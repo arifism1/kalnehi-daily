@@ -51,7 +51,8 @@ function toDraftRows(
   const chunk = transcriptChunk.slice(0, 12_000);
   return tasks.map((t) => ({
     id: crypto.randomUUID(),
-    include: true,
+    /** Voice-parsed rows start unchecked; user ticks to include in the plan. */
+    include: false,
     name: t.taskTitle?.trim() ?? "",
     startInput: t.start_time ?? "",
     endInput: t.end_time ?? "",
@@ -70,6 +71,20 @@ function emptyDraftRow(): DraftRow {
     duration: null,
   };
 }
+
+/** Fingerprint of planner state for autosave — skips redundant outbox work after load. */
+function voicePlannerAutosaveSig(
+  rows: DraftRow[],
+  transcript: string,
+): string {
+  return JSON.stringify({
+    t: transcript.trim(),
+    rows: rows.map((r) => ({ id: r.id, h: rowSyncHash(r) })),
+  });
+}
+
+const PERSIST_LOCAL_MS = 80;
+const PUSH_OUTBOX_MS = 320;
 
 export function DictateMyDay() {
   const user = useAuthStore((s) => s.user);
@@ -101,12 +116,19 @@ export function DictateMyDay() {
   const rowHashRef = useRef<Record<string, string>>({});
   const pendingCreateIdsRef = useRef<Set<string>>(new Set());
   const loadPlannerGenRef = useRef(0);
+  /** Last planner state we pushed (or loaded); avoids duplicate voice_timeline outbox ops. */
+  const autosaveSigRef = useRef<string | null>(null);
+  const draftRowsRef = useRef(draftRows);
+  const draftTranscriptRef = useRef(draftTranscript);
+  draftRowsRef.current = draftRows;
+  draftTranscriptRef.current = draftTranscript;
 
   const loadPlanner = useCallback(async () => {
     const gen = ++loadPlannerGenRef.current;
     const fresh = () => gen === loadPlannerGenRef.current;
 
     if (!user?.id) {
+      autosaveSigRef.current = null;
       setDraftRows([]);
       setDraftTranscript("");
       setPlannerReady(false);
@@ -136,6 +158,7 @@ export function DictateMyDay() {
           ].join("\n\n---\n\n");
 
           if (!fresh()) return;
+          autosaveSigRef.current = voicePlannerAutosaveSig(rows, agg);
           setDraftRows(rows);
           setDraftTranscript(agg);
           serverKnownIdsRef.current = new Set(rows.map((r) => r.id));
@@ -155,6 +178,10 @@ export function DictateMyDay() {
             snap.rows.length > 0
           ) {
             if (!fresh()) return;
+            autosaveSigRef.current = voicePlannerAutosaveSig(
+              snap.rows,
+              snap.transcriptAggregate,
+            );
             setDraftRows(snap.rows);
             setDraftTranscript(snap.transcriptAggregate);
             serverKnownIdsRef.current = new Set();
@@ -165,23 +192,48 @@ export function DictateMyDay() {
             }
             rowHashRef.current = hashes;
             prevDraftIdsRef.current = new Set(snap.rows.map((r) => r.id));
+            await persistPlannerSnapshotLocal(
+              uid,
+              logDate,
+              snap.rows,
+              snap.transcriptAggregate,
+            );
           } else {
             if (!fresh()) return;
+            autosaveSigRef.current = voicePlannerAutosaveSig([], "");
             setDraftRows([]);
             setDraftTranscript("");
             serverKnownIdsRef.current = new Set();
             pendingCreateIdsRef.current.clear();
             rowHashRef.current = {};
             prevDraftIdsRef.current = new Set();
+            await persistPlannerSnapshotLocal(uid, logDate, [], "");
           }
         }
       } else {
         if (!fresh()) return;
         setError(serverRes.error);
         if (snap && snap.userId === uid && snap.logDate === logDate) {
+          autosaveSigRef.current = voicePlannerAutosaveSig(
+            snap.rows,
+            snap.transcriptAggregate,
+          );
           setDraftRows(snap.rows);
           setDraftTranscript(snap.transcriptAggregate);
+          serverKnownIdsRef.current = new Set();
+          pendingCreateIdsRef.current.clear();
+          const hashes: Record<string, string> = {};
+          for (const r of snap.rows) {
+            hashes[r.id] = rowSyncHash(r);
+          }
+          rowHashRef.current = hashes;
           prevDraftIdsRef.current = new Set(snap.rows.map((r) => r.id));
+          await persistPlannerSnapshotLocal(
+            uid,
+            logDate,
+            snap.rows,
+            snap.transcriptAggregate,
+          );
         }
       }
     } finally {
@@ -204,25 +256,47 @@ export function DictateMyDay() {
     setFallbackPanel(null);
   }, [logDate]);
 
-  /** IndexedDB snapshot + outbox (offline-first), after planner hydrated from server/snapshot. */
+  /**
+   * Voice-only autosave: `voice_planner_snapshots` in IndexedDB + `voice_timeline_*`
+   * outbox mutations (see `voicePlannerSync` / `sync.ts`). Does not touch tasks or handwritten tables.
+   */
   useEffect(() => {
     if (!user?.id || !plannerReady) return;
     const uid = user.id;
+    const rows = draftRowsRef.current;
+    const transcript = draftTranscriptRef.current;
+    const sig = voicePlannerAutosaveSig(rows, transcript);
+    if (sig === autosaveSigRef.current) return;
+
     const idbT = setTimeout(() => {
-      void persistPlannerSnapshotLocal(uid, logDate, draftRows, draftTranscript);
-    }, 120);
-    const syncT = setTimeout(() => {
-      void pushPlannerRowsToOutbox({
-        userId: uid,
+      void persistPlannerSnapshotLocal(
+        uid,
         logDate,
-        transcriptAggregate: draftTranscript,
-        draftRows,
-        serverKnownIds: serverKnownIdsRef.current,
-        prevIdsRef: prevDraftIdsRef,
-        rowHashRef,
-        pendingCreateIdsRef,
-      });
-    }, 550);
+        draftRowsRef.current,
+        draftTranscriptRef.current,
+      );
+    }, PERSIST_LOCAL_MS);
+
+    const syncT = setTimeout(() => {
+      void (async () => {
+        const r = draftRowsRef.current;
+        const t = draftTranscriptRef.current;
+        const sigNow = voicePlannerAutosaveSig(r, t);
+        if (sigNow === autosaveSigRef.current) return;
+        await pushPlannerRowsToOutbox({
+          userId: uid,
+          logDate,
+          transcriptAggregate: t,
+          draftRows: r,
+          serverKnownIds: serverKnownIdsRef.current,
+          prevIdsRef: prevDraftIdsRef,
+          rowHashRef,
+          pendingCreateIdsRef,
+        });
+        autosaveSigRef.current = sigNow;
+      })();
+    }, PUSH_OUTBOX_MS);
+
     return () => {
       clearTimeout(idbT);
       clearTimeout(syncT);
@@ -376,7 +450,7 @@ export function DictateMyDay() {
     setDraftRows((prev) => [...prev, emptyDraftRow()]);
   }, []);
 
-  /** Forces an immediate outbox flush (planner rows already enqueue on every edit). */
+  /** Immediate flush of pending voice_timeline outbox ops (rows already enqueue on edit). */
   const confirmFinalizeSync = useCallback(async () => {
     if (!user?.id) return;
     setError(null);
@@ -654,8 +728,10 @@ export function DictateMyDay() {
           <span className="text-xs text-zinc-500">{logDate}</span>
         </div>
         <p className="mt-1 text-xs text-zinc-400">
-          Rows auto-save to this device (IndexedDB) and sync to your timeline via the
-          same outbox as the main planner. Edits queue while offline.
+          Rows auto-save to this device (voice planner snapshot in IndexedDB) and sync
+          only to your{" "}
+          <span className="font-medium text-zinc-300">voice timeline</span> via the
+          outbox—never to typed tasks or handwritten planner. Edits queue while offline.
         </p>
         {draftRows.length === 0 ? (
           <p className="mt-6 rounded-2xl border border-dashed border-white/[0.08] py-10 text-center text-sm text-zinc-500">
@@ -736,7 +812,7 @@ export function DictateMyDay() {
           onClick={() => void confirmFinalizeSync()}
           className="mt-3 inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl border border-emerald-500/40 bg-emerald-600/90 px-6 text-base font-semibold text-emerald-950"
         >
-          Confirm &amp; finalize — sync now
+          Sync voice timeline now
         </button>
       </section>
 

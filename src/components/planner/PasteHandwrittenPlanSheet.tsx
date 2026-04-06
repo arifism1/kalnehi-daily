@@ -5,14 +5,20 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 import {
   listHandwrittenPlannerForDate,
-  replaceHandwrittenPlannerForDate,
   type HandwrittenPlannerRow,
 } from "@/actions/handwrittenPlanner";
 import {
   parsePastedHandwrittenPlan,
   type ParsedPastedPlanTask,
 } from "@/actions/pasteHandwrittenPlan";
+import {
+  persistHandwrittenSnapshotLocal,
+  pushHandwrittenPlannerReplaceToOutbox,
+} from "@/lib/handwrittenPlannerSync";
+import { flushOutbox } from "@/lib/sync";
+import { getHandwrittenPlannerSnapshot } from "@/lib/taskIdb";
 import { dbTimeToInputValue, inputTimeToDb } from "@/lib/taskTime";
+import { useAuthStore } from "@/store/useAuthStore";
 
 type EditableRow = {
   id: string;
@@ -67,7 +73,8 @@ function toRows(tasks: ParsedPastedPlanTask[]): EditableRow[] {
   }));
 }
 
-const AUTOSAVE_MS = 450;
+const PERSIST_LOCAL_MS = 80;
+const PUSH_OUTBOX_MS = 320;
 
 function buildSaveTasks(rows: EditableRow[]) {
   return rows
@@ -80,10 +87,17 @@ function buildSaveTasks(rows: EditableRow[]) {
     }));
 }
 
-function payloadSig(raw: string, rows: EditableRow[]): string {
+function handwrittenAutosaveSig(raw: string, rows: EditableRow[]): string {
   return JSON.stringify({
     raw: raw.trim(),
-    tasks: buildSaveTasks(rows),
+    rows: rows.map((r) => ({
+      id: r.id,
+      include: r.include,
+      name: r.name,
+      s: r.startInput,
+      e: r.endInput,
+      d: r.duration,
+    })),
   });
 }
 
@@ -103,6 +117,7 @@ export function PasteHandwrittenPlanSheet({
   onError,
 }: Props) {
   const baseId = useId();
+  const userId = useAuthStore((s) => s.user?.id);
   const [phase, setPhase] = useState<"idle" | "parse" | "save">("idle");
   const [rawText, setRawText] = useState("");
   const [rows, setRows] = useState<EditableRow[]>([]);
@@ -110,10 +125,19 @@ export function PasteHandwrittenPlanSheet({
   rowsRef.current = rows;
   const rawTextRef = useRef(rawText);
   rawTextRef.current = rawText;
-  const lastSentRef = useRef("");
+  /** Matches last load or successful outbox enqueue — skips redundant work. */
+  const autosaveSigRef = useRef("");
   const [hint, setHint] = useState<string | null>(null);
   const [autosaveError, setAutosaveError] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
+
+  const applyServerEntries = useCallback((entries: HandwrittenPlannerRow[]) => {
+    const rt = entries[0]?.source_text?.trim() ?? "";
+    const mapped = entries.map(serverRowToEditable);
+    setRawText(rt);
+    setRows(mapped);
+    autosaveSigRef.current = handwrittenAutosaveSig(rt, mapped);
+  }, []);
 
   useEffect(() => {
     if (!open) {
@@ -123,26 +147,86 @@ export function PasteHandwrittenPlanSheet({
       setHint(null);
       setAutosaveError(null);
       setHydrated(false);
-      lastSentRef.current = "";
+      autosaveSigRef.current = "";
       return;
     }
 
     let cancelled = false;
     setHydrated(false);
     void (async () => {
+      const uid = userId;
+      if (!uid) {
+        if (cancelled) return;
+        const first = emptyRow();
+        setRawText("");
+        setRows([first]);
+        autosaveSigRef.current = handwrittenAutosaveSig("", [first]);
+        setHydrated(true);
+        return;
+      }
+
       const res = await listHandwrittenPlannerForDate(assignedDate);
       if (cancelled) return;
+
       if (res.ok && res.entries.length > 0) {
         const rt = res.entries[0]?.source_text?.trim() ?? "";
         const mapped = res.entries.map(serverRowToEditable);
         setRawText(rt);
         setRows(mapped);
-        lastSentRef.current = payloadSig(rt, mapped);
+        autosaveSigRef.current = handwrittenAutosaveSig(rt, mapped);
+        await persistHandwrittenSnapshotLocal(uid, assignedDate, rt, mapped);
+      } else if (res.ok) {
+        const snap = await getHandwrittenPlannerSnapshot(uid, assignedDate);
+        if (cancelled) return;
+        if (
+          snap &&
+          snap.userId === uid &&
+          snap.logDate === assignedDate &&
+          snap.rows.length > 0
+        ) {
+          setRawText(snap.sourceText);
+          setRows(snap.rows);
+          autosaveSigRef.current = handwrittenAutosaveSig(
+            snap.sourceText,
+            snap.rows,
+          );
+          await persistHandwrittenSnapshotLocal(
+            uid,
+            assignedDate,
+            snap.sourceText,
+            snap.rows,
+          );
+        } else {
+          const first = emptyRow();
+          setRawText("");
+          setRows([first]);
+          autosaveSigRef.current = handwrittenAutosaveSig("", [first]);
+          await persistHandwrittenSnapshotLocal(uid, assignedDate, "", [first]);
+        }
       } else {
-        const first = emptyRow();
-        setRawText("");
-        setRows([first]);
-        lastSentRef.current = payloadSig("", [first]);
+        const snap = await getHandwrittenPlannerSnapshot(uid, assignedDate);
+        if (cancelled) return;
+        if (snap && snap.userId === uid && snap.logDate === assignedDate) {
+          const displayRows =
+            snap.rows.length > 0 ? snap.rows : [emptyRow()];
+          setRawText(snap.sourceText);
+          setRows(displayRows);
+          autosaveSigRef.current = handwrittenAutosaveSig(
+            snap.sourceText,
+            displayRows,
+          );
+          await persistHandwrittenSnapshotLocal(
+            uid,
+            assignedDate,
+            snap.sourceText,
+            displayRows,
+          );
+        } else {
+          const first = emptyRow();
+          setRawText("");
+          setRows([first]);
+          autosaveSigRef.current = handwrittenAutosaveSig("", [first]);
+        }
       }
       setHydrated(true);
     })();
@@ -150,47 +234,77 @@ export function PasteHandwrittenPlanSheet({
     return () => {
       cancelled = true;
     };
-  }, [open, assignedDate]);
+  }, [open, assignedDate, userId]);
 
+  /**
+   * Handwritten-only: `handwritten_planner_snapshots` in IDB + `handwritten_planner_replace` outbox.
+   * Does not touch `tasks` or voice timeline.
+   */
   useEffect(() => {
-    if (!open || !hydrated) return;
-    const sig = payloadSig(rawTextRef.current, rowsRef.current);
-    if (sig === lastSentRef.current) return;
+    if (!open || !hydrated || !userId) return;
+    const uid = userId;
+    const sig = handwrittenAutosaveSig(rawTextRef.current, rowsRef.current);
+    if (sig === autosaveSigRef.current) return;
 
-    const t = setTimeout(() => {
+    const idbT = setTimeout(() => {
+      void persistHandwrittenSnapshotLocal(
+        uid,
+        assignedDate,
+        rawTextRef.current,
+        rowsRef.current,
+      );
+    }, PERSIST_LOCAL_MS);
+
+    const syncT = setTimeout(() => {
       void (async () => {
-        const sigSend = payloadSig(rawTextRef.current, rowsRef.current);
-        if (sigSend === lastSentRef.current) return;
+        const sigNow = handwrittenAutosaveSig(
+          rawTextRef.current,
+          rowsRef.current,
+        );
+        if (sigNow === autosaveSigRef.current) return;
         try {
-          const res = await replaceHandwrittenPlannerForDate({
-            log_date: assignedDate,
-            source_text: rawTextRef.current,
+          await pushHandwrittenPlannerReplaceToOutbox({
+            userId: uid,
+            logDate: assignedDate,
+            sourceText: rawTextRef.current,
             tasks: buildSaveTasks(rowsRef.current),
           });
-          if (!res.ok) {
-            setAutosaveError(res.error);
+          if (
+            handwrittenAutosaveSig(rawTextRef.current, rowsRef.current) !==
+            sigNow
+          ) {
             return;
           }
-          if (payloadSig(rawTextRef.current, rowsRef.current) !== sigSend) return;
           setAutosaveError(null);
-          lastSentRef.current = sigSend;
-          let si = 0;
-          setRows((prev) =>
-            prev.map((r) => {
-              if (r.include && r.name.trim().length > 0 && si < res.ids.length) {
-                return { ...r, id: res.ids[si++] };
-              }
-              return r;
-            }),
-          );
+          autosaveSigRef.current = sigNow;
         } catch {
-          setAutosaveError("Could not autosave.");
+          setAutosaveError("Could not queue sync.");
         }
       })();
-    }, AUTOSAVE_MS);
+    }, PUSH_OUTBOX_MS);
 
-    return () => clearTimeout(t);
-  }, [open, hydrated, assignedDate, rows, rawText]);
+    return () => {
+      clearTimeout(idbT);
+      clearTimeout(syncT);
+    };
+  }, [open, hydrated, assignedDate, userId, rows, rawText]);
+
+  useEffect(() => {
+    if (!open || typeof window === "undefined") return;
+    const onSynced = () => {
+      void (async () => {
+        const uid = useAuthStore.getState().user?.id;
+        if (!uid) return;
+        const res = await listHandwrittenPlannerForDate(assignedDate);
+        if (res.ok && res.entries.length > 0) {
+          applyServerEntries(res.entries);
+        }
+      })();
+    };
+    window.addEventListener("kalnehi-handwritten-planner-synced", onSynced);
+    return () =>
+      window.removeEventListener("kalnehi-handwritten-planner-synced", onSynced);
+  }, [open, assignedDate, applyServerEntries]);
 
   const updateRow = useCallback((id: string, patch: Partial<EditableRow>) => {
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
@@ -234,33 +348,36 @@ export function PasteHandwrittenPlanSheet({
 
   const saveAll = useCallback(async () => {
     const latestRows = rowsRef.current;
+    const rt = rawTextRef.current;
     const tasks = buildSaveTasks(latestRows);
     if (tasks.length === 0) {
       onError("Tick at least one row with a task name.");
       return;
     }
+    const uid = userId;
+    if (!uid) {
+      onError("Sign in to save.");
+      return;
+    }
     setPhase("save");
     try {
-      const res = await replaceHandwrittenPlannerForDate({
-        log_date: assignedDate,
-        source_text: rawText,
+      await persistHandwrittenSnapshotLocal(uid, assignedDate, rt, latestRows);
+      await pushHandwrittenPlannerReplaceToOutbox({
+        userId: uid,
+        logDate: assignedDate,
+        sourceText: rt,
         tasks,
       });
+      await flushOutbox(uid);
+      const res = await listHandwrittenPlannerForDate(assignedDate);
       if (!res.ok) {
         onError(res.error);
         setPhase("idle");
         return;
       }
-      lastSentRef.current = payloadSig(rawText, latestRows);
-      let si = 0;
-      setRows((prev) =>
-        prev.map((r) => {
-          if (r.include && r.name.trim().length > 0 && si < res.ids.length) {
-            return { ...r, id: res.ids[si++] };
-          }
-          return r;
-        }),
-      );
+      if (res.entries.length > 0) {
+        applyServerEntries(res.entries);
+      }
       onSaved();
       onClose();
     } catch (e) {
@@ -268,7 +385,7 @@ export function PasteHandwrittenPlanSheet({
     } finally {
       setPhase("idle");
     }
-  }, [assignedDate, rawText, onError, onSaved, onClose]);
+  }, [assignedDate, userId, onError, onSaved, onClose, applyServerEntries]);
 
   if (!open) return null;
   const busy = phase !== "idle";
@@ -297,7 +414,8 @@ export function PasteHandwrittenPlanSheet({
               <p className="mt-1 text-[10px] text-amber-400/90">{autosaveError}</p>
             ) : (
               <p className="mt-1 text-[10px] text-zinc-500">
-                Changes save automatically (debounced).
+                Handwritten planner only: saves on this device and queues sync
+                (debounced).
               </p>
             )}
           </div>

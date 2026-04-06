@@ -7,6 +7,8 @@ import { registerOutboxBackgroundSync } from "@/lib/pwaBackgroundSync";
 import { flushOutbox } from "@/lib/sync";
 import {
   addOutboxMutation,
+  deleteOutboxMutation,
+  getAllOutboxMutations,
   getOutboxCount,
   putTask,
   removeOutboxMutationIfPresent,
@@ -24,6 +26,22 @@ function mergeTask(taskId: string, patch: TablesUpdate<"tasks">): Task | null {
     ...patch,
     updated_at: new Date().toISOString(),
   } as Task;
+}
+
+const taskUpdateChains = new Map<string, Promise<unknown>>();
+
+function runTaskUpdateSerialized<T>(
+  taskId: string,
+  fn: () => Promise<T>,
+): Promise<T> {
+  const prev = taskUpdateChains.get(taskId) ?? Promise.resolve();
+  const next = prev.catch(() => {}).then(() => fn());
+  taskUpdateChains.set(taskId, next);
+  return next.finally(() => {
+    if (taskUpdateChains.get(taskId) === next) {
+      taskUpdateChains.delete(taskId);
+    }
+  });
 }
 
 async function enqueueAndFlush(
@@ -115,6 +133,8 @@ export async function undoRestoreTaskUpdate(
 
 /**
  * Optimistic task update: Zustand + IndexedDB first, then outbox for Supabase sync.
+ * Serializes per taskId and merges pending `task_update` outbox rows so debounced
+ * edits produce one sync payload (typed planner autosave reliability).
  */
 export async function applyOptimisticTaskUpdate(
   taskId: string,
@@ -123,17 +143,30 @@ export async function applyOptimisticTaskUpdate(
 ): Promise<
   { ok: true; outboxId: string } | { ok: false; error: string }
 > {
-  const merged = mergeTask(taskId, patch);
-  if (!merged) return { ok: false, error: USER_ERROR.taskMissing };
+  return runTaskUpdateSerialized(taskId, async () => {
+    const merged = mergeTask(taskId, patch);
+    if (!merged) return { ok: false, error: USER_ERROR.taskMissing };
 
-  useTaskStore.getState().taskEdited(merged);
-  await putTask(merged);
-  const outboxId = await enqueueAndFlush(
-    { op: "task_update", taskId, patch },
-    userId,
-  );
-  dispatchTasksSync();
-  return { ok: true, outboxId };
+    useTaskStore.getState().taskEdited(merged);
+    await putTask(merged);
+
+    const all = await getAllOutboxMutations();
+    let mergedPatch: TablesUpdate<"tasks"> = {};
+    for (const m of all) {
+      if (m.op === "task_update" && m.taskId === taskId && m.patch) {
+        mergedPatch = { ...mergedPatch, ...m.patch };
+        await deleteOutboxMutation(m.clientMutationId);
+      }
+    }
+    mergedPatch = { ...mergedPatch, ...patch };
+
+    const outboxId = await enqueueAndFlush(
+      { op: "task_update", taskId, patch: mergedPatch },
+      userId,
+    );
+    dispatchTasksSync();
+    return { ok: true, outboxId };
+  });
 }
 
 export async function applyOptimisticTaskDelete(

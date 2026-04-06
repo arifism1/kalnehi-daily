@@ -16,6 +16,7 @@ import {
   type OutboxMutation,
 } from "@/lib/taskIdb";
 import { USER_ERROR } from "@/lib/userFacingErrors";
+import type { Json, TablesInsert } from "@/types/supabase";
 import { useSyncStore } from "@/store/useSyncStore";
 
 const MAX_RETRIES = 6;
@@ -72,6 +73,77 @@ async function applyVoiceTimelineUpdate(
       })
       .eq("id", id)
       .eq("user_id", user.id);
+    if (error) return { ok: false, error: formatSupabaseError(error) };
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: formatSupabaseError(e) };
+  }
+}
+
+async function applyHandwrittenPlannerReplace(
+  payload: NonNullable<OutboxMutation["handwrittenReplace"]>,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const supabase = getSupabaseBrowserClient();
+    const {
+      data: { user },
+      error: authErr,
+    } = await supabase.auth.getUser();
+    if (authErr || !user) {
+      return { ok: false, error: USER_ERROR.session };
+    }
+
+    const logDate = payload.log_date?.trim() ?? "";
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(logDate)) {
+      return { ok: false, error: "Invalid date." };
+    }
+
+    const sourceText = (payload.source_text ?? "").trim().slice(0, 30_000);
+    const cleaned = payload.tasks
+      .map((t) => ({
+        activityName: String(t.activityName ?? "")
+          .trim()
+          .slice(0, 200),
+        start_time: t.start_time?.trim() || null,
+        end_time: t.end_time?.trim() || null,
+        duration: t.duration?.trim() || null,
+      }))
+      .filter((t) => t.activityName.length > 0);
+
+    const { error: delErr } = await supabase
+      .from("handwritten_planner_entries")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("log_date", logDate);
+
+    if (delErr) return { ok: false, error: formatSupabaseError(delErr) };
+
+    if (cleaned.length === 0) return { ok: true };
+
+    const rows: TablesInsert<"handwritten_planner_entries">[] = cleaned.map(
+      (t) => ({
+        user_id: user.id,
+        log_date: logDate,
+        source_text: sourceText,
+        title: t.activityName,
+        start_time: t.start_time,
+        end_time: t.end_time,
+        duration: t.duration,
+        parsed_json: {
+          activityName: t.activityName,
+          start_time: t.start_time,
+          end_time: t.end_time,
+          duration: t.duration,
+          source: "paste_handwritten_plan",
+          planner_include: true,
+        } as Json,
+      }),
+    );
+
+    const { error } = await supabase
+      .from("handwritten_planner_entries")
+      .insert(rows);
+
     if (error) return { ok: false, error: formatSupabaseError(error) };
     return { ok: true };
   } catch (e) {
@@ -172,6 +244,9 @@ async function applyOne(
   if (m.op === "voice_timeline_delete") {
     return applyVoiceTimelineDelete(m.taskId);
   }
+  if (m.op === "handwritten_planner_replace" && m.handwrittenReplace) {
+    return applyHandwrittenPlannerReplace(m.handwrittenReplace);
+  }
   return { ok: false, error: "Invalid outbox entry" };
 }
 
@@ -270,6 +345,7 @@ export async function flushOutbox(userId: string | undefined): Promise<void> {
     let deadLettered = 0;
     let worstFailCount = 0;
     let voicePlannerOpsApplied = 0;
+    let handwrittenPlannerOpsApplied = 0;
 
     for (const m of queue) {
       const fails = m.failCount ?? 0;
@@ -291,6 +367,9 @@ export async function flushOutbox(userId: string | undefined): Promise<void> {
             m.op === "voice_timeline_delete"
           ) {
             voicePlannerOpsApplied++;
+          }
+          if (m.op === "handwritten_planner_replace") {
+            handwrittenPlannerOpsApplied++;
           }
         } else {
           await bumpOutboxFailCount(m.clientMutationId);
@@ -340,6 +419,12 @@ export async function flushOutbox(userId: string | undefined): Promise<void> {
       typeof window !== "undefined"
     ) {
       window.dispatchEvent(new Event("kalnehi-voice-planner-synced"));
+    }
+    if (
+      handwrittenPlannerOpsApplied > 0 &&
+      typeof window !== "undefined"
+    ) {
+      window.dispatchEvent(new Event("kalnehi-handwritten-planner-synced"));
     }
   } finally {
     flushing = false;
