@@ -14,11 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      exams: {
+        Row: {
+          created_at: string
+          display_name: string
+          exam_name: string
+          id: string
+          max_score: number | null
+          multi_subject: boolean
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          exam_name: string
+          id?: string
+          max_score?: number | null
+          multi_subject?: boolean
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          exam_name?: string
+          id?: string
+          max_score?: number | null
+          multi_subject?: boolean
+          sort_order?: number
+        }
+        Relationships: []
+      }
       syllabus_master: {
         Row: {
           chapter: string
           created_at: string | null
           estimated_minutes: number | null
+          exam_name: string
           id: string
           marks_2023: number | null
           marks_2024: number | null
@@ -30,6 +61,7 @@ export type Database = {
           chapter: string
           created_at?: string | null
           estimated_minutes?: number | null
+          exam_name?: string
           id?: string
           marks_2023?: number | null
           marks_2024?: number | null
@@ -41,6 +73,7 @@ export type Database = {
           chapter?: string
           created_at?: string | null
           estimated_minutes?: number | null
+          exam_name?: string
           id?: string
           marks_2023?: number | null
           marks_2024?: number | null
@@ -84,6 +117,132 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      study_sessions: {
+        Row: {
+          created_at: string
+          duration_seconds: number
+          ended_at: string
+          id: string
+          is_camera_proven: boolean
+          started_at: string
+          subject: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds: number
+          ended_at: string
+          id?: string
+          is_camera_proven?: boolean
+          started_at: string
+          subject: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number
+          ended_at?: string
+          id?: string
+          is_camera_proven?: boolean
+          started_at?: string
+          subject?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      voice_timeline_entries: {
+        Row: {
+          id: string
+          user_id: string
+          log_date: string
+          transcript_raw: string
+          title: string
+          description: string
+          category: string
+          subject: string | null
+          chapter: string | null
+          estimated_minutes: number | null
+          occurred_at: string
+          parsed_json: Json | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          log_date: string
+          transcript_raw: string
+          title: string
+          description?: string
+          category: string
+          subject?: string | null
+          chapter?: string | null
+          estimated_minutes?: number | null
+          occurred_at?: string
+          parsed_json?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          log_date?: string
+          transcript_raw?: string
+          title?: string
+          description?: string
+          category?: string
+          subject?: string | null
+          chapter?: string | null
+          estimated_minutes?: number | null
+          occurred_at?: string
+          parsed_json?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      handwritten_planner_entries: {
+        Row: {
+          id: string
+          user_id: string
+          log_date: string
+          source_text: string
+          title: string
+          start_time: string | null
+          end_time: string | null
+          duration: string | null
+          parsed_json: Json | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          log_date: string
+          source_text?: string
+          title: string
+          start_time?: string | null
+          end_time?: string | null
+          duration?: string | null
+          parsed_json?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          log_date?: string
+          source_text?: string
+          title?: string
+          start_time?: string | null
+          end_time?: string | null
+          duration?: string | null
+          parsed_json?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       tasks: {
         Row: {
@@ -150,6 +309,7 @@ export type Database = {
       user_profiles: {
         Row: {
           attempts: Json | null
+          cuet_domain_subjects: Json
           full_name: string | null
           id: string
           prev_exam_attempted: boolean | null
@@ -162,6 +322,7 @@ export type Database = {
         }
         Insert: {
           attempts?: Json | null
+          cuet_domain_subjects?: Json
           full_name?: string | null
           id?: string
           prev_exam_attempted?: boolean | null
@@ -174,6 +335,7 @@ export type Database = {
         }
         Update: {
           attempts?: Json | null
+          cuet_domain_subjects?: Json
           full_name?: string | null
           id?: string
           prev_exam_attempted?: boolean | null
@@ -183,6 +345,104 @@ export type Database = {
           target_exam_date?: string | null
           updated_at?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_syllabus_customizations: {
+        Row: {
+          action_type: string
+          chapter: string | null
+          chapter_override: string | null
+          created_at: string
+          custom_row_id: string | null
+          exam_name: string
+          id: string
+          microtopic: string | null
+          microtopic_override: string | null
+          subject: string | null
+          subject_override: string | null
+          syllabus_master_id: string | null
+          target_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          chapter?: string | null
+          chapter_override?: string | null
+          created_at?: string
+          custom_row_id?: string | null
+          exam_name: string
+          id?: string
+          microtopic?: string | null
+          microtopic_override?: string | null
+          subject?: string | null
+          subject_override?: string | null
+          syllabus_master_id?: string | null
+          target_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          chapter?: string | null
+          chapter_override?: string | null
+          created_at?: string
+          custom_row_id?: string | null
+          exam_name?: string
+          id?: string
+          microtopic?: string | null
+          microtopic_override?: string | null
+          subject?: string | null
+          subject_override?: string | null
+          syllabus_master_id?: string | null
+          target_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_syllabus_customizations_syllabus_master_id_fkey"
+            columns: ["syllabus_master_id"]
+            isOneToOne: false
+            referencedRelation: "syllabus_master"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_syllabus_marks_overrides: {
+        Row: {
+          created_at: string
+          exam_name: string
+          id: string
+          marks_2023: number | null
+          marks_2024: number | null
+          marks_2025: number | null
+          syllabus_master_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          exam_name: string
+          id?: string
+          marks_2023?: number | null
+          marks_2024?: number | null
+          marks_2025?: number | null
+          syllabus_master_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          exam_name?: string
+          id?: string
+          marks_2023?: number | null
+          marks_2024?: number | null
+          marks_2025?: number | null
+          syllabus_master_id?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

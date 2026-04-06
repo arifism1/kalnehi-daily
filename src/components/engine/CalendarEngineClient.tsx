@@ -1,0 +1,137 @@
+"use client";
+
+import {
+  addMonths,
+  format,
+  startOfMonth,
+  subMonths,
+} from "date-fns";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useMemo, useState } from "react";
+
+import { useRefreshTasksOnHomeFocus } from "@/hooks/useRefreshTasksOnHomeFocus";
+import {
+  buildMonthHeatmap,
+  monthLabel,
+} from "@/lib/engine/calendarHeatmap";
+import { useTaskStore } from "@/store/useTaskStore";
+
+import { EngineCard, EngineHero } from "./EngineHero";
+
+const HEAT: Record<
+  "green" | "yellow" | "red" | "grey",
+  string
+> = {
+  green:
+    "border-emerald-500/40 bg-emerald-500/20 text-emerald-100 shadow-[inset_0_0_0_1px_rgba(16,185,129,0.2)]",
+  yellow:
+    "border-amber-500/35 bg-amber-500/15 text-amber-100 shadow-[inset_0_0_0_1px_rgba(245,158,11,0.2)]",
+  red: "border-rose-500/35 bg-rose-500/15 text-rose-100 shadow-[inset_0_0_0_1px_rgba(244,63,94,0.2)]",
+  grey: "border-slate-700/80 bg-slate-800/40 text-zinc-500",
+};
+
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+export function CalendarEngineClient() {
+  useRefreshTasksOnHomeFocus();
+  const tasksRecord = useTaskStore((s) => s.tasks);
+  const microRecord = useTaskStore((s) => s.microtopics);
+
+  const [cursor, setCursor] = useState(() => startOfMonth(new Date()));
+
+  const year = cursor.getFullYear();
+  const monthIndex0 = cursor.getMonth();
+
+  const cells = useMemo(() => {
+    const tasks = Object.values(tasksRecord);
+    return buildMonthHeatmap(year, monthIndex0, tasks, microRecord);
+  }, [year, monthIndex0, tasksRecord, microRecord]);
+
+  const leadBlank = useMemo(() => {
+    if (cells.length === 0) return 0;
+    const wd = cells[0]!.weekday;
+    return (wd + 6) % 7;
+  }, [cells]);
+
+  return (
+    <div className="space-y-6">
+      <EngineHero
+        eyebrow="Consistency"
+        title="Calendar"
+        description="Full monthly view with execution heat: green above 80%, yellow 50–80%, red below 50%, grey when no targets that day."
+      />
+
+      <div className="flex items-center justify-between gap-3">
+        <button
+          type="button"
+          onClick={() => setCursor((c) => subMonths(c, 1))}
+          className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-700 bg-slate-900/60 text-zinc-300 hover:bg-slate-800"
+          aria-label="Previous month"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <p className="text-center text-lg font-semibold text-white">
+          {monthLabel(year, monthIndex0)}
+        </p>
+        <button
+          type="button"
+          onClick={() => setCursor((c) => addMonths(c, 1))}
+          className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-700 bg-slate-900/60 text-zinc-300 hover:bg-slate-800"
+          aria-label="Next month"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </button>
+      </div>
+
+      <EngineCard title="Heatmap legend">
+        <div className="flex flex-wrap gap-3 text-[11px] text-zinc-400">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded-sm bg-emerald-500/50" /> &gt;80%
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded-sm bg-amber-500/45" /> 50–80%
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded-sm bg-rose-500/45" /> &lt;50%
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded-sm bg-slate-700" /> No data
+          </span>
+        </div>
+      </EngineCard>
+
+      <div className="overflow-x-auto rounded-2xl border border-white/[0.06] bg-slate-950/40 p-3 sm:p-4">
+        <div className="grid grid-cols-7 gap-1.5 text-center text-[10px] font-semibold uppercase tracking-wide text-zinc-500 sm:text-xs">
+          {WEEKDAYS.map((d) => (
+            <div key={d} className="py-1">
+              {d}
+            </div>
+          ))}
+        </div>
+        <div className="mt-1 grid grid-cols-7 gap-1.5">
+          {Array.from({ length: leadBlank }).map((_, i) => (
+            <div key={`pad-${i}`} className="aspect-square min-h-[2.5rem]" />
+          ))}
+          {cells.map((c) => (
+            <div
+              key={c.date}
+              title={
+                c.weightedPercent == null
+                  ? `${c.date} — no targets`
+                  : `${c.date} — ${Math.round(c.weightedPercent)}% · ${c.taskCount} tasks`
+              }
+              className={`flex aspect-square min-h-[2.5rem] flex-col items-center justify-center rounded-xl border text-[11px] font-semibold sm:text-sm ${HEAT[c.band]}`}
+            >
+              <span className="tabular-nums">{format(new Date(c.date + "T12:00:00"), "d")}</span>
+              {c.taskCount > 0 && c.weightedPercent != null && (
+                <span className="mt-0.5 text-[9px] font-medium opacity-90 sm:text-[10px]">
+                  {Math.round(c.weightedPercent)}%
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,145 @@
+"use client";
+
+import { KeyRound, Loader2, Lock } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCallback, useState } from "react";
+
+import { formatSupabaseError, getSupabaseBrowserClient } from "@/lib/supabase";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useOnboardingStore } from "@/store/useOnboardingStore";
+
+export default function AuthResetPage() {
+  const router = useRouter();
+  const setAuth = useAuthStore((s) => s.setAuth);
+  const onboardingCompleted = useOnboardingStore((s) => s.onboardingCompleted);
+
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = useCallback(async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const pw = password;
+      const c = confirm;
+      if (!pw || !c) {
+        setError("Enter and confirm your new password.");
+        return;
+      }
+      if (pw.length < 6) {
+        setError("Password must be at least 6 characters.");
+        return;
+      }
+      if (pw !== c) {
+        setError("Passwords do not match.");
+        return;
+      }
+
+      const supabase = getSupabaseBrowserClient();
+      const { error: upErr } = await supabase.auth.updateUser({
+        password: pw,
+      });
+      if (upErr) throw upErr;
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session) setAuth(session);
+      router.refresh();
+      router.replace(onboardingCompleted ? "/" : "/onboarding");
+    } catch (e) {
+      setError(formatSupabaseError(e));
+    } finally {
+      setBusy(false);
+    }
+  }, [password, confirm, router, setAuth, onboardingCompleted]);
+
+  return (
+    <div className="flex min-h-full flex-col items-center justify-center gap-8 bg-[#0f172a] px-6 py-16">
+      <div className="text-center">
+        <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-emerald-400">
+          Kalnehi
+        </p>
+        <h1 className="mt-2 text-2xl font-bold text-white">Set new password</h1>
+        <p className="mt-2 text-sm text-zinc-400">
+          Choose a strong password for your account.
+        </p>
+      </div>
+
+      <div className="w-full max-w-sm rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void submit();
+          }}
+        >
+          <div>
+            <label
+              htmlFor="reset-password"
+              className="flex items-center gap-1.5 text-xs font-medium text-zinc-500"
+            >
+              <Lock className="h-3.5 w-3.5" />
+              New password
+            </label>
+            <input
+              id="reset-password"
+              type="password"
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-[15px] text-white placeholder:text-zinc-600 focus:border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              placeholder="••••••••"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="reset-confirm"
+              className="flex items-center gap-1.5 text-xs font-medium text-zinc-500"
+            >
+              <Lock className="h-3.5 w-3.5" />
+              Confirm password
+            </label>
+            <input
+              id="reset-confirm"
+              type="password"
+              autoComplete="new-password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-[15px] text-white placeholder:text-zinc-600 focus:border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              placeholder="••••••••"
+            />
+          </div>
+
+          {error && (
+            <p className="rounded-xl border border-rose-500/30 bg-rose-950/30 px-3 py-2 text-sm text-rose-200">
+              {error}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={busy}
+            className="flex w-full min-h-[50px] items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-sm font-semibold text-white transition-opacity duration-200 disabled:opacity-50"
+          >
+            {busy ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <KeyRound className="h-4 w-4" />
+            )}
+            Update password
+          </button>
+        </form>
+
+        <p className="mt-4 text-center text-[11px] text-zinc-600">
+          <Link href="/auth" className="text-zinc-500 hover:text-emerald-400">
+            Back to login
+          </Link>
+        </p>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,165 @@
+"use client";
+
+import { useMemo } from "react";
+
+import { useCalendarDate } from "@/hooks/useCalendarDate";
+import { usePrimaryExamLabel } from "@/hooks/usePrimaryExamLabel";
+import { useRefreshTasksOnHomeFocus } from "@/hooks/useRefreshTasksOnHomeFocus";
+import { useSyllabusTracker } from "@/hooks/useSyllabusTracker";
+import { SyllabusComingSoon } from "@/components/syllabus/SyllabusComingSoon";
+import { shouldShowSyllabusComingSoon } from "@/lib/examProfile";
+import { buildMarksEngineSnapshot } from "@/lib/engine/marksEngineStats";
+import { useTaskStore } from "@/store/useTaskStore";
+
+import { EngineCard, EngineHero } from "./EngineHero";
+
+export function MarksEngineClient() {
+  useRefreshTasksOnHomeFocus();
+  const { examLabel, loading: examLoading } = usePrimaryExamLabel();
+
+  const today = useCalendarDate();
+  const tasksRecord = useTaskStore((s) => s.tasks);
+  const microRecord = useTaskStore((s) => s.microtopics);
+  const {
+    rows,
+    rollup,
+    neetYearProjections,
+    cuetScoringRollup,
+    cuetAwaitingDomainSelection,
+    loading: syllabusLoading,
+    error: syllabusError,
+    maxScore,
+  } = useSyllabusTracker();
+
+  const syllabusSoon = shouldShowSyllabusComingSoon({
+    examLabel,
+    examLabelLoading: examLoading,
+    syllabusLoading,
+    syllabusError,
+    syllabusRowCount: rows.length,
+    cuetAwaitingDomainSelection,
+  });
+
+  const snap = useMemo(() => {
+    const tasks = Object.values(tasksRecord);
+    const syllabusRollup = rows.length > 0 ? rollup : null;
+    return buildMarksEngineSnapshot(
+      today,
+      tasks,
+      microRecord,
+      syllabusRollup,
+      neetYearProjections,
+      maxScore,
+      cuetScoringRollup,
+    );
+  }, [
+    today,
+    tasksRecord,
+    microRecord,
+    rows.length,
+    rollup,
+    neetYearProjections,
+    maxScore,
+    cuetScoringRollup,
+  ]);
+
+  return (
+    <div className="space-y-6">
+      <EngineHero
+        eyebrow="Strategic marks"
+        title="Marks Engine"
+        description="Chapter-weight mastery, multi-year projections, and plan-level marks at risk — built for rank-focused execution."
+      />
+
+      {syllabusSoon && examLabel ? (
+        <SyllabusComingSoon variant="compact" examLabel={examLabel} />
+      ) : null}
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <EngineCard title="Syllabus · chapter pool">
+          <p className="text-3xl font-bold tabular-nums text-emerald-300">
+            {Math.round(snap.syllabusMastered)} /{" "}
+            {Math.round(snap.syllabusPool)}
+          </p>
+          <p className="mt-2 text-sm text-zinc-400">
+            {syllabusSoon
+              ? `Chapter-weight pool for ${examLabel} is coming soon. Numbers stay on plan scope until your exam’s syllabus ships.`
+              : cuetScoringRollup
+                ? `CUET projection (${snap.syllabusPercent.toFixed(1)}% overall) — each domain is 200 marks from microtopic completion.`
+                : `Weight captured (${snap.syllabusPercent.toFixed(1)}%) — full credit only when every microtopic in a chapter is done.`}
+          </p>
+        </EngineCard>
+
+        <EngineCard title="Marks at risk (missed)">
+          <p className="text-3xl font-bold tabular-nums text-amber-300">
+            {Math.round(snap.marksAtRisk)}
+          </p>
+          <p className="mt-2 text-sm text-zinc-400">
+            {snap.missedTaskCount} open past task
+            {snap.missedTaskCount === 1 ? "" : "s"} — reallocate or crush them.
+          </p>
+        </EngineCard>
+
+        <EngineCard title="Gained today (plan)">
+          <p className="text-3xl font-bold tabular-nums text-teal-300">
+            +{Math.round(snap.gainedToday)}
+          </p>
+          <p className="mt-2 text-sm text-zinc-400">
+            Weighted marks from tasks completed today.
+          </p>
+        </EngineCard>
+      </div>
+
+      <EngineCard title="Year projections · chapter weights">
+        {syllabusSoon ? (
+          <p className="text-sm text-zinc-500">
+            Year-by-year projections appear when your target exam has a syllabus
+            catalog loaded.
+          </p>
+        ) : snap.neetByYear.length === 0 ? (
+          <p className="text-sm text-zinc-500">
+            Load syllabus weights (2025–2023 columns) to unlock per-year
+            projections (scaled to your exam&apos;s max score).
+          </p>
+        ) : (
+          <ul className="space-y-3">
+            {snap.neetByYear.map((y) => (
+              <li
+                key={y.year}
+                className="flex items-baseline justify-between gap-3 rounded-xl border border-white/[0.06] bg-slate-950/50 px-4 py-3"
+              >
+                <span className="text-sm font-semibold text-zinc-300">
+                  {examLabel ?? "Exam"} {y.year}
+                </span>
+                <span className="text-2xl font-bold tabular-nums text-emerald-300">
+                  {y.mastered720}
+                  <span className="text-base font-semibold text-zinc-500">
+                    {" "}
+                    / {y.scoreMax}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </EngineCard>
+
+      <EngineCard title="Plan scope (all tasks)">
+        <p className="text-lg text-zinc-200">
+          <span className="font-semibold text-white tabular-nums">
+            {Math.round(snap.taskMastered)}
+          </span>{" "}
+          mastered of{" "}
+          <span className="tabular-nums">{Math.round(snap.taskTotalWeight)}</span>{" "}
+          weighted load
+        </p>
+        <p className="mt-2 text-sm text-zinc-500">
+          Remaining plan weight:{" "}
+          <span className="font-medium text-zinc-300 tabular-nums">
+            {Math.round(snap.remainingPlanWeight)}
+          </span>
+        </p>
+      </EngineCard>
+    </div>
+  );
+}

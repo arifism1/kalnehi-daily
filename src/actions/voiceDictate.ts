@@ -17,9 +17,13 @@ import {
 import {
   normalizeParsedVoiceEntry,
   type ParsedVoiceDayEntry,
-  type VoiceTimelineCategory,
 } from "@/lib/voiceDayParse";
+import {
+  buildScheduleDescription,
+  inferCategoryFromTaskName,
+} from "@/lib/voiceTimelineInfer";
 import type { Json, TablesInsert } from "@/types/supabase";
+import { runVoiceParseDraft } from "@/lib/runVoiceParseDraft";
 import type {
   VoiceDictateFailure,
   VoiceDictateInput,
@@ -27,58 +31,13 @@ import type {
   VoiceDictateSuccessParsed,
 } from "@/lib/voiceDictateTypes";
 
-/**
- * Map a short task title to a DB category (no LLM category field — keeps JSON small).
- */
-function inferCategoryFromTaskName(name: string): VoiceTimelineCategory {
-  const n = name.toLowerCase();
-  if (
-    /break|rest|relax|chai|coffee|sleep|snack|walk|stretch|खाना|^meal|lunch|dinner|breakfast|nashta|खा/.test(
-      n,
-    )
-  ) {
-    if (/lunch|dinner|breakfast|meal|खाना|nashta|खा लूँगा|खा रहा/.test(n))
-      return "meal";
-    return "break";
-  }
-  if (/travel|commute|metro|bus|auto|cab|journey|रास्ते|आने|जाने/.test(n))
-    return "commute";
-  if (
-    /mock|pyq|pyqs|test series|full test|exam|neet|jee|paper|nta|omr/.test(n)
-  ) {
-    return "exam_prep";
-  }
-  if (
-    /study|read|revise|revision|chapter|physics|chemistry|bio|biology|maths|math|organic|inorganic|mechanics|rotation|kinematics|dpp|ncert|module|backlog|practice|solve|questions|numericals|lec|lecture|coaching|class/.test(
-      n,
-    )
-  ) {
-    return "study";
-  }
-  if (/bath|brush|shower|wash|hygiene|कपड़े|कपडा/.test(n)) return "hygiene";
-  if (/family|call|friend|personal|mom|dad|घर|phone/.test(n))
-    return "personal";
-  return "other";
-}
-
-/**
- * Human-readable schedule line for description + timeline UI.
- */
-function buildScheduleDescription(
-  start: string | null,
-  end: string | null,
-): string {
-  if (start && end) {
-    return `Scheduled ${start}–${end} IST.`;
-  }
-  if (start) {
-    return `Starting ${start} IST (no end time).`;
-  }
-  if (end) {
-    return `Until ${end} IST.`;
-  }
-  return "Time not specified in voice note — tap Edit to add times.";
-}
+/** Structural copy of VoiceDraftTask — avoid that symbol in `"use server"` signatures (Turbopack can emit it at runtime). */
+type VoiceDraftRow = {
+  taskTitle: string;
+  start_time: string | null;
+  end_time: string | null;
+  duration: string | null;
+};
 
 /**
  * Turn a Groq task (name + optional IST HH:MM) into a row for voice_timeline_entries.
@@ -128,6 +87,9 @@ export async function runVoiceDictationPipeline(
     logDate,
   });
   if (groq.outcome === "fallback") {
+    return { ok: true, mode: "fallback", transcript: raw };
+  }
+  if (groq.outcome !== "structured") {
     return { ok: true, mode: "fallback", transcript: raw };
   }
 
@@ -273,4 +235,103 @@ export async function parseVoiceNoteWithGroq(
       ? input.occurred_at.trim()
       : new Date().toISOString();
   return runVoiceDictationPipeline(input.transcript ?? "", logDate, occurredAt);
+}
+
+/**
+ * Parse only (no DB writes): transcript -> draft task rows for table review.
+ */
+export async function parseVoiceTranscriptToDraft(
+  input: VoiceDictateInput,
+): Promise<{ ok: true; tasks: VoiceDraftRow[] } | VoiceDictateFailure> {
+  const logDate = input.log_date?.trim() ?? "";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(logDate)) {
+    return { ok: false, error: "Invalid date." };
+  }
+  const occurredAt =
+    typeof input.occurred_at === "string" && input.occurred_at.trim()
+      ? input.occurred_at.trim()
+      : new Date().toISOString();
+  const raw = (input.transcript ?? "").trim().slice(0, 12_000);
+  if (!raw) return { ok: false, error: "Nothing was captured to parse." };
+
+  return runVoiceParseDraft(raw, logDate, occurredAt);
+}
+
+/**
+ * Save reviewed draft rows ONLY to Dictate My Day timeline table.
+ */
+export async function saveVoiceDraftToTimeline(
+  input: {
+    log_date: string;
+    transcript_raw: string;
+    occurred_at?: string;
+    tasks: VoiceDraftRow[];
+  },
+): Promise<{ ok: true; entryIds: string[] } | VoiceDictateFailure> {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: USER_ERROR.session };
+
+  const logDate = input.log_date?.trim() ?? "";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(logDate)) {
+    return { ok: false, error: "Invalid date." };
+  }
+  const occurredAt =
+    typeof input.occurred_at === "string" && input.occurred_at.trim()
+      ? input.occurred_at.trim()
+      : new Date().toISOString();
+  const raw = (input.transcript_raw ?? "").trim().slice(0, 12_000);
+  if (!raw) return { ok: false, error: "Nothing to save." };
+
+  const cleaned = input.tasks
+    .map((t) => ({
+      name: t.taskTitle.trim().slice(0, 200),
+      start_time: normalizeVoiceHHMM(t.start_time ?? null),
+      end_time: normalizeVoiceHHMM(t.end_time ?? null),
+    }))
+    .filter((t) => t.name.length > 0);
+
+  if (cleaned.length === 0) {
+    return { ok: false, error: "Add at least one task row before saving." };
+  }
+
+  const entryIds: string[] = [];
+  for (const task of cleaned) {
+    const rowParsed = taskToParsedEntry(task);
+    const parsed_json: Json = {
+      name: task.name,
+      start_time: task.start_time,
+      end_time: task.end_time,
+      groq_model: GROQ_VOICE_MODEL,
+      manual_reviewed: true,
+    } as unknown as Json;
+
+    const row: TablesInsert<"voice_timeline_entries"> = {
+      user_id: user.id,
+      log_date: logDate,
+      transcript_raw: raw,
+      title: rowParsed.title,
+      description: rowParsed.description,
+      category: rowParsed.category,
+      subject: rowParsed.subject,
+      chapter: rowParsed.chapter,
+      estimated_minutes: rowParsed.estimated_minutes,
+      occurred_at: occurredAt,
+      parsed_json,
+    };
+
+    const { data: inserted, error } = await supabase
+      .from("voice_timeline_entries")
+      .insert(row)
+      .select("id")
+      .single();
+    if (error || !inserted?.id) return { ok: false, error: USER_ERROR.tryAgain };
+    entryIds.push(inserted.id);
+  }
+
+  revalidatePath("/dictate-day");
+  revalidatePath("/daily-log");
+  return { ok: true, entryIds };
 }

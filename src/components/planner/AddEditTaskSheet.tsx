@@ -1,9 +1,9 @@
 "use client";
 
 import { Loader2, X } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { createTask, updateTask } from "@/actions/tasks";
+import type { TablesUpdate } from "@/types/supabase";
 import {
   chaptersForSubject,
   hasDuplicateMicrotopicOnDate,
@@ -13,14 +13,36 @@ import {
   inputTimeToDb,
   minutesBetweenTimeInputs,
 } from "@/lib/taskTime";
-import { refreshTasksFromSupabase } from "@/lib/refreshTasksFromSupabase";
-import { dispatchTasksSync } from "@/lib/taskRefreshDispatch";
-import { formatSupabaseError } from "@/lib/supabase";
+import {
+  applyOptimisticTaskDelete,
+  applyOptimisticTaskUpdate,
+} from "@/lib/taskMutations";
+import { quickCreateEmptyTask } from "@/lib/quickTaskCreate";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useTaskStore, type Task } from "@/store/useTaskStore";
 
 import { TASK_STATUS } from "@/components/task/TaskCard";
 import { TaskPlanner } from "@/components/planner/TaskPlanner";
+
+const AUTOSAVE_MS = 350;
+
+function taskIsDiscardableDraft(t: Task): boolean {
+  const hasName = (t.name ?? "").trim().length > 0;
+  const hasLink = !!(t.microtopic_id && String(t.microtopic_id).trim());
+  const hasTime = !!(t.start_time || t.end_time);
+  const hasMarks = t.marks_value != null && Number.isFinite(Number(t.marks_value));
+  const hasEst =
+    (t.estimated_minutes != null && t.estimated_minutes > 0) ||
+    (t.estimated_time_minutes != null && t.estimated_time_minutes > 0);
+  return (
+    !hasName &&
+    !hasLink &&
+    !hasTime &&
+    !hasMarks &&
+    !hasEst &&
+    t.status === TASK_STATUS.pending
+  );
+}
 
 type Props = {
   open: boolean;
@@ -57,8 +79,48 @@ export function AddEditTaskSheet({
   const [microtopicId, setMicrotopicId] = useState("");
   const [assignedDate, setAssignedDate] = useState(defaultAssignedDate);
   const [status, setStatus] = useState<string>(TASK_STATUS.pending);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [draftTaskId, setDraftTaskId] = useState<string | null>(null);
+  const [draftBusy, setDraftBusy] = useState(false);
+  const [draftError, setDraftError] = useState<string | null>(null);
+
+  const syllabusRef = useRef(syllabusById);
+  syllabusRef.current = syllabusById;
+  const tasksListRef = useRef(tasksList);
+  tasksListRef.current = tasksList;
+
+  const formRef = useRef({
+    taskName,
+    fromTime,
+    toTime,
+    estimatedMinutes,
+    marks,
+    microtopicId,
+    assignedDate,
+    status,
+  });
+  formRef.current = {
+    taskName,
+    fromTime,
+    toTime,
+    estimatedMinutes,
+    marks,
+    microtopicId,
+    assignedDate,
+    status,
+  };
+
+  const activeTaskIdRef = useRef<string | null>(null);
+  activeTaskIdRef.current =
+    mode === "edit" ? task?.id ?? null : draftTaskId;
+
+  const excludeDupIdRef = useRef<string | undefined>(undefined);
+  excludeDupIdRef.current =
+    mode === "edit" ? task?.id : draftTaskId ?? undefined;
+
+  const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const modeRef = useRef(mode);
+  modeRef.current = mode;
 
   const chapters = useMemo(
     () => chaptersForSubject(microtopics, subject),
@@ -68,42 +130,70 @@ export function AddEditTaskSheet({
   useEffect(() => {
     if (!open) return;
     setError(null);
+    setDraftError(null);
     setAssignedDate(defaultAssignedDate);
-    if (mode === "edit" && task) {
-      const row = task.microtopic_id
-        ? syllabusById[task.microtopic_id]
-        : undefined;
-      const derivedName =
-        task.name?.trim() ||
-        row?.microtopic ||
-        "";
-      setTaskName(derivedName);
-      setFromTime(dbTimeToInputValue(task.start_time));
-      setToTime(dbTimeToInputValue(task.end_time));
-      setEstimatedMinutes(
-        task.estimated_minutes != null && task.estimated_minutes > 0
-          ? String(task.estimated_minutes)
-          : "",
-      );
-      setMarks(
-        task.marks_value != null ? String(task.marks_value) : "",
-      );
-      setSubject(row?.subject ?? "");
-      setChapter(row?.chapter ?? "");
-      setMicrotopicId(task.microtopic_id ?? "");
-      setStatus(task.status);
-    } else {
-      setTaskName("");
-      setFromTime("");
-      setToTime("");
-      setEstimatedMinutes("");
-      setMarks("");
-      setSubject("");
-      setChapter("");
-      setMicrotopicId("");
-      setStatus(TASK_STATUS.pending);
-    }
-  }, [open, mode, task, defaultAssignedDate, syllabusById]);
+  }, [open, defaultAssignedDate]);
+
+  useEffect(() => {
+    if (!open || mode !== "edit" || !task) return;
+    const row = task.microtopic_id
+      ? syllabusById[task.microtopic_id]
+      : undefined;
+    const derivedName =
+      task.name?.trim() ||
+      row?.microtopic ||
+      "";
+    setTaskName(derivedName);
+    setFromTime(dbTimeToInputValue(task.start_time));
+    setToTime(dbTimeToInputValue(task.end_time));
+    setEstimatedMinutes(
+      task.estimated_minutes != null && task.estimated_minutes > 0
+        ? String(task.estimated_minutes)
+        : "",
+    );
+    setMarks(task.marks_value != null ? String(task.marks_value) : "");
+    setSubject(row?.subject ?? "");
+    setChapter(row?.chapter ?? "");
+    setMicrotopicId(task.microtopic_id ?? "");
+    setStatus(task.status);
+  }, [open, mode, task, syllabusById]);
+
+  useEffect(() => {
+    if (!open || mode !== "add") return;
+    setTaskName("");
+    setFromTime("");
+    setToTime("");
+    setEstimatedMinutes("");
+    setMarks("");
+    setSubject("");
+    setChapter("");
+    setMicrotopicId("");
+    setStatus(TASK_STATUS.pending);
+  }, [open, mode]);
+
+  useEffect(() => {
+    if (!open || mode !== "add" || !userId) return;
+    let cancelled = false;
+    setDraftTaskId(null);
+    setDraftBusy(true);
+    void (async () => {
+      const r = await quickCreateEmptyTask(userId, defaultAssignedDate);
+      if (cancelled) {
+        if (r.ok) await applyOptimisticTaskDelete(r.id, userId);
+        return;
+      }
+      setDraftBusy(false);
+      if (r.ok) {
+        setDraftTaskId(r.id);
+        setDraftError(null);
+      } else {
+        setDraftError(r.error);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, mode, userId, defaultAssignedDate]);
 
   useEffect(() => {
     if (!open || mode === "edit") return;
@@ -112,42 +202,24 @@ export function AddEditTaskSheet({
     }
   }, [open, mode, subject, chapter, chapters]);
 
-  const onFromTimeChange = useCallback(
-    (v: string) => {
-      setFromTime(v);
-      const m = minutesBetweenTimeInputs(v, toTime);
-      if (m != null) setEstimatedMinutes(String(m));
-    },
-    [toTime],
-  );
+  const runFlush = useCallback(async () => {
+    const tid = activeTaskIdRef.current;
+    const uid = userId;
+    if (!tid || !uid) return;
 
-  const onToTimeChange = useCallback(
-    (v: string) => {
-      setToTime(v);
-      const m = minutesBetweenTimeInputs(fromTime, v);
-      if (m != null) setEstimatedMinutes(String(m));
-    },
-    [fromTime],
-  );
+    const f = formRef.current;
+    const linkId = f.microtopicId.trim() || null;
+    const linkedRow = linkId ? syllabusRef.current[linkId] : undefined;
+    const nameRaw = f.taskName.trim() || linkedRow?.microtopic?.trim() || "";
+    const name = nameRaw.length > 0 ? nameRaw : null;
 
-  const submit = useCallback(async () => {
-    if (!userId) return;
-    const linkId = microtopicId.trim() || null;
-    const linkedRow = linkId ? syllabusById[linkId] : undefined;
-    const name =
-      taskName.trim() || linkedRow?.microtopic?.trim() || "";
-    if (!name) {
-      setError("Add a task name, or pick a syllabus topic below.");
-      return;
-    }
-
-    const marksNum = marks.trim() ? Number(marks) : NaN;
-    if (marks.trim() && !Number.isFinite(marksNum)) {
+    const marksNum = f.marks.trim() ? Number(f.marks) : NaN;
+    if (f.marks.trim() && !Number.isFinite(marksNum)) {
       setError("Marks must be a number.");
       return;
     }
 
-    const estRaw = estimatedMinutes.trim();
+    const estRaw = f.estimatedMinutes.trim();
     const estNum = estRaw ? Number(estRaw) : NaN;
     if (estRaw && (!Number.isFinite(estNum) || estNum < 0)) {
       setError("Estimated minutes must be a non-negative number.");
@@ -157,71 +229,91 @@ export function AddEditTaskSheet({
     if (
       linkId &&
       hasDuplicateMicrotopicOnDate(
-        tasksList,
+        tasksListRef.current,
         linkId,
-        assignedDate,
-        mode === "edit" ? task?.id : undefined,
+        f.assignedDate,
+        excludeDupIdRef.current,
       )
     ) {
       setError("You already linked this syllabus topic on that day.");
       return;
     }
 
-    const startDb = inputTimeToDb(fromTime);
-    const endDb = inputTimeToDb(toTime);
-
-    setSaving(true);
     setError(null);
-    try {
-      const payload = {
-        assigned_date: assignedDate,
-        name,
-        microtopic_id: linkId,
-        status,
-        start_time: startDb,
-        end_time: endDb,
-        estimated_minutes: Number.isFinite(estNum) ? Math.round(estNum) : null,
-        marks_value: Number.isFinite(marksNum) ? marksNum : null,
-      };
 
-      if (mode === "add") {
-        const res = await createTask(payload);
-        if (!res.ok) throw new Error(res.error);
-      } else if (task) {
-        const res = await updateTask(task.id, payload);
-        if (!res.ok) throw new Error(res.error);
-      }
-      await refreshTasksFromSupabase(userId);
-      dispatchTasksSync();
-      onClose();
-    } catch (e) {
-      setError(formatSupabaseError(e));
-    } finally {
-      setSaving(false);
+    const startDb = inputTimeToDb(f.fromTime);
+    const endDb = inputTimeToDb(f.toTime);
+
+    const patch: TablesUpdate<"tasks"> = {
+      assigned_date: f.assignedDate,
+      name,
+      microtopic_id: linkId,
+      status: f.status,
+      start_time: startDb,
+      end_time: endDb,
+      estimated_minutes: Number.isFinite(estNum) ? Math.round(estNum) : null,
+      marks_value: Number.isFinite(marksNum) ? marksNum : null,
+    };
+
+    const res = await applyOptimisticTaskUpdate(tid, patch, uid);
+    if (!res.ok) setError(res.error);
+  }, [userId]);
+
+  const scheduleFlush = useCallback(() => {
+    if (flushTimerRef.current) clearTimeout(flushTimerRef.current);
+    flushTimerRef.current = setTimeout(() => {
+      flushTimerRef.current = null;
+      void runFlush();
+    }, AUTOSAVE_MS);
+  }, [runFlush]);
+
+  const onFromTimeChange = useCallback(
+    (v: string) => {
+      setFromTime(v);
+      const m = minutesBetweenTimeInputs(v, toTime);
+      if (m != null) setEstimatedMinutes(String(m));
+      scheduleFlush();
+    },
+    [toTime, scheduleFlush],
+  );
+
+  const onToTimeChange = useCallback(
+    (v: string) => {
+      setToTime(v);
+      const m = minutesBetweenTimeInputs(fromTime, v);
+      if (m != null) setEstimatedMinutes(String(m));
+      scheduleFlush();
+    },
+    [fromTime, scheduleFlush],
+  );
+
+  const handleClose = useCallback(() => {
+    if (flushTimerRef.current) {
+      clearTimeout(flushTimerRef.current);
+      flushTimerRef.current = null;
     }
-  }, [
-    userId,
-    taskName,
-    marks,
-    estimatedMinutes,
-    microtopicId,
-    syllabusById,
-    mode,
-    tasksList,
-    assignedDate,
-    status,
-    task,
-    fromTime,
-    toTime,
-    onClose,
-  ]);
+    void (async () => {
+      const tid = activeTaskIdRef.current;
+      const uid = userId;
+      if (tid && uid) {
+        await runFlush();
+        if (modeRef.current === "add") {
+          const row = useTaskStore.getState().tasks[tid];
+          if (row && taskIsDiscardableDraft(row)) {
+            await applyOptimisticTaskDelete(tid, uid);
+          }
+        }
+      }
+      setDraftTaskId(null);
+      onClose();
+    })();
+  }, [userId, onClose, runFlush]);
 
   if (!open) return null;
 
-  const canSave =
-    taskName.trim().length > 0 || microtopicId.trim().length > 0;
-
   const hasSyllabus = microtopics.length > 0;
+  const draftReady = mode === "edit" || !!draftTaskId;
+  const blockUi = (mode === "add" && draftBusy) || !!draftError;
 
   return (
     <div className="fixed inset-0 z-[70] flex items-end justify-center sm:items-center">
@@ -229,7 +321,7 @@ export function AddEditTaskSheet({
         type="button"
         aria-label="Close"
         className="absolute inset-0 bg-black/60"
-        onClick={onClose}
+        onClick={handleClose}
       />
       <div
         className="relative z-10 max-h-[min(92vh,40rem)] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-slate-700/90 bg-[#0c1222] p-4 shadow-2xl sm:rounded-2xl sm:p-5"
@@ -244,10 +336,15 @@ export function AddEditTaskSheet({
             <h2 className="mt-0.5 text-lg font-semibold text-white">
               {mode === "add" ? "New task" : "Edit task"}
             </h2>
+            {userId ? (
+              <p className="mt-1 text-[10px] text-zinc-500">
+                Saved automatically as you edit.
+              </p>
+            ) : null}
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="rounded-xl p-2 text-zinc-400 hover:bg-slate-800/80 hover:text-white"
             aria-label="Close"
           >
@@ -255,139 +352,189 @@ export function AddEditTaskSheet({
           </button>
         </div>
 
-        <div className="mt-5 space-y-5">
-          <div>
-            <label
-              htmlFor="task-name"
-              className="text-xs font-medium text-zinc-500"
-            >
-              Task name
-            </label>
-            <textarea
-              id="task-name"
-              value={taskName}
-              onChange={(e) => setTaskName(e.target.value)}
-              rows={4}
-              placeholder="What do you want to get done?"
-              className="mt-2 min-h-[7.5rem] w-full resize-y rounded-2xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-base leading-relaxed text-white placeholder:text-zinc-600 transition-colors duration-200 focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/25"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs text-zinc-500">From (optional)</label>
-              <input
-                type="time"
-                value={fromTime}
-                onChange={(e) => onFromTimeChange(e.target.value)}
-                className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2.5 text-base text-white transition-colors duration-200"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-zinc-500">To (optional)</label>
-              <input
-                type="time"
-                value={toTime}
-                onChange={(e) => onToTimeChange(e.target.value)}
-                className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2.5 text-base text-white transition-colors duration-200"
-              />
-            </div>
-          </div>
-          <p className="-mt-2 text-[11px] text-zinc-600">
-            Filling both times fills estimated minutes automatically.
+        {draftError ? (
+          <p className="mt-4 rounded-xl bg-rose-950/40 px-3 py-2 text-sm text-rose-200">
+            {draftError}
           </p>
+        ) : null}
 
-          <div>
-            <label className="text-xs text-zinc-500">Marks (optional)</label>
-            <input
-              type="number"
-              inputMode="decimal"
-              min={0}
-              step="any"
-              value={marks}
-              onChange={(e) => setMarks(e.target.value)}
-              placeholder="—"
-              className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2.5 text-base text-white placeholder:text-zinc-600 transition-colors duration-200"
-            />
+        {mode === "add" && draftBusy ? (
+          <div className="mt-8 flex items-center justify-center gap-2 text-sm text-zinc-400">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            Starting draft…
           </div>
+        ) : null}
 
-          {hasSyllabus ? (
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-400/90">
-                Syllabus &amp; schedule
-              </p>
-              <p className="mt-1 text-[11px] text-zinc-500">
-                Select subject → chapter → microtopic, then date and estimate.
-              </p>
-              <div className="mt-4">
-                <TaskPlanner
-                  microtopics={microtopics}
-                  tasks={tasksList}
-                  subject={subject}
-                  chapter={chapter}
-                  microtopicId={microtopicId}
-                  assignedDate={assignedDate}
-                  estimatedMinutes={estimatedMinutes}
-                  onSubjectChange={(s) => {
-                    setSubject(s);
-                    setChapter("");
-                    setMicrotopicId("");
-                  }}
-                  onChapterChange={(c) => {
-                    setChapter(c);
-                    setMicrotopicId("");
-                  }}
-                  onMicrotopicIdChange={setMicrotopicId}
-                  onAssignedDateChange={setAssignedDate}
-                  onEstimatedMinutesChange={setEstimatedMinutes}
-                  excludeTaskId={mode === "edit" ? task?.id : undefined}
-                  disabled={saving}
+        {draftReady && !draftBusy ? (
+          <div className="mt-5 space-y-5">
+            <div>
+              <label
+                htmlFor="task-name"
+                className="text-xs font-medium text-zinc-500"
+              >
+                Task name
+              </label>
+              <textarea
+                id="task-name"
+                value={taskName}
+                onChange={(e) => {
+                  setTaskName(e.target.value);
+                  scheduleFlush();
+                }}
+                rows={4}
+                placeholder="What do you want to get done?"
+                disabled={blockUi}
+                className="mt-2 min-h-[7.5rem] w-full resize-y rounded-2xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-base leading-relaxed text-white placeholder:text-zinc-600 transition-colors duration-200 focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 disabled:opacity-50"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-zinc-500">From (optional)</label>
+                <input
+                  type="time"
+                  value={fromTime}
+                  onChange={(e) => onFromTimeChange(e.target.value)}
+                  disabled={blockUi}
+                  className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2.5 text-base text-white transition-colors duration-200 disabled:opacity-50"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-zinc-500">To (optional)</label>
+                <input
+                  type="time"
+                  value={toTime}
+                  onChange={(e) => onToTimeChange(e.target.value)}
+                  disabled={blockUi}
+                  className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2.5 text-base text-white transition-colors duration-200 disabled:opacity-50"
                 />
               </div>
             </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs text-zinc-500">
-                    Est. minutes (optional)
-                  </label>
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    min={0}
-                    value={estimatedMinutes}
-                    onChange={(e) => setEstimatedMinutes(e.target.value)}
-                    placeholder="—"
-                    className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2.5 text-base text-white placeholder:text-zinc-600 transition-colors duration-200"
+            <p className="-mt-2 text-[11px] text-zinc-600">
+              Filling both times fills estimated minutes automatically.
+            </p>
+
+            <div>
+              <label className="text-xs text-zinc-500">Marks (optional)</label>
+              <input
+                type="number"
+                inputMode="decimal"
+                min={0}
+                step="any"
+                value={marks}
+                onChange={(e) => {
+                  setMarks(e.target.value);
+                  scheduleFlush();
+                }}
+                placeholder="—"
+                disabled={blockUi}
+                className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2.5 text-base text-white placeholder:text-zinc-600 transition-colors duration-200 disabled:opacity-50"
+              />
+            </div>
+
+            {hasSyllabus ? (
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-emerald-400/90">
+                  Syllabus &amp; schedule
+                </p>
+                <p className="mt-1 text-[11px] text-zinc-500">
+                  Select subject → chapter → microtopic, then date and estimate.
+                </p>
+                <div className="mt-4">
+                  <TaskPlanner
+                    microtopics={microtopics}
+                    tasks={tasksList}
+                    subject={subject}
+                    chapter={chapter}
+                    microtopicId={microtopicId}
+                    assignedDate={assignedDate}
+                    estimatedMinutes={estimatedMinutes}
+                    onSubjectChange={(s) => {
+                      setSubject(s);
+                      setChapter("");
+                      setMicrotopicId("");
+                      scheduleFlush();
+                    }}
+                    onChapterChange={(c) => {
+                      setChapter(c);
+                      setMicrotopicId("");
+                      scheduleFlush();
+                    }}
+                    onMicrotopicIdChange={(id) => {
+                      setMicrotopicId(id);
+                      scheduleFlush();
+                    }}
+                    onAssignedDateChange={(d) => {
+                      setAssignedDate(d);
+                      scheduleFlush();
+                    }}
+                    onEstimatedMinutesChange={(m) => {
+                      setEstimatedMinutes(m);
+                      scheduleFlush();
+                    }}
+                    excludeTaskId={
+                      mode === "edit" ? task?.id : draftTaskId ?? undefined
+                    }
+                    disabled={blockUi}
                   />
                 </div>
               </div>
-              <div>
-                <label className="text-xs text-zinc-500">Date</label>
-                <input
-                  type="date"
-                  value={assignedDate}
-                  onChange={(e) => setAssignedDate(e.target.value)}
-                  className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2.5 text-base text-white transition-colors duration-200"
-                />
-              </div>
-            </>
-          )}
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-zinc-500">
+                      Est. minutes (optional)
+                    </label>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      value={estimatedMinutes}
+                      onChange={(e) => {
+                        setEstimatedMinutes(e.target.value);
+                        scheduleFlush();
+                      }}
+                      placeholder="—"
+                      disabled={blockUi}
+                      className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2.5 text-base text-white placeholder:text-zinc-600 transition-colors duration-200 disabled:opacity-50"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs text-zinc-500">Date</label>
+                  <input
+                    type="date"
+                    value={assignedDate}
+                    onChange={(e) => {
+                      setAssignedDate(e.target.value);
+                      scheduleFlush();
+                    }}
+                    disabled={blockUi}
+                    className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2.5 text-base text-white transition-colors duration-200 disabled:opacity-50"
+                  />
+                </div>
+              </>
+            )}
 
-          <div>
-            <label className="text-xs text-zinc-500">Status</label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2.5 text-base text-white transition-colors duration-200"
-            >
-              <option value={TASK_STATUS.pending}>Pending</option>
-              <option value={TASK_STATUS.in_progress}>In progress</option>
-              <option value={TASK_STATUS.completed}>Conquered</option>
-            </select>
+            <div>
+              <label className="text-xs text-zinc-500">Status</label>
+              <select
+                value={status}
+                onChange={(e) => {
+                  setStatus(e.target.value);
+                  scheduleFlush();
+                }}
+                disabled={blockUi}
+                className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2.5 text-base text-white transition-colors duration-200 disabled:opacity-50"
+              >
+                <option value={TASK_STATUS.pending}>Pending</option>
+                <option value={TASK_STATUS.in_progress}>In progress</option>
+                <option value={TASK_STATUS.completed}>Conquered</option>
+              </select>
+            </div>
           </div>
-        </div>
+        ) : null}
 
         {error && (
           <p className="mt-4 rounded-xl bg-rose-950/40 px-3 py-2 text-sm text-rose-200">
@@ -398,19 +545,18 @@ export function AddEditTaskSheet({
         <div className="mt-6 flex gap-2">
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="flex-1 rounded-2xl border border-slate-700 py-3.5 text-sm font-medium text-zinc-300 transition-colors duration-200"
           >
             Cancel
           </button>
           <button
             type="button"
-            disabled={saving || !canSave}
-            onClick={() => void submit()}
+            disabled={!draftReady || blockUi}
+            onClick={handleClose}
             className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-3.5 text-sm font-semibold text-white transition-opacity duration-200 disabled:opacity-40"
           >
-            {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-            Save
+            Done
           </button>
         </div>
       </div>
