@@ -1,5 +1,4 @@
 import {
-  deleteDB,
   openDB,
   type DBSchema,
   type IDBPDatabase,
@@ -10,7 +9,7 @@ import type { Microtopic, Task } from "@/store/useTaskStore";
 import type { StudySessionLog } from "@/lib/studySessionTypes";
 
 const DB_NAME = "kalnehi-daily";
-/** v6: `handwritten_planner_snapshots` for Paste Handwritten offline draft. `openKalnehiDb` deletes DB on VersionError so bad versions recover once. */
+/** v6: `handwritten_planner_snapshots` for Paste Handwritten offline draft. */
 const DB_VERSION = 6;
 
 export type ExecutionSessionRow = Tables<"task_sessions">;
@@ -132,37 +131,84 @@ export type OutboxMutation = {
 };
 
 let dbPromise: Promise<IDBPDatabase<KalnehiDB>> | null = null;
+type StoreName =
+  | "tasks"
+  | "microtopics"
+  | "execution_log"
+  | "outbox"
+  | "study_sessions"
+  | "voice_planner_snapshots"
+  | "handwritten_planner_snapshots";
 
-function runUpgrade(db: IDBPDatabase<KalnehiDB>, oldVersion: number) {
-  if (!db.objectStoreNames.contains("tasks")) {
-    db.createObjectStore("tasks", { keyPath: "id" });
+function ensureStore(
+  db: IDBPDatabase<KalnehiDB>,
+  store: StoreName,
+  keyPath: string,
+): void {
+  if (db.objectStoreNames.contains(store)) {
+    console.log(`[taskIdb] store exists: ${store}`);
+    return;
   }
-  if (!db.objectStoreNames.contains("microtopics")) {
-    db.createObjectStore("microtopics", { keyPath: "id" });
+  console.log(`[taskIdb] creating store: ${store} (keyPath=${keyPath})`);
+  db.createObjectStore(store, { keyPath });
+}
+
+/**
+ * Versioned, step-by-step migration. Never deletes stores/data automatically.
+ * Add new migration blocks using `if (oldVersion < X)` for each next version.
+ */
+function migrateDatabase(
+  db: IDBPDatabase<KalnehiDB>,
+  oldVersion: number,
+  newVersion: number,
+): void {
+  console.log(`[taskIdb] migrate start: v${oldVersion} -> v${newVersion}`);
+
+  if (oldVersion < 1) {
+    console.log("[taskIdb] applying migration < v1");
+    ensureStore(db, "tasks", "id");
+    ensureStore(db, "microtopics", "id");
+    ensureStore(db, "outbox", "clientMutationId");
   }
-  if (!db.objectStoreNames.contains("outbox")) {
-    db.createObjectStore("outbox", { keyPath: "clientMutationId" });
+
+  if (oldVersion < 3) {
+    console.log("[taskIdb] applying migration < v3");
+    ensureStore(db, "execution_log", "id");
   }
-  if (oldVersion < 3 && !db.objectStoreNames.contains("execution_log")) {
-    db.createObjectStore("execution_log", { keyPath: "id" });
+
+  if (oldVersion < 4) {
+    console.log("[taskIdb] applying migration < v4");
+    ensureStore(db, "study_sessions", "id");
   }
-  if (oldVersion < 4 && !db.objectStoreNames.contains("study_sessions")) {
-    db.createObjectStore("study_sessions", { keyPath: "id" });
+
+  if (oldVersion < 5) {
+    console.log("[taskIdb] applying migration < v5");
+    ensureStore(db, "voice_planner_snapshots", "key");
   }
-  if (oldVersion < 5 && !db.objectStoreNames.contains("voice_planner_snapshots")) {
-    db.createObjectStore("voice_planner_snapshots", { keyPath: "key" });
+
+  if (oldVersion < 6) {
+    console.log("[taskIdb] applying migration < v6");
+    ensureStore(db, "handwritten_planner_snapshots", "key");
   }
-  if (oldVersion < 6 && !db.objectStoreNames.contains("handwritten_planner_snapshots")) {
-    db.createObjectStore("handwritten_planner_snapshots", { keyPath: "key" });
-  }
+
+  // Safety net: guarantee all known stores exist even on irregular upgrade paths.
+  ensureStore(db, "tasks", "id");
+  ensureStore(db, "microtopics", "id");
+  ensureStore(db, "outbox", "clientMutationId");
+  ensureStore(db, "execution_log", "id");
+  ensureStore(db, "study_sessions", "id");
+  ensureStore(db, "voice_planner_snapshots", "key");
+  ensureStore(db, "handwritten_planner_snapshots", "key");
+
+  console.log(`[taskIdb] migrate done: v${oldVersion} -> v${newVersion}`);
 }
 
 async function openKalnehiDb(): Promise<IDBPDatabase<KalnehiDB>> {
   try {
     return await openDB<KalnehiDB>(DB_NAME, DB_VERSION, {
-      upgrade(db, oldVersion) {
+      upgrade(db, oldVersion, newVersion) {
         try {
-          runUpgrade(db, oldVersion);
+          migrateDatabase(db, oldVersion, newVersion ?? DB_VERSION);
         } catch (e) {
           console.error("[taskIdb] upgrade failed", e);
           throw e;
@@ -170,24 +216,13 @@ async function openKalnehiDb(): Promise<IDBPDatabase<KalnehiDB>> {
       },
     });
   } catch (err) {
-    const retriable =
-      err instanceof DOMException &&
-      (err.name === "VersionError" || err.name === "AbortError");
-    if (retriable && typeof indexedDB !== "undefined") {
-      console.warn(
-        "[taskIdb] IndexedDB open failed; deleting database and retrying once",
+    const isVersionError =
+      err instanceof DOMException && err.name === "VersionError";
+    if (isVersionError) {
+      console.error(
+        "[taskIdb] VersionError while opening DB. Data-preserving auto-delete is disabled; user data remains intact.",
         err,
       );
-      try {
-        await deleteDB(DB_NAME);
-      } catch {
-        /* ignore */
-      }
-      return await openDB<KalnehiDB>(DB_NAME, DB_VERSION, {
-        upgrade(db, oldVersion) {
-          runUpgrade(db, oldVersion);
-        },
-      });
     }
     throw err;
   }
