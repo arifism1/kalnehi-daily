@@ -5,7 +5,11 @@ export type StudyCameraFacing = "user" | "environment";
 
 export type StudyDetectionSensitivity = "strict" | "balanced" | "lenient";
 
+export type AppearanceMode = "light" | "dark" | "system";
+
 type SettingsState = {
+  /** UI theme; light is default. `system` follows OS preference. */
+  appearance: AppearanceMode;
   purposeModeEnabled: boolean;
   showCountdown: boolean;
   /** When true, home/progress show projected marks from syllabus weights; when false, % only. */
@@ -31,11 +35,13 @@ type SettingsState = {
   setStudyCameraAutoStart: (v: boolean) => void;
   setStudyCameraPrivacyAcknowledged: (v: boolean) => void;
   setStudyDetectionSensitivity: (v: StudyDetectionSensitivity) => void;
+  setAppearance: (v: AppearanceMode) => void;
 };
 
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
+      appearance: "light",
       purposeModeEnabled: false,
       showCountdown: true,
       advancedMarksProjectionEnabled: true,
@@ -62,11 +68,13 @@ export const useSettingsStore = create<SettingsState>()(
         set({ studyCameraPrivacyAcknowledged }),
       setStudyDetectionSensitivity: (studyDetectionSensitivity) =>
         set({ studyDetectionSensitivity }),
+      setAppearance: (appearance) => set({ appearance }),
     }),
     {
       name: "kalnehi-settings",
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => ({
+        appearance: s.appearance,
         purposeModeEnabled: s.purposeModeEnabled,
         showCountdown: s.showCountdown,
         advancedMarksProjectionEnabled: s.advancedMarksProjectionEnabled,

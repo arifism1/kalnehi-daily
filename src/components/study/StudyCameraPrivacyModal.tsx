@@ -44,15 +44,15 @@ export function StudyCameraPrivacyModal({
       />
       <div
         className={clsx(
-          "relative z-10 max-h-[min(88dvh,32rem)] w-full max-w-md overflow-y-auto rounded-t-3xl border border-emerald-500/25 bg-[#0a101c] p-6 shadow-2xl sm:rounded-3xl sm:p-7",
+          "relative z-10 max-h-[min(88dvh,32rem)] w-full max-w-md overflow-y-auto rounded-t-3xl border border-kal-accent/25 bg-[#0a101c] p-6 shadow-2xl sm:rounded-3xl sm:p-7",
         )}
       >
         <div className="flex items-start gap-3">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-400">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-kal-accent/15 text-kal-accent">
             <ShieldCheck className="h-6 w-6" aria-hidden />
           </span>
           <div>
-            <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-emerald-400/90">
+            <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent/90">
               Privacy
             </p>
             <h2
@@ -70,7 +70,7 @@ export function StudyCameraPrivacyModal({
           {POINTS.map((text) => (
             <li key={text} className="flex gap-2">
               <Lock
-                className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500/80"
+                className="mt-0.5 h-4 w-4 shrink-0 text-kal-accent/80"
                 aria-hidden
               />
               <span>{text}</span>
@@ -88,7 +88,7 @@ export function StudyCameraPrivacyModal({
           <button
             type="button"
             onClick={onContinue}
-            className="min-h-[48px] flex-1 rounded-2xl bg-emerald-600 py-3 text-sm font-semibold text-emerald-950"
+            className="min-h-[48px] flex-1 rounded-2xl bg-kal-accent py-3 text-sm font-semibold text-kal-accent-foreground"
           >
             Continue
           </button>

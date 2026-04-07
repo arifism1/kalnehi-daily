@@ -136,7 +136,7 @@ export function PurposeModePhotos() {
             >
               <label
                 htmlFor={inputId}
-                className="relative flex min-h-[100px] min-w-0 flex-1 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed border-slate-600 bg-slate-900/50 text-center transition hover:border-emerald-500/40"
+                className="relative flex min-h-[100px] min-w-0 flex-1 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed border-slate-600 bg-slate-900/50 text-center transition hover:border-kal-accent/40"
               >
                 {row?.dataUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -171,7 +171,7 @@ export function PurposeModePhotos() {
                     value={labelFor(slot)}
                     onChange={(e) => onLabelInput(slot, e.target.value)}
                     onBlur={() => void onLabelBlur(slot)}
-                    className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900/80 px-3 py-2 text-sm text-white placeholder:text-zinc-600 focus:border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                    className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900/80 px-3 py-2 text-sm text-white placeholder:text-zinc-600 focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
                     placeholder={defaultLabelForSlot(slot)}
                   />
                 </label>

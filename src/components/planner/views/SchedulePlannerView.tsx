@@ -22,19 +22,19 @@ export function SchedulePlannerView() {
         {rows.map((r) => (
           <div
             key={r.t}
-            className="flex flex-col gap-1 rounded-xl border border-slate-700/90 bg-slate-900/35 px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
+            className="flex flex-col gap-1 rounded-xl border border-kal-border bg-kal-card px-4 py-4 kal-shadow-card sm:flex-row sm:items-center sm:justify-between"
           >
             <div>
-              <p className="text-xs font-semibold tabular-nums text-emerald-300">
+              <p className="text-xs font-semibold tabular-nums text-kal-accent">
                 {r.t}
               </p>
               <p className="text-sm font-medium text-white">{r.kind}</p>
             </div>
-            <p className="text-xs text-zinc-500">{r.note}</p>
+            <p className="text-xs text-kal-muted">{r.note}</p>
           </div>
         ))}
       </div>
-      <p className="text-center text-[11px] text-zinc-600">
+      <p className="text-center text-[11px] text-kal-text-secondary">
         Template only — adapt to your hostel, school, or home constraints.
       </p>
     </PlannerPageShell>

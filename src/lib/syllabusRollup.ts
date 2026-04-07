@@ -301,7 +301,7 @@ function chapterWeightPrimary(
   return chapterPoolFromLegacyMixedYearRows(list);
 }
 
-function buildChapterBuckets(rows: SyllabusRow[]) {
+export function buildChapterBuckets(rows: SyllabusRow[]) {
   const chapterBuckets = new Map<string, SyllabusRow[]>();
   for (const row of rows) {
     const sub = row.subject || "Other";

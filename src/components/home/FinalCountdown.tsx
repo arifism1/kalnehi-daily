@@ -85,9 +85,9 @@ export function FinalCountdown() {
   return (
     <section
       aria-label="Exam countdown"
-      className="overflow-hidden rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/80 to-slate-900 p-4 shadow-lg shadow-emerald-900/20"
+      className="overflow-hidden rounded-2xl border border-kal-accent/30 bg-gradient-to-br from-red-950/80 to-slate-900 p-4 shadow-lg shadow-red-900/20"
     >
-      <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-emerald-400/90">
+      <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent/90">
         Final countdown
       </p>
       <p className="mt-1 text-xs text-zinc-400">
@@ -98,11 +98,11 @@ export function FinalCountdown() {
           <div
             key={b.label}
             className={clsx(
-              "rounded-xl px-2 py-3 text-center ring-1 ring-emerald-500/25",
-              "bg-emerald-950/40",
+              "rounded-xl px-2 py-3 text-center ring-1 ring-kal-accent/25",
+              "bg-red-950/40",
             )}
           >
-            <div className="text-xl font-bold tabular-nums text-emerald-300">
+            <div className="text-xl font-bold tabular-nums text-kal-accent">
               {b.value}
             </div>
             <div className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">

@@ -320,24 +320,24 @@ export function AddEditTaskSheet({
       <button
         type="button"
         aria-label="Close"
-        className="absolute inset-0 bg-black/60"
+        className="absolute inset-0 bg-[var(--kal-overlay)]"
         onClick={handleClose}
       />
       <div
-        className="relative z-10 max-h-[min(92vh,40rem)] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-slate-700/90 bg-[#0c1222] p-4 shadow-2xl sm:rounded-2xl sm:p-5"
+        className="relative z-10 max-h-[min(92vh,40rem)] w-full max-w-lg overflow-y-auto rounded-t-[1.25rem] border border-kal-border bg-kal-card p-4 kal-shadow-card sm:rounded-[1.25rem] sm:p-6"
         role="dialog"
         aria-modal="true"
       >
-        <div className="flex items-start justify-between gap-2 border-b border-slate-800 pb-3">
+        <div className="flex items-start justify-between gap-2 border-b border-kal-border pb-3">
           <div>
-            <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-zinc-500">
+            <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-muted">
               Task planner
             </p>
-            <h2 className="mt-0.5 text-lg font-semibold text-white">
+            <h2 className="mt-0.5 text-lg font-semibold text-kal-text">
               {mode === "add" ? "New task" : "Edit task"}
             </h2>
             {userId ? (
-              <p className="mt-1 text-[10px] text-zinc-500">
+              <p className="mt-1 text-[10px] text-kal-muted">
                 Saved automatically as you edit.
               </p>
             ) : null}
@@ -345,7 +345,7 @@ export function AddEditTaskSheet({
           <button
             type="button"
             onClick={handleClose}
-            className="rounded-xl p-2 text-zinc-400 hover:bg-slate-800/80 hover:text-white"
+            className="rounded-xl p-2 text-kal-muted hover:bg-kal-card-muted hover:text-kal-text"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
@@ -359,7 +359,7 @@ export function AddEditTaskSheet({
         ) : null}
 
         {mode === "add" && draftBusy ? (
-          <div className="mt-8 flex items-center justify-center gap-2 text-sm text-zinc-400">
+          <div className="mt-8 flex items-center justify-center gap-2 text-sm text-kal-muted">
             <Loader2 className="h-5 w-5 animate-spin" />
             Starting draft…
           </div>
@@ -370,7 +370,7 @@ export function AddEditTaskSheet({
             <div>
               <label
                 htmlFor="task-name"
-                className="text-xs font-medium text-zinc-500"
+                className="text-xs font-medium text-kal-muted"
               >
                 Task name
               </label>
@@ -384,38 +384,38 @@ export function AddEditTaskSheet({
                 rows={4}
                 placeholder="What do you want to get done?"
                 disabled={blockUi}
-                className="mt-2 min-h-[7.5rem] w-full resize-y rounded-2xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-base leading-relaxed text-white placeholder:text-zinc-600 transition-colors duration-200 focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 disabled:opacity-50"
+                className="mt-2 min-h-[7.5rem] w-full resize-y rounded-2xl border border-kal-border bg-kal-input-bg px-4 py-3 text-base leading-relaxed text-kal-text placeholder:text-kal-muted transition-colors duration-200 focus:border-kal-accent/50 focus:outline-none focus:ring-2 focus:ring-kal-accent/25 disabled:opacity-50"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-zinc-500">From (optional)</label>
+                <label className="text-xs text-kal-muted">From (optional)</label>
                 <input
                   type="time"
                   value={fromTime}
                   onChange={(e) => onFromTimeChange(e.target.value)}
                   disabled={blockUi}
-                  className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2.5 text-base text-white transition-colors duration-200 disabled:opacity-50"
+                  className="mt-1.5 min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-base text-kal-text transition-colors duration-200 disabled:opacity-50"
                 />
               </div>
               <div>
-                <label className="text-xs text-zinc-500">To (optional)</label>
+                <label className="text-xs text-kal-muted">To (optional)</label>
                 <input
                   type="time"
                   value={toTime}
                   onChange={(e) => onToTimeChange(e.target.value)}
                   disabled={blockUi}
-                  className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2.5 text-base text-white transition-colors duration-200 disabled:opacity-50"
+                  className="mt-1.5 min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-base text-kal-text transition-colors duration-200 disabled:opacity-50"
                 />
               </div>
             </div>
-            <p className="-mt-2 text-[11px] text-zinc-600">
+            <p className="-mt-2 text-[11px] text-kal-muted">
               Filling both times fills estimated minutes automatically.
             </p>
 
             <div>
-              <label className="text-xs text-zinc-500">Marks (optional)</label>
+              <label className="text-xs text-kal-muted">Marks (optional)</label>
               <input
                 type="number"
                 inputMode="decimal"
@@ -428,16 +428,16 @@ export function AddEditTaskSheet({
                 }}
                 placeholder="—"
                 disabled={blockUi}
-                className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2.5 text-base text-white placeholder:text-zinc-600 transition-colors duration-200 disabled:opacity-50"
+                className="mt-1.5 min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-base text-kal-text placeholder:text-kal-muted transition-colors duration-200 disabled:opacity-50"
               />
             </div>
 
             {hasSyllabus ? (
-              <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-emerald-400/90">
+              <div className="rounded-2xl border border-kal-border bg-kal-card-muted p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-kal-accent">
                   Syllabus &amp; schedule
                 </p>
-                <p className="mt-1 text-[11px] text-zinc-500">
+                <p className="mt-1 text-[11px] text-kal-muted">
                   Select subject → chapter → microtopic, then date and estimate.
                 </p>
                 <div className="mt-4">
@@ -483,7 +483,7 @@ export function AddEditTaskSheet({
               <>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs text-zinc-500">
+                    <label className="text-xs text-kal-muted">
                       Est. minutes (optional)
                     </label>
                     <input
@@ -497,12 +497,12 @@ export function AddEditTaskSheet({
                       }}
                       placeholder="—"
                       disabled={blockUi}
-                      className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2.5 text-base text-white placeholder:text-zinc-600 transition-colors duration-200 disabled:opacity-50"
+                      className="mt-1.5 min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-base text-kal-text placeholder:text-kal-muted transition-colors duration-200 disabled:opacity-50"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs text-zinc-500">Date</label>
+                  <label className="text-xs text-kal-muted">Date</label>
                   <input
                     type="date"
                     value={assignedDate}
@@ -511,14 +511,14 @@ export function AddEditTaskSheet({
                       scheduleFlush();
                     }}
                     disabled={blockUi}
-                    className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2.5 text-base text-white transition-colors duration-200 disabled:opacity-50"
+                    className="mt-1.5 min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-base text-kal-text transition-colors duration-200 disabled:opacity-50"
                   />
                 </div>
               </>
             )}
 
             <div>
-              <label className="text-xs text-zinc-500">Status</label>
+              <label className="text-xs text-kal-muted">Status</label>
               <select
                 value={status}
                 onChange={(e) => {
@@ -526,7 +526,7 @@ export function AddEditTaskSheet({
                   scheduleFlush();
                 }}
                 disabled={blockUi}
-                className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2.5 text-base text-white transition-colors duration-200 disabled:opacity-50"
+                className="mt-1.5 min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-base text-kal-text transition-colors duration-200 disabled:opacity-50"
               >
                 <option value={TASK_STATUS.pending}>Pending</option>
                 <option value={TASK_STATUS.in_progress}>In progress</option>
@@ -546,7 +546,7 @@ export function AddEditTaskSheet({
           <button
             type="button"
             onClick={handleClose}
-            className="flex-1 rounded-2xl border border-slate-700 py-3.5 text-sm font-medium text-zinc-300 transition-colors duration-200"
+            className="flex-1 rounded-2xl border border-kal-border py-3.5 text-sm font-medium text-kal-text-secondary transition-colors duration-200"
           >
             Cancel
           </button>
@@ -554,7 +554,7 @@ export function AddEditTaskSheet({
             type="button"
             disabled={!draftReady || blockUi}
             onClick={handleClose}
-            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-3.5 text-sm font-semibold text-white transition-opacity duration-200 disabled:opacity-40"
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-kal-accent py-3.5 text-sm font-semibold text-white shadow-sm transition-opacity duration-200 hover:bg-kal-accent-hover disabled:opacity-40"
           >
             Done
           </button>

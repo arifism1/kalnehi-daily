@@ -73,18 +73,18 @@ export function ArenaToday() {
   return (
     <section
       id="arena"
-      className="scroll-mt-6 overflow-hidden rounded-2xl border border-white/[0.07] bg-slate-900/25 shadow-xl shadow-black/35 backdrop-blur-md sm:rounded-3xl"
+      className="scroll-mt-6 overflow-hidden rounded-2xl border border-kal-border bg-kal-card kal-shadow-card sm:rounded-2xl"
       aria-labelledby="arena-heading"
     >
-      <div className="flex items-start justify-between gap-3 border-b border-white/[0.06] px-4 py-4 sm:gap-4 sm:px-5 sm:py-6 md:px-7">
+      <div className="flex items-start justify-between gap-3 border-b border-kal-border px-6 py-6 sm:gap-4 sm:px-8 sm:py-7">
         <div className="min-w-0">
           <h2
             id="arena-heading"
-            className="text-[0.6rem] font-semibold uppercase tracking-[0.22em] text-emerald-400/90 sm:text-[0.65rem] sm:tracking-[0.3em]"
+            className="text-[0.6rem] font-semibold uppercase tracking-[0.22em] text-kal-accent sm:text-[0.65rem] sm:tracking-[0.3em]"
           >
             The arena
           </h2>
-          <p className="mt-1.5 text-sm font-medium leading-snug text-slate-300/95 sm:mt-2 sm:text-[15px] sm:leading-relaxed">
+          <p className="mt-1.5 text-sm font-medium leading-snug text-kal-text-secondary sm:mt-2 sm:text-[15px] sm:leading-relaxed">
             Today&apos;s targets — add fast, execute faster.
           </p>
         </div>
@@ -92,14 +92,14 @@ export function ArenaToday() {
           type="button"
           disabled={!userId}
           onClick={openQuickAdd}
-          className="inline-flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-xl bg-emerald-500 px-3 py-2.5 text-[10px] font-bold uppercase tracking-wide text-emerald-950 shadow-lg shadow-emerald-500/20 transition-all duration-200 hover:bg-emerald-400 active:scale-[0.98] disabled:opacity-50 sm:min-h-0 sm:gap-2 sm:rounded-2xl sm:px-4 sm:py-3 sm:text-xs"
+          className="inline-flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-xl bg-kal-accent px-4 py-2.5 text-[10px] font-bold uppercase tracking-wide text-kal-accent-foreground shadow-sm transition-all duration-200 hover:bg-kal-accent-hover active:scale-[0.98] disabled:opacity-50 sm:min-h-0 sm:gap-2 sm:rounded-xl sm:px-5 sm:py-3 sm:text-xs"
         >
           <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2.5} />
           Add target
         </button>
       </div>
 
-      <div className="mx-4 mt-3 sm:mx-5 sm:mt-4 md:mx-7">
+      <div className="mx-6 mt-4 sm:mx-8 sm:mt-5">
         <TransientNotice
           message={actionNotice}
           onDismiss={() => setActionNotice(null)}
@@ -107,7 +107,7 @@ export function ArenaToday() {
         />
       </div>
 
-      <ul className="grid grid-cols-1 gap-1.5 px-4 pb-6 pt-1 sm:gap-3 sm:px-5 sm:pb-8 sm:pt-2 md:px-7 lg:grid-cols-2 lg:gap-4 xl:gap-5">
+      <ul className="grid grid-cols-1 gap-2 px-6 pb-8 pt-2 sm:gap-4 sm:px-8 sm:pb-10 sm:pt-3 lg:grid-cols-2 lg:gap-5 xl:gap-6">
         {quickAddOpen && userId && (
           <li className="lg:col-span-2">
             <PlannerQuickAddCard
@@ -122,7 +122,7 @@ export function ArenaToday() {
 
         {dayTasks.length === 0 && !quickAddOpen && (
           <li className="px-1 py-10 text-center sm:px-2 sm:py-14 lg:col-span-2">
-            <p className="mx-auto max-w-sm text-sm font-medium leading-relaxed text-slate-400 sm:text-[15px]">
+            <p className="mx-auto max-w-sm text-sm font-medium leading-relaxed text-kal-muted sm:text-[15px]">
               No targets for today yet. Open the quick add card and type your
               first block.
             </p>
@@ -131,13 +131,13 @@ export function ArenaToday() {
                 type="button"
                 disabled={!userId}
                 onClick={openQuickAdd}
-                className="inline-flex min-h-[48px] w-full max-w-[15rem] items-center justify-center rounded-xl bg-white px-6 py-3 text-xs font-bold text-slate-900 shadow-xl shadow-black/15 transition-all duration-200 hover:bg-slate-100 active:scale-[0.98] disabled:opacity-50 sm:w-auto sm:min-h-[52px] sm:min-w-[200px] sm:rounded-2xl sm:px-8 sm:py-3.5 sm:text-sm"
+                className="inline-flex min-h-[48px] w-full max-w-[15rem] items-center justify-center rounded-xl border border-kal-border bg-kal-card px-6 py-3 text-xs font-bold text-kal-text kal-shadow-card transition-all duration-200 hover:bg-kal-card-muted active:scale-[0.98] disabled:opacity-50 sm:w-auto sm:min-h-[52px] sm:min-w-[200px] sm:rounded-xl sm:px-8 sm:py-3.5 sm:text-sm"
               >
                 Add target
               </button>
               <Link
                 href="/plan"
-                className="text-xs font-semibold text-emerald-400/95 underline-offset-4 transition-colors duration-200 hover:text-emerald-300 hover:underline sm:text-sm"
+                className="text-xs font-semibold text-kal-accent underline-offset-4 transition-colors duration-200 hover:text-kal-accent-hover hover:underline sm:text-sm"
               >
                 Open execution planner
               </Link>

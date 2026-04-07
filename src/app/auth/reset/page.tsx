@@ -60,7 +60,7 @@ export default function AuthResetPage() {
   return (
     <div className="flex min-h-full flex-col items-center justify-center gap-8 bg-[#0f172a] px-6 py-16">
       <div className="text-center">
-        <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-emerald-400">
+        <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
           Kalnehi
         </p>
         <h1 className="mt-2 text-2xl font-bold text-white">Set new password</h1>
@@ -91,7 +91,7 @@ export default function AuthResetPage() {
               autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-[15px] text-white placeholder:text-zinc-600 focus:border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-[15px] text-white placeholder:text-zinc-600 focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
               placeholder="••••••••"
             />
           </div>
@@ -109,7 +109,7 @@ export default function AuthResetPage() {
               autoComplete="new-password"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
-              className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-[15px] text-white placeholder:text-zinc-600 focus:border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-[15px] text-white placeholder:text-zinc-600 focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
               placeholder="••••••••"
             />
           </div>
@@ -123,7 +123,7 @@ export default function AuthResetPage() {
           <button
             type="submit"
             disabled={busy}
-            className="flex w-full min-h-[50px] items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-sm font-semibold text-white transition-opacity duration-200 disabled:opacity-50"
+            className="flex w-full min-h-[50px] items-center justify-center gap-2 rounded-xl bg-kal-accent py-3 text-sm font-semibold text-white transition-opacity duration-200 disabled:opacity-50"
           >
             {busy ? (
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -135,7 +135,7 @@ export default function AuthResetPage() {
         </form>
 
         <p className="mt-4 text-center text-[11px] text-zinc-600">
-          <Link href="/auth" className="text-zinc-500 hover:text-emerald-400">
+          <Link href="/auth" className="text-zinc-500 hover:text-kal-accent">
             Back to login
           </Link>
         </p>

@@ -150,19 +150,19 @@ export default function AuthPage() {
 
   if (view === "forgot-sent") {
     return (
-      <div className="flex min-h-full flex-col items-center justify-center gap-8 bg-[#0f172a] px-6 py-16">
+      <div className="flex min-h-full flex-col items-center justify-center gap-8 bg-kal-page px-6 py-16">
         <div className="text-center">
-          <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-emerald-400">
+          <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
             Kalnehi
           </p>
-          <h1 className="mt-2 text-2xl font-bold text-white">Check your email</h1>
-          <p className="mt-3 max-w-sm text-sm leading-relaxed text-zinc-400">
+          <h1 className="mt-2 text-2xl font-bold text-kal-text">Check your email</h1>
+          <p className="mt-3 max-w-sm text-sm leading-relaxed text-kal-muted">
             Password reset link sent to your email. Check your inbox (and spam
             folder).
           </p>
         </div>
-        <div className="w-full max-w-sm rounded-2xl border border-emerald-500/25 bg-emerald-950/30 px-4 py-5 text-center">
-          <p className="text-sm text-emerald-100/90">
+        <div className="w-full max-w-sm rounded-2xl border border-kal-accent/25 bg-red-950/30 px-4 py-5 text-center">
+          <p className="text-sm text-red-100/90">
             When you open the link, you&apos;ll set a new password and return to
             the app.
           </p>
@@ -172,7 +172,7 @@ export default function AuthPage() {
               setView("form");
               setError(null);
             }}
-            className="mt-5 flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-95"
+            className="mt-5 flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl bg-kal-accent py-3 text-sm font-semibold text-white shadow-sm hover:bg-kal-accent-hover transition-opacity hover:opacity-95"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to login
@@ -184,18 +184,18 @@ export default function AuthPage() {
 
   if (view === "forgot") {
     return (
-      <div className="flex min-h-full flex-col items-center justify-center gap-8 bg-[#0f172a] px-6 py-16">
+      <div className="flex min-h-full flex-col items-center justify-center gap-8 bg-kal-page px-6 py-16">
         <div className="text-center">
-          <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-emerald-400">
+          <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
             Kalnehi
           </p>
-          <h1 className="mt-2 text-2xl font-bold text-white">Forgot password</h1>
-          <p className="mt-2 text-sm text-zinc-400">
+          <h1 className="mt-2 text-2xl font-bold text-kal-text">Forgot password</h1>
+          <p className="mt-2 text-sm text-kal-muted">
             We&apos;ll email you a link to reset it.
           </p>
         </div>
 
-        <div className="w-full max-w-sm rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+        <div className="w-full max-w-sm rounded-2xl border border-kal-border bg-kal-card kal-shadow-card p-4">
           <form
             className="space-y-4"
             onSubmit={(e) => {
@@ -206,7 +206,7 @@ export default function AuthPage() {
             <div>
               <label
                 htmlFor="forgot-email"
-                className="flex items-center gap-1.5 text-xs font-medium text-zinc-500"
+                className="flex items-center gap-1.5 text-xs font-medium text-kal-muted"
               >
                 <Mail className="h-3.5 w-3.5" />
                 Email
@@ -217,7 +217,7 @@ export default function AuthPage() {
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-[15px] text-white placeholder:text-zinc-600 focus:border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                className="mt-1.5 min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-input-bg px-4 py-3 text-[15px] text-kal-text placeholder:text-kal-muted focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
                 placeholder="you@example.com"
               />
             </div>
@@ -231,7 +231,7 @@ export default function AuthPage() {
             <button
               type="submit"
               disabled={busy}
-              className="flex w-full min-h-[50px] items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-sm font-semibold text-white transition-opacity duration-200 disabled:opacity-50"
+              className="flex w-full min-h-[50px] items-center justify-center gap-2 rounded-xl bg-kal-accent py-3 text-sm font-semibold text-white shadow-sm hover:bg-kal-accent-hover transition-opacity duration-200 disabled:opacity-50"
             >
               {busy ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -249,7 +249,7 @@ export default function AuthPage() {
               setView("form");
               setError(null);
             }}
-            className="mt-4 flex w-full items-center justify-center gap-2 text-sm text-zinc-500 transition-colors hover:text-zinc-300 disabled:opacity-50"
+            className="mt-4 flex w-full items-center justify-center gap-2 text-sm text-kal-muted transition-colors hover:text-kal-text-secondary disabled:opacity-50"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to login
@@ -260,29 +260,29 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="flex min-h-full flex-col items-center justify-center gap-8 bg-[#0f172a] px-6 py-16">
+    <div className="flex min-h-full flex-col items-center justify-center gap-8 bg-kal-page px-6 py-16">
       <div className="text-center">
-        <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-emerald-400">
+        <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
           Kalnehi
         </p>
-        <h1 className="mt-2 text-2xl font-bold text-white">Kalnehi Daily</h1>
-        <p className="mt-2 text-sm text-zinc-400">
+        <h1 className="mt-2 text-2xl font-bold text-kal-text">Kalnehi Daily</h1>
+        <p className="mt-2 text-sm text-kal-muted">
           Welcome back — your plan and syllabus stay with you on every device.
         </p>
       </div>
 
       {verifyEmailSent && (
         <div
-          className="w-full max-w-sm rounded-2xl border border-emerald-500/30 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-100"
+          className="w-full max-w-sm rounded-2xl border border-kal-accent/30 bg-red-950/40 px-4 py-3 text-sm text-red-100"
           role="status"
         >
           Check your inbox to confirm your email. After confirming, use{" "}
-          <strong className="text-white">Log in</strong> with the same password.
+          <strong className="text-kal-text">Log in</strong> with the same password.
         </div>
       )}
 
-      <div className="w-full max-w-sm rounded-2xl border border-slate-800 bg-slate-900/50 p-1">
-        <div className="flex rounded-xl bg-slate-950/80 p-1">
+      <div className="w-full max-w-sm rounded-2xl border border-kal-border bg-kal-card kal-shadow-card p-1">
+        <div className="flex rounded-xl bg-kal-input-bg/80 p-1">
           <button
             type="button"
             onClick={() => {
@@ -293,8 +293,8 @@ export default function AuthPage() {
             className={clsx(
               "flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-colors duration-200",
               mode === "login"
-                ? "bg-emerald-600 text-white"
-                : "text-zinc-500 hover:text-zinc-300",
+                ? "bg-kal-accent text-white"
+                : "text-kal-muted hover:text-kal-text-secondary",
             )}
           >
             <LogIn className="h-4 w-4" />
@@ -310,8 +310,8 @@ export default function AuthPage() {
             className={clsx(
               "flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-colors duration-200",
               mode === "signup"
-                ? "bg-emerald-600 text-white"
-                : "text-zinc-500 hover:text-zinc-300",
+                ? "bg-kal-accent text-white"
+                : "text-kal-muted hover:text-kal-text-secondary",
             )}
           >
             <UserPlus className="h-4 w-4" />
@@ -329,7 +329,7 @@ export default function AuthPage() {
           <div>
             <label
               htmlFor="auth-email"
-              className="flex items-center gap-1.5 text-xs font-medium text-zinc-500"
+              className="flex items-center gap-1.5 text-xs font-medium text-kal-muted"
             >
               <Mail className="h-3.5 w-3.5" />
               Email
@@ -340,14 +340,14 @@ export default function AuthPage() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-[15px] text-white placeholder:text-zinc-600 focus:border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              className="mt-1.5 min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-input-bg px-4 py-3 text-[15px] text-kal-text placeholder:text-kal-muted focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
               placeholder="you@example.com"
             />
           </div>
           <div>
             <label
               htmlFor="auth-password"
-              className="flex items-center gap-1.5 text-xs font-medium text-zinc-500"
+              className="flex items-center gap-1.5 text-xs font-medium text-kal-muted"
             >
               <Lock className="h-3.5 w-3.5" />
               Password
@@ -360,7 +360,7 @@ export default function AuthPage() {
               }
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-[15px] text-white placeholder:text-zinc-600 focus:border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              className="mt-1.5 min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-input-bg px-4 py-3 text-[15px] text-kal-text placeholder:text-kal-muted focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
               placeholder="••••••••"
             />
             {mode === "login" && (
@@ -371,7 +371,7 @@ export default function AuthPage() {
                     setView("forgot");
                     setError(null);
                   }}
-                  className="text-[12px] font-medium text-zinc-500 underline-offset-4 transition-colors hover:text-emerald-400/90 hover:underline"
+                  className="text-[12px] font-medium text-kal-muted underline-offset-4 transition-colors hover:text-kal-accent/90 hover:underline"
                 >
                   Forgot password?
                 </button>
@@ -388,7 +388,7 @@ export default function AuthPage() {
           <button
             type="submit"
             disabled={busy}
-            className="flex w-full min-h-[50px] items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-sm font-semibold text-white transition-opacity duration-200 disabled:opacity-50"
+            className="flex w-full min-h-[50px] items-center justify-center gap-2 rounded-xl bg-kal-accent py-3 text-sm font-semibold text-white shadow-sm hover:bg-kal-accent-hover transition-opacity duration-200 disabled:opacity-50"
           >
             {busy ? (
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -399,13 +399,13 @@ export default function AuthPage() {
           </button>
         </form>
 
-        <div className="border-t border-slate-800 px-3 pb-4 pt-2">
-          <p className="text-center text-[11px] text-zinc-600">or</p>
+        <div className="border-t border-kal-border px-3 pb-4 pt-2">
+          <p className="text-center text-[11px] text-kal-muted">or</p>
           <button
             type="button"
             disabled={busy}
             onClick={() => void signInGoogle()}
-            className="mt-3 flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl border border-slate-600 bg-slate-900 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-800 disabled:opacity-50"
+            className="mt-3 flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl border border-kal-border bg-kal-card py-3 text-sm font-semibold text-kal-text transition-colors duration-200 hover:bg-kal-card-muted disabled:opacity-50"
           >
             {busy ? (
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -415,9 +415,9 @@ export default function AuthPage() {
         </div>
       </div>
 
-      <p className="max-w-sm text-center text-[11px] text-zinc-600">
+      <p className="max-w-sm text-center text-[11px] text-kal-muted">
         By continuing you agree to study like your rank depends on it.{" "}
-        <Link href="/" className="text-zinc-500 hover:text-emerald-400">
+        <Link href="/" className="text-kal-muted hover:text-kal-accent">
           Back to home
         </Link>
       </p>

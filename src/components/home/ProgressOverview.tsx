@@ -37,8 +37,8 @@ function Ring({ percent, gid }: { percent: number; gid: string }) {
     >
       <defs>
         <linearGradient id={gid} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#34d399" />
-          <stop offset="100%" stopColor="#14b8a6" />
+          <stop offset="0%" stopColor="#f87171" />
+          <stop offset="100%" stopColor="#dc2626" />
         </linearGradient>
       </defs>
       <circle
@@ -48,7 +48,7 @@ function Ring({ percent, gid }: { percent: number; gid: string }) {
         fill="none"
         stroke="currentColor"
         strokeWidth={stroke}
-        className="text-slate-700"
+        className="text-slate-300 dark:text-slate-500"
       />
       <circle
         cx={48}
@@ -205,15 +205,15 @@ export function ProgressOverview() {
   }, [todayTasks, microRecord]);
 
   return (
-    <section className="rounded-2xl border border-slate-700 bg-slate-800/40 p-4">
-      <h2 className="text-sm font-semibold text-white">Progress command</h2>
-      <p className="mt-1 text-xs text-zinc-500">
+    <section className="rounded-2xl border border-kal-border bg-kal-card p-6 kal-shadow-card sm:p-8">
+      <h2 className="text-sm font-semibold text-kal-text">Progress command</h2>
+      <p className="mt-1 text-xs text-kal-muted">
         {syllabusSoon
           ? `${examTitle || examLabel} syllabus isn’t in Kalnehi yet. Until then, marks follow your plan and linked topics.`
           : "Chapter-level capture (full credit only when every microtopic in a chapter is done) · topic coverage from tasks"}
       </p>
       {syllabusSoon ? (
-        <div className="mt-3 rounded-xl border border-emerald-500/20 bg-emerald-950/20 px-3 py-2.5 text-xs leading-relaxed text-emerald-100/90">
+        <div className="mt-3 rounded-xl border border-kal-accent/25 bg-kal-accent-soft px-4 py-3 text-xs leading-relaxed text-red-900 dark:border-red-500/20 dark:bg-red-950/20 dark:text-red-100/90">
           We&apos;re working on full chapter-weight support for{" "}
           {examTitle || examLabel}. Keep
           executing daily — your planner and tasks stay fully usable.
@@ -223,42 +223,42 @@ export function ProgressOverview() {
         <Ring percent={marksPercent} gid={`m-${gid}`} />
         <div className="min-w-0 flex-1 space-y-3 text-sm">
           {!advancedMarksProjectionEnabled && cuetScoringRollup ? (
-            <p className="text-zinc-300">
-              <span className="font-semibold text-emerald-400 tabular-nums">
+            <p className="text-kal-text-secondary">
+              <span className="font-semibold text-kal-accent dark:text-red-400 tabular-nums">
                 {cuetScoringRollup.overallPercent % 1 === 0
                   ? cuetScoringRollup.overallPercent.toFixed(0)
                   : cuetScoringRollup.overallPercent.toFixed(1)}
                 %
               </span>
-              <span className="text-zinc-500">
+              <span className="text-kal-muted">
                 {" "}
                 overall syllabus completion (CUET domains)
               </span>
             </p>
           ) : !advancedMarksProjectionEnabled && syllabusRows.length > 0 ? (
-            <p className="text-zinc-300">
-              <span className="font-semibold text-emerald-400 tabular-nums">
+            <p className="text-kal-text-secondary">
+              <span className="font-semibold text-kal-accent dark:text-red-400 tabular-nums">
                 {syllabusRollup.overallPercent % 1 === 0
                   ? syllabusRollup.overallPercent.toFixed(0)
                   : syllabusRollup.overallPercent.toFixed(1)}
                 %
               </span>
-              <span className="text-zinc-500"> chapter-level completion</span>
+              <span className="text-kal-muted"> chapter-level completion</span>
             </p>
           ) : cuetScoringRollup && advancedMarksProjectionEnabled ? (
             <>
-              <p className="text-zinc-300">
-                <span className="font-semibold text-emerald-400 tabular-nums">
+              <p className="text-kal-text-secondary">
+                <span className="font-semibold text-kal-accent dark:text-red-400 tabular-nums">
                   {secured}
                 </span>
-                <span className="text-zinc-500">
+                <span className="text-kal-muted">
                   {" "}
                   / {denom} projected (CUET)
                 </span>
               </p>
               {syllabusMultiYear ? (
-                <div className="space-y-2 border-t border-slate-700/80 pt-3 text-xs">
-                  <p className="font-semibold text-zinc-400">
+                <div className="space-y-2 border-t border-kal-border pt-3 text-xs">
+                  <p className="font-semibold text-kal-muted">
                     Multi-year (marks columns)
                   </p>
                   <ul className="space-y-2">
@@ -267,13 +267,13 @@ export function ProgressOverview() {
                         key={line.year}
                         className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5"
                       >
-                        <span className="font-semibold text-zinc-400">
+                        <span className="font-semibold text-kal-muted">
                           {examTitle || examLabel || "Exam"} {line.year}
                         </span>
-                        <span className="tabular-nums text-emerald-400">
+                        <span className="tabular-nums text-kal-accent dark:text-red-400">
                           {line.projectedOutOf720}
                         </span>
-                        <span className="text-zinc-500">
+                        <span className="text-kal-muted">
                           / {syllabusMultiYear.ringOutOf}
                         </span>
                       </li>
@@ -284,34 +284,34 @@ export function ProgressOverview() {
             </>
           ) : syllabusMultiYear ? (
             <>
-              <p className="text-zinc-300">
-                <span className="font-semibold text-emerald-400 tabular-nums">
+              <p className="text-kal-text-secondary">
+                <span className="font-semibold text-kal-accent dark:text-red-400 tabular-nums">
                   {syllabusMultiYear.ringProjected}
                 </span>
-                <span className="text-zinc-500">
+                <span className="text-kal-muted">
                   {" "}
                   / {syllabusMultiYear.ringOutOf} projected
                 </span>
-                <span className="text-zinc-600">
+                <span className="text-kal-text-secondary">
                   {" "}
                   ({examTitle || examLabel || "Exam"} {syllabusMultiYear.ringYear}{" "}
                   — primary
                   ring)
                 </span>
               </p>
-              <ul className="space-y-2 border-t border-slate-700/80 pt-3 text-xs">
+              <ul className="space-y-2 border-t border-kal-border pt-3 text-xs">
                 {syllabusMultiYear.lines.map((line) => (
                   <li
                     key={line.year}
                     className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5"
                   >
-                    <span className="font-semibold text-zinc-400">
+                    <span className="font-semibold text-kal-muted">
                       {examTitle || examLabel || "Exam"} {line.year}
                     </span>
-                    <span className="tabular-nums text-emerald-400">
+                    <span className="tabular-nums text-kal-accent dark:text-red-400">
                       {line.projectedOutOf720}
                     </span>
-                    <span className="text-zinc-500">
+                    <span className="text-kal-muted">
                       / {syllabusMultiYear.ringOutOf}
                     </span>
                   </li>
@@ -319,50 +319,50 @@ export function ProgressOverview() {
               </ul>
             </>
           ) : syllabusRows.length > 0 ? (
-            <p className="text-zinc-300">
-              <span className="font-semibold text-emerald-400 tabular-nums">
+            <p className="text-kal-text-secondary">
+              <span className="font-semibold text-kal-accent dark:text-red-400 tabular-nums">
                 {Math.round(syllabusRollup.totalMarksMastered)}
               </span>
-              <span className="text-zinc-500">
+              <span className="text-kal-muted">
                 {" "}
                 / {Math.round(syllabusRollup.totalMarksPool)} chapter-weight
                 pool
               </span>
-              <span className="mt-1 block text-xs text-zinc-500">
+              <span className="mt-1 block text-xs text-kal-muted">
                 Add per-year syllabus weights to see multi-year projections (out
                 of {syllabusScoreMax}).
               </span>
             </p>
           ) : (
-            <p className="text-zinc-300">
-              <span className="font-semibold text-emerald-400 tabular-nums">
+            <p className="text-kal-text-secondary">
+              <span className="font-semibold text-kal-accent dark:text-red-400 tabular-nums">
                 {secured}
               </span>
-              <span className="text-zinc-500"> / {denom} plan marks</span>
-              <span className="mt-1 block text-xs text-zinc-500">
+              <span className="text-kal-muted"> / {denom} plan marks</span>
+              <span className="mt-1 block text-xs text-kal-muted">
                 {syllabusSoon
                   ? `Chapter-weight capture for ${examTitle || examLabel} is coming soon.`
                   : "Open Syllabus after setting your target exam for chapter-level capture."}
               </span>
             </p>
           )}
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-kal-muted">
             Topics done (tasks): {doneTopics}/{totalTopics} (
             {Math.round(topicPercent)}%)
           </p>
           {cuetScoringRollup && cuetScoringRollup.subjects.length > 0 ? (
-            <div className="mt-4 border-t border-slate-700/80 pt-4">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
+            <div className="mt-4 border-t border-kal-border pt-4">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-kal-muted">
                 CUET · by domain (200 each)
               </p>
-              <ul className="mt-2 space-y-2 text-xs text-zinc-400">
+              <ul className="mt-2 space-y-2 text-xs text-kal-muted">
                 {cuetScoringRollup.subjects.map((s) => (
                   <li
                     key={s.subject}
                     className="flex flex-wrap items-baseline justify-between gap-2"
                   >
-                    <span className="font-medium text-zinc-300">{s.subject}</span>
-                    <span className="tabular-nums text-emerald-400/90">
+                    <span className="font-medium text-kal-text-secondary">{s.subject}</span>
+                    <span className="tabular-nums text-kal-accent dark:text-kal-accent/90">
                       {s.completionPercent % 1 === 0
                         ? s.completionPercent.toFixed(0)
                         : s.completionPercent.toFixed(1)}
@@ -382,16 +382,16 @@ export function ProgressOverview() {
         </div>
       </div>
 
-      <div className="mt-5 rounded-xl border border-slate-600/80 bg-slate-950/40 px-3 py-3">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
+      <div className="mt-6 rounded-xl border border-kal-border bg-kal-card-muted px-5 py-4 sm:px-6">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-kal-text-secondary">
           Execution feedback (today)
         </p>
-        <p className="mt-2 text-sm font-semibold text-white">
+        <p className="mt-2 text-sm font-semibold text-kal-text">
           {DAILY_PROGRESS_HEADLINE[dailyBand]}
         </p>
-        <p className="mt-1 text-xs text-zinc-400">
+        <p className="mt-1 text-xs leading-relaxed text-kal-text-secondary">
           Today&apos;s weighted completion:{" "}
-          <span className="tabular-nums text-zinc-200">
+          <span className="font-medium tabular-nums text-kal-text">
             {Math.round(todayPct * 10) / 10}%
           </span>{" "}
           · {PROGRESS_MESSAGE_LABEL[scopeMessage]}

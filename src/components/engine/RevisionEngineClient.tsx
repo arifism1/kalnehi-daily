@@ -29,13 +29,8 @@ const DIFF_LABEL: Record<RevisionDifficulty, string> = {
 export function RevisionEngineClient() {
   const today = useCalendarDate();
   const { examLabel, loading: examLoading } = usePrimaryExamLabel();
-  const {
-    rows,
-    statusBySyllabusMasterId,
-    cuetAwaitingDomainSelection,
-    loading,
-    error,
-  } = useSyllabusTracker();
+  const { rows, cuetAwaitingDomainSelection, loading, error } =
+    useSyllabusTracker();
   const syllabusSoon = shouldShowSyllabusComingSoon({
     examLabel,
     examLabelLoading: examLoading,
@@ -62,26 +57,9 @@ export function RevisionEngineClient() {
     [items, today],
   );
 
-  const syllabusSuggestions = useMemo(() => {
-    const out: { id: string; label: string }[] = [];
-    for (const r of rows) {
-      const st = statusBySyllabusMasterId[r.id] ?? "not_begun";
-      if (st === "completed") continue;
-      const label = `${r.subject} · ${r.chapter} — ${r.microtopic}`;
-      out.push({ id: r.id, label });
-      if (out.length >= 8) break;
-    }
-    return out;
-  }, [rows, statusBySyllabusMasterId]);
-
   const onAdd = () => {
     addRevisionItem(title, difficulty);
     setTitle("");
-    refresh();
-  };
-
-  const onAddFromSyllabus = (id: string, label: string) => {
-    addRevisionItem(label, "hard", id);
     refresh();
   };
 
@@ -99,23 +77,23 @@ export function RevisionEngineClient() {
 
       <EngineCard title="Queue a revision">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-          <label className="min-w-0 flex-1 text-xs font-medium text-zinc-400">
+          <label className="min-w-0 flex-1 text-xs font-medium text-kal-muted">
             Topic / note
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Rotational mechanics — friction edge cases"
-              className="mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-950/80 px-3 py-2.5 text-sm text-white placeholder:text-zinc-600"
+              className="mt-1.5 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-sm text-kal-text outline-none placeholder:text-kal-muted focus-visible:ring-2 focus-visible:ring-kal-accent/35"
             />
           </label>
-          <label className="text-xs font-medium text-zinc-400 sm:w-48">
+          <label className="text-xs font-medium text-kal-muted sm:w-48">
             Difficulty
             <select
               value={difficulty}
               onChange={(e) =>
                 setDifficulty(e.target.value as RevisionDifficulty)
               }
-              className="mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-950/80 px-3 py-2.5 text-sm text-white"
+              className="mt-1.5 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-sm text-kal-text outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/35"
             >
               {(Object.keys(DIFF_LABEL) as RevisionDifficulty[]).map((k) => (
                 <option key={k} value={k}>
@@ -127,39 +105,13 @@ export function RevisionEngineClient() {
           <button
             type="button"
             onClick={onAdd}
-            className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white"
+            className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-kal-accent px-4 text-sm font-semibold text-white"
           >
             <Plus className="h-4 w-4" />
             Add
           </button>
         </div>
       </EngineCard>
-
-      {!loading && syllabusSuggestions.length > 0 && (
-        <EngineCard title="Suggested from open syllabus">
-          <p className="mb-3 text-xs text-zinc-500">
-            Conquer weak microtopics — we pre-fill Hard spacing for maximum
-            retention before mocks.
-          </p>
-          <ul className="space-y-2">
-            {syllabusSuggestions.map((s) => (
-              <li
-                key={s.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-800 bg-slate-950/50 px-3 py-2"
-              >
-                <span className="text-sm text-zinc-200">{s.label}</span>
-                <button
-                  type="button"
-                  onClick={() => onAddFromSyllabus(s.id, s.label)}
-                  className="text-xs font-semibold text-emerald-400 hover:text-emerald-300"
-                >
-                  + Queue (Hard)
-                </button>
-              </li>
-            ))}
-          </ul>
-        </EngineCard>
-      )}
 
       <EngineCard title="Due now">
         {due.length === 0 ? (
@@ -171,7 +123,7 @@ export function RevisionEngineClient() {
             {due.map((it) => (
               <li
                 key={it.id}
-                className="flex flex-col gap-2 rounded-xl border border-emerald-500/25 bg-emerald-950/15 px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col gap-2 rounded-xl border border-kal-accent/25 bg-red-950/15 px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div>
                   <p className="font-medium text-white">{it.title}</p>
@@ -186,7 +138,7 @@ export function RevisionEngineClient() {
                       completeRevisionReview(it.id);
                       refresh();
                     }}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-kal-accent px-3 py-2 text-xs font-semibold text-white"
                   >
                     <RotateCcw className="h-3.5 w-3.5" />
                     Logged review

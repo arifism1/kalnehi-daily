@@ -174,12 +174,12 @@ export function SyllabusCustomizeSheet({
       <button
         type="button"
         aria-label="Close"
-        className="absolute inset-0 bg-black/60 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-kal-overlay backdrop-blur-[2px]"
         onClick={busy ? undefined : onClose}
         disabled={busy}
       />
       <div
-        className="relative z-[71] max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-white/[0.08] bg-[#0c1220] p-5 shadow-2xl sm:rounded-2xl"
+        className="relative z-[71] max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-kal-border bg-kal-card p-6 kal-shadow-card sm:rounded-2xl"
         role="dialog"
         aria-modal="true"
         aria-labelledby="syllabus-sheet-title"
@@ -187,7 +187,7 @@ export function SyllabusCustomizeSheet({
         <div className="flex items-start justify-between gap-3">
           <h2
             id="syllabus-sheet-title"
-            className="text-lg font-bold tracking-tight text-white"
+            className="text-lg font-bold tracking-tight text-kal-text"
           >
             {title}
           </h2>
@@ -195,7 +195,7 @@ export function SyllabusCustomizeSheet({
             type="button"
             onClick={onClose}
             disabled={busy}
-            className="rounded-lg p-2 text-zinc-500 hover:bg-white/5 hover:text-zinc-300"
+            className="rounded-lg p-2 text-kal-muted hover:bg-kal-card-muted hover:text-kal-text"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
@@ -203,12 +203,12 @@ export function SyllabusCustomizeSheet({
         </div>
 
         {mode.kind === "rename_chapter" ? (
-          <p className="mt-2 text-xs leading-relaxed text-zinc-500">
+          <p className="mt-2 text-xs leading-relaxed text-kal-muted">
             Renames this chapter for you only. Microtopics stay linked; labels
             update everywhere.
           </p>
         ) : (
-          <p className="mt-2 text-xs leading-relaxed text-zinc-500">
+          <p className="mt-2 text-xs leading-relaxed text-kal-muted">
             Changes apply to your syllabus only — the shared catalog stays
             unchanged.
           </p>
@@ -217,13 +217,13 @@ export function SyllabusCustomizeSheet({
         <div className="mt-5 space-y-4">
           {mode.kind === "rename_chapter" ? (
             <label className="block">
-              <span className="text-xs font-medium text-zinc-500">
+              <span className="text-xs font-medium text-kal-muted">
                 New chapter title
               </span>
               <input
                 value={chapterNew}
                 onChange={(e) => setChapterNew(e.target.value)}
-                className="mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-950/80 px-3 py-2.5 text-[15px] text-white placeholder:text-zinc-600 focus:border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                className="mt-1.5 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-[15px] text-kal-text placeholder:text-kal-muted focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
                 placeholder="Chapter name"
                 autoComplete="off"
               />
@@ -231,36 +231,36 @@ export function SyllabusCustomizeSheet({
           ) : (
             <>
               <label className="block">
-                <span className="text-xs font-medium text-zinc-500">
+                <span className="text-xs font-medium text-kal-muted">
                   Subject
                 </span>
                 <input
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                   disabled={busy}
-                  className="mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-950/80 px-3 py-2.5 text-[15px] text-white placeholder:text-zinc-600 focus:border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  className="mt-1.5 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-[15px] text-kal-text placeholder:text-kal-muted focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
                 />
               </label>
               <label className="block">
-                <span className="text-xs font-medium text-zinc-500">
+                <span className="text-xs font-medium text-kal-muted">
                   Chapter
                 </span>
                 <input
                   value={chapter}
                   onChange={(e) => setChapter(e.target.value)}
                   disabled={busy}
-                  className="mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-950/80 px-3 py-2.5 text-[15px] text-white placeholder:text-zinc-600 focus:border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  className="mt-1.5 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-[15px] text-kal-text placeholder:text-kal-muted focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
                 />
               </label>
               <label className="block">
-                <span className="text-xs font-medium text-zinc-500">
+                <span className="text-xs font-medium text-kal-muted">
                   Microtopic
                 </span>
                 <input
                   value={microtopic}
                   onChange={(e) => setMicrotopic(e.target.value)}
                   disabled={busy}
-                  className="mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-950/80 px-3 py-2.5 text-[15px] text-white placeholder:text-zinc-600 focus:border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  className="mt-1.5 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-[15px] text-kal-text placeholder:text-kal-muted focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
                 />
               </label>
             </>
@@ -278,7 +278,7 @@ export function SyllabusCustomizeSheet({
             type="button"
             disabled={busy}
             onClick={onClose}
-            className="min-h-[48px] rounded-xl border border-slate-600 bg-slate-900/80 px-4 py-3 text-sm font-semibold text-zinc-200 sm:min-h-[44px]"
+            className="min-h-[48px] rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-sm font-semibold text-kal-text sm:min-h-[44px]"
           >
             Cancel
           </button>
@@ -287,8 +287,8 @@ export function SyllabusCustomizeSheet({
             disabled={busy}
             onClick={() => void submit()}
             className={clsx(
-              "min-h-[48px] rounded-xl px-4 py-3 text-sm font-semibold text-white sm:min-h-[44px]",
-              "bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50",
+              "min-h-[48px] rounded-xl px-4 py-3 text-sm font-semibold text-kal-accent-foreground sm:min-h-[44px]",
+              "bg-kal-accent hover:bg-kal-accent-hover disabled:opacity-50",
             )}
           >
             {busy ? "Saving…" : "Save"}

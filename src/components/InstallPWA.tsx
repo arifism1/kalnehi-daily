@@ -71,13 +71,13 @@ export function InstallPWA({ className = "" }: { className?: string }) {
   return (
     <button
       type="button"
-      className={`flex w-full items-center justify-between gap-3 rounded-2xl border border-emerald-500/25 bg-emerald-950/40 px-4 py-3 text-left transition-colors duration-200 hover:bg-emerald-950/55 ${className}`}
+      className={`flex w-full items-center justify-between gap-3 rounded-2xl border border-kal-accent/25 bg-red-950/40 px-4 py-3 text-left transition-colors duration-200 hover:bg-red-950/55 ${className}`}
       onClick={() => void onClick()}
       disabled={busy}
     >
       <span className="flex min-w-0 flex-1 items-center gap-2">
         <Download
-          className="h-5 w-5 shrink-0 text-emerald-400"
+          className="h-5 w-5 shrink-0 text-kal-accent"
           aria-hidden
         />
         <span className="min-w-0">
@@ -89,7 +89,7 @@ export function InstallPWA({ className = "" }: { className?: string }) {
           </span>
         </span>
       </span>
-      <span className="shrink-0 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white">
+      <span className="shrink-0 rounded-lg bg-kal-accent px-3 py-1.5 text-xs font-semibold text-white">
         {busy ? "…" : "Install"}
       </span>
     </button>

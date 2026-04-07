@@ -1,6 +1,6 @@
 "use client";
 
-import { ClipboardList, Loader2, Plus, Trash2, X } from "lucide-react";
+import { ClipboardList, Loader2, Plus, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 import {
@@ -11,6 +11,7 @@ import {
   parsePastedHandwrittenPlan,
   type ParsedPastedPlanTask,
 } from "@/actions/pasteHandwrittenPlan";
+import { useCalendarDate } from "@/hooks/useCalendarDate";
 import {
   persistHandwrittenSnapshotLocal,
   pushHandwrittenPlannerReplaceToOutbox,
@@ -101,22 +102,10 @@ function handwrittenAutosaveSig(raw: string, rows: EditableRow[]): string {
   });
 }
 
-type Props = {
-  open: boolean;
-  onClose: () => void;
-  assignedDate: string;
-  onSaved: () => void;
-  onError: (message: string) => void;
-};
-
-export function PasteHandwrittenPlanSheet({
-  open,
-  onClose,
-  assignedDate,
-  onSaved,
-  onError,
-}: Props) {
+export function PasteHandwrittenPlanPage() {
   const baseId = useId();
+  const today = useCalendarDate();
+  const [logDate, setLogDate] = useState(today);
   const userId = useAuthStore((s) => s.user?.id);
   const [phase, setPhase] = useState<"idle" | "parse" | "save">("idle");
   const [rawText, setRawText] = useState("");
@@ -125,10 +114,11 @@ export function PasteHandwrittenPlanSheet({
   rowsRef.current = rows;
   const rawTextRef = useRef(rawText);
   rawTextRef.current = rawText;
-  /** Matches last load or successful outbox enqueue — skips redundant work. */
   const autosaveSigRef = useRef("");
   const [hint, setHint] = useState<string | null>(null);
   const [autosaveError, setAutosaveError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [saveOk, setSaveOk] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
   const applyServerEntries = useCallback((entries: HandwrittenPlannerRow[]) => {
@@ -140,17 +130,6 @@ export function PasteHandwrittenPlanSheet({
   }, []);
 
   useEffect(() => {
-    if (!open) {
-      setPhase("idle");
-      setRawText("");
-      setRows([]);
-      setHint(null);
-      setAutosaveError(null);
-      setHydrated(false);
-      autosaveSigRef.current = "";
-      return;
-    }
-
     let cancelled = false;
     setHydrated(false);
     void (async () => {
@@ -165,7 +144,7 @@ export function PasteHandwrittenPlanSheet({
         return;
       }
 
-      const res = await listHandwrittenPlannerForDate(assignedDate);
+      const res = await listHandwrittenPlannerForDate(logDate);
       if (cancelled) return;
 
       if (res.ok && res.entries.length > 0) {
@@ -174,14 +153,14 @@ export function PasteHandwrittenPlanSheet({
         setRawText(rt);
         setRows(mapped);
         autosaveSigRef.current = handwrittenAutosaveSig(rt, mapped);
-        await persistHandwrittenSnapshotLocal(uid, assignedDate, rt, mapped);
+        await persistHandwrittenSnapshotLocal(uid, logDate, rt, mapped);
       } else if (res.ok) {
-        const snap = await getHandwrittenPlannerSnapshot(uid, assignedDate);
+        const snap = await getHandwrittenPlannerSnapshot(uid, logDate);
         if (cancelled) return;
         if (
           snap &&
           snap.userId === uid &&
-          snap.logDate === assignedDate &&
+          snap.logDate === logDate &&
           snap.rows.length > 0
         ) {
           setRawText(snap.sourceText);
@@ -192,7 +171,7 @@ export function PasteHandwrittenPlanSheet({
           );
           await persistHandwrittenSnapshotLocal(
             uid,
-            assignedDate,
+            logDate,
             snap.sourceText,
             snap.rows,
           );
@@ -201,12 +180,12 @@ export function PasteHandwrittenPlanSheet({
           setRawText("");
           setRows([first]);
           autosaveSigRef.current = handwrittenAutosaveSig("", [first]);
-          await persistHandwrittenSnapshotLocal(uid, assignedDate, "", [first]);
+          await persistHandwrittenSnapshotLocal(uid, logDate, "", [first]);
         }
       } else {
-        const snap = await getHandwrittenPlannerSnapshot(uid, assignedDate);
+        const snap = await getHandwrittenPlannerSnapshot(uid, logDate);
         if (cancelled) return;
-        if (snap && snap.userId === uid && snap.logDate === assignedDate) {
+        if (snap && snap.userId === uid && snap.logDate === logDate) {
           const displayRows =
             snap.rows.length > 0 ? snap.rows : [emptyRow()];
           setRawText(snap.sourceText);
@@ -217,7 +196,7 @@ export function PasteHandwrittenPlanSheet({
           );
           await persistHandwrittenSnapshotLocal(
             uid,
-            assignedDate,
+            logDate,
             snap.sourceText,
             displayRows,
           );
@@ -234,14 +213,10 @@ export function PasteHandwrittenPlanSheet({
     return () => {
       cancelled = true;
     };
-  }, [open, assignedDate, userId]);
+  }, [logDate, userId]);
 
-  /**
-   * Handwritten-only: `handwritten_planner_snapshots` in IDB + `handwritten_planner_replace` outbox.
-   * Does not touch `tasks` or voice timeline.
-   */
   useEffect(() => {
-    if (!open || !hydrated || !userId) return;
+    if (!hydrated || !userId) return;
     const uid = userId;
     const sig = handwrittenAutosaveSig(rawTextRef.current, rowsRef.current);
     if (sig === autosaveSigRef.current) return;
@@ -249,7 +224,7 @@ export function PasteHandwrittenPlanSheet({
     const idbT = setTimeout(() => {
       void persistHandwrittenSnapshotLocal(
         uid,
-        assignedDate,
+        logDate,
         rawTextRef.current,
         rowsRef.current,
       );
@@ -265,7 +240,7 @@ export function PasteHandwrittenPlanSheet({
         try {
           await pushHandwrittenPlannerReplaceToOutbox({
             userId: uid,
-            logDate: assignedDate,
+            logDate,
             sourceText: rawTextRef.current,
             tasks: buildSaveTasks(rowsRef.current),
           });
@@ -287,15 +262,15 @@ export function PasteHandwrittenPlanSheet({
       clearTimeout(idbT);
       clearTimeout(syncT);
     };
-  }, [open, hydrated, assignedDate, userId, rows, rawText]);
+  }, [hydrated, logDate, userId, rows, rawText]);
 
   useEffect(() => {
-    if (!open || typeof window === "undefined") return;
+    if (typeof window === "undefined") return;
     const onSynced = () => {
       void (async () => {
         const uid = useAuthStore.getState().user?.id;
         if (!uid) return;
-        const res = await listHandwrittenPlannerForDate(assignedDate);
+        const res = await listHandwrittenPlannerForDate(logDate);
         if (res.ok && res.entries.length > 0) {
           applyServerEntries(res.entries);
         }
@@ -304,7 +279,7 @@ export function PasteHandwrittenPlanSheet({
     window.addEventListener("kalnehi-handwritten-planner-synced", onSynced);
     return () =>
       window.removeEventListener("kalnehi-handwritten-planner-synced", onSynced);
-  }, [open, assignedDate, applyServerEntries]);
+  }, [logDate, applyServerEntries]);
 
   const updateRow = useCallback((id: string, patch: Partial<EditableRow>) => {
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
@@ -347,95 +322,113 @@ export function PasteHandwrittenPlanSheet({
   }, [rawText]);
 
   const saveAll = useCallback(async () => {
+    setFormError(null);
+    setSaveOk(false);
     const latestRows = rowsRef.current;
     const rt = rawTextRef.current;
     const tasks = buildSaveTasks(latestRows);
     if (tasks.length === 0) {
-      onError("Tick at least one row with a task name.");
+      setFormError("Tick at least one row with a task name.");
       return;
     }
     const uid = userId;
     if (!uid) {
-      onError("Sign in to save.");
+      setFormError("Sign in to save.");
       return;
     }
     setPhase("save");
     try {
-      await persistHandwrittenSnapshotLocal(uid, assignedDate, rt, latestRows);
+      await persistHandwrittenSnapshotLocal(uid, logDate, rt, latestRows);
       await pushHandwrittenPlannerReplaceToOutbox({
         userId: uid,
-        logDate: assignedDate,
+        logDate,
         sourceText: rt,
         tasks,
       });
       await flushOutbox(uid);
-      const res = await listHandwrittenPlannerForDate(assignedDate);
+      const res = await listHandwrittenPlannerForDate(logDate);
       if (!res.ok) {
-        onError(res.error);
+        setFormError(res.error);
         setPhase("idle");
         return;
       }
       if (res.entries.length > 0) {
         applyServerEntries(res.entries);
       }
-      onSaved();
-      onClose();
+      setSaveOk(true);
+      window.setTimeout(() => setSaveOk(false), 4000);
     } catch (e) {
-      onError(e instanceof Error ? e.message : "Save failed.");
+      setFormError(e instanceof Error ? e.message : "Save failed.");
     } finally {
       setPhase("idle");
     }
-  }, [assignedDate, userId, onError, onSaved, onClose, applyServerEntries]);
+  }, [logDate, userId, applyServerEntries]);
 
-  if (!open) return null;
   const busy = phase !== "idle";
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-end justify-center sm:items-center">
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 bg-black/70"
-        onClick={onClose}
-      />
-      <div
-        className="relative z-10 max-h-[min(94vh,52rem)] w-full max-w-2xl overflow-y-auto rounded-t-2xl border border-zinc-700 bg-zinc-900 p-4 shadow-2xl sm:rounded-2xl sm:p-5"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={`${baseId}-title`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-start justify-between gap-2 border-b border-zinc-700 pb-3">
-          <div>
-            <h2 id={`${baseId}-title`} className="text-lg font-semibold text-white">
-              Paste Handwritten Daily Plan
-            </h2>
-            <p className="mt-1 text-xs text-zinc-400">{assignedDate}</p>
-            {autosaveError ? (
-              <p className="mt-1 text-[10px] text-amber-400/90">{autosaveError}</p>
-            ) : (
-              <p className="mt-1 text-[10px] text-zinc-500">
-                Handwritten planner only: saves on this device and queues sync
-                (debounced).
-              </p>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={busy}
-            className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-white disabled:opacity-40"
-            aria-label="Close"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+    <div className="space-y-8">
+      <header>
+        <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
+          Pro · Planner
+        </p>
+        <h1
+          id={`${baseId}-title`}
+          className="mt-1 flex flex-wrap items-center gap-2 text-2xl font-bold text-kal-text"
+        >
+          <ClipboardList className="h-8 w-8 text-kal-accent" aria-hidden />
+          Paste Handwritten Daily Plan
+        </h1>
+        {userId ? (
+          <label className="mt-4 block max-w-xs text-xs font-medium text-kal-muted">
+            Date
+            <input
+              type="date"
+              value={logDate}
+              onChange={(e) => setLogDate(e.target.value)}
+              className="mt-1.5 block min-h-[44px] w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 text-sm text-kal-text"
+            />
+          </label>
+        ) : null}
+      </header>
 
-        <div className="mt-4 rounded-xl border border-zinc-700 bg-zinc-950/40 p-3 text-sm text-zinc-200">
-          <p className="mb-2 inline-flex items-center gap-2 font-semibold text-zinc-100">
-            <ClipboardList className="h-4 w-4 text-emerald-300" />
+      {!userId ? (
+        <p className="rounded-[1rem] border border-[var(--kal-warn-border)] bg-[var(--kal-warn-soft)] px-4 py-3 text-sm text-[var(--kal-warn-text)]">
+          Sign in to use the handwritten planner and sync across devices.
+        </p>
+      ) : null}
+
+      {!userId ? null : (
+
+      <section className="rounded-[1.25rem] border border-kal-border bg-kal-card kal-shadow-card p-4 sm:p-6">
+        {autosaveError ? (
+          <p className="mb-3 text-[10px] text-[var(--kal-warn-text)]">{autosaveError}</p>
+        ) : (
+          <p className="mb-3 text-[10px] text-kal-muted">
+            Handwritten planner only: saves on this device and queues sync
+            (debounced).
+          </p>
+        )}
+        {formError ? (
+          <p
+            className="mb-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-900 dark:border-rose-500/30 dark:bg-rose-950/25 dark:text-rose-100"
+            role="alert"
+          >
+            {formError}
+          </p>
+        ) : null}
+        {saveOk ? (
+          <p className="mb-3 text-xs font-medium text-kal-accent" role="status">
+            Saved and synced.
+          </p>
+        ) : null}
+
+        <div className="rounded-xl border border-kal-border bg-kal-accent-soft p-3 text-sm text-kal-text-secondary">
+          <p className="mb-2 inline-flex items-center gap-2 font-semibold text-kal-text">
+            <ClipboardList className="h-4 w-4 text-kal-accent" />
             Steps
           </p>
-          <ul className="list-disc space-y-1 pl-5 text-xs text-zinc-300">
+          <ul className="list-disc space-y-1 pl-5 text-xs text-kal-muted">
             <li>Open ChatGPT, Gemini or any AI chatbot app</li>
             <li>Take photo of your handwritten daily task list</li>
             <li>Ask it to transcribe into clean text with times</li>
@@ -450,7 +443,7 @@ export function PasteHandwrittenPlanSheet({
             onChange={(e) => setRawText(e.target.value)}
             disabled={!hydrated}
             placeholder="Paste full transcribed text here..."
-            className="w-full resize-y rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white placeholder:text-zinc-500 disabled:opacity-50"
+            className="w-full resize-y rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2 text-sm text-kal-text placeholder:text-kal-muted disabled:opacity-50"
           />
         </div>
 
@@ -458,7 +451,7 @@ export function PasteHandwrittenPlanSheet({
           type="button"
           onClick={() => void processWithAi()}
           disabled={busy || !hydrated}
-          className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 text-sm font-semibold text-emerald-950 disabled:opacity-40"
+          className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-kal-accent px-4 text-sm font-semibold text-white shadow-sm hover:bg-kal-accent-hover disabled:opacity-40"
         >
           {phase === "parse" ? (
             <>
@@ -471,13 +464,13 @@ export function PasteHandwrittenPlanSheet({
         </button>
 
         {hint ? (
-          <p className="mt-3 rounded-lg border border-amber-500/30 bg-amber-950/40 px-3 py-2 text-xs text-amber-100">
+          <p className="mt-3 rounded-lg border border-[var(--kal-warn-border)] bg-[var(--kal-warn-soft)] px-3 py-2 text-xs text-[var(--kal-warn-text)]">
             {hint}
           </p>
         ) : null}
 
         {!hydrated ? (
-          <p className="mt-4 flex items-center gap-2 text-xs text-zinc-400">
+          <p className="mt-4 flex items-center gap-2 text-xs text-kal-muted">
             <Loader2 className="h-4 w-4 animate-spin" />
             Loading…
           </p>
@@ -485,19 +478,19 @@ export function PasteHandwrittenPlanSheet({
 
         {hydrated && rows.length > 0 ? (
           <div className="mt-4 space-y-2">
-            <p className="text-xs font-medium text-zinc-500">Parsed tasks</p>
+            <p className="text-xs font-medium text-kal-muted">Parsed tasks</p>
             <ul className="space-y-2">
               {rows.map((r) => (
                 <li
                   key={r.id}
-                  className="grid grid-cols-[2rem_1fr_2fr_auto_auto] items-start gap-2 rounded-lg border border-zinc-700 bg-zinc-950/80 p-3"
+                  className="grid grid-cols-[2rem_1fr_2fr_auto_auto] items-start gap-2 rounded-lg border border-kal-border bg-kal-card-muted/80 p-3"
                 >
                   <label className="mt-2 flex cursor-pointer">
                     <input
                       type="checkbox"
                       checked={r.include}
                       onChange={() => updateRow(r.id, { include: !r.include })}
-                      className="h-5 w-5 rounded border-zinc-600"
+                      className="h-5 w-5 rounded border-kal-border accent-kal-accent"
                       title="Include when saving"
                     />
                   </label>
@@ -506,7 +499,7 @@ export function PasteHandwrittenPlanSheet({
                     value={r.startInput}
                     onChange={(e) => updateRow(r.id, { startInput: e.target.value })}
                     disabled={!r.include}
-                    className="min-h-[40px] rounded border border-zinc-600 bg-zinc-900 px-2 text-sm text-white disabled:opacity-50"
+                    className="min-h-[40px] rounded border border-kal-border bg-kal-input-bg px-2 text-sm text-kal-text disabled:opacity-50"
                     aria-label="From time"
                   />
                   <input
@@ -514,7 +507,7 @@ export function PasteHandwrittenPlanSheet({
                     onChange={(e) => updateRow(r.id, { name: e.target.value })}
                     placeholder="Task name"
                     disabled={!r.include}
-                    className="min-h-[40px] rounded border border-zinc-600 bg-zinc-900 px-2 text-sm text-white placeholder:text-zinc-600 disabled:opacity-50"
+                    className="min-h-[40px] rounded border border-kal-border bg-kal-input-bg px-2 text-sm text-kal-text placeholder:text-kal-muted disabled:opacity-50"
                     aria-label="Task name"
                   />
                   <input
@@ -522,17 +515,17 @@ export function PasteHandwrittenPlanSheet({
                     value={r.endInput}
                     onChange={(e) => updateRow(r.id, { endInput: e.target.value })}
                     disabled={!r.include}
-                    className="min-h-[40px] w-[7.25rem] rounded border border-zinc-600 bg-zinc-900 px-2 text-sm text-white disabled:opacity-50"
+                    className="min-h-[40px] w-[7.25rem] rounded border border-kal-border bg-kal-input-bg px-2 text-sm text-kal-text disabled:opacity-50"
                     aria-label="To time"
                   />
                   <div className="flex items-center gap-2">
-                    <span className="w-[3.5rem] text-right text-xs font-medium text-zinc-400">
+                    <span className="w-[3.5rem] text-right text-xs font-medium text-kal-muted">
                       {r.duration ?? "—"}
                     </span>
                     <button
                       type="button"
                       onClick={() => removeRow(r.id)}
-                      className="rounded border border-zinc-600 p-2 text-zinc-400 hover:bg-zinc-800 hover:text-rose-300"
+                      className="rounded border border-kal-border p-2 text-kal-muted hover:bg-kal-card-muted hover:text-rose-600 dark:hover:text-rose-300"
                       aria-label="Delete row"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -545,7 +538,7 @@ export function PasteHandwrittenPlanSheet({
               type="button"
               onClick={addRow}
               disabled={busy}
-              className="flex w-full min-h-[40px] items-center justify-center gap-2 rounded-lg border border-dashed border-zinc-600 text-sm text-zinc-300 hover:bg-zinc-800/50 disabled:opacity-40"
+              className="flex w-full min-h-[40px] items-center justify-center gap-2 rounded-lg border border-dashed border-kal-border text-sm text-kal-muted hover:bg-kal-card-muted disabled:opacity-40"
             >
               <Plus className="h-4 w-4" />
               Add another row
@@ -553,12 +546,12 @@ export function PasteHandwrittenPlanSheet({
           </div>
         ) : null}
 
-        <div className="mt-5 border-t border-zinc-700 pt-4">
+        <div className="mt-5 border-t border-kal-border pt-4">
           <button
             type="button"
             disabled={busy || rows.length === 0 || !hydrated}
             onClick={() => void saveAll()}
-            className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-white px-6 text-base font-semibold text-zinc-900 disabled:opacity-40"
+            className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-kal-accent px-6 text-base font-semibold text-white shadow-sm hover:bg-kal-accent-hover disabled:opacity-40"
           >
             {phase === "save" ? (
               <>
@@ -570,7 +563,8 @@ export function PasteHandwrittenPlanSheet({
             )}
           </button>
         </div>
-      </div>
+      </section>
+      )}
     </div>
   );
 }

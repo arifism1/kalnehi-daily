@@ -2,9 +2,62 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Light-first Kalnehi Daily — cohesive off-white page, white cards, red accent. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --kal-page: #f8f9fa;
+  --kal-card: #ffffff;
+  --kal-card-muted: #f3f4f6;
+  --kal-border: #e5e7eb;
+  --kal-text: #0f172a;
+  --kal-text-secondary: #334155;
+  --kal-muted: #475569;
+  --kal-accent: #ef4444;
+  --kal-accent-hover: #dc2626;
+  --kal-accent-soft: #fef2f2;
+  --kal-accent-foreground: #ffffff;
+  /** Readable label on `--kal-accent-soft` (links, chips on tinted panels). */
+  --kal-accent-dark: #991b1b;
+  --kal-overlay: rgba(15, 23, 42, 0.45);
+  --kal-shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04),
+    0 4px 24px rgba(15, 23, 42, 0.06);
+  --kal-shadow-nav: 0 1px 0 rgba(15, 23, 42, 0.06);
+  --kal-input-bg: #ffffff;
+  --kal-danger-soft: #fef2f2;
+  --kal-danger-border: #fecaca;
+  --kal-danger-text: #991b1b;
+  --kal-warn-soft: #fffbeb;
+  --kal-warn-border: #fde68a;
+  --kal-warn-text: #92400e;
+  --background: var(--kal-page);
+  --foreground: var(--kal-text);
+}
+
+.dark {
+  --kal-page: #020617;
+  --kal-card: #0f172a;
+  --kal-card-muted: #1e293b;
+  --kal-border: #334155;
+  --kal-text: #f1f5f9;
+  --kal-text-secondary: #cbd5e1;
+  --kal-muted: #cbd5e1;
+  --kal-accent: #f87171;
+  --kal-accent-hover: #ef4444;
+  --kal-accent-soft: rgba(239, 68, 68, 0.14);
+  --kal-accent-foreground: #ffffff;
+  --kal-accent-dark: #fecaca;
+  --kal-overlay: rgba(0, 0, 0, 0.55);
+  --kal-shadow-card: 0 1px 3px rgba(0, 0, 0, 0.2),
+    0 12px 40px rgba(0, 0, 0, 0.35);
+  --kal-shadow-nav: 0 1px 0 rgba(148, 163, 184, 0.12);
+  --kal-input-bg: #1e293b;
+  --kal-danger-soft: rgba(127, 29, 29, 0.25);
+  --kal-danger-border: rgba(248, 113, 113, 0.35);
+  --kal-danger-text: #fecaca;
+  --kal-warn-soft: rgba(120, 53, 15, 0.35);
+  --kal-warn-border: rgba(251, 191, 36, 0.35);
+  --kal-warn-text: #fde68a;
+  --background: var(--kal-page);
+  --foreground: var(--kal-text);
 }
 
 @theme inline {
@@ -12,19 +65,54 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-kal-page: var(--kal-page);
+  --color-kal-card: var(--kal-card);
+  --color-kal-card-muted: var(--kal-card-muted);
+  --color-kal-border: var(--kal-border);
+  --color-kal-text: var(--kal-text);
+  --color-kal-text-secondary: var(--kal-text-secondary);
+  --color-kal-muted: var(--kal-muted);
+  --color-kal-accent: var(--kal-accent);
+  --color-kal-accent-hover: var(--kal-accent-hover);
+  --color-kal-accent-soft: var(--kal-accent-soft);
+  --color-kal-accent-foreground: var(--kal-accent-foreground);
+  --color-kal-accent-dark: var(--kal-accent-dark);
+  --color-kal-input-bg: var(--kal-input-bg);
+  --radius-kal-card: 1rem;
 }
 
 body {
-  background: #020617;
-  color: var(--foreground);
+  background-color: var(--kal-page);
+  color: var(--kal-text);
   font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+/**
+ * Standard content card: white surface, soft shadow, 24px padding (32px md+).
+ * Use for major sections; nest kal-card-muted for inner panels.
+ */
+@layer components {
+  .kal-card-surface {
+    border-radius: 1rem;
+    border: 1px solid var(--kal-border);
+    background-color: var(--kal-card);
+    box-shadow: var(--kal-shadow-card);
+    padding: 1.5rem;
+  }
+  @media (min-width: 768px) {
+    .kal-card-surface {
+      padding: 2rem;
+    }
+  }
+}
+
+@layer utilities {
+  .kal-shadow-card {
+    box-shadow: var(--kal-shadow-card);
+  }
+  .kal-nav-shadow {
+    box-shadow: var(--kal-shadow-nav);
+  }
 }
 
 @keyframes completion-pop {
@@ -41,4 +129,3 @@ body {
     opacity: 1;
   }
 }
-

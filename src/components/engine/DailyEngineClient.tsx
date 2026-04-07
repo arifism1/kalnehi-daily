@@ -42,31 +42,31 @@ export function DailyEngineClient() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <EngineCard title="Today · weighted completion">
-          <p className="text-4xl font-bold tabular-nums text-emerald-300">
+          <p className="text-4xl font-bold tabular-nums text-kal-accent dark:text-red-300">
             {Math.round(snap.todayWeightedPercent * 10) / 10}%
           </p>
-          <p className="mt-2 text-sm text-zinc-400">
+          <p className="mt-2 text-sm text-kal-muted">
             {DAILY_PROGRESS_HEADLINE[snap.todayBand]}
           </p>
-          <p className="mt-1 text-xs text-zinc-500">
+          <p className="mt-1 text-xs text-kal-muted">
             Signal: {PROGRESS_MESSAGE_LABEL[snap.progressMessage]}
           </p>
         </EngineCard>
 
         <EngineCard title="7-day average">
-          <p className="text-4xl font-bold tabular-nums text-white">
+          <p className="text-4xl font-bold tabular-nums text-kal-text">
             {snap.sevenDayAvg}%
           </p>
-          <p className="mt-2 text-sm text-zinc-400">
+          <p className="mt-2 text-sm text-kal-muted">
             Rolling mean on days with at least one target.
           </p>
         </EngineCard>
 
         <EngineCard title="Reality scope (to date)">
-          <p className="text-4xl font-bold tabular-nums text-teal-300">
+          <p className="text-4xl font-bold tabular-nums text-red-700 dark:text-red-300">
             {Math.round(snap.realityWeightedPercent * 10) / 10}%
           </p>
-          <p className="mt-2 text-sm text-zinc-400">
+          <p className="mt-2 text-sm text-kal-muted">
             All tasks on or before today — weighted.
           </p>
         </EngineCard>
@@ -77,15 +77,15 @@ export function DailyEngineClient() {
           {snap.trend.map((d) => (
             <div
               key={d.date}
-              className="flex min-w-[4.5rem] flex-col rounded-xl border border-white/[0.06] bg-slate-950/50 px-2 py-2 text-center"
+              className="flex min-w-[4.5rem] flex-col rounded-xl border border-kal-border bg-kal-card-muted px-2 py-2 text-center"
             >
-              <span className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">
+              <span className="text-[10px] font-medium uppercase tracking-wide text-kal-muted">
                 {d.date.slice(5)}
               </span>
-              <span className="mt-1 text-lg font-bold tabular-nums text-zinc-100">
+              <span className="mt-1 text-lg font-bold tabular-nums text-kal-text">
                 {d.taskCount === 0 ? "—" : `${Math.round(d.weightedPercent)}%`}
               </span>
-              <span className="mt-0.5 text-[10px] text-zinc-500">
+              <span className="mt-0.5 text-[10px] text-kal-muted">
                 {d.taskCount === 0
                   ? "No data"
                   : BAND_LABEL[d.band] ?? d.band}
@@ -96,7 +96,7 @@ export function DailyEngineClient() {
       </EngineCard>
 
       {snap.daysBehind != null && snap.daysBehind > 0 && (
-        <p className="rounded-xl border border-amber-500/25 bg-amber-950/20 px-4 py-3 text-sm text-amber-100/90">
+        <p className="rounded-xl border border-kal-warn-border bg-kal-warn-soft px-4 py-3 text-sm text-kal-warn-text dark:border-amber-500/25 dark:bg-amber-950/20 dark:text-amber-100/90">
           Execution drift: about{" "}
           <span className="font-semibold tabular-nums">{snap.daysBehind}</span>{" "}
           day{snap.daysBehind === 1 ? "" : "s"} since your last strong anchor —

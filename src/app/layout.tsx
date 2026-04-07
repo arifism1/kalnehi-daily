@@ -5,6 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import { AuthProvider } from "@/components/AuthProvider";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { SyncProvider } from "@/components/SyncProvider";
+import { ThemeSync } from "@/components/ThemeSync";
 
 import "./globals.css";
 
@@ -101,8 +102,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#10b981",
-  colorScheme: "dark",
+  themeColor: "#ef4444",
+  colorScheme: "light",
 };
 
 export default function RootLayout({
@@ -117,9 +118,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${geistMono.variable} dark h-full antialiased`}
+      className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#020617] font-sans text-zinc-100">
+      <body className="flex min-h-full min-h-dvh flex-col bg-kal-page font-sans text-kal-text">
+        <ThemeSync />
         <ServiceWorkerRegister />
         <AuthProvider>
           <SyncProvider>

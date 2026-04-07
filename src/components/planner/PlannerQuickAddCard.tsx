@@ -180,8 +180,8 @@ export function PlannerQuickAddCard({
   const timeDisabled = hour12 === "";
 
   return (
-    <div className="rounded-xl border border-emerald-500/20 bg-slate-950/50 p-3 shadow-inner shadow-black/20 ring-1 ring-white/[0.04] sm:rounded-2xl sm:p-4 md:p-5">
-      <p className="mb-2 text-[10px] text-zinc-500">
+    <div className="rounded-[1rem] border border-kal-border bg-kal-card kal-shadow-card p-3 sm:p-4 md:p-5">
+      <p className="mb-2 text-[10px] text-kal-muted">
         Add a target — it saves as you type.
       </p>
       <label className="block">
@@ -207,12 +207,12 @@ export function PlannerQuickAddCard({
           placeholder="Task name — start typing"
           autoComplete="off"
           disabled={creating || !taskId}
-          className="min-h-[4.5rem] w-full resize-y rounded-lg border border-white/[0.08] bg-slate-900/60 px-3 py-3 text-[15px] font-medium leading-snug text-white outline-none placeholder:text-zinc-500 focus-visible:border-emerald-500/40 focus-visible:ring-2 focus-visible:ring-emerald-500/25 disabled:opacity-50 sm:min-h-[5.5rem] sm:rounded-xl sm:px-4 sm:py-3.5 sm:text-[17px]"
+          className="min-h-[4.5rem] w-full resize-y rounded-lg border border-kal-border bg-kal-input-bg px-3 py-3 text-[15px] font-medium leading-snug text-kal-text outline-none placeholder:text-kal-muted focus-visible:border-kal-accent/40 focus-visible:ring-2 focus-visible:ring-kal-accent/25 disabled:opacity-50 sm:min-h-[5.5rem] sm:rounded-xl sm:px-4 sm:py-3.5 sm:text-[17px]"
         />
       </label>
 
       <div className="mt-3 space-y-2 sm:mt-4">
-        <p className="text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-zinc-500 sm:text-[0.65rem] sm:tracking-[0.2em]">
+        <p className="text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-kal-muted sm:text-[0.65rem] sm:tracking-[0.2em]">
           Time (optional)
         </p>
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -224,7 +224,7 @@ export function PlannerQuickAddCard({
               setHour12(e.target.value);
               schedulePatch();
             }}
-            className="min-h-[44px] min-w-[5.5rem] flex-1 rounded-xl border border-white/[0.1] bg-slate-900/80 px-3 text-sm font-medium text-white outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/30 disabled:opacity-50 sm:flex-none"
+            className="min-h-[44px] min-w-[5.5rem] flex-1 rounded-xl border border-kal-border bg-kal-input-bg px-3 text-sm font-medium text-kal-text outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/30 disabled:opacity-50 sm:flex-none"
           >
             <option value="">No time</option>
             {HOURS.map((h) => (
@@ -233,7 +233,7 @@ export function PlannerQuickAddCard({
               </option>
             ))}
           </select>
-          <span className="text-zinc-600">:</span>
+          <span className="text-kal-muted">:</span>
           <select
             aria-label="Minute"
             value={minute}
@@ -242,7 +242,7 @@ export function PlannerQuickAddCard({
               setMinute(e.target.value);
               schedulePatch();
             }}
-            className="min-h-[44px] min-w-[5.5rem] flex-1 rounded-xl border border-white/[0.1] bg-slate-900/80 px-3 text-sm font-medium text-white outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-40 sm:flex-none"
+            className="min-h-[44px] min-w-[5.5rem] flex-1 rounded-xl border border-kal-border bg-kal-input-bg px-3 text-sm font-medium text-kal-text outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/30 disabled:cursor-not-allowed disabled:opacity-40 sm:flex-none"
           >
             {MINUTES.map((m) => (
               <option key={m} value={String(m)}>
@@ -258,7 +258,7 @@ export function PlannerQuickAddCard({
               setPeriod(e.target.value as "AM" | "PM");
               schedulePatch();
             }}
-            className="min-h-[44px] min-w-[5.5rem] flex-1 rounded-xl border border-white/[0.1] bg-slate-900/80 px-3 text-sm font-medium text-white outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-40 sm:flex-none"
+            className="min-h-[44px] min-w-[5.5rem] flex-1 rounded-xl border border-kal-border bg-kal-input-bg px-3 text-sm font-medium text-kal-text outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/30 disabled:cursor-not-allowed disabled:opacity-40 sm:flex-none"
           >
             <option value="AM">AM</option>
             <option value="PM">PM</option>
@@ -276,30 +276,30 @@ export function PlannerQuickAddCard({
           <button
             type="button"
             onClick={clearTime}
-            className="text-[11px] font-medium text-zinc-500 underline-offset-2 hover:text-zinc-400 hover:underline"
+            className="text-[11px] font-medium text-kal-muted underline-offset-2 hover:text-kal-text-secondary hover:underline"
           >
             Clear time
           </button>
         )}
       </div>
 
-      <p className="mt-2 text-[10px] text-zinc-600">
-        <kbd className="rounded border border-white/10 bg-slate-900 px-1 py-0.5 font-mono text-[9px]">
+      <p className="mt-2 text-[10px] text-kal-muted">
+        <kbd className="rounded border border-kal-border bg-kal-card-muted px-1 py-0.5 font-mono text-[9px]">
           Ctrl
         </kbd>
         +
-        <kbd className="rounded border border-white/10 bg-slate-900 px-1 py-0.5 font-mono text-[9px]">
+        <kbd className="rounded border border-kal-border bg-kal-card-muted px-1 py-0.5 font-mono text-[9px]">
           Enter
         </kbd>
         {" (⌘+Enter on Mac) · Esc cancels"}
       </p>
 
-      <div className="mt-4 flex flex-wrap items-center justify-end gap-2 border-t border-white/[0.06] pt-3 sm:mt-5 sm:pt-4">
+      <div className="mt-4 flex flex-wrap items-center justify-end gap-2 border-t border-kal-border pt-3 sm:mt-5 sm:pt-4">
         <button
           type="button"
           onClick={cancel}
           disabled={creating}
-          className="min-h-[44px] rounded-xl px-4 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/[0.05] hover:text-white disabled:opacity-50"
+          className="min-h-[44px] rounded-xl px-4 text-sm font-medium text-kal-muted transition-colors hover:bg-kal-card-muted hover:text-kal-text disabled:opacity-50"
         >
           Cancel
         </button>
@@ -307,7 +307,7 @@ export function PlannerQuickAddCard({
           type="button"
           disabled={creating || !taskId}
           onClick={finish}
-          className="min-h-[44px] rounded-xl bg-emerald-500 px-6 text-sm font-bold text-emerald-950 shadow-lg shadow-emerald-900/30 transition-all hover:bg-emerald-400 active:scale-[0.98] disabled:opacity-60"
+          className="min-h-[44px] rounded-xl bg-kal-accent px-6 text-sm font-bold text-white shadow-sm transition-all hover:bg-kal-accent-hover active:scale-[0.98] disabled:opacity-60"
         >
           Done
         </button>

@@ -28,7 +28,7 @@ function SheetSwitch({
       onClick={() => onChange(!checked)}
       className={clsx(
         "relative h-9 w-14 shrink-0 rounded-full transition-[background-color] duration-200",
-        checked ? "bg-emerald-500" : "bg-zinc-600",
+        checked ? "bg-red-500" : "bg-zinc-600",
       )}
     >
       <span

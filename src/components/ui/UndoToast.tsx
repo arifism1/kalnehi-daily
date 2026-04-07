@@ -20,24 +20,24 @@ export function UndoToast() {
     >
       <div
         className={clsx(
-          "pointer-events-auto flex w-full max-w-lg items-center gap-3 rounded-2xl border border-white/[0.08] bg-[#0c1220]/95 px-4 py-3 shadow-2xl shadow-black/50 backdrop-blur-md",
+          "pointer-events-auto flex w-full max-w-lg items-center gap-3 rounded-2xl border border-kal-border bg-kal-card px-5 py-4 kal-shadow-card",
         )}
       >
-        <p className="min-w-0 flex-1 text-sm font-medium leading-snug text-zinc-200">
+        <p className="min-w-0 flex-1 text-sm font-medium leading-snug text-kal-text">
           {message}
         </p>
         <div className="flex shrink-0 items-center gap-2">
           <button
             type="button"
             onClick={() => void executeUndo()}
-            className="rounded-lg bg-emerald-600/90 px-3 py-2 text-xs font-bold uppercase tracking-wide text-emerald-950 transition-colors hover:bg-emerald-500 active:scale-[0.98]"
+            className="rounded-xl bg-kal-accent px-3 py-2 text-xs font-bold uppercase tracking-wide text-kal-accent-foreground transition-colors hover:bg-kal-accent-hover active:scale-[0.98]"
           >
             Undo
           </button>
           <button
             type="button"
             onClick={dismissToast}
-            className="rounded-lg px-2 py-2 text-xs font-semibold text-zinc-500 transition-colors hover:bg-white/[0.06] hover:text-zinc-300"
+            className="rounded-lg px-2 py-2 text-xs font-semibold text-kal-muted transition-colors hover:bg-kal-card-muted hover:text-kal-text"
             aria-label="Dismiss"
           >
             Dismiss

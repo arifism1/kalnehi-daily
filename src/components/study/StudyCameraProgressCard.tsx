@@ -53,20 +53,23 @@ export function StudyCameraProgressCard() {
     return { totalSec, count };
   }, [sessions, today]);
 
+  const shell =
+    "rounded-2xl border border-kal-border bg-kal-card p-5 kal-shadow-card sm:p-6";
+
   if (sessions.length === 0) {
     return (
-      <section className="rounded-3xl border border-white/[0.07] bg-slate-900/30 p-5 shadow-xl shadow-black/20 backdrop-blur-sm">
+      <section className={shell}>
         <div className="flex items-start gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 text-violet-300">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-kal-card-muted text-kal-accent ring-1 ring-kal-border">
             <Video className="h-5 w-5" aria-hidden />
           </span>
           <div>
-            <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-violet-400/90">
+            <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
               Study sessions
             </p>
-            <p className="mt-1 text-sm text-zinc-400">
+            <p className="mt-1 text-sm leading-relaxed text-kal-text-secondary">
               Add a session from{" "}
-              <Link href="/study-sessions" className="text-emerald-400 hover:underline">
+              <Link href="/study-sessions" className="font-medium text-kal-accent underline-offset-2 hover:underline">
                 Study sessions
               </Link>{" "}
               to see time here and in Daily Log.
@@ -78,20 +81,20 @@ export function StudyCameraProgressCard() {
   }
 
   return (
-    <section className="rounded-3xl border border-white/[0.07] bg-slate-900/30 p-5 shadow-xl shadow-black/20 backdrop-blur-sm">
+    <section className={shell}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 text-violet-300">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-kal-card-muted text-kal-accent ring-1 ring-kal-border">
             <Video className="h-5 w-5" aria-hidden />
           </span>
           <div>
-            <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-violet-400/90">
+            <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
               Study time (7 days)
             </p>
-            <p className="mt-1 text-lg font-bold tabular-nums text-white">
+            <p className="mt-1 text-lg font-bold tabular-nums text-kal-text sm:text-xl">
               {formatDur(weekStats.totalSec)}
             </p>
-            <p className="mt-0.5 text-xs text-zinc-500">
+            <p className="mt-0.5 text-xs text-kal-text-secondary">
               {weekStats.count} session{weekStats.count === 1 ? "" : "s"} logged ·{" "}
               {format(parseISO(today), "MMM d")} week
             </p>
@@ -99,7 +102,7 @@ export function StudyCameraProgressCard() {
         </div>
         <Link
           href="/daily-log#study-sessions-log"
-          className="min-h-[44px] shrink-0 rounded-xl border border-violet-500/30 px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-violet-200 hover:bg-violet-500/10"
+          className="inline-flex min-h-[44px] shrink-0 items-center justify-center rounded-xl border border-kal-border bg-kal-card-muted px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-kal-text transition-colors hover:border-kal-accent/40 hover:bg-kal-accent-soft hover:text-kal-accent-dark dark:hover:text-kal-text"
         >
           Daily log
         </Link>

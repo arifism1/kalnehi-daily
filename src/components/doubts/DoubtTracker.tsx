@@ -34,23 +34,28 @@ const COLUMNS: ColumnDef[] = [
     status: "current",
     title: "Current Doubts",
     empty: "No active doubts — keep conquering the syllabus",
-    panelClass: "border-slate-700/90 bg-slate-900/35",
-    headingClass: "text-slate-200",
+    panelClass:
+      "border-kal-border bg-kal-card kal-shadow-card dark:border-slate-700/90 dark:bg-slate-900/35",
+    headingClass: "text-kal-text dark:text-slate-200",
   },
   {
     status: "working",
     title: "Working on it",
     empty:
       "Nothing here yet — move a doubt here when you start breaking it down",
-    panelClass: "border-violet-500/25 bg-violet-950/15",
-    headingClass: "text-violet-200/95",
+    panelClass:
+      "border-violet-200 bg-violet-50 dark:border-violet-500/25 dark:bg-violet-950/15",
+    headingClass:
+      "text-violet-900 dark:text-violet-200/95",
   },
   {
     status: "solved",
     title: "Solved Doubts",
     empty: "All doubts solved — great progress!",
-    panelClass: "border-emerald-500/35 bg-emerald-950/20",
-    headingClass: "text-emerald-200/95",
+    panelClass:
+      "border-red-200 bg-red-50 dark:border-red-500/35 dark:bg-red-950/20",
+    headingClass:
+      "text-red-900 dark:text-red-200/95",
   },
 ];
 
@@ -73,7 +78,7 @@ function DoubtPhotoThumb({
   const url = usePhotoUrl(doubtId, photoId);
   if (!url) return null;
   return (
-    <div className="group/thumb relative inline-block overflow-hidden rounded-lg border border-slate-700/80">
+    <div className="group/thumb relative inline-block overflow-hidden rounded-lg border border-kal-border">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={url}
@@ -184,8 +189,8 @@ export function DoubtTracker() {
 
   if (!hydrated) {
     return (
-      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 text-zinc-400">
-        <Loader2 className="h-9 w-9 animate-spin text-emerald-500/80" />
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 text-kal-muted">
+        <Loader2 className="h-9 w-9 animate-spin text-kal-accent" />
         <p className="text-sm">Loading your doubts…</p>
       </div>
     );
@@ -193,7 +198,7 @@ export function DoubtTracker() {
 
   if (hydrateError) {
     return (
-      <div className="rounded-xl border border-white/[0.06] bg-slate-900/60 px-4 py-3 text-xs leading-relaxed text-slate-400">
+      <div className="rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-xs leading-relaxed text-kal-muted">
         {hydrateError}
       </div>
     );
@@ -204,19 +209,19 @@ export function DoubtTracker() {
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
         <div className="min-w-0 space-y-1.5 sm:space-y-2">
           <div className="flex items-center gap-2.5 sm:gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400 sm:h-11 sm:w-11 sm:rounded-xl">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-kal-accent-soft text-kal-accent sm:h-11 sm:w-11 sm:rounded-xl">
               <CircleHelp className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2.25} />
             </div>
             <div>
-              <p className="text-[0.6rem] font-semibold uppercase tracking-[0.2em] text-emerald-400/90 sm:text-[0.65rem] sm:tracking-widest">
+              <p className="text-[0.6rem] font-semibold uppercase tracking-[0.2em] text-kal-accent sm:text-[0.65rem] sm:tracking-widest">
                 Exam prep
               </p>
-              <h1 className="text-lg font-bold tracking-tight text-white sm:text-xl md:text-2xl">
+              <h1 className="text-lg font-bold tracking-tight text-kal-text sm:text-xl md:text-2xl">
                 Doubt Tracker
               </h1>
             </div>
           </div>
-          <p className="max-w-2xl text-xs leading-relaxed text-zinc-500 sm:text-sm">
+          <p className="max-w-2xl text-xs leading-relaxed text-kal-muted sm:text-sm">
             Capture doubts with notes and screenshots — private on this device,
             for your eyes only.
           </p>
@@ -224,21 +229,33 @@ export function DoubtTracker() {
         <button
           type="button"
           onClick={() => setAddSheetOpen(true)}
-          className="inline-flex min-h-[48px] w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-xs font-semibold text-white shadow-lg shadow-emerald-900/35 transition hover:bg-emerald-500 active:scale-[0.99] sm:min-h-[52px] sm:w-auto sm:min-w-[12.5rem] sm:rounded-2xl sm:px-6 sm:py-3.5 sm:text-sm"
+          className="inline-flex min-h-[48px] w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-kal-accent px-5 py-3 text-xs font-semibold text-kal-accent-foreground shadow-sm transition hover:bg-kal-accent-hover active:scale-[0.99] sm:min-h-[52px] sm:w-auto sm:min-w-[12.5rem] sm:rounded-xl sm:px-6 sm:py-3.5 sm:text-sm"
         >
           <Plus className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden />
           Add doubt
         </button>
       </header>
 
-      <div className="flex flex-col gap-3 sm:gap-4 md:grid md:grid-cols-3 md:items-start md:gap-5 lg:gap-6 xl:gap-8">
+      <div
+        className={clsx(
+          "flex min-w-0 gap-3 sm:gap-4",
+          "-mx-4 snap-x snap-mandatory overflow-x-auto overscroll-x-contain px-4 pb-1 [-webkit-overflow-scrolling:touch] scroll-pl-4 scroll-pr-4",
+          "sm:-mx-6 sm:px-6 sm:scroll-pl-6 sm:scroll-pr-6",
+          "md:mx-0 md:grid md:grid-cols-3 md:items-start md:gap-5 md:overflow-visible md:px-0 md:pb-0 md:snap-none md:scroll-pr-0 md:scroll-pl-0",
+          "lg:gap-6 xl:gap-8",
+        )}
+        role="region"
+        aria-label="Doubt columns — swipe sideways on small screens"
+      >
         {COLUMNS.map((col) => (
           <section
             key={col.status}
             className={clsx(
-              "flex min-h-0 min-w-0 flex-col rounded-xl border p-3 shadow-sm shadow-black/20 sm:rounded-2xl sm:p-4 md:min-h-[min(32rem,calc(100dvh-13rem))] lg:p-5",
+              "flex min-h-0 w-[min(22rem,calc(100vw-2.5rem))] shrink-0 snap-center flex-col rounded-xl border p-4 sm:w-[min(24rem,calc(100vw-3rem))] sm:rounded-2xl sm:p-5",
+              "md:w-auto md:min-w-0 md:shrink md:snap-normal md:min-h-[min(32rem,calc(100dvh-13rem))] lg:p-6",
               col.panelClass,
-              dragOver === col.status && "ring-2 ring-emerald-500/50 ring-offset-2 ring-offset-[#020617]",
+              dragOver === col.status &&
+                "ring-2 ring-kal-accent/50 ring-offset-2 ring-offset-kal-page",
             )}
             onDragOver={(e) => {
               e.preventDefault();
@@ -255,15 +272,15 @@ export function DoubtTracker() {
           >
             <h2
               className={clsx(
-                "shrink-0 border-b border-white/[0.06] pb-2 text-xs font-bold tracking-tight sm:pb-3 sm:text-sm",
+                "shrink-0 border-b border-kal-border pb-2 text-xs font-bold tracking-tight dark:border-white/[0.06] sm:pb-3 sm:text-sm",
                 col.headingClass,
               )}
             >
               {col.title}
             </h2>
-            <div className="mt-2 flex min-h-[8rem] flex-1 flex-col gap-2 overflow-y-auto overscroll-contain pr-0.5 [-webkit-overflow-scrolling:touch] sm:mt-3 sm:min-h-[10rem] sm:gap-2.5 md:min-h-0 md:max-h-[calc(100dvh-15.5rem)] lg:max-h-[calc(100dvh-14rem)]">
+            <div className="mt-2 flex min-h-[min(52dvh,22rem)] flex-1 flex-col gap-2 overflow-y-auto overscroll-contain pr-0.5 [-webkit-overflow-scrolling:touch] sm:mt-3 sm:min-h-[min(56dvh,24rem)] sm:gap-2.5 md:min-h-0 md:max-h-[calc(100dvh-15.5rem)] lg:max-h-[calc(100dvh-14rem)]">
               {byStatus[col.status].length === 0 ? (
-                <p className="rounded-lg border border-dashed border-slate-700/80 bg-slate-950/30 px-2.5 py-6 text-center text-[11px] leading-relaxed text-zinc-500 sm:rounded-xl sm:px-3 sm:py-8 sm:text-[12px]">
+                <p className="rounded-lg border border-dashed border-kal-border bg-kal-card-muted px-2.5 py-6 text-center text-[11px] leading-relaxed text-kal-muted sm:rounded-xl sm:px-3 sm:py-8 sm:text-[12px]">
                   {col.empty}
                 </p>
               ) : (
@@ -275,11 +292,11 @@ export function DoubtTracker() {
                       e.dataTransfer.setData("text/doubt-id", d.id);
                       e.dataTransfer.effectAllowed = "move";
                     }}
-                    className="group relative cursor-grab rounded-lg border border-slate-800/90 bg-slate-950/60 p-2.5 shadow-sm transition hover:border-slate-700 active:cursor-grabbing sm:rounded-xl sm:p-3 lg:p-3.5"
+                    className="group relative cursor-grab rounded-lg border border-kal-border bg-kal-card p-2.5 kal-shadow-card transition hover:border-kal-accent/30 active:cursor-grabbing dark:border-slate-800/90 dark:bg-slate-950/60 sm:rounded-xl sm:p-3 lg:p-3.5"
                   >
                     <div className="flex gap-1.5 sm:gap-2">
                       <div
-                        className="mt-px shrink-0 text-zinc-600 sm:mt-0.5"
+                        className="mt-px shrink-0 text-kal-muted sm:mt-0.5"
                         aria-hidden
                       >
                         <GripVertical className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -290,17 +307,17 @@ export function DoubtTracker() {
                           onClick={() => setEditingId(d.id)}
                           className="w-full text-left"
                         >
-                          <p className="text-sm font-semibold leading-snug text-white sm:text-[15px]">
+                          <p className="text-sm font-semibold leading-snug text-kal-text sm:text-[15px]">
                             {d.title.trim() ? (
                               d.title
                             ) : (
-                              <span className="font-medium text-zinc-500">
+                              <span className="font-medium text-kal-muted">
                                 Untitled
                               </span>
                             )}
                           </p>
                           {d.description.trim() ? (
-                            <p className="mt-0.5 line-clamp-3 text-[11px] leading-relaxed text-zinc-400 sm:mt-1 sm:text-[12px]">
+                            <p className="mt-0.5 line-clamp-3 text-[11px] leading-relaxed text-kal-muted sm:mt-1 sm:text-[12px]">
                               {d.description}
                             </p>
                           ) : null}
@@ -311,7 +328,7 @@ export function DoubtTracker() {
                               <button
                                 key={pid}
                                 type="button"
-                                className="overflow-hidden rounded-lg ring-1 ring-slate-700"
+                                className="overflow-hidden rounded-lg ring-1 ring-kal-border"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   const u =
@@ -358,9 +375,10 @@ export function DoubtTracker() {
         variant="amber"
       />
 
-      <p className="text-center text-[10px] leading-relaxed text-zinc-600 sm:text-[11px]">
-        Drag cards between columns to update status. Tap a card to edit. Stored
-        on this device only.
+      <p className="text-center text-[10px] leading-relaxed text-kal-text-secondary sm:text-[11px]">
+        Swipe between columns on your phone, or drag cards across columns on
+        larger screens, to update status. Tap a card to edit. Stored on this
+        device only.
       </p>
 
       <ConfirmDialog
@@ -425,41 +443,41 @@ export function DoubtTracker() {
             className="absolute inset-0 bg-black/65"
             onClick={() => !editSaving && setEditingId(null)}
           />
-          <div className="relative z-[61] max-h-[min(92vh,36rem)] w-full max-w-lg overflow-y-auto rounded-t-3xl border border-slate-700 bg-[#0c1220] p-5 shadow-2xl sm:rounded-3xl">
+          <div className="relative z-[61] max-h-[min(92vh,36rem)] w-full max-w-lg overflow-y-auto rounded-t-3xl border border-kal-border bg-kal-card p-6 kal-shadow-card sm:rounded-2xl">
             <div className="flex items-start justify-between gap-2">
               <h2
                 id={`${baseId}-edit-title`}
-                className="text-lg font-bold text-white"
+                className="text-lg font-bold text-kal-text"
               >
                 Edit doubt
               </h2>
               <button
                 type="button"
                 onClick={() => !editSaving && setEditingId(null)}
-                className="rounded-lg p-2 text-zinc-500 hover:bg-white/5"
+                className="rounded-lg p-2 text-kal-muted hover:bg-kal-card-muted"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <label className="mt-4 block text-xs font-medium text-zinc-400">
+            <label className="mt-4 block text-xs font-medium text-kal-muted">
               Title
               <input
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
-                className="mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-950/80 px-3 py-3 text-[15px] text-white outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+                className="mt-1.5 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-3 text-[15px] text-kal-text outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40"
               />
             </label>
-            <label className="mt-4 block text-xs font-medium text-zinc-400">
+            <label className="mt-4 block text-xs font-medium text-kal-muted">
               Details
               <textarea
                 value={editDesc}
                 onChange={(e) => setEditDesc(e.target.value)}
                 rows={5}
-                className="mt-1.5 w-full resize-y rounded-xl border border-slate-700 bg-slate-950/80 px-3 py-3 text-[15px] text-white outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+                className="mt-1.5 w-full resize-y rounded-xl border border-kal-border bg-kal-input-bg px-3 py-3 text-[15px] text-kal-text outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40"
               />
             </label>
             <div className="mt-4">
-              <p className="text-xs font-medium text-zinc-400">Photos</p>
+              <p className="text-xs font-medium text-kal-muted">Photos</p>
               <input
                 ref={editFileInputRef}
                 type="file"
@@ -486,7 +504,7 @@ export function DoubtTracker() {
                   editFileInputRef.current?.click();
                 }}
                 disabled={editSaving}
-                className="mt-2 flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl border border-emerald-500/35 bg-emerald-950/40 px-4 py-3 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-950/55 disabled:opacity-50"
+                className="mt-2 flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl border border-kal-accent/35 bg-red-950/40 px-4 py-3 text-sm font-semibold text-red-100 transition hover:bg-red-950/55 disabled:opacity-50"
               >
                 <Camera className="h-5 w-5 shrink-0" aria-hidden />
                 <span>📸 Add photo</span>
@@ -507,7 +525,7 @@ export function DoubtTracker() {
                 type="button"
                 disabled={editSaving}
                 onClick={() => void saveEdit()}
-                className="min-h-[48px] flex-1 rounded-xl bg-emerald-600 py-3 text-sm font-semibold text-white disabled:opacity-50"
+                className="min-h-[48px] flex-1 rounded-xl bg-kal-accent py-3 text-sm font-semibold text-kal-accent-foreground hover:bg-kal-accent-hover disabled:opacity-50"
               >
                 {editSaving ? "Saving…" : "Save changes"}
               </button>

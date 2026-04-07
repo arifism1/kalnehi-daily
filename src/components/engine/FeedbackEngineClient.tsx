@@ -16,7 +16,7 @@ const TONE: Record<
   "positive" | "neutral" | "urgent",
   string
 > = {
-  positive: "border-emerald-500/30 bg-emerald-950/25",
+  positive: "border-kal-accent/30 bg-red-950/25",
   neutral: "border-slate-700 bg-slate-950/40",
   urgent: "border-amber-500/35 bg-amber-950/20",
 };
@@ -66,7 +66,7 @@ export function FeedbackEngineClient() {
             key={`${ins.title}-${i}`}
             className={`rounded-2xl border px-4 py-4 ${TONE[ins.tone]}`}
           >
-            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-400/90">
+            <p className="text-xs font-semibold uppercase tracking-wide text-kal-accent/90">
               {ins.title}
             </p>
             <p className="mt-2 text-sm leading-relaxed text-zinc-200">

@@ -207,14 +207,14 @@ export function TimerEngineClient() {
               }}
               placeholder="Type a task or pick from your list…"
               autoComplete="off"
-              className="w-full rounded-xl border border-slate-700 bg-slate-950/80 px-3 py-3 text-sm text-white placeholder:text-zinc-600"
+              className="w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-3 text-sm text-kal-text placeholder:text-kal-text-secondary placeholder:opacity-90 focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20 dark:border-slate-700 dark:bg-slate-950/80 dark:text-white dark:placeholder:text-zinc-400 dark:focus:border-kal-accent/50"
               aria-autocomplete="list"
               aria-expanded={suggestOpen && filteredSuggestions.length > 0}
             />
             {suggestOpen && filteredSuggestions.length > 0 ? (
               <ul
                 role="listbox"
-                className="absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-xl border border-slate-600 bg-slate-900 py-1 shadow-lg"
+                className="absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-xl border border-kal-border bg-kal-card py-1 kal-shadow-card dark:border-slate-600 dark:bg-slate-900"
               >
                 {filteredSuggestions.map((t) => {
                   const line = `${t.assigned_date} · ${taskLabel(t, microRecord)}`;
@@ -222,7 +222,7 @@ export function TimerEngineClient() {
                     <li key={t.id} role="option">
                       <button
                         type="button"
-                        className="w-full px-3 py-2.5 text-left text-sm text-zinc-200 hover:bg-slate-800"
+                        className="w-full px-3 py-2.5 text-left text-sm text-kal-text hover:bg-kal-card-muted dark:text-zinc-200 dark:hover:bg-slate-800"
                         onMouseDown={(e) => e.preventDefault()}
                         onClick={() => {
                           setPickedTaskId(t.id);
@@ -237,7 +237,7 @@ export function TimerEngineClient() {
                 })}
               </ul>
             ) : null}
-            <p className="mt-1.5 text-[11px] text-zinc-600">
+            <p className="mt-1.5 text-[11px] leading-relaxed text-kal-text-secondary">
               New name creates a task for today — then the timer links to it.
             </p>
           </div>
@@ -253,14 +253,14 @@ export function TimerEngineClient() {
                   const task = await resolveTaskForTimer();
                   if (task) void startLinked(task);
                 }}
-                className="rounded-xl border border-slate-600 bg-slate-900/80 px-3 py-2 text-xs font-semibold text-zinc-200 disabled:opacity-40"
+                className="rounded-xl border border-kal-border bg-kal-card-muted px-3 py-2 text-xs font-semibold text-kal-text transition-colors hover:border-kal-accent/35 hover:bg-kal-accent-soft disabled:opacity-40 dark:border-slate-600 dark:bg-slate-900/80 dark:text-zinc-200 dark:hover:bg-slate-800"
               >
                 {p.label}
               </button>
             ))}
           </div>
         </div>
-        <label className="mt-4 block text-xs text-zinc-500">
+        <label className="mt-4 block text-xs font-medium text-kal-text-secondary">
           Custom target (minutes)
           <input
             type="number"
@@ -272,7 +272,7 @@ export function TimerEngineClient() {
               if (!Number.isFinite(m) || m <= 0) return;
               setCustomSec(m * 60);
             }}
-            className="mt-1 w-full max-w-[8rem] rounded-xl border border-slate-700 bg-slate-950/80 px-3 py-2 text-sm text-white"
+            className="mt-1 w-full max-w-[8rem] rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2 text-sm tabular-nums text-kal-text focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20 dark:border-slate-700 dark:bg-slate-950/80 dark:text-white"
           />
         </label>
         <button
@@ -284,7 +284,7 @@ export function TimerEngineClient() {
             setFocusTarget(customSec);
             void startLinked(task);
           }}
-          className="mt-3 inline-flex min-h-[48px] items-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white disabled:opacity-40"
+          className="mt-3 inline-flex min-h-[48px] items-center gap-2 rounded-xl bg-kal-accent px-4 text-sm font-semibold text-kal-accent-foreground shadow-sm hover:bg-kal-accent-hover disabled:opacity-40"
         >
           <Play className="h-4 w-4" />
           {creatingTask ? "Creating…" : "Start linked timer"}
@@ -294,16 +294,17 @@ export function TimerEngineClient() {
       <EngineCard title="Active session">
         {activeId ? (
           <div className="space-y-3">
-            <p className="text-sm text-zinc-400">
-              Task ID: <span className="font-mono text-xs text-zinc-500">{activeId}</span>
+            <p className="text-sm text-kal-text-secondary">
+              Task ID:{" "}
+              <span className="font-mono text-xs text-kal-muted">{activeId}</span>
             </p>
-            <p className="text-5xl font-bold tabular-nums text-emerald-300">
+            <p className="text-5xl font-bold tabular-nums text-kal-accent">
               {formatElapsedSeconds(elapsed)}
             </p>
             {focusTarget != null && (
-              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-kal-border dark:bg-slate-800">
                 <div
-                  className="h-full rounded-full bg-emerald-500 transition-[width] duration-500"
+                  className="h-full rounded-full bg-kal-accent transition-[width] duration-500"
                   style={{ width: `${ringProgress}%` }}
                 />
               </div>
@@ -316,7 +317,7 @@ export function TimerEngineClient() {
                     useActiveTimerStore.getState().pause();
                     setTick((n) => n + 1);
                   }}
-                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white"
+                  className="inline-flex items-center gap-2 rounded-xl bg-kal-accent px-4 py-2.5 text-sm font-semibold text-kal-accent-foreground hover:bg-kal-accent-hover"
                 >
                   <Pause className="h-4 w-4" />
                   Pause
@@ -338,7 +339,7 @@ export function TimerEngineClient() {
               <button
                 type="button"
                 onClick={() => void stopAndSave()}
-                className="inline-flex items-center gap-2 rounded-xl border border-rose-500/40 bg-rose-950/40 px-4 py-2.5 text-sm font-semibold text-rose-100"
+                className="inline-flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-800 hover:bg-rose-100 dark:border-rose-500/40 dark:bg-rose-950/40 dark:text-rose-100 dark:hover:bg-rose-950/60"
               >
                 <Square className="h-4 w-4" />
                 End &amp; log session
@@ -346,9 +347,10 @@ export function TimerEngineClient() {
             </div>
           </div>
         ) : (
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm leading-relaxed text-kal-text-secondary">
             No active timer — pick a task and start a block. Time accrues to{" "}
-            <span className="text-zinc-400">time spent</span> on the task.
+            <span className="font-medium text-kal-text">time spent</span> on the
+            task.
           </p>
         )}
       </EngineCard>

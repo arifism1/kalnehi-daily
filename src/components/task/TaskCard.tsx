@@ -82,21 +82,21 @@ function TaskQuickSheet({
       <button
         type="button"
         aria-label="Close sheet"
-        className="absolute inset-0 bg-black/70"
+        className="absolute inset-0 bg-[var(--kal-overlay)]"
         onClick={onClose}
       />
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Task actions"
-        className="relative z-10 w-full max-w-lg rounded-t-3xl border border-white/10 bg-[#0c1222] p-5 shadow-2xl sm:rounded-3xl"
+        className="relative z-10 w-full max-w-lg rounded-t-[1.25rem] border border-kal-border bg-kal-card p-5 kal-shadow-card sm:rounded-[1.25rem]"
       >
-        <div className="flex items-start justify-between gap-2 border-b border-neutral-800 pb-3">
-          <p className="min-w-0 text-sm font-semibold text-white">{title}</p>
+        <div className="flex items-start justify-between gap-2 border-b border-kal-border pb-3">
+          <p className="min-w-0 text-sm font-semibold text-kal-text">{title}</p>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-2 text-neutral-400 hover:bg-neutral-800 hover:text-white"
+            className="rounded-lg p-2 text-kal-muted hover:bg-kal-card-muted hover:text-kal-text"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
@@ -110,7 +110,7 @@ function TaskQuickSheet({
                 onShiftDay(-1);
                 onClose();
               }}
-              className="flex min-h-[44px] items-center justify-center rounded-xl border border-white/10 bg-slate-900/80 py-2.5 text-xs font-semibold text-zinc-200 active:bg-slate-800"
+              className="flex min-h-[44px] items-center justify-center rounded-xl border border-kal-border bg-kal-card-muted py-2.5 text-xs font-semibold text-kal-text active:bg-kal-border/50"
             >
               One day earlier
             </button>
@@ -120,7 +120,7 @@ function TaskQuickSheet({
                 onShiftDay(1);
                 onClose();
               }}
-              className="flex min-h-[44px] items-center justify-center rounded-xl border border-white/10 bg-slate-900/80 py-2.5 text-xs font-semibold text-zinc-200 active:bg-slate-800"
+              className="flex min-h-[44px] items-center justify-center rounded-xl border border-kal-border bg-kal-card-muted py-2.5 text-xs font-semibold text-kal-text active:bg-kal-border/50"
             >
               One day later
             </button>
@@ -132,7 +132,7 @@ function TaskQuickSheet({
                 onTimerPrimary();
                 onClose();
               }}
-              className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-emerald-500/35 bg-emerald-600/20 py-3 text-sm font-bold text-emerald-100 active:bg-emerald-600/30"
+              className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-kal-accent/30 bg-kal-accent-soft py-3 text-sm font-bold text-kal-accent-dark dark:text-kal-text active:bg-kal-accent/20"
             >
               {TimerIcon ? (
                 <TimerIcon
@@ -154,7 +154,7 @@ function TaskQuickSheet({
               onEdit();
               onClose();
             }}
-            className="flex min-h-[48px] w-full items-center justify-center rounded-xl border border-neutral-600 bg-white py-3 text-sm font-bold text-black active:bg-neutral-200"
+            className="flex min-h-[48px] w-full items-center justify-center rounded-xl bg-kal-accent py-3 text-sm font-bold text-kal-accent-foreground shadow-sm hover:bg-kal-accent-hover active:opacity-90"
           >
             Full edit
           </button>
@@ -164,12 +164,12 @@ function TaskQuickSheet({
               onClose();
               onRequestDelete();
             }}
-            className="flex min-h-[48px] w-full items-center justify-center rounded-xl border border-rose-500/40 bg-rose-950/30 py-3 text-sm font-semibold text-rose-200 active:bg-rose-950/50"
+            className="flex min-h-[48px] w-full items-center justify-center rounded-xl border border-[var(--kal-danger-border)] bg-[var(--kal-danger-soft)] py-3 text-sm font-semibold text-[var(--kal-danger-text)] active:opacity-90"
           >
             Delete task
           </button>
         </div>
-        <p className="mt-3 text-center text-[10px] text-neutral-600">
+        <p className="mt-3 text-center text-[10px] text-kal-muted">
           Timer controls stay on the card · This menu moves the target day
         </p>
       </div>
@@ -418,10 +418,10 @@ export function TaskCard({
   return (
     <div
       className={clsx(
-        "group rounded-lg border px-2 py-1.5 shadow-md transition-all duration-200 ease-out sm:rounded-xl sm:px-2.5 sm:py-2 md:rounded-2xl md:px-3 md:py-2.5",
+        "group rounded-xl border px-2 py-1.5 kal-shadow-card transition-all duration-200 ease-out sm:rounded-[1rem] sm:px-2.5 sm:py-2 md:px-3 md:py-2.5",
         appearance === "missed"
-          ? "border-amber-500/25 bg-gradient-to-r from-amber-950/20 to-slate-950/40 shadow-amber-950/10"
-          : "border-white/[0.07] bg-slate-900/50 shadow-black/25 backdrop-blur-sm",
+          ? "border-amber-300/60 bg-amber-50/80 dark:border-amber-500/25 dark:from-amber-950/20 dark:to-slate-950/40 dark:bg-gradient-to-r"
+          : "border-kal-border bg-kal-card",
         done && "opacity-[0.95]",
       )}
     >
@@ -466,10 +466,10 @@ export function TaskCard({
               disabled={busy}
               onChange={() => void onCheckboxChange()}
               className={clsx(
-                "size-4 shrink-0 rounded border border-slate-600/90 bg-slate-950 text-emerald-500 accent-emerald-500 transition-all duration-200 focus:ring-2 focus:ring-emerald-500/45 focus:ring-offset-1 focus:ring-offset-slate-950 sm:size-[18px] sm:rounded-md md:size-5",
-                done && "border-emerald-500/50 bg-emerald-600/20",
+                "size-4 shrink-0 rounded border border-kal-border bg-kal-card-muted text-kal-accent accent-kal-accent transition-all duration-200 focus:ring-2 focus:ring-kal-accent/40 focus:ring-offset-1 focus:ring-offset-kal-card sm:size-[18px] sm:rounded-md md:size-5",
+                done && "border-kal-accent/50 bg-kal-accent-soft",
                 justCompleted &&
-                  "animate-[completion-pop_0.55s_ease-out_both] ring-2 ring-emerald-400/70 ring-offset-2 ring-offset-slate-950",
+                  "animate-[completion-pop_0.55s_ease-out_both] ring-2 ring-kal-accent ring-offset-2 ring-offset-kal-card",
               )}
             />
           </label>
@@ -490,7 +490,7 @@ export function TaskCard({
               onBlur={() => onNameCaptureCommit?.(nameDraft.trim())}
               placeholder="Task name — start typing"
               autoComplete="off"
-              className="w-full rounded-md border border-emerald-500/35 bg-slate-950/90 px-2 py-1.5 text-xs font-semibold text-white outline-none placeholder:text-zinc-600 focus-visible:ring-2 focus-visible:ring-emerald-500/45 sm:rounded-lg sm:px-2.5 sm:text-sm"
+              className="w-full rounded-md border border-kal-border bg-kal-card-muted px-2 py-1.5 text-xs font-semibold text-kal-text outline-none placeholder:text-kal-muted focus-visible:ring-2 focus-visible:ring-kal-accent/40 sm:rounded-lg sm:px-2.5 sm:text-sm"
               aria-label="Task name"
             />
           ) : (
@@ -510,8 +510,8 @@ export function TaskCard({
                   }
                 }}
                 className={clsx(
-                  "rounded-md px-0.5 py-0.5 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/35",
-                  !done && "cursor-pointer hover:bg-white/[0.03] active:bg-white/[0.05]",
+                  "rounded-md px-0.5 py-0.5 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-kal-accent/35",
+                  !done && "cursor-pointer hover:bg-kal-card-muted active:bg-kal-border/30",
                 )}
               >
                 <div className="flex min-w-0 items-start gap-1.5 sm:gap-2 sm:items-center">
@@ -519,16 +519,16 @@ export function TaskCard({
                     className={clsx(
                       "min-w-0 flex-1 text-xs font-semibold leading-snug sm:text-[13px] sm:leading-snug md:text-sm md:leading-tight",
                       "line-clamp-2 sm:truncate sm:line-clamp-none",
-                      done ? "text-zinc-500 line-through" : "text-white",
+                      done ? "text-kal-muted line-through" : "text-kal-text",
                     )}
                   >
                     {title}
                   </p>
                   {busy && (
-                    <Loader2 className="h-3 w-3 shrink-0 animate-spin text-emerald-500 sm:h-3.5 sm:w-3.5" />
+                    <Loader2 className="h-3 w-3 shrink-0 animate-spin text-kal-accent sm:h-3.5 sm:w-3.5" />
                   )}
                   {done && (
-                    <span className="shrink-0 rounded border border-emerald-500/35 bg-emerald-500/10 px-1 py-px text-[7px] font-bold uppercase tracking-[0.1em] text-emerald-300/95 sm:px-1.5 sm:text-[8px] sm:tracking-[0.12em]">
+                    <span className="shrink-0 rounded border border-kal-accent/35 bg-kal-accent/10 px-1 py-px text-[7px] font-bold uppercase tracking-[0.1em] text-kal-accent/95 sm:px-1.5 sm:text-[8px] sm:tracking-[0.12em]">
                       Conquered
                     </span>
                   )}
@@ -542,7 +542,7 @@ export function TaskCard({
 
               <div className="mt-px flex min-w-0 items-center gap-1 sm:mt-0.5 sm:gap-1.5">
                 <p
-                  className="min-w-0 flex-1 truncate text-[9px] leading-snug tabular-nums text-zinc-500 sm:text-[10px] md:text-[11px]"
+                  className="min-w-0 flex-1 truncate text-[9px] leading-snug tabular-nums text-kal-muted sm:text-[10px] md:text-[11px]"
                   title={secondaryMetaText}
                 >
                   {secondaryMetaText}
@@ -560,7 +560,7 @@ export function TaskCard({
                         title="Start timer"
                         onClick={() => void startOrResumeTimer()}
                         disabled={busy}
-                        className="flex h-9 w-9 min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-emerald-500/25 bg-emerald-500/10 text-emerald-300 transition-colors hover:bg-emerald-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 disabled:opacity-40 sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0"
+                        className="flex h-9 w-9 min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-kal-accent/25 bg-kal-accent/10 text-kal-accent transition-colors hover:bg-kal-accent/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40 disabled:opacity-40 sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0"
                       >
                         <Play className="h-3 w-3 fill-current sm:h-3.5 sm:w-3.5" aria-hidden />
                       </button>
@@ -572,7 +572,7 @@ export function TaskCard({
                           title={`Pause (${elapsedDisplay ?? "0:00"})`}
                           onClick={() => pauseTimer()}
                           disabled={busy}
-                          className="flex h-9 min-w-9 min-h-[44px] items-center justify-center gap-0.5 rounded-lg bg-emerald-600 px-1.5 text-white shadow-sm shadow-emerald-950/30 transition-colors hover:bg-emerald-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/50 disabled:opacity-40 sm:h-8 sm:min-h-0 sm:min-w-8"
+                          className="flex h-9 min-w-9 min-h-[44px] items-center justify-center gap-0.5 rounded-lg bg-kal-accent px-1.5 text-kal-accent-foreground shadow-sm shadow-red-950/30 transition-colors hover:bg-kal-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/50 disabled:opacity-40 sm:h-8 sm:min-h-0 sm:min-w-8"
                         >
                           <Pause className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" aria-hidden />
                           <span className="max-w-[2.75rem] truncate text-[8px] font-bold tabular-nums leading-none sm:text-[9px] md:text-[10px]">
@@ -626,7 +626,7 @@ export function TaskCard({
         <div
           className={clsx(
             "flex shrink-0 items-center gap-px sm:gap-0.5",
-            "justify-end border-t border-white/[0.06] pt-1.5 sm:border-t-0 sm:border-l sm:pt-0 sm:pl-2.5 md:pl-2.5",
+            "justify-end border-t border-kal-border pt-1.5 sm:border-t-0 sm:border-l sm:pt-0 sm:pl-2.5 md:pl-2.5",
           )}
         >
           <button
@@ -635,7 +635,7 @@ export function TaskCard({
               e.stopPropagation();
               onEdit();
             }}
-            className="flex h-10 w-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-slate-800/80 hover:text-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/30 sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0"
+            className="flex h-10 w-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-slate-800/80 hover:text-kal-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/30 sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0"
             aria-label="Edit task"
           >
             <Pencil className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2} />

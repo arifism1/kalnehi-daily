@@ -57,7 +57,7 @@ export function NotificationsEngineClient() {
             <button
               type="button"
               onClick={() => void requestBrowser()}
-              className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white"
+              className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-kal-accent px-4 text-sm font-semibold text-white"
             >
               <Bell className="h-4 w-4" />
               Enable browser alerts

@@ -88,7 +88,7 @@ export function ProductivityPlannerView() {
                   ? "e.g. Electrostatics PYQs + mistakes"
                   : "e.g. Organic name reactions drill"
               }
-              className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2.5 text-[15px] text-white placeholder:text-zinc-600 focus:border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2.5 text-[15px] text-white placeholder:text-zinc-600 focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
             />
           </label>
         ))}
@@ -102,7 +102,7 @@ export function ProductivityPlannerView() {
           onChange={(e) => persist({ ...s, notes: e.target.value })}
           rows={6}
           placeholder="High-yield topics for this week, mock analysis takeaways, coach assignments…"
-          className="mt-1.5 w-full resize-y rounded-2xl border border-slate-700 bg-slate-900/80 px-3 py-3 text-sm text-white placeholder:text-zinc-600 focus:border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+          className="mt-1.5 w-full resize-y rounded-2xl border border-slate-700 bg-slate-900/80 px-3 py-3 text-sm text-white placeholder:text-zinc-600 focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
         />
       </label>
     </PlannerPageShell>

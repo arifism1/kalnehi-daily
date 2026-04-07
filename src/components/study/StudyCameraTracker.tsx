@@ -342,7 +342,7 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
             className={clsx(
               "rounded-2xl border px-4 py-3",
               statusLabel.tone === "green" &&
-                "border-emerald-500/40 bg-emerald-950/35",
+                "border-kal-accent/40 bg-red-950/35",
               statusLabel.tone === "yellow" &&
                 "border-amber-500/40 bg-amber-950/30",
               statusLabel.tone === "red" && "border-rose-500/40 bg-rose-950/30",
@@ -390,7 +390,7 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
               onUserMedia={() => setVideoReady(true)}
               className="h-full w-full object-cover"
             />
-            <div className="absolute right-1 bottom-1 max-w-[95%] rounded-md bg-black/80 px-1.5 py-1 text-[8px] font-medium leading-tight text-emerald-100/95 ring-1 ring-white/10">
+            <div className="absolute right-1 bottom-1 max-w-[95%] rounded-md bg-black/80 px-1.5 py-1 text-[8px] font-medium leading-tight text-red-100/95 ring-1 ring-white/10">
               🔒 On-device only · Private
             </div>
           </div>
@@ -435,7 +435,7 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
             type="button"
             onClick={startSession}
             disabled={!modelsReady}
-            className="inline-flex min-h-[52px] min-w-[10rem] items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-6 text-base font-semibold text-white disabled:opacity-40"
+            className="inline-flex min-h-[52px] min-w-[10rem] items-center justify-center gap-2 rounded-2xl bg-kal-accent px-6 text-base font-semibold text-white disabled:opacity-40"
           >
             <Play className="h-5 w-5" />
             Start session
@@ -464,7 +464,7 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
           <button
             type="button"
             onClick={resumeSession}
-            className="inline-flex min-h-[52px] min-w-[8rem] items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-5 text-base font-semibold text-white"
+            className="inline-flex min-h-[52px] min-w-[8rem] items-center justify-center gap-2 rounded-2xl bg-kal-accent px-5 text-base font-semibold text-white"
           >
             <Play className="h-5 w-5" />
             Resume

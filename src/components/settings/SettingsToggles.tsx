@@ -3,7 +3,10 @@
 import clsx from "clsx";
 import { useId } from "react";
 
-import { useSettingsStore } from "@/store/useSettingsStore";
+import {
+  type AppearanceMode,
+  useSettingsStore,
+} from "@/store/useSettingsStore";
 
 function SheetSwitch({
   checked,
@@ -23,7 +26,7 @@ function SheetSwitch({
       onClick={() => onChange(!checked)}
       className={clsx(
         "relative h-9 w-14 shrink-0 rounded-full transition-[background-color] duration-200",
-        checked ? "bg-emerald-500" : "bg-zinc-600",
+        checked ? "bg-kal-accent" : "bg-kal-border",
       )}
     >
       <span
@@ -36,9 +39,17 @@ function SheetSwitch({
   );
 }
 
+const APPEARANCE_OPTIONS: { value: AppearanceMode; label: string }[] = [
+  { value: "light", label: "Light" },
+  { value: "system", label: "System" },
+  { value: "dark", label: "Dark" },
+];
+
 export function SettingsToggles() {
   const baseId = useId();
 
+  const appearance = useSettingsStore((s) => s.appearance ?? "light");
+  const setAppearance = useSettingsStore((s) => s.setAppearance);
   const purposeModeEnabled = useSettingsStore((s) => s.purposeModeEnabled);
   const setPurposeModeEnabled = useSettingsStore((s) => s.setPurposeModeEnabled);
   const showCountdown = useSettingsStore((s) => s.showCountdown);
@@ -55,13 +66,40 @@ export function SettingsToggles() {
   );
 
   return (
-    <div className="divide-y divide-slate-700/80 rounded-2xl border border-slate-700/80 bg-slate-900/30 px-1">
+    <div className="divide-y divide-kal-border rounded-[1rem] border border-kal-border bg-kal-card kal-shadow-card px-1">
+      <div className="px-3 py-4">
+        <span className="text-[15px] font-medium text-kal-text">Appearance</span>
+        <p className="mt-0.5 text-xs text-kal-muted">
+          Light is default; System follows your device.
+        </p>
+        <div
+          className="mt-3 flex gap-1 rounded-xl border border-kal-border bg-kal-card-muted p-1"
+          role="group"
+          aria-label="Theme"
+        >
+          {APPEARANCE_OPTIONS.map(({ value, label }) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setAppearance(value)}
+              className={clsx(
+                "min-h-[40px] flex-1 rounded-lg text-xs font-semibold transition-colors",
+                appearance === value
+                  ? "bg-kal-card text-kal-text kal-shadow-card"
+                  : "text-kal-muted hover:text-kal-text",
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="flex items-center justify-between gap-3 px-3 py-3.5">
         <div>
-          <span className="text-[15px] font-medium text-zinc-100">
+          <span className="text-[15px] font-medium text-kal-text">
             Purpose mode
           </span>
-          <p className="mt-0.5 text-xs text-zinc-500">
+          <p className="mt-0.5 text-xs text-kal-muted">
             Photos &amp; motivation strip on home
           </p>
         </div>
@@ -73,10 +111,10 @@ export function SettingsToggles() {
       </div>
       <div className="flex items-center justify-between gap-3 px-3 py-3.5">
         <div>
-          <span className="text-[15px] font-medium text-zinc-100">
+          <span className="text-[15px] font-medium text-kal-text">
             Show countdown
           </span>
-          <p className="mt-0.5 text-xs text-zinc-500">
+          <p className="mt-0.5 text-xs text-kal-muted">
             Kalnehi Eye — exam countdown on home
           </p>
         </div>
@@ -88,10 +126,10 @@ export function SettingsToggles() {
       </div>
       <div className="flex items-center justify-between gap-3 px-3 py-3.5">
         <div>
-          <span className="text-[15px] font-medium text-zinc-100">
+          <span className="text-[15px] font-medium text-kal-text">
             Enable Advanced Marks Projection
           </span>
-          <p className="mt-0.5 text-xs text-zinc-500">
+          <p className="mt-0.5 text-xs text-kal-muted">
             When off, home and progress show syllabus completion % only (no
             projected marks).
           </p>
@@ -103,7 +141,7 @@ export function SettingsToggles() {
         />
       </div>
       <div className="flex items-center justify-between gap-3 px-3 py-3.5">
-        <span className="text-[15px] font-medium text-zinc-100">
+        <span className="text-[15px] font-medium text-kal-text">
           Sound effects
         </span>
         <SheetSwitch
@@ -113,7 +151,7 @@ export function SettingsToggles() {
         />
       </div>
       <div className="flex items-center justify-between gap-3 px-3 py-3.5">
-        <span className="text-[15px] font-medium text-zinc-100">
+        <span className="text-[15px] font-medium text-kal-text">
           Daily reminders
         </span>
         <SheetSwitch

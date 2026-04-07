@@ -45,7 +45,7 @@ export function CuetDomainSubjectPick({
             className={clsx(
               "flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 transition-colors",
               on
-                ? "border-emerald-500/50 bg-emerald-950/35"
+                ? "border-kal-accent/50 bg-red-950/35"
                 : "border-white/[0.08] bg-slate-950/40 hover:border-white/10",
               disabled && "pointer-events-none opacity-50",
             )}
@@ -55,7 +55,7 @@ export function CuetDomainSubjectPick({
               checked={on}
               disabled={disabled}
               onChange={() => toggle(opt)}
-              className="h-4 w-4 rounded border-slate-600 bg-slate-900 text-emerald-600 focus:ring-emerald-500/40"
+              className="h-4 w-4 rounded border-slate-600 bg-slate-900 text-red-600 focus:ring-kal-accent/40"
             />
             <span className="text-[15px] text-zinc-200">{opt}</span>
           </label>

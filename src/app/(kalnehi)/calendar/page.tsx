@@ -1,5 +1,5 @@
-import { CalendarEngineClient } from "@/components/engine/CalendarEngineClient";
+import { redirect } from "next/navigation";
 
-export default function CalendarPage() {
-  return <CalendarEngineClient />;
+export default function CalendarRedirectPage() {
+  redirect("/consistency-tracker");
 }

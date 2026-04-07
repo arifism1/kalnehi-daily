@@ -172,8 +172,8 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
           className="absolute inset-0 bg-black/65"
           onClick={onClose}
         />
-        <div className="relative z-10 w-full max-w-lg rounded-t-2xl border border-slate-700/90 bg-[#0c1222] p-6 sm:rounded-2xl">
-          <p className="text-sm text-zinc-400">Sign in to log study sessions.</p>
+        <div className="relative z-10 w-full max-w-lg rounded-t-2xl border border-kal-border bg-kal-card p-6 kal-shadow-card sm:rounded-2xl">
+          <p className="text-sm text-kal-muted">Sign in to log study sessions.</p>
         </div>
       </div>
     );
@@ -199,20 +199,20 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
         <div className="absolute inset-0 bg-black/65" aria-hidden />
       )}
       <div
-        className="relative z-10 max-h-[min(92dvh,100%)] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-slate-700/90 bg-[#0c1222] p-4 shadow-2xl sm:max-h-[min(90vh,44rem)] sm:rounded-2xl sm:p-5"
+        className="relative z-10 max-h-[min(92dvh,100%)] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-kal-border bg-kal-card p-5 kal-shadow-card sm:max-h-[min(90vh,44rem)] sm:rounded-2xl sm:p-6"
         role="dialog"
         aria-modal="true"
       >
         {step === "camera" ? (
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-emerald-400/90">
+              <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
                 Camera proven
               </p>
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-xl p-2 text-zinc-400 hover:bg-slate-800"
+                className="rounded-xl p-2 text-kal-muted hover:bg-kal-card-muted"
                 aria-label="Close"
               >
                 <X className="h-5 w-5" />
@@ -226,12 +226,12 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
           </div>
         ) : (
           <>
-            <div className="flex items-start justify-between gap-2 border-b border-slate-800 pb-3">
+            <div className="flex items-start justify-between gap-2 border-b border-kal-border pb-3">
               <div>
-                <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-zinc-500">
+                <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-muted">
                   Study session
                 </p>
-                <h2 className="mt-0.5 text-lg font-semibold text-white">
+                <h2 className="mt-0.5 text-lg font-semibold text-kal-text">
                   {step === "subject"
                     ? "What are you studying?"
                     : step === "mode"
@@ -242,7 +242,7 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-xl p-2 text-zinc-400 hover:bg-slate-800 hover:text-white"
+                className="rounded-xl p-2 text-kal-muted hover:bg-kal-card-muted hover:text-kal-text"
                 aria-label="Close"
               >
                 <X className="h-5 w-5" />
@@ -251,14 +251,14 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
 
             {step === "subject" && (
               <div className="mt-5 space-y-4">
-                <label className="block text-xs font-medium text-zinc-500">
+                <label className="block text-xs font-medium text-kal-muted">
                   Subject
                   <input
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
                     list="study-session-subjects"
                     placeholder="Type or pick a task / subject"
-                    className="mt-2 min-h-[52px] w-full rounded-2xl border border-slate-700 bg-slate-900/80 px-4 text-base text-white placeholder:text-zinc-600"
+                    className="mt-2 min-h-[52px] w-full rounded-2xl border border-kal-border bg-kal-input-bg px-4 text-base text-kal-text placeholder:text-kal-muted"
                   />
                 </label>
                 <datalist id="study-session-subjects">
@@ -270,7 +270,7 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
                   type="button"
                   disabled={!subjectOk}
                   onClick={() => setStep("mode")}
-                  className="flex w-full min-h-[52px] items-center justify-center rounded-2xl bg-emerald-600 text-base font-semibold text-white disabled:opacity-40"
+                  className="flex w-full min-h-[52px] items-center justify-center rounded-2xl bg-kal-accent text-base font-semibold text-kal-accent-foreground hover:bg-kal-accent-hover disabled:opacity-40"
                 >
                   Continue
                 </button>
@@ -282,12 +282,12 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
                 <button
                   type="button"
                   onClick={() => setStep("claimed")}
-                  className="flex w-full min-h-[4.5rem] flex-col items-center justify-center rounded-2xl border-2 border-slate-600 bg-slate-900/60 px-4 py-3 text-left transition-colors hover:border-emerald-500/40 hover:bg-slate-900"
+                  className="flex w-full min-h-[4.5rem] flex-col items-center justify-center rounded-2xl border-2 border-kal-border bg-kal-card-muted px-4 py-3 text-left transition-colors hover:border-kal-accent/40 hover:bg-kal-card"
                 >
-                  <span className="text-base font-bold text-white">
+                  <span className="text-base font-bold text-kal-text">
                     Claimed time (no camera)
                   </span>
-                  <span className="mt-1 text-xs text-zinc-500">
+                  <span className="mt-1 text-xs text-kal-muted">
                     Enter minutes or use a manual timer
                   </span>
                 </button>
@@ -295,23 +295,23 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
                   <button
                     type="button"
                     onClick={tryEnterCameraProven}
-                    className="flex w-full min-h-[4.5rem] flex-col items-center justify-center rounded-2xl border-2 border-emerald-500/50 bg-emerald-950/40 px-4 py-3 text-left transition-colors hover:bg-emerald-950/60"
+                    className="flex w-full min-h-[4.5rem] flex-col items-center justify-center rounded-2xl border-2 border-kal-accent/40 bg-kal-accent-soft px-4 py-3 text-left transition-colors hover:bg-kal-accent-soft dark:border-red-500/50 dark:bg-red-950/40 dark:hover:bg-red-950/60"
                   >
-                    <span className="text-base font-bold text-emerald-100">
+                    <span className="text-base font-bold text-red-900 dark:text-red-100">
                       Camera proven time
                     </span>
-                    <span className="mt-1 text-xs text-emerald-200/70">
+                    <span className="mt-1 text-xs text-red-800/90 dark:text-red-200/70">
                       On-device AI · video never uploaded
                     </span>
                   </button>
                 ) : (
-                  <div className="rounded-2xl border border-dashed border-zinc-600 bg-slate-950/40 px-4 py-4 text-center">
-                    <p className="text-sm font-medium text-zinc-300">
+                  <div className="rounded-2xl border border-dashed border-kal-border bg-kal-card-muted px-4 py-4 text-center">
+                    <p className="text-sm font-medium text-kal-text-secondary">
                       Camera proven time
                     </p>
-                    <p className="mt-2 text-xs leading-relaxed text-zinc-500">
+                    <p className="mt-2 text-xs leading-relaxed text-kal-muted">
                       Turn on{" "}
-                      <span className="font-medium text-zinc-400">
+                      <span className="font-medium text-kal-muted">
                         Enable Study Camera
                       </span>{" "}
                       in Settings first. Video stays on your device only—never
@@ -319,7 +319,7 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
                     </p>
                     <Link
                       href="/settings"
-                      className="mt-3 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-emerald-600/90 px-4 text-sm font-semibold text-emerald-950"
+                      className="mt-3 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-kal-accent px-4 text-sm font-semibold text-kal-accent-foreground hover:bg-kal-accent-hover"
                     >
                       Open Settings
                     </Link>
@@ -328,7 +328,7 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
                 <button
                   type="button"
                   onClick={() => setStep("subject")}
-                  className="w-full py-2 text-sm text-zinc-500 hover:text-zinc-300"
+                  className="w-full py-2 text-sm text-kal-muted hover:text-kal-text"
                 >
                   Back
                 </button>
@@ -337,13 +337,13 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
 
             {step === "claimed" && (
               <div className="mt-6 space-y-5">
-                <div className="flex gap-2 rounded-xl bg-slate-950/60 p-1">
+                <div className="flex gap-2 rounded-xl bg-kal-card-muted p-1">
                   <button
                     type="button"
                     className={`min-h-[44px] flex-1 rounded-lg text-sm font-semibold ${
                       claimedUi === "quick"
-                        ? "bg-emerald-600 text-white"
-                        : "text-zinc-400"
+                        ? "bg-kal-accent text-kal-accent-foreground"
+                        : "text-kal-muted"
                     }`}
                     onClick={() => setClaimedUi("quick")}
                   >
@@ -353,8 +353,8 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
                     type="button"
                     className={`min-h-[44px] flex-1 rounded-lg text-sm font-semibold ${
                       claimedUi === "timer"
-                        ? "bg-emerald-600 text-white"
-                        : "text-zinc-400"
+                        ? "bg-kal-accent text-kal-accent-foreground"
+                        : "text-kal-muted"
                     }`}
                     onClick={() => setClaimedUi("timer")}
                   >
@@ -364,7 +364,7 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
 
                 {claimedUi === "quick" && (
                   <div className="space-y-3">
-                    <label className="block text-xs text-zinc-500">
+                    <label className="block text-xs text-kal-muted">
                       Minutes studied
                       <input
                         type="number"
@@ -374,14 +374,14 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
                         value={minutesStr}
                         onChange={(e) => setMinutesStr(e.target.value)}
                         placeholder="e.g. 45"
-                        className="mt-2 min-h-[52px] w-full rounded-2xl border border-slate-700 bg-slate-900/80 px-4 text-lg text-white"
+                        className="mt-2 min-h-[52px] w-full rounded-2xl border border-kal-border bg-kal-input-bg px-4 text-lg text-kal-text"
                       />
                     </label>
                     <button
                       type="button"
                       disabled={saving}
                       onClick={() => void onQuickLog()}
-                      className="flex w-full min-h-[52px] items-center justify-center rounded-2xl bg-emerald-600 text-base font-semibold text-white disabled:opacity-50"
+                      className="flex w-full min-h-[52px] items-center justify-center rounded-2xl bg-kal-accent text-base font-semibold text-kal-accent-foreground hover:bg-kal-accent-hover disabled:opacity-50"
                     >
                       {saving ? "Saving…" : "Log session"}
                     </button>
@@ -390,7 +390,7 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
 
                 {claimedUi === "timer" && (
                   <div className="flex flex-col items-center py-4">
-                    <p className="font-mono text-5xl font-bold tabular-nums text-white">
+                    <p className="font-mono text-5xl font-bold tabular-nums text-kal-text">
                       {formatClock(timerSec)}
                     </p>
                     <div className="mt-6 flex flex-wrap justify-center gap-2">
@@ -398,7 +398,7 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
                         <button
                           type="button"
                           onClick={startClaimedTimer}
-                          className="min-h-[52px] min-w-[10rem] rounded-2xl bg-emerald-600 px-6 text-base font-semibold text-white"
+                          className="min-h-[52px] min-w-[10rem] rounded-2xl bg-kal-accent px-6 text-base font-semibold text-kal-accent-foreground hover:bg-kal-accent-hover"
                         >
                           Start
                         </button>
@@ -419,7 +419,7 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
                 <button
                   type="button"
                   onClick={() => setStep("mode")}
-                  className="w-full py-2 text-sm text-zinc-500 hover:text-zinc-300"
+                  className="w-full py-2 text-sm text-kal-muted hover:text-kal-text"
                 >
                   Back
                 </button>

@@ -36,7 +36,7 @@ export function ConfirmDialog({
       <button
         type="button"
         aria-label="Dismiss"
-        className="absolute inset-0 bg-black/70 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-kal-overlay backdrop-blur-[2px]"
         onClick={busy ? undefined : onCancel}
         disabled={busy}
       />
@@ -45,17 +45,17 @@ export function ConfirmDialog({
         aria-modal="true"
         aria-labelledby="confirm-dialog-title"
         aria-describedby="confirm-dialog-desc"
-        className="relative z-[81] w-full max-w-md rounded-2xl border border-white/[0.08] bg-[#0c1220] p-5 shadow-2xl shadow-black/50 sm:rounded-3xl"
+        className="relative z-[81] w-full max-w-md rounded-2xl border border-kal-border bg-kal-card p-6 kal-shadow-card sm:rounded-2xl"
       >
         <h2
           id="confirm-dialog-title"
-          className="text-lg font-bold tracking-tight text-white"
+          className="text-lg font-bold tracking-tight text-kal-text"
         >
           {title}
         </h2>
         <p
           id="confirm-dialog-desc"
-          className="mt-2 text-sm leading-relaxed text-zinc-400"
+          className="mt-2 text-sm leading-relaxed text-kal-muted"
         >
           {description}
         </p>
@@ -64,7 +64,7 @@ export function ConfirmDialog({
             type="button"
             disabled={busy}
             onClick={onCancel}
-            className="min-h-[48px] rounded-xl border border-slate-600 bg-slate-900/80 px-4 py-3 text-sm font-semibold text-zinc-200 sm:min-h-[44px] sm:px-5"
+            className="min-h-[48px] rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-sm font-semibold text-kal-text sm:min-h-[44px] sm:px-5"
           >
             {cancelLabel}
           </button>
@@ -76,7 +76,7 @@ export function ConfirmDialog({
               "min-h-[48px] rounded-xl px-4 py-3 text-sm font-semibold sm:min-h-[44px] sm:px-5",
               danger
                 ? "bg-rose-600 text-white hover:bg-rose-500 active:bg-rose-600"
-                : "bg-emerald-600 text-white hover:bg-emerald-500",
+                : "bg-kal-accent text-kal-accent-foreground hover:bg-kal-accent-hover",
             )}
           >
             {confirmLabel}

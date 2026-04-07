@@ -10,8 +10,6 @@ export function SyncStatusBanner() {
   const isOnline = useSyncStore((s) => s.isOnline);
   const pendingCount = useSyncStore((s) => s.pendingCount);
   const lastSyncError = useSyncStore((s) => s.lastSyncError);
-  const requestRetry = useSyncStore((s) => s.requestRetry);
-
   const [dismissed, setDismissed] = useState(false);
   const [retrying, setRetrying] = useState(false);
 
@@ -41,8 +39,8 @@ export function SyncStatusBanner() {
       <div
         role="status"
         className={clsx(
-          "mb-3 flex items-start gap-2 rounded-xl border px-2.5 py-2 text-[11px] leading-snug",
-          "border-amber-500/20 bg-amber-950/40 text-amber-200",
+          "mb-4 flex items-start gap-2 rounded-[0.875rem] border px-3 py-2.5 text-[11px] leading-snug",
+          "border-[var(--kal-warn-border)] bg-[var(--kal-warn-soft)] text-[var(--kal-warn-text)]",
         )}
       >
         <p className="min-w-0 flex-1 pt-0.5">{lastSyncError}</p>
@@ -50,7 +48,7 @@ export function SyncStatusBanner() {
           type="button"
           onClick={() => void onRetry()}
           disabled={retrying}
-          className="shrink-0 rounded-lg bg-amber-600/80 px-2.5 py-1 text-[10px] font-semibold text-white hover:bg-amber-500 disabled:opacity-50"
+          className="shrink-0 rounded-lg bg-kal-accent px-2.5 py-1 text-[10px] font-semibold text-white hover:bg-kal-accent-hover disabled:opacity-50"
         >
           {retrying ? (
             <Loader2 className="h-3 w-3 animate-spin" />
@@ -63,7 +61,7 @@ export function SyncStatusBanner() {
         <button
           type="button"
           onClick={onDismiss}
-          className="shrink-0 rounded-md p-0.5 text-amber-400/60 hover:bg-white/5 hover:text-amber-300"
+          className="shrink-0 rounded-md p-0.5 opacity-60 hover:bg-black/5 hover:opacity-100 dark:hover:bg-white/10"
           aria-label="Dismiss"
         >
           <X className="h-3 w-3" strokeWidth={2.5} />
@@ -77,11 +75,10 @@ export function SyncStatusBanner() {
       <div
         role="status"
         className={clsx(
-          "mb-3 flex items-start gap-2 rounded-xl border px-2.5 py-1.5 text-[10px] leading-snug",
-          "border-white/[0.06] bg-slate-900/70 text-slate-400 backdrop-blur-sm",
+          "mb-4 flex items-start gap-2 rounded-[0.875rem] border border-kal-border bg-kal-card-muted px-3 py-2 text-[10px] leading-snug text-kal-muted",
         )}
       >
-        <CloudOff className="mt-0.5 h-3 w-3 shrink-0 text-slate-500" />
+        <CloudOff className="mt-0.5 h-3 w-3 shrink-0 text-kal-muted" />
         <p className="min-w-0 flex-1 pt-0.5">
           You&apos;re offline — your work is saved on this device
           {pendingCount > 0 &&
@@ -91,7 +88,7 @@ export function SyncStatusBanner() {
         <button
           type="button"
           onClick={onDismiss}
-          className="shrink-0 rounded-md p-0.5 text-slate-500 hover:bg-white/5 hover:text-slate-300"
+          className="shrink-0 rounded-md p-0.5 text-kal-muted hover:bg-kal-border/40"
           aria-label="Dismiss"
         >
           <X className="h-3 w-3" strokeWidth={2.5} />
@@ -105,11 +102,10 @@ export function SyncStatusBanner() {
       <div
         role="status"
         className={clsx(
-          "mb-3 flex items-center gap-2 rounded-xl border px-2.5 py-1.5 text-[10px] leading-snug",
-          "border-emerald-500/15 bg-emerald-950/30 text-emerald-300/80",
+          "mb-4 flex items-center gap-2 rounded-[0.875rem] border border-kal-accent/25 bg-kal-accent-soft px-3 py-2 text-[10px] leading-snug text-kal-text-secondary",
         )}
       >
-        <Loader2 className="h-3 w-3 shrink-0 animate-spin text-emerald-400/70" />
+        <Loader2 className="h-3 w-3 shrink-0 animate-spin text-kal-accent" />
         <p className="min-w-0 flex-1">
           Syncing {pendingCount} change{pendingCount > 1 ? "s" : ""}…
         </p>

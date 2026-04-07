@@ -28,7 +28,7 @@ export function NeetSyllabusReadOnly({ rows }: { rows: SyllabusRow[] }) {
   if (rows.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-600 bg-slate-950/40 px-4 py-14 text-center">
-        <BookMarked className="mx-auto mb-4 h-12 w-12 text-emerald-500/70" />
+        <BookMarked className="mx-auto mb-4 h-12 w-12 text-kal-accent/70" />
         <p className="text-sm leading-relaxed text-zinc-400">
           Your NEET syllabus tree will appear here as soon as it&apos;s available
           for your account.
@@ -40,7 +40,7 @@ export function NeetSyllabusReadOnly({ rows }: { rows: SyllabusRow[] }) {
   return (
     <div className="space-y-3 pb-4">
       <header>
-        <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-emerald-400/90">
+        <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent/90">
           NEET UG
         </p>
         <h1 className="mt-1 text-2xl font-bold tracking-tight text-white">
@@ -66,7 +66,7 @@ export function NeetSyllabusReadOnly({ rows }: { rows: SyllabusRow[] }) {
               <summary className="flex min-h-[48px] cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-base font-semibold text-white marker:hidden [&::-webkit-details-marker]:hidden">
                 <span className="flex items-center gap-2">
                   <BookMarked
-                    className="h-5 w-5 shrink-0 text-emerald-400"
+                    className="h-5 w-5 shrink-0 text-kal-accent"
                     aria-hidden
                   />
                   {subject}
@@ -111,7 +111,7 @@ export function NeetSyllabusReadOnly({ rows }: { rows: SyllabusRow[] }) {
                               </p>
                               <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
                                 <span className="text-zinc-300">
-                                  <span className="font-medium text-emerald-400/90">
+                                  <span className="font-medium text-kal-accent/90">
                                     {weight}
                                   </span>{" "}
                                   marks weight

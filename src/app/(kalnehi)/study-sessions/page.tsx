@@ -38,23 +38,23 @@ export default function StudySessionsPage() {
   return (
     <div className="space-y-6">
       <header className="max-w-2xl">
-        <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-violet-400/90">
+        <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
           Study log
         </p>
-        <h1 className="mt-1 flex items-center gap-2 text-xl font-bold tracking-tight text-white sm:text-2xl">
-          <BookOpen className="h-7 w-7 text-violet-400/90" aria-hidden />
+        <h1 className="mt-1 flex items-center gap-2 text-xl font-bold tracking-tight text-kal-text sm:text-2xl">
+          <BookOpen className="h-7 w-7 text-kal-accent" aria-hidden />
           Study sessions
         </h1>
-        <p className="mt-2 text-sm leading-relaxed text-zinc-400 sm:text-[15px]">
+        <p className="mt-2 text-sm leading-relaxed text-kal-muted sm:text-[15px]">
           Claim time you know you did, or use the camera for posture-checked
           sessions. Everything saves on-device first, then syncs when you&apos;re
           online.
         </p>
-        <div className="mt-4 rounded-2xl border border-emerald-500/20 bg-emerald-950/20 px-4 py-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-400/95">
+        <div className="mt-4 rounded-2xl border border-kal-accent/25 bg-kal-accent-soft px-5 py-4">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-kal-accent">
             Privacy
           </p>
-          <p className="mt-1.5 text-xs leading-relaxed text-emerald-100/85">
+          <p className="mt-1.5 text-xs leading-relaxed text-red-900 dark:text-red-100/85">
             Camera sessions use AI only on your device (MediaPipe in the
             browser). Video is never streamed, uploaded, or saved on our servers.
             Your log only stores subject, duration, and times—never images or
@@ -67,29 +67,29 @@ export default function StudySessionsPage() {
         type="button"
         disabled={!userId}
         onClick={() => setSheetOpen(true)}
-        className="flex w-full min-h-[56px] items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 text-base font-bold text-emerald-950 shadow-lg shadow-emerald-900/30 transition-transform active:scale-[0.99] disabled:opacity-50"
+        className="flex w-full min-h-[56px] items-center justify-center gap-2 rounded-2xl bg-kal-accent px-4 text-base font-bold text-kal-accent-foreground shadow-sm transition-transform hover:bg-kal-accent-hover active:scale-[0.99] disabled:opacity-50"
       >
         <Plus className="h-5 w-5" strokeWidth={2.5} />
         Add study session
       </button>
 
       {!userId ? (
-        <p className="text-center text-sm text-zinc-500">
+        <p className="text-center text-sm text-kal-muted">
           Sign in to log and sync study sessions.
         </p>
       ) : null}
 
       <section
         aria-labelledby="study-sessions-all-heading"
-        className="rounded-3xl border border-white/[0.07] bg-slate-900/30 p-5 shadow-xl shadow-black/25 backdrop-blur-sm sm:p-6"
+        className="rounded-2xl border border-kal-border bg-kal-card p-6 kal-shadow-card sm:p-8"
       >
         <div className="flex flex-wrap items-end justify-between gap-2">
-          <h2 id="study-sessions-all-heading" className="text-sm font-bold text-white">
+          <h2 id="study-sessions-all-heading" className="text-sm font-bold text-kal-text">
             All sessions
           </h2>
           <Link
             href="/daily-log#study-sessions-log"
-            className="text-[11px] font-semibold uppercase tracking-wide text-violet-400 hover:text-violet-300"
+            className="text-[11px] font-semibold uppercase tracking-wide text-kal-accent hover:text-kal-accent-hover"
           >
             Daily log →
           </Link>

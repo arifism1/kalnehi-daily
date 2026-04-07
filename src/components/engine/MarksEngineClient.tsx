@@ -77,7 +77,7 @@ export function MarksEngineClient() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <EngineCard title="Syllabus · chapter pool">
-          <p className="text-3xl font-bold tabular-nums text-emerald-300">
+          <p className="text-3xl font-bold tabular-nums text-kal-accent">
             {Math.round(snap.syllabusMastered)} /{" "}
             {Math.round(snap.syllabusPool)}
           </p>
@@ -101,7 +101,7 @@ export function MarksEngineClient() {
         </EngineCard>
 
         <EngineCard title="Gained today (plan)">
-          <p className="text-3xl font-bold tabular-nums text-teal-300">
+          <p className="text-3xl font-bold tabular-nums text-red-300">
             +{Math.round(snap.gainedToday)}
           </p>
           <p className="mt-2 text-sm text-zinc-400">
@@ -126,12 +126,12 @@ export function MarksEngineClient() {
             {snap.neetByYear.map((y) => (
               <li
                 key={y.year}
-                className="flex items-baseline justify-between gap-3 rounded-xl border border-white/[0.06] bg-slate-950/50 px-4 py-3"
+                className="flex items-baseline justify-between gap-3 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3"
               >
                 <span className="text-sm font-semibold text-zinc-300">
                   {examLabel ?? "Exam"} {y.year}
                 </span>
-                <span className="text-2xl font-bold tabular-nums text-emerald-300">
+                <span className="text-2xl font-bold tabular-nums text-kal-accent">
                   {y.mastered720}
                   <span className="text-base font-semibold text-zinc-500">
                     {" "}

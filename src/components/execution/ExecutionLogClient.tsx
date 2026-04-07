@@ -187,29 +187,29 @@ export function ExecutionLogClient() {
   const tabCls = (active: boolean) =>
     `min-h-[44px] flex-1 rounded-xl px-3 py-2.5 text-xs font-bold uppercase tracking-wide transition-colors ${
       active
-        ? "bg-emerald-600 text-white shadow-sm shadow-emerald-900/30"
-        : "text-zinc-400 hover:text-white"
+        ? "bg-kal-accent text-kal-accent-foreground shadow-sm"
+        : "text-kal-muted hover:text-kal-text"
     }`;
 
   return (
     <div className="space-y-6">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-emerald-400/90">
+          <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
             Execution log
           </p>
-          <h1 className="mt-1 flex items-center gap-2 text-xl font-bold tracking-tight text-white sm:text-2xl">
-            <ScrollText className="h-7 w-7 text-emerald-400/90" aria-hidden />
+          <h1 className="mt-1 flex items-center gap-2 text-xl font-bold tracking-tight text-kal-text sm:text-2xl">
+            <ScrollText className="h-7 w-7 text-kal-accent" aria-hidden />
             Daily mastery record
           </h1>
-          <p className="mt-2 max-w-xl text-sm leading-relaxed text-zinc-400 sm:text-[15px]">
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-kal-muted sm:text-[15px]">
             Time invested in high-yield topics — every ended session and conquered
             target, synced offline-first across months and years.
           </p>
         </div>
       </header>
 
-      <div className="flex gap-1.5 rounded-2xl bg-slate-950/70 p-1.5 ring-1 ring-white/[0.06]">
+      <div className="flex gap-1.5 rounded-2xl bg-kal-card-muted p-1.5 ring-1 ring-kal-border">
         <button
           type="button"
           className={tabCls(view === "daily")}
@@ -234,27 +234,27 @@ export function ExecutionLogClient() {
       </div>
 
       {view === "daily" && (
-        <section className="rounded-3xl border border-white/[0.07] bg-slate-900/30 p-5 shadow-xl shadow-black/25 backdrop-blur-sm sm:p-6">
+        <section className="rounded-3xl border border-kal-border bg-kal-card p-6 kal-shadow-card sm:p-8">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-sm font-bold text-white">Day detail</h2>
+            <h2 className="text-sm font-bold text-kal-text">Day detail</h2>
             <div className="flex items-center gap-1">
               <button
                 type="button"
                 aria-label="Previous day"
-                className="rounded-xl p-2 text-zinc-400 hover:bg-slate-800 hover:text-white"
+                className="rounded-xl p-2 text-kal-muted hover:bg-kal-card hover:text-kal-text"
                 onClick={() =>
                   setSelectedDay(format(addDays(parseISO(selectedDay), -1), "yyyy-MM-dd"))
                 }
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
-              <span className="min-w-[10rem] text-center text-sm font-semibold tabular-nums text-emerald-200/90">
+              <span className="min-w-[10rem] text-center text-sm font-semibold tabular-nums text-red-200/90">
                 {selectedDay}
               </span>
               <button
                 type="button"
                 aria-label="Next day"
-                className="rounded-xl p-2 text-zinc-400 hover:bg-slate-800 hover:text-white"
+                className="rounded-xl p-2 text-kal-muted hover:bg-kal-card hover:text-kal-text"
                 onClick={() =>
                   setSelectedDay(format(addDays(parseISO(selectedDay), 1), "yyyy-MM-dd"))
                 }
@@ -263,7 +263,7 @@ export function ExecutionLogClient() {
               </button>
               <button
                 type="button"
-                className="ml-2 rounded-xl border border-emerald-500/30 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-emerald-300 hover:bg-emerald-500/10"
+                className="ml-2 rounded-xl border border-kal-accent/30 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-kal-accent hover:bg-kal-accent/10"
                 onClick={() => setSelectedDay(today)}
               >
                 Today
@@ -274,25 +274,25 @@ export function ExecutionLogClient() {
           <VoiceDayStrip logDate={selectedDay} />
 
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-2xl border border-white/[0.06] bg-slate-950/50 px-4 py-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+            <div className="rounded-2xl border border-kal-border bg-kal-card-muted px-4 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-kal-muted">
                 Time invested
               </p>
-              <p className="mt-1 text-lg font-bold tabular-nums text-emerald-300">
+              <p className="mt-1 text-lg font-bold tabular-nums text-kal-accent">
                 {formatInvested(dayStats.total)}
               </p>
             </div>
-            <div className="rounded-2xl border border-white/[0.06] bg-slate-950/50 px-4 py-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+            <div className="rounded-2xl border border-kal-border bg-kal-card-muted px-4 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-kal-muted">
                 Sessions logged
               </p>
-              <p className="mt-1 text-lg font-bold text-white">{sessionsForDay.length}</p>
+              <p className="mt-1 text-lg font-bold text-kal-text">{sessionsForDay.length}</p>
             </div>
-            <div className="rounded-2xl border border-white/[0.06] bg-slate-950/50 px-4 py-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+            <div className="rounded-2xl border border-kal-border bg-kal-card-muted px-4 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-kal-muted">
                 Day completion
               </p>
-              <p className="mt-1 text-lg font-bold text-white">
+              <p className="mt-1 text-lg font-bold text-kal-text">
                 {dayStats.completionPct != null
                   ? `${dayStats.completionPct}% (${dayStats.completed}/${dayStats.denom})`
                   : "—"}
@@ -301,15 +301,15 @@ export function ExecutionLogClient() {
           </div>
 
           {(dayStats.subjects.size > 0 || dayStats.chapters.size > 0) && (
-            <div className="mt-4 rounded-2xl border border-emerald-500/15 bg-emerald-950/20 px-4 py-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-400/90">
+            <div className="mt-4 rounded-2xl border border-kal-accent/15 bg-red-950/20 px-4 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-kal-accent">
                 High-yield coverage
               </p>
-              <p className="mt-2 text-xs text-emerald-100/80">
+              <p className="mt-2 text-xs text-red-100/80">
                 {Array.from(dayStats.subjects).join(" · ") || "—"}
               </p>
               {dayStats.chapters.size > 0 && (
-                <ul className="mt-2 space-y-1 text-[11px] text-zinc-400">
+                <ul className="mt-2 space-y-1 text-[11px] text-kal-muted">
                   {Array.from(dayStats.chapters).slice(0, 12).map((c) => (
                     <li key={c}>{c}</li>
                   ))}
@@ -320,7 +320,7 @@ export function ExecutionLogClient() {
 
           <ul className="mt-6 space-y-2">
             {sessionsForDay.length === 0 ? (
-              <li className="rounded-2xl border border-dashed border-white/[0.08] py-12 text-center text-sm text-zinc-500">
+              <li className="rounded-2xl border border-dashed border-kal-border py-12 text-center text-sm text-kal-muted">
                 No execution sessions ended this day. End a timer from a task
                 card to log real study time.
               </li>
@@ -333,21 +333,21 @@ export function ExecutionLogClient() {
                 return (
                   <li
                     key={s.id}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-white/[0.06] bg-slate-950/40 px-4 py-3"
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-kal-border bg-kal-card-muted px-4 py-3"
                   >
                     <div className="min-w-0">
-                      <p className="font-semibold text-white">{title}</p>
-                      <p className="text-[11px] text-zinc-500">
+                      <p className="font-semibold text-kal-text">{title}</p>
+                      <p className="text-[11px] text-kal-muted">
                         {m?.subject}
                         {m?.chapter ? ` · ${m.chapter}` : ""}
                         {s.end_time && (
-                          <span className="ml-2 tabular-nums text-zinc-600">
+                          <span className="ml-2 tabular-nums text-kal-text-secondary">
                             {format(parseISO(s.end_time), "HH:mm")}
                           </span>
                         )}
                       </p>
                     </div>
-                    <span className="shrink-0 text-sm font-bold tabular-nums text-emerald-300/90">
+                    <span className="shrink-0 text-sm font-bold tabular-nums text-kal-accent/90">
                       {formatInvested(s.duration_seconds ?? 0)}
                     </span>
                   </li>
@@ -358,10 +358,10 @@ export function ExecutionLogClient() {
 
           <div
             id="study-sessions-log"
-            className="mt-8 border-t border-white/[0.06] pt-8 scroll-mt-24"
+            className="mt-8 border-t border-kal-border pt-8 scroll-mt-24"
           >
-            <h3 className="text-sm font-bold text-white">Study sessions</h3>
-            <p className="mt-1 text-xs leading-relaxed text-zinc-500">
+            <h3 className="text-sm font-bold text-kal-text">Study sessions</h3>
+            <p className="mt-1 text-xs leading-relaxed text-kal-muted">
               Claimed or camera-proven time from{" "}
               <a
                 href="/study-sessions"
@@ -383,27 +383,27 @@ export function ExecutionLogClient() {
       )}
 
       {view === "monthly" && (
-        <section className="rounded-3xl border border-white/[0.07] bg-slate-900/30 p-5 shadow-xl shadow-black/25 backdrop-blur-sm sm:p-6">
+        <section className="rounded-3xl border border-kal-border bg-kal-card p-6 kal-shadow-card sm:p-8">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="flex items-center gap-2 text-sm font-bold text-white">
-              <CalendarRange className="h-4 w-4 text-emerald-400" aria-hidden />
+            <h2 className="flex items-center gap-2 text-sm font-bold text-kal-text">
+              <CalendarRange className="h-4 w-4 text-kal-accent" aria-hidden />
               Monthly rollup
             </h2>
             <div className="flex items-center gap-1">
               <button
                 type="button"
-                className="rounded-xl p-2 text-zinc-400 hover:bg-slate-800"
+                className="rounded-xl p-2 text-kal-muted hover:bg-kal-card-muted"
                 onClick={() => setMonthCursor((d) => addMonths(d, -1))}
                 aria-label="Previous month"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
-              <span className="min-w-[8rem] text-center text-sm font-semibold text-emerald-200/90">
+              <span className="min-w-[8rem] text-center text-sm font-semibold text-red-200/90">
                 {format(monthCursor, "MMMM yyyy")}
               </span>
               <button
                 type="button"
-                className="rounded-xl p-2 text-zinc-400 hover:bg-slate-800"
+                className="rounded-xl p-2 text-kal-muted hover:bg-kal-card-muted"
                 onClick={() => setMonthCursor((d) => addMonths(d, 1))}
                 aria-label="Next month"
               >
@@ -415,14 +415,14 @@ export function ExecutionLogClient() {
             {monthlyRows.map((row) => (
               <li
                 key={row.key}
-                className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.04] bg-slate-950/35 px-3 py-2.5 text-sm"
+                className="flex items-center justify-between gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-3 py-2.5 text-sm"
               >
-                <span className="tabular-nums text-zinc-300">{row.key}</span>
-                <span className="text-xs text-zinc-500">
+                <span className="tabular-nums text-kal-text-secondary">{row.key}</span>
+                <span className="text-xs text-kal-muted">
                   {row.sessionCount} sessions
                   {row.completionPct != null ? ` · ${row.completionPct}% done` : ""}
                 </span>
-                <span className="font-semibold tabular-nums text-emerald-300">
+                <span className="font-semibold tabular-nums text-kal-accent">
                   {formatInvested(row.invested)}
                 </span>
               </li>
@@ -432,24 +432,24 @@ export function ExecutionLogClient() {
       )}
 
       {view === "yearly" && (
-        <section className="rounded-3xl border border-white/[0.07] bg-slate-900/30 p-5 shadow-xl shadow-black/25 backdrop-blur-sm sm:p-6">
+        <section className="rounded-3xl border border-kal-border bg-kal-card p-6 kal-shadow-card sm:p-8">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-sm font-bold text-white">Yearly arc</h2>
+            <h2 className="text-sm font-bold text-kal-text">Yearly arc</h2>
             <div className="flex items-center gap-1">
               <button
                 type="button"
-                className="rounded-xl p-2 text-zinc-400 hover:bg-slate-800"
+                className="rounded-xl p-2 text-kal-muted hover:bg-kal-card-muted"
                 onClick={() => setYearCursor((d) => addYears(d, -1))}
                 aria-label="Previous year"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
-              <span className="min-w-[4rem] text-center text-sm font-semibold text-emerald-200/90">
+              <span className="min-w-[4rem] text-center text-sm font-semibold text-red-200/90">
                 {format(yearCursor, "yyyy")}
               </span>
               <button
                 type="button"
-                className="rounded-xl p-2 text-zinc-400 hover:bg-slate-800"
+                className="rounded-xl p-2 text-kal-muted hover:bg-kal-card-muted"
                 onClick={() => setYearCursor((d) => addYears(d, 1))}
                 aria-label="Next year"
               >
@@ -461,13 +461,13 @@ export function ExecutionLogClient() {
             {yearlyRows.map((row) => (
               <li
                 key={row.label}
-                className="rounded-2xl border border-white/[0.06] bg-slate-950/40 px-4 py-3"
+                className="rounded-2xl border border-kal-border bg-kal-card-muted px-4 py-3"
               >
-                <p className="text-xs font-bold text-white">{row.label}</p>
-                <p className="mt-2 text-lg font-bold tabular-nums text-emerald-300">
+                <p className="text-xs font-bold text-kal-text">{row.label}</p>
+                <p className="mt-2 text-lg font-bold tabular-nums text-kal-accent">
                   {formatInvested(row.invested)}
                 </p>
-                <p className="mt-1 text-[11px] text-zinc-500">
+                <p className="mt-1 text-[11px] text-kal-muted">
                   {row.sessionsCount} sessions
                   {row.completionPct != null ? ` · ${row.completionPct}% targets` : ""}
                 </p>

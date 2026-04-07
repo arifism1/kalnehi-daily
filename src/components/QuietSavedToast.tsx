@@ -46,10 +46,10 @@ export function QuietSavedToast() {
     >
       <div
         className={clsx(
-          "inline-flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-950/90 px-4 py-2 text-[11px] font-medium text-emerald-100 shadow-lg shadow-black/40 backdrop-blur-sm",
+          "inline-flex items-center gap-2 rounded-full border border-kal-accent/25 bg-red-950/90 px-4 py-2 text-[11px] font-medium text-red-100 shadow-lg shadow-black/40 backdrop-blur-sm",
         )}
       >
-        <Check className="h-3.5 w-3.5 shrink-0 text-emerald-400" strokeWidth={2.5} />
+        <Check className="h-3.5 w-3.5 shrink-0 text-kal-accent" strokeWidth={2.5} />
         Saved
       </div>
     </div>

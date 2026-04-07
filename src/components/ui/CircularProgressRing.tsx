@@ -16,7 +16,7 @@ type CircularProgressRingProps = {
 };
 
 /**
- * SVG ring with emerald gradient; center content is fully custom via children.
+ * SVG ring with accent gradient; center content is fully custom via children.
  */
 export function CircularProgressRing({
   percent,
@@ -24,7 +24,8 @@ export function CircularProgressRing({
   strokeWidth = 9,
   gradientId,
   className,
-  trackClassName = "text-white/[0.08]",
+  /** Light: visible on white / kal-card-muted; dark: subtle track on slate cards */
+  trackClassName = "text-slate-300 dark:text-slate-500",
   children,
 }: CircularProgressRingProps) {
   const p = Math.min(100, Math.max(0, percent));
@@ -46,9 +47,9 @@ export function CircularProgressRing({
             x2="100%"
             y2="100%"
           >
-            <stop offset="0%" stopColor="#6ee7b7" />
-            <stop offset="50%" stopColor="#10b981" />
-            <stop offset="100%" stopColor="#047857" />
+            <stop offset="0%" stopColor="#fca5a5" />
+            <stop offset="50%" stopColor="#ef4444" />
+            <stop offset="100%" stopColor="#b91c1c" />
           </linearGradient>
         </defs>
         <circle

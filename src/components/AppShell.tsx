@@ -9,7 +9,7 @@ import { useOnboardingStore } from "@/store/useOnboardingStore";
 function LoadingScreen() {
   return (
     <div
-      className="flex min-h-full flex-1 items-center justify-center bg-[#020617] text-sm text-zinc-400"
+      className="flex min-h-full min-h-dvh flex-1 items-center justify-center bg-kal-page text-sm text-kal-muted"
       aria-busy="true"
     >
       Loading…

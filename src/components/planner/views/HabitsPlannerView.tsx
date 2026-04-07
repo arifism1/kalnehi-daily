@@ -94,7 +94,7 @@ export function HabitsPlannerView() {
         title="Daily PYQ & Weak Topic Discipline"
         subtitle="Loading…"
       >
-        <div className="h-40 animate-pulse rounded-2xl bg-slate-800/50" />
+        <div className="h-40 animate-pulse rounded-2xl bg-kal-border/60" />
       </PlannerPageShell>
     );
   }
@@ -109,13 +109,13 @@ export function HabitsPlannerView() {
         {habits.map((h) => (
           <li
             key={h.id}
-            className="flex items-start gap-3 rounded-2xl border border-slate-700 bg-slate-900/40 p-3"
+            className="flex items-start gap-3 rounded-2xl border border-kal-border bg-kal-card p-4 kal-shadow-card dark:border-slate-700 dark:bg-slate-900/40"
           >
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-white">{h.label}</p>
               <p className="mt-1 text-xs text-zinc-500">
                 Streak:{" "}
-                <span className="font-semibold tabular-nums text-emerald-400">
+                <span className="font-semibold tabular-nums text-kal-accent">
                   {h.streak}
                 </span>{" "}
                 days logged
@@ -125,7 +125,7 @@ export function HabitsPlannerView() {
               <button
                 type="button"
                 onClick={() => bump(h.id)}
-                className="rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold text-white active:bg-emerald-500"
+                className="rounded-xl bg-kal-accent px-3 py-2 text-xs font-semibold text-white active:bg-red-500"
                 aria-label={`Log ${h.label}`}
               >
                 +1 today
@@ -133,7 +133,7 @@ export function HabitsPlannerView() {
               <button
                 type="button"
                 onClick={() => remove(h.id)}
-                className="rounded-xl p-2 text-zinc-500 hover:bg-rose-950/40 hover:text-rose-300"
+                className="rounded-xl p-2 text-kal-muted hover:bg-kal-danger-soft hover:text-kal-danger-text"
                 aria-label="Remove habit"
               >
                 <Trash2 className="h-4 w-4" />
@@ -145,12 +145,12 @@ export function HabitsPlannerView() {
       <button
         type="button"
         onClick={add}
-        className="flex w-full min-h-[48px] items-center justify-center gap-2 rounded-2xl border border-dashed border-emerald-500/40 py-3 text-sm font-semibold text-emerald-300 hover:bg-emerald-950/30"
+        className="flex w-full min-h-[48px] items-center justify-center gap-2 rounded-2xl border border-dashed border-kal-accent/40 py-3 text-sm font-semibold text-kal-accent hover:bg-red-950/30"
       >
         <Plus className="h-4 w-4" />
         Add exam habit
       </button>
-      <p id={`${baseId}-hint`} className="text-[11px] text-zinc-600">
+      <p id={`${baseId}-hint`} className="text-[11px] text-kal-text-secondary">
         Reset streaks manually by editing habits in a future update — for now,
         use +1 as an honest daily log.
       </p>

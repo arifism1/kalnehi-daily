@@ -91,7 +91,7 @@ export function TaskPlanner({
   return (
     <div className="space-y-4">
       <div>
-        <label className="text-xs font-medium text-zinc-500">Subject</label>
+        <label className="text-xs font-medium text-kal-muted">Subject</label>
         <select
           value={subject}
           disabled={disabled || microtopics.length === 0}
@@ -100,7 +100,7 @@ export function TaskPlanner({
             onChapterChange("");
             onMicrotopicIdChange("");
           }}
-          className="mt-1.5 w-full min-h-[48px] rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2.5 text-sm text-white transition-colors duration-200"
+          className="mt-1.5 w-full min-h-[48px] rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-sm text-kal-text transition-colors duration-200"
         >
           <option value="">— Select subject —</option>
           {subjects.map((s) => (
@@ -112,7 +112,7 @@ export function TaskPlanner({
       </div>
 
       <div>
-        <label className="text-xs font-medium text-zinc-500">Chapter</label>
+        <label className="text-xs font-medium text-kal-muted">Chapter</label>
         <select
           value={chapter}
           disabled={disabled || !subject}
@@ -120,7 +120,7 @@ export function TaskPlanner({
             onChapterChange(e.target.value);
             onMicrotopicIdChange("");
           }}
-          className="mt-1.5 w-full min-h-[48px] rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2.5 text-sm text-white transition-colors duration-200"
+          className="mt-1.5 w-full min-h-[48px] rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-sm text-kal-text transition-colors duration-200"
         >
           <option value="">— Select chapter —</option>
           {chapters.map((c) => (
@@ -132,16 +132,16 @@ export function TaskPlanner({
       </div>
 
       <div>
-        <label className="text-xs font-medium text-zinc-500">Microtopic</label>
+        <label className="text-xs font-medium text-kal-muted">Microtopic</label>
         <select
           value={microtopicId}
           disabled={disabled || !chapter}
           onChange={(e) => onMicrotopicIdChange(e.target.value)}
           className={clsx(
-            "mt-1.5 w-full min-h-[48px] rounded-xl border bg-slate-900/80 px-3 py-2.5 text-sm text-white transition-colors duration-200",
+            "mt-1.5 w-full min-h-[48px] rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-sm text-kal-text transition-colors duration-200",
             duplicateMicrotopic
               ? "border-amber-500/60"
-              : "border-slate-700",
+              : "border-kal-border",
           )}
         >
           <option value="">— Select microtopic —</option>
@@ -160,18 +160,18 @@ export function TaskPlanner({
       </div>
 
       <div>
-        <label className="text-xs font-medium text-zinc-500">Assigned date</label>
+        <label className="text-xs font-medium text-kal-muted">Assigned date</label>
         <input
           type="date"
           value={assignedDate}
           disabled={disabled}
           onChange={(e) => onAssignedDateChange(e.target.value)}
-          className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2.5 text-base text-white transition-colors duration-200"
+          className="mt-1.5 min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-base text-kal-text transition-colors duration-200"
         />
       </div>
 
       <div>
-        <label className="text-xs font-medium text-zinc-500">
+        <label className="text-xs font-medium text-kal-muted">
           Est. minutes (optional)
         </label>
         <input
@@ -182,9 +182,9 @@ export function TaskPlanner({
           disabled={disabled}
           onChange={(e) => onEstimatedMinutesChange(e.target.value)}
           placeholder="—"
-          className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2.5 text-base text-white transition-colors duration-200"
+          className="mt-1.5 min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-base text-kal-text transition-colors duration-200"
         />
-        <p className="mt-1 text-[11px] tabular-nums text-zinc-600">
+        <p className="mt-1 text-[11px] tabular-nums text-kal-text-secondary">
           Day load (this date): {Math.floor(dayLoadExisting / 60)}h{" "}
           {dayLoadExisting % 60}m scheduled
           {proposedMinutes > 0 && (

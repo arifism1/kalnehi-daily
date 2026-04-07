@@ -42,8 +42,8 @@ export function TransientNotice({
 
   const tone =
     variant === "amber"
-      ? "border-amber-500/20 bg-amber-950/20 text-amber-100/90"
-      : "border-white/[0.06] bg-slate-900/80 text-slate-300";
+      ? "border-kal-warn-border bg-kal-warn-soft text-kal-warn-text dark:border-amber-500/20 dark:bg-amber-950/20 dark:text-amber-100/90"
+      : "border-kal-border bg-kal-card-muted text-kal-text-secondary";
 
   return (
     <div
@@ -60,7 +60,7 @@ export function TransientNotice({
           }
           onDismiss();
         }}
-        className="shrink-0 rounded-lg p-1 text-slate-500 transition-colors hover:bg-white/5 hover:text-slate-300"
+        className="shrink-0 rounded-lg p-1 text-kal-muted transition-colors hover:bg-kal-card hover:text-kal-text"
         aria-label="Dismiss"
       >
         <X className="h-3.5 w-3.5" strokeWidth={2.5} />

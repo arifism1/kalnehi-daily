@@ -201,7 +201,7 @@ export function ProfileForm() {
   if (loading) {
     return (
       <div className="flex justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-kal-accent" />
       </div>
     );
   }
@@ -253,7 +253,7 @@ export function ProfileForm() {
                 id="target-exam"
                 value={targetExam}
                 onChange={(e) => setTargetExam(e.target.value)}
-                className="w-full appearance-none rounded-lg border border-slate-700/80 bg-slate-950/80 py-2.5 pr-10 pl-3 text-[15px] text-white focus:border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                className="w-full appearance-none rounded-lg border border-slate-700/80 bg-slate-950/80 py-2.5 pr-10 pl-3 text-[15px] text-white focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
               >
                 <option value="">Select…</option>
                 {examSelectOptions.map((opt) => (
@@ -319,7 +319,7 @@ export function ProfileForm() {
               onClick={() => setPrevAttempted((v) => !v)}
               className={clsx(
                 "relative h-8 w-[52px] shrink-0 rounded-full transition-colors duration-300",
-                prevAttempted ? "bg-emerald-600" : "bg-zinc-600",
+                prevAttempted ? "bg-kal-accent" : "bg-zinc-600",
               )}
             >
               <span
@@ -369,7 +369,7 @@ export function ProfileForm() {
         )}
 
         {saved && (
-          <p className="text-center text-sm font-medium text-emerald-400" role="status">
+          <p className="text-center text-sm font-medium text-kal-accent" role="status">
             Saved.
           </p>
         )}
@@ -377,7 +377,7 @@ export function ProfileForm() {
         <button
           type="submit"
           disabled={saving}
-          className="flex w-full min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-3.5 text-[15px] font-semibold text-white shadow-lg shadow-emerald-900/20 transition-opacity duration-200 disabled:opacity-50"
+          className="flex w-full min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-kal-accent py-3.5 text-[15px] font-semibold text-white shadow-lg shadow-red-900/20 transition-opacity duration-200 disabled:opacity-50"
         >
           {saving && <Loader2 className="h-4 w-4 animate-spin" />}
           Save profile

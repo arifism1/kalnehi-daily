@@ -166,29 +166,27 @@ export function HomeClient() {
   );
 
   return (
-    <div className="flex min-h-full flex-col gap-5 pb-10 text-white sm:gap-6 md:gap-8 md:pb-14">
-      <header className="relative overflow-hidden rounded-2xl border border-white/[0.07] bg-gradient-to-br from-slate-900/95 via-[#0c1424] to-[#020617] px-4 py-5 shadow-xl shadow-emerald-500/[0.06] sm:rounded-3xl sm:px-8 sm:py-9 lg:px-10">
+    <div className="flex min-h-full flex-col gap-6 pb-10 text-kal-text sm:gap-8 md:gap-10 md:pb-14">
+      <header className="relative overflow-hidden rounded-[1rem] border border-kal-border bg-kal-card px-5 py-8 kal-shadow-card sm:rounded-[1.25rem] sm:px-8 sm:py-10 lg:px-10">
         <div
-          className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-emerald-500/[0.12] blur-3xl"
+          className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-kal-accent/15 blur-3xl"
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute -bottom-28 -left-20 h-48 w-48 rounded-full bg-indigo-500/[0.07] blur-3xl"
+          className="pointer-events-none absolute -bottom-20 -left-16 h-40 w-40 rounded-full bg-kal-accent/10 blur-3xl"
           aria-hidden
         />
 
-        <p className="relative text-[0.6rem] font-semibold uppercase tracking-[0.28em] text-emerald-400/90 sm:text-[0.65rem] sm:tracking-[0.35em]">
+        <p className="relative text-[0.6rem] font-semibold uppercase tracking-[0.28em] text-kal-accent sm:text-[0.65rem] sm:tracking-[0.35em]">
           Kalnehi Daily
         </p>
-        <p className="relative mt-1 text-[9px] font-medium uppercase tracking-[0.22em] text-slate-500 sm:mt-1.5 sm:text-[10px] sm:tracking-[0.28em]">
+        <p className="relative mt-1 text-[9px] font-medium uppercase tracking-[0.22em] text-kal-muted sm:mt-1.5 sm:text-[10px] sm:tracking-[0.28em]">
           Master today · disciplined execution
         </p>
-        <h1 className="relative mt-4 text-2xl font-bold tracking-tight sm:mt-6 sm:text-3xl sm:leading-tight md:text-[2.125rem] lg:text-[2.25rem]">
-          <span className="bg-gradient-to-r from-white via-slate-100 to-emerald-200/95 bg-clip-text text-transparent">
-            Execute Today
-          </span>
+        <h1 className="relative mt-4 text-2xl font-bold tracking-tight text-kal-text sm:mt-6 sm:text-3xl sm:leading-tight md:text-[2.125rem] lg:text-[2.25rem]">
+          Execute Today
         </h1>
-        <p className="relative mt-2 max-w-md text-sm leading-relaxed text-slate-400 sm:mt-3 sm:text-[15px]">
+        <p className="relative mt-2 max-w-md text-sm leading-relaxed text-kal-muted sm:mt-3 sm:text-[15px]">
           Conquer your syllabus and win daily — built for serious JEE &amp; NEET
           preparation.
         </p>

@@ -21,42 +21,42 @@ export function SyllabusComingSoon({
     >
       <div
         className={clsx(
-          "relative overflow-hidden border border-emerald-500/25 bg-gradient-to-br from-slate-950/95 via-slate-900/90 to-emerald-950/30 shadow-xl shadow-emerald-900/20",
+          "relative overflow-hidden border border-kal-accent/25 bg-gradient-to-br from-slate-950/95 via-slate-900/90 to-red-950/30 shadow-xl shadow-red-900/20",
           compact ? "rounded-2xl px-4 py-5 sm:px-5 sm:py-6" : "rounded-3xl px-6 py-12 sm:px-10 sm:py-14",
         )}
       >
         <div
-          className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-emerald-500/10 blur-3xl"
+          className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-kal-accent/10 blur-3xl"
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute -bottom-12 -left-10 h-32 w-32 rounded-full bg-teal-500/10 blur-3xl"
+          className="pointer-events-none absolute -bottom-12 -left-10 h-32 w-32 rounded-full bg-red-500/10 blur-3xl"
           aria-hidden
         />
 
         <div className="relative flex flex-col items-center text-center">
           <div
             className={clsx(
-              "flex items-center justify-center rounded-2xl border border-emerald-500/35 bg-emerald-500/10",
+              "flex items-center justify-center rounded-2xl border border-kal-accent/35 bg-kal-accent/10",
               compact ? "h-14 w-14" : "h-20 w-20",
             )}
           >
             {compact ? (
               <BookOpen
-                className="h-7 w-7 text-emerald-300"
+                className="h-7 w-7 text-kal-accent"
                 strokeWidth={1.75}
                 aria-hidden
               />
             ) : (
               <Sparkles
-                className="h-10 w-10 text-emerald-300"
+                className="h-10 w-10 text-kal-accent"
                 strokeWidth={1.5}
                 aria-hidden
               />
             )}
           </div>
 
-          <p className="mt-6 text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-emerald-400/90">
+          <p className="mt-6 text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-kal-accent/90">
             Syllabus tracker
           </p>
           <h1
@@ -73,7 +73,7 @@ export function SyllabusComingSoon({
               compact ? "text-sm" : "text-[15px] sm:text-base",
             )}
           >
-            <span className="font-medium text-emerald-200/95">
+            <span className="font-medium text-red-200/95">
               {examLabel} syllabus is coming soon.
             </span>{" "}
             We are working hard to bring full support for your exam — NEET UG and

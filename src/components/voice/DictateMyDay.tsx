@@ -582,7 +582,7 @@ export function DictateMyDay() {
 
   if (!user) {
     return (
-      <p className="rounded-2xl border border-amber-500/20 bg-amber-950/25 px-4 py-3 text-sm text-amber-100">
+      <p className="rounded-[1rem] border border-[var(--kal-warn-border)] bg-[var(--kal-warn-soft)] px-4 py-3 text-sm text-[var(--kal-warn-text)]">
         Sign in to save voice logs to your timeline.
       </p>
     );
@@ -591,28 +591,41 @@ export function DictateMyDay() {
   return (
     <div className="space-y-8">
       <header>
-        <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-violet-400/90">
+        <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
           Pro · Voice
         </p>
-        <h1 className="mt-1 flex flex-wrap items-center gap-2 text-2xl font-bold text-white">
-          <Volume2 className="h-8 w-8 text-violet-400" aria-hidden />
+        <h1 className="mt-1 flex flex-wrap items-center gap-2 text-2xl font-bold text-kal-text">
+          <Volume2 className="h-8 w-8 text-kal-accent" aria-hidden />
           Dictate My Day
         </h1>
-        <p className="mt-2 max-w-xl text-sm text-zinc-400">
-          Tap the mic and speak naturally—English or Hinglish is fine. We turn each
-          note into a structured timeline entry (study blocks, breaks, mocks, and
-          more). If the AI ever hiccups, your words are never lost—you can save them
-          as a raw note.
+        <p className="mt-2 max-w-xl text-sm leading-relaxed text-kal-muted">
+          Tap the mic and speak in English.
+          <br />
+          We turn each note into a structured timeline entry (study blocks, breaks,
+          mocks, and more).
+          <br />
+          If the AI ever hiccups, your words are never lost — you can save them as a
+          raw note.
         </p>
-        <p className="mt-3 rounded-xl border border-white/[0.06] bg-slate-950/50 px-3 py-2 text-xs leading-relaxed text-zinc-500">
-          <span className="font-medium text-zinc-400">Tip:</span> Short bursts work
-          best. Example: &quot;Ab Physics rotation kar raha hoon&quot; or &quot;Ten
-          minute break&quot;.
+        <div className="mt-3 max-w-xl rounded-xl border border-kal-border bg-kal-card-muted px-3 py-2.5 text-sm leading-relaxed text-kal-muted">
+          <p className="font-medium text-kal-text-secondary">
+            You may say it like this:
+          </p>
+          <ul className="mt-2 list-none space-y-1 pl-0">
+            <li>• Study kinematics from 10 AM to 11 AM</li>
+            <li>• Take a 15 minute break now</li>
+            <li>• Revise organic chemistry for next 45 minutes</li>
+            <li>• 10 minute gym session after dinner</li>
+          </ul>
+        </div>
+        <p className="mt-3 rounded-xl border border-kal-border bg-kal-card-muted px-3 py-2 text-xs leading-relaxed text-kal-muted">
+          <span className="font-medium text-kal-text-secondary">Tip:</span> Short bursts work
+          best.
         </p>
       </header>
 
       <div className="flex flex-wrap items-end gap-3">
-        <div className="flex min-h-[44px] items-center gap-1 rounded-xl border border-slate-700 bg-slate-950/60 p-1">
+        <div className="flex min-h-[44px] items-center gap-1 rounded-xl border border-kal-border bg-kal-card-muted p-1">
           {[
             { id: today, label: "Today" },
             {
@@ -630,29 +643,29 @@ export function DictateMyDay() {
               onClick={() => setLogDate(d.id)}
               className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
                 logDate === d.id
-                  ? "bg-emerald-600 text-white"
-                  : "text-zinc-400 hover:text-white"
+                  ? "bg-kal-accent text-white"
+                  : "text-kal-muted hover:text-kal-text"
               }`}
             >
               {d.label}
             </button>
           ))}
         </div>
-        <label className="block text-[11px] font-medium text-zinc-500">
+        <label className="block text-[11px] font-medium text-kal-muted">
           Log date
           <input
             type="date"
             value={logDate}
             onChange={(e) => setLogDate(e.target.value)}
-            className="mt-1 block min-h-[44px] rounded-xl border border-slate-600 bg-slate-950 px-3 text-sm text-white"
+            className="mt-1 block min-h-[44px] rounded-xl border border-kal-border bg-kal-input-bg px-3 text-sm text-kal-text"
           />
         </label>
-        <label className="block text-[11px] font-medium text-zinc-500">
+        <label className="block text-[11px] font-medium text-kal-muted">
           Speech language
           <select
             value={lang}
             onChange={(e) => setLang(e.target.value)}
-            className="mt-1 block min-h-[44px] min-w-[12rem] rounded-xl border border-slate-600 bg-slate-950 px-3 text-sm text-white"
+            className="mt-1 block min-h-[44px] min-w-[12rem] rounded-xl border border-kal-border bg-kal-input-bg px-3 text-sm text-kal-text"
           >
             {LANGS.map((l) => (
               <option key={l.value} value={l.value}>
@@ -663,7 +676,7 @@ export function DictateMyDay() {
         </label>
       </div>
 
-      <section className="rounded-3xl border border-violet-500/20 bg-gradient-to-b from-violet-950/40 to-slate-950/40 p-6 shadow-xl shadow-black/30">
+      <section className="rounded-[1.25rem] border border-kal-border bg-kal-card kal-shadow-card p-6">
         <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
           <button
             type="button"
@@ -691,24 +704,24 @@ export function DictateMyDay() {
             )}
           </button>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+            <p className="text-xs font-semibold uppercase tracking-wider text-kal-muted">
               {phase === "listening"
                 ? "Listening…"
                 : phase === "processing"
                   ? "Parsing with AI…"
                   : "Ready"}
             </p>
-            <div className="mt-3 min-h-[5rem] rounded-2xl border border-white/[0.08] bg-black/30 px-4 py-3 text-sm leading-relaxed text-zinc-200">
-              <span className="text-zinc-100">{displayFinal}</span>
-              <span className="text-violet-300/90">{interimText}</span>
+            <div className="mt-3 min-h-[5rem] rounded-[1rem] border border-kal-border bg-kal-card-muted px-4 py-3 text-sm leading-relaxed text-kal-text-secondary">
+              <span className="text-kal-text">{displayFinal}</span>
+              <span className="text-kal-accent">{interimText}</span>
               {!displayFinal && !interimText && phase === "idle" && (
-                <span className="text-zinc-600">
+                <span className="text-kal-muted">
                   Live transcript appears here. Short bursts work best (under a
                   minute).
                 </span>
               )}
             </div>
-            <p className="mt-2 text-[11px] text-zinc-500">
+            <p className="mt-2 text-[11px] text-kal-muted">
               {phase === "listening"
                 ? "Tap the button again to stop and save this note. Auto-stops after 60s."
                 : "Tap the mic to start. We send the transcript to Groq to split into timed tasks."}
@@ -717,24 +730,18 @@ export function DictateMyDay() {
         </div>
       </section>
 
-      <section className="relative rounded-3xl border border-emerald-500/20 bg-slate-950/40 p-4 sm:p-5">
+      <section className="relative rounded-[1.25rem] border border-kal-border bg-kal-card kal-shadow-card p-4 sm:p-6">
         {plannerLoading ? (
-          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-3xl bg-slate-950/70">
-            <Loader2 className="h-8 w-8 animate-spin text-emerald-400" />
+          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-[1.25rem] bg-kal-card/90 backdrop-blur-sm">
+            <Loader2 className="h-8 w-8 animate-spin text-kal-accent" />
           </div>
         ) : null}
         <div className="flex items-center justify-between gap-2">
-          <h2 className="text-lg font-bold text-white">Dictate My Day planner</h2>
-          <span className="text-xs text-zinc-500">{logDate}</span>
+          <h2 className="text-lg font-bold text-kal-text">Dictate My Day planner</h2>
+          <span className="text-xs text-kal-muted">{logDate}</span>
         </div>
-        <p className="mt-1 text-xs text-zinc-400">
-          Rows auto-save to this device (voice planner snapshot in IndexedDB) and sync
-          only to your{" "}
-          <span className="font-medium text-zinc-300">voice timeline</span> via the
-          outbox—never to typed tasks or handwritten planner. Edits queue while offline.
-        </p>
         {draftRows.length === 0 ? (
-          <p className="mt-6 rounded-2xl border border-dashed border-white/[0.08] py-10 text-center text-sm text-zinc-500">
+          <p className="mt-6 rounded-[1rem] border border-dashed border-kal-border py-10 text-center text-sm text-kal-muted">
             No tasks for this day yet—dictate above or tap &quot;Add row&quot;.
           </p>
         ) : (
@@ -742,9 +749,9 @@ export function DictateMyDay() {
             {draftRows.map((r) => (
               <li
                 key={r.id}
-                className="space-y-2 rounded-xl border border-white/[0.08] bg-slate-900/50 p-2.5"
+                className="space-y-2 rounded-xl border border-kal-border bg-kal-card-muted p-2.5"
               >
-                <p className="px-0.5 text-[11px] font-semibold tabular-nums tracking-tight text-emerald-200/95">
+                <p className="px-0.5 text-[11px] font-semibold tabular-nums tracking-tight text-kal-accent-dark dark:text-kal-accent">
                   {formatIstSlotRange12h(r.startInput, r.endInput)}
                 </p>
                 <div className="grid grid-cols-[2rem_1fr_2.2fr_1fr_auto_auto] items-start gap-2">
@@ -752,7 +759,7 @@ export function DictateMyDay() {
                     type="checkbox"
                     checked={r.include}
                     onChange={() => updateDraftRow(r.id, { include: !r.include })}
-                    className="mt-2 h-5 w-5 rounded border-slate-600"
+                    className="mt-2 h-5 w-5 rounded border-kal-border accent-kal-accent"
                     aria-label="Include row"
                   />
                   <input
@@ -761,16 +768,14 @@ export function DictateMyDay() {
                     onChange={(e) =>
                       updateDraftRow(r.id, { startInput: e.target.value })
                     }
-                    disabled={!r.include}
-                    className="min-h-[40px] rounded-lg border border-slate-600 bg-slate-950 px-2 text-sm text-white disabled:opacity-50"
+                    className="min-h-[40px] rounded-lg border border-kal-border bg-kal-input-bg px-2 text-sm text-kal-text"
                     aria-label="From time (IST)"
                   />
                   <input
                     value={r.name}
                     onChange={(e) => updateDraftRow(r.id, { name: e.target.value })}
-                    disabled={!r.include}
                     placeholder="Task name"
-                    className="min-h-[40px] rounded-lg border border-slate-600 bg-slate-950 px-2 text-sm text-white disabled:opacity-50"
+                    className="min-h-[40px] rounded-lg border border-kal-border bg-kal-input-bg px-2 text-sm text-kal-text placeholder:text-kal-muted"
                     aria-label="Task name"
                   />
                   <input
@@ -779,11 +784,10 @@ export function DictateMyDay() {
                     onChange={(e) =>
                       updateDraftRow(r.id, { endInput: e.target.value })
                     }
-                    disabled={!r.include}
-                    className="min-h-[40px] rounded-lg border border-slate-600 bg-slate-950 px-2 text-sm text-white disabled:opacity-50"
+                    className="min-h-[40px] rounded-lg border border-kal-border bg-kal-input-bg px-2 text-sm text-kal-text"
                     aria-label="To time (IST)"
                   />
-                  <span className="mt-2 w-[3rem] text-right text-xs font-semibold text-zinc-400">
+                  <span className="mt-2 w-[3rem] text-right text-xs font-semibold text-kal-text">
                     {r.duration ?? "—"}
                   </span>
                   <button
@@ -802,7 +806,7 @@ export function DictateMyDay() {
         <button
           type="button"
           onClick={addDraftRow}
-          className="mt-3 inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-slate-600 px-3 py-2 text-sm text-zinc-300 hover:bg-slate-800"
+          className="mt-3 inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-kal-border px-3 py-2 text-sm text-kal-text-secondary hover:bg-kal-card-muted"
         >
           <Plus className="h-4 w-4" />
           Add row
@@ -810,7 +814,7 @@ export function DictateMyDay() {
         <button
           type="button"
           onClick={() => void confirmFinalizeSync()}
-          className="mt-3 inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl border border-emerald-500/40 bg-emerald-600/90 px-6 text-base font-semibold text-emerald-950"
+          className="mt-3 inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-kal-accent px-6 text-base font-semibold text-white shadow-sm hover:bg-kal-accent-hover"
         >
           Sync voice timeline now
         </button>
@@ -818,13 +822,13 @@ export function DictateMyDay() {
 
       {fallbackPanel ? (
         <section
-          className="rounded-3xl border border-amber-500/30 bg-gradient-to-b from-amber-950/50 to-slate-950/60 p-6 shadow-xl"
+          className="rounded-[1.25rem] border border-[var(--kal-warn-border)] bg-[var(--kal-warn-soft)] p-6 kal-shadow-card"
           aria-live="polite"
         >
-          <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-amber-300/90">
+          <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-[var(--kal-warn-text)]">
             We kept your words
           </p>
-          <p className="mt-2 text-sm text-amber-100/90">
+          <p className="mt-2 text-sm text-kal-text-secondary">
             Structuring didn&apos;t run this time—your note is safe below. Save it as-is
             or tweak the text, then save.
           </p>
@@ -837,11 +841,11 @@ export function DictateMyDay() {
                 )
               }
               rows={6}
-              className="mt-4 w-full resize-y rounded-2xl border border-amber-500/25 bg-black/40 px-4 py-3 text-base leading-relaxed text-white placeholder:text-zinc-600"
+              className="mt-4 w-full resize-y rounded-[1rem] border border-kal-border bg-kal-input-bg px-4 py-3 text-base leading-relaxed text-kal-text placeholder:text-kal-muted"
               placeholder="Edit your note…"
             />
           ) : (
-            <p className="mt-4 rounded-2xl border border-white/[0.08] bg-black/35 px-4 py-4 text-lg leading-relaxed text-white">
+            <p className="mt-4 rounded-[1rem] border border-kal-border bg-kal-card-muted px-4 py-4 text-lg leading-relaxed text-kal-text">
               {fallbackPanel.text}
             </p>
           )}
@@ -850,7 +854,7 @@ export function DictateMyDay() {
               type="button"
               disabled={phase === "processing" || !fallbackPanel.text.trim()}
               onClick={() => void saveFallbackNote()}
-              className="min-h-[52px] flex-1 rounded-2xl bg-emerald-600 px-6 text-base font-semibold text-emerald-950 shadow-lg shadow-emerald-900/30 disabled:opacity-40"
+              className="min-h-[52px] flex-1 rounded-xl bg-kal-accent px-6 text-base font-semibold text-white shadow-sm hover:bg-kal-accent-hover disabled:opacity-40"
             >
               {phase === "processing" ? (
                 <span className="inline-flex items-center justify-center gap-2">
@@ -867,7 +871,7 @@ export function DictateMyDay() {
                 onClick={() =>
                   setFallbackPanel((p) => (p ? { ...p, editMode: true } : p))
                 }
-                className="min-h-[52px] flex-1 rounded-2xl border-2 border-amber-400/40 bg-amber-950/40 px-6 text-base font-semibold text-amber-100 disabled:opacity-40"
+                className="min-h-[52px] flex-1 rounded-xl border-2 border-[var(--kal-warn-border)] bg-kal-card px-6 text-base font-semibold text-[var(--kal-warn-text)] disabled:opacity-40"
               >
                 Edit before saving
               </button>
@@ -878,7 +882,7 @@ export function DictateMyDay() {
                 onClick={() =>
                   setFallbackPanel((p) => (p ? { ...p, editMode: false } : p))
                 }
-                className="min-h-[52px] flex-1 rounded-2xl border border-slate-500/50 bg-slate-900/60 px-6 text-base font-medium text-zinc-200 disabled:opacity-40"
+                className="min-h-[52px] flex-1 rounded-xl border border-kal-border bg-kal-card-muted px-6 text-base font-medium text-kal-text disabled:opacity-40"
               >
                 Preview
               </button>
@@ -887,7 +891,7 @@ export function DictateMyDay() {
               type="button"
               disabled={phase === "processing"}
               onClick={() => setFallbackPanel(null)}
-              className="min-h-[48px] rounded-2xl border border-slate-600 px-4 text-sm font-medium text-zinc-400 hover:bg-slate-800/80 disabled:opacity-40"
+              className="min-h-[48px] rounded-xl border border-kal-border px-4 text-sm font-medium text-kal-muted hover:bg-kal-card-muted disabled:opacity-40"
             >
               Dismiss
             </button>
@@ -898,7 +902,7 @@ export function DictateMyDay() {
       {error && (
         <div
           role="alert"
-          className="rounded-2xl border border-rose-500/25 bg-rose-950/30 px-4 py-3 text-sm text-rose-100"
+          className="rounded-[1rem] border border-[var(--kal-danger-border)] bg-[var(--kal-danger-soft)] px-4 py-3 text-sm text-[var(--kal-danger-text)]"
         >
           {error}
           <button

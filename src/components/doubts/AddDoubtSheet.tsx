@@ -163,7 +163,7 @@ export function AddDoubtSheet({ open, onClose }: AddDoubtSheetProps) {
               rows={3}
               placeholder="Type here — question, topic, or screenshot context…"
               autoComplete="off"
-              className="mt-2 w-full resize-y rounded-xl border border-slate-700 bg-slate-950/80 px-3 py-3 text-[15px] leading-relaxed text-white outline-none placeholder:text-zinc-600 focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+              className="mt-2 w-full resize-y rounded-xl border border-slate-700 bg-slate-950/80 px-3 py-3 text-[15px] leading-relaxed text-white outline-none placeholder:text-zinc-600 focus-visible:ring-2 focus-visible:ring-kal-accent/40"
             />
           </label>
 
@@ -174,7 +174,7 @@ export function AddDoubtSheet({ open, onClose }: AddDoubtSheetProps) {
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
               placeholder="Steps you tried, page number, etc."
-              className="mt-2 w-full resize-y rounded-xl border border-slate-700 bg-slate-950/80 px-3 py-3 text-[15px] leading-relaxed text-white outline-none placeholder:text-zinc-600 focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+              className="mt-2 w-full resize-y rounded-xl border border-slate-700 bg-slate-950/80 px-3 py-3 text-[15px] leading-relaxed text-white outline-none placeholder:text-zinc-600 focus-visible:ring-2 focus-visible:ring-kal-accent/40"
             />
           </label>
 
@@ -198,7 +198,7 @@ export function AddDoubtSheet({ open, onClose }: AddDoubtSheetProps) {
               type="button"
               onClick={onAddPhotoClick}
               disabled={saving}
-              className="flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl border border-emerald-500/35 bg-emerald-950/40 px-4 py-3 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-950/60 disabled:opacity-50"
+              className="flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl border border-kal-accent/35 bg-red-950/40 px-4 py-3 text-sm font-semibold text-red-100 transition hover:bg-red-950/60 disabled:opacity-50"
             >
               <Camera className="h-5 w-5 shrink-0" aria-hidden />
               <span>📸 Add photo</span>
@@ -246,7 +246,7 @@ export function AddDoubtSheet({ open, onClose }: AddDoubtSheetProps) {
             type="button"
             disabled={!canSave || saving}
             onClick={() => void save()}
-            className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-900/25 transition hover:bg-emerald-500 disabled:opacity-40"
+            className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-kal-accent py-3 text-sm font-semibold text-white shadow-lg shadow-red-900/25 transition hover:bg-red-500 disabled:opacity-40"
           >
             {saving ? (
               <>

@@ -170,7 +170,7 @@ export function OnboardingWizard() {
   return (
     <div className="mx-auto flex min-h-[min(100dvh,720px)] max-w-lg flex-col px-4 py-8">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-        <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-emerald-400/90">
+        <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-kal-accent/90">
           Setup · {step}/{STEPS}
         </p>
         <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
@@ -268,7 +268,7 @@ export function OnboardingWizard() {
             type="button"
             disabled={busy}
             onClick={() => void saveExamAndNext()}
-            className="mt-auto flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-3.5 text-sm font-semibold text-white transition-opacity duration-200 disabled:opacity-50"
+            className="mt-auto flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-kal-accent py-3.5 text-sm font-semibold text-white transition-opacity duration-200 disabled:opacity-50"
           >
             {busy ? "Saving…" : "Continue"}
             <ArrowRight className="h-4 w-4" />
@@ -279,7 +279,7 @@ export function OnboardingWizard() {
       {step === 2 && (
         <section className="flex flex-1 flex-col gap-6">
           <div className="flex items-center gap-2">
-            <BookOpen className="h-6 w-6 text-emerald-400" />
+            <BookOpen className="h-6 w-6 text-kal-accent" />
             <div>
               <h1 className="text-xl font-bold text-white">Subjects</h1>
               <p className="text-sm text-zinc-400">
@@ -318,7 +318,7 @@ export function OnboardingWizard() {
             type="button"
             disabled={!subject || subjects.length === 0}
             onClick={() => setStep(3)}
-            className="mt-auto flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-3.5 text-sm font-semibold text-white transition-opacity duration-200 disabled:opacity-40"
+            className="mt-auto flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-kal-accent py-3.5 text-sm font-semibold text-white transition-opacity duration-200 disabled:opacity-40"
           >
             Continue
             <ArrowRight className="h-4 w-4" />
@@ -329,7 +329,7 @@ export function OnboardingWizard() {
       {step === 3 && (
         <section className="flex flex-1 flex-col gap-6">
           <div className="flex items-center gap-2">
-            <Target className="h-6 w-6 text-emerald-400" />
+            <Target className="h-6 w-6 text-kal-accent" />
             <div>
               <h1 className="text-xl font-bold text-white">Microtopics</h1>
               <p className="text-sm text-zinc-400">
@@ -370,7 +370,7 @@ export function OnboardingWizard() {
             type="button"
             disabled={!microtopicId}
             onClick={() => setStep(4)}
-            className="mt-auto flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-3.5 text-sm font-semibold text-white transition-opacity duration-200 disabled:opacity-40"
+            className="mt-auto flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-kal-accent py-3.5 text-sm font-semibold text-white transition-opacity duration-200 disabled:opacity-40"
           >
             Continue
             <ArrowRight className="h-4 w-4" />
@@ -381,7 +381,7 @@ export function OnboardingWizard() {
       {step === 4 && (
         <section className="flex flex-1 flex-col gap-6">
           <div className="flex items-center gap-2">
-            <CalendarDays className="h-6 w-6 text-emerald-400" />
+            <CalendarDays className="h-6 w-6 text-kal-accent" />
             <div>
               <h1 className="text-xl font-bold text-white">
                 What are you conquering today?
@@ -416,7 +416,7 @@ export function OnboardingWizard() {
             type="button"
             disabled={busy}
             onClick={() => void createFirstTask()}
-            className="mt-auto flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-3.5 text-sm font-semibold text-white transition-opacity duration-200 disabled:opacity-50"
+            className="mt-auto flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-kal-accent py-3.5 text-sm font-semibold text-white transition-opacity duration-200 disabled:opacity-50"
           >
             {busy ? "Locking in…" : "Lock first target"}
             <Sparkles className="h-4 w-4" />
@@ -426,7 +426,7 @@ export function OnboardingWizard() {
 
       {step === 5 && (
         <section className="flex flex-1 flex-col items-center justify-center gap-8 text-center">
-          <CheckCircle2 className="h-16 w-16 text-emerald-400" aria-hidden />
+          <CheckCircle2 className="h-16 w-16 text-kal-accent" aria-hidden />
           <div>
             <h1 className="text-2xl font-bold text-white">Commitment sealed</h1>
             <p className="mt-2 text-sm text-zinc-400">
@@ -445,7 +445,7 @@ export function OnboardingWizard() {
             </button>
             <Link
               href="/plan"
-              className="text-center text-sm text-emerald-400/90 underline-offset-4 hover:underline"
+              className="text-center text-sm text-kal-accent/90 underline-offset-4 hover:underline"
             >
               Or open the full planner
             </Link>

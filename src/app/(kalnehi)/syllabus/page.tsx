@@ -26,19 +26,19 @@ export default async function SyllabusPage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg rounded-2xl border border-slate-700/80 bg-slate-900/50 px-5 py-12 text-center">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-slate-600 bg-slate-950/80">
-        <BookOpen className="h-8 w-8 text-zinc-500" aria-hidden />
+    <div className="mx-auto max-w-lg rounded-2xl border border-kal-border bg-kal-card px-8 py-12 text-center kal-shadow-card">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-kal-border bg-kal-card-muted">
+        <BookOpen className="h-8 w-8 text-kal-muted" aria-hidden />
       </div>
-      <h1 className="mt-6 text-lg font-bold text-white">Choose your target exam</h1>
-      <p className="mt-2 text-sm leading-relaxed text-zinc-400">
-        Set <strong className="text-zinc-300">Target exam</strong> in your profile
+      <h1 className="mt-6 text-lg font-bold text-kal-text">Choose your target exam</h1>
+      <p className="mt-2 text-sm leading-relaxed text-kal-muted">
+        Set <strong className="text-kal-text">Target exam</strong> in your profile
         so we load the matching syllabus (NEET UG, JEE Main, and more as we ship
         catalogs).
       </p>
       <Link
         href="/profile"
-        className="mt-6 inline-flex min-h-[48px] items-center justify-center rounded-xl bg-emerald-600 px-6 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+        className="mt-6 inline-flex min-h-[48px] items-center justify-center rounded-xl bg-kal-accent px-6 text-sm font-semibold text-kal-accent-foreground transition-opacity hover:bg-kal-accent-hover"
       >
         Open profile
       </Link>

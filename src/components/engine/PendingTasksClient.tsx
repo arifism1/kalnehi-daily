@@ -107,7 +107,7 @@ export function PendingTasksClient() {
                     type="button"
                     disabled={busyId === t.id}
                     onClick={() => void moveToToday(t)}
-                    className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
+                    className="rounded-lg bg-kal-accent px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
                   >
                     Move to today
                   </button>

@@ -127,7 +127,7 @@ export function TodosPlannerView() {
                     ),
                   )
                 }
-                className="mt-1 h-5 w-5 rounded border-slate-500 bg-slate-950 text-emerald-500"
+                className="mt-1 h-5 w-5 rounded border-slate-500 bg-slate-950 text-kal-accent"
               />
               <div className="min-w-0 flex-1">
                 <p
@@ -138,7 +138,7 @@ export function TodosPlannerView() {
                 <button
                   type="button"
                   onClick={() => cyclePriority(t.id)}
-                  className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-500 hover:text-emerald-400"
+                  className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-500 hover:text-kal-accent"
                 >
                   Priority: {t.priority}
                 </button>
@@ -158,7 +158,7 @@ export function TodosPlannerView() {
       <button
         type="button"
         onClick={add}
-        className="flex w-full min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-3.5 text-sm font-semibold text-white shadow-lg shadow-emerald-900/20"
+        className="flex w-full min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-kal-accent py-3.5 text-sm font-semibold text-white shadow-lg shadow-red-900/20"
       >
         <Plus className="h-4 w-4" />
         Add to-do
