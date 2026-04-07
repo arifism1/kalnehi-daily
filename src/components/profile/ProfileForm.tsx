@@ -10,7 +10,15 @@ import {
   UserCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  memo,
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { upsertUserProfile } from "@/actions/profile";
 import { CuetDomainSubjectPick } from "@/components/profile/CuetDomainSubjectPick";
@@ -30,7 +38,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { formatSupabaseError } from "@/lib/supabase";
 import { useAuthStore } from "@/store/useAuthStore";
 
-function Section({
+const Section = memo(function Section({
   title,
   footer,
   children,
@@ -54,9 +62,9 @@ function Section({
       ) : null}
     </section>
   );
-}
+});
 
-function Row({
+const Row = memo(function Row({
   children,
   className,
 }: {
@@ -73,7 +81,7 @@ function Row({
       {children}
     </div>
   );
-}
+});
 
 type ScoreRow = { id: string; label: string; score: string };
 
@@ -94,11 +102,13 @@ export function ProfileForm() {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [signOutConfirmOpen, setSignOutConfirmOpen] = useState(false);
+  const fullNameInputRef = useRef<HTMLInputElement | null>(null);
 
   const examSelectOptions = useMemo(
     () => mergeOrphanExamOption(examRows, initialExamRaw),
     [examRows, initialExamRaw],
   );
+  const deferredTargetExam = useDeferredValue(targetExam);
 
   useEffect(() => {
     if (!user?.id) {
@@ -207,8 +217,9 @@ export function ProfileForm() {
         setError("Select your target exam before saving.");
         return;
       }
+      const fullNameValue = fullNameInputRef.current?.value ?? fullName;
       const res = await upsertUserProfile({
-        full_name: fullName.trim() || null,
+        full_name: fullNameValue.trim() || null,
         target_exam_date: examDate.trim() || null,
         primary_exam: examName,
         target_exam: examName,
@@ -334,8 +345,9 @@ export function ProfileForm() {
               id="full-name"
               type="text"
               autoComplete="name"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
+              ref={fullNameInputRef}
+              defaultValue={fullName}
+              onBlur={(e) => setFullName(e.target.value)}
               placeholder="Your name"
               className="min-w-0 flex-1 rounded-lg border-0 bg-transparent py-1 text-[15px] text-kal-text placeholder:text-kal-muted focus:outline-none focus:ring-0"
             />
@@ -385,7 +397,7 @@ export function ProfileForm() {
               className="min-w-0 flex-1 rounded-lg border-0 bg-transparent py-1 text-[15px] text-kal-text [color-scheme:light] focus:outline-none focus:ring-0 dark:[color-scheme:dark]"
             />
           </Row>
-          {targetExam && isCuetExam(targetExam) ? (
+          {deferredTargetExam && isCuetExam(deferredTargetExam) ? (
             <div className="border-t border-kal-border px-4 py-4">
               <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
                 CUET domain subjects
