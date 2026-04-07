@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { Menu } from "lucide-react";
+import { ClipboardList, Menu, Mic } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -77,15 +77,51 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
                   kalnehi
                 </span>
               </Link>
-              <button
-                type="button"
-                onClick={() => setMenuOpen(true)}
-                className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-transparent text-kal-text-secondary transition-colors hover:border-kal-border hover:bg-kal-card-muted active:scale-[0.98] dark:hover:bg-kal-card-muted"
-                aria-expanded={menuOpen}
-                aria-label="Open navigation menu"
-              >
-                <Menu className="h-6 w-6" strokeWidth={2} />
-              </button>
+              <div className="flex min-w-0 shrink-0 items-center gap-0.5 sm:gap-1">
+                <Link
+                  href="/dictate-day"
+                  className={clsx(
+                    "flex h-11 min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-2 text-kal-accent transition-colors hover:border-kal-border hover:bg-kal-card-muted active:scale-[0.98] sm:min-w-0 sm:px-3 dark:hover:bg-kal-card-muted",
+                    pathname === "/dictate-day"
+                      ? "border-kal-accent/30 bg-kal-accent-soft"
+                      : "border-transparent",
+                  )}
+                  aria-label="Dictate My Day"
+                >
+                  <Mic className="h-5 w-5 shrink-0" strokeWidth={2.25} aria-hidden />
+                  <span className="hidden max-w-[5.5rem] truncate text-[11px] font-semibold leading-tight sm:inline sm:max-w-none sm:text-xs">
+                    Dictate
+                  </span>
+                </Link>
+                <Link
+                  href="/paste-handwritten"
+                  className={clsx(
+                    "flex h-11 min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-2 text-kal-accent transition-colors hover:border-kal-border hover:bg-kal-card-muted active:scale-[0.98] sm:min-w-0 sm:px-3 dark:hover:bg-kal-card-muted",
+                    pathname === "/paste-handwritten"
+                      ? "border-kal-accent/30 bg-kal-accent-soft"
+                      : "border-transparent",
+                  )}
+                  aria-label="Paste schedule"
+                >
+                  <ClipboardList
+                    className="h-5 w-5 shrink-0"
+                    strokeWidth={2.25}
+                    aria-hidden
+                  />
+                  <span className="hidden max-w-[5.5rem] truncate text-[11px] font-semibold leading-tight sm:inline sm:max-w-none sm:text-xs">
+                    Paste
+                  </span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen(true)}
+                  className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-transparent text-kal-text-secondary transition-colors hover:border-kal-border hover:bg-kal-card-muted active:scale-[0.98] dark:hover:bg-kal-card-muted"
+                  aria-expanded={menuOpen}
+                  aria-label="Open navigation menu"
+                >
+                  <Menu className="h-6 w-6" strokeWidth={2} />
+                </button>
+              </div>
             </div>
           </header>
         )}
