@@ -5,6 +5,7 @@ import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 
 import { useCalendarDate } from "@/hooks/useCalendarDate";
+import { ensureAutomatedNotifications } from "@/actions/notifications";
 import { useTargetExamDisplay } from "@/hooks/useTargetExamDisplay";
 import { useRefreshTasksOnHomeFocus } from "@/hooks/useRefreshTasksOnHomeFocus";
 import { useSyllabusTracker } from "@/hooks/useSyllabusTracker";
@@ -35,6 +36,9 @@ export function HomeClient() {
   useEffect(() => {
     router.prefetch("/syllabus");
   }, [router]);
+  useEffect(() => {
+    void ensureAutomatedNotifications();
+  }, []);
 
   const {
     examLabel,

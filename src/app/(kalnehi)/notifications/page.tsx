@@ -2,21 +2,48 @@
 
 import { Bell } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
+import {
+  ensureAutomatedNotifications,
+  listUserNotifications,
+  type UserNotification,
+} from "@/actions/notifications";
 import { useAuthStore } from "@/store/useAuthStore";
-
-type NotificationItem = {
-  id: string;
-  title: string;
-  message: string;
-  createdAt: string;
-  kind: "reminder" | "deadline" | "message";
-};
-
-const notifications: NotificationItem[] = [];
 
 export default function NotificationsPage() {
   const userId = useAuthStore((s) => s.user?.id);
+  const [notifications, setNotifications] = useState<UserNotification[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!userId) {
+      setNotifications([]);
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    void (async () => {
+      const ensured = await ensureAutomatedNotifications();
+      if (!ensured.ok && !cancelled) setError(ensured.error);
+      const res = await listUserNotifications();
+      if (cancelled) return;
+      if (!res.ok) {
+        setError(res.error);
+        setNotifications([]);
+        setLoading(false);
+        return;
+      }
+      setNotifications(res.notifications);
+      setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   if (!userId) {
     return (
@@ -44,7 +71,17 @@ export default function NotificationsPage() {
         <h1 className="mt-1 text-2xl font-bold text-kal-text">Notifications</h1>
       </header>
 
-      {notifications.length === 0 ? (
+      {error ? (
+        <section className="rounded-[1.25rem] border border-[var(--kal-warn-border)] bg-[var(--kal-warn-soft)] p-5 text-sm text-[var(--kal-warn-text)]">
+          Could not load notifications: {error}
+        </section>
+      ) : null}
+
+      {loading ? (
+        <section className="rounded-[1.25rem] border border-kal-border bg-kal-card p-6 text-center kal-shadow-card sm:p-8">
+          <p className="text-sm text-kal-muted">Loading notifications...</p>
+        </section>
+      ) : notifications.length === 0 ? (
         <section className="rounded-[1.25rem] border border-kal-border bg-kal-card p-6 text-center kal-shadow-card sm:p-8">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-kal-accent-soft text-kal-accent">
             <Bell className="h-6 w-6" aria-hidden />
@@ -64,7 +101,7 @@ export default function NotificationsPage() {
                 <p className="text-sm font-semibold text-kal-text">{item.title}</p>
                 <p className="mt-0.5 text-sm text-kal-muted">{item.message}</p>
                 <p className="mt-1 text-[11px] text-kal-text-secondary">
-                  {item.createdAt}
+                  {new Date(item.created_at).toLocaleString()}
                 </p>
               </li>
             ))}
