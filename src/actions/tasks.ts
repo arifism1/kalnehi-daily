@@ -98,6 +98,31 @@ export async function createTask(
   }
 }
 
+export async function createTasksBulk(
+  rows: Array<Omit<TablesInsert<"tasks">, "user_id">>,
+): Promise<{ ok: true; ids: string[] } | { ok: false; error: string }> {
+  try {
+    if (rows.length === 0) return { ok: true, ids: [] };
+    const { supabase, userId } = await requireUser();
+    const payload = rows.map((row) =>
+      sanitizeTaskPayload({
+        ...row,
+        user_id: userId,
+      } as TablesInsert<"tasks">),
+    );
+    const { data, error } = await supabase
+      .from("tasks")
+      .upsert(payload, { onConflict: "id" })
+      .select("id");
+    if (error) throw error;
+    revalidatePath("/");
+    revalidatePath("/plan");
+    return { ok: true, ids: (data ?? []).map((r) => r.id) };
+  } catch (e) {
+    return { ok: false, error: formatSupabaseError(e) };
+  }
+}
+
 export async function updateTask(
   id: string,
   patch: TablesUpdate<"tasks">,

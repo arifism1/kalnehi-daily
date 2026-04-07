@@ -1,6 +1,11 @@
 "use client";
 
-import { createTask, deleteTask, updateTask } from "@/actions/tasks";
+import {
+  createTask,
+  createTasksBulk,
+  deleteTask,
+  updateTask,
+} from "@/actions/tasks";
 import { createTaskSession } from "@/actions/taskSessions";
 import { formatSupabaseError, getSupabaseBrowserClient } from "@/lib/supabase";
 import { dispatchTasksSync } from "@/lib/taskRefreshDispatch";
@@ -32,6 +37,8 @@ let flushDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 let flushDebounceUserId: string | undefined;
 
 const OUTBOX_FLUSH_DEBOUNCE_MS = 55;
+const TASK_CREATE_BATCH_SIZE = 12;
+const TASK_CREATE_BATCH_PARALLEL = 3;
 
 /**
  * Schedule a flush shortly — coalesces bursts of task/syllabus mutations so the
@@ -367,12 +374,69 @@ export async function flushOutbox(userId: string | undefined): Promise<void> {
     let worstFailCount = 0;
     let voicePlannerOpsApplied = 0;
     let handwrittenPlannerOpsApplied = 0;
+    let touchedTasks = false;
+    let touchedExecution = false;
+    let touchedStudy = false;
+
+    const retryableTaskCreates = queue.filter(
+      (m) => m.op === "task_create" && m.insert && (m.failCount ?? 0) < MAX_RETRIES,
+    );
+
+    const runTaskCreateBatch = async (batch: OutboxMutation[]) => {
+      const inserts = batch
+        .map((m) => m.insert)
+        .filter((v): v is NonNullable<OutboxMutation["insert"]> => !!v);
+      if (inserts.length === 0) return;
+      try {
+        const res = await createTasksBulk(inserts);
+        if (res.ok) {
+          for (const m of batch) {
+            await deleteOutboxMutation(m.clientMutationId);
+            processed++;
+          }
+          touchedTasks = true;
+          return;
+        }
+        for (const m of batch) {
+          const fails = m.failCount ?? 0;
+          await bumpOutboxFailCount(m.clientMutationId);
+          failedThisRound++;
+          worstFailCount = Math.max(worstFailCount, fails + 1);
+        }
+      } catch (err) {
+        for (const m of batch) {
+          const fails = m.failCount ?? 0;
+          await bumpOutboxFailCount(m.clientMutationId);
+          failedThisRound++;
+          worstFailCount = Math.max(worstFailCount, fails + 1);
+        }
+        console.warn("[sync] task_create batch threw:", err);
+      }
+    };
+
+    if (retryableTaskCreates.length > 0) {
+      const batches: OutboxMutation[][] = [];
+      for (let i = 0; i < retryableTaskCreates.length; i += TASK_CREATE_BATCH_SIZE) {
+        batches.push(retryableTaskCreates.slice(i, i + TASK_CREATE_BATCH_SIZE));
+      }
+      for (let i = 0; i < batches.length; i += TASK_CREATE_BATCH_PARALLEL) {
+        await Promise.all(
+          batches
+            .slice(i, i + TASK_CREATE_BATCH_PARALLEL)
+            .map((b) => runTaskCreateBatch(b)),
+        );
+      }
+    }
 
     for (const m of queue) {
       const fails = m.failCount ?? 0;
 
       if (fails >= MAX_RETRIES) {
         deadLettered++;
+        continue;
+      }
+      if (m.op === "task_create" && m.insert) {
+        // Already handled via batch path above.
         continue;
       }
 
@@ -382,7 +446,9 @@ export async function flushOutbox(userId: string | undefined): Promise<void> {
         if (res.ok) {
           await deleteOutboxMutation(m.clientMutationId);
           processed++;
-          useSyncStore.getState().setPendingCount(await getOutboxCount());
+          if (m.op === "task_update" || m.op === "task_delete") touchedTasks = true;
+          if (m.op === "task_session_create") touchedExecution = true;
+          if (m.op === "study_session_create") touchedStudy = true;
           if (
             m.op === "voice_timeline_create" ||
             m.op === "voice_timeline_update" ||
@@ -431,11 +497,11 @@ export async function flushOutbox(userId: string | undefined): Promise<void> {
 
     if (processed > 0) {
       useSyncStore.getState().touchQuietSync();
-      await Promise.all([
-        refreshTasksFromSupabase(userId),
-        refreshExecutionLogFromServer(),
-        refreshStudySessionsFromServer(),
-      ]).catch(() => {});
+      const refreshes: Promise<unknown>[] = [];
+      if (touchedTasks) refreshes.push(refreshTasksFromSupabase(userId));
+      if (touchedExecution) refreshes.push(refreshExecutionLogFromServer());
+      if (touchedStudy) refreshes.push(refreshStudySessionsFromServer());
+      await Promise.all(refreshes).catch(() => {});
       dispatchTasksSync();
     }
     if (

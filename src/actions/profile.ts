@@ -95,18 +95,19 @@ export async function upsertUserProfile(fields: {
           })()
         : null;
 
-    const { data: existing, error: selErr } = await supabase
+    const { data: existingRows, error: selErr } = await supabase
       .from("user_profiles")
       .select("id")
       .eq("user_id", user.id)
-      .maybeSingle();
+      .order("updated_at", { ascending: false })
+      .limit(1);
     if (selErr) throw selErr;
 
-    if (existing?.id) {
+    if ((existingRows?.length ?? 0) > 0) {
       const { error } = await supabase
         .from("user_profiles")
         .update({ ...patchBase, ...(examHistoryPatch ?? {}) })
-        .eq("id", existing.id);
+        .eq("user_id", user.id);
       if (error) throw error;
     } else {
       const { error } = await supabase.from("user_profiles").insert({

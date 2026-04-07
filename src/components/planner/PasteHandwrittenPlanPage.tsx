@@ -69,7 +69,7 @@ function emptyRow(): EditableRow {
 function toRows(tasks: ParsedPastedPlanTask[]): EditableRow[] {
   return tasks.map((t) => ({
     id: crypto.randomUUID(),
-    include: true,
+    include: false,
     name: t.name,
     startInput: dbTimeToInputValue(t.start_time ? `${t.start_time}:00` : null),
     endInput: dbTimeToInputValue(t.end_time ? `${t.end_time}:00` : null),
@@ -546,9 +546,8 @@ export function PasteHandwrittenPlanPage() {
                       value={r.name}
                       onChange={(e) => updateRow(r.id, { name: e.target.value })}
                       placeholder="Task name"
-                      disabled={!r.include}
                       rows={1}
-                      className="min-h-[40px] min-w-0 w-full resize-y overflow-hidden rounded border border-kal-border bg-kal-input-bg px-2 py-2 text-sm font-semibold leading-5 text-kal-text placeholder:text-kal-muted [overflow-wrap:anywhere] disabled:opacity-50"
+                      className="min-h-[40px] min-w-0 w-full resize-y overflow-hidden rounded border border-kal-border bg-kal-input-bg px-2 py-2 text-sm font-semibold leading-5 text-kal-text placeholder:text-kal-muted [overflow-wrap:anywhere]"
                       aria-label="Task name"
                     />
                     <div className="mt-1.5 flex min-w-0 items-center gap-2">
@@ -558,16 +557,14 @@ export function PasteHandwrittenPlanPage() {
                         onChange={(e) =>
                           updateRow(r.id, { startInput: e.target.value })
                         }
-                        disabled={!r.include}
-                        className="min-h-[32px] rounded border border-kal-border bg-kal-input-bg px-2 text-[11px] text-kal-text disabled:opacity-50"
+                        className="min-h-[32px] rounded border border-kal-border bg-kal-input-bg px-2 text-[11px] text-kal-text"
                         aria-label="From time"
                       />
                       <input
                         type="time"
                         value={r.endInput}
                         onChange={(e) => updateRow(r.id, { endInput: e.target.value })}
-                        disabled={!r.include}
-                        className="min-h-[32px] rounded border border-kal-border bg-kal-input-bg px-2 text-[11px] text-kal-text disabled:opacity-50"
+                        className="min-h-[32px] rounded border border-kal-border bg-kal-input-bg px-2 text-[11px] text-kal-text"
                         aria-label="To time"
                       />
                       <span className="ml-auto text-xs font-medium text-kal-muted">

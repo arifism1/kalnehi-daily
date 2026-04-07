@@ -24,7 +24,7 @@ export function QuietSavedToast() {
     hideTimerRef.current = setTimeout(() => {
       hideTimerRef.current = null;
       setVisible(false);
-    }, 800);
+    }, 1000);
     return () => {
       if (hideTimerRef.current) {
         clearTimeout(hideTimerRef.current);
