@@ -751,10 +751,7 @@ export function DictateMyDay() {
                 key={r.id}
                 className="min-w-0 space-y-2 overflow-hidden rounded-xl border border-kal-border bg-kal-card-muted p-2.5"
               >
-                <p className="px-0.5 text-[11px] font-semibold tabular-nums tracking-tight text-kal-accent-dark dark:text-kal-accent">
-                  {formatIstSlotRange12h(r.startInput, r.endInput)}
-                </p>
-                <div className="min-w-0 grid grid-cols-[2rem_6.2rem_minmax(0,1fr)_6.2rem_auto_auto] items-start gap-2">
+                <div className="min-w-0 grid grid-cols-[2rem_minmax(0,1fr)_auto] items-start gap-2">
                   <input
                     type="checkbox"
                     checked={r.include}
@@ -762,39 +759,47 @@ export function DictateMyDay() {
                     className="mt-2 h-5 w-5 rounded border-kal-border accent-kal-accent"
                     aria-label="Include row"
                   />
-                  <input
-                    type="time"
-                    value={r.startInput}
-                    onChange={(e) =>
-                      updateDraftRow(r.id, { startInput: e.target.value })
-                    }
-                    className="min-h-[40px] rounded-lg border border-kal-border bg-kal-input-bg px-2 text-sm text-kal-text"
-                    aria-label="From time (IST)"
-                  />
-                  <textarea
-                    value={r.name}
-                    onChange={(e) => updateDraftRow(r.id, { name: e.target.value })}
-                    placeholder="Task name"
-                    rows={1}
-                    className="min-h-[40px] min-w-0 w-full resize-y overflow-hidden rounded-lg border border-kal-border bg-kal-input-bg px-2 py-2 text-sm leading-5 text-kal-text placeholder:text-kal-muted [overflow-wrap:anywhere]"
-                    aria-label="Task name"
-                  />
-                  <input
-                    type="time"
-                    value={r.endInput}
-                    onChange={(e) =>
-                      updateDraftRow(r.id, { endInput: e.target.value })
-                    }
-                    className="min-h-[40px] rounded-lg border border-kal-border bg-kal-input-bg px-2 text-sm text-kal-text"
-                    aria-label="To time (IST)"
-                  />
-                  <span className="mt-2 w-[3rem] text-right text-xs font-semibold text-kal-text">
-                    {r.duration ?? "—"}
-                  </span>
+                  <div className="min-w-0">
+                    <textarea
+                      value={r.name}
+                      onChange={(e) => updateDraftRow(r.id, { name: e.target.value })}
+                      placeholder="Task name"
+                      rows={1}
+                      className="min-h-[40px] min-w-0 w-full resize-y overflow-hidden rounded-lg border border-kal-border bg-kal-input-bg px-2 py-2 text-sm font-semibold leading-5 text-kal-text placeholder:text-kal-muted [overflow-wrap:anywhere]"
+                      aria-label="Task name"
+                    />
+                    <div className="mt-1.5 flex min-w-0 items-center gap-2 text-[11px] text-kal-muted">
+                      <input
+                        type="time"
+                        value={r.startInput}
+                        onChange={(e) =>
+                          updateDraftRow(r.id, { startInput: e.target.value })
+                        }
+                        className="min-h-[32px] rounded-md border border-kal-border bg-kal-input-bg px-2 text-[11px] text-kal-text"
+                        aria-label="From time (IST)"
+                      />
+                      <span className="shrink-0">•</span>
+                      <span className="truncate font-semibold text-kal-text-secondary">
+                        {r.duration ?? "—"}
+                      </span>
+                      <input
+                        type="time"
+                        value={r.endInput}
+                        onChange={(e) =>
+                          updateDraftRow(r.id, { endInput: e.target.value })
+                        }
+                        className="ml-auto min-h-[32px] rounded-md border border-kal-border bg-kal-input-bg px-2 text-[11px] text-kal-text"
+                        aria-label="To time (IST)"
+                      />
+                    </div>
+                    <p className="mt-1 text-[10px] font-medium tracking-tight text-kal-accent-dark dark:text-kal-accent">
+                      {formatIstSlotRange12h(r.startInput, r.endInput)}
+                    </p>
+                  </div>
                   <button
                     type="button"
                     onClick={() => removeDraftRow(r.id)}
-                    className="rounded-lg border border-rose-500/30 p-2 text-rose-300 hover:bg-rose-950/40"
+                    className="mt-1 rounded-lg border border-rose-500/30 p-2 text-rose-300 hover:bg-rose-950/40"
                     aria-label="Delete row"
                   >
                     <Trash2 className="h-4 w-4" />
