@@ -483,7 +483,7 @@ export function PasteHandwrittenPlanPage() {
               {rows.map((r) => (
                 <li
                   key={r.id}
-                  className="grid grid-cols-[2rem_1fr_2fr_auto_auto] items-start gap-2 rounded-lg border border-kal-border bg-kal-card-muted/80 p-3"
+                  className="min-w-0 grid grid-cols-[2rem_6.2rem_minmax(0,1fr)_6.2rem_auto_auto] items-start gap-2 overflow-hidden rounded-lg border border-kal-border bg-kal-card-muted/80 p-3"
                 >
                   <label className="mt-2 flex cursor-pointer">
                     <input
@@ -502,12 +502,13 @@ export function PasteHandwrittenPlanPage() {
                     className="min-h-[40px] rounded border border-kal-border bg-kal-input-bg px-2 text-sm text-kal-text disabled:opacity-50"
                     aria-label="From time"
                   />
-                  <input
+                  <textarea
                     value={r.name}
                     onChange={(e) => updateRow(r.id, { name: e.target.value })}
                     placeholder="Task name"
                     disabled={!r.include}
-                    className="min-h-[40px] rounded border border-kal-border bg-kal-input-bg px-2 text-sm text-kal-text placeholder:text-kal-muted disabled:opacity-50"
+                    rows={1}
+                    className="min-h-[40px] min-w-0 w-full resize-y overflow-hidden rounded border border-kal-border bg-kal-input-bg px-2 py-2 text-sm leading-5 text-kal-text placeholder:text-kal-muted [overflow-wrap:anywhere] disabled:opacity-50"
                     aria-label="Task name"
                   />
                   <input

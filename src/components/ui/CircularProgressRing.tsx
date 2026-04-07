@@ -32,6 +32,8 @@ export function CircularProgressRing({
   const r = (size - strokeWidth) / 2;
   const c = 2 * Math.PI * r;
   const dash = (p / 100) * c;
+  /** Keep center labels/text away from the ring stroke on all sizes. */
+  const contentInset = Math.max(10, Math.round(strokeWidth + 6));
 
   return (
     <div
@@ -73,7 +75,10 @@ export function CircularProgressRing({
           className="transition-[stroke-dasharray] duration-500 ease-out"
         />
       </svg>
-      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-3 text-center">
+      <div
+        className="pointer-events-none absolute flex flex-col items-center justify-center overflow-hidden rounded-full px-2 text-center"
+        style={{ inset: contentInset }}
+      >
         {children}
       </div>
     </div>

@@ -92,7 +92,9 @@ function TaskQuickSheet({
         className="relative z-10 w-full max-w-lg rounded-t-[1.25rem] border border-kal-border bg-kal-card p-5 kal-shadow-card sm:rounded-[1.25rem]"
       >
         <div className="flex items-start justify-between gap-2 border-b border-kal-border pb-3">
-          <p className="min-w-0 text-sm font-semibold text-kal-text">{title}</p>
+          <p className="min-w-0 break-words text-sm font-semibold text-kal-text [overflow-wrap:anywhere]">
+            {title}
+          </p>
           <button
             type="button"
             onClick={onClose}
@@ -490,7 +492,7 @@ export function TaskCard({
               onBlur={() => onNameCaptureCommit?.(nameDraft.trim())}
               placeholder="Task name — start typing"
               autoComplete="off"
-              className="w-full rounded-md border border-kal-border bg-kal-card-muted px-2 py-1.5 text-xs font-semibold text-kal-text outline-none placeholder:text-kal-muted focus-visible:ring-2 focus-visible:ring-kal-accent/40 sm:rounded-lg sm:px-2.5 sm:text-sm"
+              className="w-full min-w-0 rounded-md border border-kal-border bg-kal-card-muted px-2 py-1.5 text-xs font-semibold text-kal-text outline-none placeholder:text-kal-muted [overflow-wrap:anywhere] focus-visible:ring-2 focus-visible:ring-kal-accent/40 sm:rounded-lg sm:px-2.5 sm:text-sm"
               aria-label="Task name"
             />
           ) : (

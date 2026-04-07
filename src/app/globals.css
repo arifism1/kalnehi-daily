@@ -129,3 +129,46 @@ body {
     opacity: 1;
   }
 }
+
+/* Defensive overflow guards: prevent horizontal text spill app-wide. */
+@layer base {
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Flex/grid children must be shrinkable to avoid overflow from long text. */
+  :where(.flex, .grid) > * {
+    min-width: 0;
+  }
+
+  /* Keep controls constrained and wrap long unbroken tokens safely. */
+  :where(input, textarea, select, button) {
+    max-width: 100%;
+  }
+
+  :where(
+      p,
+      span,
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6,
+      a,
+      label,
+      button,
+      li,
+      td,
+      th
+    ) {
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  :where(input[type="text"], input[type="search"], input[type="email"], textarea) {
+    overflow-wrap: anywhere;
+  }
+}

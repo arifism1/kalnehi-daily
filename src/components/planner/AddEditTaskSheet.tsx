@@ -384,7 +384,7 @@ export function AddEditTaskSheet({
                 rows={4}
                 placeholder="What do you want to get done?"
                 disabled={blockUi}
-                className="mt-2 min-h-[7.5rem] w-full resize-y rounded-2xl border border-kal-border bg-kal-input-bg px-4 py-3 text-base leading-relaxed text-kal-text placeholder:text-kal-muted transition-colors duration-200 focus:border-kal-accent/50 focus:outline-none focus:ring-2 focus:ring-kal-accent/25 disabled:opacity-50"
+                className="mt-2 min-h-[7.5rem] w-full min-w-0 resize-y overflow-hidden rounded-2xl border border-kal-border bg-kal-input-bg px-4 py-3 text-base leading-relaxed text-kal-text placeholder:text-kal-muted [overflow-wrap:anywhere] transition-colors duration-200 focus:border-kal-accent/50 focus:outline-none focus:ring-2 focus:ring-kal-accent/25 disabled:opacity-50"
               />
             </div>
 
