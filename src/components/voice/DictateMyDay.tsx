@@ -16,8 +16,9 @@ import type { VoiceDraftTask } from "@/lib/voiceDraftFromGroq";
 import { listVoiceTimelineForDate } from "@/actions/voiceTimeline";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { getVoicePlannerSnapshot } from "@/lib/taskIdb";
+import { applyOptimisticTaskCreate } from "@/lib/taskMutations";
 import { flushOutbox } from "@/lib/sync";
-import { formatIstSlotRange12h } from "@/lib/voiceIst";
+import { formatIstSlotRange12h, minutesBetweenHHMM } from "@/lib/voiceIst";
 import {
   persistPlannerSnapshotLocal,
   plannerDurationFromTimeInputs,
@@ -27,6 +28,7 @@ import {
   type VoicePlannerTableRow,
 } from "@/lib/voicePlannerSync";
 import { useAuthStore } from "@/store/useAuthStore";
+import type { Task } from "@/store/useTaskStore";
 
 type Phase = "idle" | "listening" | "processing" | "error";
 
@@ -375,6 +377,50 @@ export function DictateMyDay() {
         const chunk = transcript.trim();
         const newRows = toDraftRows(res.tasks, chunk);
         setDraftRows((prev) => [...prev, ...newRows]);
+        if (user?.id) {
+          for (const row of newRows) {
+            const id = crypto.randomUUID();
+            const now = new Date().toISOString();
+            const estimated = minutesBetweenHHMM(
+              row.startInput || null,
+              row.endInput || null,
+            );
+            const fullTask: Task = {
+              id,
+              user_id: user.id,
+              assigned_date: logDate,
+              status: "pending",
+              name: row.name?.trim() || null,
+              microtopic_id: null,
+              created_at: now,
+              updated_at: now,
+              estimated_minutes: estimated,
+              estimated_time_minutes: estimated,
+              end_time: row.endInput || null,
+              start_time: row.startInput || null,
+              marks_value: null,
+              marks_weight: null,
+              time_spent_seconds: null,
+              source: "voice",
+            };
+            await applyOptimisticTaskCreate(
+              {
+                id,
+                assigned_date: logDate,
+                status: "pending",
+                name: row.name?.trim() || null,
+                microtopic_id: null,
+                start_time: row.startInput || null,
+                end_time: row.endInput || null,
+                estimated_minutes: estimated,
+                estimated_time_minutes: estimated,
+                source: "voice",
+              },
+              user.id,
+              fullTask,
+            );
+          }
+        }
         setDraftTranscript((prev) =>
           chunk
             ? prev
@@ -399,7 +445,7 @@ export function DictateMyDay() {
         finalBufRef.current = "";
       }
     },
-    [logDate],
+    [logDate, user?.id],
   );
 
   const saveFallbackNote = useCallback(async () => {

@@ -256,6 +256,7 @@ export type Database = {
           marks_weight: number | null
           microtopic_id: string | null
           name: string | null
+          source?: string | null
           start_time: string | null
           status: string
           time_spent_seconds: number | null
@@ -273,6 +274,7 @@ export type Database = {
           marks_weight?: number | null
           microtopic_id?: string | null
           name?: string | null
+          source?: string | null
           start_time?: string | null
           status?: string
           time_spent_seconds?: number | null
@@ -290,6 +292,7 @@ export type Database = {
           marks_weight?: number | null
           microtopic_id?: string | null
           name?: string | null
+          source?: string | null
           start_time?: string | null
           status?: string
           time_spent_seconds?: number | null

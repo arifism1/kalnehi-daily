@@ -16,10 +16,13 @@ import {
   persistHandwrittenSnapshotLocal,
   pushHandwrittenPlannerReplaceToOutbox,
 } from "@/lib/handwrittenPlannerSync";
+import { applyOptimisticTaskCreate } from "@/lib/taskMutations";
 import { flushOutbox } from "@/lib/sync";
 import { getHandwrittenPlannerSnapshot } from "@/lib/taskIdb";
 import { dbTimeToInputValue, inputTimeToDb } from "@/lib/taskTime";
+import { minutesBetweenHHMM } from "@/lib/voiceIst";
 import { useAuthStore } from "@/store/useAuthStore";
+import type { Task } from "@/store/useTaskStore";
 
 type EditableRow = {
   id: string;
@@ -312,6 +315,50 @@ export function PasteHandwrittenPlanPage() {
       }
       const next = toRows(res.tasks);
       setRows(next.length > 0 ? next : [emptyRow()]);
+      if (userId && next.length > 0) {
+        for (const row of next) {
+          const id = crypto.randomUUID();
+          const now = new Date().toISOString();
+          const estimated = minutesBetweenHHMM(
+            row.startInput || null,
+            row.endInput || null,
+          );
+          const fullTask: Task = {
+            id,
+            user_id: userId,
+            assigned_date: logDate,
+            status: "pending",
+            name: row.name?.trim() || null,
+            microtopic_id: null,
+            created_at: now,
+            updated_at: now,
+            estimated_minutes: estimated,
+            estimated_time_minutes: estimated,
+            end_time: inputTimeToDb(row.endInput),
+            start_time: inputTimeToDb(row.startInput),
+            marks_value: null,
+            marks_weight: null,
+            time_spent_seconds: null,
+            source: "handwritten",
+          };
+          await applyOptimisticTaskCreate(
+            {
+              id,
+              assigned_date: logDate,
+              status: "pending",
+              name: row.name?.trim() || null,
+              microtopic_id: null,
+              start_time: inputTimeToDb(row.startInput),
+              end_time: inputTimeToDb(row.endInput),
+              estimated_minutes: estimated,
+              estimated_time_minutes: estimated,
+              source: "handwritten",
+            },
+            userId,
+            fullTask,
+          );
+        }
+      }
       setHint(null);
     } catch (e) {
       setHint(e instanceof Error ? e.message : "Could not process pasted text.");

@@ -66,6 +66,7 @@ function taskToInsertWithoutUserId(t: Task): Omit<TablesInsert<"tasks">, "user_i
     status: t.status,
     microtopic_id: t.microtopic_id,
     name: t.name,
+    source: t.source ?? null,
     start_time: t.start_time,
     end_time: t.end_time,
     estimated_minutes: t.estimated_minutes ?? t.estimated_time_minutes ?? null,
