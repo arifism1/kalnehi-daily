@@ -1,6 +1,5 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -74,9 +73,19 @@ function filterProgressToSyllabusIds(
 }
 
 /** Keys are normalized `syllabus_master.id` strings. */
+type SyllabusTrackerCache = {
+  userId: string;
+  rows: MergedSyllabusRow[];
+  statusBySyllabusMasterId: Record<string, string>;
+  targetExamLabel: string | null;
+  cuetDomainSubjects: string[];
+  catalogExamKey: string | null;
+};
+
+let trackerCache: SyllabusTrackerCache | null = null;
+
 export function useSyllabusTracker() {
   const userId = useAuthStore((s) => s.user?.id);
-  const pathname = usePathname();
 
   const [rows, setRows] = useState<MergedSyllabusRow[]>([]);
   const [statusBySyllabusMasterId, setStatusBySyllabusMasterId] = useState<
@@ -107,6 +116,7 @@ export function useSyllabusTracker() {
     async (opts?: { silent?: boolean }) => {
       const silent = opts?.silent === true;
       if (!userId) {
+        trackerCache = null;
         setRows([]);
         setStatusBySyllabusMasterId({});
         setTargetExamLabel(null);
@@ -213,6 +223,14 @@ export function useSyllabusTracker() {
 
         setRows(sorted);
         setStatusBySyllabusMasterId(map);
+        trackerCache = {
+          userId,
+          rows: sorted,
+          statusBySyllabusMasterId: map,
+          targetExamLabel: examLabel ?? null,
+          cuetDomainSubjects: domains,
+          catalogExamKey: examKey,
+        };
         if (silent) setError(null);
       } catch (e) {
         const msg = toUserFacingMessage(e);
@@ -228,12 +246,28 @@ export function useSyllabusTracker() {
         if (!silent) setLoading(false);
       }
     },
-    [userId, pathname],
+    [userId],
   );
 
   useEffect(() => {
+    if (!userId) {
+      void load();
+      return;
+    }
+    const cached = trackerCache;
+    if (cached && cached.userId === userId) {
+      setRows(cached.rows);
+      setStatusBySyllabusMasterId(cached.statusBySyllabusMasterId);
+      setTargetExamLabel(cached.targetExamLabel);
+      setCuetDomainSubjects(cached.cuetDomainSubjects);
+      setCatalogExamKey(cached.catalogExamKey);
+      setLoading(false);
+      setError(null);
+      void load({ silent: true });
+      return;
+    }
     void load();
-  }, [load]);
+  }, [load, userId]);
 
   useEffect(() => {
     const onProfileUpdated = () => {

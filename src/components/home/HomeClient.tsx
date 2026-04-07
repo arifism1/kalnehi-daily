@@ -1,7 +1,8 @@
 "use client";
 
 import { addDays, format, parseISO } from "date-fns";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useTargetExamDisplay } from "@/hooks/useTargetExamDisplay";
@@ -29,7 +30,11 @@ import { RealitySnapshot } from "./RealitySnapshot";
 import { ThreeDayStrip } from "./ThreeDayStrip";
 
 export function HomeClient() {
+  const router = useRouter();
   useRefreshTasksOnHomeFocus();
+  useEffect(() => {
+    router.prefetch("/syllabus");
+  }, [router]);
 
   const {
     examLabel,
