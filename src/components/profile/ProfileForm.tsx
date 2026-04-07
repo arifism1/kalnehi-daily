@@ -217,7 +217,10 @@ export function ProfileForm() {
         cuet_domain_subjects:
           examName && isCuetExam(examName) ? cuetDomainSubjects : [],
       });
-      if (!res.ok) throw new Error(res.error);
+      if (!res.ok) {
+        setError(res.error);
+        return;
+      }
       setSaved(true);
       window.dispatchEvent(new Event(KALNEHI_PROFILE_UPDATED_EVENT));
       router.refresh();
