@@ -321,8 +321,8 @@ export function ExecutionLogClient() {
           <ul className="mt-6 space-y-2">
             {sessionsForDay.length === 0 ? (
               <li className="rounded-2xl border border-dashed border-kal-border py-12 text-center text-sm text-kal-muted">
-                No execution sessions ended this day. End a timer from a task
-                card to log real study time.
+                No execution sessions for this day yet - start one focused timer
+                to build your mastery record.
               </li>
             ) : (
               sessionsForDay.map((s) => {
@@ -375,7 +375,7 @@ export function ExecutionLogClient() {
             <ul className="mt-4 space-y-2">
               <StudySessionsLog
                 sessions={studySessionsForDay}
-                emptyMessage="No study sessions logged for this day."
+                emptyMessage="No study sessions for this day yet - add one to keep your streak moving."
               />
             </ul>
           </div>

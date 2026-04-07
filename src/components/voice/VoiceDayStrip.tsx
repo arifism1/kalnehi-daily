@@ -24,9 +24,15 @@ export function VoiceDayStrip({ logDate }: Props) {
       return;
     }
     setLoading(true);
-    const res = await listVoiceTimelineForDate(logDate);
-    setLoading(false);
-    if (res.ok) setEntries(res.entries.slice(0, 6));
+    try {
+      const res = await listVoiceTimelineForDate(logDate);
+      if (res.ok) setEntries(res.entries.slice(0, 6));
+      else setEntries([]);
+    } catch {
+      setEntries([]);
+    } finally {
+      setLoading(false);
+    }
   }, [user, logDate]);
 
   useEffect(() => {
@@ -57,10 +63,10 @@ export function VoiceDayStrip({ logDate }: Props) {
         </Link>
       </div>
       {loading ? (
-        <p className="mt-3 text-xs text-kal-muted">Loading voice notes…</p>
+        <p className="mt-3 text-xs text-kal-muted">Preparing your voice notes...</p>
       ) : entries.length === 0 ? (
         <p className="mt-3 text-xs text-kal-muted">
-          No voice logs for {logDate}. Tap Open to record your day in English.
+          No voice notes yet - dictate your first plan today!
         </p>
       ) : (
         <ul className="mt-3 space-y-2 border-t border-kal-border pt-3">

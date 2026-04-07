@@ -367,10 +367,7 @@ export function TaskCard({
 
   const done = task.status === "completed";
   const inProgress = task.status === "in_progress";
-  const title =
-    task.name?.trim() ||
-    microtopic.microtopic ||
-    "Task";
+  const title = task.name?.trim() || microtopic.microtopic || "Untitled target";
   const hasSyllabusLink = Boolean(task.microtopic_id);
   const showMeta =
     hasSyllabusLink &&

@@ -365,7 +365,9 @@ export function RealitySnapshot({
                         </span>
                       </p>
                       <p className="mt-0.5 text-[10px] leading-snug text-kal-muted sm:mt-1 sm:text-[11px]">
-                        {line.patternShort}
+                        {line.projectedOutOf720 === 0
+                          ? "Start adding tasks to see your projected score."
+                          : line.patternShort}
                       </p>
                     </li>
                   ))}
@@ -403,20 +405,28 @@ export function RealitySnapshot({
                       </p>
                     ) : (
                       <>
-                        <p className="mt-1.5 flex items-baseline justify-center gap-1.5 text-2xl font-bold tabular-nums sm:mt-2 sm:text-3xl md:text-4xl">
-                          <span className="text-red-600 dark:text-red-300">
-                            {marksMastered.toFixed(0)}
-                          </span>
-                          <span className="text-lg font-semibold text-kal-text-secondary sm:text-xl">
-                            /
-                          </span>
-                          <span className="text-kal-text-secondary">
-                            {marksTotal.toFixed(0)}
-                          </span>
-                        </p>
-                        <p className="mt-2 text-[10px] text-kal-muted sm:mt-3 sm:text-[11px]">
-                          Marks secured vs your plan scope
-                        </p>
+                        {marksMastered <= 0 ? (
+                          <p className="mt-2 max-w-[12rem] text-center text-[10px] leading-snug text-kal-muted sm:mt-3 sm:text-[11px]">
+                            Start adding tasks to see your progress projection.
+                          </p>
+                        ) : (
+                          <>
+                            <p className="mt-1.5 flex items-baseline justify-center gap-1.5 text-2xl font-bold tabular-nums sm:mt-2 sm:text-3xl md:text-4xl">
+                              <span className="text-red-600 dark:text-red-300">
+                                {marksMastered.toFixed(0)}
+                              </span>
+                              <span className="text-lg font-semibold text-kal-text-secondary sm:text-xl">
+                                /
+                              </span>
+                              <span className="text-kal-text-secondary">
+                                {marksTotal.toFixed(0)}
+                              </span>
+                            </p>
+                            <p className="mt-2 text-[10px] text-kal-muted sm:mt-3 sm:text-[11px]">
+                              Marks secured vs your plan scope
+                            </p>
+                          </>
+                        )}
                       </>
                     )}
                   </CircularProgressRing>

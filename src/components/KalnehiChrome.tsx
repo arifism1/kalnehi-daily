@@ -69,7 +69,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
                   alt=""
                   width={48}
                   height={48}
-                  className="h-10 w-10 flex-shrink-0 object-contain rounded-xl ring-1 ring-kal-border"
+                  className="h-10 w-10 flex-shrink-0 object-contain ring-1 ring-kal-border"
                 />
                 <span className="text-lg font-semibold tracking-tight text-black dark:text-white">
                   kalnehi

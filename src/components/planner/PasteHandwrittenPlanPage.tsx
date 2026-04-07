@@ -520,7 +520,7 @@ export function PasteHandwrittenPlanPage() {
 
         {hydrated && rows.length > 0 ? (
           <div className="mt-4 space-y-2">
-            <p className="text-xs font-medium text-kal-muted">Parsed tasks</p>
+            <p className="text-xs font-medium text-kal-muted">Review tasks</p>
             <ul className="space-y-2">
               {rows.map((r) => (
                 <li
@@ -588,6 +588,10 @@ export function PasteHandwrittenPlanPage() {
               Add another row
             </button>
           </div>
+        ) : hydrated ? (
+          <p className="mt-4 rounded-lg border border-dashed border-kal-border px-3 py-3 text-xs text-kal-muted">
+            No parsed tasks yet - paste your plan and tap "Process with AI" to get started.
+          </p>
         ) : null}
 
         <div className="mt-5 border-t border-kal-border pt-4">

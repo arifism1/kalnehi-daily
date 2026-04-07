@@ -1,4 +1,4 @@
- "use client";
+"use client";
 
 import { Bell } from "lucide-react";
 import Link from "next/link";
@@ -27,18 +27,31 @@ export default function NotificationsPage() {
     setLoading(true);
     setError(null);
     void (async () => {
-      const ensured = await ensureAutomatedNotifications();
-      if (!ensured.ok && !cancelled) setError(ensured.error);
-      const res = await listUserNotifications();
-      if (cancelled) return;
-      if (!res.ok) {
-        setError(res.error);
+      try {
+        let ensured = await ensureAutomatedNotifications();
+        if (!ensured.ok) {
+          // One quick retry helps when session/bootstrap races on initial page load.
+          ensured = await ensureAutomatedNotifications();
+        }
+        if (!ensured.ok && !cancelled) setError(ensured.error);
+
+        const res = await listUserNotifications();
+        if (cancelled) return;
+        if (!res.ok) {
+          setError(res.error);
+          setNotifications([]);
+          return;
+        }
+        setNotifications(res.notifications);
+      } catch (e) {
+        if (cancelled) return;
+        const msg = e instanceof Error ? e.message : "Failed to fetch notifications";
+        console.warn("[NotificationsPage] load failed", e);
+        setError(msg);
         setNotifications([]);
-        setLoading(false);
-        return;
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      setNotifications(res.notifications);
-      setLoading(false);
     })();
     return () => {
       cancelled = true;

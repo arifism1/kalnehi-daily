@@ -46,9 +46,8 @@ export default function StudySessionsPageContent() {
           Study sessions
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-kal-muted sm:text-[15px]">
-          Claim time you know you did, or use the camera for posture-checked
-          sessions. Everything saves on-device first, then syncs when you&apos;re
-          online.
+          Claim focused study time, or use the camera mode for accountability.
+          Your progress stays in sync across devices when you&apos;re signed in.
         </p>
         <div className="mt-4 rounded-2xl border border-kal-accent/25 bg-kal-accent-soft px-5 py-4">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-kal-accent">
@@ -97,7 +96,7 @@ export default function StudySessionsPageContent() {
         <ul className="mt-4 space-y-2">
           <StudySessionsLog
             sessions={sessions}
-            emptyMessage="No sessions yet. Tap Add study session to begin."
+            emptyMessage="No study sessions yet - add your first session to start building momentum."
           />
         </ul>
       </section>

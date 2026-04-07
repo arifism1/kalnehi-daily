@@ -17,6 +17,33 @@ export type UserNotification = {
   read: boolean;
 };
 
+function toDetailedSupabaseError(error: unknown): string {
+  if (!error || typeof error !== "object") return formatSupabaseError(error);
+  const e = error as {
+    message?: string;
+    code?: string;
+    details?: string;
+    hint?: string;
+  };
+  const parts = [e.message ?? formatSupabaseError(error)];
+  if (e.code) parts.push(`code=${e.code}`);
+  if (e.details) parts.push(`details=${e.details}`);
+  if (e.hint) parts.push(`hint=${e.hint}`);
+  return parts.join(" | ");
+}
+
+/** PostgREST: table not exposed or not created yet (run migration in Supabase). */
+function isUserNotificationsTableMissing(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const e = error as { code?: string; message?: string };
+  if (e.code === "PGRST205") return true;
+  const m = (e.message ?? "").toLowerCase();
+  return (
+    m.includes("user_notifications") &&
+    (m.includes("schema cache") || m.includes("could not find"))
+  );
+}
+
 function todayRangeUtc() {
   const now = new Date();
   const start = new Date(
@@ -47,7 +74,16 @@ async function insertIfMissingToday(
     .eq("title", title)
     .gte("created_at", startIso)
     .lte("created_at", endIso);
-  if (countError) throw countError;
+  if (countError) {
+    if (isUserNotificationsTableMissing(countError)) {
+      console.log(
+        "[user_notifications] table missing; skip insert until migration is applied",
+        countError,
+      );
+      return;
+    }
+    throw countError;
+  }
   if ((count ?? 0) > 0) return;
 
   const row: TablesInsert<"user_notifications"> = {
@@ -58,7 +94,16 @@ async function insertIfMissingToday(
     read: false,
   };
   const { error } = await supabase.from("user_notifications").insert(row);
-  if (error) throw error;
+  if (error) {
+    if (isUserNotificationsTableMissing(error)) {
+      console.log(
+        "[user_notifications] table missing; skip insert until migration is applied",
+        error,
+      );
+      return;
+    }
+    throw error;
+  }
 }
 
 export async function ensureAutomatedNotifications(): Promise<
@@ -142,7 +187,8 @@ export async function ensureAutomatedNotifications(): Promise<
 
     return { ok: true };
   } catch (e) {
-    return { ok: false, error: formatSupabaseError(e) };
+    console.log("[ensureAutomatedNotifications] failed", e);
+    return { ok: false, error: toDetailedSupabaseError(e) };
   }
 }
 
@@ -163,13 +209,29 @@ export async function listUserNotifications(
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(Math.max(1, Math.min(100, limit)));
-    if (error) throw error;
+    if (error) {
+      console.log("[listUserNotifications] query error", {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        full: error,
+      });
+      if (isUserNotificationsTableMissing(error)) {
+        console.log(
+          "[listUserNotifications] user_notifications not in DB yet — returning empty list (apply supabase migration)",
+        );
+        return { ok: true, notifications: [] };
+      }
+      throw error;
+    }
 
     return {
       ok: true,
       notifications: (data ?? []) as UserNotification[],
     };
   } catch (e) {
-    return { ok: false, error: formatSupabaseError(e) };
+    console.log("[listUserNotifications] failed", e);
+    return { ok: false, error: toDetailedSupabaseError(e) };
   }
 }
