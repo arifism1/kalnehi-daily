@@ -67,9 +67,9 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
                 <Image
                   src="/icon-192x192.png"
                   alt=""
-                  width={36}
-                  height={36}
-                  className="h-8 w-8 shrink-0 rounded-xl ring-1 ring-kal-border"
+                  width={48}
+                  height={48}
+                  className="h-10 w-10 flex-shrink-0 object-contain rounded-xl ring-1 ring-kal-border"
                 />
                 <span className="text-lg font-semibold tracking-tight text-black dark:text-white">
                   kalnehi

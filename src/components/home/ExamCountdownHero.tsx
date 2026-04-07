@@ -158,11 +158,6 @@ export function ExamCountdownHero() {
           </div>
         ))}
       </div>
-      <p className="mt-5 text-center font-mono text-[10px] tabular-nums text-kal-muted sm:mt-6 sm:text-[11px]">
-        <span className="text-kal-accent">T-minus</span>{" "}
-        {String(hours).padStart(2, "0")}:{String(minutes).padStart(2, "0")}:
-        {String(seconds).padStart(2, "0")}
-      </p>
     </div>
   );
 }
