@@ -366,7 +366,7 @@ export function PasteHandwrittenPlanPage() {
     } finally {
       setPhase("idle");
     }
-  }, [rawText]);
+  }, [rawText, userId, logDate]);
 
   const saveAll = useCallback(async () => {
     setFormError(null);
@@ -450,12 +450,7 @@ export function PasteHandwrittenPlanPage() {
       <section className="rounded-[1.25rem] border border-kal-border bg-kal-card kal-shadow-card p-4 sm:p-6">
         {autosaveError ? (
           <p className="mb-3 text-[10px] text-[var(--kal-warn-text)]">{autosaveError}</p>
-        ) : (
-          <p className="mb-3 text-[10px] text-kal-muted">
-            Handwritten planner only: saves on this device and queues sync
-            (debounced).
-          </p>
-        )}
+        ) : null}
         {formError ? (
           <p
             className="mb-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-900 dark:border-rose-500/30 dark:bg-rose-950/25 dark:text-rose-100"
