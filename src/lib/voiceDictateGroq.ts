@@ -1,5 +1,8 @@
 import Groq from "groq-sdk";
-import type { ChatCompletionMessageParam } from "groq-sdk/resources/chat/completions";
+import type {
+  ChatCompletionMessageParam,
+  ChatCompletionUserMessageParam,
+} from "groq-sdk/resources/chat/completions";
 
 import {
   VOICE_DICTATE_REPAIR_SYSTEM_PROMPT,
@@ -413,6 +416,144 @@ export async function fetchVoiceTasksFromGroq(
       return {
         outcome: "structured",
         tasks: [singleTaskFromRaw(trimmed, ctx.referenceIso)],
+      };
+    }
+  }
+}
+
+/** Vision models for handwritten planner photos. */
+const GROQ_PLANNER_PHOTO_MODELS = [
+  "meta-llama/llama-4-scout-17b-16e-instruct",
+  "llama-3.2-11b-vision-preview",
+] as const;
+
+async function groqVisionChat(
+  apiKey: string,
+  messages: ChatCompletionMessageParam[],
+  opts: { temperature: number; max_tokens: number },
+): Promise<string> {
+  const groq = new Groq({ apiKey });
+  let lastErr: unknown;
+  for (const model of GROQ_PLANNER_PHOTO_MODELS) {
+    try {
+      const completion = await groq.chat.completions.create({
+        model,
+        ...opts,
+        messages,
+      });
+      return messageContentToString(completion.choices[0]?.message?.content);
+    } catch (e) {
+      lastErr = e;
+      if (isTransientGroqError(e)) throw e;
+      if (!isWrongModelError(e)) throw e;
+    }
+  }
+  throw lastErr;
+}
+
+function buildPlannerPhotoUserMessage(
+  imageBase64: string,
+  mimeType: string,
+  ctx: VoiceGroqContext,
+): ChatCompletionUserMessageParam {
+  const nowIst = isoToIST_HHMM(ctx.referenceIso);
+  return {
+    role: "user",
+    content: [
+      {
+        type: "text",
+        text: `You are reading a handwritten daily plan from an image.
+Return ONLY a JSON array where each item is:
+{"name":"string","start_time":"HH:MM"|null,"end_time":"HH:MM"|null}
+Use 24-hour IST times. Keep one task per visible schedule line.
+
+LOG_DATE: ${ctx.logDate}
+NOW_IST: ${nowIst}
+`,
+      },
+      {
+        type: "image_url",
+        image_url: {
+          url: `data:${mimeType};base64,${imageBase64}`,
+          detail: "high",
+        },
+      },
+    ],
+  };
+}
+
+export async function fetchPlannerPhotoTasksFromGroq(
+  imageBase64: string,
+  mimeType: string,
+  ctx: VoiceGroqContext,
+  options?: FetchVoiceGroqOptions,
+): Promise<GroqVoiceFetchResult> {
+  const strict = options?.strictParsedTasks === true;
+  const apiKey = process.env.GROQ_API_KEY?.trim();
+  if (!apiKey) return { outcome: "fallback" };
+  const b64 = imageBase64.trim();
+  if (!b64) return { outcome: "fallback" };
+
+  const userMsg = buildPlannerPhotoUserMessage(b64, mimeType, ctx);
+  const attemptParse = (content: string): GroqVoiceFetchResult =>
+    tasksFromModelContent(content, "[handwritten photo]", ctx.referenceIso, strict);
+
+  const run = async (): Promise<GroqVoiceFetchResult> => {
+    const content = await groqVisionChat(apiKey, [userMsg], {
+      temperature: 0.12,
+      max_tokens: 2048,
+    });
+    let result = attemptParse(content);
+    if (strict && result.outcome === "parse_failed") {
+      const repaired = await groqVisionChat(
+        apiKey,
+        [
+          {
+            role: "user",
+            content: `Fix your previous output to valid JSON array only.
+Each item: {"name":"string","start_time":"HH:MM"|null,"end_time":"HH:MM"|null}
+LOG_DATE: ${ctx.logDate}
+NOW_IST: ${isoToIST_HHMM(ctx.referenceIso)}
+Previous output:
+"""${content.slice(0, 1400)}"""`,
+          },
+          {
+            role: "user",
+            content: [
+              {
+                type: "image_url",
+                image_url: {
+                  url: `data:${mimeType};base64,${b64}`,
+                  detail: "high",
+                },
+              },
+            ],
+          } as ChatCompletionMessageParam,
+        ],
+        { temperature: 0.08, max_tokens: 2048 },
+      );
+      result = attemptParse(repaired);
+    }
+    return result;
+  };
+
+  try {
+    return await run();
+  } catch (first) {
+    if (!isTransientGroqError(first)) {
+      if (strict) return { outcome: "parse_failed" };
+      return {
+        outcome: "structured",
+        tasks: [singleTaskFromRaw("[handwritten photo]", ctx.referenceIso)],
+      };
+    }
+    try {
+      return await run();
+    } catch {
+      if (strict) return { outcome: "parse_failed" };
+      return {
+        outcome: "structured",
+        tasks: [singleTaskFromRaw("[handwritten photo]", ctx.referenceIso)],
       };
     }
   }
