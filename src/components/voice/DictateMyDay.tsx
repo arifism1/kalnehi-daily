@@ -676,8 +676,8 @@ export function DictateMyDay() {
         </label>
       </div>
 
-      <section className="rounded-[1.25rem] border border-kal-border bg-kal-card kal-shadow-card p-6">
-        <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
+      <section className="rounded-[1.25rem] border border-kal-border bg-kal-card kal-shadow-card p-4 sm:p-5">
+        <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:gap-5">
           <button
             type="button"
             disabled={phase === "processing"}
@@ -686,7 +686,7 @@ export function DictateMyDay() {
               else void startListening();
             }}
             className={[
-              "relative flex h-28 w-28 shrink-0 items-center justify-center rounded-full border-4 transition-all",
+              "relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-[3px] transition-all",
               phase === "listening"
                 ? "border-violet-400 bg-violet-500/30 shadow-[0_0_40px_rgba(139,92,246,0.45)] animate-pulse"
                 : "border-violet-500/40 bg-violet-500/15 hover:bg-violet-500/25",
@@ -696,11 +696,11 @@ export function DictateMyDay() {
             aria-label={phase === "listening" ? "Stop listening" : "Start listening"}
           >
             {phase === "processing" ? (
-              <Loader2 className="h-12 w-12 animate-spin text-violet-200" />
+              <Loader2 className="h-7 w-7 animate-spin text-violet-200" />
             ) : phase === "listening" ? (
-              <MicOff className="h-12 w-12 text-violet-100" />
+              <MicOff className="h-7 w-7 text-violet-100" />
             ) : (
-              <Mic className="h-12 w-12 text-violet-200" />
+              <Mic className="h-7 w-7 text-violet-200" />
             )}
           </button>
           <div className="min-w-0 flex-1">
@@ -711,7 +711,7 @@ export function DictateMyDay() {
                   ? "Parsing with AI…"
                   : "Ready"}
             </p>
-            <div className="mt-3 min-h-[5rem] rounded-[1rem] border border-kal-border bg-kal-card-muted px-4 py-3 text-sm leading-relaxed text-kal-text-secondary">
+            <div className="mt-2 min-h-[4rem] rounded-[1rem] border border-kal-border bg-kal-card-muted px-4 py-2.5 text-sm leading-relaxed text-kal-text-secondary">
               <span className="text-kal-text">{displayFinal}</span>
               <span className="text-kal-accent">{interimText}</span>
               {!displayFinal && !interimText && phase === "idle" && (
