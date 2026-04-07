@@ -107,16 +107,10 @@ export function MainNavigationMenu({
       />
       <div
         className={clsx(
-          "absolute inset-x-0 bottom-0 flex max-h-[min(92vh,100dvh)] flex-col overflow-hidden rounded-t-[1.25rem] border border-kal-border bg-kal-card kal-shadow-card transition-transform duration-200 ease-out sm:bottom-auto sm:left-auto sm:right-0 sm:top-0 sm:h-full sm:max-h-none sm:max-w-md sm:rounded-none sm:rounded-bl-[1.25rem] sm:border-l sm:border-t-0",
-          open ? "translate-y-0 sm:translate-x-0" : "translate-y-full sm:translate-y-0 sm:translate-x-full",
+          "absolute bottom-0 right-0 top-0 flex h-full w-[min(92vw,24rem)] max-w-md flex-col overflow-hidden rounded-l-[1.25rem] border border-kal-border border-r-0 bg-kal-card kal-shadow-card transition-transform duration-200 ease-out sm:w-[min(80vw,24rem)]",
+          open ? "translate-x-0" : "translate-x-full",
         )}
       >
-        <div className="flex shrink-0 justify-center pt-2 pb-1 sm:hidden">
-          <div
-            className="h-1 w-10 rounded-full bg-kal-border"
-            aria-hidden
-          />
-        </div>
         <div className="flex shrink-0 items-center gap-3 border-b border-kal-border px-4 py-4">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-kal-accent-soft text-kal-accent">
             <Menu className="h-6 w-6" strokeWidth={2.25} />

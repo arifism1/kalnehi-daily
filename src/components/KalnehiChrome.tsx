@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { ClipboardList, Menu, Mic } from "lucide-react";
+import { Bell, ClipboardList, Menu, Mic } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -76,6 +76,21 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
                 </span>
               </Link>
               <div className="flex min-w-0 shrink-0 items-center gap-0.5 sm:gap-1">
+                <Link
+                  href="/notifications"
+                  className={clsx(
+                    "flex h-11 min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-2 text-kal-accent transition-colors hover:border-kal-border hover:bg-kal-card-muted active:scale-[0.98] sm:min-w-0 sm:px-3 dark:hover:bg-kal-card-muted",
+                    pathname === "/notifications"
+                      ? "border-kal-accent/30 bg-kal-accent-soft"
+                      : "border-transparent",
+                  )}
+                  aria-label="Notifications"
+                >
+                  <Bell className="h-5 w-5 shrink-0" strokeWidth={2.25} aria-hidden />
+                  <span className="hidden text-[11px] font-semibold leading-tight sm:inline sm:text-xs">
+                    Alerts
+                  </span>
+                </Link>
                 <Link
                   href="/dictate-day"
                   className={clsx(
