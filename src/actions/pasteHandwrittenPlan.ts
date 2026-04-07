@@ -2,6 +2,8 @@
 
 import Groq from "groq-sdk";
 
+import { groqTasksToVoiceDraftTasks } from "@/lib/voiceDraftFromGroq";
+import { fetchPlannerPhotoTasksFromGroq } from "@/lib/voiceDictateGroq";
 import { PASTE_HANDWRITTEN_PLAN_PROMPT } from "@/lib/voicePrompts";
 import { runVoiceParseDraft } from "@/lib/runVoiceParseDraft";
 
@@ -18,6 +20,13 @@ type ParseResult =
 
 const MODEL = "llama-3.1-70b-versatile";
 const MAX_TASKS = 60;
+const ALLOWED_PHOTO_MIME = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+]);
+const MAX_PHOTO_BASE64_CHARS = 3_750_000;
 
 function normalizeHHMM(raw: string | null | undefined): string | null {
   if (!raw || typeof raw !== "string") return null;
@@ -138,6 +147,74 @@ function parseFromGroqContent(content: string): ParsedPastedPlanTask[] | null {
     }
   }
   return null;
+}
+
+export async function parseHandwrittenPlannerPhoto(input: {
+  imageBase64: string;
+  mimeType: string;
+  logDate: string;
+}): Promise<ParseResult> {
+  const logDate = input.logDate.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(logDate)) {
+    return { ok: false, error: "Invalid date.", tasks: [] };
+  }
+  const mime = input.mimeType.trim().toLowerCase().split(";")[0].trim();
+  if (!ALLOWED_PHOTO_MIME.has(mime)) {
+    return {
+      ok: false,
+      error: "Use a JPEG, PNG, WebP, or GIF photo.",
+      tasks: [],
+    };
+  }
+  const b64 = input.imageBase64.trim();
+  if (!b64) return { ok: false, error: "No image data.", tasks: [] };
+  if (b64.length > MAX_PHOTO_BASE64_CHARS) {
+    return {
+      ok: false,
+      error: "Photo is too large. Try a smaller or cropped image.",
+      tasks: [],
+    };
+  }
+
+  const groq = await fetchPlannerPhotoTasksFromGroq(
+    b64,
+    mime,
+    {
+      referenceIso: new Date().toISOString(),
+      logDate,
+    },
+    { strictParsedTasks: true },
+  );
+  if (groq.outcome === "fallback") {
+    return {
+      ok: false,
+      error:
+        "Photo scan needs GROQ_API_KEY on the server. You can still paste text below.",
+      tasks: [],
+    };
+  }
+  if (groq.outcome === "parse_failed") {
+    return {
+      ok: false,
+      error: "Could not read tasks from that photo. Try a clearer picture.",
+      tasks: [],
+    };
+  }
+
+  const mapped = groqTasksToVoiceDraftTasks(groq.tasks);
+  if (mapped.length === 0) {
+    return { ok: false, error: "No tasks found in the photo.", tasks: [] };
+  }
+
+  return {
+    ok: true,
+    tasks: mapped.map((t) => ({
+      name: t.taskTitle,
+      start_time: t.start_time,
+      end_time: t.end_time,
+      duration: t.duration,
+    })),
+  };
 }
 
 /** Best-effort local fallback: parse markdown table rows like | 4:45 am – 5:00 am | Wakeup | 15m | */

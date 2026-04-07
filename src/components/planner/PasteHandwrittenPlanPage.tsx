@@ -1,13 +1,21 @@
 "use client";
 
-import { ClipboardList, Loader2, Plus, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { Camera, ClipboardList, Loader2, Plus, Trash2 } from "lucide-react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
 
 import {
   listHandwrittenPlannerForDate,
   type HandwrittenPlannerRow,
 } from "@/actions/handwrittenPlanner";
 import {
+  parseHandwrittenPlannerPhoto,
   parsePastedHandwrittenPlan,
   type ParsedPastedPlanTask,
 } from "@/actions/pasteHandwrittenPlan";
@@ -16,6 +24,7 @@ import {
   persistHandwrittenSnapshotLocal,
   pushHandwrittenPlannerReplaceToOutbox,
 } from "@/lib/handwrittenPlannerSync";
+import { compressImageFileForGroq } from "@/lib/plannerPhotoClient";
 import { applyOptimisticTaskCreate } from "@/lib/taskMutations";
 import { flushOutbox } from "@/lib/sync";
 import { getHandwrittenPlannerSnapshot } from "@/lib/taskIdb";
@@ -123,6 +132,7 @@ export function PasteHandwrittenPlanPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [saveOk, setSaveOk] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   const applyServerEntries = useCallback((entries: HandwrittenPlannerRow[]) => {
     const rt = entries[0]?.source_text?.trim() ?? "";
@@ -296,24 +306,12 @@ export function PasteHandwrittenPlanPage() {
     setRows((prev) => [...prev, emptyRow()]);
   }, []);
 
-  const processWithAi = useCallback(async () => {
-    const text = rawText.trim();
-    if (!text) {
-      setHint("Paste some transcribed text first.");
-      setRows([emptyRow()]);
-      return;
-    }
-    setPhase("parse");
-    setHint(null);
-    try {
-      const res = await parsePastedHandwrittenPlan(text);
-      if (!res.ok) {
-        setHint(res.error);
-        setRows([emptyRow()]);
-        setPhase("idle");
-        return;
+  const commitParsedTasks = useCallback(
+    async (tasks: ParsedPastedPlanTask[], options?: { sourceText?: string }) => {
+      if (options?.sourceText !== undefined) {
+        setRawText(options.sourceText);
       }
-      const next = toRows(res.tasks);
+      const next = toRows(tasks);
       setRows(next.length > 0 ? next : [emptyRow()]);
       if (userId && next.length > 0) {
         for (const row of next) {
@@ -359,6 +357,61 @@ export function PasteHandwrittenPlanPage() {
           );
         }
       }
+    },
+    [userId, logDate],
+  );
+
+  const onPlannerPhotoSelected = useCallback(
+    async (e: ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      e.target.value = "";
+      if (!file || !userId || !hydrated) return;
+
+      setPhase("parse");
+      setHint(null);
+      setFormError(null);
+      try {
+        const { base64, mimeType } = await compressImageFileForGroq(file);
+        const res = await parseHandwrittenPlannerPhoto({
+          imageBase64: base64,
+          mimeType,
+          logDate,
+        });
+        if (!res.ok) {
+          setHint(res.error);
+          return;
+        }
+        const sourceText = `Photo scan · ${new Date().toISOString().slice(0, 16)}`;
+        await commitParsedTasks(res.tasks, { sourceText });
+      } catch (err) {
+        setHint(err instanceof Error ? err.message : "Could not scan that photo.");
+      } finally {
+        setPhase("idle");
+      }
+    },
+    [userId, hydrated, logDate, commitParsedTasks],
+  );
+
+  const processWithAi = useCallback(async () => {
+    const text = rawText.trim();
+    if (!text) {
+      setHint(
+        "Scan a photo above or add text below, then tap \"Process with AI\".",
+      );
+      setRows([emptyRow()]);
+      return;
+    }
+    setPhase("parse");
+    setHint(null);
+    try {
+      const res = await parsePastedHandwrittenPlan(text);
+      if (!res.ok) {
+        setHint(res.error);
+        setRows([emptyRow()]);
+        setPhase("idle");
+        return;
+      }
+      await commitParsedTasks(res.tasks);
       setHint(null);
     } catch (e) {
       setHint(e instanceof Error ? e.message : "Could not process pasted text.");
@@ -366,7 +419,7 @@ export function PasteHandwrittenPlanPage() {
     } finally {
       setPhase("idle");
     }
-  }, [rawText, userId, logDate]);
+  }, [rawText, commitParsedTasks]);
 
   const saveAll = useCallback(async () => {
     setFormError(null);
@@ -424,7 +477,7 @@ export function PasteHandwrittenPlanPage() {
           className="mt-1 flex flex-wrap items-center gap-2 text-2xl font-bold text-kal-text"
         >
           <ClipboardList className="h-8 w-8 text-kal-accent" aria-hidden />
-          Paste Handwritten Daily Plan
+          Handwritten Daily Plan
         </h1>
         {userId ? (
           <label className="mt-4 block max-w-xs text-xs font-medium text-kal-muted">
@@ -465,26 +518,53 @@ export function PasteHandwrittenPlanPage() {
           </p>
         ) : null}
 
-        <div className="rounded-xl border border-kal-border bg-kal-accent-soft p-3 text-sm text-kal-text-secondary">
-          <p className="mb-2 inline-flex items-center gap-2 font-semibold text-kal-text">
-            <ClipboardList className="h-4 w-4 text-kal-accent" />
-            Steps
+        <input
+          ref={photoInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="sr-only"
+          aria-hidden
+          tabIndex={-1}
+          onChange={(e) => void onPlannerPhotoSelected(e)}
+        />
+
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={() => photoInputRef.current?.click()}
+            disabled={busy || !hydrated}
+            className="inline-flex min-h-[56px] w-full items-center justify-center gap-2 rounded-xl border-2 border-kal-accent bg-kal-accent-soft px-4 text-base font-semibold text-kal-text shadow-sm transition-colors hover:bg-kal-accent hover:text-white disabled:opacity-40"
+          >
+            {phase === "parse" ? (
+              <>
+                <Loader2 className="h-5 w-5 shrink-0 animate-spin" />
+                Scanning...
+              </>
+            ) : (
+              <>
+                <Camera className="h-5 w-5 shrink-0" aria-hidden />
+                <span>📸 Take Photo of Handwritten List</span>
+              </>
+            )}
+          </button>
+          <p className="text-center text-[11px] text-kal-muted">
+            Scan planner - opens camera/gallery, then parses directly in-app.
           </p>
-          <ul className="list-disc space-y-1 pl-5 text-xs text-kal-muted">
-            <li>Open ChatGPT, Gemini or any AI chatbot app</li>
-            <li>Take photo of your handwritten daily task list</li>
-            <li>Ask it to transcribe into clean text with times</li>
-            <li>Copy the full text and paste it below</li>
-          </ul>
+        </div>
+
+        <div className="mt-5 rounded-xl border border-kal-border bg-kal-card-muted/50 p-3 text-xs text-kal-muted">
+          <span className="font-medium text-kal-text-secondary">Fallback:</span>{" "}
+          paste typed or OCR text below, then use Process with AI.
         </div>
 
         <div className="mt-3">
           <textarea
-            rows={12}
+            rows={8}
             value={rawText}
             onChange={(e) => setRawText(e.target.value)}
             disabled={!hydrated}
-            placeholder="Paste full transcribed text here..."
+            placeholder="Optional pasted schedule text..."
             className="w-full resize-y rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2 text-sm text-kal-text placeholder:text-kal-muted disabled:opacity-50"
           />
         </div>
@@ -590,7 +670,7 @@ export function PasteHandwrittenPlanPage() {
           </div>
         ) : hydrated ? (
           <p className="mt-4 rounded-lg border border-dashed border-kal-border px-3 py-3 text-xs text-kal-muted">
-            No parsed tasks yet - paste your plan and tap "Process with AI" to get started.
+            No parsed tasks yet - scan a photo or paste text, then tap Process with AI.
           </p>
         ) : null}
 
@@ -607,7 +687,7 @@ export function PasteHandwrittenPlanPage() {
                 Saving…
               </>
             ) : (
-              "Save to Handwritten Planner"
+              "Add to Today's Plan"
             )}
           </button>
         </div>
