@@ -56,10 +56,10 @@ export function VoiceDayStrip({ logDate }: Props) {
           </div>
         </div>
         <Link
-          href="/dictate-day"
+          href="/plan-my-day"
           className="shrink-0 rounded-xl border border-kal-accent/30 px-4 py-2 text-xs font-bold uppercase tracking-wide text-kal-accent hover:bg-kal-accent/10"
         >
-          Open
+          Plan day
         </Link>
       </div>
       {loading ? (

@@ -315,6 +315,8 @@ export function PasteHandwrittenPlanPage() {
       setRows(next.length > 0 ? next : [emptyRow()]);
       if (userId && next.length > 0) {
         for (const row of next) {
+          const cleanName = row.name.trim();
+          if (!cleanName) continue;
           const id = crypto.randomUUID();
           const now = new Date().toISOString();
           const estimated = minutesBetweenHHMM(
@@ -326,7 +328,7 @@ export function PasteHandwrittenPlanPage() {
             user_id: userId,
             assigned_date: logDate,
             status: "pending",
-            name: row.name?.trim() || null,
+            name: cleanName,
             microtopic_id: null,
             created_at: now,
             updated_at: now,
@@ -344,7 +346,7 @@ export function PasteHandwrittenPlanPage() {
               id,
               assigned_date: logDate,
               status: "pending",
-              name: row.name?.trim() || null,
+              name: cleanName,
               microtopic_id: null,
               start_time: inputTimeToDb(row.startInput),
               end_time: inputTimeToDb(row.endInput),

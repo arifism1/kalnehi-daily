@@ -7,16 +7,15 @@ import {
   Calendar,
   CalendarDays,
   CircleHelp,
-  ClipboardList,
   Download,
   Flame,
   Home,
   Inbox,
   Menu,
-  Mic,
   RotateCcw,
   ScrollText,
   Settings,
+  Sparkles,
   Timer,
   UserRound,
   Video,
@@ -31,8 +30,6 @@ import { isStandalonePwa, usePwaInstall } from "@/hooks/usePwaInstall";
 type MainNavigationMenuProps = {
   open: boolean;
   onClose: () => void;
-  /** Full-page handwritten paste flow (signed-in only). */
-  pasteHandwrittenHref?: string;
 };
 
 function navActive(pathname: string, href: string): boolean {
@@ -45,7 +42,6 @@ const LINKS: { href: string; label: string; Icon: LucideIcon }[] = [
   { href: "/syllabus", label: "Syllabus Tracker", Icon: BookOpen },
   { href: "/plan", label: "Execution Planner", Icon: CalendarDays },
   { href: "/daily-log", label: "Daily Log", Icon: ScrollText },
-  { href: "/dictate-day", label: "Dictate My Day", Icon: Mic },
   { href: "/study-sessions", label: "Study Sessions", Icon: Video },
   { href: "/progress", label: "Progress", Icon: BarChart3 },
   { href: "/doubts", label: "Doubt Tracker", Icon: CircleHelp },
@@ -58,11 +54,7 @@ const LINKS: { href: string; label: string; Icon: LucideIcon }[] = [
   { href: "/settings", label: "Settings", Icon: Settings },
 ];
 
-export function MainNavigationMenu({
-  open,
-  onClose,
-  pasteHandwrittenHref,
-}: MainNavigationMenuProps) {
+export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
   const pathname = usePathname();
   const { installed, canPromptInstall, showIosInstructions, promptInstall } =
     usePwaInstall();
@@ -128,34 +120,32 @@ export function MainNavigationMenu({
           aria-label="Main"
         >
           <ul className="space-y-0.5">
-            {pasteHandwrittenHref ? (
-              <li>
-                <Link
-                  href={pasteHandwrittenHref}
-                  onClick={onClose}
+            <li>
+              <Link
+                href="/plan-my-day"
+                onClick={onClose}
+                className={clsx(
+                  "flex min-h-[56px] items-center gap-4 rounded-2xl px-3 py-3 transition-colors",
+                  navActive(pathname, "/plan-my-day")
+                    ? "bg-kal-accent-soft ring-1 ring-kal-accent/25"
+                    : "hover:bg-kal-card-muted active:bg-kal-card-muted",
+                )}
+              >
+                <span
                   className={clsx(
-                    "flex min-h-[56px] items-center gap-4 rounded-2xl px-3 py-3 transition-colors",
-                    navActive(pathname, pasteHandwrittenHref)
-                      ? "bg-kal-accent-soft ring-1 ring-kal-accent/25"
-                      : "hover:bg-kal-card-muted active:bg-kal-card-muted",
+                    "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl",
+                    navActive(pathname, "/plan-my-day")
+                      ? "bg-kal-accent/20 text-kal-accent-dark dark:text-kal-accent"
+                      : "bg-kal-card-muted text-kal-muted",
                   )}
                 >
-                  <span
-                    className={clsx(
-                      "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl",
-                      navActive(pathname, pasteHandwrittenHref)
-                        ? "bg-kal-accent/20 text-kal-accent-dark dark:text-kal-accent"
-                        : "bg-kal-card-muted text-kal-muted",
-                    )}
-                  >
-                    <ClipboardList className="h-6 w-6" strokeWidth={2} />
-                  </span>
-                  <span className="min-w-0 flex-1 text-[15px] font-semibold leading-snug text-kal-text">
-                    Paste Handwritten Daily Plan
-                  </span>
-                </Link>
-              </li>
-            ) : null}
+                  <Sparkles className="h-6 w-6" strokeWidth={2} />
+                </span>
+                <span className="min-w-0 flex-1 text-[15px] font-semibold leading-snug text-kal-text">
+                  Plan My Day
+                </span>
+              </Link>
+            </li>
 
             {LINKS.map(({ href, label, Icon }) => {
               const active = navActive(pathname, href);

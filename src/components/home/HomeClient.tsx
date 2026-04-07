@@ -37,6 +37,7 @@ export function HomeClient() {
   useRefreshTasksOnHomeFocus();
   useEffect(() => {
     router.prefetch("/syllabus");
+    router.prefetch("/plan-my-day");
   }, [router]);
   useEffect(() => {
     let cancelled = false;
