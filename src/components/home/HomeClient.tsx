@@ -27,6 +27,7 @@ import { useTaskStore } from "@/store/useTaskStore";
 import { ArenaToday } from "./ArenaToday";
 import { ExecutionLagBanner } from "./ExecutionLagBanner";
 import { MissedTasks } from "./MissedTasks";
+import { MotivationWallpaper } from "./MotivationWallpaper";
 import { MotivationStrip } from "./MotivationStrip";
 import { RealitySnapshot } from "./RealitySnapshot";
 import { ThreeDayStrip } from "./ThreeDayStrip";
@@ -38,6 +39,8 @@ export function HomeClient() {
   useEffect(() => {
     router.prefetch("/syllabus");
     router.prefetch("/plan-my-day");
+    router.prefetch("/motivation");
+    router.prefetch("/habits");
   }, [router]);
   useEffect(() => {
     let cancelled = false;
@@ -203,8 +206,9 @@ export function HomeClient() {
   }, [user]);
 
   return (
-    <div className="flex min-h-full flex-col gap-6 pb-10 text-kal-text sm:gap-8 md:gap-10 md:pb-14">
-      <header className="relative overflow-hidden rounded-[1rem] border border-kal-border bg-kal-card px-5 py-8 kal-shadow-card sm:rounded-[1.25rem] sm:px-8 sm:py-10 lg:px-10">
+    <div className="relative flex min-h-full flex-col gap-6 pb-10 text-kal-text sm:gap-8 md:gap-10 md:pb-14">
+      <MotivationWallpaper />
+      <header className="relative z-[1] overflow-hidden rounded-[1rem] border border-kal-border bg-kal-card px-5 py-8 kal-shadow-card sm:rounded-[1.25rem] sm:px-8 sm:py-10 lg:px-10">
         <div
           className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-kal-accent/15 blur-3xl"
           aria-hidden

@@ -161,15 +161,9 @@ function ArenaTodayInner() {
               <span className="font-semibold text-kal-text-secondary">
                 Open Day Plan
               </span>{" "}
-              to scan, type, or dictate — then your list shows up here.
+              above to scan, type, or dictate — then your list shows up here.
             </p>
-            <div className="mt-6 flex flex-col items-center gap-3 sm:mt-8 sm:flex-row sm:justify-center sm:gap-4">
-              <Link
-                href="/plan-my-day"
-                className="inline-flex min-h-[48px] w-full max-w-[15rem] items-center justify-center rounded-xl bg-kal-accent px-6 py-3 text-xs font-bold text-kal-accent-foreground shadow-sm transition-all duration-200 hover:bg-kal-accent-hover active:scale-[0.98] sm:w-auto sm:min-h-[52px] sm:min-w-[200px] sm:rounded-xl sm:px-8 sm:py-3.5 sm:text-sm"
-              >
-                Open Day Plan
-              </Link>
+            <div className="mt-6 flex justify-center sm:mt-8">
               <Link
                 href="/plan"
                 className="text-xs font-semibold text-kal-accent underline-offset-4 transition-colors duration-200 hover:text-kal-accent-hover hover:underline sm:text-sm"

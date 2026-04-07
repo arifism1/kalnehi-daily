@@ -9,8 +9,10 @@ import {
   CircleHelp,
   Download,
   Flame,
+  Heart,
   Home,
   Inbox,
+  ListChecks,
   Menu,
   RotateCcw,
   ScrollText,
@@ -143,6 +145,60 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
                 </span>
                 <span className="min-w-0 flex-1 text-[15px] font-semibold leading-snug text-kal-text">
                   Plan My Day
+                </span>
+              </Link>
+            </li>
+
+            <li>
+              <Link
+                href="/motivation"
+                onClick={onClose}
+                className={clsx(
+                  "flex min-h-[56px] items-center gap-4 rounded-2xl px-3 py-3 transition-colors",
+                  navActive(pathname, "/motivation")
+                    ? "bg-kal-accent-soft ring-1 ring-kal-accent/25"
+                    : "hover:bg-kal-card-muted active:bg-kal-card-muted",
+                )}
+              >
+                <span
+                  className={clsx(
+                    "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl",
+                    navActive(pathname, "/motivation")
+                      ? "bg-kal-accent/20 text-kal-accent-dark dark:text-kal-accent"
+                      : "bg-kal-card-muted text-kal-muted",
+                  )}
+                >
+                  <Heart className="h-6 w-6" strokeWidth={2} />
+                </span>
+                <span className="min-w-0 flex-1 text-[15px] font-semibold leading-snug text-kal-text">
+                  Personal Motivation
+                </span>
+              </Link>
+            </li>
+
+            <li>
+              <Link
+                href="/habits"
+                onClick={onClose}
+                className={clsx(
+                  "flex min-h-[56px] items-center gap-4 rounded-2xl px-3 py-3 transition-colors",
+                  navActive(pathname, "/habits")
+                    ? "bg-kal-accent-soft ring-1 ring-kal-accent/25"
+                    : "hover:bg-kal-card-muted active:bg-kal-card-muted",
+                )}
+              >
+                <span
+                  className={clsx(
+                    "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl",
+                    navActive(pathname, "/habits")
+                      ? "bg-kal-accent/20 text-kal-accent-dark dark:text-kal-accent"
+                      : "bg-kal-card-muted text-kal-muted",
+                  )}
+                >
+                  <ListChecks className="h-6 w-6" strokeWidth={2} />
+                </span>
+                <span className="min-w-0 flex-1 text-[15px] font-semibold leading-snug text-kal-text">
+                  Habit Maker
                 </span>
               </Link>
             </li>
