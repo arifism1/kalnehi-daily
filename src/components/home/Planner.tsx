@@ -24,6 +24,17 @@ import { TransientNotice } from "@/components/ui/TransientNotice";
 
 type TabKey = "today" | "yesterday" | "tomorrow";
 
+function isPlaceholderDraftTask(t: Task): boolean {
+  const hasName = (t.name ?? "").trim().length > 0;
+  const hasLink = !!(t.microtopic_id && String(t.microtopic_id).trim());
+  const hasTime = !!(t.start_time || t.end_time);
+  const hasMarks = t.marks_value != null && Number.isFinite(Number(t.marks_value));
+  const hasEstimate =
+    (t.estimated_minutes != null && t.estimated_minutes > 0) ||
+    (t.estimated_time_minutes != null && t.estimated_time_minutes > 0);
+  return !hasName && !hasLink && !hasTime && !hasMarks && !hasEstimate;
+}
+
 function tabDayLabel(tab: TabKey): string {
   if (tab === "today") return "Today";
   if (tab === "yesterday") return "Yesterday";
@@ -79,7 +90,10 @@ export function Planner() {
 
   const taskList = useMemo(() => Object.values(tasksRecord), [tasksRecord]);
   const dayTasks = useMemo(
-    () => filterTasksForDate(taskList, assignedDateForTab),
+    () =>
+      filterTasksForDate(taskList, assignedDateForTab).filter(
+        (t) => !isPlaceholderDraftTask(t),
+      ),
     [taskList, assignedDateForTab],
   );
 
