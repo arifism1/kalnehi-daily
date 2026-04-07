@@ -22,6 +22,8 @@ import {
 } from "@/lib/taskIdb";
 import { USER_ERROR } from "@/lib/userFacingErrors";
 import type { Json, TablesInsert } from "@/types/supabase";
+import { flushHabitOutbox } from "@/lib/habitSync";
+import { flushMotivationOutbox } from "@/lib/motivationSync";
 import { useSyncStore } from "@/store/useSyncStore";
 
 const MAX_RETRIES = 6;
@@ -337,13 +339,21 @@ export async function reconcileConnectivity(
 
   if (navigator.onLine) {
     useSyncStore.getState().setOnline(true);
-    if (userId) void flushOutbox(userId);
+    if (userId) {
+      void flushOutbox(userId);
+      void flushMotivationOutbox(userId);
+      void flushHabitOutbox(userId);
+    }
     return;
   }
 
   const reachable = await probeSameOriginReachable();
   useSyncStore.getState().setOnline(reachable);
-  if (reachable && userId) void flushOutbox(userId);
+  if (reachable && userId) {
+    void flushOutbox(userId);
+    void flushMotivationOutbox(userId);
+    void flushHabitOutbox(userId);
+  }
 }
 
 /**
@@ -565,6 +575,8 @@ export function initSyncManager(userId: string | undefined): () => void {
     }
     useSyncStore.getState().setOnline(true);
     void flushOutbox(userId);
+    void flushMotivationOutbox(userId);
+    void flushHabitOutbox(userId);
   };
   const onOffline = () => {
     useSyncStore.getState().setOnline(false);
@@ -600,6 +612,8 @@ export function initSyncManager(userId: string | undefined): () => void {
 
   if (userId) {
     void flushOutbox(userId);
+    void flushMotivationOutbox(userId);
+    void flushHabitOutbox(userId);
   }
 
   return () => {

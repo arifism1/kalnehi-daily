@@ -543,6 +543,188 @@ export type Database = {
           },
         ]
       }
+      motivation_letters: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          letter_date: string
+          pinned: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          id?: string
+          letter_date: string
+          pinned?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          letter_date?: string
+          pinned?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      motivation_voice_affirmations: {
+        Row: {
+          audio_base64: string | null
+          audio_mime: string | null
+          created_at: string
+          id: string
+          recorded_at: string
+          tags: string[]
+          transcript: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          audio_base64?: string | null
+          audio_mime?: string | null
+          created_at?: string
+          id?: string
+          recorded_at?: string
+          tags?: string[]
+          transcript?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          audio_base64?: string | null
+          audio_mime?: string | null
+          created_at?: string
+          id?: string
+          recorded_at?: string
+          tags?: string[]
+          transcript?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      motivation_vision_photos: {
+        Row: {
+          caption: string | null
+          created_at: string
+          id: string
+          image_data_url: string
+          is_wallpaper: boolean
+          photo_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          image_data_url: string
+          is_wallpaper?: boolean
+          photo_date?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          image_data_url?: string
+          is_wallpaper?: boolean
+          photo_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_motivation_prefs: {
+        Row: {
+          updated_at: string
+          user_id: string
+          wallpaper_photo_id: string | null
+        }
+        Insert: {
+          updated_at?: string
+          user_id: string
+          wallpaper_photo_id?: string | null
+        }
+        Update: {
+          updated_at?: string
+          user_id?: string
+          wallpaper_photo_id?: string | null
+        }
+        Relationships: []
+      }
+      user_habits: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      habit_logs: {
+        Row: {
+          comment: string | null
+          completed: boolean
+          created_at: string
+          habit_id: string
+          id: string
+          log_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          completed?: boolean
+          created_at?: string
+          habit_id: string
+          id?: string
+          log_date: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          completed?: boolean
+          created_at?: string
+          habit_id?: string
+          id?: string
+          log_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_logs_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "user_habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
