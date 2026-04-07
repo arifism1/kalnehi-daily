@@ -203,6 +203,10 @@ export function ProfileForm() {
       }
       /** Option `value` is `exams.exam_name` (e.g. `JEE Main 2025`, `NEET UG`). */
       const examName = targetExam.trim() ? targetExam.trim() : null;
+      if (!examName) {
+        setError("Select your target exam before saving.");
+        return;
+      }
       const res = await upsertUserProfile({
         full_name: fullName.trim() || null,
         target_exam_date: examDate.trim() || null,

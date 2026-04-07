@@ -754,7 +754,7 @@ export function DictateMyDay() {
                 <p className="px-0.5 text-[11px] font-semibold tabular-nums tracking-tight text-kal-accent-dark dark:text-kal-accent">
                   {formatIstSlotRange12h(r.startInput, r.endInput)}
                 </p>
-                <div className="grid grid-cols-[2rem_1fr_2.2fr_1fr_auto_auto] items-start gap-2">
+                <div className="grid grid-cols-[2rem_6.2rem_minmax(0,1fr)_6.2rem_auto_auto] items-start gap-2">
                   <input
                     type="checkbox"
                     checked={r.include}
@@ -771,11 +771,12 @@ export function DictateMyDay() {
                     className="min-h-[40px] rounded-lg border border-kal-border bg-kal-input-bg px-2 text-sm text-kal-text"
                     aria-label="From time (IST)"
                   />
-                  <input
+                  <textarea
                     value={r.name}
                     onChange={(e) => updateDraftRow(r.id, { name: e.target.value })}
                     placeholder="Task name"
-                    className="min-h-[40px] rounded-lg border border-kal-border bg-kal-input-bg px-2 text-sm text-kal-text placeholder:text-kal-muted"
+                    rows={1}
+                    className="min-h-[40px] min-w-0 w-full resize-y rounded-lg border border-kal-border bg-kal-input-bg px-2 py-2 text-sm leading-5 text-kal-text placeholder:text-kal-muted [overflow-wrap:anywhere]"
                     aria-label="Task name"
                   />
                   <input

@@ -39,10 +39,18 @@ export async function upsertUserProfile(fields: {
       fields.target_exam !== undefined
         ? fields.target_exam?.trim() || null
         : primaryExam;
+    const examToSave = primaryExam || targetExam;
+    const targetExamDate = fields.target_exam_date?.trim() || null;
+    if (!examToSave) {
+      return { ok: false, error: "Please select your target exam." };
+    }
+    if (targetExamDate && !/^\d{4}-\d{2}-\d{2}$/.test(targetExamDate)) {
+      return { ok: false, error: "Please enter a valid exam date." };
+    }
 
     const cuetDomains =
-      primaryExam?.toLowerCase().trim() === "cuet" ||
-      targetExam?.toLowerCase().trim() === "cuet"
+      primaryExam?.toLowerCase().includes("cuet") ||
+      targetExam?.toLowerCase().includes("cuet")
         ? (fields.cuet_domain_subjects ?? []).filter(
             (s): s is string => typeof s === "string" && s.trim().length > 0,
           )
@@ -50,8 +58,8 @@ export async function upsertUserProfile(fields: {
 
     const patchBase = {
       full_name: fields.full_name?.trim() || null,
-      target_exam_date: fields.target_exam_date?.trim() || null,
-      primary_exam: primaryExam || targetExam,
+      target_exam_date: targetExamDate,
+      primary_exam: examToSave,
       target_exam: targetExam,
       cuet_domain_subjects: cuetDomains,
       updated_at: new Date().toISOString(),
@@ -87,22 +95,8 @@ export async function upsertUserProfile(fields: {
           })()
         : null;
 
-    const { data: existing, error: selErr } = await supabase
-      .from("user_profiles")
-      .select("id")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (selErr) throw selErr;
-
-    if (existing?.id) {
-      const { error } = await supabase
-        .from("user_profiles")
-        .update({ ...patchBase, ...(examHistoryPatch ?? {}) })
-        .eq("user_id", user.id);
-      if (error) throw error;
-    } else {
-      const { error } = await supabase.from("user_profiles").insert({
+    const { error } = await supabase.from("user_profiles").upsert(
+      {
         user_id: user.id,
         ...patchBase,
         ...(examHistoryPatch ?? {
@@ -110,9 +104,10 @@ export async function upsertUserProfile(fields: {
           prev_score: null,
           prev_score_entries: [],
         }),
-      });
-      if (error) throw error;
-    }
+      },
+      { onConflict: "user_id" },
+    );
+    if (error) throw error;
 
     revalidatePath("/");
     revalidatePath("/profile");

@@ -3,6 +3,7 @@
 import Groq from "groq-sdk";
 
 import { PASTE_HANDWRITTEN_PLAN_PROMPT } from "@/lib/voicePrompts";
+import { runVoiceParseDraft } from "@/lib/runVoiceParseDraft";
 
 export type ParsedPastedPlanTask = {
   name: string;
@@ -191,6 +192,24 @@ export async function parsePastedHandwrittenPlan(
   }
 
   try {
+    // Keep handwritten parsing behavior aligned with Dictate My Day parser first.
+    const viaVoiceStyle = await runVoiceParseDraft(
+      raw,
+      new Date().toISOString().slice(0, 10),
+      new Date().toISOString(),
+    );
+    if (viaVoiceStyle.ok && viaVoiceStyle.tasks.length > 0) {
+      return {
+        ok: true,
+        tasks: viaVoiceStyle.tasks.map((t) => ({
+          name: t.taskTitle,
+          start_time: t.start_time,
+          end_time: t.end_time,
+          duration: t.duration,
+        })),
+      };
+    }
+
     const groq = new Groq({ apiKey });
     const completion = await groq.chat.completions.create({
       model: MODEL,
