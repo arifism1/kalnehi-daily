@@ -1,5 +1,5 @@
-import { TimerEngineClient } from "@/components/engine/TimerEngineClient";
+import TimerRouteLazy from "./TimerRouteLazy";
 
 export default function TimerPage() {
-  return <TimerEngineClient />;
+  return <TimerRouteLazy />;
 }

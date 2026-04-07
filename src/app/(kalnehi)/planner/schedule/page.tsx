@@ -1,5 +1,5 @@
-import { SchedulePlannerView } from "@/components/planner/views/SchedulePlannerView";
+import SchedulePlannerRouteLazy from "./SchedulePlannerRouteLazy";
 
 export default function SchedulePlannerPage() {
-  return <SchedulePlannerView />;
+  return <SchedulePlannerRouteLazy />;
 }

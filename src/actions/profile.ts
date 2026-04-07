@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import type { PrevScoreEntry } from "@/lib/prevScoreEntries";
 import { formatSupabaseError } from "@/lib/supabase";
 import { USER_ERROR } from "@/lib/userFacingErrors";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -16,7 +17,10 @@ export async function upsertUserProfile(fields: {
   primary_exam: string | null;
   target_exam?: string | null;
   prev_exam_attempted?: boolean | null;
+  /** First entry mirrors legacy `prev_score` for older readers. */
   prev_score?: number | null;
+  /** Labeled past attempts, e.g. [{ label: "UPSC Pre 2025", score: 412 }]. */
+  prev_score_entries?: PrevScoreEntry[] | null;
   /** CUET domain subjects; ignored for non-CUET exams (stored as [] ). */
   cuet_domain_subjects?: string[] | null;
 }): Promise<UpsertProfileResult> {
@@ -55,13 +59,32 @@ export async function upsertUserProfile(fields: {
 
     const examHistoryPatch =
       fields.prev_exam_attempted !== undefined
-        ? {
-            prev_exam_attempted: fields.prev_exam_attempted,
-            prev_score:
-              fields.prev_exam_attempted === true && fields.prev_score != null
-                ? Math.round(fields.prev_score)
-                : null,
-          }
+        ? (() => {
+            const attempted = Boolean(fields.prev_exam_attempted);
+            const raw = fields.prev_score_entries;
+            const normalized: PrevScoreEntry[] = Array.isArray(raw)
+              ? raw
+                  .filter(
+                    (e) =>
+                      e &&
+                      typeof e.label === "string" &&
+                      e.label.trim().length > 0 &&
+                      typeof e.score === "number" &&
+                      Number.isFinite(e.score) &&
+                      e.score >= 0,
+                  )
+                  .map((e) => ({
+                    label: e.label.trim(),
+                    score: Math.round(e.score),
+                  }))
+              : [];
+            return {
+              prev_exam_attempted: attempted,
+              prev_score_entries: attempted ? normalized : [],
+              prev_score:
+                attempted && normalized.length > 0 ? normalized[0]!.score : null,
+            };
+          })()
         : null;
 
     const { data: existing, error: selErr } = await supabase
@@ -85,6 +108,7 @@ export async function upsertUserProfile(fields: {
         ...(examHistoryPatch ?? {
           prev_exam_attempted: null,
           prev_score: null,
+          prev_score_entries: [],
         }),
       });
       if (error) throw error;

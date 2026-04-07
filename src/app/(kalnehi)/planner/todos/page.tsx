@@ -1,5 +1,5 @@
-import { TodosPlannerView } from "@/components/planner/views/TodosPlannerView";
+import TodosPlannerRouteLazy from "./TodosPlannerRouteLazy";
 
 export default function TodosPlannerPage() {
-  return <TodosPlannerView />;
+  return <TodosPlannerRouteLazy />;
 }

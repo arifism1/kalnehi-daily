@@ -2,7 +2,7 @@
 
 import type { TablesInsert } from "@/types/supabase";
 import { registerOutboxBackgroundSync } from "@/lib/pwaBackgroundSync";
-import { flushOutbox } from "@/lib/sync";
+import { scheduleOutboxFlush } from "@/lib/sync";
 import {
   addOutboxMutation,
   getOutboxCount,
@@ -47,7 +47,7 @@ export async function applyOptimisticTaskSessionCreate(
   useSyncStore.getState().setPendingCount(n);
   registerOutboxBackgroundSync().catch(() => {});
   if (typeof navigator !== "undefined" && userId) {
-    flushOutbox(userId).catch(() => {});
+    scheduleOutboxFlush(userId);
   }
 
   dispatchExecutionLogChanged();

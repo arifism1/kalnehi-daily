@@ -314,6 +314,7 @@ export type Database = {
           id: string
           prev_exam_attempted: boolean | null
           prev_score: number | null
+          prev_score_entries: Json
           primary_exam: string | null
           target_exam: string | null
           target_exam_date: string | null
@@ -327,6 +328,7 @@ export type Database = {
           id?: string
           prev_exam_attempted?: boolean | null
           prev_score?: number | null
+          prev_score_entries?: Json
           primary_exam?: string | null
           target_exam?: string | null
           target_exam_date?: string | null
@@ -340,6 +342,7 @@ export type Database = {
           id?: string
           prev_exam_attempted?: boolean | null
           prev_score?: number | null
+          prev_score_entries?: Json
           primary_exam?: string | null
           target_exam?: string | null
           target_exam_date?: string | null

@@ -27,6 +27,27 @@ let flushing = false;
 let retryTimer: ReturnType<typeof setTimeout> | null = null;
 let offlineRecoverTimer: ReturnType<typeof setTimeout> | null = null;
 
+/** Batches rapid outbox writes (planner typing) into one flush pass. */
+let flushDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+let flushDebounceUserId: string | undefined;
+
+const OUTBOX_FLUSH_DEBOUNCE_MS = 55;
+
+/**
+ * Schedule a flush shortly — coalesces bursts of task/syllabus mutations so the
+ * UI does not pay one full round-trip per keystroke.
+ */
+export function scheduleOutboxFlush(userId: string | undefined): void {
+  if (!userId || typeof window === "undefined") return;
+  flushDebounceUserId = userId;
+  if (flushDebounceTimer) clearTimeout(flushDebounceTimer);
+  flushDebounceTimer = setTimeout(() => {
+    flushDebounceTimer = null;
+    const uid = flushDebounceUserId;
+    void flushOutbox(uid);
+  }, OUTBOX_FLUSH_DEBOUNCE_MS);
+}
+
 /** Inserts a voice_timeline_entries row with the browser Supabase session (outbox flush). */
 async function applyVoiceTimelineCreate(
   row: NonNullable<OutboxMutation["voiceInsert"]>,
@@ -361,6 +382,7 @@ export async function flushOutbox(userId: string | undefined): Promise<void> {
         if (res.ok) {
           await deleteOutboxMutation(m.clientMutationId);
           processed++;
+          useSyncStore.getState().setPendingCount(await getOutboxCount());
           if (
             m.op === "voice_timeline_create" ||
             m.op === "voice_timeline_update" ||
@@ -409,9 +431,11 @@ export async function flushOutbox(userId: string | undefined): Promise<void> {
 
     if (processed > 0) {
       useSyncStore.getState().touchQuietSync();
-      await refreshTasksFromSupabase(userId).catch(() => {});
-      await refreshExecutionLogFromServer().catch(() => {});
-      await refreshStudySessionsFromServer().catch(() => {});
+      await Promise.all([
+        refreshTasksFromSupabase(userId),
+        refreshExecutionLogFromServer(),
+        refreshStudySessionsFromServer(),
+      ]).catch(() => {});
       dispatchTasksSync();
     }
     if (
@@ -486,6 +510,10 @@ export function initSyncManager(userId: string | undefined): () => void {
 
   return () => {
     clearRetryTimer();
+    if (flushDebounceTimer) {
+      clearTimeout(flushDebounceTimer);
+      flushDebounceTimer = null;
+    }
     if (offlineRecoverTimer) {
       clearTimeout(offlineRecoverTimer);
       offlineRecoverTimer = null;

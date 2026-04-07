@@ -14,7 +14,6 @@ import {
 } from "react";
 
 import { MainNavigationMenu } from "@/components/MainNavigationMenu";
-import { ProfileSheet } from "@/components/ProfileSheet";
 import { QuietSavedToast } from "@/components/QuietSavedToast";
 import { SyncStatusBanner } from "@/components/SyncStatusBanner";
 import { UndoToast } from "@/components/ui/UndoToast";
@@ -48,7 +47,6 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const userId = useAuthStore((s) => s.user?.id);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
   const onboarding = pathname === "/onboarding";
 
   useEffect(() => {
@@ -142,17 +140,8 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
       <MainNavigationMenu
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
-        onOpenAccount={
-          userId
-            ? () => {
-                setMenuOpen(false);
-                setProfileOpen(true);
-              }
-            : undefined
-        }
         pasteHandwrittenHref={userId ? "/paste-handwritten" : undefined}
       />
-      <ProfileSheet open={profileOpen} onClose={() => setProfileOpen(false)} />
       <UndoToast />
       <QuietSavedToastBoundary>
         <QuietSavedToast />

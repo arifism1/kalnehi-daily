@@ -6,12 +6,28 @@ import { useCallback, useEffect, useState } from "react";
 
 import { useSyncStore } from "@/store/useSyncStore";
 
+const SYNC_PENDING_SHOW_DELAY_MS = 72;
+
 export function SyncStatusBanner() {
   const isOnline = useSyncStore((s) => s.isOnline);
   const pendingCount = useSyncStore((s) => s.pendingCount);
   const lastSyncError = useSyncStore((s) => s.lastSyncError);
   const [dismissed, setDismissed] = useState(false);
   const [retrying, setRetrying] = useState(false);
+  /** Avoid flashing “Syncing…” when the outbox clears in a few ms (instant flush). */
+  const [showPendingBanner, setShowPendingBanner] = useState(false);
+
+  useEffect(() => {
+    if (pendingCount === 0) {
+      setShowPendingBanner(false);
+      return;
+    }
+    const t = setTimeout(
+      () => setShowPendingBanner(true),
+      SYNC_PENDING_SHOW_DELAY_MS,
+    );
+    return () => clearTimeout(t);
+  }, [pendingCount]);
 
   useEffect(() => {
     if (isOnline && !lastSyncError) setDismissed(false);
@@ -97,7 +113,7 @@ export function SyncStatusBanner() {
     );
   }
 
-  if (pendingCount > 0) {
+  if (showPendingBanner && pendingCount > 0) {
     return (
       <div
         role="status"

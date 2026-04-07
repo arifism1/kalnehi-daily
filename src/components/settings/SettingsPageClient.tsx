@@ -16,16 +16,16 @@ export function SettingsPageClient() {
       <div>
         <Link
           href="/"
-          className="inline-flex min-h-[44px] items-center gap-1.5 text-sm font-medium text-zinc-400 hover:text-kal-accent"
+          className="inline-flex min-h-[44px] items-center gap-1.5 text-sm font-medium text-kal-text-secondary hover:text-kal-accent"
         >
           <ArrowLeft className="h-4 w-4" />
           Home
         </Link>
-        <p className="mt-3 text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent/90">
+        <p className="mt-3 text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
           App
         </p>
-        <h1 className="mt-1 text-xl font-bold text-white">Settings</h1>
-        <p className="mt-1 text-sm leading-relaxed text-zinc-400">
+        <h1 className="mt-1 text-xl font-bold text-kal-text">Settings</h1>
+        <p className="mt-1 text-sm leading-relaxed text-kal-text-secondary">
           Shape how Kalnehi feels — every option here is optional.
         </p>
       </div>
@@ -57,9 +57,6 @@ export function SettingsPageClient() {
         </section>
       )}
 
-      <p className="text-center text-[11px] text-zinc-600">
-        You&apos;ll find the same choices under the profile icon.
-      </p>
     </div>
   );
 }

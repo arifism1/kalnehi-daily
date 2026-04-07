@@ -24,7 +24,7 @@ export function QuietSavedToast() {
     hideTimerRef.current = setTimeout(() => {
       hideTimerRef.current = null;
       setVisible(false);
-    }, 1400);
+    }, 800);
     return () => {
       if (hideTimerRef.current) {
         clearTimeout(hideTimerRef.current);
@@ -38,7 +38,7 @@ export function QuietSavedToast() {
       role="status"
       aria-live="polite"
       className={clsx(
-        "pointer-events-none fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 z-[90] transition-all duration-300 sm:bottom-6",
+        "pointer-events-none fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 z-[90] transition-all duration-200 sm:bottom-6",
         visible
           ? "-translate-x-1/2 translate-y-0 opacity-100"
           : "-translate-x-1/2 translate-y-2 opacity-0",

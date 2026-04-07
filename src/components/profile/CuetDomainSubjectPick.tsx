@@ -45,8 +45,8 @@ export function CuetDomainSubjectPick({
             className={clsx(
               "flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 transition-colors",
               on
-                ? "border-kal-accent/50 bg-red-950/35"
-                : "border-white/[0.08] bg-slate-950/40 hover:border-white/10",
+                ? "border-kal-accent/45 bg-kal-accent-soft"
+                : "border-kal-border bg-kal-card-muted hover:border-kal-accent/25",
               disabled && "pointer-events-none opacity-50",
             )}
           >
@@ -55,9 +55,9 @@ export function CuetDomainSubjectPick({
               checked={on}
               disabled={disabled}
               onChange={() => toggle(opt)}
-              className="h-4 w-4 rounded border-slate-600 bg-slate-900 text-red-600 focus:ring-kal-accent/40"
+              className="h-4 w-4 rounded border-kal-border bg-kal-card text-kal-accent focus:ring-kal-accent/40"
             />
-            <span className="text-[15px] text-zinc-200">{opt}</span>
+            <span className="text-[15px] font-medium text-kal-text">{opt}</span>
           </label>
         );
       })}

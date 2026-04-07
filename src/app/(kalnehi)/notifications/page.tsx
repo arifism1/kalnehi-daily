@@ -1,5 +1,5 @@
-import { NotificationsEngineClient } from "@/components/engine/NotificationsEngineClient";
+import NotificationsRouteLazy from "./NotificationsRouteLazy";
 
 export default function NotificationsPage() {
-  return <NotificationsEngineClient />;
+  return <NotificationsRouteLazy />;
 }

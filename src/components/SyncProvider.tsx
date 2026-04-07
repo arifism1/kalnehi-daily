@@ -45,20 +45,25 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!userId) return;
-    void refreshTasksFromSupabase(userId).catch(() => {});
-    void refreshExecutionLogFromServer().catch(() => {});
+    void Promise.all([
+      refreshTasksFromSupabase(userId),
+      refreshExecutionLogFromServer(),
+      refreshStudySessionsFromServer(),
+    ]).catch(() => {});
   }, [userId, examLabel]);
 
   useEffect(() => {
     if (!userId) return;
     const onProfileUpdated = () => {
-      void refreshTasksFromSupabase(userId)
+      void Promise.all([
+        refreshTasksFromSupabase(userId),
+        refreshExecutionLogFromServer(),
+        refreshStudySessionsFromServer(),
+      ])
         .then(() => {
           dispatchTasksSync();
         })
         .catch(() => {});
-      void refreshExecutionLogFromServer().catch(() => {});
-      void refreshStudySessionsFromServer().catch(() => {});
     };
     window.addEventListener(KALNEHI_PROFILE_UPDATED_EVENT, onProfileUpdated);
     return () =>

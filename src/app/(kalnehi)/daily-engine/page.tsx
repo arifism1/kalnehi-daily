@@ -1,5 +1,5 @@
-import { DailyEngineClient } from "@/components/engine/DailyEngineClient";
+import DailyEngineRouteLazy from "./DailyEngineRouteLazy";
 
 export default function DailyEnginePage() {
-  return <DailyEngineClient />;
+  return <DailyEngineRouteLazy />;
 }

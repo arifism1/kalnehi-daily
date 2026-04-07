@@ -8,6 +8,10 @@ alter table public.user_profiles
 alter table public.user_profiles
   add column if not exists prev_score integer;
 
+alter table public.user_profiles
+  add column if not exists prev_score_entries jsonb not null default '[]'::jsonb;
+
 comment on column public.user_profiles.target_exam is 'Target exam label (e.g. NEET UG)';
 comment on column public.user_profiles.prev_exam_attempted is 'Whether the user attempted the exam before';
-comment on column public.user_profiles.prev_score is 'Previous attempt score when prev_exam_attempted is true';
+comment on column public.user_profiles.prev_score is 'Legacy: first previous score; use prev_score_entries for multiple';
+comment on column public.user_profiles.prev_score_entries is 'JSON array of {label, score} for past attempts';

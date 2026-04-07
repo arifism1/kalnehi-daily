@@ -231,9 +231,9 @@ export async function pushPlannerRowsToOutbox(opts: {
   const n = await getOutboxCount();
   useSyncStore.getState().setPendingCount(n);
   registerOutboxBackgroundSync().catch(() => {});
-  void import("@/lib/sync").then(({ flushOutbox }) => {
+  void import("@/lib/sync").then(({ scheduleOutboxFlush }) => {
     if (typeof navigator !== "undefined" && navigator.onLine) {
-      void flushOutbox(userId);
+      scheduleOutboxFlush(userId);
     }
   });
 }

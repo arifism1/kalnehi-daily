@@ -18,9 +18,14 @@ import {
   type UserSyllabusCustomizationRow,
 } from "@/lib/userSyllabusMerge";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
-import { getAllOutboxMutations } from "@/lib/taskIdb";
+import { getAllOutboxMutations, persistMicrotopics, persistTasks } from "@/lib/taskIdb";
 import type { Microtopic, Task } from "@/store/useTaskStore";
 import { useTaskStore } from "@/store/useTaskStore";
+
+/** Coalesce overlapping refreshes (login + flush + focus) into one in-flight request per user. */
+let refreshInFlight: Promise<void> | null = null;
+let refreshInFlightUserId: string | null = null;
+let refreshGeneration = 0;
 
 const STATUS_FROM_DB: Record<string, string> = {
   not_started: "pending",
@@ -46,10 +51,7 @@ function normalizeTaskRow(row: Record<string, unknown>): Task {
   } as Task;
 }
 
-/**
- * Pull tasks + syllabus (for the user’s target exam only) from Supabase into Zustand and IndexedDB.
- */
-export async function refreshTasksFromSupabase(userId: string): Promise<void> {
+async function refreshTasksFromSupabaseImpl(userId: string): Promise<void> {
   const supabase = getSupabaseBrowserClient();
 
   const { data: profile, error: pProf } = await supabase
@@ -148,7 +150,27 @@ export async function refreshTasksFromSupabase(userId: string): Promise<void> {
   });
   useTaskStore.getState().setMicrotopics(microtopics as Microtopic[]);
 
-  const { persistTasks, persistMicrotopics } = await import("@/lib/taskIdb");
-  await persistTasks(Object.values(useTaskStore.getState().tasks));
-  await persistMicrotopics(microtopics as Microtopic[]);
+  await Promise.all([
+    persistTasks(Object.values(useTaskStore.getState().tasks)),
+    persistMicrotopics(microtopics as Microtopic[]),
+  ]);
+}
+
+/**
+ * Pull tasks + syllabus (for the user’s target exam only) from Supabase into Zustand and IndexedDB.
+ * Concurrent calls for the same user share one network round-trip.
+ */
+export async function refreshTasksFromSupabase(userId: string): Promise<void> {
+  if (refreshInFlight && refreshInFlightUserId === userId) {
+    return refreshInFlight;
+  }
+  const gen = ++refreshGeneration;
+  refreshInFlightUserId = userId;
+  refreshInFlight = refreshTasksFromSupabaseImpl(userId).finally(() => {
+    if (gen === refreshGeneration) {
+      refreshInFlight = null;
+      refreshInFlightUserId = null;
+    }
+  });
+  return refreshInFlight;
 }

@@ -170,7 +170,7 @@ export function OnboardingWizard() {
   return (
     <div className="mx-auto flex min-h-[min(100dvh,720px)] max-w-lg flex-col px-4 py-8">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-        <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-kal-accent/90">
+        <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-kal-accent">
           Setup · {step}/{STEPS}
         </p>
         <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
@@ -179,7 +179,7 @@ export function OnboardingWizard() {
               type="button"
               onClick={() => skipToDashboard()}
               disabled={busy}
-              className="rounded-lg px-2 py-1.5 text-xs font-semibold text-zinc-400 underline-offset-4 transition-colors hover:text-white disabled:opacity-40"
+              className="rounded-lg px-2 py-1.5 text-xs font-semibold text-kal-text-secondary underline-offset-4 transition-colors hover:text-kal-accent disabled:opacity-40"
             >
               Skip to dashboard
             </button>
@@ -189,7 +189,7 @@ export function OnboardingWizard() {
               type="button"
               onClick={() => setStep((s) => Math.max(1, s - 1))}
               disabled={step <= 1 || busy}
-              className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs text-zinc-500 hover:text-white disabled:pointer-events-none disabled:opacity-30"
+              className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-kal-text-secondary hover:text-kal-accent disabled:pointer-events-none disabled:opacity-30"
             >
               <ChevronLeft className="h-4 w-4" />
               Back
@@ -199,7 +199,7 @@ export function OnboardingWizard() {
       </div>
 
       {step < 5 && (
-        <p className="mb-6 text-center text-[11px] leading-relaxed text-zinc-600">
+        <p className="mb-6 text-center text-[11px] leading-relaxed text-kal-text-secondary">
           Prefer to explore first? Use Skip — you can add your exam, targets, and
           history in Profile anytime after you land on the home screen.
         </p>
@@ -208,22 +208,22 @@ export function OnboardingWizard() {
       {step === 1 && (
         <section className="flex flex-1 flex-col gap-6">
           <div>
-            <h1 className="text-2xl font-bold text-white">
+            <h1 className="text-2xl font-bold tracking-tight text-kal-text">
               Define your ultimate target
             </h1>
-            <p className="mt-2 text-sm text-zinc-400">
+            <p className="mt-2 text-sm leading-relaxed text-kal-text-secondary">
               This is the exam you&apos;re going to conquer — lock the date you
               will execute toward. You can refine it anytime in Profile.
             </p>
           </div>
           <div>
-            <label className="text-xs font-medium text-zinc-500">
+            <label className="text-xs font-semibold text-kal-text-secondary">
               Target exam
             </label>
             <select
               value={primaryExam}
               onChange={(e) => setPrimaryExam(e.target.value)}
-              className="mt-2 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-white transition-colors duration-200"
+              className="mt-2 min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-[15px] text-kal-text transition-colors duration-200 focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
             >
               {examOptions.map((opt) => (
                 <option key={opt.exam_name} value={opt.exam_name}>
@@ -233,11 +233,11 @@ export function OnboardingWizard() {
             </select>
           </div>
           {primaryExam && isCuetExam(primaryExam) ? (
-            <div className="rounded-xl border border-white/[0.06] bg-slate-950/40 p-4">
-              <p className="text-xs font-medium text-zinc-500">
+            <div className="rounded-xl border border-kal-border bg-kal-card-muted p-4">
+              <p className="text-xs font-semibold text-kal-accent">
                 CUET domain subjects
               </p>
-              <p className="mt-1 text-[11px] leading-relaxed text-zinc-600">
+              <p className="mt-1 text-[11px] leading-relaxed text-kal-text-secondary">
                 Select the subjects you are taking. You can change this later in
                 Profile.
               </p>
@@ -251,24 +251,26 @@ export function OnboardingWizard() {
             </div>
           ) : null}
           <div>
-            <label className="text-xs font-medium text-zinc-500">
+            <label className="text-xs font-semibold text-kal-text-secondary">
               D-day (exam date)
             </label>
             <input
               type="date"
               value={examDate}
               onChange={(e) => setExamDate(e.target.value)}
-              className="mt-2 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-white transition-colors duration-200"
+              className="mt-2 min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-kal-text transition-colors duration-200 [color-scheme:light] focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20 dark:[color-scheme:dark]"
             />
           </div>
           {error && (
-            <p className="text-sm text-rose-300">{error}</p>
+            <p className="text-sm font-medium text-red-700 dark:text-rose-200">
+              {error}
+            </p>
           )}
           <button
             type="button"
             disabled={busy}
             onClick={() => void saveExamAndNext()}
-            className="mt-auto flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-kal-accent py-3.5 text-sm font-semibold text-white transition-opacity duration-200 disabled:opacity-50"
+            className="mt-auto flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-kal-accent py-3.5 text-sm font-semibold text-kal-accent-foreground shadow-sm transition-opacity duration-200 disabled:opacity-50"
           >
             {busy ? "Saving…" : "Continue"}
             <ArrowRight className="h-4 w-4" />
@@ -281,14 +283,16 @@ export function OnboardingWizard() {
           <div className="flex items-center gap-2">
             <BookOpen className="h-6 w-6 text-kal-accent" />
             <div>
-              <h1 className="text-xl font-bold text-white">Subjects</h1>
-              <p className="text-sm text-zinc-400">
+              <h1 className="text-xl font-bold tracking-tight text-kal-text">
+                Subjects
+              </h1>
+              <p className="text-sm leading-relaxed text-kal-text-secondary">
                 Pick a subject to anchor your first study block.
               </p>
             </div>
           </div>
           {subjects.length === 0 ? (
-            <p className="rounded-xl border border-amber-500/30 bg-amber-950/20 px-4 py-3 text-sm text-amber-100">
+            <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-950 dark:border-amber-500/30 dark:bg-amber-950/25 dark:text-amber-50">
               No syllabus loaded yet. Open the app online once, then come back —
               or visit{" "}
               <Link href="/syllabus" className="font-semibold underline">
@@ -304,7 +308,7 @@ export function OnboardingWizard() {
                 setChapter("");
                 setMicrotopicId("");
               }}
-              className="min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-white transition-colors duration-200"
+              className="min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-kal-text transition-colors duration-200 focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
             >
               <option value="">— Select —</option>
               {subjects.map((s) => (
@@ -318,7 +322,7 @@ export function OnboardingWizard() {
             type="button"
             disabled={!subject || subjects.length === 0}
             onClick={() => setStep(3)}
-            className="mt-auto flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-kal-accent py-3.5 text-sm font-semibold text-white transition-opacity duration-200 disabled:opacity-40"
+            className="mt-auto flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-kal-accent py-3.5 text-sm font-semibold text-kal-accent-foreground shadow-sm transition-opacity duration-200 disabled:opacity-40"
           >
             Continue
             <ArrowRight className="h-4 w-4" />
@@ -331,8 +335,10 @@ export function OnboardingWizard() {
           <div className="flex items-center gap-2">
             <Target className="h-6 w-6 text-kal-accent" />
             <div>
-              <h1 className="text-xl font-bold text-white">Microtopics</h1>
-              <p className="text-sm text-zinc-400">
+              <h1 className="text-xl font-bold tracking-tight text-kal-text">
+                Microtopics
+              </h1>
+              <p className="text-sm leading-relaxed text-kal-text-secondary">
                 Chapter, then one microtopic for your first plan.
               </p>
             </div>
@@ -343,7 +349,7 @@ export function OnboardingWizard() {
               setChapter(e.target.value);
               setMicrotopicId("");
             }}
-            className="min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-white transition-colors duration-200"
+            className="min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-kal-text transition-colors duration-200 focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20 disabled:opacity-50"
             disabled={!subject}
           >
             <option value="">— Chapter —</option>
@@ -356,7 +362,7 @@ export function OnboardingWizard() {
           <select
             value={microtopicId}
             onChange={(e) => setMicrotopicId(e.target.value)}
-            className="min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-white transition-colors duration-200"
+            className="min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-kal-text transition-colors duration-200 focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20 disabled:opacity-50"
             disabled={!chapter}
           >
             <option value="">— Microtopic —</option>
@@ -370,7 +376,7 @@ export function OnboardingWizard() {
             type="button"
             disabled={!microtopicId}
             onClick={() => setStep(4)}
-            className="mt-auto flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-kal-accent py-3.5 text-sm font-semibold text-white transition-opacity duration-200 disabled:opacity-40"
+            className="mt-auto flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-kal-accent py-3.5 text-sm font-semibold text-kal-accent-foreground shadow-sm transition-opacity duration-200 disabled:opacity-40"
           >
             Continue
             <ArrowRight className="h-4 w-4" />
@@ -383,40 +389,48 @@ export function OnboardingWizard() {
           <div className="flex items-center gap-2">
             <CalendarDays className="h-6 w-6 text-kal-accent" />
             <div>
-              <h1 className="text-xl font-bold text-white">
+              <h1 className="text-xl font-bold tracking-tight text-kal-text">
                 What are you conquering today?
               </h1>
-              <p className="text-sm text-zinc-400">
+              <p className="text-sm leading-relaxed text-kal-text-secondary">
                 Set 3 non-negotiable targets in your head — start by locking your
                 first block on the calendar. Execution beats intention.
               </p>
             </div>
           </div>
           <div>
-            <label className="text-xs text-zinc-500">Date</label>
+            <label className="text-xs font-semibold text-kal-text-secondary">
+              Date
+            </label>
             <input
               type="date"
               value={planDate}
               onChange={(e) => setPlanDate(e.target.value)}
-              className="mt-2 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-white transition-colors duration-200"
+              className="mt-2 min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-kal-text transition-colors duration-200 [color-scheme:light] focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20 dark:[color-scheme:dark]"
             />
           </div>
           <div>
-            <label className="text-xs text-zinc-500">Est. minutes</label>
+            <label className="text-xs font-semibold text-kal-text-secondary">
+              Est. minutes
+            </label>
             <input
               type="number"
               min={0}
               value={estMinutes}
               onChange={(e) => setEstMinutes(e.target.value)}
-              className="mt-2 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-white transition-colors duration-200"
+              className="mt-2 min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-kal-text transition-colors duration-200 focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
             />
           </div>
-          {error && <p className="text-sm text-rose-300">{error}</p>}
+          {error && (
+            <p className="text-sm font-medium text-red-700 dark:text-rose-200">
+              {error}
+            </p>
+          )}
           <button
             type="button"
             disabled={busy}
             onClick={() => void createFirstTask()}
-            className="mt-auto flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-kal-accent py-3.5 text-sm font-semibold text-white transition-opacity duration-200 disabled:opacity-50"
+            className="mt-auto flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-kal-accent py-3.5 text-sm font-semibold text-kal-accent-foreground shadow-sm transition-opacity duration-200 disabled:opacity-50"
           >
             {busy ? "Locking in…" : "Lock first target"}
             <Sparkles className="h-4 w-4" />
@@ -428,8 +442,10 @@ export function OnboardingWizard() {
         <section className="flex flex-1 flex-col items-center justify-center gap-8 text-center">
           <CheckCircle2 className="h-16 w-16 text-kal-accent" aria-hidden />
           <div>
-            <h1 className="text-2xl font-bold text-white">Commitment sealed</h1>
-            <p className="mt-2 text-sm text-zinc-400">
+            <h1 className="text-2xl font-bold tracking-tight text-kal-text">
+              Commitment sealed
+            </h1>
+            <p className="mt-2 text-sm leading-relaxed text-kal-text-secondary">
               Home is your arena — start timers, conquer blocks, and let every
               checkbox prove you executed. No more drift.
             </p>
@@ -438,7 +454,7 @@ export function OnboardingWizard() {
             <button
               type="button"
               onClick={finish}
-              className="flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-white py-3.5 text-sm font-bold text-slate-900 transition-opacity duration-200"
+              className="flex min-h-[52px] items-center justify-center gap-2 rounded-2xl border border-kal-border bg-kal-card py-3.5 text-sm font-bold text-kal-text kal-shadow-card transition-opacity duration-200 hover:bg-kal-card-muted"
             >
               <Flag className="h-4 w-4" />
               Enter the Arena

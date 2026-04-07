@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BookOpen } from "lucide-react";
 
-import { SyllabusTracker } from "@/components/syllabus/SyllabusTracker";
+import { SyllabusShell } from "./SyllabusShell";
 import { resolveSyllabusExam } from "@/lib/examProfile";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -22,7 +22,7 @@ export default async function SyllabusPage() {
   }
 
   if (user && examLabel) {
-    return <SyllabusTracker />;
+    return <SyllabusShell />;
   }
 
   return (

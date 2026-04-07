@@ -1,5 +1,5 @@
-import { StrategicHeatmapClient } from "@/components/engine/StrategicHeatmapClient";
+import HeatmapRouteLazy from "./HeatmapRouteLazy";
 
 export default function HeatmapPage() {
-  return <StrategicHeatmapClient />;
+  return <HeatmapRouteLazy />;
 }

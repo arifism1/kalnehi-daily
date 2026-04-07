@@ -111,16 +111,16 @@ export function PurposeModePhotos() {
   };
 
   return (
-    <div className="rounded-2xl border border-slate-700/80 bg-slate-900/30 p-4">
-      <p className="text-sm font-medium text-zinc-200">Purpose photos</p>
-      <p className="mt-1 text-xs text-zinc-500">
+    <div className="rounded-2xl border border-kal-border bg-kal-card p-4 kal-shadow-card">
+      <p className="text-sm font-medium text-kal-text">Purpose photos</p>
+      <p className="mt-1 text-xs text-kal-text-secondary">
         Up to three images for your home motivation strip.
       </p>
       <LocalPhotoPrivacyNote className="mt-2 max-w-xl" />
       {saveError ? (
         <p
           role="alert"
-          className="mt-3 rounded-lg border border-rose-500/35 bg-rose-950/40 px-3 py-2 text-xs text-rose-100"
+          className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-900 dark:border-rose-500/35 dark:bg-rose-950/40 dark:text-rose-100"
         >
           {saveError}
         </p>
@@ -132,11 +132,11 @@ export function PurposeModePhotos() {
           return (
             <li
               key={slot}
-              className="flex flex-col gap-2 rounded-xl border border-slate-700/60 bg-slate-950/40 p-3 sm:flex-row sm:items-stretch"
+              className="flex flex-col gap-2 rounded-xl border border-kal-border bg-kal-card-muted p-3 sm:flex-row sm:items-stretch"
             >
               <label
                 htmlFor={inputId}
-                className="relative flex min-h-[100px] min-w-0 flex-1 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed border-slate-600 bg-slate-900/50 text-center transition hover:border-kal-accent/40"
+                className="relative flex min-h-[100px] min-w-0 flex-1 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed border-kal-border bg-kal-card text-center transition hover:border-kal-accent/40"
               >
                 {row?.dataUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -146,8 +146,8 @@ export function PurposeModePhotos() {
                     className="h-full max-h-[140px] w-full object-cover"
                   />
                 ) : (
-                  <span className="flex flex-col items-center gap-1.5 px-2 py-4 text-xs text-zinc-500">
-                    <ImagePlus className="h-6 w-6 text-zinc-600" />
+                  <span className="flex flex-col items-center gap-1.5 px-2 py-4 text-xs text-kal-text-secondary">
+                    <ImagePlus className="h-6 w-6 text-kal-muted" />
                     Tap to add
                   </span>
                 )}
@@ -164,14 +164,14 @@ export function PurposeModePhotos() {
                 />
               </label>
               <div className="flex min-w-0 flex-1 flex-col gap-2">
-                <label className="text-[11px] font-medium text-zinc-500">
+                <label className="text-[11px] font-medium text-kal-text-secondary">
                   Label
                   <input
                     type="text"
                     value={labelFor(slot)}
                     onChange={(e) => onLabelInput(slot, e.target.value)}
                     onBlur={() => void onLabelBlur(slot)}
-                    className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900/80 px-3 py-2 text-sm text-white placeholder:text-zinc-600 focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
+                    className="mt-1 w-full rounded-lg border border-kal-border bg-kal-card px-3 py-2 text-sm text-kal-text placeholder:text-kal-muted focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
                     placeholder={defaultLabelForSlot(slot)}
                   />
                 </label>
@@ -179,7 +179,7 @@ export function PurposeModePhotos() {
                   <button
                     type="button"
                     onClick={() => void onRemove(slot)}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-rose-500/30 bg-rose-950/20 px-3 py-2 text-xs font-medium text-rose-200 transition hover:bg-rose-950/40"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-800 transition hover:bg-red-100 dark:border-rose-500/30 dark:bg-rose-950/20 dark:text-rose-200 dark:hover:bg-rose-950/40"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                     Remove photo

@@ -28,7 +28,7 @@ function SheetSwitch({
       onClick={() => onChange(!checked)}
       className={clsx(
         "relative h-9 w-14 shrink-0 rounded-full transition-[background-color] duration-200",
-        checked ? "bg-red-500" : "bg-zinc-600",
+        checked ? "bg-kal-accent" : "bg-kal-border",
       )}
     >
       <span
@@ -92,22 +92,22 @@ export function CameraPlannerSettings() {
         onContinue={onPrivacyContinue}
         onDismiss={onPrivacyDismiss}
       />
-      <div className="divide-y divide-slate-700/80 rounded-2xl border border-slate-700/80 bg-slate-900/30 px-1">
+      <div className="divide-y divide-kal-border rounded-[1rem] border border-kal-border bg-kal-card kal-shadow-card px-1">
         <div className="px-3 py-3">
-          <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-violet-400/90">
+          <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
             Camera &amp; planner
           </p>
-          <p className="mt-1 text-xs text-zinc-500">
+          <p className="mt-1 text-xs text-kal-text-secondary">
             Study camera runs on-device only. No video is uploaded or streamed.
           </p>
         </div>
         <div className="px-3 py-3.5">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <span className="text-[15px] font-medium text-zinc-100">
+              <span className="text-[15px] font-medium text-kal-text">
                 Enable Study Camera
               </span>
-              <p className="mt-2 text-xs leading-relaxed text-zinc-400">
+              <p className="mt-2 text-xs leading-relaxed text-kal-text-secondary">
                 Video is processed only on your phone or computer. No data is
                 streamed, uploaded, or shared. Completely private and safe—AI runs
                 on-device (MediaPipe); nothing is sent to our servers.
@@ -124,10 +124,10 @@ export function CameraPlannerSettings() {
           <>
             <div className="flex flex-col gap-2 px-3 py-3.5 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <span className="text-[15px] font-medium text-zinc-100">
+                <span className="text-[15px] font-medium text-kal-text">
                   Default camera
                 </span>
-                <p className="mt-0.5 text-xs text-zinc-500">
+                <p className="mt-0.5 text-xs text-kal-text-secondary">
                   For camera-proven study sessions. Your choice is remembered.
                 </p>
               </div>
@@ -136,7 +136,7 @@ export function CameraPlannerSettings() {
                 onChange={(e) =>
                   setStudyCameraFacing(e.target.value as StudyCameraFacing)
                 }
-                className="min-h-[44px] rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+                className="min-h-[44px] rounded-lg border border-kal-border bg-kal-card-muted px-3 py-2 text-sm text-kal-text"
                 aria-label="Default camera for study sessions"
               >
                 <option value="user">Front (selfie)</option>
@@ -144,10 +144,10 @@ export function CameraPlannerSettings() {
               </select>
             </div>
             <div className="px-3 py-3.5">
-              <span className="text-[15px] font-medium text-zinc-100">
+              <span className="text-[15px] font-medium text-kal-text">
                 Detection sensitivity
               </span>
-              <p className="mt-1 text-xs leading-relaxed text-zinc-500">
+              <p className="mt-1 text-xs leading-relaxed text-kal-text-secondary">
                 Stricter needs clearer head-down + stable pose; Lenient is easier
                 to trigger while still on-device only.
               </p>
@@ -158,7 +158,7 @@ export function CameraPlannerSettings() {
                     e.target.value as StudyDetectionSensitivity,
                   )
                 }
-                className="mt-3 min-h-[44px] w-full max-w-xs rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white sm:w-auto"
+                className="mt-3 min-h-[44px] w-full max-w-xs rounded-lg border border-kal-border bg-kal-card-muted px-3 py-2 text-sm text-kal-text sm:w-auto"
                 aria-label="Study detection sensitivity"
               >
                 <option value="strict">Strict</option>

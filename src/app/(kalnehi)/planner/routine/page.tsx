@@ -1,5 +1,5 @@
-import { RoutinePlannerView } from "@/components/planner/views/RoutinePlannerView";
+import RoutinePlannerRouteLazy from "./RoutinePlannerRouteLazy";
 
 export default function RoutinePlannerPage() {
-  return <RoutinePlannerView />;
+  return <RoutinePlannerRouteLazy />;
 }

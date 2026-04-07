@@ -1,5 +1,5 @@
-import { PendingTasksClient } from "@/components/engine/PendingTasksClient";
+import PendingRouteLazy from "./PendingRouteLazy";
 
 export default function PendingPage() {
-  return <PendingTasksClient />;
+  return <PendingRouteLazy />;
 }

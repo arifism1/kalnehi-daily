@@ -69,7 +69,7 @@ export function SettingsToggles() {
     <div className="divide-y divide-kal-border rounded-[1rem] border border-kal-border bg-kal-card kal-shadow-card px-1">
       <div className="px-3 py-4">
         <span className="text-[15px] font-medium text-kal-text">Appearance</span>
-        <p className="mt-0.5 text-xs text-kal-muted">
+        <p className="mt-0.5 text-xs text-kal-text-secondary">
           Light is default; System follows your device.
         </p>
         <div
@@ -86,7 +86,7 @@ export function SettingsToggles() {
                 "min-h-[40px] flex-1 rounded-lg text-xs font-semibold transition-colors",
                 appearance === value
                   ? "bg-kal-card text-kal-text kal-shadow-card"
-                  : "text-kal-muted hover:text-kal-text",
+                  : "text-kal-text-secondary hover:text-kal-text",
               )}
             >
               {label}
@@ -99,7 +99,7 @@ export function SettingsToggles() {
           <span className="text-[15px] font-medium text-kal-text">
             Purpose mode
           </span>
-          <p className="mt-0.5 text-xs text-kal-muted">
+          <p className="mt-0.5 text-xs text-kal-text-secondary">
             Photos &amp; motivation strip on home
           </p>
         </div>
@@ -114,7 +114,7 @@ export function SettingsToggles() {
           <span className="text-[15px] font-medium text-kal-text">
             Show countdown
           </span>
-          <p className="mt-0.5 text-xs text-kal-muted">
+          <p className="mt-0.5 text-xs text-kal-text-secondary">
             Kalnehi Eye — exam countdown on home
           </p>
         </div>
@@ -129,7 +129,7 @@ export function SettingsToggles() {
           <span className="text-[15px] font-medium text-kal-text">
             Enable Advanced Marks Projection
           </span>
-          <p className="mt-0.5 text-xs text-kal-muted">
+          <p className="mt-0.5 text-xs text-kal-text-secondary">
             When off, home and progress show syllabus completion % only (no
             projected marks).
           </p>

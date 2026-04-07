@@ -1,5 +1,5 @@
-import { WeeklyPlannerView } from "@/components/planner/views/WeeklyPlannerView";
+import WeeklyPlannerRouteLazy from "./WeeklyPlannerRouteLazy";
 
 export default function WeeklyPlannerPage() {
-  return <WeeklyPlannerView />;
+  return <WeeklyPlannerRouteLazy />;
 }

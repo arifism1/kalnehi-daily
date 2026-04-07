@@ -71,7 +71,7 @@ export function InstallPWA({ className = "" }: { className?: string }) {
   return (
     <button
       type="button"
-      className={`flex w-full items-center justify-between gap-3 rounded-2xl border border-kal-accent/25 bg-red-950/40 px-4 py-3 text-left transition-colors duration-200 hover:bg-red-950/55 ${className}`}
+      className={`flex w-full items-center justify-between gap-3 rounded-2xl border border-kal-accent/30 bg-kal-accent-soft px-4 py-3 text-left transition-colors duration-200 hover:border-kal-accent/40 ${className}`}
       onClick={() => void onClick()}
       disabled={busy}
     >
@@ -81,15 +81,15 @@ export function InstallPWA({ className = "" }: { className?: string }) {
           aria-hidden
         />
         <span className="min-w-0">
-          <span className="block text-sm font-semibold text-white">
+          <span className="block text-sm font-semibold text-kal-text">
             Install Kalnehi
           </span>
-          <span className="block text-[11px] text-zinc-400">
+          <span className="block text-[11px] text-kal-text-secondary">
             Add to home screen for a full-screen app experience.
           </span>
         </span>
       </span>
-      <span className="shrink-0 rounded-lg bg-kal-accent px-3 py-1.5 text-xs font-semibold text-white">
+      <span className="shrink-0 rounded-lg bg-kal-accent px-3 py-1.5 text-xs font-semibold text-kal-accent-foreground">
         {busy ? "…" : "Install"}
       </span>
     </button>

@@ -1,5 +1,5 @@
-import { MarksEngineClient } from "@/components/engine/MarksEngineClient";
+import MarksEngineRouteLazy from "./MarksEngineRouteLazy";
 
 export default function MarksEnginePage() {
-  return <MarksEngineClient />;
+  return <MarksEngineRouteLazy />;
 }

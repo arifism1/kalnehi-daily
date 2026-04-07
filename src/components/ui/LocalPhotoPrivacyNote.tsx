@@ -13,7 +13,7 @@ export function LocalPhotoPrivacyNote({ className, compact }: Props) {
   return (
     <p
       className={clsx(
-        "text-[11px] leading-relaxed text-zinc-500",
+        "text-[11px] leading-relaxed text-kal-text-secondary",
         compact && "leading-snug",
         className,
       )}

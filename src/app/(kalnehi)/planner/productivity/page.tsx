@@ -1,5 +1,5 @@
-import { ProductivityPlannerView } from "@/components/planner/views/ProductivityPlannerView";
+import ProductivityPlannerRouteLazy from "./ProductivityPlannerRouteLazy";
 
 export default function ProductivityPlannerPage() {
-  return <ProductivityPlannerView />;
+  return <ProductivityPlannerRouteLazy />;
 }

@@ -1,5 +1,5 @@
-import { DoubtTracker } from "@/components/doubts/DoubtTracker";
+import DoubtsRouteLazy from "./DoubtsRouteLazy";
 
 export default function DoubtsPage() {
-  return <DoubtTracker />;
+  return <DoubtsRouteLazy />;
 }

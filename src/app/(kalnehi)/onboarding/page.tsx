@@ -1,5 +1,5 @@
-import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
+import OnboardingRouteLazy from "./OnboardingRouteLazy";
 
 export default function OnboardingPage() {
-  return <OnboardingWizard />;
+  return <OnboardingRouteLazy />;
 }

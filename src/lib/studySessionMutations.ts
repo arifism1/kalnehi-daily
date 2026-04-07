@@ -2,7 +2,7 @@
 
 import type { TablesInsert } from "@/types/supabase";
 import { registerOutboxBackgroundSync } from "@/lib/pwaBackgroundSync";
-import { flushOutbox } from "@/lib/sync";
+import { scheduleOutboxFlush } from "@/lib/sync";
 import { putStudySessionWithOutboxMutation, getOutboxCount } from "@/lib/taskIdb";
 import {
   migrateLegacyStudySessionsIfNeeded,
@@ -46,7 +46,7 @@ export async function applyOptimisticStudySessionCreate(
   useSyncStore.getState().setPendingCount(n);
   registerOutboxBackgroundSync().catch(() => {});
   if (typeof navigator !== "undefined" && row.user_id) {
-    flushOutbox(row.user_id).catch(() => {});
+    scheduleOutboxFlush(row.user_id);
   }
 
   return { ok: true };

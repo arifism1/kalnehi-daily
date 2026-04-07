@@ -1,5 +1,5 @@
-import { SettingsPageClient } from "@/components/settings/SettingsPageClient";
+import SettingsRouteLazy from "./SettingsRouteLazy";
 
 export default function SettingsPage() {
-  return <SettingsPageClient />;
+  return <SettingsRouteLazy />;
 }

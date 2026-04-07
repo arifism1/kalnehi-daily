@@ -1,5 +1,5 @@
-import { CalendarEngineClient } from "@/components/engine/CalendarEngineClient";
+import ConsistencyTrackerRouteLazy from "./ConsistencyTrackerRouteLazy";
 
 export default function ConsistencyTrackerPage() {
-  return <CalendarEngineClient />;
+  return <ConsistencyTrackerRouteLazy />;
 }

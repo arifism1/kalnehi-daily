@@ -1,5 +1,5 @@
-import { FeedbackEngineClient } from "@/components/engine/FeedbackEngineClient";
+import FeedbackRouteLazy from "./FeedbackRouteLazy";
 
 export default function FeedbackPage() {
-  return <FeedbackEngineClient />;
+  return <FeedbackRouteLazy />;
 }

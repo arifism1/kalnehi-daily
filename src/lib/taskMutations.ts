@@ -4,7 +4,7 @@ import type { TablesInsert, TablesUpdate } from "@/types/supabase";
 import { USER_ERROR } from "@/lib/userFacingErrors";
 import { dispatchTasksSync } from "@/lib/taskRefreshDispatch";
 import { registerOutboxBackgroundSync } from "@/lib/pwaBackgroundSync";
-import { flushOutbox } from "@/lib/sync";
+import { scheduleOutboxFlush } from "@/lib/sync";
 import {
   addOutboxMutation,
   deleteOutboxMutation,
@@ -54,7 +54,7 @@ async function enqueueAndFlush(
   registerOutboxBackgroundSync().catch(() => {});
 
   if (typeof navigator !== "undefined" && navigator.onLine && userId) {
-    flushOutbox(userId).catch(() => {});
+    scheduleOutboxFlush(userId);
   }
   return outboxId;
 }
@@ -100,7 +100,7 @@ export async function undoRestoreTaskDelete(
     useSyncStore.getState().setPendingCount(n);
   }
   dispatchTasksSync();
-  if (userId) flushOutbox(userId).catch(() => {});
+  if (userId) scheduleOutboxFlush(userId);
 }
 
 /**
@@ -118,7 +118,7 @@ export async function undoRestoreTaskUpdate(
   useSyncStore.getState().setPendingCount(n);
   if (hadPending) {
     dispatchTasksSync();
-    if (userId) flushOutbox(userId).catch(() => {});
+    if (userId) scheduleOutboxFlush(userId);
     return;
   }
   await applyOptimisticTaskUpdate(

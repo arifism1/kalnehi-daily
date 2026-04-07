@@ -31,8 +31,6 @@ import { isStandalonePwa, usePwaInstall } from "@/hooks/usePwaInstall";
 type MainNavigationMenuProps = {
   open: boolean;
   onClose: () => void;
-  /** Account sheet with quick toggles & sign out. */
-  onOpenAccount?: () => void;
   /** Full-page handwritten paste flow (signed-in only). */
   pasteHandwrittenHref?: string;
 };
@@ -63,7 +61,6 @@ const LINKS: { href: string; label: string; Icon: LucideIcon }[] = [
 export function MainNavigationMenu({
   open,
   onClose,
-  onOpenAccount,
   pasteHandwrittenHref,
 }: MainNavigationMenuProps) {
   const pathname = usePathname();
@@ -137,22 +134,6 @@ export function MainNavigationMenu({
           aria-label="Main"
         >
           <ul className="space-y-0.5">
-            {onOpenAccount ? (
-              <li>
-                <button
-                  type="button"
-                  onClick={onOpenAccount}
-                  className="flex min-h-[56px] w-full items-center gap-4 rounded-2xl px-3 py-3 text-left transition-colors hover:bg-kal-card-muted active:bg-kal-card-muted"
-                >
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-kal-card-muted text-kal-accent">
-                    <UserRound className="h-6 w-6" strokeWidth={2} />
-                  </span>
-                  <span className="min-w-0 flex-1 text-[15px] font-semibold leading-snug text-kal-text">
-                    Account
-                  </span>
-                </button>
-              </li>
-            ) : null}
             {pasteHandwrittenHref ? (
               <li>
                 <Link

@@ -1,5 +1,5 @@
-import { HabitsPlannerView } from "@/components/planner/views/HabitsPlannerView";
+import HabitsPlannerRouteLazy from "./HabitsPlannerRouteLazy";
 
 export default function HabitsPlannerPage() {
-  return <HabitsPlannerView />;
+  return <HabitsPlannerRouteLazy />;
 }

@@ -1,5 +1,5 @@
-import { RevisionEngineClient } from "@/components/engine/RevisionEngineClient";
+import RevisionRouteLazy from "./RevisionRouteLazy";
 
 export default function RevisionPage() {
-  return <RevisionEngineClient />;
+  return <RevisionRouteLazy />;
 }
