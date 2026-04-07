@@ -108,8 +108,8 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
                     strokeWidth={2.25}
                     aria-hidden
                   />
-                  <span className="hidden max-w-[5.5rem] truncate text-[11px] font-semibold leading-tight sm:inline sm:max-w-none sm:text-xs">
-                    Paste
+                  <span className="hidden text-[11px] font-semibold leading-tight sm:inline sm:text-xs">
+                    Schedule
                   </span>
                 </Link>
                 <button
