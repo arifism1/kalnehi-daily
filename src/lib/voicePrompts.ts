@@ -62,6 +62,7 @@ Output format (strict, JSON only, no markdown/code fences):
 Rules:
 - Output ONLY a flat JSON array. No wrapper object.
 - Keep only real task rows from table/list content.
+- Prioritize splitting into MULTIPLE rows when multiple time slots are present.
 - Ignore headings and narrative text like:
   "Clean & accurate transcription", "Why this matters", "Date:", comments, tips.
 - Respect student-written times. If time unclear => null.
@@ -69,6 +70,13 @@ Rules:
 - If row has only one time, use start_time and end_time = null.
 - duration should be a compact label if available (e.g. "15m", "2h 30m"), else null.
 - name must be the real activity text from the table's Activity column (or equivalent). Each row needs a distinct, specific name (e.g. "Wakeup + Freshen Up"). Never use the generic word "Task", "TASK", "Activity", or column headers as name.
+- Typical Indian planner patterns to detect as separate rows:
+  - "5:00 am - 6:30 am Physics"
+  - "7:15-8:00 Breakfast / break"
+  - "9:00 to 12:00 Coaching"
+  - "14:00–15:30 Revision"
+  - "10:30 PM-11:00 PM Plan tomorrow"
+- Keep short breaks/meals as rows too (Break, Lunch, Dinner, Rest, Walk, etc.).
 
 Few-shot example (exact noisy style):
 Input:

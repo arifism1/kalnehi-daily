@@ -173,6 +173,66 @@ function parseFromMarkdownTable(raw: string): ParsedPastedPlanTask[] {
   return out;
 }
 
+function cleanupActivityName(raw: string): string {
+  return raw
+    .replace(/^[\s\-–—•*]+/, "")
+    .replace(/^\d+\.\s*/, "")
+    .replace(/\s{2,}/g, " ")
+    .trim()
+    .slice(0, 400);
+}
+
+/** Parse plain schedule lines such as "5:00 am - 6:30 am Physics revision". */
+function parseFromScheduleLines(raw: string): ParsedPastedPlanTask[] {
+  const lines = raw
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const out: ParsedPastedPlanTask[] = [];
+  for (const line of lines) {
+    if (
+      /^(date|day|schedule|time slot|activity|duration|why this matters|clean & accurate transcription)/i.test(
+        line,
+      )
+    ) {
+      continue;
+    }
+
+    const range = line.match(
+      /(\d{1,2}:\d{2}\s*(?:am|pm)?)\s*(?:-|–|—|\bto\b)\s*(\d{1,2}:\d{2}\s*(?:am|pm)?)(.*)$/i,
+    );
+    if (range) {
+      const st = normalizeHHMM(range[1]);
+      const et = normalizeHHMM(range[2]);
+      const name = cleanupActivityName(range[3] ?? "");
+      if (name) {
+        out.push({
+          name,
+          start_time: st,
+          end_time: et,
+          duration: null,
+        });
+        continue;
+      }
+    }
+
+    const single = line.match(/(\d{1,2}:\d{2}\s*(?:am|pm)?)(.*)$/i);
+    if (single) {
+      const st = normalizeHHMM(single[1]);
+      const name = cleanupActivityName(single[2] ?? "");
+      if (name) {
+        out.push({
+          name,
+          start_time: st,
+          end_time: null,
+          duration: null,
+        });
+      }
+    }
+  }
+  return out.slice(0, MAX_TASKS);
+}
+
 export async function parsePastedHandwrittenPlan(
   pastedText: string,
 ): Promise<ParseResult> {
@@ -185,6 +245,8 @@ export async function parsePastedHandwrittenPlan(
   if (!apiKey) {
     const local = parseFromMarkdownTable(raw);
     if (local.length > 0) return { ok: true, tasks: local };
+    const lines = parseFromScheduleLines(raw);
+    if (lines.length > 0) return { ok: true, tasks: lines };
     return {
       ok: true,
       tasks: [{ name: raw.slice(0, 300), start_time: null, end_time: null, duration: null }],
@@ -236,6 +298,8 @@ export async function parsePastedHandwrittenPlan(
 
   const local = parseFromMarkdownTable(raw);
   if (local.length > 0) return { ok: true, tasks: local };
+  const lines = parseFromScheduleLines(raw);
+  if (lines.length > 0) return { ok: true, tasks: lines };
 
   return {
     ok: true,
