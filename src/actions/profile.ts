@@ -95,8 +95,21 @@ export async function upsertUserProfile(fields: {
           })()
         : null;
 
-    const { error } = await supabase.from("user_profiles").upsert(
-      {
+    const { data: existing, error: selErr } = await supabase
+      .from("user_profiles")
+      .select("id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (selErr) throw selErr;
+
+    if (existing?.id) {
+      const { error } = await supabase
+        .from("user_profiles")
+        .update({ ...patchBase, ...(examHistoryPatch ?? {}) })
+        .eq("id", existing.id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase.from("user_profiles").insert({
         user_id: user.id,
         ...patchBase,
         ...(examHistoryPatch ?? {
@@ -104,10 +117,9 @@ export async function upsertUserProfile(fields: {
           prev_score: null,
           prev_score_entries: [],
         }),
-      },
-      { onConflict: "user_id" },
-    );
-    if (error) throw error;
+      });
+      if (error) throw error;
+    }
 
     revalidatePath("/");
     revalidatePath("/profile");

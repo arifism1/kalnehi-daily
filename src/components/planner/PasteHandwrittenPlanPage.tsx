@@ -530,7 +530,7 @@ export function PasteHandwrittenPlanPage() {
               {rows.map((r) => (
                 <li
                   key={r.id}
-                  className="min-w-0 grid grid-cols-[2rem_6.2rem_minmax(0,1fr)_6.2rem_auto_auto] items-start gap-2 overflow-hidden rounded-lg border border-kal-border bg-kal-card-muted/80 p-3"
+                  className="min-w-0 grid grid-cols-[2rem_minmax(0,1fr)_auto] items-start gap-2 overflow-hidden rounded-lg border border-kal-border bg-kal-card-muted/80 p-3"
                 >
                   <label className="mt-2 flex cursor-pointer">
                     <input
@@ -541,44 +541,48 @@ export function PasteHandwrittenPlanPage() {
                       title="Include when saving"
                     />
                   </label>
-                  <input
-                    type="time"
-                    value={r.startInput}
-                    onChange={(e) => updateRow(r.id, { startInput: e.target.value })}
-                    disabled={!r.include}
-                    className="min-h-[40px] rounded border border-kal-border bg-kal-input-bg px-2 text-sm text-kal-text disabled:opacity-50"
-                    aria-label="From time"
-                  />
-                  <textarea
-                    value={r.name}
-                    onChange={(e) => updateRow(r.id, { name: e.target.value })}
-                    placeholder="Task name"
-                    disabled={!r.include}
-                    rows={1}
-                    className="min-h-[40px] min-w-0 w-full resize-y overflow-hidden rounded border border-kal-border bg-kal-input-bg px-2 py-2 text-sm leading-5 text-kal-text placeholder:text-kal-muted [overflow-wrap:anywhere] disabled:opacity-50"
-                    aria-label="Task name"
-                  />
-                  <input
-                    type="time"
-                    value={r.endInput}
-                    onChange={(e) => updateRow(r.id, { endInput: e.target.value })}
-                    disabled={!r.include}
-                    className="min-h-[40px] w-[7.25rem] rounded border border-kal-border bg-kal-input-bg px-2 text-sm text-kal-text disabled:opacity-50"
-                    aria-label="To time"
-                  />
-                  <div className="flex items-center gap-2">
-                    <span className="w-[3.5rem] text-right text-xs font-medium text-kal-muted">
-                      {r.duration ?? "—"}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => removeRow(r.id)}
-                      className="rounded border border-kal-border p-2 text-kal-muted hover:bg-kal-card-muted hover:text-rose-600 dark:hover:text-rose-300"
-                      aria-label="Delete row"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                  <div className="min-w-0">
+                    <textarea
+                      value={r.name}
+                      onChange={(e) => updateRow(r.id, { name: e.target.value })}
+                      placeholder="Task name"
+                      disabled={!r.include}
+                      rows={1}
+                      className="min-h-[40px] min-w-0 w-full resize-y overflow-hidden rounded border border-kal-border bg-kal-input-bg px-2 py-2 text-sm font-semibold leading-5 text-kal-text placeholder:text-kal-muted [overflow-wrap:anywhere] disabled:opacity-50"
+                      aria-label="Task name"
+                    />
+                    <div className="mt-1.5 flex min-w-0 items-center gap-2">
+                      <input
+                        type="time"
+                        value={r.startInput}
+                        onChange={(e) =>
+                          updateRow(r.id, { startInput: e.target.value })
+                        }
+                        disabled={!r.include}
+                        className="min-h-[32px] rounded border border-kal-border bg-kal-input-bg px-2 text-[11px] text-kal-text disabled:opacity-50"
+                        aria-label="From time"
+                      />
+                      <input
+                        type="time"
+                        value={r.endInput}
+                        onChange={(e) => updateRow(r.id, { endInput: e.target.value })}
+                        disabled={!r.include}
+                        className="min-h-[32px] rounded border border-kal-border bg-kal-input-bg px-2 text-[11px] text-kal-text disabled:opacity-50"
+                        aria-label="To time"
+                      />
+                      <span className="ml-auto text-xs font-medium text-kal-muted">
+                        {r.duration ?? "—"}
+                      </span>
+                    </div>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => removeRow(r.id)}
+                    className="mt-1 rounded border border-kal-border p-2 text-kal-muted hover:bg-kal-card-muted hover:text-rose-600 dark:hover:text-rose-300"
+                    aria-label="Delete row"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </li>
               ))}
             </ul>
