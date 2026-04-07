@@ -372,6 +372,7 @@ export async function flushOutbox(userId: string | undefined): Promise<void> {
     let failedThisRound = 0;
     let deadLettered = 0;
     let worstFailCount = 0;
+    let latestFailureMessage: string | null = null;
     let voicePlannerOpsApplied = 0;
     let handwrittenPlannerOpsApplied = 0;
     let touchedTasks = false;
@@ -403,13 +404,21 @@ export async function flushOutbox(userId: string | undefined): Promise<void> {
           failedThisRound++;
           worstFailCount = Math.max(worstFailCount, fails + 1);
         }
+        latestFailureMessage = res.error;
+        console.log("[sync] task_create batch failed", {
+          error: res.error,
+          batchSize: batch.length,
+          ids: batch.map((m) => m.taskId),
+        });
       } catch (err) {
+        const msg = formatSupabaseError(err);
         for (const m of batch) {
           const fails = m.failCount ?? 0;
           await bumpOutboxFailCount(m.clientMutationId);
           failedThisRound++;
           worstFailCount = Math.max(worstFailCount, fails + 1);
         }
+        latestFailureMessage = msg;
         console.warn("[sync] task_create batch threw:", err);
       }
     };
@@ -463,19 +472,37 @@ export async function flushOutbox(userId: string | undefined): Promise<void> {
           await bumpOutboxFailCount(m.clientMutationId);
           failedThisRound++;
           worstFailCount = Math.max(worstFailCount, fails + 1);
+          latestFailureMessage = res.error;
           console.warn(
             `[sync] entry ${m.op} ${m.taskId} failed (attempt ${fails + 1}):`,
             res.error,
           );
+          console.log("[sync] full mutation failure", {
+            op: m.op,
+            taskId: m.taskId,
+            attempt: fails + 1,
+            error: res.error,
+            mutation: m,
+          });
         }
       } catch (err) {
+        const msg = formatSupabaseError(err);
         await bumpOutboxFailCount(m.clientMutationId);
         failedThisRound++;
         worstFailCount = Math.max(worstFailCount, fails + 1);
+        latestFailureMessage = msg;
         console.warn(
           `[sync] entry ${m.op} ${m.taskId} threw (attempt ${fails + 1}):`,
           err,
         );
+        console.log("[sync] full thrown mutation error", {
+          op: m.op,
+          taskId: m.taskId,
+          attempt: fails + 1,
+          error: msg,
+          rawError: err,
+          mutation: m,
+        });
       }
     }
 
@@ -486,10 +513,11 @@ export async function flushOutbox(userId: string | undefined): Promise<void> {
       useSyncStore
         .getState()
         .setLastSyncError(
-          `${deadLettered} change${deadLettered > 1 ? "s" : ""} couldn't sync after several attempts. Tap retry or check your connection.`,
+          latestFailureMessage ??
+            `${deadLettered} change${deadLettered > 1 ? "s" : ""} couldn't sync after several attempts. Tap retry or check your connection.`,
         );
     } else if (failedThisRound > 0 && remaining > 0) {
-      useSyncStore.getState().setLastSyncError(null);
+      useSyncStore.getState().setLastSyncError(latestFailureMessage);
       scheduleRetry(userId, worstFailCount);
     } else {
       useSyncStore.getState().setLastSyncError(null);

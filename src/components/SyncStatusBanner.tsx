@@ -72,7 +72,9 @@ export function SyncStatusBanner() {
           "border-[var(--kal-warn-border)] bg-[var(--kal-warn-soft)] text-[var(--kal-warn-text)]",
         )}
       >
-        <p className="min-w-0 flex-1 pt-0.5">{lastSyncError}</p>
+        <p className="min-w-0 flex-1 pt-0.5">
+          Sync failed: {lastSyncError}
+        </p>
         <button
           type="button"
           onClick={() => void onRetry()}
