@@ -2,14 +2,13 @@
 
 import { X } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { StudyCameraPrivacyModal } from "@/components/study/StudyCameraPrivacyModal";
 import { StudyCameraTracker } from "@/components/study/StudyCameraTracker";
 import { applyOptimisticStudySessionCreate } from "@/lib/studySessionMutations";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
-import { useTaskStore } from "@/store/useTaskStore";
 
 type Step = "subject" | "mode" | "claimed" | "camera";
 
@@ -36,8 +35,6 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
   const setStudyCameraPrivacyAcknowledged = useSettingsStore(
     (s) => s.setStudyCameraPrivacyAcknowledged,
   );
-  const tasksRecord = useTaskStore((s) => s.tasks);
-  const microRecord = useTaskStore((s) => s.microtopics);
 
   const [step, setStep] = useState<Step>("subject");
   const [subject, setSubject] = useState("");
@@ -48,18 +45,6 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
   const [timerRunning, setTimerRunning] = useState(false);
   const [saving, setSaving] = useState(false);
   const [privacyGateOpen, setPrivacyGateOpen] = useState(false);
-
-  const suggestions = useMemo(() => {
-    const names = new Set<string>();
-    for (const t of Object.values(tasksRecord)) {
-      const n = t.name?.trim();
-      if (n) names.add(n);
-    }
-    for (const m of Object.values(microRecord)) {
-      if (m.subject?.trim()) names.add(m.subject.trim());
-    }
-    return Array.from(names).sort((a, b) => a.localeCompare(b)).slice(0, 80);
-  }, [tasksRecord, microRecord]);
 
   useEffect(() => {
     if (!open) {
@@ -256,16 +241,11 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
                   <input
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
-                    list="study-session-subjects"
-                    placeholder="Type or pick a task / subject"
+                    autoComplete="off"
+                    placeholder="Type what you're studying"
                     className="mt-2 min-h-[52px] w-full rounded-2xl border border-kal-border bg-kal-input-bg px-4 text-base text-kal-text placeholder:text-kal-muted"
                   />
                 </label>
-                <datalist id="study-session-subjects">
-                  {suggestions.map((s) => (
-                    <option key={s} value={s} />
-                  ))}
-                </datalist>
                 <button
                   type="button"
                   disabled={!subjectOk}

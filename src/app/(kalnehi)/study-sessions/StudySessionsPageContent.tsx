@@ -54,10 +54,9 @@ export default function StudySessionsPageContent() {
             Privacy
           </p>
           <p className="mt-1.5 text-xs leading-relaxed text-red-900 dark:text-red-100/85">
-            Camera sessions use AI only on your device (MediaPipe in the
-            browser). Video is never streamed, uploaded, or saved on our servers.
-            Your log only stores subject, duration, and times—never images or
-            recordings.
+            Camera sessions use AI only on your device. Video is never streamed,
+            uploaded, or saved on our servers. Your log only stores subject,
+            duration, and times—never images or recordings.
           </p>
         </div>
       </header>

@@ -2,7 +2,6 @@
 
 import { addDays, format, parseISO } from "date-fns";
 import Link from "next/link";
-import { Video } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 
 import { useCalendarDate } from "@/hooks/useCalendarDate";
@@ -18,7 +17,6 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { useTaskStore, type Task } from "@/store/useTaskStore";
 
 import { AddEditTaskSheet } from "@/components/planner/AddEditTaskSheet";
-import { AddStudySessionSheet } from "@/components/study/AddStudySessionSheet";
 import { TaskCard } from "@/components/task/TaskCard";
 import { TransientNotice } from "@/components/ui/TransientNotice";
 
@@ -84,7 +82,6 @@ export function Planner() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetMode, setSheetMode] = useState<"add" | "edit">("add");
   const [editTask, setEditTask] = useState<Task | null>(null);
-  const [studySheetOpen, setStudySheetOpen] = useState(false);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
 
   const taskList = useMemo(() => Object.values(tasksRecord), [tasksRecord]);
@@ -185,19 +182,6 @@ export function Planner() {
         <p className="mt-2 text-[10px] tabular-nums text-kal-muted sm:mt-3 sm:text-[11px]">
           {assignedDateForTab}
         </p>
-
-        {userId ? (
-          <div className="mt-4 flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={() => setStudySheetOpen(true)}
-              className="flex w-full min-h-[52px] items-center justify-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-4 text-sm font-bold text-kal-text transition-colors hover:bg-kal-border/30 active:scale-[0.99]"
-            >
-              <Video className="h-5 w-5 shrink-0 text-kal-accent" aria-hidden />
-              Add study session
-            </button>
-          </div>
-        ) : null}
       </div>
 
       <div className="mx-4 mt-3 sm:mx-6 sm:mt-4 md:mx-8">
@@ -246,11 +230,6 @@ export function Planner() {
         mode={sheetMode}
         task={editTask}
         defaultAssignedDate={assignedDateForTab}
-      />
-
-      <AddStudySessionSheet
-        open={studySheetOpen}
-        onClose={() => setStudySheetOpen(false)}
       />
     </section>
   );

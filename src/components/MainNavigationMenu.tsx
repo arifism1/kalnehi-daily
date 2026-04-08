@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 
 import { isStandalonePwa, usePwaInstall } from "@/hooks/usePwaInstall";
 
@@ -54,21 +54,63 @@ function policyHubActive(pathname: string): boolean {
   return POLICY_HUB_PATHS.has(pathname);
 }
 
-const LINKS: { href: string; label: string; Icon: LucideIcon }[] = [
-  { href: "/", label: "Dashboard (Home)", Icon: Home },
-  { href: "/syllabus", label: "Syllabus Tracker", Icon: BookOpen },
-  { href: "/plan", label: "Execution Planner", Icon: CalendarDays },
-  { href: "/daily-log", label: "Daily Log", Icon: ScrollText },
-  { href: "/study-sessions", label: "Study Sessions", Icon: Video },
-  { href: "/progress", label: "Progress", Icon: BarChart3 },
-  { href: "/doubts", label: "Doubt Tracker", Icon: CircleHelp },
-  { href: "/consistency-tracker", label: "Consistency Tracker", Icon: Calendar },
-  { href: "/revision", label: "Revision Engine", Icon: RotateCcw },
-  { href: "/heatmap", label: "Heatmap", Icon: Flame },
-  { href: "/timer", label: "Timer", Icon: Timer },
-  { href: "/pending", label: "Pending Tasks", Icon: Inbox },
-  { href: "/profile", label: "Profile", Icon: UserRound },
-  { href: "/settings", label: "Settings", Icon: Settings },
+type NavItem = {
+  href: string;
+  label: string;
+  Icon: LucideIcon;
+  /** Override default pathname-based active state */
+  isActive?: (pathname: string) => boolean;
+};
+
+const MENU_SECTIONS: { title: string; items: NavItem[] }[] = [
+  {
+    title: "Core Daily Flow",
+    items: [
+      { href: "/", label: "Dashboard (Home)", Icon: Home },
+      { href: "/plan-my-day", label: "Plan My Day", Icon: Sparkles },
+      { href: "/syllabus", label: "Syllabus Tracker", Icon: BookOpen },
+    ],
+  },
+  {
+    title: "Execution",
+    items: [
+      { href: "/plan", label: "Execution Planner", Icon: CalendarDays },
+      { href: "/study-sessions", label: "Study Sessions", Icon: Video },
+      { href: "/timer", label: "Timer", Icon: Timer },
+    ],
+  },
+  {
+    title: "Review & Analysis",
+    items: [
+      { href: "/progress", label: "Progress", Icon: BarChart3 },
+      { href: "/daily-log", label: "Daily Log", Icon: ScrollText },
+      { href: "/revision", label: "Revision Engine", Icon: RotateCcw },
+      { href: "/heatmap", label: "Heatmap", Icon: Flame },
+      { href: "/consistency-tracker", label: "Consistency Tracker", Icon: Calendar },
+    ],
+  },
+  {
+    title: "Growth Tools",
+    items: [
+      { href: "/habits", label: "Habit Maker", Icon: ListChecks },
+      { href: "/motivation", label: "Personal Motivation", Icon: Heart },
+      { href: "/doubts", label: "Doubt Tracker", Icon: CircleHelp },
+    ],
+  },
+  {
+    title: "Account & Legal",
+    items: [
+      { href: "/pending", label: "Pending Tasks", Icon: Inbox },
+      {
+        href: "/policies",
+        label: "Our Policies",
+        Icon: Scale,
+        isActive: policyHubActive,
+      },
+      { href: "/profile", label: "Profile", Icon: UserRound },
+      { href: "/settings", label: "Settings", Icon: Settings },
+    ],
+  },
 ];
 
 export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
@@ -137,147 +179,55 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
           aria-label="Main"
         >
           <ul className="space-y-0.5">
-            <li>
-              <Link
-                href="/plan-my-day"
-                onClick={onClose}
-                className={clsx(
-                  "flex min-h-[56px] items-center gap-4 rounded-2xl px-3 py-3 transition-colors",
-                  navActive(pathname, "/plan-my-day")
-                    ? "bg-kal-accent-soft ring-1 ring-kal-accent/25"
-                    : "hover:bg-kal-card-muted active:bg-kal-card-muted",
-                )}
-              >
-                <span
+            {MENU_SECTIONS.map((section, sectionIndex) => (
+              <Fragment key={section.title}>
+                <li
                   className={clsx(
-                    "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl",
-                    navActive(pathname, "/plan-my-day")
-                      ? "bg-kal-accent/20 text-kal-accent-dark dark:text-kal-accent"
-                      : "bg-kal-card-muted text-kal-muted",
+                    "list-none px-3 pb-1 pt-2",
+                    sectionIndex > 0 && "mt-5 sm:mt-6",
                   )}
                 >
-                  <Sparkles className="h-6 w-6" strokeWidth={2} />
-                </span>
-                <span className="min-w-0 flex-1 text-[15px] font-semibold leading-snug text-kal-text">
-                  Plan My Day
-                </span>
-              </Link>
-            </li>
-
-            <li>
-              <Link
-                href="/motivation"
-                onClick={onClose}
-                className={clsx(
-                  "flex min-h-[56px] items-center gap-4 rounded-2xl px-3 py-3 transition-colors",
-                  navActive(pathname, "/motivation")
-                    ? "bg-kal-accent-soft ring-1 ring-kal-accent/25"
-                    : "hover:bg-kal-card-muted active:bg-kal-card-muted",
-                )}
-              >
-                <span
-                  className={clsx(
-                    "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl",
-                    navActive(pathname, "/motivation")
-                      ? "bg-kal-accent/20 text-kal-accent-dark dark:text-kal-accent"
-                      : "bg-kal-card-muted text-kal-muted",
-                  )}
-                >
-                  <Heart className="h-6 w-6" strokeWidth={2} />
-                </span>
-                <span className="min-w-0 flex-1 text-[15px] font-semibold leading-snug text-kal-text">
-                  Personal Motivation
-                </span>
-              </Link>
-            </li>
-
-            <li>
-              <Link
-                href="/habits"
-                onClick={onClose}
-                className={clsx(
-                  "flex min-h-[56px] items-center gap-4 rounded-2xl px-3 py-3 transition-colors",
-                  navActive(pathname, "/habits")
-                    ? "bg-kal-accent-soft ring-1 ring-kal-accent/25"
-                    : "hover:bg-kal-card-muted active:bg-kal-card-muted",
-                )}
-              >
-                <span
-                  className={clsx(
-                    "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl",
-                    navActive(pathname, "/habits")
-                      ? "bg-kal-accent/20 text-kal-accent-dark dark:text-kal-accent"
-                      : "bg-kal-card-muted text-kal-muted",
-                  )}
-                >
-                  <ListChecks className="h-6 w-6" strokeWidth={2} />
-                </span>
-                <span className="min-w-0 flex-1 text-[15px] font-semibold leading-snug text-kal-text">
-                  Habit Maker
-                </span>
-              </Link>
-            </li>
-
-            <li>
-              <Link
-                href="/policies"
-                onClick={onClose}
-                className={clsx(
-                  "flex min-h-[56px] items-center gap-4 rounded-2xl px-3 py-3 transition-colors",
-                  policyHubActive(pathname)
-                    ? "bg-kal-accent-soft ring-1 ring-kal-accent/25"
-                    : "hover:bg-kal-card-muted active:bg-kal-card-muted",
-                )}
-              >
-                <span
-                  className={clsx(
-                    "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl",
-                    policyHubActive(pathname)
-                      ? "bg-kal-accent/20 text-kal-accent-dark dark:text-kal-accent"
-                      : "bg-kal-card-muted text-kal-muted",
-                  )}
-                >
-                  <Scale className="h-6 w-6" strokeWidth={2} />
-                </span>
-                <span className="min-w-0 flex-1 text-[15px] font-semibold leading-snug text-kal-text">
-                  Our Policies
-                </span>
-              </Link>
-            </li>
-
-            {LINKS.map(({ href, label, Icon }) => {
-              const active = navActive(pathname, href);
-              return (
-                <li key={href}>
-                  <Link
-                    href={href}
-                    onClick={onClose}
-                    className={clsx(
-                      "flex min-h-[56px] items-center gap-4 rounded-2xl px-3 py-3 transition-colors",
-                      active
-                        ? "bg-kal-accent-soft ring-1 ring-kal-accent/25"
-                        : "hover:bg-kal-card-muted active:bg-kal-card-muted",
-                    )}
-                  >
-                    <span
-                      className={clsx(
-                        "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl",
-                        active
-                          ? "bg-kal-accent/20 text-kal-accent-dark dark:text-kal-accent"
-                          : "bg-kal-card-muted text-kal-muted",
-                      )}
-                    >
-                      <Icon className="h-6 w-6" strokeWidth={2} />
-                    </span>
-                    <span className="min-w-0 flex-1 text-[15px] font-semibold leading-snug text-kal-text">
-                      {label}
-                    </span>
-                  </Link>
+                  <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-muted">
+                    {section.title}
+                  </p>
                 </li>
-              );
-            })}
+                {section.items.map(({ href, label, Icon, isActive }) => {
+                  const active = isActive
+                    ? isActive(pathname)
+                    : navActive(pathname, href);
+                  return (
+                    <li key={href}>
+                      <Link
+                        href={href}
+                        onClick={onClose}
+                        className={clsx(
+                          "flex min-h-[56px] items-center gap-4 rounded-2xl px-3 py-3 transition-colors",
+                          active
+                            ? "bg-kal-accent-soft ring-1 ring-kal-accent/25"
+                            : "hover:bg-kal-card-muted active:bg-kal-card-muted",
+                        )}
+                      >
+                        <span
+                          className={clsx(
+                            "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl",
+                            active
+                              ? "bg-kal-accent/20 text-kal-accent-dark dark:text-kal-accent"
+                              : "bg-kal-card-muted text-kal-muted",
+                          )}
+                        >
+                          <Icon className="h-6 w-6" strokeWidth={2} />
+                        </span>
+                        <span className="min-w-0 flex-1 text-[15px] font-semibold leading-snug text-kal-text">
+                          {label}
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </Fragment>
+            ))}
 
-            <li className="pt-1">
+            <li className="pt-3">
               <div
                 className={clsx(
                   "rounded-2xl border px-3 py-4",
