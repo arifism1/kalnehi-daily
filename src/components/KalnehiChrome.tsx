@@ -41,10 +41,21 @@ class QuietSavedToastBoundary extends Component<
   }
 }
 
+const MINIMAL_CHROME_PATHS = new Set([
+  "/policies",
+  "/privacy",
+  "/terms",
+  "/refund",
+  "/shipping",
+  "/return",
+  "/about",
+]);
+
 export function KalnehiChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const onboarding = pathname === "/onboarding";
+  const minimalChrome = MINIMAL_CHROME_PATHS.has(pathname);
 
   useEffect(() => {
     console.log("[KalnehiChrome] mounted", { path: pathname });
@@ -53,7 +64,38 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-full min-h-dvh flex-col bg-kal-page text-kal-text">
       <div className="flex min-w-0 flex-1 flex-col">
-        {!onboarding && (
+        {!onboarding && minimalChrome && (
+          <header className="sticky top-0 z-40 border-b border-kal-border bg-kal-card kal-nav-shadow">
+            <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:h-[3.5rem] sm:px-6 xl:px-8">
+              <Link
+                href="/"
+                className="flex min-w-0 items-center gap-3 rounded-xl py-1 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-kal-accent/40"
+                aria-label="Dashboard"
+              >
+                <Image
+                  src="/icon-192x192.png"
+                  alt=""
+                  width={48}
+                  height={48}
+                  className="h-10 w-10 flex-shrink-0 object-contain ring-1 ring-kal-border"
+                />
+                <span className="text-lg font-semibold tracking-tight text-black dark:text-white">
+                  kalnehi
+                </span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => setMenuOpen(true)}
+                className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-transparent text-kal-text-secondary transition-colors hover:border-kal-border hover:bg-kal-card-muted active:scale-[0.98] dark:hover:bg-kal-card-muted"
+                aria-expanded={menuOpen}
+                aria-label="Open navigation menu"
+              >
+                <Menu className="h-6 w-6" strokeWidth={2} />
+              </button>
+            </div>
+          </header>
+        )}
+        {!onboarding && !minimalChrome && (
           <header className="sticky top-0 z-40 border-b border-kal-border bg-kal-card kal-nav-shadow">
             <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:h-[3.5rem] sm:px-6 xl:px-8">
               <Link
@@ -144,7 +186,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
             "pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-[max(1.5rem,env(safe-area-inset-bottom))]",
           )}
         >
-          {!onboarding && <SyncStatusBanner />}
+          {!onboarding && !minimalChrome && <SyncStatusBanner />}
           {children}
         </main>
       </div>

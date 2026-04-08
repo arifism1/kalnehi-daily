@@ -15,6 +15,7 @@ import {
   ListChecks,
   Menu,
   RotateCcw,
+  Scale,
   ScrollText,
   Settings,
   Sparkles,
@@ -37,6 +38,20 @@ type MainNavigationMenuProps = {
 function navActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+const POLICY_HUB_PATHS = new Set([
+  "/policies",
+  "/privacy",
+  "/terms",
+  "/refund",
+  "/shipping",
+  "/return",
+  "/about",
+]);
+
+function policyHubActive(pathname: string): boolean {
+  return POLICY_HUB_PATHS.has(pathname);
 }
 
 const LINKS: { href: string; label: string; Icon: LucideIcon }[] = [
@@ -199,6 +214,33 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
                 </span>
                 <span className="min-w-0 flex-1 text-[15px] font-semibold leading-snug text-kal-text">
                   Habit Maker
+                </span>
+              </Link>
+            </li>
+
+            <li>
+              <Link
+                href="/policies"
+                onClick={onClose}
+                className={clsx(
+                  "flex min-h-[56px] items-center gap-4 rounded-2xl px-3 py-3 transition-colors",
+                  policyHubActive(pathname)
+                    ? "bg-kal-accent-soft ring-1 ring-kal-accent/25"
+                    : "hover:bg-kal-card-muted active:bg-kal-card-muted",
+                )}
+              >
+                <span
+                  className={clsx(
+                    "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl",
+                    policyHubActive(pathname)
+                      ? "bg-kal-accent/20 text-kal-accent-dark dark:text-kal-accent"
+                      : "bg-kal-card-muted text-kal-muted",
+                  )}
+                >
+                  <Scale className="h-6 w-6" strokeWidth={2} />
+                </span>
+                <span className="min-w-0 flex-1 text-[15px] font-semibold leading-snug text-kal-text">
+                  Our Policies
                 </span>
               </Link>
             </li>
