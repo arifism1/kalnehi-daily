@@ -112,7 +112,7 @@ function ChapterToggle({
         onChange(!checked);
       }}
       className={clsx(
-        "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border-2 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-kal-card",
+        "relative inline-flex h-8 w-14 shrink-0 items-center rounded-full border-2 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-kal-card",
         checked
           ? "border-kal-accent bg-kal-accent"
           : "border-kal-border bg-kal-card-muted",
@@ -121,8 +121,8 @@ function ChapterToggle({
     >
       <span
         className={clsx(
-          "pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200",
-          checked ? "translate-x-[1.25rem]" : "translate-x-0.5",
+          "pointer-events-none inline-block h-[1.35rem] w-[1.35rem] rounded-full bg-white shadow-sm transition-transform duration-200",
+          checked ? "translate-x-[1.55rem]" : "translate-x-0.5",
         )}
       />
     </button>
@@ -504,147 +504,149 @@ export function SyllabusTracker() {
                       key={chapter}
                       className="group/ch border-b border-kal-border last:border-b-0 dark:border-slate-800"
                     >
-                      <summary className="cursor-pointer list-none bg-kal-card-muted px-4 py-3 marker:hidden dark:bg-slate-950/50 [&::-webkit-details-marker]:hidden">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="text-sm font-semibold text-kal-text">
-                                {chapter}
+                      <summary className="cursor-pointer list-none bg-kal-card-muted px-4 py-4 marker:hidden sm:px-5 sm:py-5 dark:bg-slate-950/50 [&::-webkit-details-marker]:hidden">
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="min-w-0 truncate text-sm font-semibold text-kal-text sm:text-[15px]">
+                              {chapter}
+                            </span>
+                            <ChevronDown className="h-5 w-5 shrink-0 text-kal-muted transition-transform group-open/ch:rotate-180" />
+                          </div>
+
+                          <p className="text-[11px] tabular-nums text-kal-muted">
+                            {cr?.completedCount ?? 0}/{cr?.totalCount ?? list.length}{" "}
+                            microtopics done · {pct}%
+                          </p>
+                          <ChapterBar percent={pct} />
+                          <p
+                            className={clsx(
+                              "text-[11px] font-medium tabular-nums",
+                              cr?.isChapterMastered
+                                ? "text-kal-accent"
+                                : "text-amber-900 dark:text-amber-200/90",
+                            )}
+                          >
+                            {showMarksUi && marksLine ? (
+                              <>
+                                {marksLine}
+                                {cr?.isChapterMastered
+                                  ? " · chapter mastered"
+                                  : " · complete all for chapter weight"}
+                              </>
+                            ) : (
+                              <>
+                                {pct}% done
+                                {cr?.isChapterMastered
+                                  ? " · chapter complete"
+                                  : " · finish all to complete"}
+                              </>
+                            )}
+                          </p>
+
+                          <div className="flex flex-wrap items-center gap-2 pt-1">
+                            {canCustomize && catalogExamKey ? (
+                              <>
+                                <button
+                                  type="button"
+                                  title="Add microtopic here"
+                                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-kal-accent/30 text-kal-accent hover:bg-kal-accent-soft dark:border-red-500/25 dark:text-red-400 dark:hover:bg-red-950/50"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    openSheet({
+                                      kind: "add_microtopic",
+                                      examName: catalogExamKey,
+                                      defaultSubject: subject,
+                                      defaultChapter: chapter,
+                                    });
+                                  }}
+                                >
+                                  <Plus className="h-4 w-4" aria-hidden />
+                                </button>
+                                <button
+                                  type="button"
+                                  title="Rename chapter"
+                                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-kal-border text-kal-muted hover:bg-kal-card-muted dark:border-slate-600 dark:hover:bg-slate-800/80"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    openSheet({
+                                      kind: "rename_chapter",
+                                      examName: catalogExamKey,
+                                      subject: originSubject,
+                                      chapterOld: originChapter,
+                                      chapterCurrentLabel: chapter,
+                                    });
+                                  }}
+                                >
+                                  <Pencil className="h-4 w-4" aria-hidden />
+                                </button>
+                                <button
+                                  type="button"
+                                  title="Hide chapter (for you)"
+                                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-rose-500/25 text-rose-300/90 hover:bg-rose-950/30"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setConfirmState({
+                                      title: "Hide this chapter?",
+                                      description:
+                                        "This removes every microtopic in the chapter from your syllabus only. The shared catalog does not change.",
+                                      run: async () => {
+                                        const res =
+                                          await deleteCustomSyllabusItem({
+                                            examName: catalogExamKey,
+                                            mode: "chapter",
+                                            originSubject,
+                                            originChapter,
+                                          });
+                                        if (!res.ok) throw new Error(res.error);
+                                      },
+                                    });
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4" aria-hidden />
+                                </button>
+                              </>
+                            ) : null}
+                            <div className="ml-auto flex items-center gap-2">
+                              <span className="text-xs font-medium text-kal-muted">
+                                {cr?.isChapterMastered
+                                  ? "Completed"
+                                  : "Mark complete"}
                               </span>
-                              <div className="flex items-center gap-1 sm:gap-2">
-                                {canCustomize && catalogExamKey ? (
-                                  <>
-                                    <button
-                                      type="button"
-                                      title="Add microtopic here"
-                                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-kal-accent/30 text-kal-accent hover:bg-kal-accent-soft dark:border-red-500/25 dark:text-red-400 dark:hover:bg-red-950/50"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        openSheet({
-                                          kind: "add_microtopic",
-                                          examName: catalogExamKey,
-                                          defaultSubject: subject,
-                                          defaultChapter: chapter,
-                                        });
-                                      }}
-                                    >
-                                      <Plus className="h-4 w-4" aria-hidden />
-                                    </button>
-                                    <button
-                                      type="button"
-                                      title="Rename chapter"
-                                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-kal-border text-kal-muted hover:bg-kal-card-muted dark:border-slate-600 dark:hover:bg-slate-800/80"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        openSheet({
-                                          kind: "rename_chapter",
-                                          examName: catalogExamKey,
-                                          subject: originSubject,
-                                          chapterOld: originChapter,
-                                          chapterCurrentLabel: chapter,
-                                        });
-                                      }}
-                                    >
-                                      <Pencil className="h-3.5 w-3.5" aria-hidden />
-                                    </button>
-                                    <button
-                                      type="button"
-                                      title="Hide chapter (for you)"
-                                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-rose-500/25 text-rose-300/90 hover:bg-rose-950/30"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        setConfirmState({
-                                          title: "Hide this chapter?",
-                                          description:
-                                            "This removes every microtopic in the chapter from your syllabus only. The shared catalog does not change.",
-                                          run: async () => {
-                                            const res =
-                                              await deleteCustomSyllabusItem({
-                                                examName: catalogExamKey,
-                                                mode: "chapter",
-                                                originSubject,
-                                                originChapter,
-                                              });
-                                            if (!res.ok) throw new Error(res.error);
-                                          },
-                                        });
-                                      }}
-                                    >
-                                      <Trash2 className="h-3.5 w-3.5" aria-hidden />
-                                    </button>
-                                  </>
-                                ) : null}
-                                <span className="text-[10px] font-medium text-kal-muted">
-                                  {cr?.isChapterMastered
-                                    ? "Completed"
-                                    : "Mark complete"}
-                                </span>
-                                <ChapterToggle
-                                  checked={cr?.isChapterMastered ?? false}
-                                  onChange={(on) =>
-                                    void setChapterCompleted(
-                                      list.map((r) => r.id),
-                                      on,
-                                    )
-                                  }
-                                />
-                                {catalogExamKey ? (
-                                  <button
-                                    type="button"
-                                    title="Chapter marks (your weights)"
-                                    className="inline-flex h-8 min-w-[2rem] shrink-0 items-center justify-center gap-0.5 rounded-lg border border-amber-500/40 bg-amber-950/25 px-1.5 text-[10px] font-semibold text-amber-100/95 shadow-sm shadow-amber-950/20 hover:bg-amber-950/45 sm:px-2"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      setMarksSheetChapter({
-                                        subject,
-                                        chapter,
-                                        rows: list as MergedSyllabusRow[],
-                                      });
-                                    }}
-                                  >
-                                    <SlidersHorizontal
-                                      className="h-3.5 w-3.5 shrink-0"
-                                      aria-hidden
-                                    />
-                                    <span className="hidden sm:inline">Marks</span>
-                                  </button>
-                                ) : null}
-                                <ChevronDown className="h-4 w-4 shrink-0 text-kal-muted transition-transform group-open/ch:rotate-180" />
-                              </div>
+                              <ChapterToggle
+                                checked={cr?.isChapterMastered ?? false}
+                                onChange={(on) =>
+                                  void setChapterCompleted(
+                                    list.map((r) => r.id),
+                                    on,
+                                  )
+                                }
+                              />
                             </div>
-                            <p className="mt-1 text-[11px] tabular-nums text-kal-muted">
-                              {cr?.completedCount ?? 0}/{cr?.totalCount ?? list.length}{" "}
-                              microtopics done · {pct}% toward chapter
-                            </p>
-                            <p
-                              className={clsx(
-                                "mt-1 text-[11px] font-medium tabular-nums",
-                                cr?.isChapterMastered
-                                  ? "text-kal-accent"
-                                  : "text-amber-900 dark:text-amber-200/90",
-                              )}
-                            >
-                              {showMarksUi && marksLine ? (
-                                <>
-                                  {marksLine}
-                                  {cr?.isChapterMastered
-                                    ? " · chapter mastered"
-                                    : " · complete all to count toward chapter weight"}
-                                </>
-                              ) : (
-                                <>
-                                  {pct}% microtopics done
-                                  {cr?.isChapterMastered
-                                    ? " · chapter complete"
-                                    : " · finish all microtopics to complete this chapter"}
-                                </>
-                              )}
-                            </p>
-                            <ChapterBar percent={pct} />
+                            {catalogExamKey ? (
+                              <button
+                                type="button"
+                                title="Chapter marks (your weights)"
+                                className="inline-flex h-9 min-w-[2.5rem] shrink-0 items-center justify-center gap-1 rounded-lg border border-amber-500/40 bg-amber-950/25 px-2 text-[11px] font-semibold text-amber-100/95 shadow-sm shadow-amber-950/20 hover:bg-amber-950/45 sm:px-3"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setMarksSheetChapter({
+                                    subject,
+                                    chapter,
+                                    rows: list as MergedSyllabusRow[],
+                                  });
+                                }}
+                              >
+                                <SlidersHorizontal
+                                  className="h-4 w-4 shrink-0"
+                                  aria-hidden
+                                />
+                                <span className="hidden sm:inline">Marks</span>
+                              </button>
+                            ) : null}
                           </div>
                         </div>
                       </summary>

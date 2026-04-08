@@ -33,6 +33,18 @@ import type { Task } from "@/store/useTaskStore";
 type Phase = "idle" | "listening" | "processing" | "error";
 
 const MAX_SESSION_MS = 60_000;
+const SILENCE_END_MS = 5_000;
+
+function normalizeSpeechTranscript(raw: string): string {
+  const parts = raw.trim().split(/\s+/).filter(Boolean);
+  const out: string[] = [];
+  for (const p of parts) {
+    if (out[out.length - 1] === p) continue;
+    out.push(p);
+  }
+  return out.join(" ");
+}
+
 const LANGS: { value: string; label: string }[] = [
   { value: "en-IN", label: "English (India)" },
   { value: "hi-IN", label: "Hindi (India)" },
@@ -94,8 +106,6 @@ export function DictateMyDay() {
   const [logDate, setLogDate] = useState(today);
   const [lang, setLang] = useState("en-IN");
   const [phase, setPhase] = useState<Phase>("idle");
-  const [interimText, setInterimText] = useState("");
-  const [displayFinal, setDisplayFinal] = useState("");
   const [error, setError] = useState<string | null>(null);
   /** Groq failed — user can save raw text or edit first */
   const [fallbackPanel, setFallbackPanel] = useState<{
@@ -112,6 +122,7 @@ export function DictateMyDay() {
   const interimRef = useRef("");
   const listeningActiveRef = useRef(false);
   const sessionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** Row ids known to exist on Supabase for this log date (drives create vs update). */
   const serverKnownIdsRef = useRef<Set<string>>(new Set());
   const prevDraftIdsRef = useRef<Set<string>>(new Set());
@@ -334,6 +345,10 @@ export function DictateMyDay() {
       clearTimeout(sessionTimerRef.current);
       sessionTimerRef.current = null;
     }
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
     try {
       recRef.current?.abort();
     } catch {
@@ -346,6 +361,12 @@ export function DictateMyDay() {
 
   const sendTranscript = useCallback(
     async (transcript: string) => {
+      const cleaned = normalizeSpeechTranscript(transcript);
+      if (!cleaned) {
+        setPhase("idle");
+        setError("No speech captured. Try again.");
+        return;
+      }
       setPhase("processing");
       setError(null);
       try {
@@ -354,7 +375,7 @@ export function DictateMyDay() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            transcript,
+            transcript: cleaned,
             log_date: logDate,
             occurred_at: occurredAt,
           }),
@@ -365,7 +386,7 @@ export function DictateMyDay() {
 
         if (!res.ok) {
           if (res.openRawFallback) {
-            setFallbackPanel({ text: transcript.trim(), editMode: false });
+            setFallbackPanel({ text: cleaned, editMode: false });
             setError(null);
           } else {
             setError(res.error);
@@ -374,7 +395,7 @@ export function DictateMyDay() {
           return;
         }
         setFallbackPanel(null);
-        const chunk = transcript.trim();
+        const chunk = cleaned;
         const newRows = toDraftRows(res.tasks, chunk);
         setDraftRows((prev) => [...prev, ...newRows]);
         if (user?.id) {
@@ -429,19 +450,14 @@ export function DictateMyDay() {
             : prev,
         );
         setPhase("idle");
-        setDisplayFinal("");
-        setInterimText("");
         finalBufRef.current = "";
       } catch {
-        setFallbackPanel({ text: transcript.trim(), editMode: false });
+        setFallbackPanel({ text: cleaned, editMode: false });
         setDraftTranscript((prev) => {
-          const chunk = transcript.trim();
-          if (!chunk) return prev;
-          return prev ? `${prev}\n\n---\n\n${chunk}` : chunk;
+          if (!cleaned) return prev;
+          return prev ? `${prev}\n\n---\n\n${cleaned}` : cleaned;
         });
         setPhase("idle");
-        setDisplayFinal("");
-        setInterimText("");
         finalBufRef.current = "";
       }
     },
@@ -512,14 +528,16 @@ export function DictateMyDay() {
       clearTimeout(sessionTimerRef.current);
       sessionTimerRef.current = null;
     }
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
     if (!listeningActiveRef.current) return;
     listeningActiveRef.current = false;
 
     const full = (finalBufRef.current + interimRef.current).trim();
     finalBufRef.current = "";
     interimRef.current = "";
-    setInterimText("");
-    setDisplayFinal("");
 
     if (!full) {
       setPhase("idle");
@@ -528,6 +546,19 @@ export function DictateMyDay() {
     }
     void sendTranscript(full);
   }, [sendTranscript]);
+
+  const scheduleSilenceStop = useCallback(() => {
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+    silenceTimerRef.current = setTimeout(() => {
+      const rec = recRef.current;
+      if (!rec || !listeningActiveRef.current) return;
+      try {
+        rec.stop();
+      } catch {
+        try { rec.abort(); } catch { /* ignore */ }
+      }
+    }, SILENCE_END_MS);
+  }, []);
 
   const startListening = useCallback(() => {
     const Ctor = getSpeechRecognitionCtor();
@@ -543,8 +574,6 @@ export function DictateMyDay() {
     listeningActiveRef.current = true;
     finalBufRef.current = "";
     interimRef.current = "";
-    setDisplayFinal("");
-    setInterimText("");
     setError(null);
     setFallbackPanel(null);
     setPhase("listening");
@@ -552,29 +581,25 @@ export function DictateMyDay() {
     const rec = new Ctor();
     recRef.current = rec;
     rec.continuous = true;
-    rec.interimResults = true;
+    rec.interimResults = false;
     rec.lang = lang;
     rec.maxAlternatives = 1;
 
     rec.onresult = (event: SpeechRecognitionEvent) => {
-      let interim = "";
-      let final = finalBufRef.current;
       for (let i = event.resultIndex; i < event.results.length; i++) {
-        const piece = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
-          final += piece;
-        } else {
-          interim += piece;
+          finalBufRef.current += event.results[i][0].transcript;
         }
       }
-      finalBufRef.current = final;
-      interimRef.current = interim;
-      setDisplayFinal(final);
-      setInterimText(interim);
+      scheduleSilenceStop();
     };
 
     rec.onerror = (ev: SpeechRecognitionErrorEvent) => {
       if (ev.error === "aborted") return;
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+        silenceTimerRef.current = null;
+      }
       listeningActiveRef.current = false;
       if (ev.error === "no-speech") {
         setPhase("idle");
@@ -610,7 +635,7 @@ export function DictateMyDay() {
       setError("Could not start microphone. Check permissions.");
       setPhase("error");
     }
-  }, [cleanupRecognition, lang, flushSession]);
+  }, [cleanupRecognition, lang, flushSession, scheduleSilenceStop]);
 
   const stopListening = useCallback(() => {
     const rec = recRef.current;
@@ -722,8 +747,8 @@ export function DictateMyDay() {
         </label>
       </div>
 
-      <section className="rounded-[1.25rem] border border-kal-border bg-kal-card kal-shadow-card p-4 sm:p-5">
-        <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:gap-5">
+      <section className="rounded-[1.25rem] border border-kal-border bg-kal-card kal-shadow-card p-6 sm:p-8">
+        <div className="flex flex-col items-center gap-5">
           <button
             type="button"
             disabled={phase === "processing"}
@@ -732,9 +757,9 @@ export function DictateMyDay() {
               else void startListening();
             }}
             className={[
-              "relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-[3px] transition-all",
+              "relative flex h-24 w-24 shrink-0 items-center justify-center rounded-full border-[3px] transition-all sm:h-28 sm:w-28",
               phase === "listening"
-                ? "border-violet-400 bg-violet-500/30 shadow-[0_0_40px_rgba(139,92,246,0.45)] animate-pulse"
+                ? "border-violet-400 bg-violet-500/30 shadow-[0_0_48px_rgba(139,92,246,0.45)] animate-pulse"
                 : "border-violet-500/40 bg-violet-500/15 hover:bg-violet-500/25",
               phase === "processing" ? "opacity-50" : "",
             ].join(" ")}
@@ -742,37 +767,27 @@ export function DictateMyDay() {
             aria-label={phase === "listening" ? "Stop listening" : "Start listening"}
           >
             {phase === "processing" ? (
-              <Loader2 className="h-7 w-7 animate-spin text-violet-200" />
+              <Loader2 className="h-10 w-10 animate-spin text-violet-200" />
             ) : phase === "listening" ? (
-              <MicOff className="h-7 w-7 text-violet-100" />
+              <MicOff className="h-10 w-10 text-violet-100" />
             ) : (
-              <Mic className="h-7 w-7 text-violet-200" />
+              <Mic className="h-10 w-10 text-violet-200" />
             )}
           </button>
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold uppercase tracking-wider text-kal-muted">
-              {phase === "listening"
-                ? "Listening…"
-                : phase === "processing"
-                  ? "Parsing with AI…"
-                  : "Ready"}
-            </p>
-            <div className="mt-2 min-h-[4rem] rounded-[1rem] border border-kal-border bg-kal-card-muted px-4 py-2.5 text-sm leading-relaxed text-kal-text-secondary">
-              <span className="text-kal-text">{displayFinal}</span>
-              <span className="text-kal-accent">{interimText}</span>
-              {!displayFinal && !interimText && phase === "idle" && (
-                <span className="text-kal-muted">
-                  Live transcript appears here. Short bursts work best (under a
-                  minute).
-                </span>
-              )}
-            </div>
-            <p className="mt-2 text-[11px] text-kal-muted">
-              {phase === "listening"
-                ? "Tap the button again to stop and save this note. Auto-stops after 60s."
-                : "Tap the mic to start. We send the transcript to Groq to split into timed tasks."}
-            </p>
-          </div>
+          <p className="text-sm font-semibold tracking-wide text-kal-text-secondary">
+            {phase === "listening"
+              ? "Listening…"
+              : phase === "processing"
+                ? "Processing…"
+                : "Ready when you are"}
+          </p>
+          <p className="max-w-xs text-center text-[11px] text-kal-muted">
+            {phase === "listening"
+              ? "Speak naturally. Auto-stops after 5 s of silence, or tap to stop manually."
+              : phase === "processing"
+                ? "Turning your words into a structured plan…"
+                : "Tap the mic to start dictating. Short bursts work best."}
+          </p>
         </div>
       </section>
 
@@ -781,7 +796,17 @@ export function DictateMyDay() {
           <div className="absolute inset-0 z-10 flex items-center justify-center rounded-[1.25rem] bg-kal-card/90 backdrop-blur-sm">
             <Loader2 className="h-8 w-8 animate-spin text-kal-accent" />
           </div>
+        ) : (phase === "listening" || phase === "processing") ? (
+          <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
+            <Loader2 className="h-6 w-6 animate-spin text-kal-accent" />
+            <p className="text-sm text-kal-muted">
+              {phase === "listening" ? "Recording — tasks will appear after you stop." : "Building your task list…"}
+            </p>
+          </div>
         ) : null}
+        {(phase === "listening" || phase === "processing") ? null : (
+          <>
+        
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-lg font-bold text-kal-text">Dictate My Day planner</h2>
           <span className="text-xs text-kal-muted">{logDate}</span>
@@ -870,6 +895,8 @@ export function DictateMyDay() {
         >
           Sync voice timeline now
         </button>
+          </>
+        )}
       </section>
 
       {fallbackPanel ? (

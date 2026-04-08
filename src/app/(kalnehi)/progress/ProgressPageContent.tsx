@@ -2,7 +2,6 @@
 
 import { useRefreshTasksOnHomeFocus } from "@/hooks/useRefreshTasksOnHomeFocus";
 import { ProgressOverview } from "@/components/home/ProgressOverview";
-import { StudyCameraProgressCard } from "@/components/study/StudyCameraProgressCard";
 
 export default function ProgressPageContent() {
   useRefreshTasksOnHomeFocus();
@@ -17,11 +16,10 @@ export default function ProgressPageContent() {
           Progress
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-kal-text-secondary sm:text-[15px]">
-          Marks and coverage from what you&apos;ve completed — see the trend and
-          keep pushing.
+          Marks and syllabus completion — stay focused on coverage and scoring
+          momentum.
         </p>
       </header>
-      <StudyCameraProgressCard />
       <ProgressOverview />
     </div>
   );

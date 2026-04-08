@@ -7,17 +7,10 @@ import { useSyllabusTracker } from "@/hooks/useSyllabusTracker";
 import { useTargetExamDisplay } from "@/hooks/useTargetExamDisplay";
 import { shouldShowSyllabusComingSoon } from "@/lib/examProfile";
 import {
-  classifyDailyProgressBand,
-  classifyProgressMessageWithScope,
-  computeWeightedCompletionPercent,
   computeWeightedMarksTotals,
-  DAILY_PROGRESS_HEADLINE,
-  filterTasksForDate,
   filterTasksThroughDate,
-  PROGRESS_MESSAGE_LABEL,
 } from "@/lib/progressEngine";
 import { buildSyllabusMultiYearCapture } from "@/lib/syllabusRollup";
-import { topicCompletionStats } from "@/lib/progressOverview";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useTaskStore } from "@/store/useTaskStore";
 
@@ -99,11 +92,6 @@ export function ProgressOverview() {
     cuetAwaitingDomainSelection,
   });
 
-  const todayTasks = useMemo(
-    () => filterTasksForDate(Object.values(tasksRecord), today),
-    [tasksRecord, today],
-  );
-
   const realityTasks = useMemo(
     () => filterTasksThroughDate(Object.values(tasksRecord), today),
     [tasksRecord, today],
@@ -127,90 +115,68 @@ export function ProgressOverview() {
     primaryMarksYear,
   ]);
 
-  const { secured, denom, marksPercent, topicPercent, doneTopics, totalTopics } =
-    useMemo(() => {
-      const tasks = Object.values(tasksRecord);
-      const microtopics = Object.values(microRecord);
-      const microtopicById = microRecord;
+  const { secured, denom, marksPercent } = useMemo(() => {
+    const microtopicById = microRecord;
 
-      let secured = 0;
-      let denom = 720;
-      let marksPercent = 0;
+    let secured = 0;
+    let denom = 720;
+    let marksPercent = 0;
 
-      if (!advancedMarksProjectionEnabled && cuetScoringRollup) {
-        marksPercent = cuetScoringRollup.overallPercent;
+    if (!advancedMarksProjectionEnabled && cuetScoringRollup) {
+      marksPercent = cuetScoringRollup.overallPercent;
+      secured = 0;
+      denom = 0;
+    } else if (!advancedMarksProjectionEnabled && syllabusRows.length > 0) {
+      marksPercent = syllabusRollup.overallPercent;
+      secured = 0;
+      denom = 0;
+    } else if (cuetScoringRollup) {
+      marksPercent = cuetScoringRollup.overallPercent;
+      secured = cuetScoringRollup.totalProjected;
+      denom = cuetScoringRollup.totalMax;
+    } else if (syllabusMultiYear) {
+      marksPercent = syllabusMultiYear.ringPercent;
+      secured = syllabusMultiYear.ringProjected;
+      denom = syllabusMultiYear.ringOutOf;
+    } else if (syllabusRows.length > 0) {
+      marksPercent = syllabusRollup.overallPercent;
+      secured = Math.round(syllabusRollup.totalMarksMastered);
+      denom = Math.round(syllabusRollup.totalMarksPool);
+      if (denom <= 0) {
         secured = 0;
-        denom = 0;
-      } else if (!advancedMarksProjectionEnabled && syllabusRows.length > 0) {
-        marksPercent = syllabusRollup.overallPercent;
-        secured = 0;
-        denom = 0;
-      } else if (cuetScoringRollup) {
-        marksPercent = cuetScoringRollup.overallPercent;
-        secured = cuetScoringRollup.totalProjected;
-        denom = cuetScoringRollup.totalMax;
-      } else if (syllabusMultiYear) {
-        marksPercent = syllabusMultiYear.ringPercent;
-        secured = syllabusMultiYear.ringProjected;
-        denom = syllabusMultiYear.ringOutOf;
-      } else if (syllabusRows.length > 0) {
-        marksPercent = syllabusRollup.overallPercent;
-        secured = Math.round(syllabusRollup.totalMarksMastered);
-        denom = Math.round(syllabusRollup.totalMarksPool);
-        if (denom <= 0) {
-          secured = 0;
-          denom = 720;
-          marksPercent = 0;
-        }
-      } else {
-        const { mastered, total } = computeWeightedMarksTotals(
-          realityTasks,
-          microtopicById,
-        );
-        secured = Math.round(mastered);
-        denom = total > 0 ? Math.round(total) : 720;
-        marksPercent = denom > 0 ? (secured / denom) * 100 : 0;
+        denom = 720;
+        marksPercent = 0;
       }
-
-      const { percent, doneTopics, totalTopics } = topicCompletionStats(
-        tasks,
-        microtopics,
+    } else {
+      const { mastered, total } = computeWeightedMarksTotals(
+        realityTasks,
+        microtopicById,
       );
-      return {
-        secured,
-        denom,
-        marksPercent,
-        topicPercent: percent,
-        doneTopics,
-        totalTopics,
-      };
-    }, [
-      tasksRecord,
-      microRecord,
-      advancedMarksProjectionEnabled,
-      cuetScoringRollup,
-      syllabusMultiYear,
-      syllabusRows.length,
-      syllabusRollup.overallPercent,
-      syllabusRollup.totalMarksMastered,
-      syllabusRollup.totalMarksPool,
-      realityTasks,
-    ]);
+      secured = Math.round(mastered);
+      denom = total > 0 ? Math.round(total) : 720;
+      marksPercent = denom > 0 ? (secured / denom) * 100 : 0;
+    }
 
-  const { todayPct, dailyBand, scopeMessage } = useMemo(() => {
-    const todayPct = computeWeightedCompletionPercent(todayTasks, microRecord);
-    const dailyBand = classifyDailyProgressBand(todayPct, todayTasks.length);
-    const scopeMessage = classifyProgressMessageWithScope(todayTasks, todayPct);
-    return { todayPct, dailyBand, scopeMessage };
-  }, [todayTasks, microRecord]);
+    return { secured, denom, marksPercent };
+  }, [
+    microRecord,
+    advancedMarksProjectionEnabled,
+    cuetScoringRollup,
+    syllabusMultiYear,
+    syllabusRows.length,
+    syllabusRollup.overallPercent,
+    syllabusRollup.totalMarksMastered,
+    syllabusRollup.totalMarksPool,
+    realityTasks,
+  ]);
 
   return (
     <section className="rounded-2xl border border-kal-border bg-kal-card p-6 kal-shadow-card sm:p-8">
-      <h2 className="text-sm font-semibold text-kal-text">Progress command</h2>
+      <h2 className="text-sm font-semibold text-kal-text">Marks &amp; syllabus</h2>
       <p className="mt-1 text-xs text-kal-muted">
         {syllabusSoon
           ? `${examTitle || examLabel} syllabus isn’t in Kalnehi yet. Until then, marks follow your plan and linked topics.`
-          : "Chapter-level capture (full credit only when every microtopic in a chapter is done) · topic coverage from tasks"}
+          : "Chapter-level capture — full credit when every microtopic in a chapter is done"}
       </p>
       {syllabusSoon ? (
         <div className="mt-3 rounded-xl border border-kal-accent/25 bg-kal-accent-soft px-4 py-3 text-xs leading-relaxed text-red-900 dark:border-red-500/20 dark:bg-red-950/20 dark:text-red-100/90">
@@ -346,10 +312,6 @@ export function ProgressOverview() {
               </span>
             </p>
           )}
-          <p className="text-xs text-kal-muted">
-            Topics done (tasks): {doneTopics}/{totalTopics} (
-            {Math.round(topicPercent)}%)
-          </p>
           {cuetScoringRollup && cuetScoringRollup.subjects.length > 0 ? (
             <div className="mt-4 border-t border-kal-border pt-4">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-kal-muted">
@@ -382,21 +344,6 @@ export function ProgressOverview() {
         </div>
       </div>
 
-      <div className="mt-6 rounded-xl border border-kal-border bg-kal-card-muted px-5 py-4 sm:px-6">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-kal-text-secondary">
-          Execution feedback (today)
-        </p>
-        <p className="mt-2 text-sm font-semibold text-kal-text">
-          {DAILY_PROGRESS_HEADLINE[dailyBand]}
-        </p>
-        <p className="mt-1 text-xs leading-relaxed text-kal-text-secondary">
-          Today&apos;s weighted completion:{" "}
-          <span className="font-medium tabular-nums text-kal-text">
-            {Math.round(todayPct * 10) / 10}%
-          </span>{" "}
-          · {PROGRESS_MESSAGE_LABEL[scopeMessage]}
-        </p>
-      </div>
     </section>
   );
 }
