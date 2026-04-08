@@ -9,7 +9,6 @@ import {
   SlidersHorizontal,
   Sparkles,
   Trash2,
-  TrendingUp,
 } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 
@@ -833,84 +832,6 @@ export function SyllabusTracker() {
           );
         })}
       </div>
-
-      <section className="space-y-4" aria-labelledby="neet-projection-heading">
-        <div className="flex items-start gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-kal-accent/15">
-            <TrendingUp className="h-6 w-6 text-kal-accent" aria-hidden />
-          </div>
-          <div className="min-w-0 flex-1">
-            <h2
-              id="neet-projection-heading"
-              className="text-base font-semibold text-kal-text"
-            >
-              {showMarksUi ? "Score projections" : "Syllabus mastery"}
-            </h2>
-            <p className="mt-1 text-xs leading-relaxed text-kal-muted">
-              {showMarksUi ? (
-                <>
-                  Each year uses chapter weights from that exam’s column. Only
-                  chapters where every microtopic is completed count toward the
-                  numerator; scaled to {maxScore} for {displayExam}.
-                </>
-              ) : (
-                <>
-                  This catalog doesn’t include chapter-weight columns yet — your
-                  percentage reflects chapters where every microtopic is complete.
-                </>
-              )}
-            </p>
-          </div>
-        </div>
-
-        {!showMarksUi ? (
-          <div className="rounded-2xl border border-kal-border bg-kal-card-muted px-6 py-8 text-center dark:border-slate-700/80 dark:bg-slate-950/40">
-            <p className="text-sm leading-relaxed text-kal-muted">
-              Weighted score projections and multi-year marks appear when the
-              syllabus includes chapter weights (or you set them per topic). Until
-              then, use the mastery ring above for completion %.
-            </p>
-          </div>
-        ) : neetYearProjections.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-kal-border bg-kal-card-muted px-6 py-8 text-center dark:border-slate-600 dark:bg-slate-950/40">
-            <p className="text-sm leading-relaxed text-kal-muted">
-              Multi-year score projections will show here once chapter marks for
-              different exam years are available in your syllabus.
-            </p>
-          </div>
-        ) : (
-          <ul className="space-y-3">
-            {neetYearProjections.map((p) => (
-              <li
-                key={p.year}
-                className="overflow-hidden rounded-2xl border border-kal-accent/25 bg-gradient-to-br from-kal-accent-soft via-kal-card to-kal-card p-5 kal-shadow-card dark:border-red-500/20 dark:from-slate-900/90 dark:via-slate-900/70 dark:to-red-950/25 dark:shadow-md dark:shadow-red-900/10"
-              >
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-kal-accent">
-                  {displayExam} {p.year}
-                </p>
-                <p className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                  <span className="text-3xl font-bold tabular-nums text-kal-accent">
-                    {p.projectedOutOf720}
-                  </span>
-                  <span className="text-lg font-medium text-kal-muted">
-                    / {maxScore}
-                  </span>
-                </p>
-                <p className="mt-2 text-[13px] font-medium leading-snug text-red-100/95">
-                  {p.patternLabel}
-                </p>
-                <p className="mt-1 text-[11px] leading-relaxed text-kal-muted">
-                  {p.completionNote}
-                </p>
-                <p className="mt-3 text-[10px] tabular-nums text-kal-text-secondary">
-                  Chapter marks captured: {p.totalMarksMastered.toFixed(0)} /{" "}
-                  {p.totalMarksPool.toFixed(0)} (this year’s weights)
-                </p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
 
       <ChapterMarksSheet
         open={marksSheetChapter != null && Boolean(catalogExamKey)}

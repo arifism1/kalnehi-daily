@@ -24,7 +24,6 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useTaskStore } from "@/store/useTaskStore";
 
-import { ArenaToday } from "./ArenaToday";
 import { ExecutionLagBanner } from "./ExecutionLagBanner";
 import { MissedTasks } from "./MissedTasks";
 import { MotivationWallpaper } from "./MotivationWallpaper";
@@ -261,8 +260,6 @@ export function HomeClient() {
         tomorrowMarks={tomorrowMarks}
         tomorrowMinutes={tomorrowMinutes}
       />
-
-      <ArenaToday />
 
       <MissedTasks />
     </div>

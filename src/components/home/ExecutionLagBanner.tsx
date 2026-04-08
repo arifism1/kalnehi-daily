@@ -52,7 +52,7 @@ export function ExecutionLagBanner() {
               Reset Reality
             </Link>
             <Link
-              href="/#arena"
+              href="/plan-my-day"
               className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-2xl border border-rose-400/40 bg-rose-950/40 px-4 py-3 text-center text-xs font-bold uppercase tracking-wide text-rose-100 transition-all duration-200 hover:bg-rose-950/60 sm:flex-initial"
             >
               Resume Execution

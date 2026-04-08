@@ -104,9 +104,10 @@ export function PlanMyDayPage() {
       </div>
 
       <p className="relative mt-10 text-center text-sm leading-relaxed text-kal-muted sm:mt-12">
-        Each planner works independently. After adding tasks, head to{" "}
-        <span className="font-medium text-kal-text-secondary">The arena</span> on the
-        home page to execute and tick them off.
+        Each planner works independently. After adding tasks, use{" "}
+        <span className="font-medium text-kal-text-secondary">Home</span> and{" "}
+        <span className="font-medium text-kal-text-secondary">Calendar</span> to
+        execute and tick them off.
       </p>
     </div>
   );
