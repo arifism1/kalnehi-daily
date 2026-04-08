@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Inter } from "next/font/google";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 import { AppShell } from "@/components/AppShell";
 import { AuthProvider } from "@/components/AuthProvider";
@@ -128,6 +129,7 @@ export default function RootLayout({
             <AppShell>{children}</AppShell>
           </SyncProvider>
         </AuthProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
