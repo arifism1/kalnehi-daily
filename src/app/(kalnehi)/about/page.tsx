@@ -41,7 +41,7 @@ export default function AboutUsPage() {
         <strong>Contact Us</strong>
       </p>
       <p>
-        Neven Academy Assam (Sole Proprietorship)
+        Neven Academy Assam
         <br />
         1000, Uday Nagar, Bono Durga Mandir, Karim Chowk, K.Chowka, Ward No.4,
         Mangaldoi, Darrang, Assam, 784125

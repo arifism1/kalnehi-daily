@@ -8,7 +8,7 @@ export default function PrivacyPolicyPage() {
         <strong>Last updated:</strong> April 08, 2026
       </p>
       <p>
-        Neven Academy Assam (Sole Proprietorship) operates the Kalnehi Daily
+        Neven Academy Assam operates the Kalnehi Daily
         application available at www.kalnehi.com.
       </p>
       <p>
@@ -97,7 +97,7 @@ export default function PrivacyPolicyPage() {
         <strong>Contact Us</strong>
       </p>
       <p>
-        Neven Academy Assam (Sole Proprietorship)
+        Neven Academy Assam
         <br />
         1000, Uday Nagar, Bono Durga Mandir, Karim Chowk, K.Chowka, Ward No.4,
         Mangaldoi, Darrang, Assam, 784125
