@@ -3,6 +3,8 @@
 import clsx from "clsx";
 import {
   Camera,
+  ChevronLeft,
+  ChevronRight,
   CircleHelp,
   GripVertical,
   Loader2,
@@ -100,6 +102,18 @@ function DoubtPhotoThumb({
       )}
     </div>
   );
+}
+
+const STATUS_ORDER: DoubtStatus[] = ["current", "working", "solved"];
+
+function shiftDoubtStatus(
+  status: DoubtStatus,
+  delta: -1 | 1,
+): DoubtStatus | null {
+  const i = STATUS_ORDER.indexOf(status);
+  const next = i + delta;
+  if (next < 0 || next >= STATUS_ORDER.length) return null;
+  return STATUS_ORDER[next]!;
 }
 
 export function DoubtTracker() {
@@ -301,7 +315,7 @@ export function DoubtTracker() {
                       >
                         <GripVertical className="h-4 w-4 sm:h-5 sm:w-5" />
                       </div>
-                      <div className="min-w-0 flex-1 pr-9 sm:pr-11">
+                      <div className="min-w-0 flex-1 pr-[4.5rem] sm:pr-20">
                         <button
                           type="button"
                           onClick={() => setEditingId(d.id)}
@@ -343,17 +357,47 @@ export function DoubtTracker() {
                             ))}
                           </div>
                         ) : null}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPendingDeleteId(d.id);
-                          }}
-                          className="absolute right-1 top-1 flex h-9 w-9 min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-rose-400/90 opacity-100 transition-opacity hover:bg-rose-950/50 hover:text-rose-300 sm:right-2 sm:top-2 sm:h-10 sm:w-10 sm:min-h-0 sm:min-w-0 sm:rounded-xl md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100"
-                          aria-label="Delete doubt"
-                        >
-                          <Trash2 className="h-5 w-5" strokeWidth={2.25} />
-                        </button>
+                        <div className="absolute right-1 top-1 flex flex-col items-center gap-0.5 sm:right-2 sm:top-2">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPendingDeleteId(d.id);
+                            }}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg text-rose-400/90 transition-opacity hover:bg-rose-950/50 hover:text-rose-300 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100"
+                            aria-label="Delete doubt"
+                          >
+                            <Trash2 className="h-4 w-4" strokeWidth={2.25} />
+                          </button>
+                          <div className="flex items-center gap-0.5">
+                            <button
+                              type="button"
+                              disabled={!shiftDoubtStatus(d.status, -1)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const next = shiftDoubtStatus(d.status, -1);
+                                if (next) void setDoubtStatus(d.id, next);
+                              }}
+                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-kal-border text-kal-muted transition hover:bg-kal-card-muted hover:text-kal-text disabled:opacity-30 disabled:hover:bg-transparent"
+                              aria-label="Move left"
+                            >
+                              <ChevronLeft className="h-4 w-4" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={!shiftDoubtStatus(d.status, 1)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const next = shiftDoubtStatus(d.status, 1);
+                                if (next) void setDoubtStatus(d.id, next);
+                              }}
+                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-kal-border text-kal-muted transition hover:bg-kal-card-muted hover:text-kal-text disabled:opacity-30 disabled:hover:bg-transparent"
+                              aria-label="Move right"
+                            >
+                              <ChevronRight className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </article>
@@ -376,9 +420,9 @@ export function DoubtTracker() {
       />
 
       <p className="text-center text-[10px] leading-relaxed text-kal-text-secondary sm:text-[11px]">
-        Swipe between columns on your phone, or drag cards across columns on
-        larger screens, to update status. Tap a card to edit. Stored on this
-        device only.
+        Use the arrows on each card to move between Current → Working → Solved.
+        You can still swipe columns on mobile or drag on larger screens. Tap a
+        card to edit. Stored on this device only.
       </p>
 
       <ConfirmDialog
