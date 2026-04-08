@@ -1,0 +1,101 @@
+export default function TermsPage() {
+  return (
+    <article className="mx-auto max-w-2xl space-y-4 pb-8 text-[15px] leading-relaxed text-kal-text sm:text-base">
+      <h1 className="text-2xl font-bold tracking-tight text-kal-text sm:text-3xl">
+        Terms &amp; Conditions
+      </h1>
+      <p>
+        <strong>Last updated:</strong> April 08, 2026
+      </p>
+      <p>
+        These Terms &amp; Conditions govern your use of Kalnehi Daily operated
+        by Neven Academy Assam (Sole Proprietorship).
+      </p>
+      <p>
+        <strong>Acceptance of Terms</strong>
+      </p>
+      <p>
+        By accessing or using Kalnehi Daily, you agree to these Terms. If you
+        do not agree, you must not use the app.
+      </p>
+      <p>
+        <strong>Description of Service</strong>
+      </p>
+      <p>
+        Kalnehi Daily is a digital study planning tool for competitive exam
+        preparation. It includes AI-powered features like voice dictation,
+        planner scanning, progress tracking, and more.
+      </p>
+      <p>
+        <strong>User Responsibilities</strong>
+      </p>
+      <p>
+        You are solely responsible for your use of the app and all outcomes.
+        You must use the app only for lawful purposes.
+      </p>
+      <p>
+        <strong>AI Features – Strong Disclaimer</strong>
+      </p>
+      <p>
+        The app uses Artificial Intelligence.{" "}
+        <strong>We are not responsible</strong> for any AI output. AI may
+        produce wrong, inaccurate, incomplete, or misleading results.{" "}
+        <strong>Maybe the AI did it. We are not sure.</strong> You use all AI
+        features <strong>entirely at your own risk</strong>.
+      </p>
+      <p>
+        <strong>No Warranties</strong>
+      </p>
+      <p>
+        The app is provided &quot;AS IS&quot; and &quot;AS AVAILABLE&quot; with{" "}
+        <strong>zero warranties</strong>. We do not guarantee that the app
+        will help you improve your exam scores, work without errors, or meet
+        your expectations.
+      </p>
+      <p>
+        <strong>Limitation of Liability</strong>
+      </p>
+      <p>
+        To the maximum extent permitted by law, Neven Academy Assam and its
+        owner shall have <strong>ZERO LIABILITY</strong> and{" "}
+        <strong>ZERO RESPONSIBILITY</strong> for any loss, damage, missed
+        opportunity, financial loss, emotional distress, or any other harm
+        resulting from your use of the app. <strong>It is not our fault.</strong>
+      </p>
+      <p>
+        <strong>Indemnification</strong>
+      </p>
+      <p>
+        You agree to indemnify and hold us harmless from any claims, damages,
+        or losses arising from your use of the app.
+      </p>
+      <p>
+        <strong>Intellectual Property</strong>
+      </p>
+      <p>
+        All content and features belong to Neven Academy Assam. You may not copy
+        or distribute any part of the app.
+      </p>
+      <p>
+        <strong>Governing Law</strong>
+      </p>
+      <p>
+        These Terms are governed by the laws of India. Any dispute shall be
+        subject to the exclusive jurisdiction of courts in Mangaldoi, Assam.
+      </p>
+      <p>
+        <strong>Contact</strong>
+      </p>
+      <p>
+        Neven Academy Assam (Sole Proprietorship)
+        <br />
+        1000, Uday Nagar, Bono Durga Mandir, Karim Chowk, K.Chowka, Ward No.4,
+        Mangaldoi, Darrang, Assam, 784125
+        <br />
+        Phone: 9101776379
+        <br />
+        Email: curioversitylearning@gmail.com;
+      </p>
+    </article>
+  );
+}
