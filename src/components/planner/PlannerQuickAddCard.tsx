@@ -46,10 +46,13 @@ export function PlannerQuickAddCard({
   const [minute, setMinute] = useState("0");
   const [period, setPeriod] = useState<"AM" | "PM">("AM");
   const [taskId, setTaskId] = useState<string | null>(null);
-  const [creating, setCreating] = useState(true);
+  /** True while lazily creating the task after user types / picks time. */
+  const [creating, setCreating] = useState(false);
 
   const taskIdRef = useRef<string | null>(null);
   taskIdRef.current = taskId;
+
+  const ensurePromiseRef = useRef<Promise<string | null> | null>(null);
 
   const titleRef = useRef(title);
   const hourRef = useRef(hour12);
@@ -70,25 +73,35 @@ export function PlannerQuickAddCard({
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    setCreating(true);
+    ensurePromiseRef.current = null;
     setTaskId(null);
-    void (async () => {
-      const r = await quickCreateEmptyTask(userId, assignedDate);
-      if (cancelled) {
-        if (r.ok) await applyOptimisticTaskDelete(r.id, userId);
-        return;
+    taskIdRef.current = null;
+    setTitle("");
+    setHour12("");
+    setMinute("0");
+    setPeriod("AM");
+    setCreating(false);
+  }, [userId, assignedDate]);
+
+  const ensureTaskId = useCallback(async (): Promise<string | null> => {
+    if (taskIdRef.current) return taskIdRef.current;
+    if (ensurePromiseRef.current) return ensurePromiseRef.current;
+    const p = (async () => {
+      try {
+        const r = await quickCreateEmptyTask(userId, assignedDate);
+        if (!r.ok) {
+          onErrorRef.current(r.error);
+          return null;
+        }
+        setTaskId(r.id);
+        taskIdRef.current = r.id;
+        return r.id;
+      } finally {
+        ensurePromiseRef.current = null;
       }
-      setCreating(false);
-      if (!r.ok) {
-        onErrorRef.current(r.error);
-        return;
-      }
-      setTaskId(r.id);
     })();
-    return () => {
-      cancelled = true;
-    };
+    ensurePromiseRef.current = p;
+    return p;
   }, [userId, assignedDate]);
 
   const pushPatch = useCallback(async () => {
@@ -131,8 +144,16 @@ export function PlannerQuickAddCard({
     setHour12(String(t.hour12));
     setMinute(String(t.minute));
     setPeriod(t.period);
-    requestAnimationFrame(() => schedulePatch());
-  }, [schedulePatch]);
+    void (async () => {
+      if (!taskIdRef.current) {
+        setCreating(true);
+        const id = await ensureTaskId();
+        setCreating(false);
+        if (!id) return;
+      }
+      requestAnimationFrame(() => schedulePatch());
+    })();
+  }, [ensureTaskId, schedulePatch]);
 
   const clearTime = useCallback(() => {
     setHour12("");
@@ -190,8 +211,18 @@ export function PlannerQuickAddCard({
           ref={areaRef}
           value={title}
           onChange={(e) => {
-            setTitle(e.target.value);
-            schedulePatch();
+            const v = e.target.value;
+            setTitle(v);
+            void (async () => {
+              if (!taskIdRef.current && v.trim().length === 0) return;
+              if (!taskIdRef.current) {
+                setCreating(true);
+                const id = await ensureTaskId();
+                setCreating(false);
+                if (!id) return;
+              }
+              schedulePatch();
+            })();
           }}
           onKeyDown={(e) => {
             if (e.key === "Escape") {
@@ -206,7 +237,7 @@ export function PlannerQuickAddCard({
           rows={3}
           placeholder="Task name — start typing"
           autoComplete="off"
-          disabled={creating || !taskId}
+          disabled={creating}
           className="min-h-[4.5rem] w-full min-w-0 resize-y overflow-hidden rounded-lg border border-kal-border bg-kal-input-bg px-3 py-3 text-[15px] font-medium leading-snug text-kal-text outline-none placeholder:text-kal-muted [overflow-wrap:anywhere] focus-visible:border-kal-accent/40 focus-visible:ring-2 focus-visible:ring-kal-accent/25 disabled:opacity-50 sm:min-h-[5.5rem] sm:rounded-xl sm:px-4 sm:py-3.5 sm:text-[17px]"
         />
       </label>
@@ -219,10 +250,19 @@ export function PlannerQuickAddCard({
           <select
             aria-label="Hour"
             value={hour12}
-            disabled={creating || !taskId}
+            disabled={creating}
             onChange={(e) => {
-              setHour12(e.target.value);
-              schedulePatch();
+              const v = e.target.value;
+              setHour12(v);
+              void (async () => {
+                if (v !== "" && !taskIdRef.current) {
+                  setCreating(true);
+                  const id = await ensureTaskId();
+                  setCreating(false);
+                  if (!id) return;
+                }
+                schedulePatch();
+              })();
             }}
             className="min-h-[44px] min-w-[5.5rem] flex-1 rounded-xl border border-kal-border bg-kal-input-bg px-3 text-sm font-medium text-kal-text outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/30 disabled:opacity-50 sm:flex-none"
           >
@@ -237,7 +277,7 @@ export function PlannerQuickAddCard({
           <select
             aria-label="Minute"
             value={minute}
-            disabled={timeDisabled || creating || !taskId}
+            disabled={timeDisabled || creating}
             onChange={(e) => {
               setMinute(e.target.value);
               schedulePatch();
@@ -253,7 +293,7 @@ export function PlannerQuickAddCard({
           <select
             aria-label="AM or PM"
             value={period}
-            disabled={timeDisabled || creating || !taskId}
+            disabled={timeDisabled || creating}
             onChange={(e) => {
               setPeriod(e.target.value as "AM" | "PM");
               schedulePatch();
@@ -266,7 +306,7 @@ export function PlannerQuickAddCard({
           <button
             type="button"
             onClick={applyRightNow}
-            disabled={creating || !taskId}
+            disabled={creating}
             className="min-h-[44px] shrink-0 rounded-xl border border-orange-500/45 bg-orange-600/20 px-4 text-xs font-bold uppercase tracking-wide text-orange-200 shadow-sm shadow-orange-950/30 transition-colors hover:bg-orange-600/35 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/50 disabled:opacity-50"
           >
             Right now
@@ -305,7 +345,7 @@ export function PlannerQuickAddCard({
         </button>
         <button
           type="button"
-          disabled={creating || !taskId}
+          disabled={creating}
           onClick={finish}
           className="min-h-[44px] rounded-xl bg-kal-accent px-6 text-sm font-bold text-white shadow-sm transition-all hover:bg-kal-accent-hover active:scale-[0.98] disabled:opacity-60"
         >

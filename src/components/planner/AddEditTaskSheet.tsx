@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { TablesUpdate } from "@/types/supabase";
@@ -44,6 +44,25 @@ function taskIsDiscardableDraft(t: Task): boolean {
   );
 }
 
+/** True once the user has entered anything we should persist (lazy draft creation). */
+function addFormHasUserContent(f: {
+  taskName: string;
+  fromTime: string;
+  toTime: string;
+  estimatedMinutes: string;
+  marks: string;
+  microtopicId: string;
+  status: string;
+}): boolean {
+  if (f.taskName.trim().length > 0) return true;
+  if (f.fromTime || f.toTime) return true;
+  if (f.marks.trim().length > 0) return true;
+  if (f.estimatedMinutes.trim().length > 0) return true;
+  if (f.microtopicId.trim().length > 0) return true;
+  if (f.status !== TASK_STATUS.pending) return true;
+  return false;
+}
+
 type Props = {
   open: boolean;
   onClose: () => void;
@@ -81,8 +100,10 @@ export function AddEditTaskSheet({
   const [status, setStatus] = useState<string>(TASK_STATUS.pending);
   const [error, setError] = useState<string | null>(null);
   const [draftTaskId, setDraftTaskId] = useState<string | null>(null);
-  const [draftBusy, setDraftBusy] = useState(false);
   const [draftError, setDraftError] = useState<string | null>(null);
+
+  const draftTaskIdRef = useRef<string | null>(null);
+  const ensureDraftPromiseRef = useRef<Promise<string | null> | null>(null);
 
   const syllabusRef = useRef(syllabusById);
   syllabusRef.current = syllabusById;
@@ -113,6 +134,37 @@ export function AddEditTaskSheet({
   const activeTaskIdRef = useRef<string | null>(null);
   activeTaskIdRef.current =
     mode === "edit" ? task?.id ?? null : draftTaskId;
+
+  useEffect(() => {
+    if (mode === "add") draftTaskIdRef.current = draftTaskId;
+  }, [mode, draftTaskId]);
+
+  const ensureDraftTaskId = useCallback(async (): Promise<string | null> => {
+    if (draftTaskIdRef.current) return draftTaskIdRef.current;
+    if (ensureDraftPromiseRef.current) return ensureDraftPromiseRef.current;
+    const uid = userId;
+    if (!uid) return null;
+    const f = formRef.current;
+    if (!addFormHasUserContent(f)) return null;
+
+    const p = (async () => {
+      try {
+        const r = await quickCreateEmptyTask(uid, f.assignedDate);
+        if (!r.ok) {
+          setDraftError(r.error);
+          return null;
+        }
+        setDraftError(null);
+        setDraftTaskId(r.id);
+        draftTaskIdRef.current = r.id;
+        return r.id;
+      } finally {
+        ensureDraftPromiseRef.current = null;
+      }
+    })();
+    ensureDraftPromiseRef.current = p;
+    return p;
+  }, [userId]);
 
   const excludeDupIdRef = useRef<string | undefined>(undefined);
   excludeDupIdRef.current =
@@ -160,6 +212,9 @@ export function AddEditTaskSheet({
 
   useEffect(() => {
     if (!open || mode !== "add") return;
+    setDraftTaskId(null);
+    draftTaskIdRef.current = null;
+    ensureDraftPromiseRef.current = null;
     setTaskName("");
     setFromTime("");
     setToTime("");
@@ -172,30 +227,6 @@ export function AddEditTaskSheet({
   }, [open, mode]);
 
   useEffect(() => {
-    if (!open || mode !== "add" || !userId) return;
-    let cancelled = false;
-    setDraftTaskId(null);
-    setDraftBusy(true);
-    void (async () => {
-      const r = await quickCreateEmptyTask(userId, defaultAssignedDate);
-      if (cancelled) {
-        if (r.ok) await applyOptimisticTaskDelete(r.id, userId);
-        return;
-      }
-      setDraftBusy(false);
-      if (r.ok) {
-        setDraftTaskId(r.id);
-        setDraftError(null);
-      } else {
-        setDraftError(r.error);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [open, mode, userId, defaultAssignedDate]);
-
-  useEffect(() => {
     if (!open || mode === "edit") return;
     if (subject && !chapters.includes(chapter)) {
       setChapter(chapters[0] ?? "");
@@ -203,9 +234,20 @@ export function AddEditTaskSheet({
   }, [open, mode, subject, chapter, chapters]);
 
   const runFlush = useCallback(async () => {
-    const tid = activeTaskIdRef.current;
     const uid = userId;
-    if (!tid || !uid) return;
+    if (!uid) return;
+
+    let tid: string | null = null;
+    if (modeRef.current === "edit") {
+      tid = task?.id ?? null;
+      if (!tid) return;
+    } else {
+      tid = draftTaskIdRef.current;
+      if (!tid) {
+        tid = await ensureDraftTaskId();
+        if (!tid) return;
+      }
+    }
 
     const f = formRef.current;
     const linkId = f.microtopicId.trim() || null;
@@ -257,7 +299,7 @@ export function AddEditTaskSheet({
 
     const res = await applyOptimisticTaskUpdate(tid, patch, uid);
     if (!res.ok) setError(res.error);
-  }, [userId]);
+  }, [userId, task?.id, ensureDraftTaskId]);
 
   const scheduleFlush = useCallback(() => {
     if (flushTimerRef.current) clearTimeout(flushTimerRef.current);
@@ -293,18 +335,21 @@ export function AddEditTaskSheet({
       flushTimerRef.current = null;
     }
     void (async () => {
-      const tid = activeTaskIdRef.current;
       const uid = userId;
-      if (tid && uid) {
+      if (uid) {
         await runFlush();
         if (modeRef.current === "add") {
-          const row = useTaskStore.getState().tasks[tid];
-          if (row && taskIsDiscardableDraft(row)) {
-            await applyOptimisticTaskDelete(tid, uid);
+          const finalId = draftTaskIdRef.current;
+          if (finalId) {
+            const row = useTaskStore.getState().tasks[finalId];
+            if (row && taskIsDiscardableDraft(row)) {
+              await applyOptimisticTaskDelete(finalId, uid);
+            }
           }
         }
       }
       setDraftTaskId(null);
+      draftTaskIdRef.current = null;
       onClose();
     })();
   }, [userId, onClose, runFlush]);
@@ -312,8 +357,9 @@ export function AddEditTaskSheet({
   if (!open) return null;
 
   const hasSyllabus = microtopics.length > 0;
-  const draftReady = mode === "edit" || !!draftTaskId;
-  const blockUi = (mode === "add" && draftBusy) || !!draftError;
+  const blockUi = !!draftError;
+  const showForm =
+    (mode === "edit" && Boolean(task)) || mode === "add";
 
   return (
     <div className="fixed inset-0 z-[70] flex items-end justify-center sm:items-center">
@@ -358,14 +404,7 @@ export function AddEditTaskSheet({
           </p>
         ) : null}
 
-        {mode === "add" && draftBusy ? (
-          <div className="mt-8 flex items-center justify-center gap-2 text-sm text-kal-muted">
-            <Loader2 className="h-5 w-5 animate-spin" />
-            Starting draft…
-          </div>
-        ) : null}
-
-        {draftReady && !draftBusy ? (
+        {showForm ? (
           <div className="mt-5 space-y-5">
             <div>
               <label
@@ -552,7 +591,7 @@ export function AddEditTaskSheet({
           </button>
           <button
             type="button"
-            disabled={!draftReady || blockUi}
+            disabled={blockUi}
             onClick={handleClose}
             className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-kal-accent py-3.5 text-sm font-semibold text-white shadow-sm transition-opacity duration-200 hover:bg-kal-accent-hover disabled:opacity-40"
           >
