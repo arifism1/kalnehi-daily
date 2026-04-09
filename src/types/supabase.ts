@@ -378,9 +378,12 @@ export type Database = {
       user_profiles: {
         Row: {
           attempts: Json | null
+          class_studying: string | null
           cuet_domain_subjects: Json
           full_name: string | null
           id: string
+          mandatory_onboarding_completed_at: string | null
+          phone_number: string | null
           prev_exam_attempted: boolean | null
           prev_score: number | null
           prev_score_entries: Json
@@ -397,9 +400,12 @@ export type Database = {
         }
         Insert: {
           attempts?: Json | null
+          class_studying?: string | null
           cuet_domain_subjects?: Json
           full_name?: string | null
           id?: string
+          mandatory_onboarding_completed_at?: string | null
+          phone_number?: string | null
           prev_exam_attempted?: boolean | null
           prev_score?: number | null
           prev_score_entries?: Json
@@ -416,9 +422,12 @@ export type Database = {
         }
         Update: {
           attempts?: Json | null
+          class_studying?: string | null
           cuet_domain_subjects?: Json
           full_name?: string | null
           id?: string
+          mandatory_onboarding_completed_at?: string | null
+          phone_number?: string | null
           prev_exam_attempted?: boolean | null
           prev_score?: number | null
           prev_score_entries?: Json

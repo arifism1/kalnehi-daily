@@ -181,3 +181,76 @@ export async function upsertUserProfile(fields: {
     return { ok: false, error: detailed };
   }
 }
+
+export async function completeOnboarding(fields: {
+  full_name: string;
+  phone_number: string;
+  class_studying: string;
+  primary_exam: string;
+  target_exam_date: string;
+}): Promise<UpsertProfileResult> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+      error: authErr,
+    } = await supabase.auth.getUser();
+    if (authErr || !user) {
+      return { ok: false, error: USER_ERROR.session };
+    }
+
+    const name = fields.full_name.trim();
+    const phone = fields.phone_number.trim();
+    const cls = fields.class_studying.trim();
+    const exam = fields.primary_exam.trim();
+    const examDate = fields.target_exam_date.trim();
+
+    if (!name) return { ok: false, error: "Please enter your name." };
+    if (!phone || !/^\d{10}$/.test(phone))
+      return { ok: false, error: "Please enter a valid 10-digit phone number." };
+    if (!cls) return { ok: false, error: "Please select your class." };
+    if (!exam) return { ok: false, error: "Please select your target exam." };
+    if (!examDate || !/^\d{4}-\d{2}-\d{2}$/.test(examDate))
+      return { ok: false, error: "Please enter a valid exam date." };
+
+    const now = new Date().toISOString();
+    const patch = {
+      full_name: name,
+      phone_number: phone,
+      class_studying: cls,
+      primary_exam: exam,
+      target_exam: exam,
+      target_exam_date: examDate,
+      cuet_domain_subjects: [] as string[],
+      mandatory_onboarding_completed_at: now,
+      updated_at: now,
+    };
+
+    const { data: existing, error: selErr } = await supabase
+      .from("user_profiles")
+      .select("id")
+      .eq("user_id", user.id)
+      .limit(1);
+    if (selErr) throw selErr;
+
+    if ((existing?.length ?? 0) > 0) {
+      const { error } = await supabase
+        .from("user_profiles")
+        .update(patch)
+        .eq("user_id", user.id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase
+        .from("user_profiles")
+        .insert({ user_id: user.id, ...patch });
+      if (error) throw error;
+    }
+
+    revalidatePath("/");
+    return { ok: true };
+  } catch (e) {
+    const detailed = toDetailedSupabaseError(e);
+    console.error("[profile.completeOnboarding] failed", { error: detailed, raw: e });
+    return { ok: false, error: detailed };
+  }
+}

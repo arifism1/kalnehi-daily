@@ -49,6 +49,7 @@ const MINIMAL_CHROME_PATHS = new Set([
   "/shipping",
   "/return",
   "/about",
+  "/pricing",
 ]);
 
 export function KalnehiChrome({ children }: { children: React.ReactNode }) {

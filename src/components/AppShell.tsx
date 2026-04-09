@@ -1,11 +1,10 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { useAuthStore } from "@/store/useAuthStore";
-import { useOnboardingStore } from "@/store/useOnboardingStore";
 
 function LoadingScreen() {
   return (
@@ -18,103 +17,87 @@ function LoadingScreen() {
   );
 }
 
+const AUTH_PATHS = new Set(["/auth", "/auth/reset"]);
+
+const LEGAL_PATHS = new Set([
+  "/privacy",
+  "/terms",
+  "/refund",
+  "/return",
+  "/shipping",
+  "/policies",
+  "/about",
+]);
+
+function isLegalPath(p: string) {
+  return LEGAL_PATHS.has(p);
+}
+function isAuthPath(p: string) {
+  return AUTH_PATHS.has(p);
+}
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const initialized = useAuthStore((s) => s.initialized);
   const session = useAuthStore((s) => s.session);
-  const onboardingCompleted = useOnboardingStore((s) => s.onboardingCompleted);
-  const { loading: subscriptionLoading, hasPaidAccess } = useSubscriptionAccess();
+  const {
+    loading: profileLoading,
+    onboardingDone,
+    hasPaidAccess,
+  } = useSubscriptionAccess();
 
-  const publicAuthPath =
-    pathname === "/auth" || pathname === "/auth/reset";
-  const meditationPath =
-    pathname === "/meditation" || pathname.startsWith("/meditation/");
-  const pricingPath = pathname === "/pricing";
-  const legalPath =
-    pathname === "/privacy" ||
-    pathname === "/terms" ||
-    pathname === "/refund" ||
-    pathname === "/return" ||
-    pathname === "/shipping" ||
-    pathname === "/policies" ||
-    pathname === "/about";
-  const alwaysAllowedPath = publicAuthPath || pathname === "/onboarding" || pricingPath || legalPath;
+  const authed = !!session;
+
+  const gateTarget = useMemo(() => {
+    if (!initialized) return "wait";
+    if (!authed) {
+      if (isAuthPath(pathname)) return "render";
+      return "auth";
+    }
+    if (profileLoading) {
+      if (isAuthPath(pathname) || isLegalPath(pathname))
+        return "render";
+      return "wait";
+    }
+
+    if (isAuthPath(pathname)) return "home";
+
+    if (!onboardingDone) {
+      if (pathname === "/onboarding" || isLegalPath(pathname))
+        return "render";
+      return "onboarding";
+    }
+
+    if (!hasPaidAccess) {
+      if (pathname === "/pricing" || isLegalPath(pathname))
+        return "render";
+      return "pricing";
+    }
+
+    if (pathname === "/onboarding") return "home";
+
+    return "render";
+  }, [initialized, authed, profileLoading, onboardingDone, hasPaidAccess, pathname]);
 
   useEffect(() => {
-    if (!initialized) return;
-    const authed = !!session;
-    if (!authed && !publicAuthPath) {
-      router.replace("/auth");
-      return;
-    }
-    if (authed && pathname === "/auth") {
-      router.replace(onboardingCompleted ? "/" : "/onboarding");
-      return;
-    }
-    if (authed && onboardingCompleted && pathname === "/onboarding") {
-      router.replace("/");
-      return;
-    }
-    if (
-      authed &&
-      !onboardingCompleted &&
-      !meditationPath &&
-      pathname !== "/onboarding" &&
-      pathname !== "/auth" &&
-      pathname !== "/auth/reset"
-    ) {
-      router.replace("/onboarding");
-      return;
-    }
-
-    if (authed && onboardingCompleted && !subscriptionLoading) {
-      if (!hasPaidAccess && !pricingPath && !legalPath) {
+    switch (gateTarget) {
+      case "auth":
+        router.replace("/auth");
+        break;
+      case "home":
+        router.replace("/");
+        break;
+      case "onboarding":
+        router.replace("/onboarding");
+        break;
+      case "pricing":
         router.replace("/pricing");
-        return;
-      }
+        break;
     }
-  }, [
-    initialized,
-    session,
-    pathname,
-    router,
-    onboardingCompleted,
-    meditationPath,
-    hasPaidAccess,
-    subscriptionLoading,
-    pricingPath,
-    legalPath,
-  ]);
+  }, [gateTarget, router]);
 
-  if (!initialized) {
-    return <LoadingScreen />;
-  }
-
-  if (!session && !publicAuthPath) {
-    return <LoadingScreen />;
-  }
-
-  if (session && pathname === "/auth") {
-    return <LoadingScreen />;
-  }
-
-  if (
-    session &&
-    !onboardingCompleted &&
-    !meditationPath &&
-    pathname !== "/onboarding" &&
-    pathname !== "/auth" &&
-    pathname !== "/auth/reset"
-  ) {
-    return <LoadingScreen />;
-  }
-
-  if (session && onboardingCompleted && subscriptionLoading && !alwaysAllowedPath) {
-    return <LoadingScreen />;
-  }
-
-  if (session && onboardingCompleted && !subscriptionLoading && !hasPaidAccess && !pricingPath && !legalPath) {
+  if (gateTarget !== "render") {
     return <LoadingScreen />;
   }
 

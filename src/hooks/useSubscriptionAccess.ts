@@ -9,6 +9,7 @@ export type SubscriptionStatus = "trial" | "active" | "expired" | "cancelled" | 
 
 type SubscriptionData = {
   loading: boolean;
+  onboardingDone: boolean;
   status: SubscriptionStatus;
   hasPaidAccess: boolean;
   plan: string | null;
@@ -27,6 +28,7 @@ function isCurrentlyPaid(status: SubscriptionStatus, endDate: string | null): bo
 export function useSubscriptionAccess(): SubscriptionData {
   const user = useAuthStore((s) => s.user);
   const [loading, setLoading] = useState(true);
+  const [onboardingDone, setOnboardingDone] = useState(false);
   const [status, setStatus] = useState<SubscriptionStatus>(null);
   const [hasPaidAccess, setHasPaidAccess] = useState(false);
   const [plan, setPlan] = useState<string | null>(null);
@@ -36,6 +38,7 @@ export function useSubscriptionAccess(): SubscriptionData {
   useEffect(() => {
     let cancelled = false;
     if (!user?.id) {
+      setOnboardingDone(false);
       setStatus(null);
       setHasPaidAccess(false);
       setPlan(null);
@@ -52,17 +55,20 @@ export function useSubscriptionAccess(): SubscriptionData {
         const { data, error } = await supabase
           .from("user_profiles")
           .select(
-            "subscription_status, subscription_plan, subscription_start_date, subscription_end_date",
+            "mandatory_onboarding_completed_at, subscription_status, subscription_plan, subscription_start_date, subscription_end_date",
           )
           .eq("user_id", user.id)
           .maybeSingle();
 
         if (cancelled) return;
         if (error) {
+          setOnboardingDone(false);
           setStatus(null);
           setHasPaidAccess(false);
           return;
         }
+
+        setOnboardingDone(!!data?.mandatory_onboarding_completed_at);
 
         const normalizedStatus =
           data?.subscription_status === "trial" ||
@@ -81,6 +87,7 @@ export function useSubscriptionAccess(): SubscriptionData {
         );
       } catch {
         if (!cancelled) {
+          setOnboardingDone(false);
           setStatus(null);
           setHasPaidAccess(false);
         }
@@ -94,5 +101,5 @@ export function useSubscriptionAccess(): SubscriptionData {
     };
   }, [user?.id]);
 
-  return { loading, status, hasPaidAccess, plan, startDate, endDate };
+  return { loading, onboardingDone, status, hasPaidAccess, plan, startDate, endDate };
 }
