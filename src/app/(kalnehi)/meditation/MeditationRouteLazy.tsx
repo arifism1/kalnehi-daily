@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
 
+import { FeatureGate } from "@/components/subscription/FeatureGate";
 import { RoutePageSkeleton } from "@/components/loading/RoutePageSkeleton";
 
 const MeditationPage = dynamic(
@@ -16,7 +17,9 @@ const MeditationPage = dynamic(
 export default function MeditationRouteLazy() {
   return (
     <Suspense fallback={<RoutePageSkeleton />}>
-      <MeditationPage />
+      <FeatureGate feature="meditation">
+        <MeditationPage />
+      </FeatureGate>
     </Suspense>
   );
 }

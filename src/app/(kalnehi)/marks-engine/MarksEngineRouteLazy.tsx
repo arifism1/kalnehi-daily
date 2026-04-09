@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
 
+import { FeatureGate } from "@/components/subscription/FeatureGate";
 import { RoutePageSkeleton } from "@/components/loading/RoutePageSkeleton";
 
 const MarksEngineClient = dynamic(
@@ -16,7 +17,9 @@ const MarksEngineClient = dynamic(
 export default function MarksEngineRouteLazy() {
   return (
     <Suspense fallback={<RoutePageSkeleton />}>
-      <MarksEngineClient />
+      <FeatureGate feature="marks_engine">
+        <MarksEngineClient />
+      </FeatureGate>
     </Suspense>
   );
 }

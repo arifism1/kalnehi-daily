@@ -378,12 +378,15 @@ export type Database = {
       user_profiles: {
         Row: {
           attempts: Json | null
+          bonus_photo_scans: number
+          bonus_voice_minutes: number
           class_studying: string | null
           cuet_domain_subjects: Json
           full_name: string | null
           id: string
           mandatory_onboarding_completed_at: string | null
           phone_number: string | null
+          photo_scans_used_this_month: number
           prev_exam_attempted: boolean | null
           prev_score: number | null
           prev_score_entries: Json
@@ -393,19 +396,25 @@ export type Database = {
           subscription_plan: string | null
           subscription_start_date: string | null
           subscription_status: string | null
+          subscription_tier: string | null
           target_exam: string | null
           target_exam_date: string | null
           updated_at: string | null
+          usage_reset_date: string | null
           user_id: string | null
+          voice_minutes_used_this_month: number
         }
         Insert: {
           attempts?: Json | null
+          bonus_photo_scans?: number
+          bonus_voice_minutes?: number
           class_studying?: string | null
           cuet_domain_subjects?: Json
           full_name?: string | null
           id?: string
           mandatory_onboarding_completed_at?: string | null
           phone_number?: string | null
+          photo_scans_used_this_month?: number
           prev_exam_attempted?: boolean | null
           prev_score?: number | null
           prev_score_entries?: Json
@@ -415,19 +424,25 @@ export type Database = {
           subscription_plan?: string | null
           subscription_start_date?: string | null
           subscription_status?: string | null
+          subscription_tier?: string | null
           target_exam?: string | null
           target_exam_date?: string | null
           updated_at?: string | null
+          usage_reset_date?: string | null
           user_id?: string | null
+          voice_minutes_used_this_month?: number
         }
         Update: {
           attempts?: Json | null
+          bonus_photo_scans?: number
+          bonus_voice_minutes?: number
           class_studying?: string | null
           cuet_domain_subjects?: Json
           full_name?: string | null
           id?: string
           mandatory_onboarding_completed_at?: string | null
           phone_number?: string | null
+          photo_scans_used_this_month?: number
           prev_exam_attempted?: boolean | null
           prev_score?: number | null
           prev_score_entries?: Json
@@ -437,10 +452,13 @@ export type Database = {
           subscription_plan?: string | null
           subscription_start_date?: string | null
           subscription_status?: string | null
+          subscription_tier?: string | null
           target_exam?: string | null
           target_exam_date?: string | null
           updated_at?: string | null
+          usage_reset_date?: string | null
           user_id?: string | null
+          voice_minutes_used_this_month?: number
         }
         Relationships: []
       }

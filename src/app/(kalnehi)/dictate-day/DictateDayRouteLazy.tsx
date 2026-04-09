@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
 
+import { AiFeatureGate } from "@/components/subscription/AiFeatureGate";
 import { RoutePageSkeleton } from "@/components/loading/RoutePageSkeleton";
 
 const DictateDayPageContent = dynamic(() => import("./DictateDayPageContent"), {
@@ -13,7 +14,9 @@ const DictateDayPageContent = dynamic(() => import("./DictateDayPageContent"), {
 export default function DictateDayRouteLazy() {
   return (
     <Suspense fallback={<RoutePageSkeleton />}>
-      <DictateDayPageContent />
+      <AiFeatureGate feature="voice">
+        <DictateDayPageContent />
+      </AiFeatureGate>
     </Suspense>
   );
 }

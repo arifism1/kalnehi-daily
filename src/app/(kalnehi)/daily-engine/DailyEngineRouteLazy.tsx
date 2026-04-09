@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
 
+import { FeatureGate } from "@/components/subscription/FeatureGate";
 import { RoutePageSkeleton } from "@/components/loading/RoutePageSkeleton";
 
 const DailyEngineClient = dynamic(
@@ -16,7 +17,9 @@ const DailyEngineClient = dynamic(
 export default function DailyEngineRouteLazy() {
   return (
     <Suspense fallback={<RoutePageSkeleton />}>
-      <DailyEngineClient />
+      <FeatureGate feature="execution_planner">
+        <DailyEngineClient />
+      </FeatureGate>
     </Suspense>
   );
 }

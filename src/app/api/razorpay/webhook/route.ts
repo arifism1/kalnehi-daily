@@ -16,9 +16,11 @@ const HANDLED_EVENTS = new Set([
 ]);
 
 type PlanType = "trial" | "monthly";
+type TierType = "basic" | "pro" | "pro_max";
 type ProfileUpdate = {
   subscription_status: "trial" | "active" | "expired" | "cancelled";
   subscription_plan: PlanType;
+  subscription_tier?: TierType;
   subscription_start_date: string;
   subscription_end_date: string;
   razorpay_subscription_id: string;
@@ -72,6 +74,14 @@ function inferPlan(payload: WebhookEnvelope): PlanType {
   const fromPayment = payload.payload?.payment?.entity?.notes?.kalnehi_plan;
   const plan = fromSubscription ?? fromPayment;
   return plan === "trial" ? "trial" : "monthly";
+}
+
+function inferTier(payload: WebhookEnvelope): TierType {
+  const fromSub = payload.payload?.subscription?.entity?.notes?.kalnehi_tier;
+  const fromPay = payload.payload?.payment?.entity?.notes?.kalnehi_tier;
+  const raw = fromSub ?? fromPay;
+  if (raw === "basic" || raw === "pro" || raw === "pro_max") return raw;
+  return "pro";
 }
 
 function buildUpdateFromSubscription(payload: WebhookEnvelope): ProfileUpdate | null {
@@ -183,6 +193,7 @@ export async function POST(request: Request) {
       ...patch,
       subscription_status: "active",
       subscription_plan: "monthly",
+      subscription_tier: inferTier(payload),
       razorpay_subscription_id: subscriptionId ?? patch.razorpay_subscription_id,
     };
 
