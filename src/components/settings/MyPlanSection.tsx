@@ -2,7 +2,6 @@
 
 import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { cancelSubscription } from "@/actions/subscription";
@@ -37,6 +36,7 @@ function statusColor(status: string | null): string {
     case "active":
       return "text-emerald-600 dark:text-emerald-400";
     case "cancelled":
+      return "text-amber-600 dark:text-amber-400";
     case "expired":
       return "text-[var(--kal-danger-text)]";
     default:
@@ -45,8 +45,8 @@ function statusColor(status: string | null): string {
 }
 
 export function MyPlanSection() {
-  const router = useRouter();
-  const { loading, status, plan, startDate, endDate } = useSubscriptionAccess();
+  const { loading, status, hasPaidAccess, plan, startDate, endDate, refetch } =
+    useSubscriptionAccess();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -60,6 +60,10 @@ export function MyPlanSection() {
   }
 
   const canCancel = status === "trial" || status === "active";
+  const cancelledWithAccess = status === "cancelled" && hasPaidAccess;
+  const isCancelled = status === "cancelled";
+  const noActivePlan =
+    !status || status === "expired" || (isCancelled && !hasPaidAccess);
 
   function handleCancel() {
     setConfirmOpen(false);
@@ -70,19 +74,32 @@ export function MyPlanSection() {
         setMessage(res.error);
         return;
       }
-      setMessage("Subscription cancelled. No further charges will occur.");
-      router.refresh();
+      refetch();
     });
   }
 
+  const confirmDescription =
+    status === "trial"
+      ? `You'll keep full access until ${formatDate(endDate)}. After that, the app will be locked and the upcoming ₹299 monthly charge will not occur.`
+      : `You'll keep access until the end of the current billing cycle (${formatDate(endDate)}). After that, you will lose access to all Pro features.`;
+
   const rows: { label: string; value: string; className?: string }[] = [
-    { label: "Status", value: statusLabel(status), className: statusColor(status) },
+    {
+      label: "Status",
+      value: statusLabel(status),
+      className: statusColor(status),
+    },
   ];
 
-  if (status && status !== "expired" && status !== "cancelled") {
+  if (status && status !== "expired" && !(isCancelled && !hasPaidAccess)) {
     rows.push({
       label: "Plan",
-      value: plan === "monthly" ? "₹299/month (12 months)" : plan === "trial" ? "₹21 Trial" : plan ?? "—",
+      value:
+        plan === "monthly"
+          ? "₹299/month (12 months)"
+          : plan === "trial"
+            ? "₹21 Trial"
+            : (plan ?? "—"),
     });
   }
 
@@ -90,11 +107,13 @@ export function MyPlanSection() {
     rows.push({ label: "Started", value: formatDate(startDate) });
   }
 
-  if (endDate && (status === "trial" || status === "active")) {
-    rows.push({
-      label: status === "trial" ? "Trial ends" : "Current cycle ends",
-      value: formatDate(endDate),
-    });
+  if (endDate && (status === "trial" || status === "active" || isCancelled)) {
+    const label = isCancelled
+      ? "Expires on"
+      : status === "trial"
+        ? "Trial ends"
+        : "Current cycle ends";
+    rows.push({ label, value: formatDate(endDate) });
   }
 
   return (
@@ -102,11 +121,7 @@ export function MyPlanSection() {
       <ConfirmDialog
         open={confirmOpen}
         title="Cancel subscription?"
-        description={
-          status === "trial"
-            ? "Your trial will end immediately and the upcoming ₹299 monthly charge will not occur. You will lose access to all Pro features."
-            : "Your subscription will be cancelled immediately. You will lose access to all Pro features at the end of the current billing cycle."
-        }
+        description={confirmDescription}
         confirmLabel="Yes, cancel"
         cancelLabel="Keep subscription"
         danger
@@ -120,13 +135,24 @@ export function MyPlanSection() {
           className="flex min-h-[48px] items-center justify-between border-b border-kal-border px-4 py-3 last:border-b-0"
         >
           <span className="text-sm text-kal-text-secondary">{row.label}</span>
-          <span className={`text-sm font-medium ${row.className ?? "text-kal-text"}`}>
+          <span
+            className={`text-sm font-medium ${row.className ?? "text-kal-text"}`}
+          >
             {row.value}
           </span>
         </div>
       ))}
 
-      {canCancel ? (
+      {isCancelled && (
+        <div className="border-t border-kal-border bg-amber-50 px-4 py-3 dark:bg-amber-950/20">
+          <p className="text-xs leading-relaxed text-amber-800 dark:text-amber-300">
+            Trial plan is cancelled and will expire on{" "}
+            {formatDate(endDate)}. You will not be charged ₹299.
+          </p>
+        </div>
+      )}
+
+      {canCancel && (
         <div className="border-t border-kal-border px-4 py-3">
           <button
             type="button"
@@ -139,8 +165,10 @@ export function MyPlanSection() {
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Cancelling...
               </>
+            ) : status === "trial" ? (
+              "Cancel Trial"
             ) : (
-              status === "trial" ? "Cancel Trial" : "Cancel Subscription"
+              "Cancel Subscription"
             )}
           </button>
           {message ? (
@@ -149,9 +177,9 @@ export function MyPlanSection() {
             </p>
           ) : null}
         </div>
-      ) : null}
+      )}
 
-      {!status || status === "expired" || status === "cancelled" ? (
+      {noActivePlan && (
         <div className="border-t border-kal-border px-4 py-3">
           <a
             href="/pricing"
@@ -160,7 +188,7 @@ export function MyPlanSection() {
             Subscribe to Pro
           </a>
         </div>
-      ) : null}
+      )}
     </div>
   );
 }

@@ -35,7 +35,8 @@ const BENEFITS = [
 ];
 
 export function PricingPageClient() {
-  const { hasPaidAccess, status: subscriptionStatus } = useSubscriptionAccess();
+  const { hasPaidAccess, status: subscriptionStatus, endDate } =
+    useSubscriptionAccess();
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
 
@@ -106,6 +107,24 @@ export function PricingPageClient() {
             charged every month for 12 months (1 year). You can cancel anytime.
           </p>
         </header>
+
+        {subscriptionStatus === "expired" && (
+          <div className="rounded-2xl border border-rose-300 bg-rose-50 px-5 py-4 dark:border-rose-800 dark:bg-rose-950/30">
+            <p className="text-sm font-medium text-rose-800 dark:text-rose-200">
+              Your last payment could not be processed. Subscribe again to
+              continue using Kalnehi Daily.
+            </p>
+          </div>
+        )}
+
+        {subscriptionStatus === "cancelled" && !hasPaidAccess && (
+          <div className="rounded-2xl border border-amber-300 bg-amber-50 px-5 py-4 dark:border-amber-800 dark:bg-amber-950/30">
+            <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+              Your subscription has been cancelled and your access has ended.
+              Subscribe again to get back to your daily plan.
+            </p>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 gap-5">
           <article className="relative rounded-2xl border-2 border-kal-accent bg-kal-card p-6 kal-shadow-card">

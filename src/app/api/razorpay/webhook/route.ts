@@ -196,11 +196,25 @@ export async function POST(request: Request) {
     return okResponse({ updated });
   }
 
-  if (event === "subscription.cancelled" || event === "payment.failed") {
+  if (event === "subscription.cancelled") {
+    const patch: Partial<ProfileUpdate> = {
+      subscription_status: "cancelled",
+    };
+
+    let updated = false;
+    if (subscriptionId) {
+      updated = await applyBySubscriptionId(supabase, subscriptionId, patch);
+    }
+    if (!updated && userIdFromNotes) {
+      updated = await applyByUserId(supabase, userIdFromNotes, patch);
+    }
+    return okResponse({ updated });
+  }
+
+  if (event === "payment.failed") {
     const nowIso = new Date().toISOString();
     const patch: Partial<ProfileUpdate> = {
-      subscription_status:
-        event === "subscription.cancelled" ? "cancelled" : "expired",
+      subscription_status: "expired",
       subscription_end_date: nowIso,
     };
 
