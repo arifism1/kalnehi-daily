@@ -2,6 +2,7 @@
 
 import { format } from "date-fns";
 import {
+  CalendarDays,
   CheckCircle2,
   CirclePause,
   CirclePlay,
@@ -10,6 +11,7 @@ import {
   PlayCircle,
   Timer,
 } from "lucide-react";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -17,6 +19,7 @@ import {
   computeMonthTotalSeconds,
   enqueueMeditationOutbox,
   getMeditationSessions,
+  updateMeditationSessionNoteLocal,
   upsertMeditationSessionLocal,
   type MeditationOutboxOp,
 } from "@/lib/meditationLocal";
@@ -55,12 +58,14 @@ export function MeditationPage() {
   const [sound, setSound] = useState<MeditationSound>("Rain");
   const [pendingNote, setPendingNote] = useState("");
   const [showNoteInput, setShowNoteInput] = useState(false);
+  const [lastCompletedSessionId, setLastCompletedSessionId] = useState<string | null>(null);
   const [hydrating, setHydrating] = useState(true);
   const tickRef = useRef<number | null>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const noiseSourceRef = useRef<AudioBufferSourceNode | OscillatorNode | null>(null);
   const gainRef = useRef<GainNode | null>(null);
+  const autoSaveInFlightRef = useRef(false);
 
   const today = useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
   const monthPrefix = useMemo(() => format(new Date(), "yyyy-MM"), []);
@@ -226,12 +231,45 @@ export function MeditationPage() {
 
   useEffect(() => () => stopSession(), [stopSession]);
 
-  const completeSession = useCallback(async () => {
-    stopSession();
-    await playEndingChime();
-    guidedSpeak("Beautiful work. Session complete.");
+  const saveCompletedSession = useCallback(async () => {
+    if (!userId || !activeType) return null;
+    if (elapsedSeconds <= 0) return null;
+    const now = new Date().toISOString();
+    const row: MeditationSessionRow = {
+      id: crypto.randomUUID(),
+      user_id: userId,
+      date: format(new Date(), "yyyy-MM-dd"),
+      session_type: activeType.id,
+      duration_minutes: Math.max(1, Math.floor(elapsedSeconds / 60)),
+      duration_seconds: elapsedSeconds,
+      notes: pendingNote.trim() ? pendingNote.trim().slice(0, 1000) : null,
+      soundscape: sound,
+      guided,
+      created_at: now,
+    };
+    await upsertMeditationSessionLocal(row);
+    const op: MeditationOutboxOp = { kind: "session_create", row };
+    await enqueueMeditationOutbox(userId, op);
+    await flushMeditationOutbox(userId);
+    await load();
+    setActiveType(null);
     setShowNoteInput(true);
-  }, [guidedSpeak, playEndingChime, stopSession]);
+    setLastCompletedSessionId(row.id);
+    return row.id;
+  }, [activeType, elapsedSeconds, guided, load, pendingNote, sound, userId]);
+
+  const completeSession = useCallback(async () => {
+    if (autoSaveInFlightRef.current) return;
+    autoSaveInFlightRef.current = true;
+    try {
+      stopSession();
+      await playEndingChime();
+      guidedSpeak("Beautiful work. Session complete. Session saved.");
+      await saveCompletedSession();
+    } finally {
+      autoSaveInFlightRef.current = false;
+    }
+  }, [guidedSpeak, playEndingChime, saveCompletedSession, stopSession]);
 
   const beginSession = useCallback(
     async (type: MeditationTypeDef, minutes: number) => {
@@ -241,6 +279,7 @@ export function MeditationPage() {
       setRemainingSeconds(sec);
       setPendingNote("");
       setShowNoteInput(false);
+      setLastCompletedSessionId(null);
       setRunning(true);
       await startAmbient(sound);
       guidedSpeak(`${type.title}. Settle into your breath and begin.`);
@@ -268,31 +307,24 @@ export function MeditationPage() {
     };
   }, [running, completeSession]);
 
-  const saveCompletedSession = useCallback(async () => {
-    if (!userId || !activeType) return;
-    if (elapsedSeconds <= 0) return;
-    const now = new Date().toISOString();
-    const row: MeditationSessionRow = {
-      id: crypto.randomUUID(),
-      user_id: userId,
-      session_date: format(new Date(), "yyyy-MM-dd"),
-      meditation_type: activeType.id,
-      duration_seconds: elapsedSeconds,
-      note: pendingNote.trim() ? pendingNote.trim().slice(0, 1000) : null,
-      soundscape: sound,
-      guided,
-      created_at: now,
-      updated_at: now,
+  const saveNoteForCompletedSession = useCallback(async () => {
+    if (!userId || !lastCompletedSessionId) return;
+    const note = pendingNote.trim() ? pendingNote.trim().slice(0, 1000) : null;
+    const updatedAt = new Date().toISOString();
+    await updateMeditationSessionNoteLocal(userId, lastCompletedSessionId, note, updatedAt);
+    const op: MeditationOutboxOp = {
+      kind: "session_note_update",
+      sessionId: lastCompletedSessionId,
+      note,
+      updatedAt,
     };
-    await upsertMeditationSessionLocal(row);
-    const op: MeditationOutboxOp = { kind: "session_create", row };
     await enqueueMeditationOutbox(userId, op);
     await flushMeditationOutbox(userId);
     await load();
-    setActiveType(null);
     setShowNoteInput(false);
     setPendingNote("");
-  }, [activeType, elapsedSeconds, guided, load, pendingNote, sound, userId]);
+    setLastCompletedSessionId(null);
+  }, [lastCompletedSessionId, load, pendingNote, userId]);
 
   const calendar = useMemo(() => {
     const now = new Date();
@@ -300,7 +332,7 @@ export function MeditationPage() {
     const m = now.getMonth();
     const first = new Date(y, m, 1);
     const last = new Date(y, m + 1, 0);
-    const done = new Set(rows.map((r) => r.session_date));
+    const done = new Set(rows.map((r) => r.date));
     const cells: Array<{ day: number; key: string; done: boolean }> = [];
     for (let d = 1; d <= last.getDate(); d += 1) {
       const key = format(new Date(y, m, d), "yyyy-MM-dd");
@@ -341,6 +373,13 @@ export function MeditationPage() {
           </article>
         ))}
       </section>
+      <Link
+        href="/meditation/consistency"
+        className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl border border-kal-border bg-kal-card px-4 py-3 text-sm font-semibold text-kal-text transition-colors hover:bg-kal-card-muted"
+      >
+        <CalendarDays className="h-5 w-5 text-kal-accent" />
+        View Meditation Consistency
+      </Link>
 
       <section className="rounded-2xl border border-kal-border bg-kal-card p-6">
         <div className="flex flex-wrap items-center gap-3">
@@ -430,11 +469,12 @@ export function MeditationPage() {
             />
             <button
               type="button"
-              onClick={() => void saveCompletedSession()}
+              onClick={() => void saveNoteForCompletedSession()}
+              disabled={!lastCompletedSessionId}
               className="mt-3 inline-flex items-center gap-2 rounded-xl bg-kal-accent px-4 py-2 text-sm font-semibold text-kal-accent-foreground"
             >
               <CheckCircle2 className="h-4 w-4" />
-              Save session
+              Save note
             </button>
           </div>
         ) : null}
@@ -496,14 +536,14 @@ export function MeditationPage() {
             <li key={r.id} className="rounded-xl border border-kal-border bg-kal-page p-3 text-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="font-medium text-kal-text">
-                  {MEDITATION_TYPES.find((t) => t.id === r.meditation_type)?.title ?? r.meditation_type}
+                  {MEDITATION_TYPES.find((t) => t.id === r.session_type)?.title ?? r.session_type}
                 </p>
-                <p className="text-kal-muted">{r.session_date}</p>
+                <p className="text-kal-muted">{r.date}</p>
               </div>
               <p className="mt-1 text-kal-text-secondary">
                 {Math.round(r.duration_seconds / 60)} min · {r.guided ? "Guided" : "Silent"} · {r.soundscape ?? "No sound"}
               </p>
-              {r.note ? <p className="mt-1 text-kal-muted">{r.note}</p> : null}
+              {r.notes ? <p className="mt-1 text-kal-muted">{r.notes}</p> : null}
             </li>
           ))}
         </ul>

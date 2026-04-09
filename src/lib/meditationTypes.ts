@@ -79,12 +79,19 @@ export type MeditationSound = (typeof MEDITATION_SOUNDS)[number];
 export type MeditationSessionRow = {
   id: string;
   user_id: string;
-  session_date: string;
-  meditation_type: MeditationTypeId;
-  duration_seconds: number;
-  note: string | null;
-  soundscape: MeditationSound | null;
+  date: string;
+  duration_minutes: number;
+  session_type: MeditationTypeId;
+  notes: string | null;
   guided: boolean;
+  soundscape: MeditationSound | null;
+  duration_seconds: number;
+  // Legacy compatibility for previously-synced rows.
+  session_date?: string;
+  meditation_type?: MeditationTypeId;
+  note?: string | null;
+  updated_at?: string;
+  guided_mode?: boolean;
+  background_sound?: MeditationSound | null;
   created_at: string;
-  updated_at: string;
 };

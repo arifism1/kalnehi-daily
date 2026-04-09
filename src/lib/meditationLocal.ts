@@ -3,10 +3,17 @@ import { openDB, type DBSchema, type IDBPDatabase } from "idb";
 
 import type { MeditationSessionRow } from "@/lib/meditationTypes";
 
-export type MeditationOutboxOp = {
-  kind: "session_create";
-  row: MeditationSessionRow;
-};
+export type MeditationOutboxOp =
+  | {
+      kind: "session_create";
+      row: MeditationSessionRow;
+    }
+  | {
+      kind: "session_note_update";
+      sessionId: string;
+      note: string | null;
+      updatedAt: string;
+    };
 
 type LocalRow = {
   key: string;
@@ -88,7 +95,24 @@ export async function getMeditationSessions(userId: string): Promise<MeditationS
   const db = await getDb();
   const row = await db.get("sessions", SESSIONS_KEY);
   if (!row || row.userId !== userId) return [];
-  return [...row.rows].sort((a, b) => b.created_at.localeCompare(a.created_at));
+  return [...row.rows]
+    .map((r) => ({
+      ...r,
+      date: r.date ?? r.session_date ?? format(new Date(r.created_at), "yyyy-MM-dd"),
+      session_type: r.session_type ?? r.meditation_type ?? "focus_breath",
+      notes: r.notes ?? r.note ?? null,
+      duration_minutes:
+        typeof r.duration_minutes === "number"
+          ? r.duration_minutes
+          : Math.max(1, Math.floor((r.duration_seconds ?? 0) / 60)),
+      duration_seconds:
+        typeof r.duration_seconds === "number"
+          ? r.duration_seconds
+          : Math.max(0, (r.duration_minutes ?? 0) * 60),
+      guided: typeof r.guided === "boolean" ? r.guided : (r.guided_mode ?? true),
+      soundscape: r.soundscape ?? r.background_sound ?? null,
+    }))
+    .sort((a, b) => b.created_at.localeCompare(a.created_at));
 }
 
 export async function saveMeditationSessions(
@@ -112,6 +136,24 @@ export async function upsertMeditationSessionLocal(row: MeditationSessionRow): P
   if (ix >= 0) next[ix] = row;
   else next.unshift(row);
   await saveMeditationSessions(row.user_id, next);
+}
+
+export async function updateMeditationSessionNoteLocal(
+  userId: string,
+  sessionId: string,
+  note: string | null,
+  _updatedAt: string,
+): Promise<void> {
+  const current = await getMeditationSessions(userId);
+  const ix = current.findIndex((x) => x.id === sessionId);
+  if (ix < 0) return;
+  const next = [...current];
+  next[ix] = {
+    ...next[ix],
+    notes: note,
+    note,
+  };
+  await saveMeditationSessions(userId, next);
 }
 
 export async function enqueueMeditationOutbox(
@@ -149,7 +191,7 @@ export async function bumpMeditationOutboxFail(id: string): Promise<void> {
 }
 
 export function computeMeditationStreak(rows: MeditationSessionRow[], todayIso: string): number {
-  const doneDays = new Set(rows.map((r) => r.session_date));
+  const doneDays = new Set(rows.map((r) => r.date));
   let n = 0;
   let d = new Date(`${todayIso}T00:00:00`);
   while (true) {
@@ -166,6 +208,6 @@ export function computeMonthTotalSeconds(
   monthPrefix: string,
 ): number {
   return rows
-    .filter((r) => r.session_date.startsWith(monthPrefix))
+    .filter((r) => r.date.startsWith(monthPrefix))
     .reduce((sum, r) => sum + r.duration_seconds, 0);
 }

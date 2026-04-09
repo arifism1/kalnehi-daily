@@ -151,41 +151,38 @@ export type Database = {
         }
         Relationships: []
       }
-      user_meditation_sessions: {
+      meditation_sessions: {
         Row: {
           created_at: string
-          duration_seconds: number
+          date: string
+          duration_minutes: number
           guided: boolean
           id: string
-          meditation_type: string
-          note: string | null
-          session_date: string
+          notes: string | null
+          session_type: string
           soundscape: string | null
-          updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
-          duration_seconds: number
+          date: string
+          duration_minutes: number
           guided?: boolean
           id?: string
-          meditation_type: string
-          note?: string | null
-          session_date: string
+          notes?: string | null
+          session_type: string
           soundscape?: string | null
-          updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
-          duration_seconds?: number
+          date?: string
+          duration_minutes?: number
           guided?: boolean
           id?: string
-          meditation_type?: string
-          note?: string | null
-          session_date?: string
+          notes?: string | null
+          session_type?: string
           soundscape?: string | null
-          updated_at?: string
           user_id?: string
         }
         Relationships: []
