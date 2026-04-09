@@ -19,6 +19,7 @@ import {
   ScrollText,
   Settings,
   Sparkles,
+  Sunrise,
   Timer,
   UserRound,
   Video,
@@ -94,6 +95,7 @@ const MENU_SECTIONS: { title: string; items: NavItem[] }[] = [
     items: [
       { href: "/habits", label: "Habit Maker", Icon: ListChecks },
       { href: "/motivation", label: "Personal Motivation", Icon: Heart },
+      { href: "/meditation", label: "Meditation", Icon: Sunrise },
       { href: "/doubts", label: "Doubt Tracker", Icon: CircleHelp },
     ],
   },

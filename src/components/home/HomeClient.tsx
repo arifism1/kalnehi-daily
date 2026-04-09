@@ -30,6 +30,7 @@ import { MotivationWallpaper } from "./MotivationWallpaper";
 import { MotivationStrip } from "./MotivationStrip";
 import { RealitySnapshot } from "./RealitySnapshot";
 import { ThreeDayStrip } from "./ThreeDayStrip";
+import { QuickMeditationCards } from "./QuickMeditationCards";
 
 export function HomeClient() {
   const router = useRouter();
@@ -39,6 +40,7 @@ export function HomeClient() {
     router.prefetch("/syllabus");
     router.prefetch("/plan-my-day");
     router.prefetch("/motivation");
+    router.prefetch("/meditation");
     router.prefetch("/habits");
   }, [router]);
   useEffect(() => {
@@ -260,6 +262,8 @@ export function HomeClient() {
         tomorrowMarks={tomorrowMarks}
         tomorrowMinutes={tomorrowMinutes}
       />
+
+      <QuickMeditationCards />
 
       <MissedTasks />
     </div>
