@@ -22,6 +22,7 @@ import {
 
 import { upsertUserProfile } from "@/actions/profile";
 import { CuetDomainSubjectPick } from "@/components/profile/CuetDomainSubjectPick";
+import { CancelSubscriptionButton } from "@/components/subscription/CancelSubscriptionButton";
 import { InstallPWA } from "@/components/InstallPWA";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
@@ -589,6 +590,7 @@ export function ProfileForm() {
           </div>
         </Row>
         <div className="border-t border-kal-border px-4 py-3">
+          <CancelSubscriptionButton className="mb-3 flex w-full min-h-[48px] items-center justify-center rounded-xl border border-[var(--kal-danger-border)] bg-[var(--kal-danger-soft)] py-3 text-[15px] font-semibold text-[var(--kal-danger-text)]" />
           <button
             type="button"
             onClick={() => setSignOutConfirmOpen(true)}

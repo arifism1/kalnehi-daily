@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
+import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useOnboardingStore } from "@/store/useOnboardingStore";
 
@@ -23,11 +24,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const initialized = useAuthStore((s) => s.initialized);
   const session = useAuthStore((s) => s.session);
   const onboardingCompleted = useOnboardingStore((s) => s.onboardingCompleted);
+  const { loading: subscriptionLoading, hasPaidAccess } = useSubscriptionAccess();
 
   const publicAuthPath =
     pathname === "/auth" || pathname === "/auth/reset";
   const meditationPath =
     pathname === "/meditation" || pathname.startsWith("/meditation/");
+  const pricingPath = pathname === "/pricing";
+  const legalPath =
+    pathname === "/privacy" ||
+    pathname === "/terms" ||
+    pathname === "/refund" ||
+    pathname === "/return" ||
+    pathname === "/shipping" ||
+    pathname === "/policies" ||
+    pathname === "/about";
+  const alwaysAllowedPath = publicAuthPath || pathname === "/onboarding" || pricingPath || legalPath;
 
   useEffect(() => {
     if (!initialized) return;
@@ -53,8 +65,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       pathname !== "/auth/reset"
     ) {
       router.replace("/onboarding");
+      return;
     }
-  }, [initialized, session, pathname, router, onboardingCompleted, meditationPath]);
+
+    if (authed && onboardingCompleted && !subscriptionLoading) {
+      if (!hasPaidAccess && !pricingPath && !legalPath) {
+        router.replace("/pricing");
+        return;
+      }
+    }
+  }, [
+    initialized,
+    session,
+    pathname,
+    router,
+    onboardingCompleted,
+    meditationPath,
+    hasPaidAccess,
+    subscriptionLoading,
+    pricingPath,
+    legalPath,
+  ]);
 
   if (!initialized) {
     return <LoadingScreen />;
@@ -76,6 +107,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     pathname !== "/auth" &&
     pathname !== "/auth/reset"
   ) {
+    return <LoadingScreen />;
+  }
+
+  if (session && onboardingCompleted && subscriptionLoading && !alwaysAllowedPath) {
+    return <LoadingScreen />;
+  }
+
+  if (session && onboardingCompleted && !subscriptionLoading && !hasPaidAccess && !pricingPath && !legalPath) {
     return <LoadingScreen />;
   }
 
