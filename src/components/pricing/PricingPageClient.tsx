@@ -41,6 +41,20 @@ const TIER_ICONS: Record<SubscriptionTier, React.ReactNode> = {
   pro_max: <Sparkles className="h-5 w-5" />,
 };
 
+function trialAiSummary(config: TierConfig): string {
+  if (config.trialPhotoScansLimit === 0 && config.trialVoiceMinutesLimit === 0) {
+    return "0 scans + 0 voice minutes during trial";
+  }
+  return `Only ${config.trialPhotoScansLimit} scans + ${config.trialVoiceMinutesLimit} voice minutes during trial`;
+}
+
+function fullAiSummary(config: TierConfig): string {
+  if (config.photoScansPerMonth === 0 && config.voiceMinutesPerMonth === 0) {
+    return "0 scans + 0 voice minutes / month (no AI)";
+  }
+  return `${config.photoScansPerMonth} scans + ${config.voiceMinutesPerMonth} voice min / month after trial`;
+}
+
 function TierCard({
   config,
   highlighted,
@@ -66,15 +80,13 @@ function TierCard({
   } else if (busy) {
     buttonLabel = "Opening checkout...";
   } else {
-    buttonLabel = `Start Trial — ${config.trialPriceDisplay}`;
+    buttonLabel = `Start 3-day trial — ${config.trialPriceDisplay}`;
   }
 
   return (
     <article
       className={`relative flex flex-col rounded-2xl border-2 bg-kal-card p-5 kal-shadow-card ${
-        highlighted
-          ? "border-kal-accent"
-          : "border-kal-border"
+        highlighted ? "border-kal-accent" : "border-kal-border"
       }`}
     >
       {highlighted && (
@@ -92,15 +104,22 @@ function TierCard({
 
       <p className="mt-1 text-xs text-kal-text-secondary">{config.tagline}</p>
 
-      <div className="mt-4 flex items-baseline gap-1">
-        <span className="text-2xl font-bold text-kal-text">
-          {config.monthlyPriceDisplay}
-        </span>
-        <span className="text-sm text-kal-text-secondary">/month</span>
+      <div className="mt-4 rounded-xl border border-kal-accent/40 bg-kal-accent/10 px-3 py-3">
+        <p className="text-lg font-bold leading-snug text-kal-text">
+          {config.trialPriceDisplay} for 3 days
+        </p>
+        <p className="mt-1 text-sm font-semibold text-kal-text">
+          → then {config.monthlyPriceDisplay}/month
+        </p>
+        <p className="mt-2 text-xs font-medium leading-relaxed text-kal-text-secondary">
+          {trialAiSummary(config)}
+        </p>
       </div>
-      <p className="mt-1 text-xs text-kal-text-secondary">
-        {config.trialPriceDisplay} for 3-day trial
-      </p>
+
+      <div className="mt-3 text-xs text-kal-text-secondary">
+        <span className="font-medium text-kal-text">Full plan: </span>
+        {fullAiSummary(config)}
+      </div>
 
       <ul className="mt-4 flex-1 space-y-2">
         {config.benefits.map((b) => (
@@ -115,12 +134,7 @@ function TierCard({
         <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
           No AI features (no voice dictation, no handwritten scanner)
         </p>
-      ) : (
-        <p className="mt-3 rounded-lg border border-kal-border bg-kal-card-muted px-3 py-2 text-xs text-kal-text-secondary">
-          {config.photoScansPerMonth} photo scans + {config.voiceMinutesPerMonth} voice
-          min / month
-        </p>
-      )}
+      ) : null}
 
       <button
         type="button"
@@ -150,54 +164,51 @@ export function PricingPageClient() {
   const showCancel =
     subscriptionStatus === "trial" || subscriptionStatus === "active";
 
-  const startCheckout = useCallback(
-    async (tier: SubscriptionTier) => {
-      setBusy(true);
-      setStatusMsg(null);
-      try {
-        const created = await createRazorpayTrialSubscription(tier);
-        if (!created.ok) {
-          setStatusMsg(created.error);
-          return;
-        }
-
-        if (typeof window === "undefined" || !window.Razorpay) {
-          setStatusMsg("Unable to load payment window. Refresh and try again.");
-          return;
-        }
-
-        const tierConfig = TIERS[tier];
-        const rzp = new window.Razorpay({
-          key: created.keyId,
-          name: "Kalnehi Daily",
-          description: `${tierConfig.name} 3-Day Trial (${tierConfig.trialPriceDisplay})`,
-          subscription_id: created.subscriptionId,
-          amount: created.amountPaise,
-          currency: "INR",
-          theme: { color: "#ef4444" },
-          handler: async (response: RazorpayCheckoutResponse) => {
-            const updated = await activateRazorpaySubscription({ ...response });
-            if (!updated.ok) {
-              setStatusMsg(updated.error);
-              return;
-            }
-            setStatusMsg(
-              `${tierConfig.name} trial started! ${tierConfig.monthlyPriceDisplay}/month auto-charges after 3 days.`,
-            );
-            window.location.assign("/");
-          },
-        });
-        rzp.open();
-      } catch (error) {
-        setStatusMsg(
-          error instanceof Error ? error.message : "Checkout failed.",
-        );
-      } finally {
-        setBusy(false);
+  const startCheckout = useCallback(async (tier: SubscriptionTier) => {
+    setBusy(true);
+    setStatusMsg(null);
+    try {
+      const created = await createRazorpayTrialSubscription(tier);
+      if (!created.ok) {
+        setStatusMsg(created.error);
+        return;
       }
-    },
-    [],
-  );
+
+      if (typeof window === "undefined" || !window.Razorpay) {
+        setStatusMsg("Unable to load payment window. Refresh and try again.");
+        return;
+      }
+
+      const tierConfig = TIERS[tier];
+      const rzp = new window.Razorpay({
+        key: created.keyId,
+        name: "Kalnehi Daily",
+        description: `${tierConfig.name} 3-Day Trial (${tierConfig.trialPriceDisplay})`,
+        subscription_id: created.subscriptionId,
+        amount: created.amountPaise,
+        currency: "INR",
+        theme: { color: "#ef4444" },
+        handler: async (response: RazorpayCheckoutResponse) => {
+          const updated = await activateRazorpaySubscription({ ...response });
+          if (!updated.ok) {
+            setStatusMsg(updated.error);
+            return;
+          }
+          setStatusMsg(
+            `${tierConfig.name} trial started. Your subscription will auto-renew at ${tierConfig.monthlyPriceDisplay}/month after the trial (Razorpay handles the recurring charge).`,
+          );
+          window.location.assign("/");
+        },
+      });
+      rzp.open();
+    } catch (error) {
+      setStatusMsg(
+        error instanceof Error ? error.message : "Checkout failed.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }, []);
 
   const statusBanner = useMemo(() => {
     if (subscriptionStatus === "expired") {
@@ -238,9 +249,9 @@ export function PricingPageClient() {
             Pick the plan that fits your goals
           </h1>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-kal-text-secondary">
-            Every plan includes a 3-day trial. After the trial, your chosen
-            plan auto-renews monthly for 12 months. Cancel anytime before day 3
-            to avoid charges.
+            Kalnehi Daily is fully paid — there is no free tier. Start with a
+            3-day trial, then your plan renews monthly for up to 12 cycles.
+            Cancel anytime before the next charge if you change your mind.
           </p>
         </header>
 

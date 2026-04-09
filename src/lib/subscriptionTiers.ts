@@ -132,6 +132,9 @@ export type TierConfig = {
   trialPricePaise: number;
   trialPriceDisplay: string;
   trialDays: number;
+  /** AI caps during the 3-day trial (separate from full monthly quota). */
+  trialPhotoScansLimit: number;
+  trialVoiceMinutesLimit: number;
   photoScansPerMonth: number;
   voiceMinutesPerMonth: number;
   maxTasksPerDay: number | null;
@@ -148,6 +151,8 @@ export const TIERS: Record<SubscriptionTier, TierConfig> = {
     trialPricePaise: 900,
     trialPriceDisplay: "₹9",
     trialDays: 3,
+    trialPhotoScansLimit: 0,
+    trialVoiceMinutesLimit: 0,
     photoScansPerMonth: 0,
     voiceMinutesPerMonth: 0,
     maxTasksPerDay: 10,
@@ -167,6 +172,8 @@ export const TIERS: Record<SubscriptionTier, TierConfig> = {
     trialPricePaise: 2100,
     trialPriceDisplay: "₹21",
     trialDays: 3,
+    trialPhotoScansLimit: 5,
+    trialVoiceMinutesLimit: 10,
     photoScansPerMonth: 20,
     voiceMinutesPerMonth: 40,
     maxTasksPerDay: null,
@@ -181,8 +188,8 @@ export const TIERS: Record<SubscriptionTier, TierConfig> = {
       "Personal Motivation Vault",
       "Meditation + Consistency",
       "Doubt Tracker",
-      "20 AI photo scans / month",
-      "40 AI voice minutes / month",
+      "20 AI photo scans / month (after trial)",
+      "40 AI voice minutes / month (after trial)",
     ],
   },
   pro_max: {
@@ -190,17 +197,19 @@ export const TIERS: Record<SubscriptionTier, TierConfig> = {
     name: "Pro Max",
     monthlyPricePaise: 49900,
     monthlyPriceDisplay: "₹499",
-    trialPricePaise: 2900,
-    trialPriceDisplay: "₹29",
+    trialPricePaise: 4900,
+    trialPriceDisplay: "₹49",
     trialDays: 3,
+    trialPhotoScansLimit: 10,
+    trialVoiceMinutesLimit: 20,
     photoScansPerMonth: 50,
     voiceMinutesPerMonth: 80,
     maxTasksPerDay: null,
     tagline: "Maximum power",
     benefits: [
       "Everything in Pro",
-      "50 AI photo scans / month",
-      "80 AI voice minutes / month",
+      "50 AI photo scans / month (after trial)",
+      "80 AI voice minutes / month (after trial)",
       "Priority support",
     ],
   },
@@ -242,45 +251,75 @@ export function canUseAi(tier: string | null | undefined): boolean {
   return !isFeatureBlocked(tier, "ai_photo_scan");
 }
 
-export function getPhotoScansLimit(tier: string | null | undefined): number {
-  return getTierConfig(tier).photoScansPerMonth;
+export function getPhotoScansLimit(
+  tier: string | null | undefined,
+  isTrialPeriod: boolean,
+): number {
+  const c = getTierConfig(tier);
+  return isTrialPeriod ? c.trialPhotoScansLimit : c.photoScansPerMonth;
 }
 
-export function getVoiceMinutesLimit(tier: string | null | undefined): number {
-  return getTierConfig(tier).voiceMinutesPerMonth;
+export function getVoiceMinutesLimit(
+  tier: string | null | undefined,
+  isTrialPeriod: boolean,
+): number {
+  const c = getTierConfig(tier);
+  return isTrialPeriod ? c.trialVoiceMinutesLimit : c.voiceMinutesPerMonth;
 }
 
 export function remainingPhotoScans(
   tier: string | null | undefined,
   used: number,
   bonus: number,
+  isTrialPeriod: boolean,
 ): number {
-  return Math.max(0, getPhotoScansLimit(tier) + bonus - used);
+  return Math.max(0, getPhotoScansLimit(tier, isTrialPeriod) + bonus - used);
 }
 
 export function remainingVoiceMinutes(
   tier: string | null | undefined,
   used: number,
   bonus: number,
+  isTrialPeriod: boolean,
 ): number {
-  return Math.max(0, getVoiceMinutesLimit(tier) + bonus - used);
+  return Math.max(0, getVoiceMinutesLimit(tier, isTrialPeriod) + bonus - used);
 }
 
-export const EXTRA_CREDITS = {
-  photoScans25: {
-    id: "photo_scans_25",
-    label: "+25 Photo Scans",
-    amount: 25,
-    pricePaise: 4900,
-    priceDisplay: "₹49",
-    type: "photo_scans" as const,
-  },
-  voiceMinutes50: {
-    id: "voice_minutes_50",
-    label: "+50 Voice Minutes",
-    amount: 50,
-    pricePaise: 7900,
-    priceDisplay: "₹79",
-    type: "voice_minutes" as const,
-  },
+export type ExtraCreditPack = {
+  id: string;
+  label: string;
+  amount: number;
+  pricePaise: number;
+  priceDisplay: string;
+  type: "photo_scans" | "voice_minutes";
 };
+
+export const EXTRA_CREDIT_PACKS: ExtraCreditPack[] = [
+  {
+    id: "photo_scans_10",
+    label: "10 Extra Photo Scans",
+    amount: 10,
+    pricePaise: 9900,
+    priceDisplay: "₹99",
+    type: "photo_scans",
+  },
+  {
+    id: "photo_scans_30",
+    label: "30 Extra Photo Scans",
+    amount: 30,
+    pricePaise: 24900,
+    priceDisplay: "₹249",
+    type: "photo_scans",
+  },
+  {
+    id: "voice_minutes_20",
+    label: "20 Extra Voice Minutes",
+    amount: 20,
+    pricePaise: 14900,
+    priceDisplay: "₹149",
+    type: "voice_minutes",
+  },
+];
+
+export const EXTRA_CREDITS_BY_ID: Record<string, ExtraCreditPack> =
+  Object.fromEntries(EXTRA_CREDIT_PACKS.map((p) => [p.id, p]));

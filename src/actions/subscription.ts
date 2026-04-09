@@ -7,7 +7,16 @@ import { createClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/types/supabase";
 import type { SubscriptionTier } from "@/lib/subscriptionTiers";
-import { TIERS } from "@/lib/subscriptionTiers";
+import {
+  EXTRA_CREDITS_BY_ID,
+  getPhotoScansLimit,
+  getVoiceMinutesLimit,
+  TIERS,
+} from "@/lib/subscriptionTiers";
+import {
+  firstOfCurrentMonthDateString,
+  needsMonthlyUsageReset,
+} from "@/lib/subscriptionUsage";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type SubscriptionStatus = "trial" | "active" | "expired" | "cancelled";
@@ -35,6 +44,7 @@ const TOTAL_BILLING_CYCLES = 12;
 const TRIAL_DAYS = 3;
 
 const RAZORPAY_ID_RE = /^[a-zA-Z0-9_]{14,30}$/;
+const RAZORPAY_ORDER_ID_RE = /^order_[a-zA-Z0-9]+$/;
 const HEX_SIGNATURE_RE = /^[a-f0-9]{64}$/;
 
 // ---------------------------------------------------------------------------
@@ -149,6 +159,21 @@ async function upsertProfileByUserId(
   }
 
   return { ok: true as const };
+}
+
+async function resetMonthlyAiUsageCounters(userId: string) {
+  const admin = getAdminClient();
+  if (!admin) return;
+  const nowIso = new Date().toISOString();
+  await admin
+    .from("user_profiles")
+    .update({
+      photo_scans_used_this_month: 0,
+      voice_minutes_used_this_month: 0,
+      usage_reset_date: firstOfCurrentMonthDateString(),
+      updated_at: nowIso,
+    })
+    .eq("user_id", userId);
 }
 
 // ---------------------------------------------------------------------------
@@ -297,6 +322,8 @@ export async function activateRazorpaySubscription(params: {
   });
   if (!updated.ok) return updated;
 
+  await resetMonthlyAiUsageCounters(userId);
+
   return { ok: true, subscriptionId };
 }
 
@@ -383,19 +410,21 @@ export async function incrementPhotoScanUsage(): Promise<
   const { data, error } = await admin
     .from("user_profiles")
     .select(
-      "subscription_tier, photo_scans_used_this_month, bonus_photo_scans, usage_reset_date",
+      "subscription_tier, subscription_status, photo_scans_used_this_month, bonus_photo_scans, usage_reset_date",
     )
     .eq("user_id", userId)
     .maybeSingle();
 
   if (error || !data) return { ok: false, error: "Unable to check usage." };
 
-  const resetNeeded = needsMonthlyReset(data.usage_reset_date);
+  const resetNeeded = needsMonthlyUsageReset(data.usage_reset_date);
   const currentUsed = resetNeeded ? 0 : (data.photo_scans_used_this_month ?? 0);
   const bonus = data.bonus_photo_scans ?? 0;
 
-  const tierConfig = TIERS[data.subscription_tier as SubscriptionTier] ?? TIERS.pro;
-  const totalLimit = tierConfig.photoScansPerMonth + bonus;
+  const rawTier = data.subscription_tier;
+  const tierResolved: SubscriptionTier = isValidTier(rawTier) ? rawTier : "pro";
+  const isTrial = data.subscription_status === "trial";
+  const totalLimit = getPhotoScansLimit(tierResolved, isTrial) + bonus;
 
   if (currentUsed >= totalLimit) {
     return { ok: false, error: "Monthly photo scan limit reached." };
@@ -407,7 +436,7 @@ export async function incrementPhotoScanUsage(): Promise<
   };
   if (resetNeeded) {
     patch.voice_minutes_used_this_month = 0;
-    patch.usage_reset_date = todayDateString();
+    patch.usage_reset_date = firstOfCurrentMonthDateString();
   }
 
   const { error: updateErr } = await admin
@@ -434,19 +463,21 @@ export async function incrementVoiceMinuteUsage(
   const { data, error } = await admin
     .from("user_profiles")
     .select(
-      "subscription_tier, voice_minutes_used_this_month, bonus_voice_minutes, usage_reset_date",
+      "subscription_tier, subscription_status, voice_minutes_used_this_month, bonus_voice_minutes, usage_reset_date",
     )
     .eq("user_id", userId)
     .maybeSingle();
 
   if (error || !data) return { ok: false, error: "Unable to check usage." };
 
-  const resetNeeded = needsMonthlyReset(data.usage_reset_date);
+  const resetNeeded = needsMonthlyUsageReset(data.usage_reset_date);
   const currentUsed = resetNeeded ? 0 : (data.voice_minutes_used_this_month ?? 0);
   const bonus = data.bonus_voice_minutes ?? 0;
 
-  const tierConfig = TIERS[data.subscription_tier as SubscriptionTier] ?? TIERS.pro;
-  const totalLimit = tierConfig.voiceMinutesPerMonth + bonus;
+  const rawTier = data.subscription_tier;
+  const tierResolved: SubscriptionTier = isValidTier(rawTier) ? rawTier : "pro";
+  const isTrial = data.subscription_status === "trial";
+  const totalLimit = getVoiceMinutesLimit(tierResolved, isTrial) + bonus;
 
   if (currentUsed + minutes > totalLimit) {
     return { ok: false, error: "Monthly voice minutes limit reached." };
@@ -458,7 +489,7 @@ export async function incrementVoiceMinuteUsage(
   };
   if (resetNeeded) {
     patch.photo_scans_used_this_month = 0;
-    patch.usage_reset_date = todayDateString();
+    patch.usage_reset_date = firstOfCurrentMonthDateString();
   }
 
   const { error: updateErr } = await admin
@@ -518,18 +549,152 @@ export async function addBonusCredits(
 }
 
 // ---------------------------------------------------------------------------
-// Monthly reset helper
+// One-time extra credits (Razorpay Order + Checkout)
 // ---------------------------------------------------------------------------
 
-function todayDateString(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+type CreateExtraCreditsOrderResult =
+  | { ok: true; keyId: string; orderId: string; amountPaise: number }
+  | { ok: false; error: string };
+
+export async function createExtraCreditsOrder(
+  packId: string,
+): Promise<CreateExtraCreditsOrderResult> {
+  const pack = EXTRA_CREDITS_BY_ID[packId];
+  if (!pack) return { ok: false, error: "Unknown credit pack." };
+
+  const userId = await getAuthedUserId();
+  if (!userId) return { ok: false, error: "Please sign in." };
+
+  const config = getRazorpayConfig();
+  if (!config) return { ok: false, error: "Payment system is not configured yet." };
+
+  const admin = getAdminClient();
+  if (!admin) return { ok: false, error: "Payment system is not configured yet." };
+
+  const { data: profile } = await admin
+    .from("user_profiles")
+    .select("subscription_status, subscription_end_date")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  const st = profile?.subscription_status;
+  const endDate = profile?.subscription_end_date
+    ? new Date(profile.subscription_end_date)
+    : null;
+  const stillHasAccess = endDate && endDate.getTime() > Date.now();
+  const paid =
+    (st === "trial" || st === "active" || st === "cancelled") && stillHasAccess;
+  if (!paid) {
+    return { ok: false, error: "Subscribe to a plan before buying extra credits." };
+  }
+
+  try {
+    const razorpay = getRazorpayClient(config);
+    const receipt = `ec${Date.now()}`.slice(0, 40);
+    const order = (await razorpay.orders.create({
+      amount: pack.pricePaise,
+      currency: "INR",
+      receipt,
+      notes: {
+        kalnehi_user_id: userId,
+        kalnehi_credit_pack: pack.id,
+        kalnehi_credit_type: pack.type,
+        kalnehi_credit_amount: String(pack.amount),
+      },
+    })) as { id: string };
+
+    return {
+      ok: true,
+      keyId: config.keyId,
+      orderId: order.id,
+      amountPaise: pack.pricePaise,
+    };
+  } catch (error) {
+    return { ok: false, error: safeErrorMessage(error) };
+  }
 }
 
-function needsMonthlyReset(lastResetDate: string | null): boolean {
-  if (!lastResetDate) return true;
-  const now = new Date();
-  const last = new Date(lastResetDate);
-  if (Number.isNaN(last.getTime())) return true;
-  return now.getMonth() !== last.getMonth() || now.getFullYear() !== last.getFullYear();
+type VerifyExtraCreditsResult = { ok: true } | { ok: false; error: string };
+
+export async function verifyExtraCreditsPayment(params: {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
+}): Promise<VerifyExtraCreditsResult> {
+  const userId = await getAuthedUserId();
+  if (!userId) return { ok: false, error: "Session expired. Please sign in again." };
+
+  const paymentId = params.razorpay_payment_id?.trim() ?? "";
+  const orderId = params.razorpay_order_id?.trim() ?? "";
+  const signature = params.razorpay_signature?.trim() ?? "";
+
+  if (!RAZORPAY_ID_RE.test(paymentId)) {
+    return { ok: false, error: "Invalid payment reference." };
+  }
+  if (!RAZORPAY_ORDER_ID_RE.test(orderId)) {
+    return { ok: false, error: "Invalid order reference." };
+  }
+  if (!HEX_SIGNATURE_RE.test(signature)) {
+    return { ok: false, error: "Invalid payment signature format." };
+  }
+
+  const config = getRazorpayConfig();
+  if (!config) return { ok: false, error: "Payment system is not configured yet." };
+
+  const expectedSignature = crypto
+    .createHmac("sha256", config.keySecret)
+    .update(`${orderId}|${paymentId}`)
+    .digest("hex");
+
+  if (!timingSafeEqual(expectedSignature, signature)) {
+    return { ok: false, error: "Payment verification failed." };
+  }
+
+  try {
+    const razorpay = getRazorpayClient(config);
+    const order = (await razorpay.orders.fetch(orderId)) as {
+      id?: string;
+      status?: string;
+      amount?: number;
+      notes?: Record<string, string>;
+    };
+    const pay = (await razorpay.payments.fetch(paymentId)) as {
+      status?: string;
+      order_id?: string;
+      amount?: number;
+    };
+
+    if (pay.order_id !== orderId) {
+      return { ok: false, error: "Payment does not match this order." };
+    }
+    if (pay.status !== "captured") {
+      return { ok: false, error: "Payment is not complete." };
+    }
+
+    const owner = order.notes?.kalnehi_user_id?.trim();
+    if (owner !== userId) {
+      return { ok: false, error: "Order does not belong to this account." };
+    }
+
+    const packId = order.notes?.kalnehi_credit_pack?.trim() ?? "";
+    const pack = EXTRA_CREDITS_BY_ID[packId];
+    if (!pack) {
+      return { ok: false, error: "Invalid order metadata." };
+    }
+    const orderAmt = Number(order.amount);
+    const payAmt = Number(pay.amount);
+    if (orderAmt !== pack.pricePaise || payAmt !== pack.pricePaise) {
+      return { ok: false, error: "Payment amount mismatch." };
+    }
+
+    const typeNote = order.notes?.kalnehi_credit_type;
+    const amountNote = order.notes?.kalnehi_credit_amount;
+    if (typeNote !== pack.type || amountNote !== String(pack.amount)) {
+      return { ok: false, error: "Order metadata mismatch." };
+    }
+
+    return await addBonusCredits(pack.type, pack.amount);
+  } catch {
+    return { ok: false, error: "Unable to verify payment." };
+  }
 }

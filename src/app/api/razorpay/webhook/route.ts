@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
+import { firstOfCurrentMonthDateString } from "@/lib/subscriptionUsage";
 import type { Database } from "@/types/supabase";
 
 export const runtime = "nodejs";
@@ -113,7 +114,7 @@ function buildUpdateFromSubscription(payload: WebhookEnvelope): ProfileUpdate | 
 async function applyBySubscriptionId(
   supabase: ReturnType<typeof createAdminClient>,
   subscriptionId: string,
-  patch: Partial<ProfileUpdate>,
+  patch: Record<string, unknown>,
 ) {
   const nowIso = new Date().toISOString();
   const { error } = await supabase
@@ -126,7 +127,7 @@ async function applyBySubscriptionId(
 async function applyByUserId(
   supabase: ReturnType<typeof createAdminClient>,
   userId: string,
-  patch: Partial<ProfileUpdate>,
+  patch: Record<string, unknown>,
 ) {
   const nowIso = new Date().toISOString();
   const { error } = await supabase
@@ -189,13 +190,36 @@ export async function POST(request: Request) {
     const patch = buildUpdateFromSubscription(payload);
     if (!patch) return okResponse({ ignored: true });
 
-    const effectivePatch: Partial<ProfileUpdate> = {
+    const effectivePatch: Record<string, unknown> = {
       ...patch,
       subscription_status: "active",
       subscription_plan: "monthly",
       subscription_tier: inferTier(payload),
       razorpay_subscription_id: subscriptionId ?? patch.razorpay_subscription_id,
     };
+
+    let priorStatus: string | null = null;
+    if (subscriptionId) {
+      const { data: row } = await supabase
+        .from("user_profiles")
+        .select("subscription_status")
+        .eq("razorpay_subscription_id", subscriptionId)
+        .maybeSingle();
+      priorStatus = row?.subscription_status ?? null;
+    } else if (userIdFromNotes) {
+      const { data: row } = await supabase
+        .from("user_profiles")
+        .select("subscription_status")
+        .eq("user_id", userIdFromNotes)
+        .maybeSingle();
+      priorStatus = row?.subscription_status ?? null;
+    }
+
+    if (priorStatus === "trial") {
+      effectivePatch.photo_scans_used_this_month = 0;
+      effectivePatch.voice_minutes_used_this_month = 0;
+      effectivePatch.usage_reset_date = firstOfCurrentMonthDateString();
+    }
 
     let updated = false;
     if (subscriptionId) {
@@ -208,7 +232,7 @@ export async function POST(request: Request) {
   }
 
   if (event === "subscription.cancelled") {
-    const patch: Partial<ProfileUpdate> = {
+    const patch: Record<string, unknown> = {
       subscription_status: "cancelled",
     };
 
@@ -224,7 +248,7 @@ export async function POST(request: Request) {
 
   if (event === "payment.failed") {
     const nowIso = new Date().toISOString();
-    const patch: Partial<ProfileUpdate> = {
+    const patch: Record<string, unknown> = {
       subscription_status: "expired",
       subscription_end_date: nowIso,
     };
