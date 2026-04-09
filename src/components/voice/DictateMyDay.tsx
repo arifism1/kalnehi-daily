@@ -1,24 +1,17 @@
 "use client";
 
 import { addDays, format, parseISO } from "date-fns";
-import {
-  Loader2,
-  Mic,
-  MicOff,
-  Plus,
-  Trash2,
-  Volume2,
-} from "lucide-react";
+import { Loader2, Mic, Plus, Trash2, Volume2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { saveRawVoiceNote } from "@/actions/voiceDictate";
 import type { VoiceDraftTask } from "@/lib/voiceDraftFromGroq";
 import { listVoiceTimelineForDate } from "@/actions/voiceTimeline";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
+import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
 import { getVoicePlannerSnapshot } from "@/lib/taskIdb";
-import { applyOptimisticTaskCreate } from "@/lib/taskMutations";
 import { flushOutbox } from "@/lib/sync";
-import { formatIstSlotRange12h, minutesBetweenHHMM } from "@/lib/voiceIst";
+import { formatIstSlotRange12h } from "@/lib/voiceIst";
 import {
   persistPlannerSnapshotLocal,
   plannerDurationFromTimeInputs,
@@ -28,12 +21,14 @@ import {
   type VoicePlannerTableRow,
 } from "@/lib/voicePlannerSync";
 import { useAuthStore } from "@/store/useAuthStore";
-import type { Task } from "@/store/useTaskStore";
 
 type Phase = "idle" | "listening" | "processing" | "error";
 
-const MAX_SESSION_MS = 60_000;
-const SILENCE_END_MS = 5_000;
+const LANGS: { value: string; label: string }[] = [
+  { value: "en-IN", label: "English (India)" },
+  { value: "hi-IN", label: "Hindi (India)" },
+  { value: "en-US", label: "English (US) fallback" },
+];
 
 function normalizeSpeechTranscript(raw: string): string {
   const parts = raw.trim().split(/\s+/).filter(Boolean);
@@ -43,17 +38,6 @@ function normalizeSpeechTranscript(raw: string): string {
     out.push(p);
   }
   return out.join(" ");
-}
-
-const LANGS: { value: string; label: string }[] = [
-  { value: "en-IN", label: "English (India)" },
-  { value: "hi-IN", label: "Hindi (India)" },
-  { value: "en-US", label: "English (US) fallback" },
-];
-
-function getSpeechRecognitionCtor(): (typeof window)["webkitSpeechRecognition"] | null {
-  if (typeof window === "undefined") return null;
-  return window.SpeechRecognition ?? window.webkitSpeechRecognition ?? null;
 }
 
 type DraftRow = VoicePlannerTableRow;
@@ -105,8 +89,8 @@ export function DictateMyDay() {
   const today = useCalendarDate();
   const [logDate, setLogDate] = useState(today);
   const [lang, setLang] = useState("en-IN");
-  const [phase, setPhase] = useState<Phase>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   /** Groq failed — user can save raw text or edit first */
   const [fallbackPanel, setFallbackPanel] = useState<{
     text: string;
@@ -117,12 +101,6 @@ export function DictateMyDay() {
   const [plannerReady, setPlannerReady] = useState(false);
   const [plannerLoading, setPlannerLoading] = useState(true);
 
-  const recRef = useRef<SpeechRecognition | null>(null);
-  const finalBufRef = useRef("");
-  const interimRef = useRef("");
-  const listeningActiveRef = useRef(false);
-  const sessionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** Row ids known to exist on Supabase for this log date (drives create vs update). */
   const serverKnownIdsRef = useRef<Set<string>>(new Set());
   const prevDraftIdsRef = useRef<Set<string>>(new Set());
@@ -339,38 +317,16 @@ export function DictateMyDay() {
     };
   }, [logDate, user?.id]);
 
-  const cleanupRecognition = useCallback(() => {
-    listeningActiveRef.current = false;
-    if (sessionTimerRef.current) {
-      clearTimeout(sessionTimerRef.current);
-      sessionTimerRef.current = null;
-    }
-    if (silenceTimerRef.current) {
-      clearTimeout(silenceTimerRef.current);
-      silenceTimerRef.current = null;
-    }
-    try {
-      recRef.current?.abort();
-    } catch {
-      /* ignore */
-    }
-    recRef.current = null;
-  }, []);
-
-  useEffect(() => () => cleanupRecognition(), [cleanupRecognition]);
-
   const sendTranscript = useCallback(
-    async (transcript: string) => {
+    async (transcript: string, occurredAt: string) => {
       const cleaned = normalizeSpeechTranscript(transcript);
       if (!cleaned) {
-        setPhase("idle");
         setError("No speech captured. Try again.");
         return;
       }
-      setPhase("processing");
+      setIsProcessing(true);
       setError(null);
       try {
-        const occurredAt = new Date().toISOString();
         const parseRes = await fetch("/api/voice-parse-draft", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -391,57 +347,12 @@ export function DictateMyDay() {
           } else {
             setError(res.error);
           }
-          setPhase("idle");
           return;
         }
         setFallbackPanel(null);
         const chunk = cleaned;
         const newRows = toDraftRows(res.tasks, chunk);
         setDraftRows((prev) => [...prev, ...newRows]);
-        if (user?.id) {
-          for (const row of newRows) {
-            const id = crypto.randomUUID();
-            const now = new Date().toISOString();
-            const estimated = minutesBetweenHHMM(
-              row.startInput || null,
-              row.endInput || null,
-            );
-            const fullTask: Task = {
-              id,
-              user_id: user.id,
-              assigned_date: logDate,
-              status: "pending",
-              name: row.name?.trim() || null,
-              microtopic_id: null,
-              created_at: now,
-              updated_at: now,
-              estimated_minutes: estimated,
-              estimated_time_minutes: estimated,
-              end_time: row.endInput || null,
-              start_time: row.startInput || null,
-              marks_value: null,
-              marks_weight: null,
-              time_spent_seconds: null,
-              source: "voice",
-            };
-            await applyOptimisticTaskCreate(
-              {
-                id,
-                assigned_date: logDate,
-                status: "pending",
-                name: row.name?.trim() || null,
-                microtopic_id: null,
-                start_time: row.startInput || null,
-                end_time: row.endInput || null,
-                estimated_minutes: estimated,
-                estimated_time_minutes: estimated,
-                source: "voice",
-              },
-              user.id,
-              fullTask,
-            );
-          }
-        }
         setDraftTranscript((prev) =>
           chunk
             ? prev
@@ -449,24 +360,51 @@ export function DictateMyDay() {
               : chunk
             : prev,
         );
-        setPhase("idle");
-        finalBufRef.current = "";
       } catch {
         setFallbackPanel({ text: cleaned, editMode: false });
         setDraftTranscript((prev) => {
           if (!cleaned) return prev;
           return prev ? `${prev}\n\n---\n\n${cleaned}` : cleaned;
         });
-        setPhase("idle");
-        finalBufRef.current = "";
+      } finally {
+        setIsProcessing(false);
       }
     },
-    [logDate, user?.id],
+    [logDate],
   );
+
+  const {
+    clearError: clearRecognitionError,
+    error: recognitionError,
+    isListening,
+    isSupported,
+    startListening,
+    stopListening,
+  } = useDeviceSpeechRecognition({
+    lang,
+    maxSessionMs: null,
+    silenceMs: null,
+    onStart: () => {
+      setError(null);
+      setFallbackPanel(null);
+    },
+    onTranscript: ({ transcript, occurredAt }) => {
+      void sendTranscript(transcript, occurredAt);
+    },
+  });
+
+  const activeError = recognitionError ?? error;
+  const phase: Phase = isProcessing
+    ? "processing"
+    : isListening
+      ? "listening"
+      : activeError
+        ? "error"
+        : "idle";
 
   const saveFallbackNote = useCallback(async () => {
     if (!fallbackPanel?.text.trim()) return;
-    setPhase("processing");
+    setIsProcessing(true);
     setError(null);
     try {
       const res = await saveRawVoiceNote({
@@ -476,15 +414,14 @@ export function DictateMyDay() {
       });
       if (!res.ok) {
         setError(res.error);
-        setPhase("idle");
         return;
       }
       setFallbackPanel(null);
-      setPhase("idle");
       await loadPlanner();
     } catch {
       setError("Could not save. Try again.");
-      setPhase("idle");
+    } finally {
+      setIsProcessing(false);
     }
   }, [fallbackPanel, logDate, loadPlanner]);
 
@@ -523,134 +460,6 @@ export function DictateMyDay() {
     }
   }, [user]);
 
-  const flushSession = useCallback(() => {
-    if (sessionTimerRef.current) {
-      clearTimeout(sessionTimerRef.current);
-      sessionTimerRef.current = null;
-    }
-    if (silenceTimerRef.current) {
-      clearTimeout(silenceTimerRef.current);
-      silenceTimerRef.current = null;
-    }
-    if (!listeningActiveRef.current) return;
-    listeningActiveRef.current = false;
-
-    const full = (finalBufRef.current + interimRef.current).trim();
-    finalBufRef.current = "";
-    interimRef.current = "";
-
-    if (!full) {
-      setPhase("idle");
-      setError("No speech captured. Try again.");
-      return;
-    }
-    void sendTranscript(full);
-  }, [sendTranscript]);
-
-  const scheduleSilenceStop = useCallback(() => {
-    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-    silenceTimerRef.current = setTimeout(() => {
-      const rec = recRef.current;
-      if (!rec || !listeningActiveRef.current) return;
-      try {
-        rec.stop();
-      } catch {
-        try { rec.abort(); } catch { /* ignore */ }
-      }
-    }, SILENCE_END_MS);
-  }, []);
-
-  const startListening = useCallback(() => {
-    const Ctor = getSpeechRecognitionCtor();
-    if (!Ctor) {
-      setError(
-        "Speech recognition is not supported in this browser. Try Chrome or your Kalnehi Android app (TWA).",
-      );
-      setPhase("error");
-      return;
-    }
-
-    cleanupRecognition();
-    listeningActiveRef.current = true;
-    finalBufRef.current = "";
-    interimRef.current = "";
-    setError(null);
-    setFallbackPanel(null);
-    setPhase("listening");
-
-    const rec = new Ctor();
-    recRef.current = rec;
-    rec.continuous = true;
-    rec.interimResults = false;
-    rec.lang = lang;
-    rec.maxAlternatives = 1;
-
-    rec.onresult = (event: SpeechRecognitionEvent) => {
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        if (event.results[i].isFinal) {
-          finalBufRef.current += event.results[i][0].transcript;
-        }
-      }
-      scheduleSilenceStop();
-    };
-
-    rec.onerror = (ev: SpeechRecognitionErrorEvent) => {
-      if (ev.error === "aborted") return;
-      if (silenceTimerRef.current) {
-        clearTimeout(silenceTimerRef.current);
-        silenceTimerRef.current = null;
-      }
-      listeningActiveRef.current = false;
-      if (ev.error === "no-speech") {
-        setPhase("idle");
-        return;
-      }
-      setError(
-        ev.error === "not-allowed"
-          ? "Microphone permission denied. Allow mic access in browser settings."
-          : `Speech error: ${ev.error}`,
-      );
-      setPhase("error");
-    };
-
-    rec.onend = () => {
-      flushSession();
-    };
-
-    try {
-      rec.start();
-      sessionTimerRef.current = setTimeout(() => {
-        try {
-          rec.stop();
-        } catch {
-          try {
-            rec.abort();
-          } catch {
-            /* ignore */
-          }
-        }
-      }, MAX_SESSION_MS);
-    } catch {
-      listeningActiveRef.current = false;
-      setError("Could not start microphone. Check permissions.");
-      setPhase("error");
-    }
-  }, [cleanupRecognition, lang, flushSession, scheduleSilenceStop]);
-
-  const stopListening = useCallback(() => {
-    const rec = recRef.current;
-    if (!rec) return;
-    try {
-      rec.stop();
-    } catch {
-      try {
-        rec.abort();
-      } catch {
-        /* ignore */
-      }
-    }
-  }, []);
-
   if (!user) {
     return (
       <p className="rounded-[1rem] border border-[var(--kal-warn-border)] bg-[var(--kal-warn-soft)] px-4 py-3 text-sm text-[var(--kal-warn-text)]">
@@ -670,28 +479,13 @@ export function DictateMyDay() {
           Dictate My Day
         </h1>
         <p className="mt-2 max-w-xl text-sm leading-relaxed text-kal-muted">
-          Tap the mic and speak in English.
-          <br />
-          We turn each note into a structured timeline entry (study blocks, breaks,
-          mocks, and more).
-          <br />
-          If the AI ever hiccups, your words are never lost — you can save them as a
-          raw note.
+          Transcription happens on your device with the browser&apos;s speech engine.
+          Only the final text is sent to Groq so it can turn your note into clean,
+          editable draft tasks.
         </p>
-        <div className="mt-3 max-w-xl rounded-xl border border-kal-border bg-kal-card-muted px-3 py-2.5 text-sm leading-relaxed text-kal-muted">
-          <p className="font-medium text-kal-text-secondary">
-            You may say it like this:
-          </p>
-          <ul className="mt-2 list-none space-y-1 pl-0">
-            <li>• Study kinematics from 10 AM to 11 AM</li>
-            <li>• Take a 15 minute break now</li>
-            <li>• Revise organic chemistry for next 45 minutes</li>
-            <li>• 10 minute gym session after dinner</li>
-          </ul>
-        </div>
         <p className="mt-3 rounded-xl border border-kal-border bg-kal-card-muted px-3 py-2 text-xs leading-relaxed text-kal-muted">
-          <span className="font-medium text-kal-text-secondary">Tip:</span> Short bursts work
-          best.
+          <span className="font-medium text-kal-text-secondary">Tip:</span> Speak
+          naturally, then tap Stop when you&apos;re done.
         </p>
       </header>
 
@@ -748,10 +542,10 @@ export function DictateMyDay() {
       </div>
 
       <section className="rounded-[1.25rem] border border-kal-border bg-kal-card kal-shadow-card p-6 sm:p-8">
-        <div className="flex flex-col items-center gap-5">
+        <div className="flex flex-col items-center gap-5 text-center">
           <button
             type="button"
-            disabled={phase === "processing"}
+            disabled={phase === "processing" || !isSupported}
             onClick={() => {
               if (phase === "listening") void stopListening();
               else void startListening();
@@ -761,33 +555,52 @@ export function DictateMyDay() {
               phase === "listening"
                 ? "border-violet-400 bg-violet-500/30 shadow-[0_0_48px_rgba(139,92,246,0.45)] animate-pulse"
                 : "border-violet-500/40 bg-violet-500/15 hover:bg-violet-500/25",
-              phase === "processing" ? "opacity-50" : "",
+              phase === "processing" || !isSupported ? "opacity-50" : "",
             ].join(" ")}
             aria-pressed={phase === "listening"}
             aria-label={phase === "listening" ? "Stop listening" : "Start listening"}
           >
             {phase === "processing" ? (
               <Loader2 className="h-10 w-10 animate-spin text-violet-200" />
-            ) : phase === "listening" ? (
-              <MicOff className="h-10 w-10 text-violet-100" />
             ) : (
-              <Mic className="h-10 w-10 text-violet-200" />
+              <Mic
+                className={`h-10 w-10 ${
+                  phase === "listening" ? "text-violet-100" : "text-violet-200"
+                }`}
+              />
             )}
           </button>
-          <p className="text-sm font-semibold tracking-wide text-kal-text-secondary">
+          <p
+            className="text-sm font-semibold tracking-wide text-kal-text-secondary"
+            aria-live="polite"
+          >
             {phase === "listening"
-              ? "Listening…"
+              ? "Listening..."
               : phase === "processing"
-                ? "Processing…"
-                : "Ready when you are"}
+                ? "Processing..."
+                : "Tap the mic to dictate"}
           </p>
-          <p className="max-w-xs text-center text-[11px] text-kal-muted">
-            {phase === "listening"
-              ? "Speak naturally. Auto-stops after 5 s of silence, or tap to stop manually."
-              : phase === "processing"
-                ? "Turning your words into a structured plan…"
-                : "Tap the mic to start dictating. Short bursts work best."}
-          </p>
+          {phase === "listening" ? (
+            <button
+              type="button"
+              onClick={() => void stopListening()}
+              className="min-h-[44px] rounded-xl border border-kal-border px-4 py-2 text-sm font-semibold text-kal-text-secondary hover:bg-kal-card-muted"
+            >
+              Stop
+            </button>
+          ) : null}
+          {phase === "idle" ? (
+            <p className="max-w-sm text-sm text-kal-muted">
+              Voice transcription stays on this device. Groq only receives the final text
+              after recording ends.
+            </p>
+          ) : null}
+          {!isSupported ? (
+            <p className="max-w-sm text-sm text-[var(--kal-warn-text)]">
+              Device speech recognition is unavailable in this browser. Try Chrome or the
+              Kalnehi Android app.
+            </p>
+          ) : null}
         </div>
       </section>
 
@@ -800,7 +613,9 @@ export function DictateMyDay() {
           <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
             <Loader2 className="h-6 w-6 animate-spin text-kal-accent" />
             <p className="text-sm text-kal-muted">
-              {phase === "listening" ? "Recording — tasks will appear after you stop." : "Building your task list…"}
+              {phase === "listening"
+                ? "Listening..."
+                : "Processing your final transcript into tasks..."}
             </p>
           </div>
         ) : null}
@@ -978,16 +793,19 @@ export function DictateMyDay() {
         </section>
       ) : null}
 
-      {error && (
+      {activeError && (
         <div
           role="alert"
           className="rounded-[1rem] border border-[var(--kal-danger-border)] bg-[var(--kal-danger-soft)] px-4 py-3 text-sm text-[var(--kal-danger-text)]"
         >
-          {error}
+          {activeError}
           <button
             type="button"
             className="ml-3 text-xs font-semibold underline"
-            onClick={() => setError(null)}
+            onClick={() => {
+              setError(null);
+              clearRecognitionError();
+            }}
           >
             Dismiss
           </button>
