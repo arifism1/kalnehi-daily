@@ -3,6 +3,9 @@
 import crypto from "node:crypto";
 import Razorpay from "razorpay";
 
+import { createClient } from "@supabase/supabase-js";
+
+import type { Database } from "@/types/supabase";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type SubscriptionStatus = "trial" | "active" | "expired" | "cancelled";
@@ -56,6 +59,15 @@ function getRazorpayClient(config: { keyId: string; keySecret: string }) {
   });
 }
 
+function getAdminClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (!url || !key) return null;
+  return createClient<Database>(url, key, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+}
+
 function safeErrorMessage(error: unknown): string {
   if (error instanceof Error) {
     const msg = error.message;
@@ -99,8 +111,10 @@ async function upsertProfileByUserId(
     razorpay_subscription_id: string;
   },
 ) {
-  const supabase = await createSupabaseServerClient();
-  const { data: existing, error: checkErr } = await supabase
+  const admin = getAdminClient();
+  if (!admin) return { ok: false as const, error: "Unable to update profile." };
+
+  const { data: existing, error: checkErr } = await admin
     .from("user_profiles")
     .select("id")
     .eq("user_id", userId)
@@ -110,13 +124,13 @@ async function upsertProfileByUserId(
   const patch = { ...payload, updated_at: new Date().toISOString() };
 
   if (existing?.id) {
-    const { error } = await supabase
+    const { error } = await admin
       .from("user_profiles")
       .update(patch)
       .eq("user_id", userId);
     if (error) return { ok: false as const, error: "Unable to update profile." };
   } else {
-    const { error } = await supabase.from("user_profiles").insert({
+    const { error } = await admin.from("user_profiles").insert({
       user_id: userId,
       ...patch,
     });
@@ -137,8 +151,10 @@ export async function createRazorpayTrialSubscription(): Promise<CreateSubscript
   const config = getRazorpayConfig();
   if (!config) return { ok: false, error: "Payment system is not configured yet." };
 
-  const supabase = await createSupabaseServerClient();
-  const { data: existing } = await supabase
+  const admin = getAdminClient();
+  if (!admin) return { ok: false, error: "Payment system is not configured yet." };
+
+  const { data: existing } = await admin
     .from("user_profiles")
     .select("subscription_status, subscription_end_date")
     .eq("user_id", userId)
@@ -146,13 +162,12 @@ export async function createRazorpayTrialSubscription(): Promise<CreateSubscript
 
   if (existing) {
     const st = existing.subscription_status;
-    if (st === "trial" || st === "active") {
-      const endDate = existing.subscription_end_date
-        ? new Date(existing.subscription_end_date)
-        : null;
-      if (endDate && endDate.getTime() > Date.now()) {
-        return { ok: false, error: "You already have an active subscription." };
-      }
+    const endDate = existing.subscription_end_date
+      ? new Date(existing.subscription_end_date)
+      : null;
+    const stillHasAccess = endDate && endDate.getTime() > Date.now();
+    if ((st === "trial" || st === "active" || st === "cancelled") && stillHasAccess) {
+      return { ok: false, error: "You already have an active subscription." };
     }
   }
 
@@ -273,10 +288,12 @@ export async function cancelSubscription(): Promise<
   const config = getRazorpayConfig();
   if (!config) return { ok: false, error: "Payment system is not configured yet." };
 
-  const supabase = await createSupabaseServerClient();
-  const { data: profile, error: profileErr } = await supabase
+  const admin = getAdminClient();
+  if (!admin) return { ok: false, error: "Unable to process cancellation." };
+
+  const { data: profile, error: profileErr } = await admin
     .from("user_profiles")
-    .select("subscription_status, razorpay_subscription_id")
+    .select("subscription_status, subscription_end_date, razorpay_subscription_id")
     .eq("user_id", userId)
     .maybeSingle();
   if (profileErr) return { ok: false, error: "Unable to read subscription." };
@@ -299,11 +316,10 @@ export async function cancelSubscription(): Promise<
   }
 
   const nowIso = new Date().toISOString();
-  const { error: updateErr } = await supabase
+  const { error: updateErr } = await admin
     .from("user_profiles")
     .update({
       subscription_status: "cancelled",
-      subscription_end_date: nowIso,
       updated_at: nowIso,
     })
     .eq("user_id", userId);

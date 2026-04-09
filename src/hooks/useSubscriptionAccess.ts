@@ -17,7 +17,7 @@ type SubscriptionData = {
 };
 
 function isCurrentlyPaid(status: SubscriptionStatus, endDate: string | null): boolean {
-  if (status !== "trial" && status !== "active") return false;
+  if (status !== "trial" && status !== "active" && status !== "cancelled") return false;
   if (!endDate) return false;
   const end = new Date(endDate);
   if (Number.isNaN(end.getTime())) return false;
