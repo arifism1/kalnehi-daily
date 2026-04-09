@@ -16,7 +16,6 @@ import { useCallback, useEffect, useState } from "react";
 
 import { formatSupabaseError, getSupabaseBrowserClient } from "@/lib/supabase";
 import { useAuthStore } from "@/store/useAuthStore";
-import { useOnboardingStore } from "@/store/useOnboardingStore";
 
 type Mode = "login" | "signup";
 type AuthView = "form" | "forgot" | "forgot-sent";
@@ -35,7 +34,6 @@ function authCallbackUrl(nextPath: string): string {
 export default function AuthPage() {
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
-  const onboardingCompleted = useOnboardingStore((s) => s.onboardingCompleted);
 
   const [mode, setMode] = useState<Mode>("login");
   const [view, setView] = useState<AuthView>("form");
@@ -60,13 +58,8 @@ export default function AuthPage() {
       data: { session },
     } = await supabase.auth.getSession();
     if (session) setAuth(session);
-    router.refresh();
-    if (!onboardingCompleted) {
-      router.replace("/onboarding");
-    } else {
-      router.replace("/");
-    }
-  }, [router, setAuth, onboardingCompleted]);
+    router.replace("/");
+  }, [router, setAuth]);
 
   const submitEmailAuth = useCallback(async () => {
     setBusy(true);

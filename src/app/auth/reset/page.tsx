@@ -7,12 +7,10 @@ import { useCallback, useState } from "react";
 
 import { formatSupabaseError, getSupabaseBrowserClient } from "@/lib/supabase";
 import { useAuthStore } from "@/store/useAuthStore";
-import { useOnboardingStore } from "@/store/useOnboardingStore";
 
 export default function AuthResetPage() {
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
-  const onboardingCompleted = useOnboardingStore((s) => s.onboardingCompleted);
 
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -48,14 +46,13 @@ export default function AuthResetPage() {
         data: { session },
       } = await supabase.auth.getSession();
       if (session) setAuth(session);
-      router.refresh();
-      router.replace(onboardingCompleted ? "/" : "/onboarding");
+      router.replace("/");
     } catch (e) {
       setError(formatSupabaseError(e));
     } finally {
       setBusy(false);
     }
-  }, [password, confirm, router, setAuth, onboardingCompleted]);
+  }, [password, confirm, router, setAuth]);
 
   return (
     <div className="flex min-h-full flex-col items-center justify-center gap-8 bg-[#0f172a] px-6 py-16">
