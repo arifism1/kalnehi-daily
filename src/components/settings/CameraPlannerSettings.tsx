@@ -172,3 +172,4 @@ export function CameraPlannerSettings() {
     </>
   );
 }
+// Vercel force rebuild - 10 April 2026
