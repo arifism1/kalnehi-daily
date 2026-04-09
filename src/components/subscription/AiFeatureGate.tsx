@@ -1,0 +1,85 @@
+"use client";
+
+import Link from "next/link";
+import { Camera, Lock, Mic } from "lucide-react";
+
+import { useAiGate } from "@/hooks/useAiGate";
+
+type Props = {
+  feature: "photo_scan" | "voice";
+  children: React.ReactNode;
+};
+
+export function AiFeatureGate({ feature, children }: Props) {
+  const {
+    loading,
+    hasAiAccess,
+    canDoPhotoScan,
+    canDoVoiceSession,
+    photoScanStatus,
+    voiceMinuteStatus,
+  } = useAiGate();
+
+  if (loading) return <>{children}</>;
+
+  if (!hasAiAccess) {
+    return (
+      <div className="flex flex-col items-center gap-4 rounded-2xl border border-kal-border bg-kal-card p-8 text-center kal-shadow-card">
+        <Lock className="h-8 w-8 text-kal-text-secondary" />
+        <h3 className="text-lg font-bold text-kal-text">
+          {feature === "photo_scan"
+            ? "Photo Scanner is a Pro feature"
+            : "Voice Dictation is a Pro feature"}
+        </h3>
+        <p className="max-w-sm text-sm text-kal-text-secondary">
+          Upgrade to Pro or Pro Max to unlock AI-powered features like voice
+          planning and handwritten scanner.
+        </p>
+        <Link
+          href="/pricing"
+          className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-kal-accent px-6 py-2.5 text-sm font-bold text-kal-accent-foreground"
+        >
+          View Plans
+        </Link>
+      </div>
+    );
+  }
+
+  const isPhoto = feature === "photo_scan";
+  const atLimit = isPhoto ? !canDoPhotoScan : !canDoVoiceSession;
+
+  if (atLimit) {
+    return (
+      <div className="flex flex-col items-center gap-4 rounded-2xl border border-amber-200 bg-amber-50 p-8 text-center dark:border-amber-800 dark:bg-amber-950/30">
+        {isPhoto ? (
+          <Camera className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+        ) : (
+          <Mic className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+        )}
+        <h3 className="text-lg font-bold text-kal-text">
+          Monthly limit reached
+        </h3>
+        <p className="max-w-sm text-sm text-kal-text-secondary">
+          {isPhoto ? photoScanStatus : voiceMinuteStatus}. Buy extra credits or
+          upgrade your plan for higher limits.
+        </p>
+        <div className="flex gap-3">
+          <Link
+            href="/pricing"
+            className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-kal-accent px-5 py-2.5 text-sm font-bold text-kal-accent-foreground"
+          >
+            Upgrade Plan
+          </Link>
+          <Link
+            href="/settings"
+            className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-kal-border bg-kal-card px-5 py-2.5 text-sm font-bold text-kal-text"
+          >
+            Buy Credits
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}

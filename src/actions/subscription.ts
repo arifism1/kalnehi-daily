@@ -6,6 +6,8 @@ import Razorpay from "razorpay";
 import { createClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/types/supabase";
+import type { SubscriptionTier } from "@/lib/subscriptionTiers";
+import { TIERS } from "@/lib/subscriptionTiers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type SubscriptionStatus = "trial" | "active" | "expired" | "cancelled";
@@ -23,9 +25,13 @@ type ActivateSubscriptionResult =
   | { ok: true; subscriptionId: string }
   | { ok: false; error: string };
 
-const MONTHLY_PLAN_ID = "plan_SbOStQOx52JVpG";
+const RAZORPAY_PLAN_IDS: Record<SubscriptionTier, string> = {
+  basic: process.env.RAZORPAY_PLAN_ID_BASIC ?? "plan_basic_placeholder",
+  pro: process.env.RAZORPAY_PLAN_ID_PRO ?? "plan_SbOStQOx52JVpG",
+  pro_max: process.env.RAZORPAY_PLAN_ID_PRO_MAX ?? "plan_promax_placeholder",
+};
+
 const TOTAL_BILLING_CYCLES = 12;
-const UPFRONT_AMOUNT_PAISE = 2100;
 const TRIAL_DAYS = 3;
 
 const RAZORPAY_ID_RE = /^[a-zA-Z0-9_]{14,30}$/;
@@ -101,11 +107,16 @@ function calculateTrialEnd(start: Date): Date {
   return d;
 }
 
+function isValidTier(tier: unknown): tier is SubscriptionTier {
+  return tier === "basic" || tier === "pro" || tier === "pro_max";
+}
+
 async function upsertProfileByUserId(
   userId: string,
   payload: {
     subscription_status: SubscriptionStatus;
     subscription_plan: "trial" | "monthly";
+    subscription_tier: SubscriptionTier;
     subscription_start_date: string;
     subscription_end_date: string;
     razorpay_subscription_id: string;
@@ -141,10 +152,16 @@ async function upsertProfileByUserId(
 }
 
 // ---------------------------------------------------------------------------
-// Create subscription (idempotent — rejects if user already has active/trial)
+// Create subscription (supports all 3 tiers)
 // ---------------------------------------------------------------------------
 
-export async function createRazorpayTrialSubscription(): Promise<CreateSubscriptionResult> {
+export async function createRazorpayTrialSubscription(
+  tier: SubscriptionTier = "pro",
+): Promise<CreateSubscriptionResult> {
+  if (!isValidTier(tier)) {
+    return { ok: false, error: "Invalid subscription tier." };
+  }
+
   const userId = await getAuthedUserId();
   if (!userId) return { ok: false, error: "Please sign in to subscribe." };
 
@@ -171,6 +188,9 @@ export async function createRazorpayTrialSubscription(): Promise<CreateSubscript
     }
   }
 
+  const tierConfig = TIERS[tier];
+  const planId = RAZORPAY_PLAN_IDS[tier];
+
   try {
     const razorpay = getRazorpayClient(config);
     const startAt = calculateTrialEnd(new Date());
@@ -178,15 +198,15 @@ export async function createRazorpayTrialSubscription(): Promise<CreateSubscript
     const created = (await (razorpay.subscriptions.create as unknown as (
       body: Record<string, unknown>,
     ) => Promise<{ id: string }>)({
-      plan_id: MONTHLY_PLAN_ID,
+      plan_id: planId,
       total_count: TOTAL_BILLING_CYCLES,
       customer_notify: 1,
       start_at: Math.floor(startAt.getTime() / 1000),
       addons: [
         {
           item: {
-            name: "3-Day Trial Access",
-            amount: UPFRONT_AMOUNT_PAISE,
+            name: `${tierConfig.name} 3-Day Trial`,
+            amount: tierConfig.trialPricePaise,
             currency: "INR",
           },
         },
@@ -194,6 +214,7 @@ export async function createRazorpayTrialSubscription(): Promise<CreateSubscript
       notes: {
         kalnehi_user_id: userId,
         kalnehi_plan: "monthly",
+        kalnehi_tier: tier,
         kalnehi_trial_days: String(TRIAL_DAYS),
       },
     })) as { id: string };
@@ -202,7 +223,7 @@ export async function createRazorpayTrialSubscription(): Promise<CreateSubscript
       ok: true,
       keyId: config.keyId,
       subscriptionId: created.id,
-      amountPaise: UPFRONT_AMOUNT_PAISE,
+      amountPaise: tierConfig.trialPricePaise,
     };
   } catch (error) {
     return { ok: false, error: safeErrorMessage(error) };
@@ -210,7 +231,7 @@ export async function createRazorpayTrialSubscription(): Promise<CreateSubscript
 }
 
 // ---------------------------------------------------------------------------
-// Activate after payment (timing-safe sig, ownership verification via notes)
+// Activate after payment
 // ---------------------------------------------------------------------------
 
 export async function activateRazorpaySubscription(params: {
@@ -247,6 +268,7 @@ export async function activateRazorpaySubscription(params: {
     return { ok: false, error: "Payment verification failed." };
   }
 
+  let tier: SubscriptionTier = "pro";
   try {
     const razorpay = getRazorpayClient(config);
     const sub = (await razorpay.subscriptions.fetch(subscriptionId)) as {
@@ -257,6 +279,8 @@ export async function activateRazorpaySubscription(params: {
     if (ownerUserId !== userId) {
       return { ok: false, error: "Subscription does not belong to this account." };
     }
+    const noteTier = sub.notes?.kalnehi_tier;
+    if (isValidTier(noteTier)) tier = noteTier;
   } catch {
     return { ok: false, error: "Unable to verify subscription ownership." };
   }
@@ -266,6 +290,7 @@ export async function activateRazorpaySubscription(params: {
   const updated = await upsertProfileByUserId(userId, {
     subscription_status: "trial",
     subscription_plan: "trial",
+    subscription_tier: tier,
     subscription_start_date: start.toISOString(),
     subscription_end_date: trialEnd.toISOString(),
     razorpay_subscription_id: subscriptionId,
@@ -276,7 +301,7 @@ export async function activateRazorpaySubscription(params: {
 }
 
 // ---------------------------------------------------------------------------
-// Cancel subscription (server-side only, verified ownership)
+// Cancel subscription
 // ---------------------------------------------------------------------------
 
 export async function cancelSubscription(): Promise<
@@ -325,7 +350,6 @@ export async function cancelSubscription(): Promise<
     .eq("user_id", userId);
 
   if (updateErr) {
-    // Razorpay already cancelled — check if the webhook beat us to the DB update.
     const { data: recheck } = await admin
       .from("user_profiles")
       .select("subscription_status")
@@ -341,4 +365,171 @@ export async function cancelSubscription(): Promise<
   }
 
   return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// Usage tracking: increment counters (called server-side before AI actions)
+// ---------------------------------------------------------------------------
+
+export async function incrementPhotoScanUsage(): Promise<
+  { ok: true; used: number; limit: number } | { ok: false; error: string }
+> {
+  const userId = await getAuthedUserId();
+  if (!userId) return { ok: false, error: "Please sign in." };
+
+  const admin = getAdminClient();
+  if (!admin) return { ok: false, error: "Service unavailable." };
+
+  const { data, error } = await admin
+    .from("user_profiles")
+    .select(
+      "subscription_tier, photo_scans_used_this_month, bonus_photo_scans, usage_reset_date",
+    )
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error || !data) return { ok: false, error: "Unable to check usage." };
+
+  const resetNeeded = needsMonthlyReset(data.usage_reset_date);
+  const currentUsed = resetNeeded ? 0 : (data.photo_scans_used_this_month ?? 0);
+  const bonus = data.bonus_photo_scans ?? 0;
+
+  const tierConfig = TIERS[data.subscription_tier as SubscriptionTier] ?? TIERS.pro;
+  const totalLimit = tierConfig.photoScansPerMonth + bonus;
+
+  if (currentUsed >= totalLimit) {
+    return { ok: false, error: "Monthly photo scan limit reached." };
+  }
+
+  const patch: Record<string, unknown> = {
+    photo_scans_used_this_month: currentUsed + 1,
+    updated_at: new Date().toISOString(),
+  };
+  if (resetNeeded) {
+    patch.voice_minutes_used_this_month = 0;
+    patch.usage_reset_date = todayDateString();
+  }
+
+  const { error: updateErr } = await admin
+    .from("user_profiles")
+    .update(patch)
+    .eq("user_id", userId);
+
+  if (updateErr) return { ok: false, error: "Unable to update usage." };
+
+  return { ok: true, used: currentUsed + 1, limit: totalLimit };
+}
+
+export async function incrementVoiceMinuteUsage(
+  minutes: number = 1,
+): Promise<
+  { ok: true; used: number; limit: number } | { ok: false; error: string }
+> {
+  const userId = await getAuthedUserId();
+  if (!userId) return { ok: false, error: "Please sign in." };
+
+  const admin = getAdminClient();
+  if (!admin) return { ok: false, error: "Service unavailable." };
+
+  const { data, error } = await admin
+    .from("user_profiles")
+    .select(
+      "subscription_tier, voice_minutes_used_this_month, bonus_voice_minutes, usage_reset_date",
+    )
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error || !data) return { ok: false, error: "Unable to check usage." };
+
+  const resetNeeded = needsMonthlyReset(data.usage_reset_date);
+  const currentUsed = resetNeeded ? 0 : (data.voice_minutes_used_this_month ?? 0);
+  const bonus = data.bonus_voice_minutes ?? 0;
+
+  const tierConfig = TIERS[data.subscription_tier as SubscriptionTier] ?? TIERS.pro;
+  const totalLimit = tierConfig.voiceMinutesPerMonth + bonus;
+
+  if (currentUsed + minutes > totalLimit) {
+    return { ok: false, error: "Monthly voice minutes limit reached." };
+  }
+
+  const patch: Record<string, unknown> = {
+    voice_minutes_used_this_month: currentUsed + minutes,
+    updated_at: new Date().toISOString(),
+  };
+  if (resetNeeded) {
+    patch.photo_scans_used_this_month = 0;
+    patch.usage_reset_date = todayDateString();
+  }
+
+  const { error: updateErr } = await admin
+    .from("user_profiles")
+    .update(patch)
+    .eq("user_id", userId);
+
+  if (updateErr) return { ok: false, error: "Unable to update usage." };
+
+  return { ok: true, used: currentUsed + minutes, limit: totalLimit };
+}
+
+// ---------------------------------------------------------------------------
+// Extra credits purchase
+// ---------------------------------------------------------------------------
+
+export async function addBonusCredits(
+  type: "photo_scans" | "voice_minutes",
+  amount: number,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const userId = await getAuthedUserId();
+  if (!userId) return { ok: false, error: "Please sign in." };
+
+  if (amount <= 0 || amount > 200) {
+    return { ok: false, error: "Invalid credit amount." };
+  }
+
+  const admin = getAdminClient();
+  if (!admin) return { ok: false, error: "Service unavailable." };
+
+  const { data, error } = await admin
+    .from("user_profiles")
+    .select("bonus_photo_scans, bonus_voice_minutes")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error || !data) return { ok: false, error: "Unable to read profile." };
+
+  const patch: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (type === "photo_scans") {
+    patch.bonus_photo_scans = (data.bonus_photo_scans ?? 0) + amount;
+  } else {
+    patch.bonus_voice_minutes = (data.bonus_voice_minutes ?? 0) + amount;
+  }
+
+  const { error: updateErr } = await admin
+    .from("user_profiles")
+    .update(patch)
+    .eq("user_id", userId);
+
+  if (updateErr) return { ok: false, error: "Unable to add credits." };
+
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// Monthly reset helper
+// ---------------------------------------------------------------------------
+
+function todayDateString(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function needsMonthlyReset(lastResetDate: string | null): boolean {
+  if (!lastResetDate) return true;
+  const now = new Date();
+  const last = new Date(lastResetDate);
+  if (Number.isNaN(last.getTime())) return true;
+  return now.getMonth() !== last.getMonth() || now.getFullYear() !== last.getFullYear();
 }

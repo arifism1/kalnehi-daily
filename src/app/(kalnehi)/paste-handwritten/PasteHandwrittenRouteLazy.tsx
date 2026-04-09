@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
 
+import { AiFeatureGate } from "@/components/subscription/AiFeatureGate";
 import { RoutePageSkeleton } from "@/components/loading/RoutePageSkeleton";
 
 const PasteHandwrittenPageContent = dynamic(
@@ -13,7 +14,9 @@ const PasteHandwrittenPageContent = dynamic(
 export default function PasteHandwrittenRouteLazy() {
   return (
     <Suspense fallback={<RoutePageSkeleton />}>
-      <PasteHandwrittenPageContent />
+      <AiFeatureGate feature="photo_scan">
+        <PasteHandwrittenPageContent />
+      </AiFeatureGate>
     </Suspense>
   );
 }
