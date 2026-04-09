@@ -1,6 +1,6 @@
 "use client";
 
-import { format } from "date-fns";
+import { differenceInCalendarDays, format } from "date-fns";
 import { Camera, Loader2, Mic } from "lucide-react";
 import { useState, useTransition } from "react";
 
@@ -51,6 +51,14 @@ function nextResetDate(): string {
   const now = new Date();
   const next = new Date(now.getFullYear(), now.getMonth() + 1, 1);
   return format(next, "d MMM yyyy");
+}
+
+function trialDaysRemaining(endDate: string | null): number | null {
+  if (!endDate) return null;
+  const end = new Date(endDate);
+  if (Number.isNaN(end.getTime())) return null;
+  const left = differenceInCalendarDays(end, new Date());
+  return Math.max(0, left);
 }
 
 function UsageBar({
@@ -162,6 +170,17 @@ export function MyPlanSection() {
     rows.push({ label: "Tier", value: tierConfig.name });
   }
 
+  if (status === "trial" && endDate && hasPaidAccess) {
+    const left = trialDaysRemaining(endDate);
+    if (left !== null) {
+      rows.push({
+        label: "Trial remaining",
+        value: left === 0 ? "Ends today" : left === 1 ? "1 day" : `${left} days`,
+        className: "text-kal-accent",
+      });
+    }
+  }
+
   if (status && status !== "expired" && !(isCancelled && !hasPaidAccess)) {
     rows.push({
       label: "Plan",
@@ -217,6 +236,12 @@ export function MyPlanSection() {
 
         {hasAiAccess && hasPaidAccess && (
           <div className="border-t border-kal-border">
+            {status === "trial" && (
+              <p className="border-b border-kal-border px-4 py-2 text-xs text-kal-text-secondary">
+                During trial, lower AI limits apply. After your first paid cycle,
+                full monthly limits apply and trial usage no longer applies.
+              </p>
+            )}
             <UsageBar
               icon={<Camera className="h-4 w-4" />}
               label="Photo Scans"
@@ -231,7 +256,7 @@ export function MyPlanSection() {
             />
             <div className="flex items-center justify-between border-t border-kal-border px-4 py-2">
               <span className="text-xs text-kal-text-secondary">
-                Usage resets
+                Usage resets (calendar month)
               </span>
               <span className="text-xs font-medium text-kal-text">
                 {nextResetDate()}

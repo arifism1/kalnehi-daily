@@ -5,7 +5,9 @@ import { useCallback, useMemo } from "react";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import {
   canUseAi,
+  getPhotoScansLimit,
   getTierConfig,
+  getVoiceMinutesLimit,
   remainingPhotoScans,
   remainingVoiceMinutes,
 } from "@/lib/subscriptionTiers";
@@ -36,14 +38,21 @@ type AiGateResult = {
 };
 
 export function useAiGate(): AiGateResult {
-  const { loading, hasPaidAccess, tier, usage, refetch } = useSubscriptionAccess();
+  const { loading, hasPaidAccess, tier, usage, refetch, status } =
+    useSubscriptionAccess();
 
   const tierConfig = useMemo(() => getTierConfig(tier), [tier]);
+  const isTrialPeriod = status === "trial";
 
   const photoScansRemaining = useMemo(
     () =>
-      remainingPhotoScans(tier, usage.photoScansUsed, usage.bonusPhotoScans),
-    [tier, usage.photoScansUsed, usage.bonusPhotoScans],
+      remainingPhotoScans(
+        tier,
+        usage.photoScansUsed,
+        usage.bonusPhotoScans,
+        isTrialPeriod,
+      ),
+    [tier, usage.photoScansUsed, usage.bonusPhotoScans, isTrialPeriod],
   );
 
   const voiceMinutesRemaining = useMemo(
@@ -52,13 +61,15 @@ export function useAiGate(): AiGateResult {
         tier,
         usage.voiceMinutesUsed,
         usage.bonusVoiceMinutes,
+        isTrialPeriod,
       ),
-    [tier, usage.voiceMinutesUsed, usage.bonusVoiceMinutes],
+    [tier, usage.voiceMinutesUsed, usage.bonusVoiceMinutes, isTrialPeriod],
   );
 
-  const photoScansLimit = tierConfig.photoScansPerMonth + usage.bonusPhotoScans;
+  const photoScansLimit =
+    getPhotoScansLimit(tier, isTrialPeriod) + usage.bonusPhotoScans;
   const voiceMinutesLimit =
-    tierConfig.voiceMinutesPerMonth + usage.bonusVoiceMinutes;
+    getVoiceMinutesLimit(tier, isTrialPeriod) + usage.bonusVoiceMinutes;
 
   const hasAiAccess = canUseAi(tier);
   const canDoPhotoScan = hasAiAccess && photoScansRemaining > 0;

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { effectiveUsageForDisplay } from "@/lib/subscriptionUsage";
 import type { SubscriptionTier } from "@/lib/subscriptionTiers";
 import { useAuthStore } from "@/store/useAuthStore";
 
@@ -120,9 +121,14 @@ export function useSubscriptionAccess(): SubscriptionData {
         setHasPaidAccess(
           isCurrentlyPaid(normalizedStatus, data?.subscription_end_date ?? null),
         );
+        const eff = effectiveUsageForDisplay(
+          data?.usage_reset_date ?? null,
+          data?.photo_scans_used_this_month ?? 0,
+          data?.voice_minutes_used_this_month ?? 0,
+        );
         setUsage({
-          photoScansUsed: data?.photo_scans_used_this_month ?? 0,
-          voiceMinutesUsed: data?.voice_minutes_used_this_month ?? 0,
+          photoScansUsed: eff.photoScansUsed,
+          voiceMinutesUsed: eff.voiceMinutesUsed,
           bonusPhotoScans: data?.bonus_photo_scans ?? 0,
           bonusVoiceMinutes: data?.bonus_voice_minutes ?? 0,
           usageResetDate: data?.usage_reset_date ?? null,
