@@ -24,7 +24,7 @@ import {
   persistHandwrittenSnapshotLocal,
   pushHandwrittenPlannerReplaceToOutbox,
 } from "@/lib/handwrittenPlannerSync";
-import { compressImageFileForGroq } from "@/lib/plannerPhotoClient";
+import { compressImageForUpload } from "@/lib/plannerPhotoClient";
 import { applyOptimisticTaskCreate } from "@/lib/taskMutations";
 import { flushOutbox } from "@/lib/sync";
 import { getHandwrittenPlannerSnapshot } from "@/lib/taskIdb";
@@ -373,7 +373,7 @@ export function PasteHandwrittenPlanPage() {
       setHint(null);
       setFormError(null);
       try {
-        const { base64, mimeType } = await compressImageFileForGroq(file);
+        const { base64, mimeType } = await compressImageForUpload(file);
         const res = await parseHandwrittenPlannerPhoto({
           imageBase64: base64,
           mimeType,
@@ -555,7 +555,33 @@ export function PasteHandwrittenPlanPage() {
           </p>
         </div>
 
-        <div className="mt-5 rounded-xl border border-kal-border bg-kal-card-muted/50 p-3 text-xs text-kal-muted">
+        <details className="mt-4 rounded-xl border border-kal-border bg-kal-card-muted/50 text-xs text-kal-muted">
+          <summary className="cursor-pointer select-none px-3 py-2.5 font-semibold text-kal-text-secondary">
+            How to write your schedule for best results
+          </summary>
+          <div className="space-y-3 border-t border-kal-border px-3 pb-3 pt-2.5">
+            <p className="leading-relaxed">
+              Write <strong className="text-kal-text">one task per line</strong> with the
+              time on the left. Any of these formats work:
+            </p>
+            <div className="rounded-lg border border-kal-border bg-kal-input-bg px-3 py-2.5 font-mono text-[11px] leading-[1.7] text-kal-text">
+              5:00 am - 6:00 am &nbsp; Morning revision<br />
+              6:00 - 7:30 &nbsp; Physics problems<br />
+              8:00 am &nbsp; Breakfast + break<br />
+              9:00 am - 12:00 pm &nbsp; Math practice<br />
+              2:00 pm - 4:30 pm &nbsp; Chemistry chapter 5
+            </div>
+            <ul className="list-inside list-disc space-y-1 leading-relaxed text-kal-muted">
+              <li>Use <strong className="text-kal-text-secondary">dark ink</strong> on plain white / ruled paper.</li>
+              <li>Keep the <strong className="text-kal-text-secondary">time range</strong> at the start of each line, then the task name.</li>
+              <li>You can use <strong className="text-kal-text-secondary">am/pm</strong> or <strong className="text-kal-text-secondary">24-hour</strong> format (e.g. 17:00).</li>
+              <li>A dash, arrow, or &ldquo;to&rdquo; between start and end times all work.</li>
+              <li>Avoid overlapping text, doodles, or very light pencil.</li>
+            </ul>
+          </div>
+        </details>
+
+        <div className="mt-3 rounded-xl border border-kal-border bg-kal-card-muted/50 p-3 text-xs text-kal-muted">
           <span className="font-medium text-kal-text-secondary">Fallback:</span>{" "}
           paste typed or OCR text below, then use Process with AI.
         </div>
