@@ -323,7 +323,22 @@ export async function cancelSubscription(): Promise<
       updated_at: nowIso,
     })
     .eq("user_id", userId);
-  if (updateErr) return { ok: false, error: "Unable to update cancellation." };
+
+  if (updateErr) {
+    // Razorpay already cancelled — check if the webhook beat us to the DB update.
+    const { data: recheck } = await admin
+      .from("user_profiles")
+      .select("subscription_status")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (recheck?.subscription_status === "cancelled") {
+      return { ok: true };
+    }
+
+    console.error("[cancelSubscription] DB update failed:", updateErr);
+    return { ok: false, error: "Unable to update cancellation." };
+  }
 
   return { ok: true };
 }

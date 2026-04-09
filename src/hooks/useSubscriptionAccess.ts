@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -15,6 +15,7 @@ type SubscriptionData = {
   plan: string | null;
   startDate: string | null;
   endDate: string | null;
+  refetch: () => void;
 };
 
 function isCurrentlyPaid(status: SubscriptionStatus, endDate: string | null): boolean {
@@ -34,6 +35,9 @@ export function useSubscriptionAccess(): SubscriptionData {
   const [plan, setPlan] = useState<string | null>(null);
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
+  const [fetchKey, setFetchKey] = useState(0);
+
+  const refetch = useCallback(() => setFetchKey((k) => k + 1), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -99,7 +103,7 @@ export function useSubscriptionAccess(): SubscriptionData {
     return () => {
       cancelled = true;
     };
-  }, [user?.id]);
+  }, [user?.id, fetchKey]);
 
-  return { loading, onboardingDone, status, hasPaidAccess, plan, startDate, endDate };
+  return { loading, onboardingDone, status, hasPaidAccess, plan, startDate, endDate, refetch };
 }
