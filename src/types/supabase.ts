@@ -384,7 +384,12 @@ export type Database = {
           prev_exam_attempted: boolean | null
           prev_score: number | null
           prev_score_entries: Json
+          razorpay_subscription_id: string | null
           primary_exam: string | null
+          subscription_end_date: string | null
+          subscription_plan: string | null
+          subscription_start_date: string | null
+          subscription_status: string | null
           target_exam: string | null
           target_exam_date: string | null
           updated_at: string | null
@@ -398,7 +403,12 @@ export type Database = {
           prev_exam_attempted?: boolean | null
           prev_score?: number | null
           prev_score_entries?: Json
+          razorpay_subscription_id?: string | null
           primary_exam?: string | null
+          subscription_end_date?: string | null
+          subscription_plan?: string | null
+          subscription_start_date?: string | null
+          subscription_status?: string | null
           target_exam?: string | null
           target_exam_date?: string | null
           updated_at?: string | null
@@ -412,7 +422,12 @@ export type Database = {
           prev_exam_attempted?: boolean | null
           prev_score?: number | null
           prev_score_entries?: Json
+          razorpay_subscription_id?: string | null
           primary_exam?: string | null
+          subscription_end_date?: string | null
+          subscription_plan?: string | null
+          subscription_start_date?: string | null
+          subscription_status?: string | null
           target_exam?: string | null
           target_exam_date?: string | null
           updated_at?: string | null

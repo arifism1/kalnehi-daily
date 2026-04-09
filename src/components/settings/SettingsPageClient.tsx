@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 import { CameraPlannerSettings } from "@/components/settings/CameraPlannerSettings";
+import { MyPlanSection } from "@/components/settings/MyPlanSection";
 import { PurposeModePhotos } from "@/components/settings/PurposeModePhotos";
 import { SettingsToggles } from "@/components/settings/SettingsToggles";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -29,6 +30,16 @@ export function SettingsPageClient() {
           Shape how Kalnehi feels — every option here is optional.
         </p>
       </div>
+
+      <section aria-labelledby="my-plan-heading">
+        <h2
+          id="my-plan-heading"
+          className="px-3 pb-2 text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent"
+        >
+          My Plan
+        </h2>
+        <MyPlanSection />
+      </section>
 
       <section aria-labelledby="toggles-heading">
         <h2 id="toggles-heading" className="sr-only">
