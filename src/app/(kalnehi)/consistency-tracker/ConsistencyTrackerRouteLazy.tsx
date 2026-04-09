@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
 
+import { FeatureGate } from "@/components/subscription/FeatureGate";
 import { RoutePageSkeleton } from "@/components/loading/RoutePageSkeleton";
 
 const CalendarEngineClient = dynamic(
@@ -16,7 +17,9 @@ const CalendarEngineClient = dynamic(
 export default function ConsistencyTrackerRouteLazy() {
   return (
     <Suspense fallback={<RoutePageSkeleton />}>
-      <CalendarEngineClient />
+      <FeatureGate feature="consistency_tracker">
+        <CalendarEngineClient />
+      </FeatureGate>
     </Suspense>
   );
 }

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { incrementVoiceMinuteUsage } from "@/actions/subscription";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   fetchVoiceTasksFromGroq,
@@ -243,6 +244,11 @@ export async function parseVoiceNoteWithGroq(
 export async function parseVoiceTranscriptToDraft(
   input: VoiceDictateInput,
 ): Promise<{ ok: true; tasks: VoiceDraftRow[] } | VoiceDictateFailure> {
+  const usageCheck = await incrementVoiceMinuteUsage(1);
+  if (!usageCheck.ok) {
+    return { ok: false, error: usageCheck.error };
+  }
+
   const logDate = input.log_date?.trim() ?? "";
   if (!/^\d{4}-\d{2}-\d{2}$/.test(logDate)) {
     return { ok: false, error: "Invalid date." };

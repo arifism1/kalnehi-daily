@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { Camera, Lock, Mic } from "lucide-react";
+import { useState } from "react";
 
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useAiGate } from "@/hooks/useAiGate";
 
 type Props = {
@@ -18,7 +20,13 @@ export function AiFeatureGate({ feature, children }: Props) {
     canDoVoiceSession,
     photoScanStatus,
     voiceMinuteStatus,
+    photoScansRemaining,
+    photoScansLimit,
+    voiceMinutesRemaining,
+    voiceMinutesLimit,
   } = useAiGate();
+
+  const [confirmed, setConfirmed] = useState(false);
 
   if (loading) return <>{children}</>;
 
@@ -81,5 +89,46 @@ export function AiFeatureGate({ feature, children }: Props) {
     );
   }
 
-  return <>{children}</>;
+  const remaining = isPhoto ? photoScansRemaining : voiceMinutesRemaining;
+  const limit = isPhoto ? photoScansLimit : voiceMinutesLimit;
+  const statusText = isPhoto ? photoScanStatus : voiceMinuteStatus;
+
+  if (!confirmed) {
+    return (
+      <ConfirmDialog
+        open
+        title={isPhoto ? "Use Photo Scanner?" : "Start Voice Session?"}
+        description={`${statusText}. Each ${isPhoto ? "scan" : "session"} will consume credits from your monthly limit.`}
+        confirmLabel="Continue"
+        cancelLabel="Go Back"
+        danger={false}
+        onConfirm={() => setConfirmed(true)}
+        onCancel={() => window.history.back()}
+      />
+    );
+  }
+
+  return (
+    <>
+      <div className="mb-4 flex items-center justify-between rounded-xl border border-kal-border bg-kal-card-muted px-4 py-2.5">
+        <span className="flex items-center gap-2 text-xs text-kal-text-secondary">
+          {isPhoto ? (
+            <Camera className="h-3.5 w-3.5" />
+          ) : (
+            <Mic className="h-3.5 w-3.5" />
+          )}
+          {statusText}
+        </span>
+        {remaining <= 3 && (
+          <Link
+            href="/settings"
+            className="text-xs font-semibold text-kal-accent hover:underline"
+          >
+            Buy more
+          </Link>
+        )}
+      </div>
+      {children}
+    </>
+  );
 }

@@ -1,5 +1,129 @@
 export type SubscriptionTier = "basic" | "pro" | "pro_max";
 
+/**
+ * Every gatable feature in the app. Keys map 1:1 to the feature table.
+ *
+ *   "allowed"  → user can access freely
+ *   "limited"  → user can access with restrictions (basic timer, basic habits, etc.)
+ *   "blocked"  → user sees upgrade prompt
+ */
+export type FeatureAccess = "allowed" | "limited" | "blocked";
+
+export type FeatureKey =
+  | "plan_my_day"
+  | "dictate_day"
+  | "handwritten_scanner"
+  | "self_type_day"
+  | "syllabus"
+  | "marks_engine"
+  | "execution_planner"
+  | "timer"
+  | "progress"
+  | "daily_log"
+  | "heatmap"
+  | "consistency_tracker"
+  | "revision"
+  | "habits"
+  | "motivation"
+  | "meditation"
+  | "meditation_consistency"
+  | "doubts"
+  | "ai_photo_scan"
+  | "ai_voice";
+
+const FEATURE_ACCESS: Record<SubscriptionTier, Record<FeatureKey, FeatureAccess>> = {
+  basic: {
+    plan_my_day: "limited",
+    dictate_day: "blocked",
+    handwritten_scanner: "blocked",
+    self_type_day: "allowed",
+    syllabus: "limited",
+    marks_engine: "blocked",
+    execution_planner: "blocked",
+    timer: "limited",
+    progress: "blocked",
+    daily_log: "blocked",
+    heatmap: "blocked",
+    consistency_tracker: "blocked",
+    revision: "blocked",
+    habits: "limited",
+    motivation: "blocked",
+    meditation: "blocked",
+    meditation_consistency: "blocked",
+    doubts: "blocked",
+    ai_photo_scan: "blocked",
+    ai_voice: "blocked",
+  },
+  pro: {
+    plan_my_day: "allowed",
+    dictate_day: "allowed",
+    handwritten_scanner: "allowed",
+    self_type_day: "allowed",
+    syllabus: "allowed",
+    marks_engine: "allowed",
+    execution_planner: "allowed",
+    timer: "allowed",
+    progress: "allowed",
+    daily_log: "allowed",
+    heatmap: "allowed",
+    consistency_tracker: "allowed",
+    revision: "allowed",
+    habits: "allowed",
+    motivation: "allowed",
+    meditation: "allowed",
+    meditation_consistency: "allowed",
+    doubts: "allowed",
+    ai_photo_scan: "allowed",
+    ai_voice: "allowed",
+  },
+  pro_max: {
+    plan_my_day: "allowed",
+    dictate_day: "allowed",
+    handwritten_scanner: "allowed",
+    self_type_day: "allowed",
+    syllabus: "allowed",
+    marks_engine: "allowed",
+    execution_planner: "allowed",
+    timer: "allowed",
+    progress: "allowed",
+    daily_log: "allowed",
+    heatmap: "allowed",
+    consistency_tracker: "allowed",
+    revision: "allowed",
+    habits: "allowed",
+    motivation: "allowed",
+    meditation: "allowed",
+    meditation_consistency: "allowed",
+    doubts: "allowed",
+    ai_photo_scan: "allowed",
+    ai_voice: "allowed",
+  },
+};
+
+/** Human-readable upgrade prompt per blocked feature. */
+export const FEATURE_LABELS: Record<FeatureKey, { name: string; upgradeHint: string }> = {
+  plan_my_day: { name: "Plan My Day", upgradeHint: "Upgrade to Pro for all 3 planners (Dictate, Handwritten, Self Type)." },
+  dictate_day: { name: "Dictate My Day", upgradeHint: "Upgrade to Pro for voice-based daily planning." },
+  handwritten_scanner: { name: "Handwritten Scanner", upgradeHint: "Upgrade to Pro for AI-powered handwritten plan scanning." },
+  self_type_day: { name: "Self Type Day", upgradeHint: "" },
+  syllabus: { name: "Syllabus Tracker", upgradeHint: "Upgrade to Pro for full syllabus with microtopics & predictions." },
+  marks_engine: { name: "Marks Engine", upgradeHint: "Upgrade to Pro for marks predictions & microtopic analysis." },
+  execution_planner: { name: "Execution Planner", upgradeHint: "Upgrade to Pro for the full execution planner." },
+  timer: { name: "Timer", upgradeHint: "Upgrade to Pro for the full execution timer." },
+  progress: { name: "Progress Tracker", upgradeHint: "Upgrade to Pro to track your preparation progress." },
+  daily_log: { name: "Daily Log", upgradeHint: "Upgrade to Pro for daily study logging." },
+  heatmap: { name: "Strategic Heatmap", upgradeHint: "Upgrade to Pro for heatmap analysis." },
+  consistency_tracker: { name: "Consistency Tracker", upgradeHint: "Upgrade to Pro for the consistency calendar." },
+  revision: { name: "Revision Engine", upgradeHint: "Upgrade to Pro for the revision engine." },
+  habits: { name: "Habit Maker", upgradeHint: "Upgrade to Pro for full habit tracking with streaks." },
+  motivation: { name: "Personal Motivation Vault", upgradeHint: "Upgrade to Pro for the motivation vault." },
+  meditation: { name: "Meditation", upgradeHint: "Upgrade to Pro for meditation sessions." },
+  meditation_consistency: { name: "Meditation Consistency", upgradeHint: "Upgrade to Pro for meditation consistency tracking." },
+  doubts: { name: "Doubt Tracker", upgradeHint: "Upgrade to Pro for doubt tracking." },
+  ai_photo_scan: { name: "AI Photo Scan", upgradeHint: "Upgrade to Pro for AI-powered photo scanning." },
+  ai_voice: { name: "AI Voice Dictation", upgradeHint: "Upgrade to Pro for AI voice dictation." },
+};
+
 export type TierConfig = {
   id: SubscriptionTier;
   name: string;
@@ -10,10 +134,6 @@ export type TierConfig = {
   trialDays: number;
   photoScansPerMonth: number;
   voiceMinutesPerMonth: number;
-  hasAi: boolean;
-  hasDictateMyDay: boolean;
-  hasHandwrittenScanner: boolean;
-  hasFullSyllabus: boolean;
   maxTasksPerDay: number | null;
   tagline: string;
   benefits: string[];
@@ -30,18 +150,13 @@ export const TIERS: Record<SubscriptionTier, TierConfig> = {
     trialDays: 3,
     photoScansPerMonth: 0,
     voiceMinutesPerMonth: 0,
-    hasAi: false,
-    hasDictateMyDay: false,
-    hasHandwrittenScanner: false,
-    hasFullSyllabus: false,
     maxTasksPerDay: 10,
     tagline: "Get organized",
     benefits: [
-      "Daily planner & task manager",
-      "Basic syllabus tracking",
-      "Calendar & consistency tracker",
-      "Up to 10 tasks per day",
-      "Meditation & habits",
+      "Self Type planner (up to 10 tasks/day)",
+      "Basic syllabus (subjects + chapters)",
+      "Basic timer",
+      "Basic habit tracking",
     ],
   },
   pro: {
@@ -54,20 +169,20 @@ export const TIERS: Record<SubscriptionTier, TierConfig> = {
     trialDays: 3,
     photoScansPerMonth: 20,
     voiceMinutesPerMonth: 40,
-    hasAi: true,
-    hasDictateMyDay: true,
-    hasHandwrittenScanner: true,
-    hasFullSyllabus: true,
     maxTasksPerDay: null,
     tagline: "Most popular",
     benefits: [
-      "Everything in Basic",
-      "Dictate My Day (voice planning)",
-      "Handwritten planner scanner",
-      "20 photo scans / month",
-      "40 voice minutes / month",
-      "Full syllabus & marks engine",
-      "Unlimited tasks per day",
+      "All 3 planners (Dictate + Handwritten + Self Type)",
+      "Full syllabus with microtopics & predictions",
+      "Full execution planner + timer",
+      "Progress, Daily Log, Heatmap",
+      "Revision Engine",
+      "Full habits with streaks",
+      "Personal Motivation Vault",
+      "Meditation + Consistency",
+      "Doubt Tracker",
+      "20 AI photo scans / month",
+      "40 AI voice minutes / month",
     ],
   },
   pro_max: {
@@ -80,16 +195,12 @@ export const TIERS: Record<SubscriptionTier, TierConfig> = {
     trialDays: 3,
     photoScansPerMonth: 50,
     voiceMinutesPerMonth: 80,
-    hasAi: true,
-    hasDictateMyDay: true,
-    hasHandwrittenScanner: true,
-    hasFullSyllabus: true,
     maxTasksPerDay: null,
     tagline: "Maximum power",
     benefits: [
       "Everything in Pro",
-      "50 photo scans / month",
-      "80 voice minutes / month",
+      "50 AI photo scans / month",
+      "80 AI voice minutes / month",
       "Priority support",
     ],
   },
@@ -100,14 +211,35 @@ export const TIER_ORDER: SubscriptionTier[] = ["basic", "pro", "pro_max"];
 export const DEFAULT_TIER: SubscriptionTier = "pro";
 
 export function getTierConfig(tier: string | null | undefined): TierConfig {
-  if (tier === "basic" || tier === "pro" || tier === "pro_max") {
-    return TIERS[tier];
-  }
+  if (tier === "basic" || tier === "pro" || tier === "pro_max") return TIERS[tier];
   return TIERS.pro;
 }
 
+export function getFeatureAccess(
+  tier: string | null | undefined,
+  feature: FeatureKey,
+): FeatureAccess {
+  const t: SubscriptionTier =
+    tier === "basic" || tier === "pro" || tier === "pro_max" ? tier : "basic";
+  return FEATURE_ACCESS[t][feature];
+}
+
+export function isFeatureBlocked(
+  tier: string | null | undefined,
+  feature: FeatureKey,
+): boolean {
+  return getFeatureAccess(tier, feature) === "blocked";
+}
+
+export function isFeatureLimited(
+  tier: string | null | undefined,
+  feature: FeatureKey,
+): boolean {
+  return getFeatureAccess(tier, feature) === "limited";
+}
+
 export function canUseAi(tier: string | null | undefined): boolean {
-  return getTierConfig(tier).hasAi;
+  return !isFeatureBlocked(tier, "ai_photo_scan");
 }
 
 export function getPhotoScansLimit(tier: string | null | undefined): number {
@@ -123,8 +255,7 @@ export function remainingPhotoScans(
   used: number,
   bonus: number,
 ): number {
-  const limit = getPhotoScansLimit(tier);
-  return Math.max(0, limit + bonus - used);
+  return Math.max(0, getPhotoScansLimit(tier) + bonus - used);
 }
 
 export function remainingVoiceMinutes(
@@ -132,8 +263,7 @@ export function remainingVoiceMinutes(
   used: number,
   bonus: number,
 ): number {
-  const limit = getVoiceMinutesLimit(tier);
-  return Math.max(0, limit + bonus - used);
+  return Math.max(0, getVoiceMinutesLimit(tier) + bonus - used);
 }
 
 export const EXTRA_CREDITS = {

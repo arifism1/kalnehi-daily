@@ -2,6 +2,7 @@
 
 import Groq from "groq-sdk";
 
+import { incrementPhotoScanUsage } from "@/actions/subscription";
 import { ocrHandwrittenPhoto } from "@/lib/mistralOcr";
 import { PASTE_HANDWRITTEN_PLAN_PROMPT } from "@/lib/voicePrompts";
 import { runVoiceParseDraft } from "@/lib/runVoiceParseDraft";
@@ -153,6 +154,11 @@ export async function parseHandwrittenPlannerPhoto(input: {
   mimeType: string;
   logDate: string;
 }): Promise<ParseResult> {
+  const usageCheck = await incrementPhotoScanUsage();
+  if (!usageCheck.ok) {
+    return { ok: false, error: usageCheck.error, tasks: [] };
+  }
+
   const logDate = input.logDate.trim();
   if (!/^\d{4}-\d{2}-\d{2}$/.test(logDate)) {
     return { ok: false, error: "Invalid date.", tasks: [] };

@@ -111,13 +111,11 @@ function TierCard({
         ))}
       </ul>
 
-      {!config.hasAi && (
+      {config.photoScansPerMonth === 0 ? (
         <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
           No AI features (no voice dictation, no handwritten scanner)
         </p>
-      )}
-
-      {config.hasAi && (
+      ) : (
         <p className="mt-3 rounded-lg border border-kal-border bg-kal-card-muted px-3 py-2 text-xs text-kal-text-secondary">
           {config.photoScansPerMonth} photo scans + {config.voiceMinutesPerMonth} voice
           min / month

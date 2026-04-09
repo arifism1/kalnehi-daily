@@ -16,6 +16,7 @@ import {
   upsertHabitLogEntry,
 } from "@/actions/habits";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
+import { useFeatureAccess } from "@/hooks/useFeatureAccess";
 import {
   enqueueHabitOutbox,
   getHabitBundleCached,
@@ -175,6 +176,7 @@ function dotVisualClass(kind: DotKind): string {
 }
 
 export function HabitMakerPage() {
+  const { limited: habitsLimited } = useFeatureAccess("habits");
   const userId = useAuthStore((s) => s.user?.id);
   const today = useCalendarDate();
   const [bundle, setBundle] = useState<HabitBundle | null>(null);
@@ -511,45 +513,53 @@ export function HabitMakerPage() {
                         {motivation}
                       </p>
                     </div>
-                    <div className="flex shrink-0 flex-col items-end gap-1 text-right">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-kal-muted">
-                        Current streak
-                      </p>
-                      <p className="flex items-center gap-1.5 text-3xl font-extrabold tabular-nums text-kal-text sm:text-4xl">
-                        {streak}
-                        {showFire ? (
-                          <span className="text-2xl leading-none" aria-hidden>
-                            🔥
-                          </span>
-                        ) : null}
-                      </p>
-                    </div>
+                    {habitsLimited ? (
+                      <span className="shrink-0 rounded-full bg-kal-card-muted px-3 py-1 text-[10px] font-semibold text-kal-muted">
+                        Streaks in Pro
+                      </span>
+                    ) : (
+                      <div className="flex shrink-0 flex-col items-end gap-1 text-right">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-kal-muted">
+                          Current streak
+                        </p>
+                        <p className="flex items-center gap-1.5 text-3xl font-extrabold tabular-nums text-kal-text sm:text-4xl">
+                          {streak}
+                          {showFire ? (
+                            <span className="text-2xl leading-none" aria-hidden>
+                              🔥
+                            </span>
+                          ) : null}
+                        </p>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="mt-6 grid grid-cols-2 gap-4 sm:gap-6">
-                    <div className="rounded-xl border border-kal-border/80 bg-kal-page/80 px-4 py-3">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-kal-muted">
-                        Best this month
-                      </p>
-                      <p className="mt-1 text-xl font-bold tabular-nums text-kal-text">
-                        {bestMonth}{" "}
-                        <span className="text-sm font-semibold text-kal-muted">
-                          days
-                        </span>
-                      </p>
+                  {!habitsLimited && (
+                    <div className="mt-6 grid grid-cols-2 gap-4 sm:gap-6">
+                      <div className="rounded-xl border border-kal-border/80 bg-kal-page/80 px-4 py-3">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-kal-muted">
+                          Best this month
+                        </p>
+                        <p className="mt-1 text-xl font-bold tabular-nums text-kal-text">
+                          {bestMonth}{" "}
+                          <span className="text-sm font-semibold text-kal-muted">
+                            days
+                          </span>
+                        </p>
+                      </div>
+                      <div className="rounded-xl border border-kal-border/80 bg-kal-page/80 px-4 py-3">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-kal-muted">
+                          Total completed
+                        </p>
+                        <p className="mt-1 text-xl font-bold tabular-nums text-kal-text">
+                          {totalDone}{" "}
+                          <span className="text-sm font-semibold text-kal-muted">
+                            lifetime
+                          </span>
+                        </p>
+                      </div>
                     </div>
-                    <div className="rounded-xl border border-kal-border/80 bg-kal-page/80 px-4 py-3">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-kal-muted">
-                        Total completed
-                      </p>
-                      <p className="mt-1 text-xl font-bold tabular-nums text-kal-text">
-                        {totalDone}{" "}
-                        <span className="text-sm font-semibold text-kal-muted">
-                          lifetime
-                        </span>
-                      </p>
-                    </div>
-                  </div>
+                  )}
 
                   <div className="mt-6">
                     <div className="mb-2 flex flex-wrap items-center justify-between gap-2">

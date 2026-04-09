@@ -38,6 +38,7 @@ import {
   type ChapterRollup,
 } from "@/lib/syllabusRollup";
 import { useExamsCatalogRows } from "@/hooks/useExamsCatalogRows";
+import { useFeatureAccess } from "@/hooks/useFeatureAccess";
 import { usePrimaryExamLabel } from "@/hooks/usePrimaryExamLabel";
 import { useSyllabusTracker } from "@/hooks/useSyllabusTracker";
 import { displayNameForExamCatalog } from "@/lib/examsCatalog";
@@ -129,6 +130,7 @@ function ChapterToggle({
 }
 
 export function SyllabusTracker() {
+  const { limited: syllabusLimited } = useFeatureAccess("syllabus");
   const { examLabel, loading: examLoading } = usePrimaryExamLabel();
   const { rows: examCatalogRows } = useExamsCatalogRows();
 
@@ -442,6 +444,18 @@ export function SyllabusTracker() {
         </p>
       )}
 
+      {syllabusLimited && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-center dark:border-amber-800 dark:bg-amber-950/30">
+          <p className="text-sm text-amber-800 dark:text-amber-200">
+            Basic plan: subjects &amp; chapters only.{" "}
+            <a href="/pricing" className="font-semibold underline">
+              Upgrade to Pro
+            </a>{" "}
+            for microtopics &amp; predictions.
+          </p>
+        </div>
+      )}
+
       <div className="space-y-3">
         {subjects.map((subject) => {
           const chapters = grouped.get(subject)!;
@@ -502,6 +516,7 @@ export function SyllabusTracker() {
                     <details
                       key={chapter}
                       className="group/ch border-b border-kal-border last:border-b-0 dark:border-slate-800"
+                      onToggle={syllabusLimited ? (e) => { (e.currentTarget as HTMLDetailsElement).open = false; } : undefined}
                     >
                       <summary className="cursor-pointer list-none bg-kal-card-muted px-4 py-4 marker:hidden sm:px-5 sm:py-5 dark:bg-slate-950/50 [&::-webkit-details-marker]:hidden">
                         <div className="flex flex-col gap-3">
