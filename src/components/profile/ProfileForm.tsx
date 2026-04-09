@@ -255,14 +255,14 @@ export function ProfileForm() {
 
   const signOut = useCallback(async () => {
     setSignOutConfirmOpen(false);
+    useAuthStore.getState().setAuth(null);
+    router.replace("/auth");
     try {
       const supabase = getSupabaseBrowserClient();
       await supabase.auth.signOut();
     } catch {
       /* ignore */
     }
-    router.replace("/auth");
-    router.refresh();
   }, [router]);
 
   const togglePrevAttempted = useCallback(() => {
