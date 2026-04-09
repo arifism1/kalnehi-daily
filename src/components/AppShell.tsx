@@ -26,6 +26,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const publicAuthPath =
     pathname === "/auth" || pathname === "/auth/reset";
+  const meditationPath =
+    pathname === "/meditation" || pathname.startsWith("/meditation/");
 
   useEffect(() => {
     if (!initialized) return;
@@ -45,13 +47,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     if (
       authed &&
       !onboardingCompleted &&
+      !meditationPath &&
       pathname !== "/onboarding" &&
       pathname !== "/auth" &&
       pathname !== "/auth/reset"
     ) {
       router.replace("/onboarding");
     }
-  }, [initialized, session, pathname, router, onboardingCompleted]);
+  }, [initialized, session, pathname, router, onboardingCompleted, meditationPath]);
 
   if (!initialized) {
     return <LoadingScreen />;
@@ -68,6 +71,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   if (
     session &&
     !onboardingCompleted &&
+    !meditationPath &&
     pathname !== "/onboarding" &&
     pathname !== "/auth" &&
     pathname !== "/auth/reset"

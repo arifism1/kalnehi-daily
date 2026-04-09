@@ -151,6 +151,42 @@ export type Database = {
         }
         Relationships: []
       }
+      meditation_sessions: {
+        Row: {
+          created_at: string
+          date: string
+          duration_minutes: number
+          guided: boolean
+          id: string
+          notes: string | null
+          session_type: string
+          soundscape: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          duration_minutes: number
+          guided?: boolean
+          id?: string
+          notes?: string | null
+          session_type: string
+          soundscape?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          duration_minutes?: number
+          guided?: boolean
+          id?: string
+          notes?: string | null
+          session_type?: string
+          soundscape?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       voice_timeline_entries: {
         Row: {
           id: string
