@@ -2,8 +2,7 @@
 
 import Groq from "groq-sdk";
 
-import { groqTasksToVoiceDraftTasks } from "@/lib/voiceDraftFromGroq";
-import { fetchPlannerPhotoTasksFromGroq } from "@/lib/voiceDictateGroq";
+import { ocrHandwrittenPhoto } from "@/lib/mistralOcr";
 import { PASTE_HANDWRITTEN_PLAN_PROMPT } from "@/lib/voicePrompts";
 import { runVoiceParseDraft } from "@/lib/runVoiceParseDraft";
 
@@ -176,44 +175,72 @@ export async function parseHandwrittenPlannerPhoto(input: {
     };
   }
 
-  const groq = await fetchPlannerPhotoTasksFromGroq(
-    b64,
-    mime,
-    {
-      referenceIso: new Date().toISOString(),
-      logDate,
-    },
-    { strictParsedTasks: true },
-  );
-  if (groq.outcome === "fallback") {
-    return {
-      ok: false,
-      error:
-        "Photo scan needs GROQ_API_KEY on the server. You can still paste text below.",
-      tasks: [],
-    };
-  }
-  if (groq.outcome === "parse_failed") {
-    return {
-      ok: false,
-      error: "Could not read tasks from that photo. Try a clearer picture.",
-      tasks: [],
-    };
+  const ocr = await ocrHandwrittenPhoto(b64, mime);
+  if (!ocr.ok) {
+    return { ok: false, error: ocr.error, tasks: [] };
   }
 
-  const mapped = groqTasksToVoiceDraftTasks(groq.tasks);
-  if (mapped.length === 0) {
+  const ocrText = ocr.markdown.trim().slice(0, 30_000);
+
+  const tableTasks = parseFromMarkdownTable(ocrText);
+  if (tableTasks.length > 0) return { ok: true, tasks: tableTasks };
+
+  const lineTasks = parseFromScheduleLines(ocrText);
+  if (lineTasks.length > 0) return { ok: true, tasks: lineTasks };
+
+  try {
+    const viaVoiceStyle = await runVoiceParseDraft(
+      ocrText,
+      logDate,
+      new Date().toISOString(),
+    );
+    if (viaVoiceStyle.ok && viaVoiceStyle.tasks.length > 0) {
+      return {
+        ok: true,
+        tasks: viaVoiceStyle.tasks.map((t) => ({
+          name: t.taskTitle,
+          start_time: t.start_time,
+          end_time: t.end_time,
+          duration: t.duration,
+        })),
+      };
+    }
+  } catch {
+    // fall through to raw-text fallback
+  }
+
+  const apiKey = process.env.GROQ_API_KEY?.trim();
+  if (apiKey) {
+    try {
+      const groq = new Groq({ apiKey });
+      const completion = await groq.chat.completions.create({
+        model: MODEL,
+        temperature: 0.1,
+        max_tokens: 2048,
+        messages: [
+          { role: "system", content: PASTE_HANDWRITTEN_PLAN_PROMPT },
+          {
+            role: "user",
+            content: `Extract rows from this OCR text of a handwritten schedule:\n\n${ocrText}\n\nReturn only the JSON array.`,
+          },
+        ],
+      });
+      const content = completion.choices[0]?.message?.content ?? "";
+      const parsed = parseFromGroqContent(content);
+      if (parsed && parsed.length > 0) return { ok: true, tasks: parsed };
+    } catch {
+      // fall through
+    }
+  }
+
+  if (!ocrText) {
     return { ok: false, error: "No tasks found in the photo.", tasks: [] };
   }
-
   return {
     ok: true,
-    tasks: mapped.map((t) => ({
-      name: t.taskTitle,
-      start_time: t.start_time,
-      end_time: t.end_time,
-      duration: t.duration,
-    })),
+    tasks: [
+      { name: ocrText.slice(0, 300), start_time: null, end_time: null, duration: null },
+    ],
   };
 }
 

@@ -29,6 +29,7 @@ interface SpeechRecognition extends EventTarget {
   interimResults: boolean;
   lang: string;
   maxAlternatives: number;
+  processLocally?: boolean;
   start(): void;
   stop(): void;
   abort(): void;
@@ -37,6 +38,8 @@ interface SpeechRecognition extends EventTarget {
   onend: ((this: SpeechRecognition, ev: Event) => void) | null;
   onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => void) | null;
   onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => void) | null;
+  onspeechend: ((this: SpeechRecognition, ev: Event) => void) | null;
+  onspeechstart: ((this: SpeechRecognition, ev: Event) => void) | null;
   onstart: ((this: SpeechRecognition, ev: Event) => void) | null;
 }
 
@@ -45,9 +48,23 @@ interface SpeechRecognitionEvent extends Event {
   readonly results: SpeechRecognitionResultList;
 }
 
+type SpeechRecognitionAvailabilityStatus =
+  | "available"
+  | "downloading"
+  | "downloadable"
+  | "unavailable";
+
 declare var SpeechRecognition: {
   prototype: SpeechRecognition;
   new (): SpeechRecognition;
+  available?: (options: {
+    langs: string[];
+    processLocally?: boolean;
+  }) => Promise<SpeechRecognitionAvailabilityStatus>;
+  install?: (options: {
+    langs: string[];
+    processLocally?: boolean;
+  }) => Promise<boolean>;
 };
 
 interface Window {

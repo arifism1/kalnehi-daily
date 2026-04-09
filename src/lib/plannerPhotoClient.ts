@@ -14,7 +14,7 @@ function renderJpeg(bitmap: ImageBitmap, maxSide: number, quality: number): stri
   return canvas.toDataURL("image/jpeg", quality);
 }
 
-export async function compressImageFileForGroq(file: File): Promise<{
+export async function compressImageForUpload(file: File): Promise<{
   base64: string;
   mimeType: "image/jpeg";
 }> {
