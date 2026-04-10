@@ -20,6 +20,11 @@ create index if not exists handwritten_planner_user_date_idx
 
 alter table public.handwritten_planner_entries enable row level security;
 
+drop policy if exists "handwritten_planner_select_own" on public.handwritten_planner_entries;
+drop policy if exists "handwritten_planner_insert_own" on public.handwritten_planner_entries;
+drop policy if exists "handwritten_planner_update_own" on public.handwritten_planner_entries;
+drop policy if exists "handwritten_planner_delete_own" on public.handwritten_planner_entries;
+
 create policy "handwritten_planner_select_own"
   on public.handwritten_planner_entries for select
   using (auth.uid() = user_id);

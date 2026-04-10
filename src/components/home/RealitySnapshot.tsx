@@ -122,12 +122,12 @@ export function RealitySnapshot({
     >
       <ExamCountdownHero />
 
-      <div className="border-t border-kal-border px-6 py-7 sm:px-8 sm:py-8 md:py-9 lg:px-10">
-        <div className="flex flex-col gap-0.5 text-center sm:gap-1 sm:text-left">
-          <p className="text-[0.6rem] font-semibold uppercase tracking-[0.22em] text-kal-accent sm:text-[0.65rem] sm:tracking-[0.28em]">
+      <div className="border-t border-kal-border px-6 py-8 sm:px-10 sm:py-10 md:py-11 lg:px-12">
+        <div className="flex max-w-3xl flex-col gap-1.5 text-center sm:text-left">
+          <p className="text-[0.65rem] font-semibold uppercase tracking-[0.24em] text-kal-accent sm:text-[0.7rem] sm:tracking-[0.26em]">
             Reality snapshot
           </p>
-          <p className="text-xs leading-snug text-kal-muted sm:text-sm sm:leading-normal">
+          <p className="text-sm leading-relaxed text-kal-muted sm:text-[15px] sm:leading-[1.55]">
             Where your syllabus stands and how hard you&apos;re executing today.
             {useCuet ? (
               <span className="mt-1 block text-[11px] text-kal-text-secondary">
@@ -156,8 +156,8 @@ export function RealitySnapshot({
         {/* Syllabus block: mastery (left) · ring (center) · per-year marks (right) */}
         <div
           className={clsx(
-            "mt-6 rounded-xl border border-kal-border bg-kal-card-muted p-6 sm:mt-8 sm:rounded-2xl sm:p-6 md:p-8 lg:p-8",
-            (useSyllabusYears || useCuet) && "lg:py-10",
+            "mt-8 rounded-2xl border border-kal-border/90 bg-kal-card-muted/80 p-7 sm:mt-10 sm:p-9 lg:p-11",
+            (useSyllabusYears || useCuet) && "lg:py-12",
           )}
         >
           {showSyllabusComingSoonBanner && (examFriendly || examLabel) ? (
@@ -179,79 +179,86 @@ export function RealitySnapshot({
           ) : null}
 
           {useCuet && cuetScoring ? (
-            <div className="grid grid-cols-1 items-center gap-6 sm:gap-8 lg:grid-cols-12 lg:gap-6 lg:gap-y-8 xl:gap-10">
-              <div className="flex flex-col items-center text-center lg:col-span-3 lg:items-start lg:text-left">
-                <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-kal-muted sm:text-[10px] sm:tracking-[0.22em]">
+            <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-3 lg:gap-x-12 xl:gap-x-14">
+              <div className="flex min-w-0 flex-col items-center text-center lg:items-start lg:text-left">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-kal-muted sm:text-[11px]">
                   Overall CUET progress
                 </p>
-                <p className="mt-1.5 text-4xl font-bold tabular-nums tracking-tight text-kal-text sm:mt-2 sm:text-5xl md:text-6xl">
+                <p className="mt-3 text-4xl font-bold tabular-nums tracking-tight text-kal-text sm:text-5xl md:text-[3.25rem]">
                   {cuetScoring.overallPercent % 1 === 0
                     ? cuetScoring.overallPercent.toFixed(0)
                     : cuetScoring.overallPercent.toFixed(1)}
                   %
                 </p>
-                <p className="mt-1.5 max-w-[13rem] text-[11px] leading-relaxed text-kal-muted sm:mt-2 sm:text-xs">
+                <p className="mt-3 max-w-[15rem] text-xs leading-relaxed text-kal-muted sm:max-w-[17rem]">
                   Combined across your selected domain subjects (each capped at
                   200).
                 </p>
               </div>
 
-              <div className="flex justify-center lg:col-span-5">
-                <div className="origin-center scale-[0.72] sm:scale-90 md:scale-100">
-                  <CircularProgressRing
-                    percent={marksPct}
-                    gradientId={gidMarks}
-                    size={192}
-                    strokeWidth={11}
-                    className="mx-auto"
-                  >
-                    <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-kal-muted sm:text-[10px] sm:tracking-[0.2em]">
-                      {showAdvancedMarksProjection
-                        ? "Projected CUET score"
-                        : "CUET syllabus"}
-                    </span>
-                    {showAdvancedMarksProjection ? (
-                      <>
-                        <p className="mt-1.5 flex items-baseline justify-center gap-1 text-2xl font-bold tabular-nums sm:mt-2 sm:gap-1.5 sm:text-3xl md:text-4xl">
-                          <span className="text-red-600 dark:text-red-300">
-                            {cuetScoring.totalProjected}
-                          </span>
-                          <span className="text-lg font-semibold text-kal-text-secondary sm:text-xl">
-                            /
-                          </span>
-                          <span className="text-kal-text-secondary">
-                            {cuetScoring.totalMax}
-                          </span>
-                        </p>
-                        <p className="mt-2 max-w-[12rem] text-[10px] leading-snug text-kal-muted sm:mt-3 sm:text-[11px]">
-                          Sum of domain projections (200 × subjects)
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <p className="mt-1.5 text-3xl font-bold tabular-nums text-kal-text sm:mt-2 sm:text-4xl md:text-5xl">
-                          {cuetScoring.overallPercent % 1 === 0
-                            ? cuetScoring.overallPercent.toFixed(0)
-                            : cuetScoring.overallPercent.toFixed(1)}
-                          <span className="align-super text-lg font-semibold text-kal-accent dark:text-kal-accent/90 sm:text-xl">
-                            %
-                          </span>
-                        </p>
-                        <p className="mt-2 max-w-[12rem] text-[10px] leading-snug text-kal-muted sm:mt-3 sm:text-[11px]">
-                          Microtopic completion across domains
-                        </p>
-                      </>
-                    )}
-                  </CircularProgressRing>
+              <div className="flex min-w-0 flex-col items-center gap-4 lg:gap-5">
+                <div className="space-y-1 text-center">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-kal-muted sm:text-[11px]">
+                    {showAdvancedMarksProjection
+                      ? "Projected CUET score"
+                      : "CUET completion"}
+                  </p>
+                  {showAdvancedMarksProjection ? (
+                    <p className="text-xs text-kal-text-secondary">
+                      Sum of domain projections (200 × subjects)
+                    </p>
+                  ) : (
+                    <p className="text-xs text-kal-text-secondary">
+                      Microtopic completion across domains
+                    </p>
+                  )}
                 </div>
+                <CircularProgressRing
+                  percent={marksPct}
+                  gradientId={gidMarks}
+                  size={204}
+                  strokeWidth={11}
+                  className="mx-auto"
+                >
+                  {showAdvancedMarksProjection ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <p className="inline-flex shrink-0 flex-nowrap items-baseline justify-center gap-1.5 whitespace-nowrap text-3xl font-bold tabular-nums sm:text-[2.125rem] md:text-4xl">
+                        <span className="text-red-600 dark:text-red-300">
+                          {cuetScoring.totalProjected}
+                        </span>
+                        <span className="text-lg font-semibold text-kal-text-secondary sm:text-xl">
+                          /
+                        </span>
+                        <span className="text-kal-text-secondary">
+                          {cuetScoring.totalMax}
+                        </span>
+                      </p>
+                      <p className="text-[11px] font-medium tabular-nums text-kal-muted">
+                        {marksPct % 1 === 0
+                          ? marksPct.toFixed(0)
+                          : marksPct.toFixed(1)}
+                        % of max
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-4xl font-bold tabular-nums text-kal-text sm:text-[2.75rem] md:text-5xl">
+                      {cuetScoring.overallPercent % 1 === 0
+                        ? cuetScoring.overallPercent.toFixed(0)
+                        : cuetScoring.overallPercent.toFixed(1)}
+                      <span className="align-super text-lg font-semibold text-kal-accent dark:text-kal-accent/90 sm:text-xl">
+                        %
+                      </span>
+                    </p>
+                  )}
+                </CircularProgressRing>
               </div>
 
-              <div className="lg:col-span-4">
-                <p className="mb-3 text-center text-[9px] font-semibold uppercase tracking-[0.16em] text-kal-muted sm:mb-4 sm:text-[10px] sm:tracking-[0.2em] lg:text-left">
+              <div className="min-w-0">
+                <p className="mb-4 text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-kal-muted sm:mb-5 sm:text-[11px] lg:text-left">
                   Per domain subject
                 </p>
                 <ul
-                  className="mx-auto flex max-w-sm flex-col gap-2.5 border-t border-kal-border pt-4 sm:gap-3 sm:pt-5 lg:mx-0 lg:max-w-none lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0"
+                  className="mx-auto flex max-w-md flex-col gap-3 border-t border-kal-border pt-5 sm:gap-3.5 sm:pt-6 lg:mx-0 lg:max-w-none lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0"
                   aria-label={
                     showAdvancedMarksProjection
                       ? "CUET projected marks by subject"
@@ -289,183 +296,216 @@ export function RealitySnapshot({
               </div>
             </div>
           ) : useSyllabusYears && syllabusMultiYear ? (
-            <div className="grid grid-cols-1 items-center gap-6 sm:gap-8 lg:grid-cols-12 lg:gap-6 lg:gap-y-8 xl:gap-10">
+            <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-3 lg:gap-x-12 xl:gap-x-14">
               {/* Left: syllabus mastery % */}
-              <div className="flex flex-col items-center text-center lg:col-span-3 lg:items-start lg:text-left">
-                <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-kal-muted sm:text-[10px] sm:tracking-[0.22em]">
+              <div className="flex min-w-0 flex-col items-center text-center lg:items-start lg:text-left">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-kal-muted sm:text-[11px]">
                   Syllabus mastery
                 </p>
                 {masteryDisplay != null ? (
                   <>
-                    <p className="mt-1.5 text-4xl font-bold tabular-nums tracking-tight text-kal-text sm:mt-2 sm:text-5xl md:text-6xl">
+                    <p className="mt-3 text-4xl font-bold tabular-nums tracking-tight text-kal-text sm:text-5xl md:text-[3.25rem]">
                       {masteryDisplay}
                     </p>
-                    <p className="mt-1.5 max-w-[13rem] text-[11px] leading-relaxed text-kal-muted sm:mt-2 sm:text-xs">
+                    <p className="mt-3 max-w-[15rem] text-xs leading-relaxed text-kal-muted sm:max-w-[17rem]">
                       Full chapter credit when every microtopic in that chapter
                       is complete.
                     </p>
                   </>
                 ) : (
-                  <p className="mt-2 text-sm text-kal-muted">—</p>
+                  <p className="mt-3 text-sm text-kal-muted">—</p>
                 )}
               </div>
 
-              {/* Center: primary ring */}
-              <div className="flex justify-center lg:col-span-5">
-                <div className="origin-center scale-[0.72] sm:scale-90 md:scale-100">
-                  <CircularProgressRing
-                    percent={marksPct}
-                    gradientId={gidMarks}
-                    size={192}
-                    strokeWidth={11}
-                    className="mx-auto"
-                  >
-                    <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-kal-muted sm:text-[10px] sm:tracking-[0.2em]">
-                      Syllabus capture
-                    </span>
-                    <p className="mt-1.5 flex items-baseline justify-center gap-1 text-2xl font-bold tabular-nums sm:mt-2 sm:gap-1.5 sm:text-3xl md:text-4xl">
-                      <span className="text-red-600 dark:text-red-300">
-                        {syllabusMultiYear.ringProjected}
+              {/* Center: primary ring — title + caption outside the circle so nothing clips */}
+              <div className="flex min-w-0 flex-col items-center gap-4 lg:gap-5">
+                <div className="space-y-1 text-center">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-kal-muted sm:text-[11px]">
+                    Primary marks ring
+                  </p>
+                  {showAdvancedMarksProjection ? (
+                    <p className="text-xs text-kal-text-secondary">
+                      Weights:{" "}
+                      <span className="font-medium text-kal-muted">
+                        marks_{syllabusMultiYear.ringYear}
                       </span>
-                      <span className="text-lg font-semibold text-kal-text-secondary sm:text-xl">
-                        /
-                      </span>
-                      <span className="text-kal-text-secondary">
-                        {syllabusMultiYear.ringOutOf}
+                      <span className="text-kal-muted">
+                        {" "}
+                        · full scale {syllabusMultiYear.ringOutOf}
                       </span>
                     </p>
-                    <p className="mt-2 max-w-[11rem] text-[10px] leading-snug text-kal-muted sm:mt-3 sm:text-[11px]">
-                      Main ring: marks_{syllabusMultiYear.ringYear} · out of{" "}
-                      {syllabusMultiYear.ringOutOf}
+                  ) : (
+                    <p className="text-xs text-kal-text-secondary">
+                      Completion % from your syllabus progress
                     </p>
-                  </CircularProgressRing>
+                  )}
                 </div>
+                <CircularProgressRing
+                  percent={marksPct}
+                  gradientId={gidMarks}
+                  size={204}
+                  strokeWidth={11}
+                  className="mx-auto"
+                >
+                  {showAdvancedMarksProjection ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <p className="inline-flex shrink-0 flex-nowrap items-baseline justify-center gap-1.5 whitespace-nowrap text-3xl font-bold tabular-nums sm:text-[2.125rem] md:text-4xl">
+                        <span className="text-red-600 dark:text-red-300">
+                          {syllabusMultiYear.ringProjected}
+                        </span>
+                        <span className="text-lg font-semibold text-kal-text-secondary sm:text-xl">
+                          /
+                        </span>
+                        <span className="text-kal-text-secondary">
+                          {syllabusMultiYear.ringOutOf}
+                        </span>
+                      </p>
+                      <p className="text-[11px] font-medium tabular-nums text-kal-muted">
+                        {marksPct % 1 === 0
+                          ? marksPct.toFixed(0)
+                          : marksPct.toFixed(1)}
+                        % of scale
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-4xl font-bold tabular-nums text-kal-text sm:text-[2.75rem] md:text-5xl">
+                      {marksPct % 1 === 0
+                        ? marksPct.toFixed(0)
+                        : marksPct.toFixed(1)}
+                      <span className="align-super text-lg font-semibold text-kal-accent dark:text-kal-accent/90 sm:text-xl">
+                        %
+                      </span>
+                    </p>
+                  )}
+                </CircularProgressRing>
               </div>
 
               {/* Right: all exam years */}
-              <div className="lg:col-span-4">
-                <p className="mb-3 text-center text-[9px] font-semibold uppercase tracking-[0.16em] text-kal-muted sm:mb-4 sm:text-[10px] sm:tracking-[0.2em] lg:text-left">
-                  Multi-year breakdown (marks columns)
+              <div className="min-w-0">
+                <p className="mb-4 text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-kal-muted sm:mb-5 sm:text-[11px] lg:text-left">
+                  Multi-year breakdown
                 </p>
-                <ul
-                  className="mx-auto flex max-w-sm flex-col gap-3 border-t border-kal-border pt-4 sm:gap-5 sm:pt-5 lg:mx-0 lg:max-w-none lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0"
-                  aria-label="Marks secured by exam year"
-                >
-                  {syllabusMultiYear.lines.map((line) => (
-                    <li key={line.year} className="text-left">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-kal-muted sm:text-[11px] sm:tracking-[0.12em]">
-                        {examFriendly || examLabel || "Exam"} {line.year}
-                      </p>
-                      <p className="mt-1 flex items-baseline gap-1.5 text-xl font-bold tabular-nums sm:mt-1.5 sm:gap-2 sm:text-2xl md:text-[1.65rem]">
-                        <span className="text-red-600 dark:text-red-300">
-                          {line.projectedOutOf720}
-                        </span>
-                        <span className="text-sm font-semibold text-kal-muted sm:text-base">
-                          / {syllabusMultiYear.ringOutOf}
-                        </span>
-                      </p>
-                      <p className="mt-0.5 text-[10px] leading-snug text-kal-muted sm:mt-1 sm:text-[11px]">
-                        {line.projectedOutOf720 === 0
-                          ? "Start adding tasks to see your projected score."
-                          : line.patternShort}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
+                <p className="mb-3 hidden text-xs text-kal-text-secondary lg:mb-4 lg:block">
+                  Marks columns (720-scale projection per pattern year)
+                </p>
+                <div className="mx-auto max-w-md border-t border-kal-border pt-5 sm:pt-6 lg:mx-0 lg:max-w-none lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
+                  <ul
+                    className="divide-y divide-kal-border/60 overflow-hidden rounded-xl border border-kal-border/70 bg-kal-card/60"
+                    aria-label="Marks secured by exam year"
+                  >
+                    {syllabusMultiYear.lines.map((line) => (
+                      <li
+                        key={line.year}
+                        className="flex flex-col gap-2 px-4 py-3.5 text-left sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:py-4"
+                      >
+                        <p className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.12em] text-kal-muted">
+                          {examFriendly || examLabel || "Exam"} {line.year}
+                        </p>
+                        <div className="min-w-0 sm:text-right">
+                          <p className="inline-flex shrink-0 flex-nowrap items-baseline gap-x-2 whitespace-nowrap text-xl font-bold tabular-nums sm:text-2xl">
+                            <span className="text-red-600 dark:text-red-300">
+                              {line.projectedOutOf720}
+                            </span>
+                            <span className="text-sm font-semibold text-kal-muted sm:text-base">
+                              / {syllabusMultiYear.ringOutOf}
+                            </span>
+                          </p>
+                          <p className="mt-1 text-xs leading-snug text-kal-muted sm:mt-0.5">
+                            {line.projectedOutOf720 === 0
+                              ? "Start adding tasks to see your projected score."
+                              : line.patternShort}
+                          </p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start sm:justify-center sm:gap-8 md:gap-12">
+            <div className="flex flex-col items-center gap-10 sm:flex-row sm:items-start sm:justify-center sm:gap-14 md:gap-16">
               {masteryDisplay != null && (
-                <div className="w-full max-w-[11rem] text-center sm:text-left">
-                  <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-kal-muted sm:text-[10px] sm:tracking-[0.22em]">
+                <div className="w-full max-w-[14rem] text-center sm:text-left">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-kal-muted sm:text-[11px]">
                     Syllabus mastery
                   </p>
-                  <p className="mt-1.5 text-4xl font-bold tabular-nums text-kal-text sm:mt-2 sm:text-5xl">
+                  <p className="mt-3 text-4xl font-bold tabular-nums text-kal-text sm:text-5xl">
                     {masteryDisplay}
                   </p>
                 </div>
               )}
-              <div className="flex flex-col items-center">
-                <div className="origin-center scale-[0.78] sm:scale-95 md:scale-100">
-                  <CircularProgressRing
-                    percent={marksPct}
-                    gradientId={gidMarks}
-                    size={184}
-                    strokeWidth={11}
-                  >
-                    <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-kal-muted sm:text-[10px] sm:tracking-[0.2em]">
-                      {syllabusMasteryPercent != null && !showAdvancedMarksProjection
-                        ? "Syllabus completion"
-                        : "Syllabus capture"}
-                    </span>
-                    {syllabusMasteryPercent != null && !showAdvancedMarksProjection ? (
-                      <p className="mt-1.5 text-3xl font-bold tabular-nums text-kal-text sm:mt-2 sm:text-4xl md:text-5xl">
-                        {masteryDisplay}
+              <div className="flex min-w-0 flex-col items-center gap-4">
+                <p className="text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-kal-muted sm:text-[11px]">
+                  {syllabusMasteryPercent != null && !showAdvancedMarksProjection
+                    ? "Syllabus completion"
+                    : "Plan-linked projection"}
+                </p>
+                <CircularProgressRing
+                  percent={marksPct}
+                  gradientId={gidMarks}
+                  size={196}
+                  strokeWidth={11}
+                >
+                  {syllabusMasteryPercent != null && !showAdvancedMarksProjection ? (
+                    <p className="text-4xl font-bold tabular-nums text-kal-text sm:text-[2.75rem] md:text-5xl">
+                      {masteryDisplay}
+                    </p>
+                  ) : marksMastered <= 0 ? (
+                    <p className="max-w-[11rem] text-center text-xs leading-relaxed text-kal-muted">
+                      Start adding tasks to see your progress projection.
+                    </p>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2">
+                      <p className="inline-flex shrink-0 flex-nowrap items-baseline justify-center gap-1.5 whitespace-nowrap text-3xl font-bold tabular-nums sm:text-[2.125rem] md:text-4xl">
+                        <span className="text-red-600 dark:text-red-300">
+                          {marksMastered.toFixed(0)}
+                        </span>
+                        <span className="text-lg font-semibold text-kal-text-secondary sm:text-xl">
+                          /
+                        </span>
+                        <span className="text-kal-text-secondary">
+                          {marksTotal.toFixed(0)}
+                        </span>
                       </p>
-                    ) : (
-                      <>
-                        {marksMastered <= 0 ? (
-                          <p className="mt-2 max-w-[12rem] text-center text-[10px] leading-snug text-kal-muted sm:mt-3 sm:text-[11px]">
-                            Start adding tasks to see your progress projection.
-                          </p>
-                        ) : (
-                          <>
-                            <p className="mt-1.5 flex items-baseline justify-center gap-1.5 text-2xl font-bold tabular-nums sm:mt-2 sm:text-3xl md:text-4xl">
-                              <span className="text-red-600 dark:text-red-300">
-                                {marksMastered.toFixed(0)}
-                              </span>
-                              <span className="text-lg font-semibold text-kal-text-secondary sm:text-xl">
-                                /
-                              </span>
-                              <span className="text-kal-text-secondary">
-                                {marksTotal.toFixed(0)}
-                              </span>
-                            </p>
-                            <p className="mt-2 text-[10px] text-kal-muted sm:mt-3 sm:text-[11px]">
-                              Marks secured vs your plan scope
-                            </p>
-                          </>
-                        )}
-                      </>
-                    )}
-                  </CircularProgressRing>
-                </div>
+                      <p className="text-[11px] text-kal-muted">
+                        Marks secured vs plan scope
+                      </p>
+                    </div>
+                  )}
+                </CircularProgressRing>
               </div>
             </div>
           )}
         </div>
 
         {/* Master today */}
-        <div className="mt-6 flex justify-center border-t border-kal-border pt-6 sm:mt-10 sm:pt-10">
-          <div className="origin-center scale-[0.82] sm:scale-95 md:scale-100">
-            <CircularProgressRing
-              percent={clampedToday}
-              gradientId={gidToday}
-              size={168}
-              strokeWidth={10}
-            >
-              <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-kal-muted sm:text-[10px] sm:tracking-[0.2em]">
-                Master today
+        <div className="mt-10 flex flex-col items-center gap-4 border-t border-kal-border pt-10 sm:mt-12 sm:pt-12">
+          <p className="text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-kal-muted sm:text-[11px]">
+            Master today
+          </p>
+          <CircularProgressRing
+            percent={clampedToday}
+            gradientId={gidToday}
+            size={176}
+            strokeWidth={10}
+          >
+            <p className="text-4xl font-bold tabular-nums text-kal-text sm:text-5xl md:text-[3.25rem]">
+              {clampedToday}
+              <span className="align-super text-lg font-semibold text-kal-accent dark:text-kal-accent/90 sm:text-xl">
+                %
               </span>
-              <p className="mt-0.5 text-3xl font-bold tabular-nums text-kal-text sm:mt-1 sm:text-4xl md:text-5xl">
-                {clampedToday}
-                <span className="align-super text-lg font-semibold text-kal-accent dark:text-kal-accent/90 sm:text-xl">
-                  %
-                </span>
-              </p>
-              <p className="mt-1.5 max-w-[12rem] text-center text-[9px] leading-snug text-kal-muted sm:mt-2 sm:text-[10px]">
-                {todayTaskCount > 0
-                  ? `${todayTaskCount} target${todayTaskCount === 1 ? "" : "s"} locked for today`
-                  : "No targets yet — lock them in Plan"}
-              </p>
-            </CircularProgressRing>
-          </div>
+            </p>
+            <p className="mt-2 max-w-[13rem] text-center text-[11px] leading-relaxed text-kal-muted sm:text-xs">
+              {todayTaskCount > 0
+                ? `${todayTaskCount} target${todayTaskCount === 1 ? "" : "s"} locked for today`
+                : "No targets yet — lock them in Plan"}
+            </p>
+          </CircularProgressRing>
         </div>
 
         <div
           className={clsx(
-            "mt-5 rounded-xl border px-3 py-3 text-left transition-colors duration-200 sm:mt-8 sm:rounded-2xl sm:px-4 sm:py-4 md:px-5",
+            "mt-8 rounded-2xl border px-4 py-4 text-left transition-colors duration-200 sm:mt-10 sm:px-5 sm:py-5 md:px-6",
             bandTone(dailyBand),
           )}
         >

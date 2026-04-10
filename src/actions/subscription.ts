@@ -54,18 +54,70 @@ export type VerifyPlanUpgradePaymentResult =
   | { ok: true; warning: string }
   | { ok: false; error: string };
 
-const RAZORPAY_PLAN_IDS: Record<SubscriptionTier, string> = {
-  basic: process.env.RAZORPAY_PLAN_ID_BASIC ?? "plan_basic_placeholder",
-  pro: process.env.RAZORPAY_PLAN_ID_PRO ?? "plan_SbOStQOx52JVpG",
-  pro_max: process.env.RAZORPAY_PLAN_ID_PRO_MAX ?? "plan_promax_placeholder",
-};
-
 const TOTAL_BILLING_CYCLES = 12;
 const TRIAL_DAYS = 3;
 
 const RAZORPAY_ID_RE = /^[a-zA-Z0-9_]{14,30}$/;
 const RAZORPAY_ORDER_ID_RE = /^order_[a-zA-Z0-9]+$/;
 const HEX_SIGNATURE_RE = /^[a-f0-9]{64}$/;
+
+/** Razorpay dashboard plan id (test vs live must match API keys). */
+const RAZORPAY_PLAN_ID_FORMAT_RE = /^plan_[A-Za-z0-9]+$/;
+
+/** When `RAZORPAY_PLAN_ID_PRO` is unset, use this (legacy dev / deploys). */
+const RAZORPAY_PLAN_ID_PRO_FALLBACK = "plan_SbOStQOx52JVpG";
+
+function razorpayPlanEnvVarName(tier: SubscriptionTier): string {
+  switch (tier) {
+    case "basic":
+      return "RAZORPAY_PLAN_ID_BASIC";
+    case "pro":
+      return "RAZORPAY_PLAN_ID_PRO";
+    case "pro_max":
+      return "RAZORPAY_PLAN_ID_PRO_MAX";
+  }
+}
+
+/**
+ * Resolves a valid Razorpay `plan_id` for the tier, or null if misconfigured.
+ * Basic and Pro Max require env; Pro falls back when env is empty (not when env is invalid).
+ */
+function resolveRazorpayPlanId(tier: SubscriptionTier): string | null {
+  const envName = razorpayPlanEnvVarName(tier);
+  const trimmed = process.env[envName]?.trim() ?? "";
+  if (trimmed && RAZORPAY_PLAN_ID_FORMAT_RE.test(trimmed)) {
+    return trimmed;
+  }
+  if (tier === "pro" && trimmed === "") {
+    return RAZORPAY_PLAN_ID_FORMAT_RE.test(RAZORPAY_PLAN_ID_PRO_FALLBACK)
+      ? RAZORPAY_PLAN_ID_PRO_FALLBACK
+      : null;
+  }
+  return null;
+}
+
+function logRazorpaySubscriptionCreateFailure(
+  context: string,
+  ctx: Record<string, string | number | undefined>,
+  error: unknown,
+): void {
+  const errRec =
+    typeof error === "object" && error !== null ? (error as Record<string, unknown>) : null;
+  const inner =
+    errRec && typeof errRec.error === "object" && errRec.error !== null
+      ? (errRec.error as Record<string, unknown>)
+      : null;
+  console.error(`[subscription] ${context}`, {
+    ...ctx,
+    safeMessage: safeErrorMessage(error),
+    statusCode: errRec?.statusCode,
+    errorCode: typeof inner?.code === "string" ? inner.code : undefined,
+    errorDescription: typeof inner?.description === "string" ? inner.description : undefined,
+    errorField: typeof inner?.field === "string" ? inner.field : undefined,
+    errorSource: typeof inner?.source === "string" ? inner.source : undefined,
+    rawMessage: error instanceof Error ? error.message : undefined,
+  });
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -261,7 +313,17 @@ export async function createRazorpayTrialSubscription(
   }
 
   const tierConfig = TIERS[tier];
-  const planId = RAZORPAY_PLAN_IDS[tier];
+  const planId = resolveRazorpayPlanId(tier);
+  if (!planId) {
+    console.error(
+      "[subscription] createRazorpayTrialSubscription: missing or invalid Razorpay plan id",
+      { tier, envVar: razorpayPlanEnvVarName(tier) },
+    );
+    return {
+      ok: false,
+      error: "This plan is not available for checkout yet. Please contact support.",
+    };
+  }
 
   try {
     const razorpay = getRazorpayClient(config);
@@ -923,6 +985,19 @@ export async function createPlanUpgradeOrder(
     return { ok: false, error: "Nothing to pay for this upgrade." };
   }
 
+  const planIdForTarget = resolveRazorpayPlanId(targetTier);
+  if (!planIdForTarget) {
+    console.error("[subscription] createPlanUpgradeOrder: missing or invalid Razorpay plan id", {
+      targetTier,
+      envVar: razorpayPlanEnvVarName(targetTier),
+    });
+    return {
+      ok: false,
+      error:
+        "This upgrade is temporarily unavailable. Please try again later or contact support.",
+    };
+  }
+
   try {
     const razorpay = getRazorpayClient(config);
     const receipt = `up${Date.now()}`.slice(0, 40);
@@ -1068,6 +1143,25 @@ export async function verifyPlanUpgradePayment(params: {
       };
     }
 
+    const planId = resolveRazorpayPlanId(targetTier);
+    if (!planId) {
+      console.error(
+        "[subscription] verifyPlanUpgradePayment: missing or invalid Razorpay plan id (before claim)",
+        {
+          targetTier,
+          envVar: razorpayPlanEnvVarName(targetTier),
+          paymentId,
+          orderId,
+          userIdPrefix: userId.slice(0, 8),
+        },
+      );
+      return {
+        ok: false,
+        error:
+          "We could not finish your upgrade due to a billing configuration issue. Please contact support with your payment id.",
+      };
+    }
+
     const claim = await claimRazorpayPaymentId(userId, paymentId, PAYMENT_KIND_UPGRADE);
     if (claim === "duplicate") return { ok: true };
     if (claim === "error") {
@@ -1083,10 +1177,19 @@ export async function verifyPlanUpgradePayment(params: {
 
     let newSubId: string | null = null;
     try {
+      console.log("[subscription] verifyPlanUpgradePayment: subscriptions.create", {
+        targetTier,
+        planId,
+        startAtSec,
+        subscriptionEndIso: endIso ?? undefined,
+        userIdPrefix: userId.slice(0, 8),
+        paymentId,
+        orderId,
+      });
       const created = (await (razorpay.subscriptions.create as unknown as (
         body: Record<string, unknown>,
       ) => Promise<{ id: string }>)({
-        plan_id: RAZORPAY_PLAN_IDS[targetTier],
+        plan_id: planId,
         total_count: TOTAL_BILLING_CYCLES,
         customer_notify: 1,
         start_at: startAtSec,
@@ -1098,6 +1201,19 @@ export async function verifyPlanUpgradePayment(params: {
       })) as { id: string };
       newSubId = created.id;
     } catch (e) {
+      logRazorpaySubscriptionCreateFailure(
+        "verifyPlanUpgradePayment: subscriptions.create failed",
+        {
+          targetTier,
+          planId,
+          startAtSec,
+          subscriptionEndIso: endIso ?? undefined,
+          userIdPrefix: userId.slice(0, 8),
+          paymentId,
+          orderId,
+        },
+        e,
+      );
       await releaseRazorpayPaymentClaim(paymentId);
       return {
         ok: false,

@@ -108,14 +108,14 @@ export function ExamCountdownHero() {
   }
 
   const breakdown = [
-    { label: "Mo", value: months },
-    { label: "Wk", value: weeks },
-    { label: "Dy", value: days },
-    { label: "Hr", value: hours },
-  ];
+    { label: "Months", value: months },
+    { label: "Weeks", value: weeks },
+    { label: "Days", value: days },
+    { label: "Hours", value: hours },
+  ] as const;
 
   return (
-    <div className="relative overflow-hidden px-6 pb-8 pt-7 sm:px-8 sm:pb-10 sm:pt-8">
+    <div className="relative overflow-hidden px-6 pb-9 pt-8 sm:px-8 sm:pb-11 sm:pt-9">
       <div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,rgba(239,68,68,0.12),transparent)] dark:bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,rgba(239,68,68,0.18),transparent)]"
         aria-hidden
@@ -143,16 +143,16 @@ export function ExamCountdownHero() {
         </p>
       </div>
 
-      <div className="mt-6 grid grid-cols-4 gap-2 sm:mt-8 sm:gap-3">
+      <div className="mt-7 grid grid-cols-2 gap-3 sm:mt-9 sm:grid-cols-4 sm:gap-4">
         {breakdown.map((b) => (
           <div
             key={b.label}
-            className="rounded-xl border border-kal-border bg-kal-card px-0.5 py-3 text-center kal-shadow-card transition-transform duration-200 hover:border-kal-accent/30 sm:rounded-2xl sm:px-1 sm:py-4"
+            className="rounded-2xl border border-kal-border/80 bg-kal-card px-3 py-4 text-center kal-shadow-card transition-colors duration-200 hover:border-kal-accent/25 sm:px-4 sm:py-5"
           >
-            <div className="text-lg font-bold tabular-nums text-kal-text sm:text-xl md:text-2xl">
+            <div className="text-2xl font-bold tabular-nums tracking-tight text-kal-text sm:text-[1.65rem] md:text-[1.85rem]">
               {b.value}
             </div>
-            <div className="mt-0.5 text-[8px] font-semibold uppercase tracking-wide text-kal-muted sm:mt-1 sm:text-[9px] sm:tracking-wider">
+            <div className="mt-2 text-[11px] font-medium leading-none text-kal-muted sm:text-xs">
               {b.label}
             </div>
           </div>

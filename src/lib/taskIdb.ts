@@ -23,6 +23,8 @@ export type VoicePlannerSnapshotRow = {
   endInput: string;
   duration: string | null;
   transcriptRaw?: string;
+  /** Unified daily plan source (IDB rows without this default to voice). */
+  source?: "typed" | "voice" | "handwritten";
 };
 
 export type VoicePlannerSnapshot = {
@@ -108,7 +110,10 @@ export type OutboxMutation = {
     | "voice_timeline_create"
     | "voice_timeline_update"
     | "voice_timeline_delete"
-    | "handwritten_planner_replace";
+    | "handwritten_planner_replace"
+    | "daily_task_create"
+    | "daily_task_update"
+    | "daily_task_delete";
   taskId: string;
   /** For task_update — fields to send to updateTask */
   patch?: TablesUpdate<"tasks">;
@@ -126,6 +131,20 @@ export type OutboxMutation = {
   voicePatch?: TablesUpdate<"voice_timeline_entries">;
   /** handwritten_planner_replace — delete all rows for log_date then insert tasks */
   handwrittenReplace?: HandwrittenPlannerReplacePayload;
+  /** daily_tasks — plan resolved from plan_date on flush */
+  dailyTaskInsert?: {
+    plan_date: string;
+    id: string;
+    title: string;
+    time_slot: string | null;
+    time_start: string | null;
+    time_end: string | null;
+    priority: string;
+    status: string;
+    source: "typed" | "voice" | "handwritten";
+    source_raw_text: string | null;
+  };
+  dailyTaskPatch?: TablesUpdate<"daily_tasks">;
   /** How many consecutive flush attempts failed for this entry. */
   failCount?: number;
 };

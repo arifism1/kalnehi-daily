@@ -4,6 +4,7 @@ import clsx from "clsx";
 import {
   BookMarked,
   ChevronDown,
+  Layers,
   Pencil,
   Plus,
   SlidersHorizontal,
@@ -456,7 +457,7 @@ export function SyllabusTracker() {
         </div>
       )}
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {subjects.map((subject) => {
           const chapters = grouped.get(subject)!;
           const chapterNames = sortChapterNameList([...chapters.keys()]);
@@ -499,7 +500,8 @@ export function SyllabusTracker() {
                 </span>
               </summary>
               <div className="border-t border-kal-border dark:border-slate-800">
-                {chapterNames.map((chapter) => {
+                {chapterNames.map((chapter, chapterIdx) => {
+                  const chapterNumber = chapterIdx + 1;
                   const list = chapters.get(chapter)!;
                   const firstRow = list[0] as MergedSyllabusRow;
                   const originSubject =
@@ -515,26 +517,46 @@ export function SyllabusTracker() {
                   return (
                     <details
                       key={chapter}
-                      className="group/ch border-b border-kal-border last:border-b-0 dark:border-slate-800"
+                      className="group/ch mb-5 border-b border-kal-border pb-5 last:mb-0 last:border-b-0 last:pb-0 dark:border-slate-800"
                       onToggle={syllabusLimited ? (e) => { (e.currentTarget as HTMLDetailsElement).open = false; } : undefined}
                     >
-                      <summary className="cursor-pointer list-none bg-kal-card-muted px-4 py-4 marker:hidden sm:px-5 sm:py-5 dark:bg-slate-950/50 [&::-webkit-details-marker]:hidden">
-                        <div className="flex flex-col gap-3">
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="min-w-0 truncate text-sm font-semibold text-kal-text sm:text-[15px]">
-                              {chapter}
+                      <summary className="cursor-pointer list-none rounded-xl border border-kal-border/90 bg-gradient-to-br from-kal-accent-soft/70 via-kal-card-muted to-kal-card-muted px-0 py-0 shadow-sm marker:hidden ring-1 ring-black/[0.03] dark:border-slate-700/80 dark:from-red-950/35 dark:via-slate-950/60 dark:to-slate-950/40 dark:ring-white/[0.04] [&::-webkit-details-marker]:hidden">
+                        <div className="flex flex-col gap-3.5 border-l-[4px] border-l-kal-accent py-4 pl-4 pr-3 sm:py-5 sm:pl-5 sm:pr-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <span className="flex min-w-0 items-start gap-2.5">
+                              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-kal-card shadow-sm ring-1 ring-kal-border/50 dark:bg-slate-900/80 dark:ring-slate-700/80">
+                                <Layers
+                                  className="h-[1.15rem] w-[1.15rem] text-kal-accent"
+                                  aria-hidden
+                                />
+                              </span>
+                              <span className="min-w-0 pt-0.5">
+                                <span className="block text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-kal-accent">
+                                  Chapter
+                                </span>
+                                <span className="mt-1 flex min-w-0 items-baseline gap-2.5 sm:gap-3">
+                                  <span className="shrink-0 border-r border-kal-border/55 pr-2.5 text-xl font-bold tabular-nums leading-none tracking-tight text-kal-text dark:border-slate-600/55 sm:pr-3 sm:text-2xl">
+                                    {chapterNumber}.
+                                  </span>
+                                  <span className="min-w-0 flex-1 truncate text-base font-bold leading-snug tracking-tight text-kal-text sm:text-lg">
+                                    {chapter}
+                                  </span>
+                                </span>
+                              </span>
                             </span>
-                            <ChevronDown className="h-5 w-5 shrink-0 text-kal-muted transition-transform group-open/ch:rotate-180" />
+                            <ChevronDown className="mt-1 h-5 w-5 shrink-0 text-kal-muted transition-transform group-open/ch:rotate-180" />
                           </div>
 
-                          <p className="text-[11px] tabular-nums text-kal-muted">
+                          <p className="pl-[2.875rem] text-[11px] tabular-nums text-kal-muted sm:pl-[3.125rem]">
                             {cr?.completedCount ?? 0}/{cr?.totalCount ?? list.length}{" "}
                             microtopics done · {pct}%
                           </p>
-                          <ChapterBar percent={pct} />
+                          <div className="pl-[2.875rem] sm:pl-[3.125rem]">
+                            <ChapterBar percent={pct} />
+                          </div>
                           <p
                             className={clsx(
-                              "text-[11px] font-medium tabular-nums",
+                              "pl-[2.875rem] text-[11px] font-medium tabular-nums sm:pl-[3.125rem]",
                               cr?.isChapterMastered
                                 ? "text-kal-accent"
                                 : "text-amber-900 dark:text-amber-200/90",
@@ -557,7 +579,7 @@ export function SyllabusTracker() {
                             )}
                           </p>
 
-                          <div className="flex flex-wrap items-center gap-2 pt-1">
+                          <div className="flex flex-wrap items-center gap-2 border-t border-kal-border/50 pt-3.5 dark:border-slate-700/60">
                             {canCustomize && catalogExamKey ? (
                               <>
                                 <button
@@ -664,8 +686,8 @@ export function SyllabusTracker() {
                           </div>
                         </div>
                       </summary>
-                      <ul className="divide-y divide-kal-border dark:divide-slate-800/80">
-                        {list.map((row) => {
+                      <ul className="mt-3 space-y-0 rounded-xl border border-kal-border/60 bg-kal-card/40 py-1 pl-2 pr-1 shadow-inner dark:border-slate-800/90 dark:bg-slate-950/25 sm:mt-4 sm:pl-3 sm:pr-2">
+                        {list.map((row, rowIdx) => {
                           const mr = row as MergedSyllabusRow;
                           const st = resolveStatus(
                             row.id,
@@ -678,32 +700,47 @@ export function SyllabusTracker() {
                               ? `${row.estimated_minutes} min`
                               : "—";
                           return (
-                            <li key={row.id} className="px-3 py-3 sm:px-4">
-                              <div className="flex flex-col gap-3 rounded-xl border border-kal-border bg-kal-card-muted p-4 sm:flex-row sm:items-end sm:justify-between sm:gap-4 dark:border-slate-800 dark:bg-slate-950/30">
+                            <li
+                              key={row.id}
+                              className={clsx(
+                                "border-l-2 border-kal-accent/20 py-2 pl-3 pr-2 sm:pl-4 sm:pr-3 dark:border-red-500/15",
+                                rowIdx > 0 &&
+                                  "mt-0 border-t border-kal-border/40 pt-3 dark:border-slate-800/70",
+                              )}
+                            >
+                              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
                                 <div className="min-w-0 flex-1">
-                                  <div className="flex flex-wrap items-center gap-2">
-                                    <p className="text-[15px] font-semibold leading-snug text-kal-text">
-                                      {row.microtopic}
-                                    </p>
-                                    {mr.userSyllabus?.isUserAdded ? (
-                                      <span className="rounded bg-violet-500/20 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-violet-200/95">
-                                        Yours
-                                      </span>
-                                    ) : null}
-                                    {mr.userSyllabus?.isDisplayEdited ? (
-                                      <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-900 dark:text-amber-200/95">
-                                        Customized
-                                      </span>
-                                    ) : null}
+                                  <div className="flex items-start gap-2.5">
+                                    <span
+                                      className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-kal-muted/45 ring-1 ring-kal-border/30 dark:bg-slate-500/50 dark:ring-slate-600/50"
+                                      aria-hidden
+                                    />
+                                    <div className="min-w-0 flex-1 space-y-1.5">
+                                      <div className="flex flex-wrap items-center gap-2">
+                                        <p className="text-[13px] font-medium leading-snug text-kal-text-secondary sm:text-sm">
+                                          {row.microtopic}
+                                        </p>
+                                        {mr.userSyllabus?.isUserAdded ? (
+                                          <span className="rounded bg-violet-500/20 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-violet-200/95">
+                                            Yours
+                                          </span>
+                                        ) : null}
+                                        {mr.userSyllabus?.isDisplayEdited ? (
+                                          <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-900 dark:text-amber-200/95">
+                                            Customized
+                                          </span>
+                                        ) : null}
+                                      </div>
+                                      <p className="text-[11px] leading-snug text-kal-muted">
+                                        Est.{" "}
+                                        <span className="font-medium tabular-nums text-kal-text-secondary/90">
+                                          {est}
+                                        </span>
+                                      </p>
+                                    </div>
                                   </div>
-                                  <p className="mt-2 text-xs text-kal-muted">
-                                    Est.{" "}
-                                    <span className="font-medium text-kal-muted">
-                                      {est}
-                                    </span>
-                                  </p>
                                   {canCustomize && catalogExamKey ? (
-                                    <div className="mt-2 flex items-center gap-2">
+                                    <div className="mt-2.5 flex items-center gap-2 pl-3.5 sm:pl-4">
                                       <button
                                         type="button"
                                         className="inline-flex h-8 items-center gap-1 rounded-lg border border-kal-border px-2 text-[11px] font-medium text-kal-text-secondary hover:bg-kal-card-muted dark:border-slate-600 dark:hover:bg-slate-800/80"
@@ -823,7 +860,7 @@ export function SyllabusTracker() {
                                     })();
                                   }}
                                   className={clsx(
-                                    "min-h-[44px] w-full min-w-[11.5rem] shrink-0 rounded-xl border px-3 py-2.5 text-[15px] font-medium outline-none sm:w-auto",
+                                    "min-h-[44px] w-full min-w-[11.5rem] shrink-0 rounded-lg border px-3 py-2 text-[13px] font-medium outline-none sm:w-auto sm:text-sm",
                                     "focus-visible:ring-2 focus-visible:ring-kal-accent/50",
                                     statusSelectClasses(st),
                                   )}

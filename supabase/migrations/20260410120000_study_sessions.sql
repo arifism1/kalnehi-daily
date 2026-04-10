@@ -16,6 +16,11 @@ create index if not exists study_sessions_user_ended_idx
 
 alter table public.study_sessions enable row level security;
 
+drop policy if exists "study_sessions_select_own" on public.study_sessions;
+drop policy if exists "study_sessions_insert_own" on public.study_sessions;
+drop policy if exists "study_sessions_update_own" on public.study_sessions;
+drop policy if exists "study_sessions_delete_own" on public.study_sessions;
+
 create policy "study_sessions_select_own"
   on public.study_sessions for select
   using (auth.uid() = user_id);

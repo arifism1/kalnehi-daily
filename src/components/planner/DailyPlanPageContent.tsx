@@ -1,7 +1,7 @@
 "use client";
 
 import { addDays, format, parseISO } from "date-fns";
-import { ArrowLeft, Home } from "lucide-react";
+import { ArrowLeft, CalendarDays } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -10,7 +10,7 @@ import { UnifiedDailyPlanList } from "@/components/planner/UnifiedDailyPlanList"
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useAuthStore } from "@/store/useAuthStore";
 
-export function SelfTypeDayPage() {
+export function DailyPlanPageContent() {
   const user = useAuthStore((s) => s.user);
   const today = useCalendarDate();
   const [logDate, setLogDate] = useState(today);
@@ -18,35 +18,32 @@ export function SelfTypeDayPage() {
 
   if (!user) {
     return (
-      <p className="rounded-xl border border-kal-warn-border bg-kal-warn-soft px-4 py-3 text-sm text-kal-warn-text">
-        Sign in to manage your planner.
+      <p className="mx-auto max-w-lg rounded-xl border border-kal-warn-border bg-kal-warn-soft px-4 py-3 text-sm text-kal-warn-text">
+        Sign in to view and edit your daily plan.
       </p>
     );
   }
 
   return (
     <div className="relative mx-auto max-w-2xl pb-16 pt-2 sm:pt-4">
-      <div className="flex items-center gap-3 text-sm font-semibold text-kal-accent">
-        <Link href="/plan" className="inline-flex items-center gap-1.5 transition hover:text-kal-accent-hover">
-          <ArrowLeft className="h-4 w-4" aria-hidden />
-          Plan hub
-        </Link>
-        <span className="text-kal-border">|</span>
-        <Link href="/" className="inline-flex items-center gap-1.5 transition hover:text-kal-accent-hover">
-          <Home className="h-4 w-4" aria-hidden />
-          Home
-        </Link>
-      </div>
+      <Link
+        href="/"
+        className="inline-flex items-center gap-2 text-sm font-semibold text-kal-accent hover:text-kal-accent-hover"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden />
+        Home
+      </Link>
 
       <header className="mt-6 mb-6">
         <p className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-kal-accent">
-          Planning · Typed
+          Planning
         </p>
-        <h1 className="mt-2 text-2xl font-bold tracking-tight text-kal-text sm:text-3xl">
-          Type your day
+        <h1 className="mt-2 flex flex-wrap items-center gap-2 text-2xl font-bold tracking-tight text-kal-text sm:text-3xl">
+          <CalendarDays className="h-8 w-8 text-kal-accent" aria-hidden />
+          Daily planner
         </h1>
         <p className="mt-2 max-w-xl text-sm leading-relaxed text-kal-muted">
-          This is the same daily plan as Dictate and Handwritten — one list per date, with typed source badges.
+          One plan per day: everything you add by voice, scan, or typing appears here together.
         </p>
       </header>
 
@@ -87,26 +84,23 @@ export function SelfTypeDayPage() {
         onAdded={() => bumpPlanList((n) => n + 1)}
       />
 
-      <div className="mt-6">
+      <div className="mt-6 space-y-3">
         <UnifiedDailyPlanList
           key={planListKey}
           planDate={logDate}
-          title="Today's plan (live)"
+          title="All tasks"
         />
-      </div>
-
-      <div className="mt-10 flex flex-wrap items-center justify-center gap-3 text-sm text-kal-muted">
-        <Link href="/daily-plan" className="font-semibold text-kal-accent hover:text-kal-accent-hover">
-          Daily planner
-        </Link>
-        <span>·</span>
-        <Link href="/" className="font-semibold text-kal-accent hover:text-kal-accent-hover">
-          Home
-        </Link>
-        <span>·</span>
-        <Link href="/plan-my-day" className="font-semibold text-kal-accent hover:text-kal-accent-hover">
-          Plan hub
-        </Link>
+        <p className="text-center text-xs text-kal-muted">
+          Voice:{" "}
+          <Link href="/dictate-day" className="font-semibold text-kal-accent hover:underline">
+            Dictate My Day
+          </Link>
+          {" · "}
+          Handwritten:{" "}
+          <Link href="/paste-handwritten" className="font-semibold text-kal-accent hover:underline">
+            Scanner
+          </Link>
+        </p>
       </div>
     </div>
   );

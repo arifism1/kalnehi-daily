@@ -38,6 +38,11 @@ create index if not exists voice_timeline_user_date_idx
 
 alter table public.voice_timeline_entries enable row level security;
 
+drop policy if exists "voice_timeline_select_own" on public.voice_timeline_entries;
+drop policy if exists "voice_timeline_insert_own" on public.voice_timeline_entries;
+drop policy if exists "voice_timeline_update_own" on public.voice_timeline_entries;
+drop policy if exists "voice_timeline_delete_own" on public.voice_timeline_entries;
+
 create policy "voice_timeline_select_own"
   on public.voice_timeline_entries for select
   using (auth.uid() = user_id);

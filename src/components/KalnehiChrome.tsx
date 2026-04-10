@@ -133,14 +133,14 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
                   </span>
                 </Link>
                 <Link
-                  href="/plan-my-day"
+                  href="/daily-plan"
                   className={clsx(
                     "flex h-11 min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-2 text-kal-accent transition-colors hover:border-kal-border hover:bg-kal-card-muted active:scale-[0.98] sm:min-w-0 sm:px-3 dark:hover:bg-kal-card-muted",
-                    pathname === "/plan-my-day"
+                    pathname === "/daily-plan" || pathname === "/plan-my-day"
                       ? "border-kal-accent/30 bg-kal-accent-soft"
                       : "border-transparent",
                   )}
-                  aria-label="Open Day Plan"
+                  aria-label="Daily planner"
                 >
                   <CalendarDays
                     className="h-5 w-5 shrink-0"
@@ -148,7 +148,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
                     aria-hidden
                   />
                   <span className="hidden max-w-[6rem] truncate text-[11px] font-semibold leading-tight sm:inline sm:max-w-none sm:text-xs">
-                    Day plan
+                    Daily plan
                   </span>
                 </Link>
                 <Link
