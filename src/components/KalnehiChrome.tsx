@@ -14,6 +14,7 @@ import {
 } from "react";
 
 import { MainNavigationMenu } from "@/components/MainNavigationMenu";
+import { QuickNavBar } from "@/components/QuickNavBar";
 import { QuietSavedToast } from "@/components/QuietSavedToast";
 import { SyncStatusBanner } from "@/components/SyncStatusBanner";
 import { UndoToast } from "@/components/ui/UndoToast";
@@ -177,6 +178,19 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
               </div>
             </div>
           </header>
+        )}
+
+        {!onboarding && (
+          <div className="sticky top-14 z-30 border-b border-kal-border/80 bg-kal-page/95 backdrop-blur-sm sm:top-[3.5rem]">
+            <div
+              className={clsx(
+                "mx-auto w-full px-4 sm:px-6 md:px-8 xl:px-10",
+                "max-w-lg md:max-w-5xl lg:max-w-6xl xl:max-w-7xl 2xl:max-w-[90rem]",
+              )}
+            >
+              <QuickNavBar />
+            </div>
+          </div>
         )}
 
         <main
