@@ -379,7 +379,9 @@ export type Database = {
         Row: {
           attempts: Json | null
           bonus_photo_scans: number
+          bonus_photo_scans_ledger: Json
           bonus_voice_minutes: number
+          bonus_voice_minutes_ledger: Json
           class_studying: string | null
           cuet_domain_subjects: Json
           full_name: string | null
@@ -407,7 +409,9 @@ export type Database = {
         Insert: {
           attempts?: Json | null
           bonus_photo_scans?: number
+          bonus_photo_scans_ledger?: Json
           bonus_voice_minutes?: number
+          bonus_voice_minutes_ledger?: Json
           class_studying?: string | null
           cuet_domain_subjects?: Json
           full_name?: string | null
@@ -435,7 +439,9 @@ export type Database = {
         Update: {
           attempts?: Json | null
           bonus_photo_scans?: number
+          bonus_photo_scans_ledger?: Json
           bonus_voice_minutes?: number
+          bonus_voice_minutes_ledger?: Json
           class_studying?: string | null
           cuet_domain_subjects?: Json
           full_name?: string | null
@@ -459,6 +465,27 @@ export type Database = {
           usage_reset_date?: string | null
           user_id?: string | null
           voice_minutes_used_this_month?: number
+        }
+        Relationships: []
+      }
+      razorpay_processed_payments: {
+        Row: {
+          created_at: string
+          kind: string
+          razorpay_payment_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          kind: string
+          razorpay_payment_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          kind?: string
+          razorpay_payment_id?: string
+          user_id?: string
         }
         Relationships: []
       }

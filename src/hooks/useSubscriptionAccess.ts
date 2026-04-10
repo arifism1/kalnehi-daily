@@ -3,6 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import {
+  nextBonusExpiryIso,
+  parseBonusLedger,
+  totalActiveBonus,
+} from "@/lib/bonusCreditsLedger";
 import { effectiveUsageForDisplay } from "@/lib/subscriptionUsage";
 import type { SubscriptionTier } from "@/lib/subscriptionTiers";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -14,6 +19,8 @@ type UsageData = {
   voiceMinutesUsed: number;
   bonusPhotoScans: number;
   bonusVoiceMinutes: number;
+  bonusPhotoScansNextExpiry: string | null;
+  bonusVoiceMinutesNextExpiry: string | null;
   usageResetDate: string | null;
 };
 
@@ -35,6 +42,8 @@ const EMPTY_USAGE: UsageData = {
   voiceMinutesUsed: 0,
   bonusPhotoScans: 0,
   bonusVoiceMinutes: 0,
+  bonusPhotoScansNextExpiry: null,
+  bonusVoiceMinutesNextExpiry: null,
   usageResetDate: null,
 };
 
@@ -88,7 +97,7 @@ export function useSubscriptionAccess(): SubscriptionData {
         const { data, error } = await supabase
           .from("user_profiles")
           .select(
-            "mandatory_onboarding_completed_at, subscription_status, subscription_plan, subscription_start_date, subscription_end_date, subscription_tier, photo_scans_used_this_month, voice_minutes_used_this_month, bonus_photo_scans, bonus_voice_minutes, usage_reset_date",
+            "mandatory_onboarding_completed_at, subscription_status, subscription_plan, subscription_start_date, subscription_end_date, subscription_tier, photo_scans_used_this_month, voice_minutes_used_this_month, bonus_photo_scans, bonus_voice_minutes, bonus_photo_scans_ledger, bonus_voice_minutes_ledger, usage_reset_date",
           )
           .eq("user_id", user.id)
           .maybeSingle();
@@ -126,11 +135,16 @@ export function useSubscriptionAccess(): SubscriptionData {
           data?.photo_scans_used_this_month ?? 0,
           data?.voice_minutes_used_this_month ?? 0,
         );
+        const now = new Date();
+        const photoLed = parseBonusLedger(data?.bonus_photo_scans_ledger);
+        const voiceLed = parseBonusLedger(data?.bonus_voice_minutes_ledger);
         setUsage({
           photoScansUsed: eff.photoScansUsed,
           voiceMinutesUsed: eff.voiceMinutesUsed,
-          bonusPhotoScans: data?.bonus_photo_scans ?? 0,
-          bonusVoiceMinutes: data?.bonus_voice_minutes ?? 0,
+          bonusPhotoScans: totalActiveBonus(photoLed, now),
+          bonusVoiceMinutes: totalActiveBonus(voiceLed, now),
+          bonusPhotoScansNextExpiry: nextBonusExpiryIso(photoLed, now),
+          bonusVoiceMinutesNextExpiry: nextBonusExpiryIso(voiceLed, now),
           usageResetDate: data?.usage_reset_date ?? null,
         });
       } catch {

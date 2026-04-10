@@ -6,8 +6,16 @@ import Razorpay from "razorpay";
 import { createClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/types/supabase";
+import { computeTierUpgradeProrationPaise, formatUpgradeProrationLabel } from "@/lib/billingProration";
+import {
+  addBonusPool,
+  consumeFromBonusLedger,
+  parseBonusLedger,
+  totalActiveBonus,
+} from "@/lib/bonusCreditsLedger";
 import type { SubscriptionTier } from "@/lib/subscriptionTiers";
 import {
+  compareSubscriptionTiers,
   EXTRA_CREDITS_BY_ID,
   getPhotoScansLimit,
   getVoiceMinutesLimit,
@@ -32,6 +40,18 @@ type CreateSubscriptionResult =
 
 type ActivateSubscriptionResult =
   | { ok: true; subscriptionId: string }
+  | { ok: false; error: string };
+
+export type PlanUpgradeQuote = {
+  targetTier: SubscriptionTier;
+  amountPaise: number;
+  line: string;
+  remainingDays: number;
+};
+
+export type VerifyPlanUpgradePaymentResult =
+  | { ok: true }
+  | { ok: true; warning: string }
   | { ok: false; error: string };
 
 const RAZORPAY_PLAN_IDS: Record<SubscriptionTier, string> = {
@@ -119,6 +139,33 @@ function calculateTrialEnd(start: Date): Date {
 
 function isValidTier(tier: unknown): tier is SubscriptionTier {
   return tier === "basic" || tier === "pro" || tier === "pro_max";
+}
+
+const PAYMENT_KIND_EXTRA = "extra_credits" as const;
+const PAYMENT_KIND_UPGRADE = "plan_upgrade" as const;
+
+async function claimRazorpayPaymentId(
+  userId: string,
+  paymentId: string,
+  kind: typeof PAYMENT_KIND_EXTRA | typeof PAYMENT_KIND_UPGRADE,
+): Promise<"new" | "duplicate" | "error"> {
+  const admin = getAdminClient();
+  if (!admin) return "error";
+  const { error } = await admin.from("razorpay_processed_payments").insert({
+    razorpay_payment_id: paymentId,
+    user_id: userId,
+    kind,
+  });
+  if (!error) return "new";
+  if (error.code === "23505") return "duplicate";
+  console.error("[subscription] payment idempotency insert failed:", error.code, error.message);
+  return "error";
+}
+
+async function releaseRazorpayPaymentClaim(paymentId: string): Promise<void> {
+  const admin = getAdminClient();
+  if (!admin) return;
+  await admin.from("razorpay_processed_payments").delete().eq("razorpay_payment_id", paymentId);
 }
 
 async function upsertProfileByUserId(
@@ -410,7 +457,7 @@ export async function incrementPhotoScanUsage(): Promise<
   const { data, error } = await admin
     .from("user_profiles")
     .select(
-      "subscription_tier, subscription_status, photo_scans_used_this_month, bonus_photo_scans, usage_reset_date",
+      "subscription_tier, subscription_status, photo_scans_used_this_month, bonus_photo_scans_ledger, usage_reset_date",
     )
     .eq("user_id", userId)
     .maybeSingle();
@@ -419,20 +466,43 @@ export async function incrementPhotoScanUsage(): Promise<
 
   const resetNeeded = needsMonthlyUsageReset(data.usage_reset_date);
   const currentUsed = resetNeeded ? 0 : (data.photo_scans_used_this_month ?? 0);
-  const bonus = data.bonus_photo_scans ?? 0;
+  const now = new Date();
+  const ledger = parseBonusLedger(data.bonus_photo_scans_ledger);
 
   const rawTier = data.subscription_tier;
   const tierResolved: SubscriptionTier = isValidTier(rawTier) ? rawTier : "pro";
   const isTrial = data.subscription_status === "trial";
-  const totalLimit = getPhotoScansLimit(tierResolved, isTrial) + bonus;
+  const monthlyLimit = getPhotoScansLimit(tierResolved, isTrial);
 
-  if (currentUsed >= totalLimit) {
+  const { ledger: afterBonus, taken } = consumeFromBonusLedger(ledger, 1, now);
+  if (taken === 1) {
+    const bonusSum = totalActiveBonus(afterBonus, now);
+    const patch: Record<string, unknown> = {
+      bonus_photo_scans_ledger: afterBonus,
+      bonus_photo_scans: bonusSum,
+      updated_at: now.toISOString(),
+    };
+    if (resetNeeded) {
+      patch.photo_scans_used_this_month = 0;
+      patch.voice_minutes_used_this_month = 0;
+      patch.usage_reset_date = firstOfCurrentMonthDateString();
+    }
+    const { error: updateErr } = await admin
+      .from("user_profiles")
+      .update(patch)
+      .eq("user_id", userId);
+    if (updateErr) return { ok: false, error: "Unable to update usage." };
+    return { ok: true, used: currentUsed, limit: monthlyLimit + bonusSum };
+  }
+
+  if (currentUsed >= monthlyLimit) {
     return { ok: false, error: "Monthly photo scan limit reached." };
   }
 
+  const bonusSum = totalActiveBonus(ledger, now);
   const patch: Record<string, unknown> = {
     photo_scans_used_this_month: currentUsed + 1,
-    updated_at: new Date().toISOString(),
+    updated_at: now.toISOString(),
   };
   if (resetNeeded) {
     patch.voice_minutes_used_this_month = 0;
@@ -446,7 +516,7 @@ export async function incrementPhotoScanUsage(): Promise<
 
   if (updateErr) return { ok: false, error: "Unable to update usage." };
 
-  return { ok: true, used: currentUsed + 1, limit: totalLimit };
+  return { ok: true, used: currentUsed + 1, limit: monthlyLimit + bonusSum };
 }
 
 export async function incrementVoiceMinuteUsage(
@@ -463,7 +533,7 @@ export async function incrementVoiceMinuteUsage(
   const { data, error } = await admin
     .from("user_profiles")
     .select(
-      "subscription_tier, subscription_status, voice_minutes_used_this_month, bonus_voice_minutes, usage_reset_date",
+      "subscription_tier, subscription_status, voice_minutes_used_this_month, bonus_voice_minutes_ledger, usage_reset_date",
     )
     .eq("user_id", userId)
     .maybeSingle();
@@ -472,20 +542,30 @@ export async function incrementVoiceMinuteUsage(
 
   const resetNeeded = needsMonthlyUsageReset(data.usage_reset_date);
   const currentUsed = resetNeeded ? 0 : (data.voice_minutes_used_this_month ?? 0);
-  const bonus = data.bonus_voice_minutes ?? 0;
+  const now = new Date();
+  const ledger = parseBonusLedger(data.bonus_voice_minutes_ledger);
 
   const rawTier = data.subscription_tier;
   const tierResolved: SubscriptionTier = isValidTier(rawTier) ? rawTier : "pro";
   const isTrial = data.subscription_status === "trial";
-  const totalLimit = getVoiceMinutesLimit(tierResolved, isTrial) + bonus;
+  const monthlyLimit = getVoiceMinutesLimit(tierResolved, isTrial);
 
-  if (currentUsed + minutes > totalLimit) {
+  const { ledger: ledgerAfterBonus, taken: takenFromBonus } = consumeFromBonusLedger(
+    ledger,
+    minutes,
+    now,
+  );
+  const fromMonthly = minutes - takenFromBonus;
+  if (fromMonthly > 0 && currentUsed + fromMonthly > monthlyLimit) {
     return { ok: false, error: "Monthly voice minutes limit reached." };
   }
 
+  const bonusSum = totalActiveBonus(ledgerAfterBonus, now);
   const patch: Record<string, unknown> = {
-    voice_minutes_used_this_month: currentUsed + minutes,
-    updated_at: new Date().toISOString(),
+    bonus_voice_minutes_ledger: ledgerAfterBonus,
+    bonus_voice_minutes: bonusSum,
+    voice_minutes_used_this_month: currentUsed + fromMonthly,
+    updated_at: now.toISOString(),
   };
   if (resetNeeded) {
     patch.photo_scans_used_this_month = 0;
@@ -499,7 +579,11 @@ export async function incrementVoiceMinuteUsage(
 
   if (updateErr) return { ok: false, error: "Unable to update usage." };
 
-  return { ok: true, used: currentUsed + minutes, limit: totalLimit };
+  return {
+    ok: true,
+    used: currentUsed + fromMonthly,
+    limit: monthlyLimit + bonusSum,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -522,20 +606,38 @@ export async function addBonusCredits(
 
   const { data, error } = await admin
     .from("user_profiles")
-    .select("bonus_photo_scans, bonus_voice_minutes")
+    .select("bonus_photo_scans_ledger, bonus_voice_minutes_ledger")
     .eq("user_id", userId)
     .maybeSingle();
 
   if (error || !data) return { ok: false, error: "Unable to read profile." };
 
+  const now = new Date();
+  const expiresAt = new Date(now);
+  expiresAt.setUTCDate(expiresAt.getUTCDate() + 30);
+
   const patch: Record<string, unknown> = {
-    updated_at: new Date().toISOString(),
+    updated_at: now.toISOString(),
   };
 
   if (type === "photo_scans") {
-    patch.bonus_photo_scans = (data.bonus_photo_scans ?? 0) + amount;
+    const ledger = addBonusPool(
+      parseBonusLedger(data.bonus_photo_scans_ledger),
+      amount,
+      expiresAt,
+      now,
+    );
+    patch.bonus_photo_scans_ledger = ledger;
+    patch.bonus_photo_scans = totalActiveBonus(ledger, now);
   } else {
-    patch.bonus_voice_minutes = (data.bonus_voice_minutes ?? 0) + amount;
+    const ledger = addBonusPool(
+      parseBonusLedger(data.bonus_voice_minutes_ledger),
+      amount,
+      expiresAt,
+      now,
+    );
+    patch.bonus_voice_minutes_ledger = ledger;
+    patch.bonus_voice_minutes = totalActiveBonus(ledger, now);
   }
 
   const { error: updateErr } = await admin
@@ -693,7 +795,350 @@ export async function verifyExtraCreditsPayment(params: {
       return { ok: false, error: "Order metadata mismatch." };
     }
 
-    return await addBonusCredits(pack.type, pack.amount);
+    const claim = await claimRazorpayPaymentId(userId, paymentId, PAYMENT_KIND_EXTRA);
+    if (claim === "duplicate") return { ok: true };
+    if (claim === "error") {
+      return { ok: false, error: "Unable to confirm payment. Try again or contact support." };
+    }
+
+    const added = await addBonusCredits(pack.type, pack.amount);
+    if (!added.ok) {
+      await releaseRazorpayPaymentClaim(paymentId);
+      return added;
+    }
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "Unable to verify payment." };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Plan upgrade (prorated one-time order + new Razorpay subscription)
+// ---------------------------------------------------------------------------
+
+export async function getPlanUpgradeQuotes(): Promise<
+  | { ok: true; quotes: PlanUpgradeQuote[] }
+  | { ok: false; error: string }
+> {
+  const userId = await getAuthedUserId();
+  if (!userId) return { ok: false, error: "Please sign in." };
+
+  const admin = getAdminClient();
+  if (!admin) return { ok: false, error: "Unable to load upgrade options." };
+
+  const { data, error } = await admin
+    .from("user_profiles")
+    .select("subscription_tier, subscription_status, subscription_end_date")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error || !data) return { ok: false, error: "Unable to load profile." };
+
+  const st = data.subscription_status;
+  const endIso = data.subscription_end_date ?? null;
+  const endDate = endIso ? new Date(endIso) : null;
+  const stillHasAccess =
+    endDate && !Number.isNaN(endDate.getTime()) && endDate.getTime() > Date.now();
+  if (
+    !stillHasAccess ||
+    (st !== "trial" && st !== "active" && st !== "cancelled")
+  ) {
+    return { ok: true, quotes: [] };
+  }
+
+  const rawTier = data.subscription_tier;
+  const fromTier: SubscriptionTier = isValidTier(rawTier) ? rawTier : "pro";
+  const targets: SubscriptionTier[] =
+    fromTier === "basic" ? ["pro", "pro_max"] : fromTier === "pro" ? ["pro_max"] : [];
+
+  const quotes: PlanUpgradeQuote[] = [];
+  for (const targetTier of targets) {
+    const { remainingDays, amountPaise } = computeTierUpgradeProrationPaise(
+      fromTier,
+      targetTier,
+      endIso,
+    );
+    if (amountPaise <= 0) continue;
+    quotes.push({
+      targetTier,
+      amountPaise,
+      remainingDays,
+      line: formatUpgradeProrationLabel(amountPaise, remainingDays),
+    });
+  }
+
+  return { ok: true, quotes };
+}
+
+type CreatePlanUpgradeOrderResult =
+  | { ok: true; keyId: string; orderId: string; amountPaise: number }
+  | { ok: false; error: string };
+
+export async function createPlanUpgradeOrder(
+  targetTier: SubscriptionTier,
+): Promise<CreatePlanUpgradeOrderResult> {
+  if (!isValidTier(targetTier)) {
+    return { ok: false, error: "Invalid plan." };
+  }
+
+  const userId = await getAuthedUserId();
+  if (!userId) return { ok: false, error: "Please sign in." };
+
+  const config = getRazorpayConfig();
+  if (!config) return { ok: false, error: "Payment system is not configured yet." };
+
+  const admin = getAdminClient();
+  if (!admin) return { ok: false, error: "Payment system is not configured yet." };
+
+  const { data: profile, error: profileErr } = await admin
+    .from("user_profiles")
+    .select(
+      "subscription_tier, subscription_status, subscription_end_date, razorpay_subscription_id",
+    )
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (profileErr || !profile) return { ok: false, error: "Unable to read subscription." };
+
+  const st = profile.subscription_status;
+  const endIso = profile.subscription_end_date ?? null;
+  const endDate = endIso ? new Date(endIso) : null;
+  const stillHasAccess =
+    endDate && !Number.isNaN(endDate.getTime()) && endDate.getTime() > Date.now();
+  if (
+    !stillHasAccess ||
+    (st !== "trial" && st !== "active" && st !== "cancelled")
+  ) {
+    return { ok: false, error: "You need an active subscription to upgrade." };
+  }
+
+  const rawTier = profile.subscription_tier;
+  const fromTier: SubscriptionTier = isValidTier(rawTier) ? rawTier : "pro";
+  if (compareSubscriptionTiers(targetTier, fromTier) <= 0) {
+    return { ok: false, error: "Invalid upgrade path." };
+  }
+
+  const { amountPaise } = computeTierUpgradeProrationPaise(fromTier, targetTier, endIso);
+  if (amountPaise <= 0) {
+    return { ok: false, error: "Nothing to pay for this upgrade." };
+  }
+
+  try {
+    const razorpay = getRazorpayClient(config);
+    const receipt = `up${Date.now()}`.slice(0, 40);
+    const order = (await razorpay.orders.create({
+      amount: amountPaise,
+      currency: "INR",
+      receipt,
+      notes: {
+        kalnehi_user_id: userId,
+        kalnehi_kind: "plan_upgrade",
+        kalnehi_from_tier: fromTier,
+        kalnehi_to_tier: targetTier,
+        kalnehi_expected_paise: String(amountPaise),
+      },
+    })) as { id: string };
+
+    return {
+      ok: true,
+      keyId: config.keyId,
+      orderId: order.id,
+      amountPaise,
+    };
+  } catch (error) {
+    return { ok: false, error: safeErrorMessage(error) };
+  }
+}
+
+export async function verifyPlanUpgradePayment(params: {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
+}): Promise<VerifyPlanUpgradePaymentResult> {
+  const userId = await getAuthedUserId();
+  if (!userId) return { ok: false, error: "Session expired. Please sign in again." };
+
+  const paymentId = params.razorpay_payment_id?.trim() ?? "";
+  const orderId = params.razorpay_order_id?.trim() ?? "";
+  const signature = params.razorpay_signature?.trim() ?? "";
+
+  if (!RAZORPAY_ID_RE.test(paymentId)) {
+    return { ok: false, error: "Invalid payment reference." };
+  }
+  if (!RAZORPAY_ORDER_ID_RE.test(orderId)) {
+    return { ok: false, error: "Invalid order reference." };
+  }
+  if (!HEX_SIGNATURE_RE.test(signature)) {
+    return { ok: false, error: "Invalid payment signature format." };
+  }
+
+  const config = getRazorpayConfig();
+  if (!config) return { ok: false, error: "Payment system is not configured yet." };
+
+  const expectedSignature = crypto
+    .createHmac("sha256", config.keySecret)
+    .update(`${orderId}|${paymentId}`)
+    .digest("hex");
+
+  if (!timingSafeEqual(expectedSignature, signature)) {
+    return { ok: false, error: "Payment verification failed." };
+  }
+
+  try {
+    const razorpay = getRazorpayClient(config);
+    const order = (await razorpay.orders.fetch(orderId)) as {
+      status?: string;
+      amount?: number;
+      notes?: Record<string, string>;
+    };
+    const pay = (await razorpay.payments.fetch(paymentId)) as {
+      status?: string;
+      order_id?: string;
+      amount?: number;
+    };
+
+    if (pay.order_id !== orderId) {
+      return { ok: false, error: "Payment does not match this order." };
+    }
+    if (pay.status !== "captured") {
+      return { ok: false, error: "Payment is not complete." };
+    }
+
+    const owner = order.notes?.kalnehi_user_id?.trim();
+    if (owner !== userId) {
+      return { ok: false, error: "Order does not belong to this account." };
+    }
+    if (order.notes?.kalnehi_kind !== "plan_upgrade") {
+      return { ok: false, error: "Invalid order type." };
+    }
+
+    const rawTo = order.notes?.kalnehi_to_tier?.trim();
+    if (!isValidTier(rawTo)) {
+      return { ok: false, error: "Invalid upgrade target in order." };
+    }
+    const targetTier = rawTo;
+    const rawFromNote = order.notes?.kalnehi_from_tier?.trim();
+    const fromNoteTier: SubscriptionTier | null = isValidTier(rawFromNote) ? rawFromNote : null;
+
+    const expectedPaiseNote = order.notes?.kalnehi_expected_paise?.trim() ?? "";
+    const expectedFromOrder = Number(expectedPaiseNote);
+    const orderAmt = Number(order.amount);
+    const payAmt = Number(pay.amount);
+    if (
+      !Number.isFinite(expectedFromOrder) ||
+      orderAmt !== expectedFromOrder ||
+      payAmt !== expectedFromOrder
+    ) {
+      return { ok: false, error: "Payment amount mismatch." };
+    }
+
+    const admin = getAdminClient();
+    if (!admin) return { ok: false, error: "Unable to complete upgrade." };
+
+    const { data: profile, error: profileErr } = await admin
+      .from("user_profiles")
+      .select(
+        "subscription_tier, subscription_end_date, razorpay_subscription_id, subscription_status",
+      )
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (profileErr || !profile) {
+      return { ok: false, error: "Unable to read subscription." };
+    }
+
+    const rawProfileTier = profile.subscription_tier;
+    const currentTier: SubscriptionTier = isValidTier(rawProfileTier) ? rawProfileTier : "pro";
+    if (fromNoteTier !== null && fromNoteTier !== currentTier) {
+      return {
+        ok: false,
+        error: "Your plan changed since checkout started. Refresh and try again.",
+      };
+    }
+    if (compareSubscriptionTiers(targetTier, currentTier) <= 0) {
+      return { ok: false, error: "You are already on this tier or higher." };
+    }
+
+    const endIso = profile.subscription_end_date ?? null;
+    const recomputed = computeTierUpgradeProrationPaise(currentTier, targetTier, endIso);
+    if (recomputed.amountPaise !== expectedFromOrder) {
+      return {
+        ok: false,
+        error: "Pricing changed since checkout started. Refresh and try again.",
+      };
+    }
+
+    const claim = await claimRazorpayPaymentId(userId, paymentId, PAYMENT_KIND_UPGRADE);
+    if (claim === "duplicate") return { ok: true };
+    if (claim === "error") {
+      return { ok: false, error: "Unable to confirm payment. Try again or contact support." };
+    }
+
+    const cycleEnd = endIso ? new Date(endIso) : new Date();
+    if (Number.isNaN(cycleEnd.getTime())) {
+      await releaseRazorpayPaymentClaim(paymentId);
+      return { ok: false, error: "Invalid billing period end date." };
+    }
+    const startAtSec = Math.floor(cycleEnd.getTime() / 1000);
+
+    let newSubId: string | null = null;
+    try {
+      const created = (await (razorpay.subscriptions.create as unknown as (
+        body: Record<string, unknown>,
+      ) => Promise<{ id: string }>)({
+        plan_id: RAZORPAY_PLAN_IDS[targetTier],
+        total_count: TOTAL_BILLING_CYCLES,
+        customer_notify: 1,
+        start_at: startAtSec,
+        notes: {
+          kalnehi_user_id: userId,
+          kalnehi_plan: "monthly",
+          kalnehi_tier: targetTier,
+        },
+      })) as { id: string };
+      newSubId = created.id;
+    } catch (e) {
+      await releaseRazorpayPaymentClaim(paymentId);
+      return {
+        ok: false,
+        error: `Could not start your new subscription: ${safeErrorMessage(e)}`,
+      };
+    }
+
+    const oldSubId = profile.razorpay_subscription_id?.trim() ?? "";
+
+    const nowIso = new Date().toISOString();
+    const { error: updateErr } = await admin
+      .from("user_profiles")
+      .update({
+        subscription_tier: targetTier,
+        razorpay_subscription_id: newSubId,
+        updated_at: nowIso,
+      })
+      .eq("user_id", userId);
+
+    if (updateErr) {
+      try {
+        await razorpay.subscriptions.cancel(newSubId, false);
+      } catch {
+        /* ignore */
+      }
+      await releaseRazorpayPaymentClaim(paymentId);
+      return { ok: false, error: "Upgrade payment succeeded but we could not update your profile." };
+    }
+
+    if (oldSubId && RAZORPAY_ID_RE.test(oldSubId) && oldSubId !== newSubId) {
+      try {
+        await razorpay.subscriptions.cancel(oldSubId, false);
+      } catch (e) {
+        return {
+          ok: true,
+          warning: `Your plan was upgraded, but the previous Razorpay subscription could not be cancelled automatically (${safeErrorMessage(e)}). Please contact support with old id ${oldSubId}.`,
+        };
+      }
+    }
+
+    return { ok: true };
   } catch {
     return { ok: false, error: "Unable to verify payment." };
   }

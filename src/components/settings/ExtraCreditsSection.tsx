@@ -2,7 +2,7 @@
 
 import Script from "next/script";
 import { Camera, Loader2, Mic, Plus } from "lucide-react";
-import { useCallback, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 
 import {
   createExtraCreditsOrder,
@@ -67,6 +67,13 @@ export function ExtraCreditsSection() {
   const { refetch } = useSubscriptionAccess();
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const id = window.setTimeout(() => setToast(null), 4500);
+    return () => window.clearTimeout(id);
+  }, [toast]);
 
   const openCheckout = useCallback(
     (pack: ExtraCreditPack) => {
@@ -101,7 +108,8 @@ export function ExtraCreditsSection() {
               setMessage(v.error);
               return;
             }
-            setMessage(`${pack.label} added to your account.`);
+            setMessage(null);
+            setToast(`${pack.label} added — valid for 30 days from purchase.`);
             refetch();
           },
         });
@@ -123,8 +131,8 @@ export function ExtraCreditsSection() {
             Buy Extra AI Credits
           </h3>
           <p className="mt-1 text-xs text-kal-text-secondary">
-            One-time Razorpay checkout — bonus credits stack with your monthly
-            allowance and do not expire.
+            One-time Razorpay checkout. Bonus credits apply for 30 days from
+            purchase (used before your monthly quota) and expire if unused.
           </p>
         </div>
         <div className="space-y-2 p-3">
@@ -144,12 +152,20 @@ export function ExtraCreditsSection() {
         )}
         {message && (
           <div className="border-t border-kal-border px-4 py-2">
-            <p className="text-xs text-kal-text-secondary" role="status">
+            <p className="text-xs text-rose-700 dark:text-rose-300" role="status">
               {message}
             </p>
           </div>
         )}
       </div>
+      {toast ? (
+        <div
+          className="fixed bottom-6 left-1/2 z-[60] max-w-[min(92vw,24rem)] -translate-x-1/2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-sm font-medium text-emerald-950 shadow-lg dark:border-emerald-800 dark:bg-emerald-950/90 dark:text-emerald-50"
+          role="status"
+        >
+          {toast}
+        </div>
+      ) : null}
     </>
   );
 }

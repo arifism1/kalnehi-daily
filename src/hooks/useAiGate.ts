@@ -8,8 +8,6 @@ import {
   getPhotoScansLimit,
   getTierConfig,
   getVoiceMinutesLimit,
-  remainingPhotoScans,
-  remainingVoiceMinutes,
 } from "@/lib/subscriptionTiers";
 
 type AiGateResult = {
@@ -18,6 +16,9 @@ type AiGateResult = {
   hasAiAccess: boolean;
   tierName: string;
 
+  monthlyPhotoScanLimit: number;
+  monthlyVoiceMinuteLimit: number;
+
   photoScansRemaining: number;
   photoScansLimit: number;
   photoScansUsed: number;
@@ -25,6 +26,11 @@ type AiGateResult = {
   voiceMinutesRemaining: number;
   voiceMinutesLimit: number;
   voiceMinutesUsed: number;
+
+  bonusPhotoScansRemaining: number;
+  bonusVoiceMinutesRemaining: number;
+  bonusPhotoScansNextExpiry: string | null;
+  bonusVoiceMinutesNextExpiry: string | null;
 
   canDoPhotoScan: boolean;
   canDoVoiceSession: boolean;
@@ -44,32 +50,21 @@ export function useAiGate(): AiGateResult {
   const tierConfig = useMemo(() => getTierConfig(tier), [tier]);
   const isTrialPeriod = status === "trial";
 
-  const photoScansRemaining = useMemo(
-    () =>
-      remainingPhotoScans(
-        tier,
-        usage.photoScansUsed,
-        usage.bonusPhotoScans,
-        isTrialPeriod,
-      ),
-    [tier, usage.photoScansUsed, usage.bonusPhotoScans, isTrialPeriod],
-  );
+  const monthlyPhotoScanLimit = getPhotoScansLimit(tier, isTrialPeriod);
+  const monthlyVoiceMinuteLimit = getVoiceMinutesLimit(tier, isTrialPeriod);
 
-  const voiceMinutesRemaining = useMemo(
-    () =>
-      remainingVoiceMinutes(
-        tier,
-        usage.voiceMinutesUsed,
-        usage.bonusVoiceMinutes,
-        isTrialPeriod,
-      ),
-    [tier, usage.voiceMinutesUsed, usage.bonusVoiceMinutes, isTrialPeriod],
-  );
+  const photoScansRemaining = useMemo(() => {
+    const monthlyRem = Math.max(0, monthlyPhotoScanLimit - usage.photoScansUsed);
+    return monthlyRem + usage.bonusPhotoScans;
+  }, [monthlyPhotoScanLimit, usage.photoScansUsed, usage.bonusPhotoScans]);
 
-  const photoScansLimit =
-    getPhotoScansLimit(tier, isTrialPeriod) + usage.bonusPhotoScans;
-  const voiceMinutesLimit =
-    getVoiceMinutesLimit(tier, isTrialPeriod) + usage.bonusVoiceMinutes;
+  const voiceMinutesRemaining = useMemo(() => {
+    const monthlyRem = Math.max(0, monthlyVoiceMinuteLimit - usage.voiceMinutesUsed);
+    return monthlyRem + usage.bonusVoiceMinutes;
+  }, [monthlyVoiceMinuteLimit, usage.voiceMinutesUsed, usage.bonusVoiceMinutes]);
+
+  const photoScansLimit = monthlyPhotoScanLimit + usage.bonusPhotoScans;
+  const voiceMinutesLimit = monthlyVoiceMinuteLimit + usage.bonusVoiceMinutes;
 
   const hasAiAccess = canUseAi(tier);
   const canDoPhotoScan = hasAiAccess && photoScansRemaining > 0;
@@ -89,6 +84,9 @@ export function useAiGate(): AiGateResult {
     hasAiAccess,
     tierName: tierConfig.name,
 
+    monthlyPhotoScanLimit,
+    monthlyVoiceMinuteLimit,
+
     photoScansRemaining,
     photoScansLimit,
     photoScansUsed: usage.photoScansUsed,
@@ -96,6 +94,11 @@ export function useAiGate(): AiGateResult {
     voiceMinutesRemaining,
     voiceMinutesLimit,
     voiceMinutesUsed: usage.voiceMinutesUsed,
+
+    bonusPhotoScansRemaining: usage.bonusPhotoScans,
+    bonusVoiceMinutesRemaining: usage.bonusVoiceMinutes,
+    bonusPhotoScansNextExpiry: usage.bonusPhotoScansNextExpiry,
+    bonusVoiceMinutesNextExpiry: usage.bonusVoiceMinutesNextExpiry,
 
     canDoPhotoScan,
     canDoVoiceSession,

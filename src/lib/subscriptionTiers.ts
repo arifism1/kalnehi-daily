@@ -219,6 +219,13 @@ export const TIER_ORDER: SubscriptionTier[] = ["basic", "pro", "pro_max"];
 
 export const DEFAULT_TIER: SubscriptionTier = "pro";
 
+export function compareSubscriptionTiers(
+  a: SubscriptionTier,
+  b: SubscriptionTier,
+): number {
+  return TIER_ORDER.indexOf(a) - TIER_ORDER.indexOf(b);
+}
+
 export function getTierConfig(tier: string | null | undefined): TierConfig {
   if (tier === "basic" || tier === "pro" || tier === "pro_max") return TIERS[tier];
   return TIERS.pro;

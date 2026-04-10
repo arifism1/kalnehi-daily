@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import Script from "next/script";
 import { useCallback, useMemo, useState } from "react";
 import { Check, Crown, Sparkles, Zap } from "lucide-react";
@@ -211,6 +212,26 @@ export function PricingPageClient() {
   }, []);
 
   const statusBanner = useMemo(() => {
+    if (hasPaidAccess) {
+      const trialHint =
+        subscriptionStatus === "trial"
+          ? " During the 3-day trial you have the trial AI limits shown on each card. After the first successful charge you get the full monthly quotas for your tier."
+          : "";
+      return (
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 dark:border-emerald-800 dark:bg-emerald-950/30">
+          <p className="text-sm font-medium text-emerald-900 dark:text-emerald-100">
+            You already have access.
+            {trialHint}{" "}
+            To move to a higher tier, use{" "}
+            <Link href="/my-plan" className="font-bold underline underline-offset-2">
+              My Plan
+            </Link>
+            : you&apos;ll pay only a prorated difference for the days left in your
+            current window (up to 30 days), and the upgrade applies immediately.
+          </p>
+        </div>
+      );
+    }
     if (subscriptionStatus === "expired") {
       return (
         <div className="rounded-2xl border border-rose-300 bg-rose-50 px-5 py-4 dark:border-rose-800 dark:bg-rose-950/30">

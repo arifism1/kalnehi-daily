@@ -7,6 +7,7 @@ import {
   Calendar,
   CalendarDays,
   CircleHelp,
+  Crown,
   Download,
   Flame,
   Heart,
@@ -111,6 +112,7 @@ const MENU_SECTIONS: { title: string; items: NavItem[] }[] = [
       },
       { href: "/profile", label: "Profile", Icon: UserRound },
       { href: "/settings", label: "Settings", Icon: Settings },
+      { href: "/my-plan", label: "My Plan", Icon: Crown },
     ],
   },
 ];

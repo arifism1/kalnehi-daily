@@ -79,7 +79,7 @@ export function AiFeatureGate({ feature, children }: Props) {
             Upgrade Plan
           </Link>
           <Link
-            href="/settings"
+            href="/my-plan"
             className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-kal-border bg-kal-card px-5 py-2.5 text-sm font-bold text-kal-text"
           >
             Buy Credits
@@ -98,7 +98,7 @@ export function AiFeatureGate({ feature, children }: Props) {
       <ConfirmDialog
         open
         title={isPhoto ? "Use Photo Scanner?" : "Start Voice Session?"}
-        description={`${statusText}. Each ${isPhoto ? "scan" : "session"} will consume credits from your monthly limit.`}
+        description={`${statusText}. Each ${isPhoto ? "scan" : "session"} uses bonus credits first (if active), then your monthly allowance.`}
         confirmLabel="Continue"
         cancelLabel="Go Back"
         danger={false}
@@ -121,7 +121,7 @@ export function AiFeatureGate({ feature, children }: Props) {
         </span>
         {remaining <= 3 && (
           <Link
-            href="/settings"
+            href="/my-plan"
             className="text-xs font-semibold text-kal-accent hover:underline"
           >
             Buy more

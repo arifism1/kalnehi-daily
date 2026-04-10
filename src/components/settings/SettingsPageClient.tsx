@@ -4,7 +4,6 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 import { CameraPlannerSettings } from "@/components/settings/CameraPlannerSettings";
-import { MyPlanSection } from "@/components/settings/MyPlanSection";
 import { PurposeModePhotos } from "@/components/settings/PurposeModePhotos";
 import { SettingsToggles } from "@/components/settings/SettingsToggles";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -27,19 +26,17 @@ export function SettingsPageClient() {
         </p>
         <h1 className="mt-1 text-xl font-bold text-kal-text">Settings</h1>
         <p className="mt-1 text-sm leading-relaxed text-kal-text-secondary">
-          Shape how Kalnehi feels — every option here is optional.
+          Shape how Kalnehi feels — every option here is optional. Subscription,
+          billing, and AI credits live under{" "}
+          <Link
+            href="/my-plan"
+            className="font-semibold text-kal-accent underline underline-offset-2"
+          >
+            My Plan
+          </Link>
+          .
         </p>
       </div>
-
-      <section aria-labelledby="my-plan-heading">
-        <h2
-          id="my-plan-heading"
-          className="px-3 pb-2 text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent"
-        >
-          My Plan
-        </h2>
-        <MyPlanSection />
-      </section>
 
       <section aria-labelledby="toggles-heading">
         <h2 id="toggles-heading" className="sr-only">
