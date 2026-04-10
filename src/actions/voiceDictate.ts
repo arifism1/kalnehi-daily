@@ -2,8 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 
+import { insertDailyTask } from "@/actions/dailyPlan";
 import { incrementVoiceMinuteUsage } from "@/actions/subscription";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { slotFromStartEnd } from "@/lib/dailyPlanTime";
 import {
   fetchVoiceTasksFromGroq,
   GROQ_VOICE_MODEL,
@@ -23,7 +24,6 @@ import {
   buildScheduleDescription,
   inferCategoryFromTaskName,
 } from "@/lib/voiceTimelineInfer";
-import type { Json, TablesInsert } from "@/types/supabase";
 import { runVoiceParseDraft } from "@/lib/runVoiceParseDraft";
 import type {
   VoiceDictateFailure,
@@ -41,7 +41,7 @@ type VoiceDraftRow = {
 };
 
 /**
- * Turn a Groq task (name + optional IST HH:MM) into a row for voice_timeline_entries.
+ * Turn a Groq task (name + optional IST HH:MM) into a parsed preview row.
  */
 function taskToParsedEntry(task: GroqVoiceTask): ParsedVoiceDayEntry {
   const title = task.name.trim().slice(0, 200) || "Activity";
@@ -61,7 +61,7 @@ function taskToParsedEntry(task: GroqVoiceTask): ParsedVoiceDayEntry {
 }
 
 /**
- * Core pipeline: Groq parse → insert `voice_timeline_entries` (one row per task).
+ * Core pipeline: Groq parse → insert unified `daily_tasks` (one row per task).
  * Passes to Groq: `occurredAtIso` (CURRENT_TIME_ISO + derived CURRENT_IST_HHMM) and `logDate` (LOG_DATE).
  * On missing API key / empty transcript, returns `mode: "fallback"` for raw save UI.
  */
@@ -70,14 +70,6 @@ export async function runVoiceDictationPipeline(
   logDate: string,
   occurredAtIso: string,
 ): Promise<VoiceDictateSuccess | VoiceDictateFailure> {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return { ok: false, error: USER_ERROR.session };
-  }
-
   const raw = transcript.trim().slice(0, 12_000);
   if (!raw) {
     return { ok: false, error: "Nothing was captured to save." };
@@ -103,38 +95,25 @@ export async function runVoiceDictationPipeline(
 
     const st = normalizeVoiceHHMM(task.start_time ?? null);
     const et = normalizeVoiceHHMM(task.end_time ?? null);
+    const si = st && /^\d{2}:\d{2}$/.test(st) ? st : "";
+    const ei = et && /^\d{2}:\d{2}$/.test(et) ? et : "";
+    const { time_slot, time_start, time_end } = slotFromStartEnd(si, ei);
+    const id = crypto.randomUUID();
 
-    const parsed_json: Json = {
-      name: task.name,
-      start_time: st,
-      end_time: et,
-      groq_model: GROQ_VOICE_MODEL,
-    } as unknown as Json;
-
-    const row: TablesInsert<"voice_timeline_entries"> = {
-      user_id: user.id,
-      log_date: logDate,
-      transcript_raw: raw,
+    const ins = await insertDailyTask({
+      plan_date: logDate,
+      id,
       title: rowParsed.title,
-      description: rowParsed.description,
-      category: rowParsed.category,
-      subject: rowParsed.subject,
-      chapter: rowParsed.chapter,
-      estimated_minutes: rowParsed.estimated_minutes,
-      occurred_at: occurredAtIso,
-      parsed_json,
-    };
-
-    const { data: inserted, error } = await supabase
-      .from("voice_timeline_entries")
-      .insert(row)
-      .select("id")
-      .single();
-
-    if (error || !inserted?.id) {
-      return { ok: false, error: USER_ERROR.tryAgain };
+      time_slot,
+      time_start,
+      time_end,
+      source: "voice",
+      source_raw_text: raw,
+    });
+    if (!ins.ok) {
+      return { ok: false, error: ins.error };
     }
-    entryIds.push(inserted.id);
+    entryIds.push(id);
   }
 
   revalidatePath("/dictate-day");
@@ -149,14 +128,6 @@ export async function runVoiceDictationPipeline(
 export async function saveRawVoiceNote(
   input: VoiceDictateInput,
 ): Promise<VoiceDictateSuccessParsed | VoiceDictateFailure> {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return { ok: false, error: USER_ERROR.session };
-  }
-
   const logDate = input.log_date?.trim() ?? "";
   if (!/^\d{4}-\d{2}-\d{2}$/.test(logDate)) {
     return { ok: false, error: "Invalid date." };
@@ -177,35 +148,22 @@ export async function saveRawVoiceNote(
     category: inferCategoryFromTaskName(firstLine),
   });
 
-  const parsed_json: Json = {
-    groq_model: GROQ_VOICE_MODEL,
-    raw_fallback: true,
-    start_time: nowIst,
-    end_time: null,
-  } as unknown as Json;
+  const si = nowIst && /^\d{2}:\d{2}$/.test(nowIst) ? nowIst : "";
+  const { time_slot, time_start, time_end } = slotFromStartEnd(si, "");
+  const id = crypto.randomUUID();
 
-  const row: TablesInsert<"voice_timeline_entries"> = {
-    user_id: user.id,
-    log_date: logDate,
-    transcript_raw: raw,
+  const ins = await insertDailyTask({
+    plan_date: logDate,
+    id,
     title: rowParsed.title,
-    description: rowParsed.description,
-    category: rowParsed.category,
-    subject: rowParsed.subject,
-    chapter: rowParsed.chapter,
-    estimated_minutes: rowParsed.estimated_minutes,
-    occurred_at: occurredAt,
-    parsed_json,
-  };
-
-  const { data: inserted, error } = await supabase
-    .from("voice_timeline_entries")
-    .insert(row)
-    .select("id")
-    .single();
-
-  if (error || !inserted?.id) {
-    return { ok: false, error: USER_ERROR.tryAgain };
+    time_slot,
+    time_start,
+    time_end,
+    source: "voice",
+    source_raw_text: raw,
+  });
+  if (!ins.ok) {
+    return { ok: false, error: ins.error };
   }
 
   revalidatePath("/dictate-day");
@@ -214,7 +172,7 @@ export async function saveRawVoiceNote(
   return {
     ok: true,
     mode: "parsed",
-    entryIds: [inserted.id],
+    entryIds: [id],
     preview: rowParsed,
   };
 }
@@ -264,7 +222,7 @@ export async function parseVoiceTranscriptToDraft(
 }
 
 /**
- * Save reviewed draft rows ONLY to Dictate My Day timeline table.
+ * Save reviewed draft rows to the unified daily plan (`daily_tasks`).
  */
 export async function saveVoiceDraftToTimeline(
   input: {
@@ -274,20 +232,10 @@ export async function saveVoiceDraftToTimeline(
     tasks: VoiceDraftRow[];
   },
 ): Promise<{ ok: true; entryIds: string[] } | VoiceDictateFailure> {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: USER_ERROR.session };
-
   const logDate = input.log_date?.trim() ?? "";
   if (!/^\d{4}-\d{2}-\d{2}$/.test(logDate)) {
     return { ok: false, error: "Invalid date." };
   }
-  const occurredAt =
-    typeof input.occurred_at === "string" && input.occurred_at.trim()
-      ? input.occurred_at.trim()
-      : new Date().toISOString();
   const raw = (input.transcript_raw ?? "").trim().slice(0, 12_000);
   if (!raw) return { ok: false, error: "Nothing to save." };
 
@@ -305,36 +253,31 @@ export async function saveVoiceDraftToTimeline(
 
   const entryIds: string[] = [];
   for (const task of cleaned) {
-    const rowParsed = taskToParsedEntry(task);
-    const parsed_json: Json = {
+    const rowParsed = taskToParsedEntry({
       name: task.name,
       start_time: task.start_time,
       end_time: task.end_time,
-      groq_model: GROQ_VOICE_MODEL,
-      manual_reviewed: true,
-    } as unknown as Json;
-
-    const row: TablesInsert<"voice_timeline_entries"> = {
-      user_id: user.id,
-      log_date: logDate,
-      transcript_raw: raw,
+    });
+    const si =
+      task.start_time && /^\d{2}:\d{2}$/.test(task.start_time)
+        ? task.start_time
+        : "";
+    const ei =
+      task.end_time && /^\d{2}:\d{2}$/.test(task.end_time) ? task.end_time : "";
+    const { time_slot, time_start, time_end } = slotFromStartEnd(si, ei);
+    const id = crypto.randomUUID();
+    const ins = await insertDailyTask({
+      plan_date: logDate,
+      id,
       title: rowParsed.title,
-      description: rowParsed.description,
-      category: rowParsed.category,
-      subject: rowParsed.subject,
-      chapter: rowParsed.chapter,
-      estimated_minutes: rowParsed.estimated_minutes,
-      occurred_at: occurredAt,
-      parsed_json,
-    };
-
-    const { data: inserted, error } = await supabase
-      .from("voice_timeline_entries")
-      .insert(row)
-      .select("id")
-      .single();
-    if (error || !inserted?.id) return { ok: false, error: USER_ERROR.tryAgain };
-    entryIds.push(inserted.id);
+      time_slot,
+      time_start,
+      time_end,
+      source: "voice",
+      source_raw_text: raw,
+    });
+    if (!ins.ok) return { ok: false, error: ins.error };
+    entryIds.push(id);
   }
 
   revalidatePath("/dictate-day");

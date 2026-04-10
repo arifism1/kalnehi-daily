@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Camera, Lock, Mic, PenLine } from "lucide-react";
+import { ArrowLeft, CalendarDays, Camera, Lock, Mic, PenLine } from "lucide-react";
 import Link from "next/link";
 
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
@@ -99,11 +99,25 @@ export function PlanMyDayPage() {
         <p className="mx-auto mt-3 max-w-xl text-[15px] leading-relaxed text-kal-muted sm:mx-0 sm:text-base">
           {dictateLocked
             ? "Type your plan below. Upgrade to Pro to unlock voice dictation and handwritten scanning."
-            : "Three independent planners — pick whichever suits your flow. Everything lands in Today's targets on your home screen."}
+            : "One shared plan per day — use voice, scan, or typing. Open the daily planner anytime to see everything together."}
         </p>
       </header>
 
       <div className="relative flex flex-col gap-5 sm:gap-6">
+        <PlannerCard
+          href="/daily-plan"
+          emoji="📋"
+          icon={
+            <CalendarDays
+              className="h-5 w-5 text-kal-accent opacity-85 group-hover:opacity-100"
+              aria-hidden
+            />
+          }
+          title="Daily planner"
+          subtitle="Unified list — typed, voice & handwritten"
+          locked={false}
+          order="order-1"
+        />
         <PlannerCard
           href="/dictate-day"
           emoji="🎤"
@@ -116,7 +130,7 @@ export function PlanMyDayPage() {
           title="Dictate My Day"
           subtitle="Speak — smart timed tasks"
           locked={dictateLocked}
-          order="order-1"
+          order="order-2"
         />
 
         <PlannerCard
@@ -131,7 +145,7 @@ export function PlanMyDayPage() {
           title="Handwritten"
           subtitle="Snap your list — camera & OCR"
           locked={handwrittenLocked}
-          order="order-2"
+          order="order-3"
         />
 
         <PlannerCard
@@ -146,7 +160,7 @@ export function PlanMyDayPage() {
           title="Self type"
           subtitle="Type & edit your day's plan"
           locked={false}
-          order="order-3"
+          order="order-4"
         />
       </div>
 
@@ -163,10 +177,9 @@ export function PlanMyDayPage() {
       )}
 
       <p className="relative mt-10 text-center text-sm leading-relaxed text-kal-muted sm:mt-12">
-        Each planner works independently. After adding tasks, use{" "}
-        <span className="font-medium text-kal-text-secondary">Home</span> and{" "}
-        <span className="font-medium text-kal-text-secondary">Calendar</span> to
-        execute and tick them off.
+        All inputs update the same plan for the date you pick. Use{" "}
+        <span className="font-medium text-kal-text-secondary">Home</span> for
+        syllabus-linked targets and timer; daily planner is for your schedule lines.
       </p>
     </div>
   );

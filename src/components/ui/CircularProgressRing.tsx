@@ -32,12 +32,15 @@ export function CircularProgressRing({
   const r = (size - strokeWidth) / 2;
   const c = 2 * Math.PI * r;
   const dash = (p / 100) * c;
-  /** Keep center labels/text away from the ring stroke on all sizes. */
-  const contentInset = Math.max(10, Math.round(strokeWidth + 6));
+  /** Inset scales with ring so labels stay clear of the stroke (light + dark themes). */
+  const contentInset = Math.max(
+    14,
+    Math.round(strokeWidth * 1.35 + size * 0.06),
+  );
 
   return (
     <div
-      className={clsx("relative flex items-center justify-center", className)}
+      className={clsx("relative flex shrink-0 items-center justify-center", className)}
       style={{ width: size, height: size }}
     >
       <svg width={size} height={size} className="-rotate-90" aria-hidden>
@@ -76,7 +79,7 @@ export function CircularProgressRing({
         />
       </svg>
       <div
-        className="pointer-events-none absolute flex flex-col items-center justify-center overflow-hidden rounded-full px-2 text-center"
+        className="pointer-events-none absolute flex flex-col items-center justify-center rounded-full px-3 py-2 text-center"
         style={{ inset: contentInset }}
       >
         {children}

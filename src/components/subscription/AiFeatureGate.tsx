@@ -2,9 +2,7 @@
 
 import Link from "next/link";
 import { Camera, Lock, Mic } from "lucide-react";
-import { useState } from "react";
 
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useAiGate } from "@/hooks/useAiGate";
 
 type Props = {
@@ -21,12 +19,8 @@ export function AiFeatureGate({ feature, children }: Props) {
     photoScanStatus,
     voiceMinuteStatus,
     photoScansRemaining,
-    photoScansLimit,
     voiceMinutesRemaining,
-    voiceMinutesLimit,
   } = useAiGate();
-
-  const [confirmed, setConfirmed] = useState(false);
 
   if (loading) return <>{children}</>;
 
@@ -90,23 +84,7 @@ export function AiFeatureGate({ feature, children }: Props) {
   }
 
   const remaining = isPhoto ? photoScansRemaining : voiceMinutesRemaining;
-  const limit = isPhoto ? photoScansLimit : voiceMinutesLimit;
   const statusText = isPhoto ? photoScanStatus : voiceMinuteStatus;
-
-  if (!confirmed) {
-    return (
-      <ConfirmDialog
-        open
-        title={isPhoto ? "Use Photo Scanner?" : "Start Voice Session?"}
-        description={`${statusText}. Each ${isPhoto ? "scan" : "session"} uses bonus credits first (if active), then your monthly allowance.`}
-        confirmLabel="Continue"
-        cancelLabel="Go Back"
-        danger={false}
-        onConfirm={() => setConfirmed(true)}
-        onCancel={() => window.history.back()}
-      />
-    );
-  }
 
   return (
     <>

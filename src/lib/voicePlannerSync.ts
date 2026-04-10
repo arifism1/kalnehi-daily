@@ -1,27 +1,37 @@
 "use client";
 
-import type { VoiceTimelineRow } from "@/actions/voiceTimeline";
-import { GROQ_VOICE_MODEL } from "@/lib/voiceDictateGroq";
+import type { DailyTaskRow } from "@/actions/dailyPlan";
 import { registerOutboxBackgroundSync } from "@/lib/pwaBackgroundSync";
+import { slotFromStartEnd, timeDbToInput } from "@/lib/dailyPlanTime";
 import {
   addOutboxMutation,
   getOutboxCount,
   putVoicePlannerSnapshot,
   voicePlannerSnapshotKey,
+  type OutboxMutation,
   type VoicePlannerSnapshotRow,
 } from "@/lib/taskIdb";
-import {
-  buildScheduleDescription,
-  inferCategoryFromTaskName,
-} from "@/lib/voiceTimelineInfer";
-import { minutesBetweenHHMM, normalizeVoiceHHMM } from "@/lib/voiceIst";
-import type { Json, TablesInsert, TablesUpdate } from "@/types/supabase";
+import { normalizeVoiceHHMM } from "@/lib/voiceIst";
+import type { TablesUpdate } from "@/types/supabase";
 import { useSyncStore } from "@/store/useSyncStore";
 
 export type VoicePlannerTableRow = VoicePlannerSnapshotRow;
 
 function durationLabel(start: string | null, end: string | null): string | null {
-  const mins = minutesBetweenHHMM(start, end);
+  const mins =
+    start && end
+      ? (() => {
+          const [sh, sm] = start.split(":").map(Number);
+          const [eh, em] = end.split(":").map(Number);
+          if ([sh, sm, eh, em].some((n) => Number.isNaN(n))) return null;
+          let a = sh * 60 + sm;
+          let b = eh * 60 + em;
+          if (b < a) b += 24 * 60;
+          const diff = b - a;
+          if (diff <= 0 || diff > 24 * 60) return null;
+          return diff;
+        })()
+      : null;
   if (mins == null) return null;
   if (mins >= 60) {
     return mins % 60 === 0
@@ -31,109 +41,84 @@ function durationLabel(start: string | null, end: string | null): string | null 
   return `${mins}m`;
 }
 
-function timeInputToDb(s: string): string | null {
-  const t = s.trim();
-  if (!t) return null;
-  return normalizeVoiceHHMM(t);
-}
-
-export function voiceTimelineRowToDraftRow(
-  e: VoiceTimelineRow,
-): VoicePlannerTableRow {
-  const pj =
-    e.parsed_json && typeof e.parsed_json === "object"
-      ? (e.parsed_json as Record<string, unknown>)
-      : {};
-  const st = typeof pj.start_time === "string" ? pj.start_time : null;
-  const et = typeof pj.end_time === "string" ? pj.end_time : null;
-  const startNorm = normalizeVoiceHHMM(st);
-  const endNorm = normalizeVoiceHHMM(et);
-  const startInput =
-    startNorm && /^\d{2}:\d{2}$/.test(startNorm) ? startNorm : "";
-  const endInput = endNorm && /^\d{2}:\d{2}$/.test(endNorm) ? endNorm : "";
-  const include = pj.planner_include !== false;
-  return {
-    id: e.id,
-    include,
-    name: e.title?.trim() ?? "",
-    startInput,
-    endInput,
-    duration: durationLabel(startNorm, endNorm),
-    transcriptRaw: e.transcript_raw?.slice(0, 12_000),
-  };
-}
-
-function buildParsedJson(
-  d: VoicePlannerTableRow,
-  title: string,
-  start: string | null,
-  end: string | null,
-): Json {
-  return {
-    name: title,
-    start_time: start,
-    end_time: end,
-    planner_include: d.include,
-    groq_model: GROQ_VOICE_MODEL,
-    auto_saved: true,
-  } as unknown as Json;
-}
-
-function draftRowToInsert(
-  d: VoicePlannerTableRow,
-  logDate: string,
-  transcriptFallback: string,
-): Omit<TablesInsert<"voice_timeline_entries">, "user_id"> {
-  const title = d.name.trim().slice(0, 200) || "Activity";
-  const start = timeInputToDb(d.startInput);
-  const end = timeInputToDb(d.endInput);
-  const description = buildScheduleDescription(start, end);
-  const estimated_minutes = minutesBetweenHHMM(start, end);
-  const category = inferCategoryFromTaskName(title);
-  const raw =
-    (d.transcriptRaw?.trim() || transcriptFallback || "").slice(0, 12_000) ||
-    " ";
-  const transcript_raw = raw.length > 0 ? raw : " ";
-  const parsed_json = buildParsedJson(d, title, start, end);
-  return {
-    id: d.id,
-    log_date: logDate,
-    transcript_raw,
-    title,
-    description,
-    category,
-    subject: null,
-    chapter: null,
-    estimated_minutes,
-    occurred_at: new Date().toISOString(),
-    parsed_json,
-  };
-}
-
-function draftRowToUpdate(
-  d: VoicePlannerTableRow,
-): TablesUpdate<"voice_timeline_entries"> {
-  const title = d.name.trim().slice(0, 200) || "Activity";
-  const start = timeInputToDb(d.startInput);
-  const end = timeInputToDb(d.endInput);
-  const description = buildScheduleDescription(start, end);
-  const estimated_minutes = minutesBetweenHHMM(start, end);
-  const category = inferCategoryFromTaskName(title);
-  const parsed_json = buildParsedJson(d, title, start, end);
-  return {
-    title,
-    description,
-    category,
-    estimated_minutes,
-    parsed_json,
-  };
-}
-
 export function plannerDurationFromTimeInputs(
   startInput: string,
   endInput: string,
 ): string | null {
-  return durationLabel(timeInputToDb(startInput), timeInputToDb(endInput));
+  const s = normalizeVoiceHHMM(startInput.trim() || null);
+  const e = normalizeVoiceHHMM(endInput.trim() || null);
+  return durationLabel(s, e);
+}
+
+export function dailyTaskRowToDraftRow(e: DailyTaskRow): VoicePlannerTableRow {
+  const st = e.time_start ? timeDbToInput(e.time_start) : "";
+  const et = e.time_end ? timeDbToInput(e.time_end) : "";
+  const include = e.status !== "skipped";
+  return {
+    id: e.id,
+    include,
+    name: e.title?.trim() ?? "",
+    startInput: st,
+    endInput: et,
+    duration: plannerDurationFromTimeInputs(st, et),
+    transcriptRaw: e.source_raw_text?.slice(0, 12_000),
+    source: e.source as VoicePlannerTableRow["source"],
+  };
+}
+
+/** @deprecated Use dailyTaskRowToDraftRow */
+export function voiceTimelineRowToDraftRow(e: DailyTaskRow): VoicePlannerTableRow {
+  return dailyTaskRowToDraftRow(e);
+}
+
+function draftRowToDailyInsertPayload(
+  d: VoicePlannerTableRow,
+  logDate: string,
+  sourceTextAggregate: string,
+  sourceDefault: "voice" | "handwritten",
+): NonNullable<OutboxMutation["dailyTaskInsert"]> {
+  const title = d.name.trim().slice(0, 500) || "Activity";
+  const { time_slot, time_start, time_end } = slotFromStartEnd(
+    d.startInput,
+    d.endInput,
+  );
+  const raw =
+    (d.transcriptRaw?.trim() || sourceTextAggregate || "").slice(0, 12_000) ||
+    null;
+  const status = d.include ? "pending" : "skipped";
+  const src = d.source ?? sourceDefault;
+  return {
+    plan_date: logDate,
+    id: d.id,
+    title,
+    time_slot,
+    time_start,
+    time_end,
+    priority: "normal",
+    status,
+    source:
+      src === "typed" || src === "voice" || src === "handwritten"
+        ? src
+        : sourceDefault,
+    source_raw_text: raw,
+  };
+}
+
+function draftRowToDailyPatch(d: VoicePlannerTableRow): TablesUpdate<"daily_tasks"> {
+  const title = d.name.trim().slice(0, 500) || "Activity";
+  const { time_slot, time_start, time_end } = slotFromStartEnd(
+    d.startInput,
+    d.endInput,
+  );
+  const status = d.include ? "pending" : "skipped";
+  return {
+    title,
+    time_slot,
+    time_start,
+    time_end,
+    status,
+    updated_at: new Date().toISOString(),
+  };
 }
 
 export function rowSyncHash(d: VoicePlannerTableRow): string {
@@ -142,6 +127,7 @@ export function rowSyncHash(d: VoicePlannerTableRow): string {
     s: d.startInput,
     e: d.endInput,
     i: d.include,
+    o: d.source ?? "",
   });
 }
 
@@ -162,13 +148,14 @@ export async function persistPlannerSnapshotLocal(
 }
 
 /**
- * Diff-based enqueue: creates / updates / deletes for voice_timeline_entries.
- * Caller seeds serverKnownIds, rowHashRef, prevIdsRef after a successful server load.
+ * Diff-based enqueue: creates / updates / deletes for `daily_tasks` (unified plan).
  */
-export async function pushPlannerRowsToOutbox(opts: {
+export async function pushDailyPlannerRowsToOutbox(opts: {
   userId: string;
   logDate: string;
-  transcriptAggregate: string;
+  /** New rows without explicit `source` use this default. */
+  sourceDefault: "voice" | "handwritten";
+  sourceTextAggregate: string;
   draftRows: VoicePlannerTableRow[];
   serverKnownIds: Set<string>;
   prevIdsRef: { current: Set<string> };
@@ -178,7 +165,8 @@ export async function pushPlannerRowsToOutbox(opts: {
   const {
     userId,
     logDate,
-    transcriptAggregate,
+    sourceDefault,
+    sourceTextAggregate,
     draftRows,
     serverKnownIds,
     prevIdsRef,
@@ -193,7 +181,7 @@ export async function pushPlannerRowsToOutbox(opts: {
       pendingCreateIdsRef.current.delete(id);
       if (serverKnownIds.has(id)) {
         await addOutboxMutation({
-          op: "voice_timeline_delete",
+          op: "daily_task_delete",
           taskId: id,
         });
         serverKnownIds.delete(id);
@@ -208,9 +196,14 @@ export async function pushPlannerRowsToOutbox(opts: {
       if (!pendingCreateIdsRef.current.has(r.id)) {
         pendingCreateIdsRef.current.add(r.id);
         await addOutboxMutation({
-          op: "voice_timeline_create",
+          op: "daily_task_create",
           taskId: r.id,
-          voiceInsert: draftRowToInsert(r, logDate, transcriptAggregate),
+          dailyTaskInsert: draftRowToDailyInsertPayload(
+            r,
+            logDate,
+            sourceTextAggregate,
+            sourceDefault,
+          ),
         });
       }
       continue;
@@ -220,9 +213,9 @@ export async function pushPlannerRowsToOutbox(opts: {
     if (rowHashRef.current[r.id] === h) continue;
     rowHashRef.current[r.id] = h;
     await addOutboxMutation({
-      op: "voice_timeline_update",
+      op: "daily_task_update",
       taskId: r.id,
-      voicePatch: draftRowToUpdate(r),
+      dailyTaskPatch: draftRowToDailyPatch(r),
     });
   }
 
@@ -235,5 +228,17 @@ export async function pushPlannerRowsToOutbox(opts: {
     if (typeof navigator !== "undefined" && navigator.onLine) {
       scheduleOutboxFlush(userId);
     }
+  });
+}
+
+/** @deprecated Prefer pushDailyPlannerRowsToOutbox with explicit sourceDefault */
+export async function pushPlannerRowsToOutbox(
+  opts: Omit<Parameters<typeof pushDailyPlannerRowsToOutbox>[0], "sourceDefault"> & {
+    sourceDefault?: "voice" | "handwritten";
+  },
+): Promise<void> {
+  return pushDailyPlannerRowsToOutbox({
+    ...opts,
+    sourceDefault: opts.sourceDefault ?? "voice",
   });
 }

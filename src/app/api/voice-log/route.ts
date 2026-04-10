@@ -21,7 +21,7 @@ function isValidYmd(s: string): boolean {
 /**
  * POST /api/voice-log
  * Auth: Supabase session cookie. Body: { transcript, log_date, occurred_at? }
- * Parses transcript with Groq and inserts `voice_timeline_entries`, or returns fallback payload.
+ * Parses transcript with Groq and inserts unified `daily_tasks`, or returns fallback payload.
  */
 export async function POST(request: Request) {
   let body: PostBody;

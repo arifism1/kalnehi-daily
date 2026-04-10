@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, ClipboardList, Loader2, Plus, Trash2 } from "lucide-react";
+import { Camera, ClipboardList, Loader2 } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -10,64 +10,29 @@ import {
   type ChangeEvent,
 } from "react";
 
-import {
-  listHandwrittenPlannerForDate,
-  type HandwrittenPlannerRow,
-} from "@/actions/handwrittenPlanner";
+import { insertDailyTask } from "@/actions/dailyPlan";
 import {
   parseHandwrittenPlannerPhoto,
   parsePastedHandwrittenPlan,
   type ParsedPastedPlanTask,
 } from "@/actions/pasteHandwrittenPlan";
-import { useCalendarDate } from "@/hooks/useCalendarDate";
 import {
-  persistHandwrittenSnapshotLocal,
-  pushHandwrittenPlannerReplaceToOutbox,
-} from "@/lib/handwrittenPlannerSync";
+  DailyPlanPreviewStaging,
+  type DailyPlanPreviewRow,
+} from "@/components/planner/DailyPlanPreviewStaging";
+import { UnifiedDailyPlanList } from "@/components/planner/UnifiedDailyPlanList";
+import { useCalendarDate } from "@/hooks/useCalendarDate";
+import { slotFromStartEnd } from "@/lib/dailyPlanTime";
 import { compressImageForUpload } from "@/lib/plannerPhotoClient";
-import { applyOptimisticTaskCreate } from "@/lib/taskMutations";
-import { flushOutbox } from "@/lib/sync";
-import { getHandwrittenPlannerSnapshot } from "@/lib/taskIdb";
-import { dbTimeToInputValue, inputTimeToDb } from "@/lib/taskTime";
+import { dbTimeToInputValue } from "@/lib/taskTime";
 import { minutesBetweenHHMM } from "@/lib/voiceIst";
 import { useAuthStore } from "@/store/useAuthStore";
-import type { Task } from "@/store/useTaskStore";
 
-type EditableRow = {
-  id: string;
-  include: boolean;
-  name: string;
-  startInput: string;
-  endInput: string;
-  duration: string | null;
-};
-
-function parsedInclude(pj: Record<string, unknown> | null): boolean {
-  if (!pj) return true;
-  return pj.planner_include !== false;
-}
-
-function serverRowToEditable(e: HandwrittenPlannerRow): EditableRow {
-  const pj =
-    e.parsed_json && typeof e.parsed_json === "object"
-      ? (e.parsed_json as Record<string, unknown>)
-      : null;
-  const st = e.start_time ? String(e.start_time).slice(0, 5) : "";
-  const et = e.end_time ? String(e.end_time).slice(0, 5) : "";
-  return {
-    id: e.id,
-    include: parsedInclude(pj),
-    name: e.title?.trim() ?? "",
-    startInput: st,
-    endInput: et,
-    duration: e.duration?.trim() || null,
-  };
-}
+type EditableRow = DailyPlanPreviewRow;
 
 function emptyRow(): EditableRow {
   return {
     id: crypto.randomUUID(),
-    include: true,
     name: "",
     startInput: "",
     endInput: "",
@@ -78,7 +43,6 @@ function emptyRow(): EditableRow {
 function toRows(tasks: ParsedPastedPlanTask[]): EditableRow[] {
   return tasks.map((t) => ({
     id: crypto.randomUUID(),
-    include: false,
     name: t.name,
     startInput: dbTimeToInputValue(t.start_time ? `${t.start_time}:00` : null),
     endInput: dbTimeToInputValue(t.end_time ? `${t.end_time}:00` : null),
@@ -86,32 +50,31 @@ function toRows(tasks: ParsedPastedPlanTask[]): EditableRow[] {
   }));
 }
 
-const PERSIST_LOCAL_MS = 80;
-const PUSH_OUTBOX_MS = 320;
-
 function buildSaveTasks(rows: EditableRow[]) {
   return rows
-    .filter((r) => r.include && r.name.trim().length > 0)
+    .filter((r) => r.name.trim().length > 0)
     .map((r) => ({
       activityName: r.name.trim(),
-      start_time: inputTimeToDb(r.startInput),
-      end_time: inputTimeToDb(r.endInput),
-      duration: r.duration ?? null,
+      start_input: r.startInput,
+      end_input: r.endInput,
+      source_raw_slice: r.name.trim(),
     }));
 }
 
-function handwrittenAutosaveSig(raw: string, rows: EditableRow[]): string {
-  return JSON.stringify({
-    raw: raw.trim(),
-    rows: rows.map((r) => ({
-      id: r.id,
-      include: r.include,
-      name: r.name,
-      s: r.startInput,
-      e: r.endInput,
-      d: r.duration,
-    })),
-  });
+function scrollStagingIntoView(): void {
+  window.setTimeout(() => {
+    document
+      .getElementById("handwritten-staging")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, 120);
+}
+
+function scrollLivePlanIntoView(): void {
+  window.setTimeout(() => {
+    document
+      .getElementById("handwritten-live-plan")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, 200);
 }
 
 export function PasteHandwrittenPlanPage() {
@@ -126,176 +89,34 @@ export function PasteHandwrittenPlanPage() {
   rowsRef.current = rows;
   const rawTextRef = useRef(rawText);
   rawTextRef.current = rawText;
-  const autosaveSigRef = useRef("");
   const [hint, setHint] = useState<string | null>(null);
-  const [autosaveError, setAutosaveError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [saveOk, setSaveOk] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [planListKey, setPlanListKey] = useState(0);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
-  const applyServerEntries = useCallback((entries: HandwrittenPlannerRow[]) => {
-    const rt = entries[0]?.source_text?.trim() ?? "";
-    const mapped = entries.map(serverRowToEditable);
-    setRawText(rt);
-    setRows(mapped);
-    autosaveSigRef.current = handwrittenAutosaveSig(rt, mapped);
-  }, []);
-
   useEffect(() => {
-    let cancelled = false;
-    setHydrated(false);
-    void (async () => {
-      const uid = userId;
-      if (!uid) {
-        if (cancelled) return;
-        const first = emptyRow();
-        setRawText("");
-        setRows([first]);
-        autosaveSigRef.current = handwrittenAutosaveSig("", [first]);
-        setHydrated(true);
-        return;
-      }
-
-      const res = await listHandwrittenPlannerForDate(logDate);
-      if (cancelled) return;
-
-      if (res.ok && res.entries.length > 0) {
-        const rt = res.entries[0]?.source_text?.trim() ?? "";
-        const mapped = res.entries.map(serverRowToEditable);
-        setRawText(rt);
-        setRows(mapped);
-        autosaveSigRef.current = handwrittenAutosaveSig(rt, mapped);
-        await persistHandwrittenSnapshotLocal(uid, logDate, rt, mapped);
-      } else if (res.ok) {
-        const snap = await getHandwrittenPlannerSnapshot(uid, logDate);
-        if (cancelled) return;
-        if (
-          snap &&
-          snap.userId === uid &&
-          snap.logDate === logDate &&
-          snap.rows.length > 0
-        ) {
-          setRawText(snap.sourceText);
-          setRows(snap.rows);
-          autosaveSigRef.current = handwrittenAutosaveSig(
-            snap.sourceText,
-            snap.rows,
-          );
-          await persistHandwrittenSnapshotLocal(
-            uid,
-            logDate,
-            snap.sourceText,
-            snap.rows,
-          );
-        } else {
-          const first = emptyRow();
-          setRawText("");
-          setRows([first]);
-          autosaveSigRef.current = handwrittenAutosaveSig("", [first]);
-          await persistHandwrittenSnapshotLocal(uid, logDate, "", [first]);
-        }
-      } else {
-        const snap = await getHandwrittenPlannerSnapshot(uid, logDate);
-        if (cancelled) return;
-        if (snap && snap.userId === uid && snap.logDate === logDate) {
-          const displayRows =
-            snap.rows.length > 0 ? snap.rows : [emptyRow()];
-          setRawText(snap.sourceText);
-          setRows(displayRows);
-          autosaveSigRef.current = handwrittenAutosaveSig(
-            snap.sourceText,
-            displayRows,
-          );
-          await persistHandwrittenSnapshotLocal(
-            uid,
-            logDate,
-            snap.sourceText,
-            displayRows,
-          );
-        } else {
-          const first = emptyRow();
-          setRawText("");
-          setRows([first]);
-          autosaveSigRef.current = handwrittenAutosaveSig("", [first]);
-        }
-      }
-      setHydrated(true);
-    })();
-
-    return () => {
-      cancelled = true;
-    };
+    const first = emptyRow();
+    setRows([first]);
+    setHydrated(true);
   }, [logDate, userId]);
 
-  useEffect(() => {
-    if (!hydrated || !userId) return;
-    const uid = userId;
-    const sig = handwrittenAutosaveSig(rawTextRef.current, rowsRef.current);
-    if (sig === autosaveSigRef.current) return;
-
-    const idbT = setTimeout(() => {
-      void persistHandwrittenSnapshotLocal(
-        uid,
-        logDate,
-        rawTextRef.current,
-        rowsRef.current,
-      );
-    }, PERSIST_LOCAL_MS);
-
-    const syncT = setTimeout(() => {
-      void (async () => {
-        const sigNow = handwrittenAutosaveSig(
-          rawTextRef.current,
-          rowsRef.current,
-        );
-        if (sigNow === autosaveSigRef.current) return;
-        try {
-          await pushHandwrittenPlannerReplaceToOutbox({
-            userId: uid,
-            logDate,
-            sourceText: rawTextRef.current,
-            tasks: buildSaveTasks(rowsRef.current),
-          });
-          if (
-            handwrittenAutosaveSig(rawTextRef.current, rowsRef.current) !==
-            sigNow
-          ) {
-            return;
-          }
-          setAutosaveError(null);
-          autosaveSigRef.current = sigNow;
-        } catch {
-          setAutosaveError("Could not queue sync.");
-        }
-      })();
-    }, PUSH_OUTBOX_MS);
-
-    return () => {
-      clearTimeout(idbT);
-      clearTimeout(syncT);
-    };
-  }, [hydrated, logDate, userId, rows, rawText]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const onSynced = () => {
-      void (async () => {
-        const uid = useAuthStore.getState().user?.id;
-        if (!uid) return;
-        const res = await listHandwrittenPlannerForDate(logDate);
-        if (res.ok && res.entries.length > 0) {
-          applyServerEntries(res.entries);
-        }
-      })();
-    };
-    window.addEventListener("kalnehi-handwritten-planner-synced", onSynced);
-    return () =>
-      window.removeEventListener("kalnehi-handwritten-planner-synced", onSynced);
-  }, [logDate, applyServerEntries]);
-
   const updateRow = useCallback((id: string, patch: Partial<EditableRow>) => {
-    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+    setRows((prev) =>
+      prev.map((r) => {
+        if (r.id !== id) return r;
+        const next = { ...r, ...patch };
+        if ("startInput" in patch || "endInput" in patch) {
+          const mins = minutesBetweenHHMM(
+            next.startInput || null,
+            next.endInput || null,
+          );
+          next.duration = mins != null ? `${mins}m` : null;
+        }
+        return next;
+      }),
+    );
   }, []);
 
   const removeRow = useCallback((id: string) => {
@@ -307,60 +128,17 @@ export function PasteHandwrittenPlanPage() {
   }, []);
 
   const commitParsedTasks = useCallback(
-    async (tasks: ParsedPastedPlanTask[], options?: { sourceText?: string }) => {
+    (tasks: ParsedPastedPlanTask[], options?: { sourceText?: string }) => {
       if (options?.sourceText !== undefined) {
         setRawText(options.sourceText);
       }
       const next = toRows(tasks);
       setRows(next.length > 0 ? next : [emptyRow()]);
-      if (userId && next.length > 0) {
-        for (const row of next) {
-          const cleanName = row.name.trim();
-          if (!cleanName) continue;
-          const id = crypto.randomUUID();
-          const now = new Date().toISOString();
-          const estimated = minutesBetweenHHMM(
-            row.startInput || null,
-            row.endInput || null,
-          );
-          const fullTask: Task = {
-            id,
-            user_id: userId,
-            assigned_date: logDate,
-            status: "pending",
-            name: cleanName,
-            microtopic_id: null,
-            created_at: now,
-            updated_at: now,
-            estimated_minutes: estimated,
-            estimated_time_minutes: estimated,
-            end_time: inputTimeToDb(row.endInput),
-            start_time: inputTimeToDb(row.startInput),
-            marks_value: null,
-            marks_weight: null,
-            time_spent_seconds: null,
-            source: "handwritten",
-          };
-          await applyOptimisticTaskCreate(
-            {
-              id,
-              assigned_date: logDate,
-              status: "pending",
-              name: cleanName,
-              microtopic_id: null,
-              start_time: inputTimeToDb(row.startInput),
-              end_time: inputTimeToDb(row.endInput),
-              estimated_minutes: estimated,
-              estimated_time_minutes: estimated,
-              source: "handwritten",
-            },
-            userId,
-            fullTask,
-          );
-        }
+      if (next.length > 0) {
+        scrollStagingIntoView();
       }
     },
-    [userId, logDate],
+    [],
   );
 
   const onPlannerPhotoSelected = useCallback(
@@ -384,7 +162,7 @@ export function PasteHandwrittenPlanPage() {
           return;
         }
         const sourceText = `Photo scan · ${new Date().toISOString().slice(0, 16)}`;
-        await commitParsedTasks(res.tasks, { sourceText });
+        commitParsedTasks(res.tasks, { sourceText });
       } catch (err) {
         setHint(err instanceof Error ? err.message : "Could not scan that photo.");
       } finally {
@@ -413,7 +191,7 @@ export function PasteHandwrittenPlanPage() {
         setPhase("idle");
         return;
       }
-      await commitParsedTasks(res.tasks);
+      commitParsedTasks(res.tasks);
       setHint(null);
     } catch (e) {
       setHint(e instanceof Error ? e.message : "Could not process pasted text.");
@@ -423,48 +201,58 @@ export function PasteHandwrittenPlanPage() {
     }
   }, [rawText, commitParsedTasks]);
 
-  const saveAll = useCallback(async () => {
+  const addCheckedToPlan = useCallback(async () => {
     setFormError(null);
     setSaveOk(false);
     const latestRows = rowsRef.current;
-    const rt = rawTextRef.current;
+    const rt = rawTextRef.current.trim().slice(0, 12_000);
     const tasks = buildSaveTasks(latestRows);
     if (tasks.length === 0) {
-      setFormError("Tick at least one row with a task name.");
+      setFormError(
+        "Add at least one task with a name in the preview box above, then tap Add again.",
+      );
       return;
     }
-    const uid = userId;
-    if (!uid) {
+    if (!userId) {
       setFormError("Sign in to save.");
       return;
     }
     setPhase("save");
     try {
-      await persistHandwrittenSnapshotLocal(uid, logDate, rt, latestRows);
-      await pushHandwrittenPlannerReplaceToOutbox({
-        userId: uid,
-        logDate,
-        sourceText: rt,
-        tasks,
-      });
-      await flushOutbox(uid);
-      const res = await listHandwrittenPlannerForDate(logDate);
-      if (!res.ok) {
-        setFormError(res.error);
-        setPhase("idle");
-        return;
+      for (const t of tasks) {
+        const { time_slot, time_start, time_end } = slotFromStartEnd(
+          t.start_input,
+          t.end_input,
+        );
+        const id = crypto.randomUUID();
+        const res = await insertDailyTask({
+          plan_date: logDate,
+          id,
+          title: t.activityName,
+          time_slot,
+          time_start,
+          time_end,
+          source: "handwritten",
+          source_raw_text: rt || t.source_raw_slice,
+        });
+        if (!res.ok) {
+          setFormError(res.error);
+          setPhase("idle");
+          return;
+        }
       }
-      if (res.entries.length > 0) {
-        applyServerEntries(res.entries);
-      }
+      window.dispatchEvent(new Event("kalnehi-daily-plan-synced"));
+      setPlanListKey((k) => k + 1);
       setSaveOk(true);
       window.setTimeout(() => setSaveOk(false), 4000);
+      setRows([emptyRow()]);
+      scrollLivePlanIntoView();
     } catch (e) {
       setFormError(e instanceof Error ? e.message : "Save failed.");
     } finally {
       setPhase("idle");
     }
-  }, [logDate, userId, applyServerEntries]);
+  }, [logDate, userId]);
 
   const busy = phase !== "idle";
 
@@ -481,6 +269,9 @@ export function PasteHandwrittenPlanPage() {
           <ClipboardList className="h-8 w-8 text-kal-accent" aria-hidden />
           Handwritten Daily Plan
         </h1>
+        <p className="mt-2 max-w-xl text-sm text-kal-muted">
+          Scan or paste your note — tasks appear in the preview box. When it looks right, tap Add to Today&apos;s Plan; they show up in Today&apos;s plan (live) below.
+        </p>
         {userId ? (
           <label className="mt-4 block max-w-xs text-xs font-medium text-kal-muted">
             Date
@@ -501,225 +292,172 @@ export function PasteHandwrittenPlanPage() {
       ) : null}
 
       {!userId ? null : (
+        <>
+          <section className="rounded-[1.25rem] border border-kal-border bg-kal-card kal-shadow-card p-4 sm:p-6">
+            {formError ? (
+              <p
+                className="mb-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-900 dark:border-rose-500/30 dark:bg-rose-950/25 dark:text-rose-100"
+                role="alert"
+              >
+                {formError}
+              </p>
+            ) : null}
+            {saveOk ? (
+              <p className="mb-3 text-xs font-medium text-kal-accent" role="status">
+                Added to your unified plan.
+              </p>
+            ) : null}
 
-      <section className="rounded-[1.25rem] border border-kal-border bg-kal-card kal-shadow-card p-4 sm:p-6">
-        {autosaveError ? (
-          <p className="mb-3 text-[10px] text-[var(--kal-warn-text)]">{autosaveError}</p>
-        ) : null}
-        {formError ? (
-          <p
-            className="mb-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-900 dark:border-rose-500/30 dark:bg-rose-950/25 dark:text-rose-100"
-            role="alert"
-          >
-            {formError}
-          </p>
-        ) : null}
-        {saveOk ? (
-          <p className="mb-3 text-xs font-medium text-kal-accent" role="status">
-            Saved and synced.
-          </p>
-        ) : null}
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="sr-only"
+              aria-hidden
+              tabIndex={-1}
+              onChange={(e) => void onPlannerPhotoSelected(e)}
+            />
 
-        <input
-          ref={photoInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          className="sr-only"
-          aria-hidden
-          tabIndex={-1}
-          onChange={(e) => void onPlannerPhotoSelected(e)}
-        />
-
-        <div className="space-y-2">
-          <button
-            type="button"
-            onClick={() => photoInputRef.current?.click()}
-            disabled={busy || !hydrated}
-            className="inline-flex min-h-[56px] w-full items-center justify-center gap-2 rounded-xl border-2 border-kal-accent bg-kal-accent-soft px-4 text-base font-semibold text-kal-text shadow-sm transition-colors hover:bg-kal-accent hover:text-white disabled:opacity-40"
-          >
-            {phase === "parse" ? (
-              <>
-                <Loader2 className="h-5 w-5 shrink-0 animate-spin" />
-                Scanning...
-              </>
-            ) : (
-              <>
-                <Camera className="h-5 w-5 shrink-0" aria-hidden />
-                <span>📸 Take Photo of Handwritten List</span>
-              </>
-            )}
-          </button>
-          <p className="text-center text-[11px] text-kal-muted">
-            Scan planner - opens camera/gallery, then parses directly in-app.
-          </p>
-        </div>
-
-        <details className="mt-4 rounded-xl border border-kal-border bg-kal-card-muted/50 text-xs text-kal-muted">
-          <summary className="cursor-pointer select-none px-3 py-2.5 font-semibold text-kal-text-secondary">
-            How to write your schedule for best results
-          </summary>
-          <div className="space-y-3 border-t border-kal-border px-3 pb-3 pt-2.5">
-            <p className="leading-relaxed">
-              Write <strong className="text-kal-text">one task per line</strong> with the
-              time on the left. Any of these formats work:
-            </p>
-            <div className="rounded-lg border border-kal-border bg-kal-input-bg px-3 py-2.5 font-mono text-[11px] leading-[1.7] text-kal-text">
-              5:00 am - 6:00 am &nbsp; Morning revision<br />
-              6:00 - 7:30 &nbsp; Physics problems<br />
-              8:00 am &nbsp; Breakfast + break<br />
-              9:00 am - 12:00 pm &nbsp; Math practice<br />
-              2:00 pm - 4:30 pm &nbsp; Chemistry chapter 5
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={() => photoInputRef.current?.click()}
+                disabled={busy || !hydrated}
+                className="inline-flex min-h-[56px] w-full items-center justify-center gap-2 rounded-xl border-2 border-kal-accent bg-kal-accent-soft px-4 text-base font-semibold text-kal-text shadow-sm transition-colors hover:bg-kal-accent hover:text-white disabled:opacity-40"
+              >
+                {phase === "parse" ? (
+                  <>
+                    <Loader2 className="h-5 w-5 shrink-0 animate-spin" />
+                    Scanning...
+                  </>
+                ) : (
+                  <>
+                    <Camera className="h-5 w-5 shrink-0" aria-hidden />
+                    <span>📸 Take Photo of Handwritten List</span>
+                  </>
+                )}
+              </button>
+              <p className="text-center text-[11px] text-kal-muted">
+                Scan planner - opens camera/gallery, then parses directly in-app.
+              </p>
             </div>
-            <ul className="list-inside list-disc space-y-1 leading-relaxed text-kal-muted">
-              <li>Use <strong className="text-kal-text-secondary">dark ink</strong> on plain white / ruled paper.</li>
-              <li>Keep the <strong className="text-kal-text-secondary">time range</strong> at the start of each line, then the task name.</li>
-              <li>You can use <strong className="text-kal-text-secondary">am/pm</strong> or <strong className="text-kal-text-secondary">24-hour</strong> format (e.g. 17:00).</li>
-              <li>A dash, arrow, or &ldquo;to&rdquo; between start and end times all work.</li>
-              <li>Avoid overlapping text, doodles, or very light pencil.</li>
-            </ul>
-          </div>
-        </details>
 
-        <div className="mt-3 rounded-xl border border-kal-border bg-kal-card-muted/50 p-3 text-xs text-kal-muted">
-          <span className="font-medium text-kal-text-secondary">Fallback:</span>{" "}
-          paste typed or OCR text below, then use Process with AI.
-        </div>
+            <details className="mt-4 rounded-xl border border-kal-border bg-kal-card-muted/50 text-xs text-kal-muted">
+              <summary className="cursor-pointer select-none px-3 py-2.5 font-semibold text-kal-text-secondary">
+                How to write your schedule for best results
+              </summary>
+              <div className="space-y-3 border-t border-kal-border px-3 pb-3 pt-2.5">
+                <p className="leading-relaxed">
+                  Write <strong className="text-kal-text">one task per line</strong> with the
+                  time on the left. Any of these formats work:
+                </p>
+                <div className="rounded-lg border border-kal-border bg-kal-input-bg px-3 py-2.5 font-mono text-[11px] leading-[1.7] text-kal-text">
+                  5:00 am - 6:00 am &nbsp; Morning revision<br />
+                  6:00 - 7:30 &nbsp; Physics problems<br />
+                  8:00 am &nbsp; Breakfast + break<br />
+                  9:00 am - 12:00 pm &nbsp; Math practice<br />
+                  2:00 pm - 4:30 pm &nbsp; Chemistry chapter 5
+                </div>
+                <ul className="list-inside list-disc space-y-1 leading-relaxed text-kal-muted">
+                  <li>Use <strong className="text-kal-text-secondary">dark ink</strong> on plain white / ruled paper.</li>
+                  <li>Keep the <strong className="text-kal-text-secondary">time range</strong> at the start of each line, then the task name.</li>
+                  <li>You can use <strong className="text-kal-text-secondary">am/pm</strong> or <strong className="text-kal-text-secondary">24-hour</strong> format (e.g. 17:00).</li>
+                  <li>A dash, arrow, or &ldquo;to&rdquo; between start and end times all work.</li>
+                  <li>Avoid overlapping text, doodles, or very light pencil.</li>
+                </ul>
+              </div>
+            </details>
 
-        <div className="mt-3">
-          <textarea
-            rows={8}
-            value={rawText}
-            onChange={(e) => setRawText(e.target.value)}
-            disabled={!hydrated}
-            placeholder="Optional pasted schedule text..."
-            className="w-full resize-y rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2 text-sm text-kal-text placeholder:text-kal-muted disabled:opacity-50"
-          />
-        </div>
+            <div className="mt-3 rounded-xl border border-kal-border bg-kal-card-muted/50 p-3 text-xs text-kal-muted">
+              <span className="font-medium text-kal-text-secondary">Fallback:</span>{" "}
+              paste typed or OCR text below, then use Process with AI.
+            </div>
 
-        <button
-          type="button"
-          onClick={() => void processWithAi()}
-          disabled={busy || !hydrated}
-          className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-kal-accent px-4 text-sm font-semibold text-white shadow-sm hover:bg-kal-accent-hover disabled:opacity-40"
-        >
-          {phase === "parse" ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Processing…
-            </>
-          ) : (
-            "Process with AI"
-          )}
-        </button>
+            <div className="mt-3">
+              <textarea
+                rows={8}
+                value={rawText}
+                onChange={(e) => setRawText(e.target.value)}
+                disabled={!hydrated}
+                placeholder="Optional pasted schedule text..."
+                className="w-full resize-y rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2 text-sm text-kal-text placeholder:text-kal-muted disabled:opacity-50"
+              />
+            </div>
 
-        {hint ? (
-          <p className="mt-3 rounded-lg border border-[var(--kal-warn-border)] bg-[var(--kal-warn-soft)] px-3 py-2 text-xs text-[var(--kal-warn-text)]">
-            {hint}
-          </p>
-        ) : null}
-
-        {!hydrated ? (
-          <p className="mt-4 flex items-center gap-2 text-xs text-kal-muted">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Loading…
-          </p>
-        ) : null}
-
-        {hydrated && rows.length > 0 ? (
-          <div className="mt-4 space-y-2">
-            <p className="text-xs font-medium text-kal-muted">Review tasks</p>
-            <ul className="space-y-2">
-              {rows.map((r) => (
-                <li
-                  key={r.id}
-                  className="min-w-0 grid grid-cols-[2rem_minmax(0,1fr)_auto] items-start gap-2 overflow-hidden rounded-lg border border-kal-border bg-kal-card-muted/80 p-3"
-                >
-                  <label className="mt-2 flex cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={r.include}
-                      onChange={() => updateRow(r.id, { include: !r.include })}
-                      className="h-5 w-5 rounded border-kal-border accent-kal-accent"
-                      title="Include when saving"
-                    />
-                  </label>
-                  <div className="min-w-0">
-                    <textarea
-                      value={r.name}
-                      onChange={(e) => updateRow(r.id, { name: e.target.value })}
-                      placeholder="Task name"
-                      rows={1}
-                      className="min-h-[40px] min-w-0 w-full resize-y overflow-hidden rounded border border-kal-border bg-kal-input-bg px-2 py-2 text-sm font-semibold leading-5 text-kal-text placeholder:text-kal-muted [overflow-wrap:anywhere]"
-                      aria-label="Task name"
-                    />
-                    <div className="mt-1.5 flex min-w-0 items-center gap-2">
-                      <input
-                        type="time"
-                        value={r.startInput}
-                        onChange={(e) =>
-                          updateRow(r.id, { startInput: e.target.value })
-                        }
-                        className="min-h-[32px] rounded border border-kal-border bg-kal-input-bg px-2 text-[11px] text-kal-text"
-                        aria-label="From time"
-                      />
-                      <input
-                        type="time"
-                        value={r.endInput}
-                        onChange={(e) => updateRow(r.id, { endInput: e.target.value })}
-                        className="min-h-[32px] rounded border border-kal-border bg-kal-input-bg px-2 text-[11px] text-kal-text"
-                        aria-label="To time"
-                      />
-                      <span className="ml-auto text-xs font-medium text-kal-muted">
-                        {r.duration ?? "—"}
-                      </span>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => removeRow(r.id)}
-                    className="mt-1 rounded border border-kal-border p-2 text-kal-muted hover:bg-kal-card-muted hover:text-rose-600 dark:hover:text-rose-300"
-                    aria-label="Delete row"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </li>
-              ))}
-            </ul>
             <button
               type="button"
-              onClick={addRow}
-              disabled={busy}
-              className="flex w-full min-h-[40px] items-center justify-center gap-2 rounded-lg border border-dashed border-kal-border text-sm text-kal-muted hover:bg-kal-card-muted disabled:opacity-40"
+              onClick={() => void processWithAi()}
+              disabled={busy || !hydrated}
+              className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-kal-accent px-4 text-sm font-semibold text-white shadow-sm hover:bg-kal-accent-hover disabled:opacity-40"
             >
-              <Plus className="h-4 w-4" />
-              Add another row
+              {phase === "parse" ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Processing…
+                </>
+              ) : (
+                "Process with AI"
+              )}
             </button>
-          </div>
-        ) : hydrated ? (
-          <p className="mt-4 rounded-lg border border-dashed border-kal-border px-3 py-3 text-xs text-kal-muted">
-            No parsed tasks yet - scan a photo or paste text, then tap Process with AI.
-          </p>
-        ) : null}
 
-        <div className="mt-5 border-t border-kal-border pt-4">
-          <button
-            type="button"
-            disabled={busy || rows.length === 0 || !hydrated}
-            onClick={() => void saveAll()}
-            className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-kal-accent px-6 text-base font-semibold text-white shadow-sm hover:bg-kal-accent-hover disabled:opacity-40"
-          >
-            {phase === "save" ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" />
-                Saving…
-              </>
-            ) : (
-              "Add to Today's Plan"
-            )}
-          </button>
-        </div>
-      </section>
+            {hint ? (
+              <p className="mt-3 rounded-lg border border-[var(--kal-warn-border)] bg-[var(--kal-warn-soft)] px-3 py-2 text-xs text-[var(--kal-warn-text)]">
+                {hint}
+              </p>
+            ) : null}
+
+            {!hydrated ? (
+              <p className="mt-4 flex items-center gap-2 text-xs text-kal-muted">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading…
+              </p>
+            ) : null}
+
+            {hydrated ? (
+              <DailyPlanPreviewStaging
+                sectionId="handwritten-staging"
+                title="Preview (not saved yet)"
+                subtitle="Your scan or AI parse shows up here first. Edit if needed, remove a row with the trash icon, then tap Add to Today's Plan to copy these into the live list underneath."
+                rows={rows}
+                onUpdateRow={updateRow}
+                onRemoveRow={removeRow}
+                onAddEmptyRow={addRow}
+                disabled={busy}
+              />
+            ) : null}
+
+            <div className="mt-5 border-t border-kal-border pt-4">
+              <button
+                type="button"
+                disabled={
+                  busy ||
+                  !hydrated ||
+                  !rows.some((r) => r.name.trim().length > 0)
+                }
+                onClick={() => void addCheckedToPlan()}
+                className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-kal-accent px-6 text-base font-semibold text-white shadow-sm hover:bg-kal-accent-hover disabled:opacity-40"
+              >
+                {phase === "save" ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Adding…
+                  </>
+                ) : (
+                  "Add to Today's Plan"
+                )}
+              </button>
+            </div>
+          </section>
+
+          <div id="handwritten-live-plan">
+            <UnifiedDailyPlanList
+              key={planListKey}
+              planDate={logDate}
+              title="Today's plan (live)"
+            />
+          </div>
+        </>
       )}
     </div>
   );

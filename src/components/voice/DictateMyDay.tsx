@@ -1,25 +1,21 @@
 "use client";
 
 import { addDays, format, parseISO } from "date-fns";
-import { Loader2, Mic, Plus, Trash2, Volume2 } from "lucide-react";
+import { Loader2, Mic, Volume2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { insertDailyTask } from "@/actions/dailyPlan";
 import { saveRawVoiceNote } from "@/actions/voiceDictate";
-import type { VoiceDraftTask } from "@/lib/voiceDraftFromGroq";
-import { listVoiceTimelineForDate } from "@/actions/voiceTimeline";
+import {
+  DailyPlanPreviewStaging,
+  type DailyPlanPreviewRow,
+} from "@/components/planner/DailyPlanPreviewStaging";
+import { UnifiedDailyPlanList } from "@/components/planner/UnifiedDailyPlanList";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
-import { getVoicePlannerSnapshot } from "@/lib/taskIdb";
-import { flushOutbox } from "@/lib/sync";
-import { formatIstSlotRange12h } from "@/lib/voiceIst";
-import {
-  persistPlannerSnapshotLocal,
-  plannerDurationFromTimeInputs,
-  pushPlannerRowsToOutbox,
-  rowSyncHash,
-  voiceTimelineRowToDraftRow,
-  type VoicePlannerTableRow,
-} from "@/lib/voicePlannerSync";
+import { slotFromStartEnd } from "@/lib/dailyPlanTime";
+import type { VoiceDraftTask } from "@/lib/voiceDraftFromGroq";
+import { plannerDurationFromTimeInputs } from "@/lib/voicePlannerSync";
 import { useAuthStore } from "@/store/useAuthStore";
 
 type Phase = "idle" | "listening" | "processing" | "error";
@@ -40,29 +36,9 @@ function normalizeSpeechTranscript(raw: string): string {
   return out.join(" ");
 }
 
-type DraftRow = VoicePlannerTableRow;
-
-function toDraftRows(
-  tasks: VoiceDraftTask[],
-  transcriptChunk: string,
-): DraftRow[] {
-  const chunk = transcriptChunk.slice(0, 12_000);
-  return tasks.map((t) => ({
-    id: crypto.randomUUID(),
-    /** Voice-parsed rows start unchecked; user ticks to include in the plan. */
-    include: false,
-    name: t.taskTitle?.trim() ?? "",
-    startInput: t.start_time ?? "",
-    endInput: t.end_time ?? "",
-    duration: t.duration ?? null,
-    transcriptRaw: chunk,
-  }));
-}
-
-function emptyDraftRow(): DraftRow {
+function emptyPreviewRow(): DailyPlanPreviewRow {
   return {
     id: crypto.randomUUID(),
-    include: true,
     name: "",
     startInput: "",
     endInput: "",
@@ -70,19 +46,36 @@ function emptyDraftRow(): DraftRow {
   };
 }
 
-/** Fingerprint of planner state for autosave — skips redundant outbox work after load. */
-function voicePlannerAutosaveSig(
-  rows: DraftRow[],
-  transcript: string,
-): string {
-  return JSON.stringify({
-    t: transcript.trim(),
-    rows: rows.map((r) => ({ id: r.id, h: rowSyncHash(r) })),
-  });
+function toPreviewRowsFromParse(
+  tasks: VoiceDraftTask[],
+  transcriptChunk: string,
+): DailyPlanPreviewRow[] {
+  const chunk = transcriptChunk.slice(0, 12_000);
+  return tasks.map((t) => ({
+    id: crypto.randomUUID(),
+    name: t.taskTitle?.trim() ?? "",
+    startInput: t.start_time ?? "",
+    endInput: t.end_time ?? "",
+    duration: t.duration ?? null,
+    sourceRaw: chunk,
+  }));
 }
 
-const PERSIST_LOCAL_MS = 80;
-const PUSH_OUTBOX_MS = 320;
+function scrollDictateStaging(): void {
+  window.setTimeout(() => {
+    document
+      .getElementById("dictate-staging")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, 120);
+}
+
+function scrollDictateLive(): void {
+  window.setTimeout(() => {
+    document
+      .getElementById("dictate-live-plan")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, 200);
+}
 
 export function DictateMyDay() {
   const user = useAuthStore((s) => s.user);
@@ -91,231 +84,28 @@ export function DictateMyDay() {
   const [lang, setLang] = useState("en-IN");
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  /** Groq failed — user can save raw text or edit first */
   const [fallbackPanel, setFallbackPanel] = useState<{
     text: string;
     editMode: boolean;
   } | null>(null);
-  const [draftRows, setDraftRows] = useState<DraftRow[]>([]);
-  const [draftTranscript, setDraftTranscript] = useState("");
-  const [plannerReady, setPlannerReady] = useState(false);
-  const [plannerLoading, setPlannerLoading] = useState(true);
+  const [previewRows, setPreviewRows] = useState<DailyPlanPreviewRow[]>(() => [
+    emptyPreviewRow(),
+  ]);
+  const [planListKey, setPlanListKey] = useState(0);
+  const [savePhase, setSavePhase] = useState<"idle" | "save">("idle");
 
-  /** Row ids known to exist on Supabase for this log date (drives create vs update). */
-  const serverKnownIdsRef = useRef<Set<string>>(new Set());
-  const prevDraftIdsRef = useRef<Set<string>>(new Set());
-  const rowHashRef = useRef<Record<string, string>>({});
-  const pendingCreateIdsRef = useRef<Set<string>>(new Set());
-  const loadPlannerGenRef = useRef(0);
-  /** Last planner state we pushed (or loaded); avoids duplicate voice_timeline outbox ops. */
-  const autosaveSigRef = useRef<string | null>(null);
-  const draftRowsRef = useRef(draftRows);
-  const draftTranscriptRef = useRef(draftTranscript);
-  draftRowsRef.current = draftRows;
-  draftTranscriptRef.current = draftTranscript;
-
-  const loadPlanner = useCallback(async () => {
-    const gen = ++loadPlannerGenRef.current;
-    const fresh = () => gen === loadPlannerGenRef.current;
-
-    if (!user?.id) {
-      autosaveSigRef.current = null;
-      setDraftRows([]);
-      setDraftTranscript("");
-      setPlannerReady(false);
-      setPlannerLoading(false);
-      return;
-    }
-    setPlannerReady(false);
-    setPlannerLoading(true);
-    const uid = user.id;
-
-    try {
-      const snap = await getVoicePlannerSnapshot(uid, logDate);
-      if (!fresh()) return;
-      const serverRes = await listVoiceTimelineForDate(logDate);
-      if (!fresh()) return;
-
-      if (serverRes.ok) {
-        if (serverRes.entries.length > 0) {
-          const rows = serverRes.entries
-            .slice()
-            .reverse()
-            .map(voiceTimelineRowToDraftRow);
-          const agg = [
-            ...new Set(
-              serverRes.entries.map((e) => e.transcript_raw).filter(Boolean),
-            ),
-          ].join("\n\n---\n\n");
-
-          if (!fresh()) return;
-          autosaveSigRef.current = voicePlannerAutosaveSig(rows, agg);
-          setDraftRows(rows);
-          setDraftTranscript(agg);
-          serverKnownIdsRef.current = new Set(rows.map((r) => r.id));
-          pendingCreateIdsRef.current.clear();
-          const hashes: Record<string, string> = {};
-          for (const r of rows) {
-            hashes[r.id] = rowSyncHash(r);
-          }
-          rowHashRef.current = hashes;
-          prevDraftIdsRef.current = new Set(rows.map((r) => r.id));
-          await persistPlannerSnapshotLocal(uid, logDate, rows, agg);
-        } else {
-          if (
-            snap &&
-            snap.userId === uid &&
-            snap.logDate === logDate &&
-            snap.rows.length > 0
-          ) {
-            if (!fresh()) return;
-            autosaveSigRef.current = voicePlannerAutosaveSig(
-              snap.rows,
-              snap.transcriptAggregate,
-            );
-            setDraftRows(snap.rows);
-            setDraftTranscript(snap.transcriptAggregate);
-            serverKnownIdsRef.current = new Set();
-            pendingCreateIdsRef.current.clear();
-            const hashes: Record<string, string> = {};
-            for (const r of snap.rows) {
-              hashes[r.id] = rowSyncHash(r);
-            }
-            rowHashRef.current = hashes;
-            prevDraftIdsRef.current = new Set(snap.rows.map((r) => r.id));
-            await persistPlannerSnapshotLocal(
-              uid,
-              logDate,
-              snap.rows,
-              snap.transcriptAggregate,
-            );
-          } else {
-            if (!fresh()) return;
-            autosaveSigRef.current = voicePlannerAutosaveSig([], "");
-            setDraftRows([]);
-            setDraftTranscript("");
-            serverKnownIdsRef.current = new Set();
-            pendingCreateIdsRef.current.clear();
-            rowHashRef.current = {};
-            prevDraftIdsRef.current = new Set();
-            await persistPlannerSnapshotLocal(uid, logDate, [], "");
-          }
-        }
-      } else {
-        if (!fresh()) return;
-        setError(serverRes.error);
-        if (snap && snap.userId === uid && snap.logDate === logDate) {
-          autosaveSigRef.current = voicePlannerAutosaveSig(
-            snap.rows,
-            snap.transcriptAggregate,
-          );
-          setDraftRows(snap.rows);
-          setDraftTranscript(snap.transcriptAggregate);
-          serverKnownIdsRef.current = new Set();
-          pendingCreateIdsRef.current.clear();
-          const hashes: Record<string, string> = {};
-          for (const r of snap.rows) {
-            hashes[r.id] = rowSyncHash(r);
-          }
-          rowHashRef.current = hashes;
-          prevDraftIdsRef.current = new Set(snap.rows.map((r) => r.id));
-          await persistPlannerSnapshotLocal(
-            uid,
-            logDate,
-            snap.rows,
-            snap.transcriptAggregate,
-          );
-        }
-      }
-    } finally {
-      if (fresh()) {
-        setPlannerLoading(false);
-        setPlannerReady(true);
-      }
-    }
-  }, [user, logDate]);
+  const previewRowsRef = useRef(previewRows);
+  previewRowsRef.current = previewRows;
 
   useEffect(() => {
-    void loadPlanner();
-  }, [loadPlanner]);
+    setPreviewRows([emptyPreviewRow()]);
+    setFallbackPanel(null);
+    setError(null);
+  }, [logDate]);
 
   useEffect(() => {
     setLogDate(today);
   }, [today]);
-
-  useEffect(() => {
-    setFallbackPanel(null);
-  }, [logDate]);
-
-  /**
-   * Voice-only autosave: `voice_planner_snapshots` in IndexedDB + `voice_timeline_*`
-   * outbox mutations (see `voicePlannerSync` / `sync.ts`). Does not touch tasks or handwritten tables.
-   */
-  useEffect(() => {
-    if (!user?.id || !plannerReady) return;
-    const uid = user.id;
-    const rows = draftRowsRef.current;
-    const transcript = draftTranscriptRef.current;
-    const sig = voicePlannerAutosaveSig(rows, transcript);
-    if (sig === autosaveSigRef.current) return;
-
-    const idbT = setTimeout(() => {
-      void persistPlannerSnapshotLocal(
-        uid,
-        logDate,
-        draftRowsRef.current,
-        draftTranscriptRef.current,
-      );
-    }, PERSIST_LOCAL_MS);
-
-    const syncT = setTimeout(() => {
-      void (async () => {
-        const r = draftRowsRef.current;
-        const t = draftTranscriptRef.current;
-        const sigNow = voicePlannerAutosaveSig(r, t);
-        if (sigNow === autosaveSigRef.current) return;
-        await pushPlannerRowsToOutbox({
-          userId: uid,
-          logDate,
-          transcriptAggregate: t,
-          draftRows: r,
-          serverKnownIds: serverKnownIdsRef.current,
-          prevIdsRef: prevDraftIdsRef,
-          rowHashRef,
-          pendingCreateIdsRef,
-        });
-        autosaveSigRef.current = sigNow;
-      })();
-    }, PUSH_OUTBOX_MS);
-
-    return () => {
-      clearTimeout(idbT);
-      clearTimeout(syncT);
-    };
-  }, [draftRows, draftTranscript, logDate, user, plannerReady]);
-
-  useEffect(() => {
-    if (typeof window === "undefined" || !user?.id) return;
-    const onPlannerSynced = () => {
-      void (async () => {
-        const res = await listVoiceTimelineForDate(logDate);
-        if (!res.ok) return;
-        serverKnownIdsRef.current = new Set(res.entries.map((e) => e.id));
-        for (const id of [...pendingCreateIdsRef.current]) {
-          if (serverKnownIdsRef.current.has(id)) {
-            pendingCreateIdsRef.current.delete(id);
-          }
-        }
-      })();
-    };
-    window.addEventListener("kalnehi-voice-planner-synced", onPlannerSynced);
-    return () => {
-      window.removeEventListener(
-        "kalnehi-voice-planner-synced",
-        onPlannerSynced,
-      );
-    };
-  }, [logDate, user?.id]);
 
   const sendTranscript = useCallback(
     async (transcript: string, occurredAt: string) => {
@@ -351,21 +141,17 @@ export function DictateMyDay() {
         }
         setFallbackPanel(null);
         const chunk = cleaned;
-        const newRows = toDraftRows(res.tasks, chunk);
-        setDraftRows((prev) => [...prev, ...newRows]);
-        setDraftTranscript((prev) =>
-          chunk
-            ? prev
-              ? `${prev}\n\n---\n\n${chunk}`
-              : chunk
-            : prev,
-        );
+        const newRows = toPreviewRowsFromParse(res.tasks, chunk);
+        setPreviewRows((prev) => {
+          const kept = prev.filter(
+            (r) => r.name.trim() || r.startInput || r.endInput,
+          );
+          const merged = [...kept, ...newRows];
+          return merged.length > 0 ? merged : [emptyPreviewRow()];
+        });
+        scrollDictateStaging();
       } catch {
         setFallbackPanel({ text: cleaned, editMode: false });
-        setDraftTranscript((prev) => {
-          if (!cleaned) return prev;
-          return prev ? `${prev}\n\n---\n\n${cleaned}` : cleaned;
-        });
       } finally {
         setIsProcessing(false);
       }
@@ -417,48 +203,111 @@ export function DictateMyDay() {
         return;
       }
       setFallbackPanel(null);
-      await loadPlanner();
+      window.dispatchEvent(new Event("kalnehi-daily-plan-synced"));
+      setPlanListKey((k) => k + 1);
     } catch {
       setError("Could not save. Try again.");
     } finally {
       setIsProcessing(false);
     }
-  }, [fallbackPanel, logDate, loadPlanner]);
+  }, [fallbackPanel, logDate]);
 
-  const updateDraftRow = useCallback((id: string, patch: Partial<DraftRow>) => {
-    setDraftRows((prev) =>
-      prev.map((r) => {
-        if (r.id !== id) return r;
-        const next = { ...r, ...patch };
-        if ("startInput" in patch || "endInput" in patch) {
-          next.duration = plannerDurationFromTimeInputs(
-            next.startInput,
-            next.endInput,
-          );
-        }
-        return next;
-      }),
-    );
+  const addFallbackToPreview = useCallback(() => {
+    if (!fallbackPanel?.text.trim()) return;
+    const t = fallbackPanel.text.trim();
+    setPreviewRows((prev) => {
+      const kept = prev.filter(
+        (r) => r.name.trim() || r.startInput || r.endInput,
+      );
+      return [
+        ...kept,
+        {
+          id: crypto.randomUUID(),
+          name: t.slice(0, 500),
+          startInput: "",
+          endInput: "",
+          duration: null,
+          sourceRaw: t.slice(0, 12_000),
+        },
+        emptyPreviewRow(),
+      ];
+    });
+    setFallbackPanel(null);
+    scrollDictateStaging();
+  }, [fallbackPanel]);
+
+  const updatePreviewRow = useCallback(
+    (id: string, patch: Partial<DailyPlanPreviewRow>) => {
+      setPreviewRows((prev) =>
+        prev.map((r) => {
+          if (r.id !== id) return r;
+          const next = { ...r, ...patch };
+          if ("startInput" in patch || "endInput" in patch) {
+            next.duration = plannerDurationFromTimeInputs(
+              next.startInput,
+              next.endInput,
+            );
+          }
+          return next;
+        }),
+      );
+    },
+    [],
+  );
+
+  const removePreviewRow = useCallback((id: string) => {
+    setPreviewRows((prev) => prev.filter((r) => r.id !== id));
   }, []);
 
-  const removeDraftRow = useCallback((id: string) => {
-    setDraftRows((prev) => prev.filter((r) => r.id !== id));
+  const addPreviewRow = useCallback(() => {
+    setPreviewRows((prev) => [...prev, emptyPreviewRow()]);
   }, []);
 
-  const addDraftRow = useCallback(() => {
-    setDraftRows((prev) => [...prev, emptyDraftRow()]);
-  }, []);
-
-  /** Immediate flush of pending voice_timeline outbox ops (rows already enqueue on edit). */
-  const confirmFinalizeSync = useCallback(async () => {
-    if (!user?.id) return;
+  const commitPreviewToPlan = useCallback(async () => {
     setError(null);
-    try {
-      await flushOutbox(user.id);
-    } catch {
-      setError("Could not sync pending changes. Check connection and try again.");
+    const named = previewRowsRef.current.filter((r) => r.name.trim());
+    if (named.length === 0) {
+      setError(
+        "Add at least one task with a name in the preview, then tap Add to Today's Plan.",
+      );
+      return;
     }
-  }, [user]);
+    setSavePhase("save");
+    try {
+      for (const r of named) {
+        const { time_slot, time_start, time_end } = slotFromStartEnd(
+          r.startInput,
+          r.endInput,
+        );
+        const res = await insertDailyTask({
+          plan_date: logDate,
+          id: crypto.randomUUID(),
+          title: r.name.trim(),
+          time_slot,
+          time_start,
+          time_end,
+          source: "voice",
+          source_raw_text: r.sourceRaw ?? null,
+        });
+        if (!res.ok) {
+          setError(res.error);
+          return;
+        }
+      }
+      window.dispatchEvent(new Event("kalnehi-daily-plan-synced"));
+      setPlanListKey((k) => k + 1);
+      setPreviewRows([emptyPreviewRow()]);
+      scrollDictateLive();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Save failed.");
+    } finally {
+      setSavePhase("idle");
+    }
+  }, [logDate]);
+
+  const busyCommit = savePhase === "save";
+  const previewProcessing =
+    phase === "listening" || phase === "processing";
 
   if (!user) {
     return (
@@ -481,7 +330,9 @@ export function DictateMyDay() {
         <p className="mt-2 max-w-xl text-sm leading-relaxed text-kal-muted">
           Transcription happens on your device with the browser&apos;s speech engine.
           Only the final text is sent to Groq so it can turn your note into clean,
-          editable draft tasks.
+          editable tasks in the preview. When it looks right, add them to today&apos;s
+          plan — they appear in the live list below with your typed and handwritten
+          items.
         </p>
         <p className="mt-3 rounded-xl border border-kal-border bg-kal-card-muted px-3 py-2 text-xs leading-relaxed text-kal-muted">
           <span className="font-medium text-kal-text-secondary">Tip:</span> Speak
@@ -604,115 +455,68 @@ export function DictateMyDay() {
         </div>
       </section>
 
-      <section className="relative rounded-[1.25rem] border border-kal-border bg-kal-card kal-shadow-card p-4 sm:p-6">
-        {plannerLoading ? (
-          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-[1.25rem] bg-kal-card/90 backdrop-blur-sm">
-            <Loader2 className="h-8 w-8 animate-spin text-kal-accent" />
-          </div>
-        ) : (phase === "listening" || phase === "processing") ? (
-          <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-            <Loader2 className="h-6 w-6 animate-spin text-kal-accent" />
-            <p className="text-sm text-kal-muted">
-              {phase === "listening"
-                ? "Listening..."
-                : "Processing your final transcript into tasks..."}
-            </p>
-          </div>
-        ) : null}
-        {(phase === "listening" || phase === "processing") ? null : (
-          <>
-        
+      <section className="rounded-[1.25rem] border border-kal-border bg-kal-card kal-shadow-card p-4 sm:p-6">
         <div className="flex items-center justify-between gap-2">
-          <h2 className="text-lg font-bold text-kal-text">Dictate My Day planner</h2>
+          <h2 className="text-lg font-bold text-kal-text">Preview (not saved yet)</h2>
           <span className="text-xs text-kal-muted">{logDate}</span>
         </div>
-        {draftRows.length === 0 ? (
-          <p className="mt-6 rounded-[1rem] border border-dashed border-kal-border py-10 text-center text-sm text-kal-muted">
-            No tasks for this day yet—dictate above or tap &quot;Add row&quot;.
+        <p className="mt-1 text-xs leading-relaxed text-kal-muted">
+          Parsed lines land here first. Edit times or names, then add to your plan — the
+          live list below is shared with typed and handwritten entries.
+        </p>
+        <DailyPlanPreviewStaging
+          sectionId="dictate-staging"
+          title=""
+          subtitle=""
+          rows={previewRows}
+          onUpdateRow={updatePreviewRow}
+          onRemoveRow={removePreviewRow}
+          onAddEmptyRow={addPreviewRow}
+          disabled={busyCommit}
+          processing={previewProcessing}
+          processingLabel={
+            phase === "listening"
+              ? "Listening…"
+              : "Processing your transcript into tasks…"
+          }
+        />
+        {error ? (
+          <p
+            className="mt-2 text-xs text-[var(--kal-danger-text)]"
+            role="alert"
+          >
+            {error}
           </p>
-        ) : (
-          <ul className="mt-3 space-y-2">
-            {draftRows.map((r) => (
-              <li
-                key={r.id}
-                className="min-w-0 space-y-2 overflow-hidden rounded-xl border border-kal-border bg-kal-card-muted p-2.5"
-              >
-                <div className="min-w-0 grid grid-cols-[2rem_minmax(0,1fr)_auto] items-start gap-2">
-                  <input
-                    type="checkbox"
-                    checked={r.include}
-                    onChange={() => updateDraftRow(r.id, { include: !r.include })}
-                    className="mt-2 h-5 w-5 rounded border-kal-border accent-kal-accent"
-                    aria-label="Include row"
-                  />
-                  <div className="min-w-0">
-                    <textarea
-                      value={r.name}
-                      onChange={(e) => updateDraftRow(r.id, { name: e.target.value })}
-                      placeholder="Task name"
-                      rows={1}
-                      className="min-h-[40px] min-w-0 w-full resize-y overflow-hidden rounded-lg border border-kal-border bg-kal-input-bg px-2 py-2 text-sm font-semibold leading-5 text-kal-text placeholder:text-kal-muted [overflow-wrap:anywhere]"
-                      aria-label="Task name"
-                    />
-                    <div className="mt-1.5 flex min-w-0 items-center gap-2 text-[11px] text-kal-muted">
-                      <input
-                        type="time"
-                        value={r.startInput}
-                        onChange={(e) =>
-                          updateDraftRow(r.id, { startInput: e.target.value })
-                        }
-                        className="min-h-[32px] rounded-md border border-kal-border bg-kal-input-bg px-2 text-[11px] text-kal-text"
-                        aria-label="From time (IST)"
-                      />
-                      <span className="shrink-0">•</span>
-                      <span className="truncate font-semibold text-kal-text-secondary">
-                        {r.duration ?? "—"}
-                      </span>
-                      <input
-                        type="time"
-                        value={r.endInput}
-                        onChange={(e) =>
-                          updateDraftRow(r.id, { endInput: e.target.value })
-                        }
-                        className="ml-auto min-h-[32px] rounded-md border border-kal-border bg-kal-input-bg px-2 text-[11px] text-kal-text"
-                        aria-label="To time (IST)"
-                      />
-                    </div>
-                    <p className="mt-1 text-[10px] font-medium tracking-tight text-kal-accent-dark dark:text-kal-accent">
-                      {formatIstSlotRange12h(r.startInput, r.endInput)}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => removeDraftRow(r.id)}
-                    className="mt-1 rounded-lg border border-rose-500/30 p-2 text-rose-300 hover:bg-rose-950/40"
-                    aria-label="Delete row"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-        <button
-          type="button"
-          onClick={addDraftRow}
-          className="mt-3 inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-kal-border px-3 py-2 text-sm text-kal-text-secondary hover:bg-kal-card-muted"
-        >
-          <Plus className="h-4 w-4" />
-          Add row
-        </button>
-        <button
-          type="button"
-          onClick={() => void confirmFinalizeSync()}
-          className="mt-3 inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-kal-accent px-6 text-base font-semibold text-white shadow-sm hover:bg-kal-accent-hover"
-        >
-          Sync voice timeline now
-        </button>
-          </>
-        )}
+        ) : null}
+        <div className="mt-4 border-t border-kal-border pt-4">
+          <button
+            type="button"
+            disabled={
+              busyCommit ||
+              !previewRows.some((r) => r.name.trim().length > 0)
+            }
+            onClick={() => void commitPreviewToPlan()}
+            className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-kal-accent px-6 text-base font-semibold text-white shadow-sm hover:bg-kal-accent-hover disabled:opacity-40"
+          >
+            {busyCommit ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Adding…
+              </>
+            ) : (
+              "Add to Today's Plan"
+            )}
+          </button>
+        </div>
       </section>
+
+      <div id="dictate-live-plan">
+        <UnifiedDailyPlanList
+          key={planListKey}
+          planDate={logDate}
+          title="Today's plan (live)"
+        />
+      </div>
 
       {fallbackPanel ? (
         <section
@@ -723,8 +527,8 @@ export function DictateMyDay() {
             We kept your words
           </p>
           <p className="mt-2 text-sm text-kal-text-secondary">
-            Structuring didn&apos;t run this time—your note is safe below. Save it as-is
-            or tweak the text, then save.
+            Structuring didn&apos;t run this time — add the text to the preview to split
+            into tasks, save it as a raw note, or edit first.
           </p>
           {fallbackPanel.editMode ? (
             <textarea
@@ -747,15 +551,23 @@ export function DictateMyDay() {
             <button
               type="button"
               disabled={phase === "processing" || !fallbackPanel.text.trim()}
-              onClick={() => void saveFallbackNote()}
+              onClick={() => addFallbackToPreview()}
               className="min-h-[52px] flex-1 rounded-xl bg-kal-accent px-6 text-base font-semibold text-white shadow-sm hover:bg-kal-accent-hover disabled:opacity-40"
+            >
+              Add to preview
+            </button>
+            <button
+              type="button"
+              disabled={phase === "processing" || !fallbackPanel.text.trim()}
+              onClick={() => void saveFallbackNote()}
+              className="min-h-[52px] flex-1 rounded-xl border-2 border-[var(--kal-warn-border)] bg-kal-card px-6 text-base font-semibold text-[var(--kal-warn-text)] disabled:opacity-40"
             >
               {phase === "processing" ? (
                 <span className="inline-flex items-center justify-center gap-2">
                   <Loader2 className="h-5 w-5 animate-spin" /> Saving…
                 </span>
               ) : (
-                "Save this note anyway"
+                "Save as raw note"
               )}
             </button>
             {!fallbackPanel.editMode ? (
@@ -765,9 +577,9 @@ export function DictateMyDay() {
                 onClick={() =>
                   setFallbackPanel((p) => (p ? { ...p, editMode: true } : p))
                 }
-                className="min-h-[52px] flex-1 rounded-xl border-2 border-[var(--kal-warn-border)] bg-kal-card px-6 text-base font-semibold text-[var(--kal-warn-text)] disabled:opacity-40"
+                className="min-h-[52px] flex-1 rounded-xl border border-kal-border bg-kal-card-muted px-6 text-base font-semibold text-kal-text-secondary disabled:opacity-40"
               >
-                Edit before saving
+                Edit text
               </button>
             ) : (
               <button

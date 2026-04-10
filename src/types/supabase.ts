@@ -280,6 +280,110 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_motivational_phrases: {
+        Row: {
+          active: boolean
+          author: string | null
+          category: string
+          created_at: string
+          id: string
+          phrase: string
+        }
+        Insert: {
+          active?: boolean
+          author?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          phrase: string
+        }
+        Update: {
+          active?: boolean
+          author?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          phrase?: string
+        }
+        Relationships: []
+      }
+      daily_plans: {
+        Row: {
+          created_at: string
+          id: string
+          plan_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          plan_date: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          plan_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      daily_tasks: {
+        Row: {
+          created_at: string
+          daily_plan_id: string
+          id: string
+          priority: string
+          source: string
+          source_raw_text: string | null
+          status: string
+          time_end: string | null
+          time_slot: string | null
+          time_start: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          daily_plan_id: string
+          id: string
+          priority?: string
+          source: string
+          source_raw_text?: string | null
+          status?: string
+          time_end?: string | null
+          time_slot?: string | null
+          time_start?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          daily_plan_id?: string
+          id?: string
+          priority?: string
+          source?: string
+          source_raw_text?: string | null
+          status?: string
+          time_end?: string | null
+          time_slot?: string | null
+          time_start?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_tasks_daily_plan_id_fkey"
+            columns: ["daily_plan_id"]
+            isOneToOne: false
+            referencedRelation: "daily_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           assigned_date: string

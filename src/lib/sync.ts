@@ -181,6 +181,125 @@ async function applyHandwrittenPlannerReplace(
   }
 }
 
+async function ensureBrowserDailyPlanId(
+  planDate: string,
+): Promise<{ ok: true; planId: string } | { ok: false; error: string }> {
+  try {
+    const supabase = getSupabaseBrowserClient();
+    const {
+      data: { user },
+      error: authErr,
+    } = await supabase.auth.getUser();
+    if (authErr || !user) {
+      return { ok: false, error: USER_ERROR.session };
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(planDate)) {
+      return { ok: false, error: "Invalid date." };
+    }
+    const now = new Date().toISOString();
+    const { data, error } = await supabase
+      .from("daily_plans")
+      .upsert(
+        {
+          user_id: user.id,
+          plan_date: planDate,
+          updated_at: now,
+        },
+        { onConflict: "user_id,plan_date" },
+      )
+      .select("id")
+      .single();
+    if (error || !data?.id) {
+      return { ok: false, error: formatSupabaseError(error) };
+    }
+    return { ok: true, planId: data.id };
+  } catch (e) {
+    return { ok: false, error: formatSupabaseError(e) };
+  }
+}
+
+async function applyDailyTaskCreate(
+  payload: NonNullable<OutboxMutation["dailyTaskInsert"]>,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const supabase = getSupabaseBrowserClient();
+    const {
+      data: { user },
+      error: authErr,
+    } = await supabase.auth.getUser();
+    if (authErr || !user) {
+      return { ok: false, error: USER_ERROR.session };
+    }
+    const ensured = await ensureBrowserDailyPlanId(payload.plan_date);
+    if (!ensured.ok) return ensured;
+
+    const { error } = await supabase.from("daily_tasks").insert({
+      id: payload.id,
+      daily_plan_id: ensured.planId,
+      title: payload.title,
+      time_slot: payload.time_slot,
+      time_start: payload.time_start,
+      time_end: payload.time_end,
+      priority: payload.priority,
+      status: payload.status,
+      source: payload.source,
+      source_raw_text: payload.source_raw_text,
+    });
+    if (!error) return { ok: true };
+    if (error.code === "23505") return { ok: true };
+    return { ok: false, error: formatSupabaseError(error) };
+  } catch (e) {
+    return { ok: false, error: formatSupabaseError(e) };
+  }
+}
+
+async function applyDailyTaskUpdate(
+  id: string,
+  patch: NonNullable<OutboxMutation["dailyTaskPatch"]>,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const supabase = getSupabaseBrowserClient();
+    const {
+      data: { user },
+      error: authErr,
+    } = await supabase.auth.getUser();
+    if (authErr || !user) {
+      return { ok: false, error: USER_ERROR.session };
+    }
+    const { error } = await supabase
+      .from("daily_tasks")
+      .update({
+        ...patch,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id);
+    if (error) return { ok: false, error: formatSupabaseError(error) };
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: formatSupabaseError(e) };
+  }
+}
+
+async function applyDailyTaskDelete(
+  id: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const supabase = getSupabaseBrowserClient();
+    const {
+      data: { user },
+      error: authErr,
+    } = await supabase.auth.getUser();
+    if (authErr || !user) {
+      return { ok: false, error: USER_ERROR.session };
+    }
+    const { error } = await supabase.from("daily_tasks").delete().eq("id", id);
+    if (error) return { ok: false, error: formatSupabaseError(error) };
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: formatSupabaseError(e) };
+  }
+}
+
 async function applyVoiceTimelineDelete(
   id: string,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
@@ -276,6 +395,15 @@ async function applyOne(
   }
   if (m.op === "handwritten_planner_replace" && m.handwrittenReplace) {
     return applyHandwrittenPlannerReplace(m.handwrittenReplace);
+  }
+  if (m.op === "daily_task_create" && m.dailyTaskInsert) {
+    return applyDailyTaskCreate(m.dailyTaskInsert);
+  }
+  if (m.op === "daily_task_update" && m.dailyTaskPatch) {
+    return applyDailyTaskUpdate(m.taskId, m.dailyTaskPatch);
+  }
+  if (m.op === "daily_task_delete") {
+    return applyDailyTaskDelete(m.taskId);
   }
   return { ok: false, error: "Invalid outbox entry" };
 }
@@ -384,6 +512,7 @@ export async function flushOutbox(userId: string | undefined): Promise<void> {
     let worstFailCount = 0;
     let latestFailureMessage: string | null = null;
     let voicePlannerOpsApplied = 0;
+    let dailyPlanOpsApplied = 0;
     let handwrittenPlannerOpsApplied = 0;
     let touchedTasks = false;
     let touchedExecution = false;
@@ -475,6 +604,13 @@ export async function flushOutbox(userId: string | undefined): Promise<void> {
           ) {
             voicePlannerOpsApplied++;
           }
+          if (
+            m.op === "daily_task_create" ||
+            m.op === "daily_task_update" ||
+            m.op === "daily_task_delete"
+          ) {
+            dailyPlanOpsApplied++;
+          }
           if (m.op === "handwritten_planner_replace") {
             handwrittenPlannerOpsApplied++;
           }
@@ -541,6 +677,10 @@ export async function flushOutbox(userId: string | undefined): Promise<void> {
       if (touchedStudy) refreshes.push(refreshStudySessionsFromServer());
       await Promise.all(refreshes).catch(() => {});
       dispatchTasksSync();
+    }
+    if (dailyPlanOpsApplied > 0 && typeof window !== "undefined") {
+      window.dispatchEvent(new Event("kalnehi-daily-plan-synced"));
+      window.dispatchEvent(new Event("kalnehi-voice-planner-synced"));
     }
     if (
       voicePlannerOpsApplied > 0 &&

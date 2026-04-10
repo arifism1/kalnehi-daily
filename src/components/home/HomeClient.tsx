@@ -1,7 +1,7 @@
 "use client";
 
 import { addDays, format, parseISO } from "date-fns";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useCalendarDate } from "@/hooks/useCalendarDate";
@@ -9,6 +9,11 @@ import { ensureAutomatedNotifications } from "@/actions/notifications";
 import { useTargetExamDisplay } from "@/hooks/useTargetExamDisplay";
 import { useRefreshTasksOnHomeFocus } from "@/hooks/useRefreshTasksOnHomeFocus";
 import { useSyllabusTracker } from "@/hooks/useSyllabusTracker";
+import {
+  pickDailyPhraseIndex,
+  type DailyMotivationalPhraseRow,
+} from "@/lib/dailyMotivationalPhrase";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { buildSyllabusMultiYearCapture } from "@/lib/syllabusRollup";
 import { shouldShowSyllabusComingSoon } from "@/lib/examProfile";
 import {
@@ -38,6 +43,7 @@ export function HomeClient() {
   useEffect(() => {
     router.prefetch("/syllabus");
     router.prefetch("/plan-my-day");
+    router.prefetch("/daily-plan");
     router.prefetch("/motivation");
     router.prefetch("/meditation");
     router.prefetch("/habits");
@@ -205,10 +211,55 @@ export function HomeClient() {
     return "Aspirant";
   }, [user]);
 
+  const firstName = useMemo(() => {
+    const part = welcomeName.split(/\s+/)[0]?.trim();
+    return part || "Aspirant";
+  }, [welcomeName]);
+
+  const greetingLead = (() => {
+    const h = new Date().getHours();
+    if (h >= 5 && h < 12) return "Good morning";
+    return "Hi";
+  })();
+
+  const [dailyPhrase, setDailyPhrase] = useState<DailyMotivationalPhraseRow | null>(
+    null,
+  );
+  const [dailyPhraseLoading, setDailyPhraseLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      setDailyPhraseLoading(true);
+      try {
+        const supabase = getSupabaseBrowserClient();
+        const { data, error } = await supabase
+          .from("daily_motivational_phrases")
+          .select("id, phrase, author, category")
+          .eq("active", true)
+          .order("phrase", { ascending: true });
+        if (cancelled) return;
+        if (error || !data?.length) {
+          setDailyPhrase(null);
+          return;
+        }
+        const idx = pickDailyPhraseIndex(today, data.length);
+        setDailyPhrase(data[idx] ?? null);
+      } catch {
+        if (!cancelled) setDailyPhrase(null);
+      } finally {
+        if (!cancelled) setDailyPhraseLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [today]);
+
   return (
     <div className="relative flex min-h-full flex-col gap-6 pb-10 text-kal-text sm:gap-8 md:gap-10 md:pb-14">
       <MotivationWallpaper />
-      <header className="relative z-[1] overflow-hidden rounded-[1rem] border border-kal-border bg-kal-card px-5 py-8 kal-shadow-card sm:rounded-[1.25rem] sm:px-8 sm:py-10 lg:px-10">
+      <header className="relative z-[1] overflow-hidden rounded-[1rem] border border-kal-border bg-kal-card px-5 py-6 kal-shadow-card sm:rounded-[1.25rem] sm:px-8 sm:py-7 lg:px-10 lg:py-8">
         <div
           className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-kal-accent/15 blur-3xl"
           aria-hidden
@@ -218,21 +269,45 @@ export function HomeClient() {
           aria-hidden
         />
 
-        <p className="relative text-[0.72rem] font-semibold tracking-wide text-kal-accent sm:text-sm">
-          {`Hi, ${welcomeName}`}
-        </p>
-        <p className="relative mt-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-kal-muted sm:mt-1.5 sm:text-[0.72rem]">
-          Welcome to Kalnehi Daily
-        </p>
-        <p className="relative mt-1 max-w-md text-xs leading-relaxed text-kal-muted sm:text-sm">
-          Your best friend to ensure you reach your goals.
-        </p>
-        <h1 className="relative mt-4 text-2xl font-bold tracking-tight text-kal-text sm:mt-6 sm:text-3xl sm:leading-tight md:text-[2.125rem] lg:text-[2.25rem]">
-          Execute Today
-        </h1>
-        <p className="relative mt-2 max-w-md text-sm leading-relaxed text-kal-muted sm:mt-3 sm:text-[15px]">
-          Conquer your syllabus and win daily — built for serious aspirants.
-        </p>
+        <div className="relative flex flex-col gap-4 sm:gap-5">
+          <div className="space-y-1 sm:space-y-1.5">
+            <h1 className="text-[1.4rem] font-semibold leading-tight tracking-tight text-kal-text sm:text-2xl md:text-[1.75rem]">
+              Welcome to Kalnehi
+            </h1>
+            <p className="text-sm text-kal-muted sm:text-[0.95rem]">
+              <span className="text-kal-text">{`${greetingLead}, ${firstName}`}</span>
+            </p>
+          </div>
+
+          <div className="border-t border-kal-border/80 pt-4 sm:pt-5">
+            <p className="text-[0.62rem] font-semibold uppercase tracking-[0.2em] text-kal-muted sm:text-[0.68rem]">
+              Today&apos;s line
+            </p>
+            <blockquote
+              className={`relative mt-2 max-w-3xl text-[1rem] font-medium leading-snug text-kal-text sm:mt-2.5 sm:text-[1.0625rem] sm:leading-snug md:text-lg md:leading-snug ${dailyPhraseLoading ? "opacity-40" : ""}`}
+            >
+              {dailyPhraseLoading ? (
+                <span className="block min-h-[2.75rem] w-full max-w-2xl animate-pulse rounded-lg bg-kal-border/35 sm:min-h-[3.25rem]" />
+              ) : dailyPhrase ? (
+                <>
+                  <span className="text-kal-accent">&ldquo;</span>
+                  {dailyPhrase.phrase}
+                  <span className="text-kal-accent">&rdquo;</span>
+                  {dailyPhrase.author ? (
+                    <footer className="mt-2 text-xs font-normal not-italic text-kal-muted sm:mt-2.5 sm:text-sm">
+                      — {dailyPhrase.author}
+                    </footer>
+                  ) : null}
+                </>
+              ) : (
+                <span className="text-kal-muted">
+                  Small daily wins stack into the rank you are building—open your plan
+                  and take the next honest step.
+                </span>
+              )}
+            </blockquote>
+          </div>
+        </div>
       </header>
 
       <MotivationStrip />

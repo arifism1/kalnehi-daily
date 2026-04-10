@@ -65,6 +65,12 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
     items: [
       { href: "/", label: "Dashboard (Home)", shortLabel: "Home", Icon: Home },
       { href: "/plan-my-day", label: "Plan My Day", Icon: Sparkles },
+      {
+        href: "/daily-plan",
+        label: "Daily Planner",
+        shortLabel: "Daily plan",
+        Icon: CalendarDays,
+      },
       { href: "/syllabus", label: "Syllabus Tracker", shortLabel: "Syllabus", Icon: BookOpen },
     ],
   },
@@ -139,6 +145,7 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
 const QUICK_NAV_HREF_ORDER: readonly string[] = [
   "/",
   "/plan-my-day",
+  "/daily-plan",
   "/syllabus",
   "/plan",
   "/timer",

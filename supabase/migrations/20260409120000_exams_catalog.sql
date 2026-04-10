@@ -9,13 +9,25 @@ CREATE TABLE IF NOT EXISTS public.exams (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
+-- Existing DBs may have max_score NOT NULL from an older definition; CUET/Other need NULL.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'exams'
+      AND column_name = 'max_score'
+      AND is_nullable = 'NO'
+  ) THEN
+    ALTER TABLE public.exams ALTER COLUMN max_score DROP NOT NULL;
+  END IF;
+END $$;
+
 ALTER TABLE public.exams ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Anyone can read exams catalog"
-  ON public.exams
-  FOR SELECT
-  TO anon, authenticated
-  USING (true);
+-- Policy already exists in database, so we skip creating it again
+-- CREATE POLICY "Anyone can read exams catalog" ...
 
 COMMENT ON TABLE public.exams IS
   'Target exam catalog: exam_name is stored on user_profiles.target_exam and filters syllabus_master.';
@@ -33,5 +45,5 @@ VALUES
 ON CONFLICT (exam_name) DO UPDATE SET
   display_name = EXCLUDED.display_name,
   sort_order = EXCLUDED.sort_order,
-  max_score = COALESCE(public.exams.max_score, EXCLUDED.max_score),
+  max_score = EXCLUDED.max_score,
   multi_subject = EXCLUDED.multi_subject;
