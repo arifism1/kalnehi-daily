@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Fragment, useEffect, useState } from "react";
 
+import { PwaIosInstallModal } from "@/components/PwaIosInstallModal";
 import { MAIN_NAV_SECTIONS, navActive } from "@/config/mainNavigation";
 import { isStandalonePwa, usePwaInstall } from "@/hooks/usePwaInstall";
 
@@ -16,9 +17,10 @@ type MainNavigationMenuProps = {
 
 export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
   const pathname = usePathname();
-  const { installed, canPromptInstall, showIosInstructions, promptInstall } =
+  const { showInstallButton, canPromptInstall, needsIosInstallModal, promptInstall } =
     usePwaInstall();
   const [installBusy, setInstallBusy] = useState(false);
+  const [iosInstallOpen, setIosInstallOpen] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -30,13 +32,15 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
   }, [open]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open && !iosInstallOpen) return;
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+      if (e.key !== "Escape") return;
+      if (iosInstallOpen) setIosInstallOpen(false);
+      else onClose();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+  }, [open, iosInstallOpen, onClose]);
 
   return (
     <div
@@ -130,79 +134,52 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
               </Fragment>
             ))}
 
-            <li className="pt-2">
-              <div
-                className={clsx(
-                  "rounded-xl border px-2.5 py-3 sm:px-3",
-                  installed
-                    ? "border-kal-accent/30 bg-kal-accent-soft"
-                    : "border-kal-accent/40 bg-kal-accent-soft",
-                )}
-              >
-                <div className="flex items-start gap-2.5">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-kal-accent/25 text-kal-accent-dark dark:text-kal-accent">
-                    <Download className="h-5 w-5" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-kal-text sm:text-[15px]">
-                      Install on phone
-                    </p>
-                    <p className="mt-0.5 text-xs leading-relaxed text-kal-muted">
-                      Add to Home Screen — faster launch, calmer sessions.
-                    </p>
-                    {installed ? (
-                      <p className="mt-3 text-sm font-medium text-kal-accent-dark dark:text-kal-accent">
-                        You&apos;re running the installed app.
+            {showInstallButton ? (
+              <li className="pt-2">
+                <div className="rounded-xl border border-kal-accent/40 bg-kal-accent-soft px-2.5 py-3 sm:px-3">
+                  <div className="flex items-start gap-2.5">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-kal-accent/25 text-kal-accent-dark dark:text-kal-accent">
+                      <Download className="h-5 w-5" strokeWidth={2.25} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-kal-text sm:text-[15px]">
+                        Kalnehi on your home screen
                       </p>
-                    ) : (
-                      <>
-                        {canPromptInstall && (
-                          <button
-                            type="button"
-                            disabled={installBusy}
-                            onClick={async () => {
-                              setInstallBusy(true);
-                              await promptInstall();
-                              setInstallBusy(false);
-                              if (isStandalonePwa()) onClose();
-                            }}
-                            className="mt-3 w-full min-h-[48px] rounded-xl bg-kal-accent px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-kal-accent-hover active:scale-[0.99] disabled:opacity-50"
-                          >
-                            {installBusy ? "Opening…" : "Install on phone"}
-                          </button>
-                        )}
-                        {showIosInstructions && !canPromptInstall && (
-                          <div className="mt-3 rounded-xl border border-kal-border bg-kal-card-muted px-3 py-2.5 text-xs leading-relaxed text-kal-text-secondary">
-                            <p className="font-medium text-kal-accent-dark dark:text-kal-accent">
-                              iPhone &amp; iPad (Safari)
-                            </p>
-                            <ol className="mt-2 list-decimal space-y-1 pl-4 text-kal-muted">
-                              <li>Tap the Share button</li>
-                              <li>
-                                Tap{" "}
-                                <span className="text-kal-text">
-                                  Add to Home Screen
-                                </span>
-                              </li>
-                              <li>Open Kalnehi from your home screen</li>
-                            </ol>
-                          </div>
-                        )}
-                        {!canPromptInstall && !showIosInstructions && (
-                          <p className="mt-3 text-[11px] leading-relaxed text-kal-muted">
-                            Android / desktop: use your browser menu → Install
-                            app, or Add to Home screen.
-                          </p>
-                        )}
-                      </>
-                    )}
+                      <p className="mt-0.5 text-xs leading-relaxed text-kal-muted">
+                        Launch in one tap — same calm experience, full screen.
+                      </p>
+                      <button
+                        type="button"
+                        disabled={installBusy}
+                        onClick={async () => {
+                          if (canPromptInstall) {
+                            setInstallBusy(true);
+                            await promptInstall();
+                            setInstallBusy(false);
+                            if (isStandalonePwa()) onClose();
+                            return;
+                          }
+                          if (needsIosInstallModal) {
+                            setIosInstallOpen(true);
+                          }
+                        }}
+                        className="mt-3 flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl bg-kal-accent px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-kal-accent-hover active:scale-[0.99] disabled:opacity-50 motion-reduce:active:scale-100"
+                      >
+                        <Download className="h-[1.125rem] w-[1.125rem]" strokeWidth={2.5} />
+                        {installBusy ? "Opening…" : "Install App"}
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </li>
+              </li>
+            ) : null}
           </ul>
         </nav>
       </div>
+      <PwaIosInstallModal
+        open={iosInstallOpen}
+        onClose={() => setIosInstallOpen(false)}
+      />
     </div>
   );
 }
