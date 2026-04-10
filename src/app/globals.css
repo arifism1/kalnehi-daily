@@ -130,6 +130,20 @@ body {
   }
 }
 
+/** Subtle “tap Share” hint for iOS PWA install modal (respects motion-reduce via Tailwind). */
+@keyframes pwa-share-nudge {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  35% {
+    transform: translateY(-6px) scale(1.06);
+  }
+  55% {
+    transform: translateY(0) scale(1);
+  }
+}
+
 /* Defensive overflow guards: prevent horizontal text spill app-wide. */
 @layer base {
   html,

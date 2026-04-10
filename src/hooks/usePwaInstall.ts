@@ -1,11 +1,27 @@
 "use client";
 
-import { useCallback, useEffect, useState, startTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useState,
+  startTransition,
+} from "react";
 
-type BeforeInstallPromptEvent = Event & {
+export type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
+
+function readStandalone(): boolean {
+  if (typeof window === "undefined") return false;
+  const mq = window.matchMedia("(display-mode: standalone)");
+  if (mq.matches) return true;
+  return (
+    (window.navigator as Navigator & { standalone?: boolean }).standalone ===
+    true
+  );
+}
 
 function isIOSDevice(): boolean {
   if (typeof navigator === "undefined") return false;
@@ -17,13 +33,7 @@ function isIOSDevice(): boolean {
 }
 
 export function isStandalonePwa(): boolean {
-  if (typeof window === "undefined") return false;
-  const mq = window.matchMedia("(display-mode: standalone)");
-  if (mq.matches) return true;
-  return (
-    (window.navigator as Navigator & { standalone?: boolean }).standalone ===
-    true
-  );
+  return readStandalone();
 }
 
 export function usePwaInstall() {
@@ -31,24 +41,51 @@ export function usePwaInstall() {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(
     null,
   );
-  const [iosDevice] = useState(() =>
-    typeof window !== "undefined" ? isIOSDevice() : false,
-  );
+  const [iosDevice, setIosDevice] = useState(false);
+
+  useLayoutEffect(() => {
+    setInstalled(readStandalone());
+    setIosDevice(isIOSDevice());
+  }, []);
 
   useEffect(() => {
     const sync = () =>
-      startTransition(() => setInstalled(isStandalonePwa()));
-    sync();
+      startTransition(() => {
+        setInstalled(readStandalone());
+      });
 
     const onBip = (e: Event) => {
       e.preventDefault();
       setDeferred(e as BeforeInstallPromptEvent);
     };
+
+    const onAppInstalled = () => {
+      setDeferred(null);
+      startTransition(() => setInstalled(true));
+    };
+
+    const mq = window.matchMedia("(display-mode: standalone)");
+    const onDisplayModeChange = () => sync();
+
     window.addEventListener("beforeinstallprompt", onBip);
+    window.addEventListener("appinstalled", onAppInstalled);
     document.addEventListener("visibilitychange", sync);
+
+    if (typeof mq.addEventListener === "function") {
+      mq.addEventListener("change", onDisplayModeChange);
+    } else {
+      mq.addListener(onDisplayModeChange);
+    }
+
     return () => {
       window.removeEventListener("beforeinstallprompt", onBip);
+      window.removeEventListener("appinstalled", onAppInstalled);
       document.removeEventListener("visibilitychange", sync);
+      if (typeof mq.removeEventListener === "function") {
+        mq.removeEventListener("change", onDisplayModeChange);
+      } else {
+        mq.removeListener(onDisplayModeChange);
+      }
     };
   }, []);
 
@@ -69,17 +106,26 @@ export function usePwaInstall() {
 
   const canPromptInstall = Boolean(deferred);
 
-  /** iOS / iPadOS: no native install prompt — show Share → Add to Home Screen. */
-  const showIosInstructions =
+  /** iOS / iPadOS Safari: no deferred prompt — open guided sheet instead. */
+  const needsIosInstallModal =
     iosDevice && !installed && !canPromptInstall;
 
+  const showInstallButton =
+    !installed && (canPromptInstall || iosDevice);
+
   return {
-    /** Already running as installed PWA */
+    /** Running as installed PWA (standalone / iOS home screen). */
     installed,
-    /** Android / desktop Chromium: native install prompt available */
+    /** Chromium: native install prompt is available. */
     canPromptInstall,
-    /** iOS: manual Add to Home Screen steps */
-    showIosInstructions,
+    /** iOS: show Share → Add to Home Screen sheet (no `beforeinstallprompt`). */
+    needsIosInstallModal,
+    /** Hide install CTA in standalone or after successful install flow. */
+    showInstallButton,
+    iosDevice,
     promptInstall,
   };
 }
+
+/** Alias matching common PWA naming. */
+export const usePWAInstall = usePwaInstall;
