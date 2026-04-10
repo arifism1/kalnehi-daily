@@ -1,121 +1,18 @@
 "use client";
 
 import clsx from "clsx";
-import {
-  BarChart3,
-  BookOpen,
-  Calendar,
-  CalendarDays,
-  CircleHelp,
-  Crown,
-  Download,
-  Flame,
-  Heart,
-  Home,
-  Inbox,
-  ListChecks,
-  Menu,
-  RotateCcw,
-  Scale,
-  ScrollText,
-  Settings,
-  Sparkles,
-  Sunrise,
-  Timer,
-  UserRound,
-  Video,
-  type LucideIcon,
-} from "lucide-react";
+import { Download, Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Fragment, useEffect, useState } from "react";
 
+import { MAIN_NAV_SECTIONS, navActive } from "@/config/mainNavigation";
 import { isStandalonePwa, usePwaInstall } from "@/hooks/usePwaInstall";
 
 type MainNavigationMenuProps = {
   open: boolean;
   onClose: () => void;
 };
-
-function navActive(pathname: string, href: string): boolean {
-  if (href === "/") return pathname === "/";
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
-
-const POLICY_HUB_PATHS = new Set([
-  "/policies",
-  "/privacy",
-  "/terms",
-  "/refund",
-  "/shipping",
-  "/return",
-  "/about",
-]);
-
-function policyHubActive(pathname: string): boolean {
-  return POLICY_HUB_PATHS.has(pathname);
-}
-
-type NavItem = {
-  href: string;
-  label: string;
-  Icon: LucideIcon;
-  /** Override default pathname-based active state */
-  isActive?: (pathname: string) => boolean;
-};
-
-const MENU_SECTIONS: { title: string; items: NavItem[] }[] = [
-  {
-    title: "Core Daily Flow",
-    items: [
-      { href: "/", label: "Dashboard (Home)", Icon: Home },
-      { href: "/plan-my-day", label: "Plan My Day", Icon: Sparkles },
-      { href: "/syllabus", label: "Syllabus Tracker", Icon: BookOpen },
-    ],
-  },
-  {
-    title: "Execution",
-    items: [
-      { href: "/plan", label: "Execution Planner", Icon: CalendarDays },
-      { href: "/study-sessions", label: "Study Sessions", Icon: Video },
-      { href: "/timer", label: "Timer", Icon: Timer },
-    ],
-  },
-  {
-    title: "Review & Analysis",
-    items: [
-      { href: "/progress", label: "Progress", Icon: BarChart3 },
-      { href: "/daily-log", label: "Daily Log", Icon: ScrollText },
-      { href: "/revision", label: "Revision Engine", Icon: RotateCcw },
-      { href: "/heatmap", label: "Heatmap", Icon: Flame },
-      { href: "/consistency-tracker", label: "Consistency Tracker", Icon: Calendar },
-    ],
-  },
-  {
-    title: "Growth Tools",
-    items: [
-      { href: "/habits", label: "Habit Maker", Icon: ListChecks },
-      { href: "/motivation", label: "Personal Motivation", Icon: Heart },
-      { href: "/meditation", label: "Meditation", Icon: Sunrise },
-      { href: "/doubts", label: "Doubt Tracker", Icon: CircleHelp },
-    ],
-  },
-  {
-    title: "Account & Legal",
-    items: [
-      { href: "/pending", label: "Pending Tasks", Icon: Inbox },
-      {
-        href: "/policies",
-        label: "Our Policies",
-        Icon: Scale,
-        isActive: policyHubActive,
-      },
-      { href: "/profile", label: "Profile", Icon: UserRound },
-      { href: "/settings", label: "Settings", Icon: Settings },
-      { href: "/my-plan", label: "My Plan", Icon: Crown },
-    ],
-  },
-];
 
 export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
   const pathname = usePathname();
@@ -166,32 +63,34 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
           open ? "translate-x-0" : "translate-x-full",
         )}
       >
-        <div className="flex shrink-0 items-center gap-3 border-b border-kal-border px-4 py-4">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-kal-accent-soft text-kal-accent">
-            <Menu className="h-6 w-6" strokeWidth={2.25} />
+        <div className="flex shrink-0 items-center gap-2.5 border-b border-kal-border px-3 py-2.5 sm:px-4">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-kal-accent-soft text-kal-accent">
+            <Menu className="h-5 w-5" strokeWidth={2.25} />
           </div>
           <div>
-            <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
+            <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-kal-accent">
               Navigate
             </p>
-            <p className="text-base font-semibold text-kal-text">Kalnehi Daily</p>
+            <p className="text-sm font-semibold leading-tight text-kal-text sm:text-[15px]">
+              Kalnehi Daily
+            </p>
           </div>
         </div>
 
         <nav
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-1.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1 sm:px-2"
           aria-label="Main"
         >
-          <ul className="space-y-0.5">
-            {MENU_SECTIONS.map((section, sectionIndex) => (
+          <ul className="space-y-px">
+            {MAIN_NAV_SECTIONS.map((section, sectionIndex) => (
               <Fragment key={section.title}>
                 <li
                   className={clsx(
-                    "list-none px-3 pb-1 pt-2",
-                    sectionIndex > 0 && "mt-5 sm:mt-6",
+                    "list-none px-2.5 pb-0.5 pt-1.5",
+                    sectionIndex > 0 && "mt-2.5 sm:mt-3",
                   )}
                 >
-                  <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-muted">
+                  <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-kal-muted">
                     {section.title}
                   </p>
                 </li>
@@ -205,7 +104,7 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
                         href={href}
                         onClick={onClose}
                         className={clsx(
-                          "flex min-h-[56px] items-center gap-4 rounded-2xl px-3 py-3 transition-colors",
+                          "flex min-h-[44px] items-center gap-2.5 rounded-xl px-2.5 py-1.5 transition-colors sm:gap-3",
                           active
                             ? "bg-kal-accent-soft ring-1 ring-kal-accent/25"
                             : "hover:bg-kal-card-muted active:bg-kal-card-muted",
@@ -213,15 +112,15 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
                       >
                         <span
                           className={clsx(
-                            "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl",
+                            "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg sm:h-10 sm:w-10",
                             active
                               ? "bg-kal-accent/20 text-kal-accent-dark dark:text-kal-accent"
                               : "bg-kal-card-muted text-kal-muted",
                           )}
                         >
-                          <Icon className="h-6 w-6" strokeWidth={2} />
+                          <Icon className="h-[1.125rem] w-[1.125rem] sm:h-5 sm:w-5" strokeWidth={2} />
                         </span>
-                        <span className="min-w-0 flex-1 text-[15px] font-semibold leading-snug text-kal-text">
+                        <span className="min-w-0 flex-1 text-sm font-semibold leading-tight text-kal-text">
                           {label}
                         </span>
                       </Link>
@@ -231,21 +130,21 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
               </Fragment>
             ))}
 
-            <li className="pt-3">
+            <li className="pt-2">
               <div
                 className={clsx(
-                  "rounded-2xl border px-3 py-4",
+                  "rounded-xl border px-2.5 py-3 sm:px-3",
                   installed
                     ? "border-kal-accent/30 bg-kal-accent-soft"
                     : "border-kal-accent/40 bg-kal-accent-soft",
                 )}
               >
-                <div className="flex items-start gap-3">
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-kal-accent/25 text-kal-accent-dark dark:text-kal-accent">
-                    <Download className="h-6 w-6" />
+                <div className="flex items-start gap-2.5">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-kal-accent/25 text-kal-accent-dark dark:text-kal-accent">
+                    <Download className="h-5 w-5" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[15px] font-semibold text-kal-text">
+                    <p className="text-sm font-semibold text-kal-text sm:text-[15px]">
                       Install on phone
                     </p>
                     <p className="mt-0.5 text-xs leading-relaxed text-kal-muted">

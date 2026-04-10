@@ -24,7 +24,6 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useTaskStore } from "@/store/useTaskStore";
 
-import { ExecutionLagBanner } from "./ExecutionLagBanner";
 import { MissedTasks } from "./MissedTasks";
 import { MotivationWallpaper } from "./MotivationWallpaper";
 import { MotivationStrip } from "./MotivationStrip";
@@ -237,8 +236,6 @@ export function HomeClient() {
       </header>
 
       <MotivationStrip />
-
-      <ExecutionLagBanner />
 
       <RealitySnapshot
         marksMastered={mastered}
