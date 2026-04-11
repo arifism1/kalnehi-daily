@@ -40,7 +40,7 @@ export async function createStudySession(
     revalidatePath("/study-sessions");
     revalidatePath("/daily-log");
     revalidatePath("/progress");
-    revalidatePath("/plan");
+    revalidatePath("/daily-plan");
     return { ok: true };
   } catch (e) {
     return { ok: false, error: formatSupabaseError(e) };

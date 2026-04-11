@@ -98,7 +98,7 @@ export async function saveHandwrittenPlannerRows(
   if (error) return { ok: false, error: USER_ERROR.tryAgain };
 
   revalidatePath("/");
-  revalidatePath("/plan");
+  revalidatePath("/daily-plan");
   return { ok: true, ids: (data ?? []).map((r) => r.id) };
 }
 
@@ -144,7 +144,7 @@ export async function replaceHandwrittenPlannerForDate(
 
   if (cleaned.length === 0) {
     revalidatePath("/");
-    revalidatePath("/plan");
+    revalidatePath("/daily-plan");
     return { ok: true, ids: [] };
   }
 
@@ -174,6 +174,6 @@ export async function replaceHandwrittenPlannerForDate(
   if (error) return { ok: false, error: USER_ERROR.tryAgain };
 
   revalidatePath("/");
-  revalidatePath("/plan");
+  revalidatePath("/daily-plan");
   return { ok: true, ids: (data ?? []).map((r) => r.id) };
 }

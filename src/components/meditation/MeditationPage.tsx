@@ -26,6 +26,7 @@ import {
 import {
   MEDITATION_SOUNDS,
   MEDITATION_TYPES,
+  meditationSessionTypeTitle,
   type MeditationSessionRow,
   type MeditationSound,
   type MeditationTypeDef,
@@ -536,7 +537,7 @@ export function MeditationPage() {
             <li key={r.id} className="rounded-xl border border-kal-border bg-kal-page p-3 text-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="font-medium text-kal-text">
-                  {MEDITATION_TYPES.find((t) => t.id === r.session_type)?.title ?? r.session_type}
+                  {meditationSessionTypeTitle(r.session_type)}
                 </p>
                 <p className="text-kal-muted">{r.date}</p>
               </div>

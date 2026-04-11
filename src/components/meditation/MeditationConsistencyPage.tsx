@@ -9,7 +9,11 @@ import {
   getMeditationSessions,
 } from "@/lib/meditationLocal";
 import { flushMeditationOutbox, refreshMeditationFromServer } from "@/lib/meditationSync";
-import { MEDITATION_TYPES, type MeditationSessionRow } from "@/lib/meditationTypes";
+import {
+  MEDITATION_TYPES,
+  meditationSessionTypeTitle,
+  type MeditationSessionRow,
+} from "@/lib/meditationTypes";
 import { useAuthStore } from "@/store/useAuthStore";
 
 function sumSeconds(rows: MeditationSessionRow[]): number {
@@ -225,7 +229,7 @@ export function MeditationConsistencyPage() {
               {selectedRows.map((r) => (
                 <li key={r.id} className="rounded-xl border border-kal-border bg-kal-page p-3 text-sm">
                   <p className="font-medium text-kal-text">
-                    {MEDITATION_TYPES.find((t) => t.id === r.session_type)?.title ?? r.session_type}
+                    {meditationSessionTypeTitle(r.session_type)}
                   </p>
                   <p className="mt-1 text-kal-muted">{Math.max(1, r.duration_minutes)} min</p>
                   {r.notes ? <p className="mt-1 text-kal-text-secondary">{r.notes}</p> : null}

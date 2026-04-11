@@ -20,7 +20,6 @@ export type FeatureKey =
   | "timer"
   | "progress"
   | "daily_log"
-  | "heatmap"
   | "consistency_tracker"
   | "revision"
   | "habits"
@@ -29,7 +28,8 @@ export type FeatureKey =
   | "meditation_consistency"
   | "doubts"
   | "ai_photo_scan"
-  | "ai_voice";
+  | "ai_voice"
+  | "prepbrain_ai";
 
 const FEATURE_ACCESS: Record<SubscriptionTier, Record<FeatureKey, FeatureAccess>> = {
   basic: {
@@ -43,7 +43,6 @@ const FEATURE_ACCESS: Record<SubscriptionTier, Record<FeatureKey, FeatureAccess>
     timer: "limited",
     progress: "blocked",
     daily_log: "blocked",
-    heatmap: "blocked",
     consistency_tracker: "blocked",
     revision: "blocked",
     habits: "limited",
@@ -53,6 +52,7 @@ const FEATURE_ACCESS: Record<SubscriptionTier, Record<FeatureKey, FeatureAccess>
     doubts: "blocked",
     ai_photo_scan: "blocked",
     ai_voice: "blocked",
+    prepbrain_ai: "blocked",
   },
   pro: {
     plan_my_day: "allowed",
@@ -65,7 +65,6 @@ const FEATURE_ACCESS: Record<SubscriptionTier, Record<FeatureKey, FeatureAccess>
     timer: "allowed",
     progress: "allowed",
     daily_log: "allowed",
-    heatmap: "allowed",
     consistency_tracker: "allowed",
     revision: "allowed",
     habits: "allowed",
@@ -75,6 +74,7 @@ const FEATURE_ACCESS: Record<SubscriptionTier, Record<FeatureKey, FeatureAccess>
     doubts: "allowed",
     ai_photo_scan: "allowed",
     ai_voice: "allowed",
+    prepbrain_ai: "allowed",
   },
   pro_max: {
     plan_my_day: "allowed",
@@ -87,7 +87,6 @@ const FEATURE_ACCESS: Record<SubscriptionTier, Record<FeatureKey, FeatureAccess>
     timer: "allowed",
     progress: "allowed",
     daily_log: "allowed",
-    heatmap: "allowed",
     consistency_tracker: "allowed",
     revision: "allowed",
     habits: "allowed",
@@ -97,6 +96,7 @@ const FEATURE_ACCESS: Record<SubscriptionTier, Record<FeatureKey, FeatureAccess>
     doubts: "allowed",
     ai_photo_scan: "allowed",
     ai_voice: "allowed",
+    prepbrain_ai: "allowed",
   },
 };
 
@@ -112,7 +112,6 @@ export const FEATURE_LABELS: Record<FeatureKey, { name: string; upgradeHint: str
   timer: { name: "Timer", upgradeHint: "Upgrade to Pro for the full execution timer." },
   progress: { name: "Progress Tracker", upgradeHint: "Upgrade to Pro to track your preparation progress." },
   daily_log: { name: "Daily Log", upgradeHint: "Upgrade to Pro for daily study logging." },
-  heatmap: { name: "Strategic Heatmap", upgradeHint: "Upgrade to Pro for heatmap analysis." },
   consistency_tracker: { name: "Consistency Tracker", upgradeHint: "Upgrade to Pro for the consistency calendar." },
   revision: { name: "Revision Engine", upgradeHint: "Upgrade to Pro for the revision engine." },
   habits: { name: "Habit Maker", upgradeHint: "Upgrade to Pro for full habit tracking with streaks." },
@@ -122,6 +121,10 @@ export const FEATURE_LABELS: Record<FeatureKey, { name: string; upgradeHint: str
   doubts: { name: "Doubt Tracker", upgradeHint: "Upgrade to Pro for doubt tracking." },
   ai_photo_scan: { name: "AI Photo Scan", upgradeHint: "Upgrade to Pro for AI-powered photo scanning." },
   ai_voice: { name: "AI Voice Dictation", upgradeHint: "Upgrade to Pro for AI voice dictation." },
+  prepbrain_ai: {
+    name: "PrepBrain AI",
+    upgradeHint: "Upgrade to Pro for PrepBrain AI — your personalized prep coach.",
+  },
 };
 
 export type TierConfig = {
@@ -182,7 +185,7 @@ export const TIERS: Record<SubscriptionTier, TierConfig> = {
       "All 3 planners (Dictate + Handwritten + Self Type)",
       "Full syllabus with microtopics & predictions",
       "Full execution planner + timer",
-      "Progress, Daily Log, Heatmap",
+      "Progress, Daily Log",
       "Revision Engine",
       "Full habits with streaks",
       "Personal Motivation Vault",

@@ -1,0 +1,286 @@
+"use client";
+
+import { Brain, Loader2, Send, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+
+import { usePrepBrainAI } from "@/hooks/usePrepBrainAI";
+import { PREPBRAIN_UI_DISCLAIMER } from "@/lib/prepBrainPrompts";
+import { PREPBRAIN_USAGE_WARN_RATIO } from "@/lib/prepbrainTokens";
+
+const SUGGESTED = [
+  "I need about 20 more marks — what should I focus on first?",
+  "Which chapters are my weakest right now, and how should I fix them?",
+  "I'm not meditating regularly. What should I do this week?",
+  "Based on my data, am I executing my daily plan well enough?",
+];
+
+export function PrepBrainChat() {
+  const {
+    messages,
+    isSending,
+    error,
+    setError,
+    sendMessage,
+    clearChat,
+    usage,
+    usageLoading,
+    atTokenLimit,
+    tokenLimitMessage,
+  } = usePrepBrainAI();
+
+  const usagePct =
+    usage && usage.limit > 0
+      ? Math.min(100, (usage.used / usage.limit) * 100)
+      : 0;
+  const usageNearLimit =
+    usage != null &&
+    !atTokenLimit &&
+    usage.limit > 0 &&
+    usage.used >= usage.limit * PREPBRAIN_USAGE_WARN_RATIO;
+  const [draft, setDraft] = useState("");
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isSending]);
+
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!draft.trim() || isSending || atTokenLimit) return;
+    void sendMessage(draft);
+    setDraft("");
+  };
+
+  return (
+    <div
+      className={[
+        "flex flex-col overflow-hidden rounded-2xl border border-kal-border bg-kal-card kal-shadow-card",
+        /* Mobile: bounded height so messages scroll inside; avoids tiny scroll with keyboard quirks */
+        "h-[min(calc(100dvh-11.5rem),680px)]",
+        "sm:h-auto sm:min-h-[min(70vh,560px)] sm:max-h-none",
+      ].join(" ")}
+    >
+      <div className="flex shrink-0 items-start justify-between gap-2 border-b border-kal-border/80 px-3 py-3 sm:items-center sm:gap-3 sm:px-5">
+        <div className="flex min-w-0 flex-1 items-center gap-2.5">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-kal-accent-soft text-kal-accent ring-1 ring-kal-accent/20 sm:h-11 sm:w-11">
+            <Brain className="h-5 w-5" strokeWidth={2} aria-hidden />
+          </span>
+          <div className="min-w-0">
+            <h2 className="text-base font-bold text-kal-text sm:text-lg">PrepBrain AI</h2>
+            <p className="text-[11px] leading-snug text-kal-text-secondary sm:text-xs sm:leading-normal">
+              <span className="sm:hidden">Coach using your Kalnehi data</span>
+              <span className="hidden sm:inline">
+                Your preparation coach — uses your syllabus, planner, and habits
+              </span>
+            </p>
+          </div>
+        </div>
+        {messages.length > 0 && (
+          <button
+            type="button"
+            onClick={() => clearChat()}
+            className="touch-manipulation shrink-0 rounded-lg border border-kal-border bg-kal-page px-3 py-2 text-xs font-semibold leading-none text-kal-text-secondary transition-colors hover:border-kal-accent/30 hover:text-kal-text active:scale-[0.98] sm:min-h-0 sm:py-1.5"
+          >
+            Clear
+          </button>
+        )}
+      </div>
+
+      {usage && !usageLoading && (
+        <div className="shrink-0 border-b border-kal-border/80 bg-kal-card-muted/50 px-3 py-2.5 sm:px-5">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] sm:text-xs">
+            <span className="font-medium tabular-nums text-kal-text">
+              Tokens used:{" "}
+              {usage.used.toLocaleString("en-IN")} /{" "}
+              {usage.limit.toLocaleString("en-IN")} this month
+            </span>
+            {usageNearLimit && (
+              <span className="font-semibold text-amber-800 dark:text-amber-200/90">
+                Approaching monthly limit
+              </span>
+            )}
+          </div>
+          <div
+            className="mt-2 h-2 w-full overflow-hidden rounded-full bg-kal-border/80"
+            role="progressbar"
+            aria-valuenow={Math.round(usagePct)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="PrepBrain token usage this month"
+          >
+            <div
+              className={`h-full rounded-full transition-[width] duration-300 ${
+                atTokenLimit
+                  ? "bg-red-500/90"
+                  : usageNearLimit
+                    ? "bg-amber-500/90"
+                    : "bg-kal-accent/90"
+              }`}
+              style={{ width: `${usagePct}%` }}
+            />
+          </div>
+          {tokenLimitMessage ? (
+            <p className="mt-2 text-[11px] leading-snug text-red-800 dark:text-red-200/90">
+              {tokenLimitMessage}
+            </p>
+          ) : null}
+        </div>
+      )}
+      {usageLoading && (
+        <div className="shrink-0 border-b border-kal-border/80 bg-kal-card-muted/30 px-3 py-2 text-[11px] text-kal-text-secondary sm:px-5">
+          Loading usage…
+        </div>
+      )}
+
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 py-3 [-webkit-overflow-scrolling:touch] sm:px-5 sm:py-4">
+        {messages.length === 0 && !isSending && (
+          <div className="mx-auto max-w-lg space-y-5 text-center sm:space-y-6">
+            <div className="inline-flex items-center gap-2 rounded-full border border-kal-border bg-kal-card-muted px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-kal-text-secondary">
+              <Sparkles className="h-3.5 w-3.5 shrink-0 text-kal-accent" aria-hidden />
+              Pro / Pro Max
+            </div>
+            <p className="text-sm leading-relaxed text-kal-muted">
+              Ask anything about your syllabus gaps, daily execution, habits, or calm
+              focus. PrepBrain reads your Kalnehi data each time you send a message.
+            </p>
+            <div className="flex flex-col gap-2.5 text-left">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-kal-text-secondary">
+                Try asking
+              </p>
+              <div className="flex flex-col gap-2">
+                {SUGGESTED.map((q) => (
+                  <button
+                    key={q}
+                    type="button"
+                    onClick={() => {
+                      setError(null);
+                      void sendMessage(q);
+                    }}
+                    disabled={isSending || atTokenLimit}
+                    className="touch-manipulation rounded-xl border border-kal-border bg-kal-page px-3 py-3 text-left text-sm leading-snug text-kal-text transition-colors hover:border-kal-accent/35 hover:bg-kal-accent-soft/40 active:bg-kal-accent-soft/55 disabled:opacity-50 sm:min-h-0 sm:py-2.5"
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-3 pb-1">
+          {messages.map((m, i) => (
+            <div
+              key={`${i}-${m.role}-${m.content.slice(0, 24)}`}
+              className={
+                m.role === "user"
+                  ? "flex justify-end"
+                  : "flex justify-start"
+              }
+            >
+              <div
+                className={
+                  m.role === "user"
+                    ? "max-w-[min(100%,20rem)] rounded-2xl rounded-br-md bg-kal-accent px-3.5 py-2.5 text-sm font-medium text-kal-accent-foreground shadow-sm sm:max-w-[min(100%,28rem)]"
+                    : "w-full max-w-full rounded-2xl rounded-bl-md border border-kal-border bg-kal-page px-3.5 py-2.5 text-sm leading-relaxed text-kal-text sm:w-auto sm:max-w-[min(100%,34rem)]"
+                }
+              >
+                <p className="break-words whitespace-pre-wrap">{m.content}</p>
+              </div>
+            </div>
+          ))}
+          {isSending && (
+            <div className="flex justify-start">
+              <div className="flex items-center gap-2 rounded-2xl rounded-bl-md border border-kal-border bg-kal-card-muted px-3.5 py-2.5 text-sm text-kal-text-secondary">
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                PrepBrain is thinking…
+              </div>
+            </div>
+          )}
+          <div ref={bottomRef} />
+        </div>
+      </div>
+
+      {error && (
+        <div className="shrink-0 border-t border-red-200 bg-red-50 px-3 py-2.5 text-center text-sm leading-snug text-red-900 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-100 sm:px-4">
+          {error}
+          <button
+            type="button"
+            className="touch-manipulation ml-2 inline-flex min-h-[44px] items-center px-2 font-semibold underline sm:min-h-0"
+            onClick={() => setError(null)}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      <form
+        onSubmit={onSubmit}
+        className="shrink-0 border-t border-kal-border/80 p-2.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:p-4 sm:pb-4"
+      >
+        <div className="flex gap-2 sm:gap-2.5">
+          <textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                if (!isSending && !atTokenLimit && draft.trim()) {
+                  e.currentTarget.form?.requestSubmit();
+                }
+              }
+            }}
+            placeholder="Ask PrepBrain about your preparation…"
+            rows={2}
+            disabled={isSending || atTokenLimit}
+            enterKeyHint="send"
+            autoComplete="off"
+            className="min-h-[44px] min-w-0 flex-1 resize-y rounded-xl border border-kal-border bg-kal-page px-3 py-2.5 text-base leading-normal text-kal-text placeholder:text-kal-text-secondary/70 focus:border-kal-accent/50 focus:outline-none focus:ring-2 focus:ring-kal-accent/20 disabled:opacity-60 sm:min-h-[48px] sm:py-3 sm:text-sm"
+          />
+          <button
+            type="submit"
+            disabled={isSending || atTokenLimit || !draft.trim()}
+            className="touch-manipulation inline-flex h-12 w-12 shrink-0 items-center justify-center self-end rounded-xl bg-kal-accent text-kal-accent-foreground shadow-sm transition-opacity hover:opacity-95 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 sm:h-11 sm:w-11"
+            aria-label="Send"
+          >
+            {isSending ? (
+              <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+            ) : (
+              <Send className="h-5 w-5" aria-hidden />
+            )}
+          </button>
+        </div>
+        {/* Mobile: one-line control; full disclaimer inside expandable panel */}
+        <details className="mt-1.5 sm:hidden">
+          <summary className="flex min-h-[40px] cursor-pointer list-none items-center text-[10px] leading-none text-kal-text-secondary underline decoration-kal-border decoration-dotted underline-offset-2 [&::-webkit-details-marker]:hidden">
+            {"AI disclaimer · Terms"}
+          </summary>
+          <div className="mt-1.5 max-h-[min(28vh,200px)] overflow-y-auto rounded-md border border-kal-border/60 bg-kal-card-muted/40 px-2 py-1.5 text-[9px] leading-snug text-kal-text-secondary">
+            <p>{PREPBRAIN_UI_DISCLAIMER}</p>
+            <Link
+              href="/terms"
+              className="mt-1 inline-block font-medium text-kal-accent underline-offset-2 hover:underline"
+            >
+              Full Terms
+            </Link>
+          </div>
+        </details>
+
+        <div className="mt-2 hidden space-y-2 sm:block">
+          <p className="text-[11px] text-kal-text-secondary">
+            Shift+Enter for a new line. PrepBrain uses your latest Kalnehi data each send.
+          </p>
+          <p className="text-[10px] leading-snug text-kal-text-secondary/90">
+            {PREPBRAIN_UI_DISCLAIMER}{" "}
+            <Link
+              href="/terms"
+              className="font-medium text-kal-accent underline-offset-2 hover:underline"
+            >
+              Terms
+            </Link>
+          </p>
+        </div>
+      </form>
+    </div>
+  );
+}

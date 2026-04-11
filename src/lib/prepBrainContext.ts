@@ -1,0 +1,388 @@
+import { format, parseISO, subDays } from "date-fns";
+
+import type { CuetScoringRollup, NeetYearProjection, SyllabusRollup } from "@/lib/syllabusRollup";
+import {
+  classifyDailyProgressBand,
+  computeDaysBehindExecution,
+  computeWeightedCompletionPercent,
+  DAILY_PROGRESS_HEADLINE,
+  DAILY_PROGRESS_PILL,
+  filterTasksForDate,
+  filterTasksThroughDate,
+  findMissedIncompleteTasks,
+  resolveTaskMarksWeight,
+  sumEstimatedMinutes,
+  sumPlannedMarksWeight,
+  type DailyProgressBand,
+} from "@/lib/progressEngine";
+import type { ExecutionSessionRow } from "@/lib/taskIdb";
+import type { StudySessionLog } from "@/lib/studySessionTypes";
+import type { Microtopic, Task } from "@/store/useTaskStore";
+import type { HabitBundle } from "@/lib/habitLocal";
+
+const WEAK_CHAPTER_CAP = 10;
+const RECENT_TASK_CAP = 40;
+
+/** Avoid `[...value]` — non-arrays (e.g. `{}`, numbers) throw at runtime after odd JSON/client payloads. */
+function safeArraySlice<T>(value: unknown, max: number): T[] {
+  if (!Array.isArray(value)) return [];
+  return value.slice(0, max) as T[];
+}
+
+/**
+ * LLM-facing snapshot: keys and labels are written for plain-English coaching,
+ * not internal API / column names.
+ */
+export type PrepBrainContext = {
+  context_generated_at: string;
+  calendar_date_today: string;
+  exam_profile: {
+    exam_label: string | null;
+    exam_display_name: string;
+    target_exam_date: string | null;
+    max_score_scale: number | null;
+    primary_marks_year: number | null;
+  };
+  syllabus_snapshot: {
+    overall_weighted_completion_percent: number;
+    total_marks_secured_in_syllabus_model: number;
+    total_marks_pool_in_syllabus_model: number;
+    weakest_chapters: Array<{
+      subject: string;
+      chapter: string;
+      percent_of_microtopics_done_in_chapter: number;
+      chapter_weight_in_marks: number;
+      chapter_fully_mastered: boolean;
+    }>;
+    neet_style_projections_by_year: Array<{
+      exam_year: number;
+      projected_score_on_720_scale: number;
+      pattern_label: string;
+      completion_note: string;
+    }>;
+    cuet_domain_summary: null | {
+      overall_percent_across_domains: number;
+      total_projected_marks: number;
+      total_max_marks: number;
+      per_domain: Array<{
+        subject: string;
+        microtopics_completed: number;
+        microtopics_total: number;
+        completion_percent: number;
+        projected_marks: number;
+        max_marks_per_domain: number;
+      }>;
+    };
+  };
+  todays_planned_work: {
+    completion_percent_for_todays_planned_tasks: number;
+    todays_execution_status_label: string;
+    todays_execution_guidance_line: string;
+    planned_marks_weight_total_for_today: number;
+    estimated_minutes_planned_for_today: number;
+    count_of_incomplete_tasks_from_past_days: number;
+    days_behind_on_execution: number | null;
+  };
+  recent_tasks_last_two_weeks: Array<{
+    assigned_date: string;
+    task_status: string;
+    title: string;
+    marks_weight: number;
+    estimated_minutes: number;
+  }>;
+  last_7_days: {
+    execution_timer_sessions: {
+      session_count: number;
+      total_minutes: number;
+    };
+    study_sessions_with_camera: {
+      session_count: number;
+      total_minutes: number;
+      sessions_marked_camera_proven: number;
+    };
+  };
+  habits_overview: {
+    habit_names: string[];
+    completed_habit_logs_last_14_days: number;
+  };
+  meditation_last_30_days: {
+    session_count: number;
+    distinct_days_with_a_session: number;
+  };
+};
+
+export type PrepBrainContextInput = {
+  nowIso: string;
+  calendarToday: string;
+  examLabel: string | null;
+  examDisplayName: string;
+  targetExamDate: string | null;
+  maxScore: number | null;
+  primaryMarksYear: number | null;
+  rollup: SyllabusRollup | null;
+  neetYearProjections: NeetYearProjection[];
+  cuetScoringRollup: CuetScoringRollup | null;
+  tasks: Task[];
+  microtopicById: Record<string, Microtopic>;
+  executionSessions: ExecutionSessionRow[];
+  studySessions: StudySessionLog[];
+  habitBundle: HabitBundle | null;
+  meditation30d: { sessionCount: number; distinctDays: number };
+};
+
+function taskTitle(task: Task, microtopicById: Record<string, Microtopic>): string {
+  const n = task.name?.trim();
+  if (n) return n.slice(0, 200);
+  if (task.microtopic_id) {
+    const m = microtopicById[task.microtopic_id];
+    if (m) {
+      const piece = [m.subject, m.chapter, m.microtopic].filter(Boolean).join(" · ");
+      return piece.slice(0, 200) || "Task";
+    }
+  }
+  return "Task";
+}
+
+function msInLastDays(iso: string, days: number): boolean {
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return false;
+  const cutoff = Date.now() - days * 86_400_000;
+  return t >= cutoff;
+}
+
+function weakChaptersFromRollup(rollup: SyllabusRollup | null): PrepBrainContext["syllabus_snapshot"]["weakest_chapters"] {
+  if (!rollup?.chapters?.length) return [];
+  return [...rollup.chapters]
+    .sort((a, b) => a.microtopicProgressPercent - b.microtopicProgressPercent)
+    .slice(0, WEAK_CHAPTER_CAP)
+    .map((ch) => ({
+      subject: ch.subject,
+      chapter: ch.chapter,
+      percent_of_microtopics_done_in_chapter: ch.microtopicProgressPercent,
+      chapter_weight_in_marks: ch.chapterMarksTotal,
+      chapter_fully_mastered: ch.isChapterMastered,
+    }));
+}
+
+function bandCopy(band: DailyProgressBand): { label: string; guidance: string } {
+  return {
+    label: DAILY_PROGRESS_PILL[band],
+    guidance: DAILY_PROGRESS_HEADLINE[band],
+  };
+}
+
+function mapCuet(c: CuetScoringRollup): NonNullable<PrepBrainContext["syllabus_snapshot"]["cuet_domain_summary"]> {
+  return {
+    overall_percent_across_domains: c.overallPercent,
+    total_projected_marks: c.totalProjected,
+    total_max_marks: c.totalMax,
+    per_domain: c.subjects.map((s) => ({
+      subject: s.subject,
+      microtopics_completed: s.completedMicrotopics,
+      microtopics_total: s.totalMicrotopics,
+      completion_percent: s.completionPercent,
+      projected_marks: s.projectedMarks,
+      max_marks_per_domain: s.maxPerSubject,
+    })),
+  };
+}
+
+/**
+ * Assembles a JSON-safe snapshot for PrepBrain AI from in-memory / IDB data.
+ */
+export function buildPrepBrainContext(input: PrepBrainContextInput): PrepBrainContext {
+  const {
+    nowIso,
+    calendarToday,
+    examLabel,
+    examDisplayName,
+    targetExamDate,
+    maxScore,
+    primaryMarksYear,
+    rollup,
+    neetYearProjections,
+    cuetScoringRollup,
+    tasks,
+    microtopicById,
+    executionSessions,
+    studySessions,
+    habitBundle,
+    meditation30d,
+  } = input;
+
+  const allThroughToday = filterTasksThroughDate(tasks, calendarToday);
+  const todayTasks = filterTasksForDate(tasks, calendarToday);
+  const weightedToday = computeWeightedCompletionPercent(todayTasks, microtopicById);
+  const plannedW = sumPlannedMarksWeight(todayTasks, microtopicById);
+  const band = classifyDailyProgressBand(weightedToday, plannedW);
+  const { label: bandLabel, guidance: bandGuidance } = bandCopy(band);
+  const missed = findMissedIncompleteTasks(tasks, calendarToday);
+  const daysBehind = computeDaysBehindExecution(allThroughToday, calendarToday);
+
+  const cutoffDate = format(subDays(parseISO(calendarToday), 13), "yyyy-MM-dd");
+  const recentPool = tasks.filter(
+    (t) => t.assigned_date >= cutoffDate && t.assigned_date <= calendarToday,
+  );
+  recentPool.sort((a, b) => (a.assigned_date < b.assigned_date ? 1 : -1));
+  const recent_tasks_last_two_weeks = recentPool.slice(0, RECENT_TASK_CAP).map((t) => ({
+    assigned_date: t.assigned_date,
+    task_status: t.status,
+    title: taskTitle(t, microtopicById),
+    marks_weight: Math.round(resolveTaskMarksWeight(t, microtopicById) * 10) / 10,
+    estimated_minutes: t.estimated_minutes ?? t.estimated_time_minutes ?? 0,
+  }));
+
+  let execCount = 0;
+  let execSeconds = 0;
+  for (const s of executionSessions) {
+    if (msInLastDays(s.start_time, 7)) {
+      execCount++;
+      execSeconds += Math.max(0, s.duration_seconds ?? 0);
+    }
+  }
+
+  let studyCount = 0;
+  let studySeconds = 0;
+  let cameraProven = 0;
+  for (const s of studySessions) {
+    if (msInLastDays(s.started_at, 7)) {
+      studyCount++;
+      studySeconds += Math.max(0, s.duration_seconds);
+      if (s.is_camera_proven) cameraProven++;
+    }
+  }
+
+  const habit_names =
+    habitBundle?.habits?.map((h) => h.name?.trim() || "Habit").slice(0, 20) ?? [];
+  const logCutoff = format(subDays(parseISO(calendarToday), 13), "yyyy-MM-dd");
+  let habitLogs14 = 0;
+  if (habitBundle?.logs) {
+    for (const log of habitBundle.logs) {
+      if (log.completed && log.log_date >= logCutoff && log.log_date <= calendarToday) {
+        habitLogs14++;
+      }
+    }
+  }
+
+  const r = rollup;
+
+  return {
+    context_generated_at: nowIso,
+    calendar_date_today: calendarToday,
+    exam_profile: {
+      exam_label: examLabel,
+      exam_display_name: examDisplayName,
+      target_exam_date: targetExamDate,
+      max_score_scale: maxScore ?? null,
+      primary_marks_year: primaryMarksYear ?? null,
+    },
+    syllabus_snapshot: {
+      overall_weighted_completion_percent: r?.overallPercent ?? 0,
+      total_marks_secured_in_syllabus_model: r?.totalMarksMastered ?? 0,
+      total_marks_pool_in_syllabus_model: r?.totalMarksPool ?? 0,
+      weakest_chapters: weakChaptersFromRollup(r),
+      neet_style_projections_by_year: neetYearProjections.map((p) => ({
+        exam_year: p.year,
+        projected_score_on_720_scale: p.projectedOutOf720,
+        pattern_label: p.patternLabel,
+        completion_note: p.completionNote,
+      })),
+      cuet_domain_summary: cuetScoringRollup ? mapCuet(cuetScoringRollup) : null,
+    },
+    todays_planned_work: {
+      completion_percent_for_todays_planned_tasks: weightedToday,
+      todays_execution_status_label: bandLabel,
+      todays_execution_guidance_line: bandGuidance,
+      planned_marks_weight_total_for_today: Math.round(plannedW * 10) / 10,
+      estimated_minutes_planned_for_today: sumEstimatedMinutes(todayTasks),
+      count_of_incomplete_tasks_from_past_days: missed.length,
+      days_behind_on_execution: daysBehind,
+    },
+    recent_tasks_last_two_weeks,
+    last_7_days: {
+      execution_timer_sessions: {
+        session_count: execCount,
+        total_minutes: Math.round(execSeconds / 60),
+      },
+      study_sessions_with_camera: {
+        session_count: studyCount,
+        total_minutes: Math.round(studySeconds / 60),
+        sessions_marked_camera_proven: cameraProven,
+      },
+    },
+    habits_overview: {
+      habit_names,
+      completed_habit_logs_last_14_days: habitLogs14,
+    },
+    meditation_last_30_days: {
+      session_count: meditation30d.sessionCount,
+      distinct_days_with_a_session: meditation30d.distinctDays,
+    },
+  };
+}
+
+type PrepBrainWeakChapter =
+  PrepBrainContext["syllabus_snapshot"]["weakest_chapters"][number];
+type PrepBrainNeetProj =
+  PrepBrainContext["syllabus_snapshot"]["neet_style_projections_by_year"][number];
+type PrepBrainCuetDomainRow = NonNullable<
+  PrepBrainContext["syllabus_snapshot"]["cuet_domain_summary"]
+>["per_domain"][number];
+type PrepBrainRecentTask = PrepBrainContext["recent_tasks_last_two_weeks"][number];
+
+/** Server-side defense: cap oversized client payloads before Groq. Never throws on partial/malformed JSON. */
+export function truncatePrepBrainContextForApi(ctx: PrepBrainContext): PrepBrainContext {
+  const snap =
+    ctx?.syllabus_snapshot != null &&
+    typeof ctx.syllabus_snapshot === "object" &&
+    !Array.isArray(ctx.syllabus_snapshot)
+      ? ctx.syllabus_snapshot
+      : null;
+
+  const weak = safeArraySlice<PrepBrainWeakChapter>(
+    snap?.weakest_chapters,
+    WEAK_CHAPTER_CAP,
+  );
+  const recent = safeArraySlice<PrepBrainRecentTask>(
+    ctx?.recent_tasks_last_two_weeks,
+    RECENT_TASK_CAP,
+  );
+  const proj = safeArraySlice<PrepBrainNeetProj>(
+    snap?.neet_style_projections_by_year,
+    6,
+  );
+
+  const cuetRaw = snap?.cuet_domain_summary;
+  const cuet =
+    cuetRaw != null && typeof cuetRaw === "object" && !Array.isArray(cuetRaw)
+      ? (cuetRaw as NonNullable<
+          PrepBrainContext["syllabus_snapshot"]["cuet_domain_summary"]
+        >)
+      : null;
+  const cuetSub = cuet
+    ? safeArraySlice<PrepBrainCuetDomainRow>(cuet.per_domain, 12)
+    : null;
+
+  return {
+    ...ctx,
+    syllabus_snapshot: {
+      ...(snap ?? {
+        overall_weighted_completion_percent: 0,
+        total_marks_secured_in_syllabus_model: 0,
+        total_marks_pool_in_syllabus_model: 0,
+        weakest_chapters: [],
+        neet_style_projections_by_year: [],
+        cuet_domain_summary: null,
+      }),
+      weakest_chapters: weak,
+      neet_style_projections_by_year: proj,
+      cuet_domain_summary: cuet
+        ? {
+            ...cuet,
+            per_domain: cuetSub ?? [],
+          }
+        : null,
+    },
+    recent_tasks_last_two_weeks: recent,
+  };
+}

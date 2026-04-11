@@ -44,6 +44,7 @@ export function HomeClient() {
     router.prefetch("/syllabus");
     router.prefetch("/plan-my-day");
     router.prefetch("/daily-plan");
+    router.prefetch("/prepbrain");
     router.prefetch("/motivation");
     router.prefetch("/meditation");
     router.prefetch("/habits");

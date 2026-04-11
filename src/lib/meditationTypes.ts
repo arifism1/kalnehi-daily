@@ -66,6 +66,16 @@ export const MEDITATION_TYPES: MeditationTypeDef[] = [
   },
 ];
 
+/** User-facing label for a stored session type — never returns raw ids or slugs. */
+export function meditationSessionTypeTitle(
+  sessionType: string | null | undefined,
+): string {
+  const id = sessionType?.trim();
+  if (!id) return "Meditation session";
+  const def = MEDITATION_TYPES.find((t) => t.id === id);
+  return def?.title ?? "Meditation session";
+}
+
 export const MEDITATION_SOUNDS = [
   "Rain",
   "Forest",
