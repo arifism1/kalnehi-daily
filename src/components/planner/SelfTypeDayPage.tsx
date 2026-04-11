@@ -27,7 +27,7 @@ export function SelfTypeDayPage() {
   return (
     <div className="relative mx-auto max-w-2xl pb-16 pt-2 sm:pt-4">
       <div className="flex items-center gap-3 text-sm font-semibold text-kal-accent">
-        <Link href="/plan" className="inline-flex items-center gap-1.5 transition hover:text-kal-accent-hover">
+        <Link href="/daily-plan" className="inline-flex items-center gap-1.5 transition hover:text-kal-accent-hover">
           <ArrowLeft className="h-4 w-4" aria-hidden />
           Plan hub
         </Link>

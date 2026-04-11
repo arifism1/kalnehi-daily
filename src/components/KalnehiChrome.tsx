@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { Bell, CalendarDays, Menu, Mic } from "lucide-react";
+import { Bell, Calendar, Menu, Mic } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -142,7 +142,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
                   )}
                   aria-label="Daily planner"
                 >
-                  <CalendarDays
+                  <Calendar
                     className="h-5 w-5 shrink-0"
                     strokeWidth={2.25}
                     aria-hidden

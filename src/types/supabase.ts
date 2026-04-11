@@ -493,6 +493,8 @@ export type Database = {
           mandatory_onboarding_completed_at: string | null
           phone_number: string | null
           photo_scans_used_this_month: number
+          prepbrain_tokens_month: string | null
+          prepbrain_tokens_used: number
           prev_exam_attempted: boolean | null
           prev_score: number | null
           prev_score_entries: Json
@@ -523,6 +525,8 @@ export type Database = {
           mandatory_onboarding_completed_at?: string | null
           phone_number?: string | null
           photo_scans_used_this_month?: number
+          prepbrain_tokens_month?: string | null
+          prepbrain_tokens_used?: number
           prev_exam_attempted?: boolean | null
           prev_score?: number | null
           prev_score_entries?: Json
@@ -553,6 +557,8 @@ export type Database = {
           mandatory_onboarding_completed_at?: string | null
           phone_number?: string | null
           photo_scans_used_this_month?: number
+          prepbrain_tokens_month?: string | null
+          prepbrain_tokens_used?: number
           prev_exam_attempted?: boolean | null
           prev_score?: number | null
           prev_score_entries?: Json

@@ -91,7 +91,7 @@ export async function createTask(
       .single();
     if (error) throw error;
     revalidatePath("/");
-    revalidatePath("/plan");
+    revalidatePath("/daily-plan");
     return { ok: true, id: data.id };
   } catch (e) {
     return { ok: false, error: formatSupabaseError(e) };
@@ -116,7 +116,7 @@ export async function createTasksBulk(
       .select("id");
     if (error) throw error;
     revalidatePath("/");
-    revalidatePath("/plan");
+    revalidatePath("/daily-plan");
     return { ok: true, ids: (data ?? []).map((r) => r.id) };
   } catch (e) {
     return { ok: false, error: formatSupabaseError(e) };
@@ -136,7 +136,7 @@ export async function updateTask(
       .eq("user_id", userId);
     if (error) throw error;
     revalidatePath("/");
-    revalidatePath("/plan");
+    revalidatePath("/daily-plan");
     return { ok: true };
   } catch (e) {
     return { ok: false, error: formatSupabaseError(e) };
@@ -155,7 +155,7 @@ export async function deleteTask(
       .eq("user_id", userId);
     if (error) throw error;
     revalidatePath("/");
-    revalidatePath("/plan");
+    revalidatePath("/daily-plan");
     return { ok: true };
   } catch (e) {
     return { ok: false, error: formatSupabaseError(e) };

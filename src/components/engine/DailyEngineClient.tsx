@@ -21,6 +21,8 @@ const BAND_LABEL: Record<string, string> = {
   no_plan: "No plan",
 };
 
+const BAND_LABEL_UNKNOWN = "Unknown";
+
 export function DailyEngineClient() {
   useRefreshTasksOnHomeFocus();
   const today = useCalendarDate();
@@ -88,7 +90,7 @@ export function DailyEngineClient() {
               <span className="mt-0.5 text-[10px] text-kal-muted">
                 {d.taskCount === 0
                   ? "No data"
-                  : BAND_LABEL[d.band] ?? d.band}
+                  : BAND_LABEL[d.band] ?? BAND_LABEL_UNKNOWN}
               </span>
             </div>
           ))}

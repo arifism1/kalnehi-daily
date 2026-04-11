@@ -1,5 +1,5 @@
-import HeatmapRouteLazy from "./HeatmapRouteLazy";
+import { redirect } from "next/navigation";
 
 export default function HeatmapPage() {
-  return <HeatmapRouteLazy />;
+  redirect("/progress");
 }
