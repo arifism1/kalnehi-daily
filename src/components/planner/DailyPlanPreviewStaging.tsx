@@ -12,7 +12,16 @@ export type DailyPlanPreviewRow = {
   duration: string | null;
   /** Optional snippet stored on commit (e.g. voice transcript chunk). */
   sourceRaw?: string;
+  /**
+   * When true, row is skipped for "Add to Today's Plan". Omitted/false = include named rows.
+   */
+  excludeFromCommit?: boolean;
 };
+
+/** Whether this row should be committed with the bulk "add to plan" action. */
+export function isPreviewRowIncluded(r: DailyPlanPreviewRow): boolean {
+  return Boolean(r.name.trim()) && r.excludeFromCommit !== true;
+}
 
 type Props = {
   sectionId: string;
@@ -73,9 +82,21 @@ export function DailyPlanPreviewStaging({
         {rows.map((r) => (
           <li
             key={r.id}
-            className="min-w-0 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2 overflow-hidden rounded-xl border border-kal-border bg-kal-card p-3"
+            className="flex min-w-0 items-start gap-2 overflow-hidden rounded-xl border border-kal-border bg-kal-card p-3"
           >
-            <div className="min-w-0">
+            <input
+              type="checkbox"
+              checked={r.excludeFromCommit === true}
+              onChange={() => {
+                const skip = r.excludeFromCommit === true;
+                onUpdateRow(r.id, { excludeFromCommit: !skip });
+              }}
+              disabled={disabled}
+              className="mt-2.5 h-5 w-5 shrink-0 rounded border-kal-border bg-kal-input-bg text-kal-accent focus:ring-kal-accent disabled:opacity-50"
+              title="Exclude this row from Add to Today's Plan"
+              aria-label="Exclude this row from Add to Today's Plan"
+            />
+            <div className="min-w-0 flex-1">
               <textarea
                 value={r.name}
                 onChange={(e) => onUpdateRow(r.id, { name: e.target.value })}

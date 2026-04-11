@@ -8,6 +8,7 @@ import { insertDailyTask } from "@/actions/dailyPlan";
 import { saveRawVoiceNote } from "@/actions/voiceDictate";
 import {
   DailyPlanPreviewStaging,
+  isPreviewRowIncluded,
   type DailyPlanPreviewRow,
 } from "@/components/planner/DailyPlanPreviewStaging";
 import { UnifiedDailyPlanList } from "@/components/planner/UnifiedDailyPlanList";
@@ -265,10 +266,10 @@ export function DictateMyDay() {
 
   const commitPreviewToPlan = useCallback(async () => {
     setError(null);
-    const named = previewRowsRef.current.filter((r) => r.name.trim());
+    const named = previewRowsRef.current.filter(isPreviewRowIncluded);
     if (named.length === 0) {
       setError(
-        "Add at least one task with a name in the preview, then tap Add to Today's Plan.",
+        "Add at least one task in the preview, or turn off Exclude on rows you want to save.",
       );
       return;
     }
@@ -327,13 +328,6 @@ export function DictateMyDay() {
           <Volume2 className="h-8 w-8 text-kal-accent" aria-hidden />
           Dictate My Day
         </h1>
-        <p className="mt-2 max-w-xl text-sm leading-relaxed text-kal-muted">
-          Transcription happens on your device with the browser&apos;s speech engine.
-          Only the final text is sent to Groq so it can turn your note into clean,
-          editable tasks in the preview. When it looks right, add them to today&apos;s
-          plan — they appear in the live list below with your typed and handwritten
-          items.
-        </p>
         <p className="mt-3 rounded-xl border border-kal-border bg-kal-card-muted px-3 py-2 text-xs leading-relaxed text-kal-muted">
           <span className="font-medium text-kal-text-secondary">Tip:</span> Speak
           naturally, then tap Stop when you&apos;re done.
@@ -440,12 +434,6 @@ export function DictateMyDay() {
               Stop
             </button>
           ) : null}
-          {phase === "idle" ? (
-            <p className="max-w-sm text-sm text-kal-muted">
-              Voice transcription stays on this device. Groq only receives the final text
-              after recording ends.
-            </p>
-          ) : null}
           {!isSupported ? (
             <p className="max-w-sm text-sm text-[var(--kal-warn-text)]">
               Device speech recognition is unavailable in this browser. Try Chrome or the
@@ -493,7 +481,7 @@ export function DictateMyDay() {
             type="button"
             disabled={
               busyCommit ||
-              !previewRows.some((r) => r.name.trim().length > 0)
+              !previewRows.some((r) => isPreviewRowIncluded(r))
             }
             onClick={() => void commitPreviewToPlan()}
             className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-kal-accent px-6 text-base font-semibold text-white shadow-sm hover:bg-kal-accent-hover disabled:opacity-40"

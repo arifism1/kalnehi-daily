@@ -12,6 +12,8 @@ type CircularProgressRingProps = {
   gradientId: string;
   className?: string;
   trackClassName?: string;
+  /** Applied to the progress arc (e.g. longer transition). */
+  progressClassName?: string;
   children: ReactNode;
 };
 
@@ -26,6 +28,7 @@ export function CircularProgressRing({
   className,
   /** Light: visible on white / kal-card-muted; dark: subtle track on slate cards */
   trackClassName = "text-slate-300 dark:text-slate-500",
+  progressClassName = "transition-[stroke-dasharray] duration-500 ease-out motion-reduce:transition-none",
   children,
 }: CircularProgressRingProps) {
   const p = Math.min(100, Math.max(0, percent));
@@ -75,7 +78,7 @@ export function CircularProgressRing({
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={`${dash} ${c}`}
-          className="transition-[stroke-dasharray] duration-500 ease-out"
+          className={progressClassName}
         />
       </svg>
       <div

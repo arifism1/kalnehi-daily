@@ -6,6 +6,9 @@ import Link from "next/link";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { isFeatureBlocked } from "@/lib/subscriptionTiers";
 
+const plannerCardShell =
+  "group relative flex min-h-0 flex-row items-center gap-3 rounded-xl border-2 border-kal-border px-3 py-2.5 text-left kal-shadow-card sm:gap-3.5 sm:rounded-[1rem] sm:py-3 sm:pl-3.5 sm:pr-4";
+
 function PlannerCard({
   href,
   emoji,
@@ -13,7 +16,6 @@ function PlannerCard({
   title,
   subtitle,
   locked,
-  order,
 }: {
   href: string;
   emoji: string;
@@ -21,27 +23,41 @@ function PlannerCard({
   title: string;
   subtitle: string;
   locked: boolean;
-  order: string;
 }) {
+  const body = (
+    <>
+      <span
+        className="flex h-10 w-10 shrink-0 items-center justify-center text-[1.35rem] leading-none sm:h-11 sm:w-11 sm:text-[1.5rem]"
+        aria-hidden
+      >
+        {locked ? <span className="grayscale">{emoji}</span> : emoji}
+      </span>
+      <div className="min-w-0 flex-1 py-0.5">
+        <div className="flex items-center gap-1.5">
+          {icon}
+          <span
+            className={`text-sm font-bold leading-tight sm:text-[0.95rem] ${locked ? "text-kal-text-secondary" : "text-kal-text"}`}
+          >
+            {title}
+          </span>
+        </div>
+        <p className="mt-0.5 text-[9px] font-medium uppercase leading-snug tracking-wide text-kal-muted sm:text-[10px]">
+          {subtitle}
+        </p>
+      </div>
+    </>
+  );
+
   if (locked) {
     return (
       <div
-        className={`${order} group relative flex min-h-[148px] flex-col items-center justify-center rounded-[1.35rem] border-2 border-kal-border bg-kal-card-muted px-5 py-8 text-center opacity-65 kal-shadow-card`}
+        className={`${plannerCardShell} bg-kal-card-muted pr-12 opacity-65 sm:pr-14`}
       >
-        <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-kal-card-muted px-2.5 py-1 text-[10px] font-semibold text-kal-text-secondary">
-          <Lock className="h-3 w-3" />
+        <span className="absolute right-2 top-2 flex items-center gap-0.5 rounded-full bg-kal-card px-1.5 py-0.5 text-[9px] font-semibold text-kal-text-secondary ring-1 ring-kal-border/60">
+          <Lock className="h-2.5 w-2.5" />
           Pro
         </span>
-        <span className="text-3xl leading-none grayscale" aria-hidden>
-          {emoji}
-        </span>
-        <span className="mt-3 flex items-center gap-2 text-base font-bold text-kal-text-secondary">
-          {icon}
-          {title}
-        </span>
-        <span className="mt-2 max-w-[14rem] text-[11px] font-medium uppercase tracking-wide text-kal-muted">
-          {subtitle}
-        </span>
+        {body}
       </div>
     );
   }
@@ -49,18 +65,9 @@ function PlannerCard({
   return (
     <Link
       href={href}
-      className={`${order} group flex min-h-[148px] flex-col items-center justify-center rounded-[1.35rem] border-2 border-kal-border bg-kal-card px-5 py-8 text-center kal-shadow-card transition-[border-color,background-color,box-shadow,transform] duration-200 will-change-transform hover:border-kal-accent/45 hover:bg-kal-accent-soft/50 hover:shadow-md active:scale-[0.99]`}
+      className={`${plannerCardShell} bg-kal-card transition-[border-color,background-color,box-shadow,transform] duration-200 will-change-transform hover:border-kal-accent/45 hover:bg-kal-accent-soft/50 hover:shadow-md active:scale-[0.99]`}
     >
-      <span className="text-3xl leading-none" aria-hidden>
-        {emoji}
-      </span>
-      <span className="mt-3 flex items-center gap-2 text-base font-bold text-kal-text">
-        {icon}
-        {title}
-      </span>
-      <span className="mt-2 max-w-[14rem] text-[11px] font-medium uppercase tracking-wide text-kal-muted">
-        {subtitle}
-      </span>
+      {body}
     </Link>
   );
 }
@@ -89,7 +96,7 @@ export function PlanMyDayPage() {
         Back to today
       </Link>
 
-      <header className="relative mb-10 text-center sm:mb-12 sm:text-left">
+      <header className="relative mb-6 text-center sm:mb-8 sm:text-left">
         <p className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-kal-accent">
           Planning
         </p>
@@ -103,34 +110,32 @@ export function PlanMyDayPage() {
         </p>
       </header>
 
-      <div className="relative flex flex-col gap-5 sm:gap-6">
+      <div className="relative grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-2.5">
         <PlannerCard
           href="/daily-plan"
           emoji="📋"
           icon={
             <CalendarDays
-              className="h-5 w-5 text-kal-accent opacity-85 group-hover:opacity-100"
+              className="h-3.5 w-3.5 shrink-0 text-kal-accent opacity-85 group-hover:opacity-100 sm:h-4 sm:w-4"
               aria-hidden
             />
           }
           title="Daily planner"
           subtitle="Unified list — typed, voice & handwritten"
           locked={false}
-          order="order-1"
         />
         <PlannerCard
           href="/dictate-day"
           emoji="🎤"
           icon={
             <Mic
-              className="h-5 w-5 text-kal-accent opacity-85 group-hover:opacity-100"
+              className="h-3.5 w-3.5 shrink-0 text-kal-accent opacity-85 group-hover:opacity-100 sm:h-4 sm:w-4"
               aria-hidden
             />
           }
           title="Dictate My Day"
           subtitle="Speak — smart timed tasks"
           locked={dictateLocked}
-          order="order-2"
         />
 
         <PlannerCard
@@ -138,14 +143,13 @@ export function PlanMyDayPage() {
           emoji="📸"
           icon={
             <Camera
-              className="h-5 w-5 text-kal-accent opacity-85 group-hover:opacity-100"
+              className="h-3.5 w-3.5 shrink-0 text-kal-accent opacity-85 group-hover:opacity-100 sm:h-4 sm:w-4"
               aria-hidden
             />
           }
           title="Handwritten"
           subtitle="Snap your list — camera & OCR"
           locked={handwrittenLocked}
-          order="order-3"
         />
 
         <PlannerCard
@@ -153,14 +157,13 @@ export function PlanMyDayPage() {
           emoji="✍️"
           icon={
             <PenLine
-              className="h-5 w-5 text-kal-accent opacity-85 group-hover:opacity-100"
+              className="h-3.5 w-3.5 shrink-0 text-kal-accent opacity-85 group-hover:opacity-100 sm:h-4 sm:w-4"
               aria-hidden
             />
           }
           title="Self type"
           subtitle="Type & edit your day's plan"
           locked={false}
-          order="order-4"
         />
       </div>
 

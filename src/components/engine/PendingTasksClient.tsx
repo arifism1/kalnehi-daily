@@ -15,8 +15,6 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { useTaskStore } from "@/store/useTaskStore";
 import type { Microtopic, Task } from "@/store/useTaskStore";
 
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-
 import { EngineCard, EngineHero } from "./EngineHero";
 
 function taskTitle(t: Task, microtopicById: Record<string, Microtopic>) {
@@ -32,7 +30,6 @@ export function PendingTasksClient() {
   const microRecord = useTaskStore((s) => s.microtopics);
 
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<Task | null>(null);
 
   const { missed, upcoming } = useMemo(() => {
     const tasks = Object.values(tasksRecord);
@@ -61,15 +58,13 @@ export function PendingTasksClient() {
     }
   };
 
-  const confirmDelete = async () => {
-    if (!pendingDelete || !userId) return;
-    const id = pendingDelete.id;
-    setBusyId(id);
+  const deleteTask = async (t: Task) => {
+    if (!userId) return;
+    setBusyId(t.id);
     try {
-      await deleteTaskWithUndo(id, userId);
+      await deleteTaskWithUndo(t.id, userId);
     } finally {
       setBusyId(null);
-      setPendingDelete(null);
     }
   };
 
@@ -114,8 +109,8 @@ export function PendingTasksClient() {
                   <button
                     type="button"
                     disabled={busyId === t.id}
-                    onClick={() => setPendingDelete(t)}
-                    className="inline-flex items-center gap-1 rounded-lg border border-slate-600 px-3 py-2 text-xs font-semibold text-zinc-300 hover:text-rose-300"
+                    onClick={() => void deleteTask(t)}
+                    className="inline-flex items-center gap-1 rounded-lg border border-slate-600 px-3 py-2 text-xs font-semibold text-zinc-300 hover:border-rose-500/50 hover:text-rose-300"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                     Delete
@@ -146,18 +141,6 @@ export function PendingTasksClient() {
           </ul>
         )}
       </EngineCard>
-
-      <ConfirmDialog
-        open={pendingDelete != null}
-        title="Delete task?"
-        description="Remove this task from your plan permanently?"
-        confirmLabel="Delete"
-        cancelLabel="Cancel"
-        danger
-        busy={busyId === pendingDelete?.id}
-        onCancel={() => !busyId && setPendingDelete(null)}
-        onConfirm={() => void confirmDelete()}
-      />
     </div>
   );
 }

@@ -6,14 +6,16 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { insertDailyTask } from "@/actions/dailyPlan";
 import {
   DailyPlanPreviewStaging,
+  isPreviewRowIncluded,
   type DailyPlanPreviewRow,
 } from "@/components/planner/DailyPlanPreviewStaging";
 import { slotFromStartEnd } from "@/lib/dailyPlanTime";
-import { dbTimeFromTwelveHour } from "@/lib/taskTime";
+import type { VoiceDraftTask } from "@/lib/voiceDraftFromGroq";
 import { minutesBetweenHHMM } from "@/lib/voiceIst";
 
-const HOURS = Array.from({ length: 12 }, (_, i) => i + 1);
-const MINUTES = Array.from({ length: 60 }, (_, i) => i);
+type ParseResponse =
+  | { ok: true; tasks: VoiceDraftTask[] }
+  | { ok: false; error: string; openRawFallback?: boolean };
 
 type Props = {
   planDate: string;
@@ -30,28 +32,42 @@ function emptyPreviewRow(): DailyPlanPreviewRow {
   };
 }
 
+function voiceDraftToRow(
+  t: VoiceDraftTask,
+  sourceRaw: string,
+): DailyPlanPreviewRow {
+  return {
+    id: crypto.randomUUID(),
+    name: t.taskTitle,
+    startInput: t.start_time ?? "",
+    endInput: t.end_time ?? "",
+    duration: t.duration,
+    sourceRaw,
+  };
+}
+
 export function DailyPlanTypedQuickAdd({ planDate, onAdded }: Props) {
   const areaRef = useRef<HTMLTextAreaElement>(null);
-  const [title, setTitle] = useState("");
-  const [hour12, setHour12] = useState<string>("");
-  const [minute, setMinute] = useState("0");
-  const [period, setPeriod] = useState<"AM" | "PM">("AM");
+  const [inputText, setInputText] = useState("");
+  /** Keeps latest text for Add to preview — avoids stale closure if useCallback deps omit inputText. */
+  const inputTextRef = useRef(inputText);
+  inputTextRef.current = inputText;
   const [previewRows, setPreviewRows] = useState<DailyPlanPreviewRow[]>(() => [
     emptyPreviewRow(),
   ]);
   const previewRowsRef = useRef(previewRows);
   previewRowsRef.current = previewRows;
 
+  const [parsing, setParsing] = useState(false);
   const [committing, setCommitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [parseHint, setParseHint] = useState<string | null>(null);
 
   useEffect(() => {
     setPreviewRows([emptyPreviewRow()]);
-    setTitle("");
-    setHour12("");
-    setMinute("0");
-    setPeriod("AM");
+    setInputText("");
     setError(null);
+    setParseHint(null);
   }, [planDate]);
 
   useEffect(() => {
@@ -59,55 +75,83 @@ export function DailyPlanTypedQuickAdd({ planDate, onAdded }: Props) {
     return () => cancelAnimationFrame(id);
   }, []);
 
-  const startEndFromPickers = useCallback((): {
-    start_input: string;
-    end_input: string;
-  } => {
-    if (hour12 === "") return { start_input: "", end_input: "" };
-    const h = Number(hour12);
-    const m = Number(minute);
-    if (!Number.isFinite(h) || !Number.isFinite(m)) {
-      return { start_input: "", end_input: "" };
-    }
-    const start_time = dbTimeFromTwelveHour({
-      hour12: h,
-      minute: m,
-      period,
-    });
-    const si = start_time ? start_time.slice(0, 5) : "";
-    return { start_input: si, end_input: "" };
-  }, [hour12, minute, period]);
-
-  const addCurrentToPreview = useCallback(() => {
-    const name = title.trim();
-    if (!name) {
-      setError("Add a task name.");
+  const addNaturalLanguageToPreview = useCallback(async () => {
+    const raw = inputTextRef.current.trim();
+    if (!raw) {
+      setError("Type what you want to add.");
       return;
     }
     setError(null);
-    const { start_input, end_input } = startEndFromPickers();
-    const mins = minutesBetweenHHMM(
-      start_input || null,
-      end_input || null,
-    );
-    const row: DailyPlanPreviewRow = {
-      id: crypto.randomUUID(),
-      name,
-      startInput: start_input,
-      endInput: end_input,
-      duration: mins != null ? `${mins}m` : null,
-    };
-    setPreviewRows((prev) => {
-      const kept = prev.filter(
-        (r) => r.name.trim() || r.startInput || r.endInput,
+    setParseHint(null);
+    setParsing(true);
+    try {
+      const parseRes = await fetch("/api/voice-parse-draft", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          transcript: raw,
+          log_date: planDate,
+          occurred_at: new Date().toISOString(),
+        }),
+      });
+      const res = (await parseRes.json()) as ParseResponse;
+
+      if (!res.ok) {
+        if (res.openRawFallback) {
+          setParseHint(
+            "Could not auto-parse times — showing your text below; edit the row, then add.",
+          );
+          const fallbackRow: DailyPlanPreviewRow = {
+            id: crypto.randomUUID(),
+            name: raw.slice(0, 500),
+            startInput: "",
+            endInput: "",
+            duration: null,
+            sourceRaw: raw.slice(0, 12_000),
+          };
+          setPreviewRows((prev) => {
+            const kept = prev.filter(
+              (r) => r.name.trim() || r.startInput || r.endInput,
+            );
+            return [...kept, fallbackRow, emptyPreviewRow()];
+          });
+        } else {
+          setError(res.error);
+        }
+        return;
+      }
+
+      const chunk = raw.slice(0, 12_000);
+      const newRows = res.tasks.map((t) => voiceDraftToRow(t, chunk));
+      setPreviewRows((prev) => {
+        const kept = prev.filter(
+          (r) => r.name.trim() || r.startInput || r.endInput,
+        );
+        return [...kept, ...newRows, emptyPreviewRow()];
+      });
+    } catch {
+      setParseHint(
+        "Network error — added your text as a single task; edit times if needed.",
       );
-      return [...kept, row, emptyPreviewRow()];
-    });
-    setTitle("");
-    setHour12("");
-    setMinute("0");
-    setPeriod("AM");
-  }, [startEndFromPickers, title]);
+      const fallbackRow: DailyPlanPreviewRow = {
+        id: crypto.randomUUID(),
+        name: raw.slice(0, 500),
+        startInput: "",
+        endInput: "",
+        duration: null,
+        sourceRaw: raw.slice(0, 12_000),
+      };
+      setPreviewRows((prev) => {
+        const kept = prev.filter(
+          (r) => r.name.trim() || r.startInput || r.endInput,
+        );
+        return [...kept, fallbackRow, emptyPreviewRow()];
+      });
+    } finally {
+      setParsing(false);
+      setInputText("");
+    }
+  }, [planDate]);
 
   const updatePreviewRow = useCallback(
     (id: string, patch: Partial<DailyPlanPreviewRow>) => {
@@ -139,16 +183,16 @@ export function DailyPlanTypedQuickAdd({ planDate, onAdded }: Props) {
 
   const commitPreviewToPlan = useCallback(async () => {
     setError(null);
-    const named = previewRowsRef.current.filter((r) => r.name.trim());
-    if (named.length === 0) {
+    const toSave = previewRowsRef.current.filter(isPreviewRowIncluded);
+    if (toSave.length === 0) {
       setError(
-        "Add at least one task with a name to the preview (use Add to preview), then commit.",
+        "Add at least one task in the preview, or turn off Exclude on rows you want to save.",
       );
       return;
     }
     setCommitting(true);
     try {
-      for (const r of named) {
+      for (const r of toSave) {
         const { time_slot, time_start, time_end } = slotFromStartEnd(
           r.startInput,
           r.endInput,
@@ -161,7 +205,7 @@ export function DailyPlanTypedQuickAdd({ planDate, onAdded }: Props) {
           time_start,
           time_end,
           source: "typed",
-          source_raw_text: r.name.trim(),
+          source_raw_text: r.sourceRaw ?? r.name.trim(),
         });
         if (!res.ok) {
           setError(res.error);
@@ -169,6 +213,7 @@ export function DailyPlanTypedQuickAdd({ planDate, onAdded }: Props) {
         }
       }
       setPreviewRows([emptyPreviewRow()]);
+      setParseHint(null);
       window.dispatchEvent(new Event("kalnehi-daily-plan-synced"));
       onAdded?.();
     } catch (e) {
@@ -178,7 +223,7 @@ export function DailyPlanTypedQuickAdd({ planDate, onAdded }: Props) {
     }
   }, [planDate, onAdded]);
 
-  const busy = committing;
+  const busy = committing || parsing;
 
   return (
     <div className="rounded-[1.25rem] border border-kal-border bg-kal-card kal-shadow-card p-4 sm:p-5">
@@ -186,69 +231,47 @@ export function DailyPlanTypedQuickAdd({ planDate, onAdded }: Props) {
         Quick add
       </p>
       <p className="mt-1 text-xs leading-relaxed text-kal-muted">
-        Queue tasks in the preview first, then add them all to today&apos;s plan in one
-        tap — same flow as dictate and handwritten.
+        Describe the task and time in plain English — e.g. &quot;study bio from 6 am to 7
+        am&quot;, &quot;revise physics chapter 5 at 9pm&quot;, or &quot;morning run 30
+        mins&quot;. We parse it with Groq, then you can edit before saving.
       </p>
-      <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
-        <label className="min-w-0 flex-1 text-[11px] font-medium text-kal-muted">
-          Task
+      <div className="mt-3">
+        <label className="block text-[11px] font-medium text-kal-muted">
+          Task (natural language)
           <textarea
             ref={areaRef}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            rows={2}
-            placeholder="What are you doing?"
-            className="mt-1 w-full resize-y rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2 text-sm text-kal-text placeholder:text-kal-muted"
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            rows={3}
+            placeholder="e.g. study bio from 6 am to 7 am"
+            disabled={busy}
+            className="mt-1 w-full resize-y rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-sm text-kal-text placeholder:text-kal-muted focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20 disabled:opacity-50"
           />
         </label>
-        <div className="flex flex-wrap gap-2">
-          <label className="text-[11px] font-medium text-kal-muted">
-            Start
-            <div className="mt-1 flex gap-1">
-              <select
-                value={hour12}
-                onChange={(e) => setHour12(e.target.value)}
-                className="min-h-[44px] rounded-lg border border-kal-border bg-kal-input-bg px-2 text-sm text-kal-text"
-              >
-                <option value="">—</option>
-                {HOURS.map((h) => (
-                  <option key={h} value={String(h)}>
-                    {h}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={minute}
-                onChange={(e) => setMinute(e.target.value)}
-                className="min-h-[44px] rounded-lg border border-kal-border bg-kal-input-bg px-2 text-sm text-kal-text"
-              >
-                {MINUTES.map((m) => (
-                  <option key={m} value={String(m)}>
-                    {String(m).padStart(2, "0")}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={period}
-                onChange={(e) => setPeriod(e.target.value as "AM" | "PM")}
-                className="min-h-[44px] rounded-lg border border-kal-border bg-kal-input-bg px-2 text-sm text-kal-text"
-              >
-                <option value="AM">AM</option>
-                <option value="PM">PM</option>
-              </select>
-            </div>
-          </label>
-        </div>
         <button
           type="button"
           disabled={busy}
-          onClick={() => addCurrentToPreview()}
-          className="inline-flex min-h-[48px] shrink-0 items-center justify-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-5 text-sm font-bold text-kal-text-secondary shadow-sm hover:bg-kal-border/30 disabled:opacity-40"
+          onClick={() => void addNaturalLanguageToPreview()}
+          className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-5 text-sm font-bold text-kal-text-secondary shadow-sm hover:bg-kal-border/30 disabled:opacity-40 sm:w-auto"
         >
-          <Plus className="h-4 w-4" />
-          Add to preview
+          {parsing ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Parsing…
+            </>
+          ) : (
+            <>
+              <Plus className="h-4 w-4" />
+              Add to preview
+            </>
+          )}
         </button>
       </div>
+      {parseHint ? (
+        <p className="mt-2 text-xs text-kal-muted" role="status">
+          {parseHint}
+        </p>
+      ) : null}
       {error ? (
         <p className="mt-2 text-xs text-[var(--kal-danger-text)]" role="alert">
           {error}
@@ -258,7 +281,7 @@ export function DailyPlanTypedQuickAdd({ planDate, onAdded }: Props) {
       <DailyPlanPreviewStaging
         sectionId="typed-plan-staging"
         title="Preview (not saved yet)"
-        subtitle="Edit rows if needed, then tap Add to Today's Plan to save them to the live list below."
+        subtitle="All named rows are added by default. Check the box on a row only to exclude it. Edit title or times if needed, then tap Add to Today's Plan."
         rows={previewRows}
         onUpdateRow={updatePreviewRow}
         onRemoveRow={removePreviewRow}
@@ -271,7 +294,7 @@ export function DailyPlanTypedQuickAdd({ planDate, onAdded }: Props) {
           type="button"
           disabled={
             busy ||
-            !previewRows.some((r) => r.name.trim().length > 0)
+            !previewRows.some((r) => isPreviewRowIncluded(r))
           }
           onClick={() => void commitPreviewToPlan()}
           className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-kal-accent px-6 text-base font-semibold text-white shadow-sm hover:bg-kal-accent-hover disabled:opacity-40"
