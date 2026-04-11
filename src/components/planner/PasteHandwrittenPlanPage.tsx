@@ -13,7 +13,6 @@ import {
 import { insertDailyTask } from "@/actions/dailyPlan";
 import {
   parseHandwrittenPlannerPhoto,
-  parsePastedHandwrittenPlan,
   type ParsedPastedPlanTask,
 } from "@/actions/pasteHandwrittenPlan";
 import {
@@ -52,7 +51,7 @@ function toRows(tasks: ParsedPastedPlanTask[]): EditableRow[] {
 
 function buildSaveTasks(rows: EditableRow[]) {
   return rows
-    .filter((r) => r.name.trim().length > 0)
+    .filter((r) => r.name.trim().length > 0 && r.excludeFromCommit !== true)
     .map((r) => ({
       activityName: r.name.trim(),
       start_input: r.startInput,
@@ -172,35 +171,6 @@ export function PasteHandwrittenPlanPage() {
     [userId, hydrated, logDate, commitParsedTasks],
   );
 
-  const processWithAi = useCallback(async () => {
-    const text = rawText.trim();
-    if (!text) {
-      setHint(
-        "Scan a photo above or add text below, then tap \"Process with AI\".",
-      );
-      setRows([emptyRow()]);
-      return;
-    }
-    setPhase("parse");
-    setHint(null);
-    try {
-      const res = await parsePastedHandwrittenPlan(text);
-      if (!res.ok) {
-        setHint(res.error);
-        setRows([emptyRow()]);
-        setPhase("idle");
-        return;
-      }
-      commitParsedTasks(res.tasks);
-      setHint(null);
-    } catch (e) {
-      setHint(e instanceof Error ? e.message : "Could not process pasted text.");
-      setRows([emptyRow()]);
-    } finally {
-      setPhase("idle");
-    }
-  }, [rawText, commitParsedTasks]);
-
   const addCheckedToPlan = useCallback(async () => {
     setFormError(null);
     setSaveOk(false);
@@ -270,7 +240,7 @@ export function PasteHandwrittenPlanPage() {
           Handwritten Daily Plan
         </h1>
         <p className="mt-2 max-w-xl text-sm text-kal-muted">
-          Scan or paste your note — tasks appear in the preview box. When it looks right, tap Add to Today&apos;s Plan; they show up in Today&apos;s plan (live) below.
+          Scan your note — tasks appear in the preview box. When it looks right, tap Add to Today&apos;s Plan; they show up in Today&apos;s plan (live) below.
         </p>
         {userId ? (
           <label className="mt-4 block max-w-xs text-xs font-medium text-kal-muted">
@@ -369,38 +339,6 @@ export function PasteHandwrittenPlanPage() {
               </div>
             </details>
 
-            <div className="mt-3 rounded-xl border border-kal-border bg-kal-card-muted/50 p-3 text-xs text-kal-muted">
-              <span className="font-medium text-kal-text-secondary">Fallback:</span>{" "}
-              paste typed or OCR text below, then use Process with AI.
-            </div>
-
-            <div className="mt-3">
-              <textarea
-                rows={8}
-                value={rawText}
-                onChange={(e) => setRawText(e.target.value)}
-                disabled={!hydrated}
-                placeholder="Optional pasted schedule text..."
-                className="w-full resize-y rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2 text-sm text-kal-text placeholder:text-kal-muted disabled:opacity-50"
-              />
-            </div>
-
-            <button
-              type="button"
-              onClick={() => void processWithAi()}
-              disabled={busy || !hydrated}
-              className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-kal-accent px-4 text-sm font-semibold text-white shadow-sm hover:bg-kal-accent-hover disabled:opacity-40"
-            >
-              {phase === "parse" ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Processing…
-                </>
-              ) : (
-                "Process with AI"
-              )}
-            </button>
-
             {hint ? (
               <p className="mt-3 rounded-lg border border-[var(--kal-warn-border)] bg-[var(--kal-warn-soft)] px-3 py-2 text-xs text-[var(--kal-warn-text)]">
                 {hint}
@@ -418,7 +356,7 @@ export function PasteHandwrittenPlanPage() {
               <DailyPlanPreviewStaging
                 sectionId="handwritten-staging"
                 title="Preview (not saved yet)"
-                subtitle="Your scan or AI parse shows up here first. Edit if needed, remove a row with the trash icon, then tap Add to Today's Plan to copy these into the live list underneath."
+                subtitle="Your scan or AI parse shows up here first. Edit if needed; check the box on a row only to exclude it from Add to Today's Plan. Then tap Add to Today's Plan to copy the rest into the live list underneath."
                 rows={rows}
                 onUpdateRow={updateRow}
                 onRemoveRow={removeRow}

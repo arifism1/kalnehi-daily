@@ -21,7 +21,6 @@ import { getAllStudySessions, type StudySessionLog } from "@/lib/studySessionsId
 import { getAllExecutionSessions } from "@/lib/taskIdb";
 import type { ExecutionSessionRow } from "@/lib/taskIdb";
 import { StudySessionsLog } from "@/components/study/StudySessionsLog";
-import { VoiceDayStrip } from "@/components/voice/VoiceDayStrip";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useTaskStore } from "@/store/useTaskStore";
 
@@ -270,8 +269,6 @@ export function ExecutionLogClient() {
               </button>
             </div>
           </div>
-
-          <VoiceDayStrip logDate={selectedDay} />
 
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
             <div className="rounded-2xl border border-kal-border bg-kal-card-muted px-4 py-3">

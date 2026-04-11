@@ -1,7 +1,19 @@
 "use client";
 
 import { addDays, format, parseISO, startOfMonth } from "date-fns";
-import { Check, Loader2, Plus, Sparkles } from "lucide-react";
+import clsx from "clsx";
+import {
+  BookOpen,
+  Brain,
+  Check,
+  Droplets,
+  Loader2,
+  Moon,
+  Plus,
+  Sparkles,
+  Sunrise,
+} from "lucide-react";
+import type { CSSProperties } from "react";
 import {
   useCallback,
   useEffect,
@@ -15,6 +27,7 @@ import {
   fetchHabitsData,
   upsertHabitLogEntry,
 } from "@/actions/habits";
+import { CircularProgressRing } from "@/components/ui/CircularProgressRing";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
 import {
@@ -78,10 +91,7 @@ function habitCreatedYmd(habit: UserHabitRow): string {
   return habit.created_at.slice(0, 10);
 }
 
-function totalCompletedDays(
-  logs: HabitLogRow[],
-  habitId: string,
-): number {
+function totalCompletedDays(logs: HabitLogRow[], habitId: string): number {
   return logs.filter((l) => l.habit_id === habitId && l.completed).length;
 }
 
@@ -175,6 +185,68 @@ function dotVisualClass(kind: DotKind): string {
   }
 }
 
+type HabitPreset = { name: string; Icon: typeof BookOpen };
+
+const HABIT_PRESETS: HabitPreset[] = [
+  { name: "Read for 25 minutes", Icon: BookOpen },
+  { name: "Lights out by 11 PM", Icon: Moon },
+  { name: "One focused practice block", Icon: Brain },
+  { name: "Drink 8 glasses of water", Icon: Droplets },
+  { name: "10-minute morning walk", Icon: Sunrise },
+  { name: "Review today's mistakes", Icon: Sparkles },
+];
+
+function ConfettiCelebration({
+  burstKey,
+}: {
+  burstKey: number;
+}) {
+  const particles = useMemo(() => {
+    return Array.from({ length: 22 }, (_, i) => {
+      const angle = (i / 22) * Math.PI * 2 + (i % 5) * 0.08;
+      const dist = 36 + (i % 7) * 8;
+      const dx = `${Math.cos(angle) * dist}px`;
+      const dy = `${Math.sin(angle) * dist - 12}px`;
+      const dr = `${180 + (i % 5) * 40}deg`;
+      const colors = [
+        "bg-rose-400",
+        "bg-amber-400",
+        "bg-emerald-400",
+        "bg-sky-400",
+        "bg-violet-400",
+      ];
+      return { dx, dy, dr, color: colors[i % colors.length], delay: i * 14 };
+    });
+  }, [burstKey]);
+
+  if (!burstKey) return null;
+
+  return (
+    <div
+      className="pointer-events-none absolute left-1/2 top-1/2 z-20 h-0 w-0 overflow-visible"
+      aria-hidden
+    >
+      {particles.map((p, i) => (
+        <span
+          key={`${burstKey}-${i}`}
+          style={
+            {
+              "--dx": p.dx,
+              "--dy": p.dy,
+              "--dr": p.dr,
+              animationDelay: `${p.delay}ms`,
+            } as CSSProperties
+          }
+          className={clsx(
+            "absolute h-2 w-1.5 rounded-[2px] motion-safe:animate-[confetti-burst_0.78s_ease-out_forwards] motion-reduce:hidden",
+            p.color,
+          )}
+        />
+      ))}
+    </div>
+  );
+}
+
 export function HabitMakerPage() {
   const { limited: habitsLimited } = useFeatureAccess("habits");
   const userId = useAuthStore((s) => s.user?.id);
@@ -185,6 +257,13 @@ export function HabitMakerPage() {
   const [newName, setNewName] = useState("");
   const [adding, setAdding] = useState(false);
   const [recoveryBusy, setRecoveryBusy] = useState(false);
+  const [rowEnterId, setRowEnterId] = useState<string | null>(null);
+  const rowEnterTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [celebrateByHabit, setCelebrateByHabit] = useState<
+    Record<string, number>
+  >({});
+  const [streakPopHabitId, setStreakPopHabitId] = useState<string | null>(null);
+  const streakPopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const commentTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(
     new Map(),
@@ -361,49 +440,110 @@ export function HabitMakerPage() {
   useEffect(() => {
     return () => {
       commentTimers.current.forEach((t) => clearTimeout(t));
+      if (rowEnterTimer.current) clearTimeout(rowEnterTimer.current);
+      if (streakPopTimer.current) clearTimeout(streakPopTimer.current);
     };
   }, []);
 
-  const addHabit = useCallback(async () => {
-    if (!userId || adding) return;
-    const name = newName.trim().slice(0, 200);
+  const scheduleRowEnterAnimation = useCallback((habitId: string) => {
+    if (rowEnterTimer.current) clearTimeout(rowEnterTimer.current);
+    setRowEnterId(habitId);
+    rowEnterTimer.current = setTimeout(() => {
+      setRowEnterId(null);
+      rowEnterTimer.current = null;
+    }, 650);
+  }, []);
+
+  const commitNewHabit = useCallback(
+    async (rawName: string) => {
+      if (!userId || adding) return;
+      const name = rawName.trim().slice(0, 200);
+      if (!name) return;
+      setAdding(true);
+      setNotice(null);
+      const id = crypto.randomUUID();
+      const now = new Date().toISOString();
+      const row: UserHabitRow = {
+        id,
+        user_id: userId,
+        name,
+        created_at: now,
+        updated_at: now,
+      };
+      const base = bundle ?? {
+        habits: [],
+        logs: [],
+        updatedAt: Date.now(),
+      };
+      const next: HabitBundle = {
+        ...base,
+        habits: [...base.habits, row],
+        updatedAt: Date.now(),
+      };
+      setBundle(next);
+      await saveHabitBundleCached(next);
+      scheduleRowEnterAnimation(id);
+
+      const res = await createUserHabit({ id, name });
+      if (!res.ok) {
+        await enqueueHabitOutbox(userId, { kind: "habit_create", id, name });
+        setNotice("Habit saved on this device — will sync when online.");
+      } else {
+        void refreshFromRemote();
+      }
+      setAdding(false);
+    },
+    [userId, adding, bundle, refreshFromRemote, scheduleRowEnterAnimation],
+  );
+
+  const addHabitFromInput = useCallback(async () => {
+    const name = newName.trim();
     if (!name) return;
-    setAdding(true);
-    setNotice(null);
-    const id = crypto.randomUUID();
-    const now = new Date().toISOString();
-    const row: UserHabitRow = {
-      id,
-      user_id: userId,
-      name,
-      created_at: now,
-      updated_at: now,
-    };
-    const base = bundle ?? {
-      habits: [],
-      logs: [],
-      updatedAt: Date.now(),
-    };
-    const next: HabitBundle = {
-      ...base,
-      habits: [...base.habits, row],
-      updatedAt: Date.now(),
-    };
-    setBundle(next);
-    await saveHabitBundleCached(next);
+    await commitNewHabit(name);
     setNewName("");
+  }, [commitNewHabit, newName]);
 
-    const res = await createUserHabit({ id, name });
-    if (!res.ok) {
-      await enqueueHabitOutbox(userId, { kind: "habit_create", id, name });
-      setNotice("Habit saved on this device — will sync when online.");
-    } else {
-      void refreshFromRemote();
-    }
-    setAdding(false);
-  }, [userId, newName, adding, bundle, refreshFromRemote]);
+  const addPresetHabit = useCallback(
+    async (name: string) => {
+      await commitNewHabit(name);
+    },
+    [commitNewHabit],
+  );
 
-  const habitCards = useMemo(() => habits, [habits]);
+  const habitNameTaken = useCallback(
+    (label: string) =>
+      habits.some(
+        (h) => h.name.trim().toLowerCase() === label.trim().toLowerCase(),
+      ),
+    [habits],
+  );
+
+  const doneTodayCount = useMemo(() => {
+    return habits.filter((h) => isCompletedOn(logs, h.id, today)).length;
+  }, [habits, logs, today]);
+
+  const dailyProgressPercent =
+    habits.length === 0 ? 0 : (doneTodayCount / habits.length) * 100;
+
+  const onToggleCheckIn = useCallback(
+    (habitId: string, checked: boolean, tl: HabitLogRow | undefined) => {
+      const willComplete = !checked;
+      void persistLog(habitId, !checked, tl?.comment ?? null, tl);
+      if (willComplete) {
+        setCelebrateByHabit((prev) => ({
+          ...prev,
+          [habitId]: (prev[habitId] ?? 0) + 1,
+        }));
+        if (streakPopTimer.current) clearTimeout(streakPopTimer.current);
+        setStreakPopHabitId(habitId);
+        streakPopTimer.current = setTimeout(() => {
+          setStreakPopHabitId(null);
+          streakPopTimer.current = null;
+        }, 650);
+      }
+    },
+    [persistLog],
+  );
 
   if (!userId) {
     return (
@@ -425,7 +565,11 @@ export function HabitMakerPage() {
   return (
     <div className="relative mx-auto max-w-3xl pb-16">
       <div
-        className="pointer-events-none absolute -left-16 top-10 h-48 w-48 rounded-full bg-kal-accent/10 blur-3xl"
+        className="pointer-events-none absolute -left-16 top-10 h-48 w-48 rounded-full bg-kal-accent/10 blur-3xl motion-safe:animate-pulse"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute -right-10 bottom-40 h-40 w-40 rounded-full bg-rose-200/30 blur-3xl dark:bg-rose-900/20"
         aria-hidden
       />
 
@@ -437,17 +581,18 @@ export function HabitMakerPage() {
           Habit Maker
         </h1>
         <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-kal-muted sm:text-base">
-          Build unbreakable daily discipline
+          Small wins, stacked daily — make consistency feel as good as the
+          results.
         </p>
       </header>
 
       {notice ? (
-        <p className="mb-6 rounded-xl border border-kal-accent/20 bg-kal-accent-soft/50 px-4 py-3 text-sm text-kal-text-secondary">
+        <p className="mb-6 rounded-xl border border-kal-accent/20 bg-kal-accent-soft/50 px-4 py-3 text-sm text-kal-text-secondary motion-safe:animate-[habit-row-enter_0.45s_ease-out_both]">
           {notice}
         </p>
       ) : null}
 
-      <section className="mb-10 rounded-2xl border border-kal-border bg-kal-card px-5 py-6 kal-shadow-card sm:px-8 sm:py-7">
+      <section className="mb-8 rounded-2xl border border-kal-border bg-kal-card px-5 py-6 kal-shadow-card sm:px-8 sm:py-7">
         <h2 className="text-sm font-bold text-kal-text">Add new habit</h2>
         <p className="mt-1 text-xs text-kal-text-secondary sm:text-sm">
           Name what you&apos;ll repeat every day — keep it concrete.
@@ -456,6 +601,9 @@ export function HabitMakerPage() {
           <input
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") void addHabitFromInput();
+            }}
             placeholder="e.g. Study 4 hours, No phone after 10 PM…"
             className="min-h-[48px] w-full flex-1 rounded-xl border border-kal-border bg-kal-page px-4 text-sm text-kal-text placeholder:text-kal-muted focus:border-kal-accent/45 focus:outline-none focus:ring-2 focus:ring-kal-accent/15"
             maxLength={200}
@@ -463,8 +611,8 @@ export function HabitMakerPage() {
           <button
             type="button"
             disabled={adding || !newName.trim()}
-            onClick={() => void addHabit()}
-            className="inline-flex min-h-[48px] shrink-0 items-center justify-center gap-2 rounded-xl bg-kal-accent px-5 py-3 text-xs font-bold uppercase tracking-wide text-kal-accent-foreground shadow-sm transition-colors hover:bg-kal-accent-hover disabled:opacity-45"
+            onClick={() => void addHabitFromInput()}
+            className="inline-flex min-h-[48px] shrink-0 items-center justify-center gap-2 rounded-xl bg-kal-accent px-5 py-3 text-xs font-bold uppercase tracking-wide text-kal-accent-foreground shadow-sm transition-colors hover:bg-kal-accent-hover enabled:motion-safe:active:scale-[0.98] disabled:opacity-45 motion-reduce:enabled:active:scale-100"
           >
             {adding ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -476,17 +624,268 @@ export function HabitMakerPage() {
         </div>
       </section>
 
-      <section className="mb-10">
-        <h2 className="mb-4 text-sm font-bold uppercase tracking-wide text-kal-muted">
-          My habits
-        </h2>
-        {habitCards.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-kal-border bg-kal-card-muted/50 px-6 py-12 text-center text-sm text-kal-muted">
-            No habits yet — add your first one above.
+      {habits.length === 0 ? (
+        <section className="mb-10 overflow-hidden rounded-3xl border border-dashed border-kal-border/90 bg-gradient-to-br from-kal-accent-soft/60 via-kal-card to-kal-card px-6 py-10 text-center kal-shadow-card sm:px-10 sm:py-12 dark:from-kal-accent-soft/25">
+          <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-rose-100 to-amber-50 shadow-inner ring-1 ring-rose-200/60 dark:from-rose-950/50 dark:to-kal-card-muted dark:ring-rose-900/40">
+            <div className="relative">
+              <Sparkles
+                className="h-11 w-11 text-rose-500 dark:text-rose-300"
+                strokeWidth={1.75}
+              />
+              <span className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-kal-accent text-[11px] font-bold text-kal-accent-foreground shadow-md">
+                ✓
+              </span>
+            </div>
+          </div>
+          <p className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-kal-accent">
+            Your streak starts here
           </p>
-        ) : (
+          <h2 className="mt-2 text-xl font-bold tracking-tight text-kal-text sm:text-2xl">
+            Let&apos;s build some unbreakable habits 🔥
+          </h2>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-kal-muted">
+            Pick a starter below or name your own — every rep counts.
+          </p>
+          <ul className="mx-auto mt-8 grid max-w-lg grid-cols-1 gap-3 sm:grid-cols-2">
+            {HABIT_PRESETS.map(({ name, Icon }) => {
+              const taken = habitNameTaken(name);
+              return (
+                <li key={name}>
+                  <button
+                    type="button"
+                    disabled={adding || taken}
+                    onClick={() => void addPresetHabit(name)}
+                    className={clsx(
+                      "group flex w-full items-center gap-3 rounded-2xl border bg-kal-card px-4 py-3.5 text-left text-sm font-semibold text-kal-text shadow-sm transition-all",
+                      taken
+                        ? "cursor-not-allowed border-kal-border/60 opacity-50"
+                        : "border-kal-border hover:border-kal-accent/35 hover:shadow-md motion-safe:hover:-translate-y-0.5",
+                    )}
+                  >
+                    <span
+                      className={clsx(
+                        "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition-colors",
+                        taken
+                          ? "border-kal-border bg-kal-card-muted text-kal-muted"
+                          : "border-rose-100 bg-rose-50 text-rose-600 group-hover:border-kal-accent/30 group-hover:bg-kal-accent-soft dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-200",
+                      )}
+                    >
+                      <Icon className="h-5 w-5" strokeWidth={2} />
+                    </span>
+                    <span className="min-w-0 leading-snug">{name}</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
+
+      {habits.length > 0 ? (
+        <section className="relative mb-10 overflow-hidden rounded-3xl border border-kal-border bg-gradient-to-br from-white via-kal-card to-kal-accent-soft/30 px-5 py-8 kal-shadow-card sm:px-10 sm:py-10 dark:from-kal-card dark:via-kal-card dark:to-kal-accent-soft/20">
+          <div
+            className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-kal-accent/5 blur-3xl"
+            aria-hidden
+          />
+          <div className="relative flex flex-col items-center gap-8 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-center sm:gap-8">
+              <CircularProgressRing
+                percent={dailyProgressPercent}
+                gradientId="kal-habit-daily-ring"
+                size={168}
+                strokeWidth={10}
+                progressClassName="motion-safe:transition-[stroke-dasharray] motion-safe:duration-[780ms] motion-safe:ease-out motion-reduce:transition-none"
+                trackClassName="text-slate-200/95 dark:text-slate-600"
+                className="drop-shadow-sm"
+              >
+                <p className="text-3xl font-extrabold tabular-nums leading-none text-kal-text">
+                  {doneTodayCount}
+                  <span className="text-lg font-bold text-kal-muted">
+                    /{habits.length}
+                  </span>
+                </p>
+                <p className="mt-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-kal-muted">
+                  done today
+                </p>
+              </CircularProgressRing>
+              <div className="max-w-sm text-center sm:text-left">
+                <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-kal-accent">
+                  Today&apos;s check-in
+                </h2>
+                <p className="mt-2 text-xl font-bold tracking-tight text-kal-text sm:text-2xl">
+                  {doneTodayCount === habits.length
+                    ? "You showed up for all of them."
+                    : doneTodayCount > 0
+                      ? "Momentum is building — keep going."
+                      : "Your canvas is clear — paint the first check."}
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-kal-muted">
+                  For{" "}
+                  <span className="font-semibold tabular-nums text-kal-text">
+                    {today}
+                  </span>{" "}
+                  — tap when you&apos;ve earned it. Notes autosave quietly.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <ul className="relative mt-10 flex flex-col gap-4">
+            {habits.map((h) => {
+              const tl = todayLog(h.id);
+              const checked = tl?.completed ?? false;
+              const commentVal = tl?.comment ?? "";
+              const streak = habitStreak(logs, h.id, today);
+              const burstKey = celebrateByHabit[h.id] ?? 0;
+              return (
+                <li
+                  key={`check-${h.id}`}
+                  className="group/check relative overflow-hidden rounded-2xl border border-kal-border/90 bg-kal-card/95 px-5 py-6 shadow-sm transition-[box-shadow,transform,border-color] motion-safe:duration-300 motion-safe:ease-out hover:border-kal-accent/25 hover:shadow-[0_12px_40px_-12px_rgba(239,68,68,0.18)] motion-safe:hover:-translate-y-0.5 dark:bg-kal-card sm:px-8 sm:py-7"
+                >
+                  {burstKey ? (
+                    <ConfettiCelebration burstKey={burstKey} />
+                  ) : null}
+                  <div className="relative z-[1] flex flex-wrap items-start justify-between gap-3">
+                    <p className="text-sm font-bold text-kal-text sm:text-base">
+                      {h.name}
+                    </p>
+                    {!habitsLimited ? (
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={clsx(
+                            "inline-flex items-center gap-1 rounded-full bg-kal-card-muted px-2.5 py-1 text-[11px] font-bold tabular-nums text-kal-text ring-1 ring-kal-border/70",
+                            streakPopHabitId === h.id &&
+                              "motion-safe:animate-[streak-pop_0.55s_ease-out_both] motion-reduce:animate-none",
+                          )}
+                        >
+                          <span aria-hidden>🔥</span>
+                          {streak} day streak
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="rounded-full bg-kal-card-muted px-2.5 py-1 text-[10px] font-semibold text-kal-muted">
+                        Streaks in Pro
+                      </span>
+                    )}
+                  </div>
+                  <div className="relative z-[1] mt-5 flex items-start gap-4">
+                    <button
+                      type="button"
+                      role="checkbox"
+                      aria-checked={checked}
+                      aria-label={`Did you complete ${h.name} today?`}
+                      onClick={() => onToggleCheckIn(h.id, checked, tl)}
+                      className={clsx(
+                        "relative mt-0.5 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 transition-[transform,box-shadow,background-color,border-color] motion-safe:duration-200",
+                        checked
+                          ? "border-kal-accent bg-kal-accent text-kal-accent-foreground shadow-[0_0_0_4px_rgba(239,68,68,0.12)] motion-safe:animate-[completion-pop_0.55s_ease-out_both] motion-reduce:animate-none"
+                          : "border-kal-border bg-kal-page text-transparent shadow-sm hover:border-kal-accent/45 hover:shadow-md motion-safe:hover:scale-[1.03]",
+                      )}
+                    >
+                      <Check className="h-6 w-6" strokeWidth={3} />
+                    </button>
+                    <div className="min-w-0 flex-1">
+                      <span className="text-base font-semibold text-kal-text">
+                        Did it today?
+                      </span>
+                      <p className="mt-1 text-xs text-kal-muted">
+                        {checked
+                          ? "Beautiful — that’s one more rep for future you."
+                          : "Tap when you’ve completed this habit today."}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="relative z-[1] mt-4">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-kal-muted">
+                      Optional note
+                    </span>
+                    <textarea
+                      value={commentVal}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setBundle((prev) => {
+                          const base = prev ?? {
+                            habits,
+                            logs,
+                            updatedAt: Date.now(),
+                          };
+                          const now = new Date().toISOString();
+                          const prevLog = base.logs.find(
+                            (l) =>
+                              l.habit_id === h.id && l.log_date === today,
+                          );
+                          const row: HabitLogRow = {
+                            id: prevLog?.id ?? crypto.randomUUID(),
+                            user_id: userId,
+                            habit_id: h.id,
+                            log_date: today,
+                            completed: checked,
+                            comment: v.trim().slice(0, 1_000) || null,
+                            created_at: prevLog?.created_at ?? now,
+                            updated_at: now,
+                          };
+                          const next: HabitBundle = {
+                            ...base,
+                            logs: upsertLogInList(base.logs, row),
+                            updatedAt: Date.now(),
+                          };
+                          void saveHabitBundleCached(next);
+                          scheduleCommentSave(h.id, v);
+                          return next;
+                        });
+                      }}
+                      rows={2}
+                      placeholder="How did it feel? Anything to remember?"
+                      className="mt-1.5 w-full resize-y rounded-xl border border-kal-border bg-kal-page px-3 py-2.5 text-sm text-kal-text placeholder:text-kal-muted focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/15"
+                    />
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
+
+      {habits.length > 0 && showRecoveryBanner ? (
+        <div className="mb-10 overflow-hidden rounded-2xl border border-orange-200/90 bg-gradient-to-br from-orange-50 via-kal-card to-kal-card px-6 py-7 kal-shadow-card motion-safe:animate-[habit-row-enter_0.6s_ease-out_both] dark:border-orange-900/40 dark:from-orange-950/35 dark:via-kal-card dark:to-kal-card sm:px-8 sm:py-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 gap-3">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-200">
+                <Sparkles className="h-6 w-6" strokeWidth={2} />
+              </span>
+              <div>
+                <p className="text-sm font-bold text-kal-text sm:text-base">
+                  Recovery mode
+                </p>
+                <p className="mt-1 max-w-md text-sm leading-relaxed text-kal-text-secondary">
+                  One day doesn&apos;t break you. Start fresh today and rebuild
+                  your streak!
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              disabled={recoveryBusy}
+              onClick={() => void startNewStreakToday()}
+              className="inline-flex min-h-[52px] w-full shrink-0 items-center justify-center rounded-xl bg-kal-accent px-6 py-3.5 text-sm font-bold text-kal-accent-foreground shadow-sm transition-colors hover:bg-kal-accent-hover enabled:motion-safe:active:scale-[0.99] disabled:opacity-50 sm:w-auto sm:min-w-[14rem] motion-reduce:enabled:active:scale-100"
+            >
+              {recoveryBusy ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                "Start New Streak Today"
+              )}
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {habits.length > 0 ? (
+        <section className="mb-6">
+          <h2 className="mb-4 text-sm font-bold uppercase tracking-wide text-kal-muted">
+            My habits
+          </h2>
           <ul className="flex flex-col gap-6">
-            {habitCards.map((h) => {
+            {habits.map((h) => {
               const streak = habitStreak(logs, h.id, today);
               const bestMonth = bestStreakThisMonth(logs, h.id, today);
               const totalDone = totalCompletedDays(logs, h.id);
@@ -499,10 +898,18 @@ export function HabitMakerPage() {
                 todayDone,
               );
               const showFire = streak >= 7;
+              const enterMotion =
+                rowEnterId === h.id
+                  ? "motion-safe:animate-[habit-row-enter_0.55s_ease-out_both] motion-reduce:animate-none"
+                  : "";
               return (
                 <li
                   key={h.id}
-                  className="rounded-2xl border border-kal-border bg-kal-card px-6 py-7 kal-shadow-card sm:px-8 sm:py-8"
+                  className={clsx(
+                    "rounded-2xl border border-kal-border bg-kal-card px-6 py-7 kal-shadow-card transition-[transform,box-shadow] motion-safe:duration-300 motion-safe:ease-out sm:px-8 sm:py-8",
+                    "hover:border-kal-accent/20 hover:shadow-[0_16px_48px_-16px_rgba(15,23,42,0.12)] motion-safe:hover:-translate-y-1 motion-safe:hover:shadow-lg",
+                    enterMotion,
+                  )}
                 >
                   <div className="flex flex-wrap items-start justify-between gap-4 border-b border-kal-border/80 pb-6">
                     <div className="min-w-0 flex-1">
@@ -522,7 +929,13 @@ export function HabitMakerPage() {
                         <p className="text-[10px] font-bold uppercase tracking-wider text-kal-muted">
                           Current streak
                         </p>
-                        <p className="flex items-center gap-1.5 text-3xl font-extrabold tabular-nums text-kal-text sm:text-4xl">
+                        <p
+                          className={clsx(
+                            "flex items-center gap-1.5 text-3xl font-extrabold tabular-nums text-kal-text sm:text-4xl",
+                            streakPopHabitId === h.id &&
+                              "motion-safe:animate-[streak-pop_0.55s_ease-out_both] motion-reduce:animate-none",
+                          )}
+                        >
                           {streak}
                           {showFire ? (
                             <span className="text-2xl leading-none" aria-hidden>
@@ -605,141 +1018,8 @@ export function HabitMakerPage() {
               );
             })}
           </ul>
-        )}
-      </section>
-
-      {habitCards.length > 0 && showRecoveryBanner ? (
-        <div className="mb-10 overflow-hidden rounded-2xl border border-orange-200/90 bg-gradient-to-br from-orange-50 via-kal-card to-kal-card px-6 py-7 kal-shadow-card dark:border-orange-900/40 dark:from-orange-950/35 dark:via-kal-card dark:to-kal-card sm:px-8 sm:py-8">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex min-w-0 gap-3">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-200">
-                <Sparkles className="h-6 w-6" strokeWidth={2} />
-              </span>
-              <div>
-                <p className="text-sm font-bold text-kal-text sm:text-base">
-                  Recovery mode
-                </p>
-                <p className="mt-1 max-w-md text-sm leading-relaxed text-kal-text-secondary">
-                  One day doesn&apos;t break you. Start fresh today and rebuild
-                  your streak!
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              disabled={recoveryBusy}
-              onClick={() => void startNewStreakToday()}
-              className="inline-flex min-h-[52px] w-full shrink-0 items-center justify-center rounded-xl bg-kal-accent px-6 py-3.5 text-sm font-bold text-kal-accent-foreground shadow-sm transition-colors hover:bg-kal-accent-hover disabled:opacity-50 sm:w-auto sm:min-w-[14rem]"
-            >
-              {recoveryBusy ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                "Start New Streak Today"
-              )}
-            </button>
-          </div>
-        </div>
+        </section>
       ) : null}
-
-      <section>
-        <h2 className="mb-4 text-sm font-bold uppercase tracking-wide text-kal-muted">
-          Today&apos;s check-in
-        </h2>
-        <p className="mb-6 text-sm leading-relaxed text-kal-text-secondary">
-          For{" "}
-          <span className="font-semibold tabular-nums text-kal-text">{today}</span>{" "}
-          — tap when you&apos;ve earned it. Notes autosave quietly.
-        </p>
-        {habitCards.length === 0 ? null : (
-          <ul className="flex flex-col gap-5">
-            {habitCards.map((h) => {
-              const tl = todayLog(h.id);
-              const checked = tl?.completed ?? false;
-              const commentVal = tl?.comment ?? "";
-              return (
-                <li
-                  key={`check-${h.id}`}
-                  className="rounded-2xl border border-kal-border bg-kal-card px-5 py-6 kal-shadow-card sm:px-8 sm:py-7"
-                >
-                  <p className="text-sm font-bold text-kal-text">{h.name}</p>
-                  <div className="mt-5 flex items-start gap-4">
-                    <button
-                      type="button"
-                      role="checkbox"
-                      aria-checked={checked}
-                      aria-label={`Did you complete ${h.name} today?`}
-                      onClick={() =>
-                        void persistLog(h.id, !checked, tl?.comment ?? null, tl)
-                      }
-                      className={`mt-0.5 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 transition-colors ${
-                        checked
-                          ? "border-kal-accent bg-kal-accent text-kal-accent-foreground"
-                          : "border-kal-border bg-kal-page text-transparent hover:border-kal-accent/45"
-                      }`}
-                    >
-                      <Check className="h-6 w-6" strokeWidth={3} />
-                    </button>
-                    <div className="min-w-0 flex-1">
-                      <span className="text-base font-semibold text-kal-text">
-                        Did it today?
-                      </span>
-                      <p className="mt-1 text-xs text-kal-muted">
-                        {checked
-                          ? "Nice — that’s one more rep for future you."
-                          : "Tap when you’ve completed this habit today."}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-4">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-kal-muted">
-                      Optional note
-                    </span>
-                    <textarea
-                      value={commentVal}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        setBundle((prev) => {
-                          const base = prev ?? {
-                            habits,
-                            logs,
-                            updatedAt: Date.now(),
-                          };
-                          const now = new Date().toISOString();
-                          const prevLog = base.logs.find(
-                            (l) =>
-                              l.habit_id === h.id && l.log_date === today,
-                          );
-                          const row: HabitLogRow = {
-                            id: prevLog?.id ?? crypto.randomUUID(),
-                            user_id: userId,
-                            habit_id: h.id,
-                            log_date: today,
-                            completed: checked,
-                            comment: v.trim().slice(0, 1_000) || null,
-                            created_at: prevLog?.created_at ?? now,
-                            updated_at: now,
-                          };
-                          const next: HabitBundle = {
-                            ...base,
-                            logs: upsertLogInList(base.logs, row),
-                            updatedAt: Date.now(),
-                          };
-                          void saveHabitBundleCached(next);
-                          scheduleCommentSave(h.id, v);
-                          return next;
-                        });
-                      }}
-                      rows={2}
-                      placeholder="How did it feel? Anything to remember?"
-                      className="mt-1.5 w-full resize-y rounded-xl border border-kal-border bg-kal-page px-3 py-2.5 text-sm text-kal-text placeholder:text-kal-muted focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/15"
-                    />
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
     </div>
   );
 }

@@ -130,6 +130,46 @@ body {
   }
 }
 
+/** Habit Maker: new row mount */
+@keyframes habit-row-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/** Habit Maker: streak number bump after check-in */
+@keyframes streak-pop {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.75;
+  }
+  40% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/** Habit Maker: lightweight confetti particle */
+@keyframes confetti-burst {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx, 0), var(--dy, -48px)) rotate(var(--dr, 180deg));
+    opacity: 0;
+  }
+}
+
 /** Subtle “tap Share” hint for iOS PWA install modal (respects motion-reduce via Tailwind). */
 @keyframes pwa-share-nudge {
   0%,
