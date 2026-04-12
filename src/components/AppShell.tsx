@@ -4,6 +4,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
+import { isLegalPath } from "@/lib/legal-paths";
+import { isPublicMarketingPath } from "@/lib/public-paths";
 import { useAuthStore } from "@/store/useAuthStore";
 
 function LoadingScreen() {
@@ -19,19 +21,6 @@ function LoadingScreen() {
 
 const AUTH_PATHS = new Set(["/auth", "/auth/reset"]);
 
-const LEGAL_PATHS = new Set([
-  "/privacy",
-  "/terms",
-  "/refund",
-  "/return",
-  "/shipping",
-  "/policies",
-  "/about",
-]);
-
-function isLegalPath(p: string) {
-  return LEGAL_PATHS.has(p);
-}
 function isAuthPath(p: string) {
   return AUTH_PATHS.has(p);
 }
@@ -53,6 +42,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     if (!initialized) return "wait";
     if (!authed) {
       if (isAuthPath(pathname)) return "render";
+      if (isPublicMarketingPath(pathname)) return "render";
+      if (isLegalPath(pathname)) return "render";
       return "auth";
     }
     if (profileLoading) {

@@ -6,13 +6,16 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Kalnehi Daily",
     short_name: "Kalnehi",
     description:
-      "Daily execution planner for JEE, NEET & Boards aspirants - Win Daily",
+      "Daily execution planner for JEE, NEET & Boards — syllabus, habits, study sessions & PrepBrain AI. Install Kalnehi Daily as a PWA.",
     start_url: "/",
     scope: "/",
     display: "standalone",
+    display_override: ["standalone", "minimal-ui", "browser"],
     orientation: "portrait-primary",
-    background_color: "#0f172a",
+    background_color: "#f8f9fa",
     theme_color: "#ef4444",
+    lang: "en-IN",
+    dir: "ltr",
     categories: ["education", "productivity"],
     icons: [
       {

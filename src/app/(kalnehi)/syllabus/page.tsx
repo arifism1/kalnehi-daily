@@ -1,9 +1,13 @@
 import Link from "next/link";
 import { BookOpen } from "lucide-react";
 
+import { kalnehiPageMetadata } from "@/lib/seo-metadata";
+
 import { SyllabusShell } from "./SyllabusShell";
 import { resolveSyllabusExam } from "@/lib/examProfile";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+export const metadata = kalnehiPageMetadata("syllabus");
 
 export default async function SyllabusPage() {
   const supabase = await createSupabaseServerClient();

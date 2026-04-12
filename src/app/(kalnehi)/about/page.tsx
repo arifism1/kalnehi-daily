@@ -1,3 +1,7 @@
+import { kalnehiPageMetadata } from "@/lib/seo-metadata";
+
+export const metadata = kalnehiPageMetadata("about");
+
 export default function AboutUsPage() {
   return (
     <article className="mx-auto max-w-2xl space-y-4 pb-8 text-[15px] leading-relaxed text-kal-text sm:text-base">

@@ -1,12 +1,18 @@
 import type { Metadata, Viewport } from "next";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Geist_Mono, Inter } from "next/font/google";
 
 import { AppShell } from "@/components/AppShell";
 import { AuthProvider } from "@/components/AuthProvider";
 import { FcmForegroundListener } from "@/components/FcmForegroundListener";
+import { GoogleAnalytics } from "@/components/GoogleAnalytics";
+import { OrganicEntryCapture } from "@/components/OrganicEntryCapture";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { SyncProvider } from "@/components/SyncProvider";
 import { ThemeSync } from "@/components/ThemeSync";
+import { defaultSiteMetadata } from "@/lib/seo-metadata";
 
 import "./globals.css";
 
@@ -70,11 +76,14 @@ const appleStartupImages = [
   },
 ] as const;
 
+const baseMeta = defaultSiteMetadata();
+const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim();
+
 export const metadata: Metadata = {
-  title: "Kalnehi Daily",
-  description:
-    "Daily execution planner for JEE, NEET & Boards aspirants - Win Daily",
-  applicationName: "Kalnehi Daily",
+  ...baseMeta,
+  ...(googleSiteVerification
+    ? { verification: { google: googleSiteVerification } }
+    : {}),
   appleWebApp: {
     capable: true,
     title: "Kalnehi Daily",
@@ -95,6 +104,7 @@ export const metadata: Metadata = {
   },
   other: {
     "mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-capable": "yes",
   },
 };
 
@@ -118,10 +128,13 @@ export default function RootLayout({
 
   return (
     <html
-      lang="en"
+      lang="en-IN"
       className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full min-h-dvh flex-col bg-kal-page font-sans text-kal-text">
+        <JsonLd />
+        <OrganicEntryCapture />
+        <GoogleAnalytics />
         <ThemeSync />
         <ServiceWorkerRegister />
         <AuthProvider>
@@ -130,6 +143,8 @@ export default function RootLayout({
             <AppShell>{children}</AppShell>
           </SyncProvider>
         </AuthProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
