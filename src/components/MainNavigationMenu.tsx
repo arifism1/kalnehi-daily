@@ -11,6 +11,7 @@ import { ContactSupportModal } from "@/components/support/ContactSupportModal";
 import { ContactSupportSuccessToast } from "@/components/support/ContactSupportSuccessToast";
 import { MAIN_NAV_SECTIONS, navActive } from "@/config/mainNavigation";
 import { isStandalonePwa, usePwaInstall } from "@/hooks/usePwaInstall";
+import { SITE_NAME } from "@/lib/seo-metadata";
 
 type MainNavigationMenuProps = {
   open: boolean;
@@ -91,8 +92,8 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
             <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-kal-accent">
               Navigate
             </p>
-            <p className="text-sm font-semibold leading-tight text-kal-text sm:text-[15px]">
-              Kalnehi Daily
+            <p className="text-xs font-semibold leading-snug text-kal-text sm:text-[13px] sm:leading-tight">
+              {SITE_NAME}
             </p>
           </div>
         </div>

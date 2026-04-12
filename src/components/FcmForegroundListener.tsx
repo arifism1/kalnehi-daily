@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 
 import { isFirebaseConfigured } from "@/lib/firebase/config";
+import { SITE_NAME } from "@/lib/seo-metadata";
 import { getMessagingIfSupported } from "@/lib/firebase/messagingClient";
 import { useAuthStore } from "@/store/useAuthStore";
 
@@ -26,7 +27,7 @@ export function FcmForegroundListener() {
         if (typeof window === "undefined" || Notification.permission !== "granted") {
           return;
         }
-        const title = payload.notification?.title ?? "Kalnehi Daily";
+        const title = payload.notification?.title ?? SITE_NAME;
         const body = payload.notification?.body ?? "";
         try {
           new Notification(title, {

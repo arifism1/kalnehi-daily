@@ -4,7 +4,9 @@ import { useEffect } from "react";
 
 /**
  * Registers `/sw.js` in production so static assets and visited pages cache for
- * offline use. Dev server skips registration to avoid breaking HMR.
+ * offline use. The merged worker (`scripts/merge-service-worker.mjs`) can inject
+ * Firebase messaging for push when `NEXT_PUBLIC_FIREBASE_*` is set. Dev server
+ * skips registration to avoid breaking HMR.
  */
 export function ServiceWorkerRegister() {
   useEffect(() => {

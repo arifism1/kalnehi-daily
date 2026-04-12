@@ -2,12 +2,12 @@ import Link from "next/link";
 
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
+import { SITE_NAME } from "@/lib/seo-metadata";
 
 export const metadata = marketingPageMetadata({
   path: "/jee-study-planner",
-  title: "JEE study planner app — daily execution for JEE Main & Advanced | Kalnehi Daily",
-  description:
-    "Turn IIT-JEE prep into a repeatable daily system: weekly planner, syllabus-weighted tasks, timed study sessions, and habits. Kalnehi Daily is an installable PWA for serious JEE aspirants in India.",
+  title: `Best Daily Planner for JEE 2026 — JEE Main & Advanced execution | ${SITE_NAME}`,
+  description: `Best daily planner for JEE 2026: weekly map, syllabus-weighted tasks, timed study sessions & habits. ${SITE_NAME} is an installable PWA for IIT-JEE — PCM revision, mocks, and consistency without chaos.`,
 });
 
 export default function JeeStudyPlannerPage() {
@@ -17,99 +17,123 @@ export default function JeeStudyPlannerPage() {
         breadcrumbs={[
           { name: "Home", path: "/" },
           { name: "Guides", path: "/guides" },
-          { name: "JEE study planner", path: "/jee-study-planner" },
+          { name: "Best daily planner for JEE 2026", path: "/jee-study-planner" },
         ]}
         faqs={[
           {
-            question: "How is Kalnehi Daily different from a generic to-do app for JEE?",
+            question: "Why use a dedicated JEE 2026 daily planner?",
             answer:
-              "Kalnehi Daily is built around exam execution: syllabus-linked progress, weighted marks thinking, study sessions, and routines aligned to a target exam date — not just unchecked boxes.",
+              "Because rank follows repeatable output: clear daily tasks, timed blocks, and revision loops — not vague “study more” intentions.",
           },
           {
-            question: "Does Kalnehi Daily cover JEE Main and Advanced together?",
+            question: `Does ${SITE_NAME} cover JEE Main and Advanced together?`,
             answer:
-              "You configure your target exam profile inside the app and plan daily work accordingly. Use the planner and syllabus modules to reflect your current stage — dropper, class 12, or parallel Boards.",
+              "You set your exam profile and plan phases accordingly — drop year, class 12, or parallel Boards. The planner adapts to your timeline.",
           },
           {
-            question: "Can I use Kalnehi Daily offline?",
+            question: `Can I install ${SITE_NAME} on Android for a full-screen app?`,
             answer:
-              "After visiting while online, the PWA caches key assets and pages you have opened for offline-friendly access — ideal for unstable hostel Wi‑Fi. You still need connectivity for sync and AI features.",
+              "Yes. After signing in with Chrome, add to home screen for standalone mode, offline-friendly caching of visited pages, and fewer distracting tabs.",
           },
           {
-            question: "Is there an AI coach for JEE?",
+            question: "Is PrepBrain AI required for JEE prep?",
             answer:
-              "PrepBrain AI is available on paid plans. It is designed to respect your syllabus and planner context — upgrade only if you want that layer.",
+              "No. PrepBrain AI is optional on paid plans for syllabus-aware Q&A — your NCERT, coaching, and mocks still come first.",
           },
         ]}
       />
       <article className="space-y-8">
         <header className="space-y-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-kal-accent">
-            JEE preparation
+            JEE Main & Advanced · 2026 cycle
           </p>
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            JEE study planner that respects Physics, Chemistry & Mathematics together
+            Best daily planner for JEE 2026 — ship PCM output every single day
           </h1>
           <p className="text-sm leading-relaxed text-kal-text-secondary sm:text-base">
-            The IIT-JEE race rewards consistency more than bursts. Kalnehi Daily helps you translate a
-            two-year (or drop-year) goal into <strong className="text-kal-text">what to ship today</strong>
-            : tasks tied to syllabus weightage, time on task, and streaks that survive bad weeks.
+            The IIT-JEE race in <strong className="text-kal-text">2026</strong> rewards students who
+            can execute when mocks go badly and schedules break. {SITE_NAME} turns your target date
+            into weekly intent and daily tasks: Physics, Chemistry, and Mathematics in one execution
+            system — not three separate notebooks.
           </p>
         </header>
 
         <section className="space-y-3" aria-labelledby="jee-why">
           <h2 id="jee-why" className="text-lg font-semibold text-kal-text">
-            Why “just study harder” fails
+            What breaks most JEE timetables
           </h2>
           <p className="text-sm leading-relaxed text-kal-text-secondary">
-            Most students know <em>what</em> to study. The gap is execution under fatigue: inconsistent
-            revision, skipped drills, and no honest link between hours spent and marks outcomes.
-            Kalnehi Daily pushes you toward measurable daily output — minutes in study sessions,
-            syllabus coverage you can defend in mocks, and habits that keep you in the chair when
-            motivation dips.
+            Inconsistent revision, skipped numerical practice, and no honest link between hours spent and
+            mock percentiles. A strong daily planner fixes visibility: what shipped today, what failed,
+            and what gets carried — without rewriting the whole plan every Sunday night.
           </p>
         </section>
 
         <section className="space-y-3" aria-labelledby="jee-how">
           <h2 id="jee-how" className="text-lg font-semibold text-kal-text">
-            How Kalnehi Daily supports JEE prep
+            Built for JEE execution — not generic checklists
           </h2>
           <ul className="list-inside list-disc space-y-2 text-sm leading-relaxed text-kal-text-secondary">
             <li>
-              <strong className="text-kal-text">Weekly planner:</strong> allocate subjects and priorities
-              so each day has a lane — not an endless backlog.
+              <strong className="text-kal-text">Weekly planner:</strong> allocate PCM lanes so backlog
+              does not become shame.
             </li>
             <li>
-              <strong className="text-kal-text">Study sessions:</strong> time-box problem solving and
-              theory so distraction does not eat your night.
+              <strong className="text-kal-text">Study sessions:</strong> protect problem-solving depth
+              from phone distraction.
             </li>
             <li>
-              <strong className="text-kal-text">Syllabus & progress:</strong> connect microtopics to
-              tasks so you see whether your effort matches exam scope.
+              <strong className="text-kal-text">Syllabus & progress:</strong> connect effort to scope —
+              especially during revision months before JEE Main 2026.
             </li>
             <li>
-              <strong className="text-kal-text">Habits:</strong> lock non-negotiables (revision cards,
-              formula sheets, mock review) into streaks you can trust.
+              <strong className="text-kal-text">Habits:</strong> formula sheets, mistake logs, mock
+              review — small streaks that survive bad weeks.
             </li>
           </ul>
         </section>
 
         <section className="rounded-2xl border border-kal-border bg-kal-accent-soft/40 px-4 py-5" aria-labelledby="jee-pwa">
           <h2 id="jee-pwa" className="text-lg font-semibold text-kal-text">
-            Install as a PWA on Android
+            Install the PWA — study like an app, not a tab farm
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-kal-text-secondary">
-            Open Kalnehi Daily in Chrome, sign in, then install to your home screen for a focused,
-            app-like shell — fewer tabs, less context switching between coaching PDFs and your plan.
+            Google surfaces installable PWAs when the manifest, icons, HTTPS, and service worker line
+            up. {SITE_NAME} is optimized for that “Install” path on mobile search — open in Chrome,
+            sign in, then add to home screen.
           </p>
         </section>
+
+        <nav className="text-sm" aria-label="Related reading">
+          <p className="font-medium text-kal-text">Keep reading</p>
+          <ul className="mt-2 list-inside list-disc space-y-1 text-kal-text-secondary">
+            <li>
+              <Link
+                href="/guides/how-to-maintain-consistency-in-jee-preparation"
+                className="font-medium text-kal-accent-dark hover:underline"
+              >
+                How to maintain consistency in JEE preparation
+              </Link>
+            </li>
+            <li>
+              <Link href="/neet-study-planner" className="font-medium text-kal-accent-dark hover:underline">
+                Best daily planner for NEET 2026
+              </Link>
+            </li>
+            <li>
+              <Link href="/brain-yoga" className="font-medium text-kal-accent-dark hover:underline">
+                Brain Yoga for exam warriors
+              </Link>
+            </li>
+          </ul>
+        </nav>
 
         <div className="flex flex-col gap-3 sm:flex-row">
           <Link
             href="/auth"
             className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-xl bg-kal-accent px-6 text-sm font-bold text-kal-accent-foreground"
           >
-            Start planning with Kalnehi Daily
+            Start your JEE 2026 plan
           </Link>
           <Link
             href="/guides"

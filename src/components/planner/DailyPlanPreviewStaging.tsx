@@ -36,6 +36,8 @@ type Props = {
   /** When true, show a compact loading strip at top of preview (e.g. voice processing). */
   processing?: boolean;
   processingLabel?: string;
+  /** Tighter padding and spacing (e.g. mobile handwritten scan flow). */
+  compact?: boolean;
 };
 
 export function DailyPlanPreviewStaging({
@@ -50,22 +52,35 @@ export function DailyPlanPreviewStaging({
   disabled = false,
   processing = false,
   processingLabel = "Processing…",
+  compact = false,
 }: Props) {
   const showHeader = Boolean(title.trim() || subtitle.trim());
 
   return (
     <div
       id={sectionId}
-      className="mt-5 space-y-3 rounded-[1.15rem] border-2 border-kal-accent/30 bg-kal-accent-soft/45 p-4 shadow-sm backdrop-blur-md dark:bg-kal-accent-soft/20"
+      className={
+        compact
+          ? "mt-3 space-y-2 rounded-xl border-2 border-kal-accent/30 bg-kal-accent-soft/45 p-3 shadow-sm backdrop-blur-md dark:bg-kal-accent-soft/20"
+          : "mt-5 space-y-3 rounded-[1.15rem] border-2 border-kal-accent/30 bg-kal-accent-soft/45 p-4 shadow-sm backdrop-blur-md dark:bg-kal-accent-soft/20"
+      }
     >
       {showHeader ? (
         <div>
           {title.trim() ? (
-            <p className="text-sm font-bold text-kal-text">{title}</p>
+            <p
+              className={
+                compact
+                  ? "text-xs font-bold text-kal-text"
+                  : "text-sm font-bold text-kal-text"
+              }
+            >
+              {title}
+            </p>
           ) : null}
           {subtitle.trim() ? (
             <p
-              className={`text-xs leading-relaxed text-kal-muted ${title.trim() ? "mt-1" : ""}`}
+              className={`text-kal-muted ${compact ? "text-[11px] leading-snug" : "text-xs leading-relaxed"} ${title.trim() ? (compact ? "mt-0.5" : "mt-1") : ""}`}
             >
               {subtitle}
             </p>
@@ -78,11 +93,15 @@ export function DailyPlanPreviewStaging({
           {processingLabel}
         </div>
       ) : null}
-      <ul className="space-y-2">
+      <ul className={compact ? "space-y-1.5" : "space-y-2"}>
         {rows.map((r) => (
           <li
             key={r.id}
-            className="kal-glass-subtle flex min-w-0 items-start gap-2 overflow-hidden rounded-xl p-3"
+            className={
+              compact
+                ? "kal-glass-subtle flex min-w-0 items-start gap-1.5 overflow-hidden rounded-lg p-2"
+                : "kal-glass-subtle flex min-w-0 items-start gap-2 overflow-hidden rounded-xl p-3"
+            }
           >
             <input
               type="checkbox"
@@ -92,7 +111,11 @@ export function DailyPlanPreviewStaging({
                 onUpdateRow(r.id, { excludeFromCommit: !skip });
               }}
               disabled={disabled}
-              className="mt-2.5 h-5 w-5 shrink-0 rounded border-kal-border bg-kal-input-bg text-kal-accent focus:ring-kal-accent disabled:opacity-50"
+              className={
+                compact
+                  ? "mt-1.5 h-4 w-4 shrink-0 rounded border-kal-border bg-kal-input-bg text-kal-accent focus:ring-kal-accent disabled:opacity-50"
+                  : "mt-2.5 h-5 w-5 shrink-0 rounded border-kal-border bg-kal-input-bg text-kal-accent focus:ring-kal-accent disabled:opacity-50"
+              }
               title="Exclude this row from Add to Today's Plan"
               aria-label="Exclude this row from Add to Today's Plan"
             />
@@ -103,10 +126,20 @@ export function DailyPlanPreviewStaging({
                 placeholder="Task name"
                 rows={1}
                 disabled={disabled}
-                className="min-h-[40px] min-w-0 w-full resize-y overflow-hidden rounded border border-kal-border bg-kal-input-bg px-2 py-2 text-sm font-semibold leading-5 text-kal-text placeholder:text-kal-muted [overflow-wrap:anywhere] disabled:opacity-50"
+                className={
+                  compact
+                    ? "min-h-[36px] min-w-0 w-full resize-y overflow-hidden rounded border border-kal-border bg-kal-input-bg px-2 py-1.5 text-sm font-semibold leading-5 text-kal-text placeholder:text-kal-muted [overflow-wrap:anywhere] disabled:opacity-50"
+                    : "min-h-[40px] min-w-0 w-full resize-y overflow-hidden rounded border border-kal-border bg-kal-input-bg px-2 py-2 text-sm font-semibold leading-5 text-kal-text placeholder:text-kal-muted [overflow-wrap:anywhere] disabled:opacity-50"
+                }
                 aria-label="Task name"
               />
-              <div className="mt-1.5 flex min-w-0 items-center gap-2">
+              <div
+                className={
+                  compact
+                    ? "mt-1 flex min-w-0 items-center gap-1.5"
+                    : "mt-1.5 flex min-w-0 items-center gap-2"
+                }
+              >
                 <input
                   type="time"
                   value={r.startInput}
@@ -114,7 +147,11 @@ export function DailyPlanPreviewStaging({
                     onUpdateRow(r.id, { startInput: e.target.value })
                   }
                   disabled={disabled}
-                  className="min-h-[32px] rounded border border-kal-border bg-kal-input-bg px-2 text-[11px] text-kal-text disabled:opacity-50"
+                  className={
+                    compact
+                      ? "min-h-[30px] rounded border border-kal-border bg-kal-input-bg px-1.5 text-[11px] text-kal-text disabled:opacity-50"
+                      : "min-h-[32px] rounded border border-kal-border bg-kal-input-bg px-2 text-[11px] text-kal-text disabled:opacity-50"
+                  }
                   aria-label="From time"
                 />
                 <input
@@ -122,7 +159,11 @@ export function DailyPlanPreviewStaging({
                   value={r.endInput}
                   onChange={(e) => onUpdateRow(r.id, { endInput: e.target.value })}
                   disabled={disabled}
-                  className="min-h-[32px] rounded border border-kal-border bg-kal-input-bg px-2 text-[11px] text-kal-text disabled:opacity-50"
+                  className={
+                    compact
+                      ? "min-h-[30px] rounded border border-kal-border bg-kal-input-bg px-1.5 text-[11px] text-kal-text disabled:opacity-50"
+                      : "min-h-[32px] rounded border border-kal-border bg-kal-input-bg px-2 text-[11px] text-kal-text disabled:opacity-50"
+                  }
                   aria-label="To time"
                 />
                 <span className="ml-auto text-xs font-medium text-kal-muted">
@@ -137,7 +178,11 @@ export function DailyPlanPreviewStaging({
               type="button"
               onClick={() => onRemoveRow(r.id)}
               disabled={disabled}
-              className="mt-1 rounded border border-kal-border p-2 text-kal-muted hover:bg-kal-card-muted hover:text-rose-600 disabled:opacity-40 dark:hover:text-rose-300"
+              className={
+                compact
+                  ? "mt-0.5 rounded border border-kal-border p-1.5 text-kal-muted hover:bg-kal-card-muted hover:text-rose-600 disabled:opacity-40 dark:hover:text-rose-300"
+                  : "mt-1 rounded border border-kal-border p-2 text-kal-muted hover:bg-kal-card-muted hover:text-rose-600 disabled:opacity-40 dark:hover:text-rose-300"
+              }
               aria-label="Delete row"
             >
               <Trash2 className="h-4 w-4" />
@@ -149,7 +194,11 @@ export function DailyPlanPreviewStaging({
         type="button"
         onClick={onAddEmptyRow}
         disabled={disabled}
-        className="flex w-full min-h-[40px] items-center justify-center gap-2 rounded-lg border border-dashed border-white/35 bg-white/30 text-sm text-kal-muted backdrop-blur-sm hover:bg-white/50 disabled:opacity-40 dark:border-white/15 dark:bg-zinc-900/30 dark:hover:bg-zinc-900/50"
+        className={
+          compact
+            ? "flex w-full min-h-[36px] items-center justify-center gap-1.5 rounded-lg border border-dashed border-white/35 bg-white/30 text-xs text-kal-muted backdrop-blur-sm hover:bg-white/50 disabled:opacity-40 dark:border-white/15 dark:bg-zinc-900/30 dark:hover:bg-zinc-900/50"
+            : "flex w-full min-h-[40px] items-center justify-center gap-2 rounded-lg border border-dashed border-white/35 bg-white/30 text-sm text-kal-muted backdrop-blur-sm hover:bg-white/50 disabled:opacity-40 dark:border-white/15 dark:bg-zinc-900/30 dark:hover:bg-zinc-900/50"
+        }
       >
         <Plus className="h-4 w-4" />
         {addAnotherLabel}

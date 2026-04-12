@@ -71,11 +71,11 @@ export function useAiGate(): AiGateResult {
   const canDoVoiceSession = hasAiAccess && voiceMinutesRemaining > 0;
 
   const photoScanStatus = hasAiAccess
-    ? `${photoScansRemaining} of ${photoScansLimit} scans remaining`
+    ? `${photoScansRemaining}/${photoScansLimit} scans`
     : "Upgrade to Pro for photo scanning";
 
   const voiceMinuteStatus = hasAiAccess
-    ? `${voiceMinutesRemaining} of ${voiceMinutesLimit} minutes remaining`
+    ? `${voiceMinutesRemaining}/${voiceMinutesLimit} min`
     : "Upgrade to Pro for voice dictation";
 
   return {

@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { trackAuthSuccess } from "@/lib/analytics";
+import { SITE_NAME } from "@/lib/seo-metadata";
 import { formatSupabaseError, getSupabaseBrowserClient } from "@/lib/supabase";
 import { useAuthStore } from "@/store/useAuthStore";
 
@@ -270,7 +271,9 @@ export default function AuthPage() {
         <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
           Kalnehi
         </p>
-        <h1 className="mt-2 text-2xl font-bold text-kal-text">Kalnehi Daily</h1>
+        <h1 className="mt-2 max-w-md text-balance text-xl font-bold leading-snug text-kal-text sm:text-2xl">
+          {SITE_NAME}
+        </h1>
         <p className="mt-2 text-sm text-kal-muted">
           Welcome back — your plan and syllabus stay with you on every device.
         </p>

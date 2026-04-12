@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Calendar, CheckSquare, Clock, LineChart, ListTodo, Sparkles } from "lucide-react";
 
-import { kalnehiPageMetadata } from "@/lib/seo-metadata";
+import { kalnehiPageMetadata, SITE_NAME } from "@/lib/seo-metadata";
 
 export const metadata = kalnehiPageMetadata("planner");
 
@@ -52,7 +52,7 @@ export default function PlannerLandingPage() {
           Study planner — built for JEE, NEET & Boards
         </h1>
         <p className="text-sm leading-relaxed text-kal-text-secondary sm:text-base">
-          Kalnehi Daily connects your target exam to a weekly rhythm: schedule deep work, manage
+          {SITE_NAME} connects your target exam to a weekly rhythm: schedule deep work, manage
           todos, lock routines, and track habits in one installable PWA. Pick a module below to plan
           the layer you need today.
         </p>
@@ -83,7 +83,7 @@ export default function PlannerLandingPage() {
           Why a single planner matters for competitive exams
         </h2>
         <p className="mt-3">
-          Fragmented notes and scattered apps hide the real bottleneck: execution. Kalnehi Daily keeps
+          Fragmented notes and scattered apps hide the real bottleneck: execution. {SITE_NAME} keeps
           weekly intent, daily tasks, and habit loops in one place so you can see whether your plan is
           realistic — and fix it before you lose weeks. Install the app on Android for quick access
           from your home screen and fewer distractions than hopping between browser tabs.

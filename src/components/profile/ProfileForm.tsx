@@ -33,6 +33,7 @@ import {
 } from "@/lib/examsCatalog";
 import { isCuetExam } from "@/lib/examProfile";
 import { parseCuetDomainSubjectsJson } from "@/lib/cuetDomainSubjects";
+import { SITE_NAME } from "@/lib/seo-metadata";
 import { parsePrevScoreEntries } from "@/lib/prevScoreEntries";
 import { KALNEHI_PROFILE_UPDATED_EVENT } from "@/lib/profileEvents";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
@@ -314,7 +315,7 @@ export function ProfileForm() {
       <ConfirmDialog
         open={signOutConfirmOpen}
         title="Sign out?"
-        description="You will be logged out of Kalnehi Daily."
+        description={`You will be logged out of ${SITE_NAME}.`}
         confirmLabel="Sign Out"
         cancelLabel="Cancel"
         danger

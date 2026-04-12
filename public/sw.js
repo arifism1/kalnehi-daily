@@ -1,4 +1,4 @@
-/* Kalnehi Daily — service worker (static caching + offline shell + sync bridge)
+/* Kalnehi Daily - Exam Prep Tracker — service worker (static caching + offline shell + sync bridge)
  * FCM block is injected at request time by src/app/sw.js/route.ts (never commit API keys).
  */
 const STATIC_CACHE = "kalnehi-static-v3";
@@ -150,6 +150,12 @@ function networkFirstHtml(request) {
 
 
 
+
+
+
+
+
+
 // --- Firebase Cloud Messaging (injected by scripts/merge-service-worker.mjs) ---
 importScripts("https://www.gstatic.com/firebasejs/12.12.0/firebase-app-compat.js");
 importScripts("https://www.gstatic.com/firebasejs/12.12.0/firebase-messaging-compat.js");
@@ -163,7 +169,7 @@ try {
       const title =
         payload.notification && payload.notification.title
           ? payload.notification.title
-          : "Kalnehi Daily";
+          : "Kalnehi Daily - Exam Prep Tracker";
       const body =
         payload.notification && payload.notification.body
           ? payload.notification.body

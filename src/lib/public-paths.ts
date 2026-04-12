@@ -6,10 +6,13 @@ export const PUBLIC_MARKETING_PATHS = new Set<string>([
   "/guides",
   "/jee-study-planner",
   "/neet-study-planner",
+  "/upsc-study-planner",
   "/boards-study-planner",
+  "/brain-yoga",
 ]);
 
 export function isPublicMarketingPath(pathname: string): boolean {
   if (PUBLIC_MARKETING_PATHS.has(pathname)) return true;
+  if (pathname.startsWith("/guides/")) return true;
   return false;
 }

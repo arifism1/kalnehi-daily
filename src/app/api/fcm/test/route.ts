@@ -10,6 +10,7 @@ import {
   sendFcmToUserTokens,
 } from "@/lib/fcm/sendNotifications";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { SITE_NAME } from "@/lib/seo-metadata";
 
 export const runtime = "nodejs";
 
@@ -47,7 +48,7 @@ export async function POST() {
     }
 
     const { sent, failures } = await sendFcmToUserTokens(sdk.messaging, user.id, {
-      title: "Kalnehi Daily",
+      title: SITE_NAME,
       body: "Test notification — push is working on this account.",
       data: { kind: "test" },
     });

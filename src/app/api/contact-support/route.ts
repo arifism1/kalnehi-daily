@@ -7,6 +7,7 @@ import {
   type ContactSupportSubjectValue,
 } from "@/lib/contactSupport";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { SITE_NAME } from "@/lib/seo-metadata";
 
 export const runtime = "nodejs";
 
@@ -144,7 +145,7 @@ export async function POST(req: Request) {
   }
 
   const subjectLabel = contactSupportSubjectLabel(subject);
-  const emailSubject = `[Kalnehi Daily] ${subjectLabel}`;
+  const emailSubject = `[${SITE_NAME}] ${subjectLabel}`;
 
   const textLines = [
     `Subject: ${subjectLabel}`,

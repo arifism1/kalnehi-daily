@@ -88,7 +88,7 @@ export function AiFeatureGate({ feature, children }: Props) {
 
   return (
     <>
-      <div className="kal-glass-subtle mb-4 flex items-center justify-between rounded-xl px-4 py-2.5">
+      <div className="kal-glass-subtle mb-2 flex min-h-0 items-center justify-between rounded-lg px-3 py-1.5">
         <span className="flex items-center gap-2 text-xs text-kal-text-secondary">
           {isPhoto ? (
             <Camera className="h-3.5 w-3.5" />

@@ -1,3 +1,5 @@
+import { SITE_NAME } from "@/lib/seo-metadata";
+
 export default function ShippingPolicyPage() {
   return (
     <article className="mx-auto max-w-2xl space-y-4 pb-8 text-[15px] leading-relaxed text-kal-text sm:text-base">
@@ -8,7 +10,7 @@ export default function ShippingPolicyPage() {
         <strong>Last updated:</strong> April 08, 2026
       </p>
       <p>
-        Neven Academy Assam operates Kalnehi Daily (www.kalnehi.com).
+        Neven Academy Assam operates {SITE_NAME} (www.kalnehi.com).
       </p>
       <p>
         <strong>This is a purely digital service.</strong> We do not sell or
