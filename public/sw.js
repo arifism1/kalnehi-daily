@@ -133,4 +133,36 @@ function networkFirstHtml(request) {
     );
 }
 
-/* __KALNEHI_FCM_INJECT__ */
+
+// --- Firebase Cloud Messaging (injected by scripts/merge-service-worker.mjs) ---
+importScripts("https://www.gstatic.com/firebasejs/12.12.0/firebase-app-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/12.12.0/firebase-messaging-compat.js");
+try {
+  if (!firebase.apps.length) {
+    firebase.initializeApp({"apiKey":"AIzaSyD2EO5qzR_GKJBuLOr9VCle4Pq8W8lqcUk","authDomain":"kalnehi-1.firebaseapp.com","projectId":"kalnehi-1","storageBucket":"kalnehi-1.firebasestorage.app","messagingSenderId":"543640707010","appId":"1:543640707010:web:e93c47633a1148a2a0805b","measurementId":"G-DGMQZ6D9NN"});
+  }
+  if (firebase.messaging && firebase.messaging.isSupported()) {
+    const messaging = firebase.messaging();
+    messaging.onBackgroundMessage((payload) => {
+      const title =
+        payload.notification && payload.notification.title
+          ? payload.notification.title
+          : "Kalnehi Daily";
+      const body =
+        payload.notification && payload.notification.body
+          ? payload.notification.body
+          : "";
+      const options = {
+        body,
+        icon: "/icon-192x192.png",
+        badge: "/icon-192x192.png",
+        data: payload.data || {},
+        tag: payload.data && payload.data.tag ? String(payload.data.tag) : "kalnehi-fcm",
+      };
+      return self.registration.showNotification(title, options);
+    });
+  }
+} catch (e) {
+  console.error("[kalnehi sw] FCM background init failed", e);
+}
+
