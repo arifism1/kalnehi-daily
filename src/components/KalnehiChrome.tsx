@@ -122,7 +122,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
                   className="h-9 w-9 flex-shrink-0 object-contain ring-1 ring-white/30 sm:h-10 sm:w-10 dark:ring-white/15"
                 />
               </Link>
-              <div className="flex min-h-0 min-w-0 flex-1 items-center overflow-hidden rounded-lg border border-zinc-300/70 dark:border-zinc-600/60">
+              <div className="flex min-h-0 min-w-0 flex-1 items-center justify-center overflow-hidden">
                 <QuickNavBar />
               </div>
               <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">

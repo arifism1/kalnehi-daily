@@ -54,11 +54,11 @@ export function QuickNavBar() {
   }, [updateEdgeHints]);
 
   return (
-    <nav className="w-full min-w-0" aria-label="Quick navigation">
+    <nav className="mx-auto min-w-0 w-max max-w-full" aria-label="Quick navigation">
       <div className="relative -mx-1 min-w-0 sm:-mx-0">
         <div
           ref={scrollRef}
-          className="min-h-0 min-w-0 overflow-x-auto overflow-y-hidden overscroll-x-contain py-1 [scrollbar-width:thin]"
+          className="min-h-0 min-w-0 overflow-x-auto overflow-y-hidden overscroll-x-contain py-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           <div className="flex flex-nowrap items-center gap-1.5 px-1 pb-0.5 sm:gap-2 sm:px-0">
             {items.map((item) => {
