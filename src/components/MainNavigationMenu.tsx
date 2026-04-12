@@ -4,9 +4,11 @@ import clsx from "clsx";
 import { Download, Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 
 import { PwaIosInstallModal } from "@/components/PwaIosInstallModal";
+import { ContactSupportModal } from "@/components/support/ContactSupportModal";
+import { ContactSupportSuccessToast } from "@/components/support/ContactSupportSuccessToast";
 import { MAIN_NAV_SECTIONS, navActive } from "@/config/mainNavigation";
 import { isStandalonePwa, usePwaInstall } from "@/hooks/usePwaInstall";
 
@@ -21,6 +23,13 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
     usePwaInstall();
   const [installBusy, setInstallBusy] = useState(false);
   const [iosInstallOpen, setIosInstallOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
+  const [contactSuccess, setContactSuccess] = useState<string | null>(null);
+
+  const openContactFromMenu = useCallback(() => {
+    onClose();
+    setContactOpen(true);
+  }, [onClose]);
 
   useEffect(() => {
     if (!open) return;
@@ -42,7 +51,14 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [open, iosInstallOpen, onClose]);
 
+  useEffect(() => {
+    if (!contactSuccess) return;
+    const t = window.setTimeout(() => setContactSuccess(null), 5_000);
+    return () => window.clearTimeout(t);
+  }, [contactSuccess]);
+
   return (
+    <>
     <div
       role="dialog"
       aria-modal="true"
@@ -98,39 +114,65 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
                     {section.title}
                   </p>
                 </li>
-                {section.items.map(({ href, label, Icon, isActive }) => {
-                  const active = isActive
-                    ? isActive(pathname)
-                    : navActive(pathname, href);
-                  return (
-                    <li key={href}>
-                      <Link
-                        href={href}
-                        onClick={onClose}
-                        className={clsx(
-                          "flex min-h-[44px] items-center gap-2.5 rounded-xl px-2.5 py-1.5 transition-colors sm:gap-3",
-                          active
-                            ? "bg-kal-accent-soft ring-1 ring-kal-accent/25"
-                            : "hover:bg-kal-card-muted active:bg-kal-card-muted",
-                        )}
-                      >
-                        <span
+                {section.items.map(
+                  ({ href, label, Icon, isActive, menuAction }) => {
+                    if (menuAction === "contact-support") {
+                      return (
+                        <li key="contact-support">
+                          <button
+                            type="button"
+                            onClick={openContactFromMenu}
+                            className="flex w-full min-h-[44px] items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-left transition-colors hover:bg-kal-card-muted active:bg-kal-card-muted sm:gap-3"
+                          >
+                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-kal-card-muted text-kal-muted sm:h-10 sm:w-10">
+                              <Icon
+                                className="h-[1.125rem] w-[1.125rem] sm:h-5 sm:w-5"
+                                strokeWidth={2}
+                              />
+                            </span>
+                            <span className="min-w-0 flex-1 text-sm font-semibold leading-tight text-kal-text">
+                              {label}
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    }
+                    const active = isActive
+                      ? isActive(pathname)
+                      : navActive(pathname, href);
+                    return (
+                      <li key={href}>
+                        <Link
+                          href={href}
+                          onClick={onClose}
                           className={clsx(
-                            "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg sm:h-10 sm:w-10",
+                            "flex min-h-[44px] items-center gap-2.5 rounded-xl px-2.5 py-1.5 transition-colors sm:gap-3",
                             active
-                              ? "bg-kal-accent/20 text-kal-accent-dark dark:text-kal-accent"
-                              : "bg-kal-card-muted text-kal-muted",
+                              ? "bg-kal-accent-soft ring-1 ring-kal-accent/25"
+                              : "hover:bg-kal-card-muted active:bg-kal-card-muted",
                           )}
                         >
-                          <Icon className="h-[1.125rem] w-[1.125rem] sm:h-5 sm:w-5" strokeWidth={2} />
-                        </span>
-                        <span className="min-w-0 flex-1 text-sm font-semibold leading-tight text-kal-text">
-                          {label}
-                        </span>
-                      </Link>
-                    </li>
-                  );
-                })}
+                          <span
+                            className={clsx(
+                              "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg sm:h-10 sm:w-10",
+                              active
+                                ? "bg-kal-accent/20 text-kal-accent-dark dark:text-kal-accent"
+                                : "bg-kal-card-muted text-kal-muted",
+                            )}
+                          >
+                            <Icon
+                              className="h-[1.125rem] w-[1.125rem] sm:h-5 sm:w-5"
+                              strokeWidth={2}
+                            />
+                          </span>
+                          <span className="min-w-0 flex-1 text-sm font-semibold leading-tight text-kal-text">
+                            {label}
+                          </span>
+                        </Link>
+                      </li>
+                    );
+                  },
+                )}
               </Fragment>
             ))}
 
@@ -181,5 +223,15 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
         onClose={() => setIosInstallOpen(false)}
       />
     </div>
+    <ContactSupportModal
+      open={contactOpen}
+      onClose={() => setContactOpen(false)}
+      onSent={() => setContactSuccess("Message sent — we'll reply soon.")}
+    />
+    <ContactSupportSuccessToast
+      message={contactSuccess}
+      onDismiss={() => setContactSuccess(null)}
+    />
+    </>
   );
 }

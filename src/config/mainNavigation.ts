@@ -16,6 +16,7 @@ import {
   Mic,
   Notebook,
   PlayCircle,
+  LifeBuoy,
   RotateCw,
   Settings,
   Shield,
@@ -51,6 +52,8 @@ export type MainNavItem = {
   Icon: LucideIcon;
   /** Override default pathname-based active state */
   isActive?: (pathname: string) => boolean;
+  /** Opens in-menu UI (e.g. contact modal) instead of navigating */
+  menuAction?: "contact-support";
 };
 
 export type MainNavSection = {
@@ -156,6 +159,13 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
       },
       { href: "/profile", label: "Profile", Icon: User },
       { href: "/settings", label: "Settings", Icon: Settings },
+      {
+        href: "#",
+        label: "Contact support",
+        shortLabel: "Support",
+        Icon: LifeBuoy,
+        menuAction: "contact-support",
+      },
       { href: "/my-plan", label: "My Plan", Icon: Crown },
     ],
   },
@@ -202,7 +212,8 @@ function quickNavOrderIndex(href: string): number {
 /** Flat list of nav items for the scrolling quick bar, frequency-sorted. */
 export function getMainNavItemsInQuickNavOrder(): MainNavItem[] {
   const flat = MAIN_NAV_SECTIONS.flatMap((s) => s.items).filter(
-    (item) => !QUICK_NAV_EXCLUDED_HREFS.has(item.href),
+    (item) =>
+      !item.menuAction && !QUICK_NAV_EXCLUDED_HREFS.has(item.href),
   );
   return [...flat].sort(
     (a, b) => quickNavOrderIndex(a.href) - quickNavOrderIndex(b.href),
