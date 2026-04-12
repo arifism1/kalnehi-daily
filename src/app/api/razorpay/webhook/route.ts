@@ -3,13 +3,13 @@ import crypto from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
+import { RAZORPAY_PAYMENT_OR_SUB_ID_RE } from "@/lib/razorpayIds";
 import { firstOfCurrentMonthDateString } from "@/lib/subscriptionUsage";
 import type { Database } from "@/types/supabase";
 
 export const runtime = "nodejs";
 
 const MAX_BODY_BYTES = 64 * 1024;
-const RAZORPAY_SUB_ID_RE = /^sub_[a-zA-Z0-9]{14,20}$/;
 const HANDLED_EVENTS = new Set([
   "subscription.charged",
   "subscription.cancelled",
@@ -43,6 +43,7 @@ type WebhookEnvelope = {
     payment?: {
       entity?: {
         notes?: Record<string, string>;
+        subscription_id?: string | null;
       };
     };
   };
@@ -88,7 +89,7 @@ function inferTier(payload: WebhookEnvelope): TierType {
 function buildUpdateFromSubscription(payload: WebhookEnvelope): ProfileUpdate | null {
   const sub = payload.payload?.subscription?.entity;
   const subId = sub?.id?.trim();
-  if (!subId || !RAZORPAY_SUB_ID_RE.test(subId)) return null;
+  if (!subId || !RAZORPAY_PAYMENT_OR_SUB_ID_RE.test(subId)) return null;
 
   const plan = inferPlan(payload);
   const now = new Date();
@@ -182,7 +183,7 @@ export async function POST(request: Request) {
     payload.payload?.payment?.entity?.notes?.kalnehi_user_id
   )?.trim();
 
-  if (subscriptionId && !RAZORPAY_SUB_ID_RE.test(subscriptionId)) {
+  if (subscriptionId && !RAZORPAY_PAYMENT_OR_SUB_ID_RE.test(subscriptionId)) {
     return errorResponse(400);
   }
 
@@ -247,19 +248,22 @@ export async function POST(request: Request) {
   }
 
   if (event === "payment.failed") {
+    const failedPaymentSubId =
+      payload.payload?.payment?.entity?.subscription_id?.trim() ?? "";
+    if (
+      !failedPaymentSubId ||
+      !RAZORPAY_PAYMENT_OR_SUB_ID_RE.test(failedPaymentSubId)
+    ) {
+      return okResponse({ ignored: true });
+    }
+
     const nowIso = new Date().toISOString();
     const patch: Record<string, unknown> = {
       subscription_status: "expired",
       subscription_end_date: nowIso,
     };
 
-    let updated = false;
-    if (subscriptionId) {
-      updated = await applyBySubscriptionId(supabase, subscriptionId, patch);
-    }
-    if (!updated && userIdFromNotes) {
-      updated = await applyByUserId(supabase, userIdFromNotes, patch);
-    }
+    const updated = await applyBySubscriptionId(supabase, failedPaymentSubId, patch);
     return okResponse({ updated });
   }
 

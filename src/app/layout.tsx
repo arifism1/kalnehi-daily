@@ -3,6 +3,7 @@ import { Geist_Mono, Inter } from "next/font/google";
 
 import { AppShell } from "@/components/AppShell";
 import { AuthProvider } from "@/components/AuthProvider";
+import { FcmForegroundListener } from "@/components/FcmForegroundListener";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { SyncProvider } from "@/components/SyncProvider";
 import { ThemeSync } from "@/components/ThemeSync";
@@ -124,6 +125,7 @@ export default function RootLayout({
         <ThemeSync />
         <ServiceWorkerRegister />
         <AuthProvider>
+          <FcmForegroundListener />
           <SyncProvider>
             <AppShell>{children}</AppShell>
           </SyncProvider>
