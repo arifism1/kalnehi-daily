@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { differenceInCalendarDays, format } from "date-fns";
 import { ArrowLeft, Camera, Crown, Loader2, Mic, Sparkles, Zap } from "lucide-react";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 
 import { cancelSubscription } from "@/actions/subscription";
+import { HelpyJiChat } from "@/components/helpyji/HelpyJiChat";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ExtraCreditsSection } from "@/components/settings/ExtraCreditsSection";
 import { PlanUpgradeSection } from "@/components/settings/PlanUpgradeSection";
@@ -13,6 +14,8 @@ import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { useAiGate } from "@/hooks/useAiGate";
 import { SITE_NAME } from "@/lib/seo-metadata";
 import { getTierConfig, type SubscriptionTier } from "@/lib/subscriptionTiers";
+import { isHelpyJiEligibleForTier } from "@/lib/helpyjiVisibility";
+import { useAuthStore } from "@/store/useAuthStore";
 
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
@@ -140,6 +143,13 @@ export function MyPlanPageClient() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const helpyjiUpgradeAnchorRef = useRef<HTMLDivElement>(null);
+  const user = useAuthStore((s) => s.user);
+
+  const showHelpyJiMyPlan =
+    !!user &&
+    isHelpyJiEligibleForTier(tier) &&
+    (hasPaidAccess ? tier === "basic" : true);
 
   const tierConfig = getTierConfig(tier);
   const resolvedTier: SubscriptionTier =
@@ -425,7 +435,23 @@ export function MyPlanPageClient() {
             )}
           </div>
 
-          {hasPaidAccess && <PlanUpgradeSection />}
+          {showHelpyJiMyPlan ? (
+            <>
+              <div
+                ref={helpyjiUpgradeAnchorRef}
+                className="h-px w-full max-w-lg md:max-w-xl"
+                aria-hidden
+              />
+              <HelpyJiChat
+                surface={
+                  hasPaidAccess && tier === "basic" ? "upgrade" : "pricing"
+                }
+                intersectionAnchorRef={helpyjiUpgradeAnchorRef}
+              />
+            </>
+          ) : null}
+
+          {hasPaidAccess ? <PlanUpgradeSection /> : null}
 
           {hasAiAccess && hasPaidAccess && <ExtraCreditsSection />}
         </>

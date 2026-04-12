@@ -233,7 +233,7 @@ export function DailyPlanTypedQuickAdd({ planDate, onAdded }: Props) {
       <p className="mt-1 text-xs leading-relaxed text-kal-muted">
         Describe the task and time in plain English — e.g. &quot;study bio from 6 am to 7
         am&quot;, &quot;revise physics chapter 5 at 9pm&quot;, or &quot;morning run 30
-        mins&quot;. We parse it with Groq, then you can edit before saving.
+        mins&quot;. We parse it automatically, then you can edit before saving.
       </p>
       <div className="mt-3">
         <label className="block text-[11px] font-medium text-kal-muted">
