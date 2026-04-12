@@ -118,7 +118,7 @@ export function RealitySnapshot({
   return (
     <section
       aria-label="Reality snapshot"
-      className="kal-glass-panel overflow-hidden rounded-2xl sm:rounded-2xl"
+      className="kal-glass-panel rounded-2xl sm:rounded-2xl"
     >
       <ExamCountdownHero />
 
@@ -179,7 +179,7 @@ export function RealitySnapshot({
           ) : null}
 
           {useCuet && cuetScoring ? (
-            <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-3 lg:gap-x-12 xl:gap-x-14">
+            <div className="grid grid-cols-1 items-stretch gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)] lg:gap-x-8 xl:gap-x-12">
               <div className="flex min-w-0 flex-col items-center text-center lg:items-start lg:text-left">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-kal-muted sm:text-[11px]">
                   Overall CUET progress
@@ -253,12 +253,12 @@ export function RealitySnapshot({
                 </CircularProgressRing>
               </div>
 
-              <div className="min-w-0">
+              <div className="min-w-0 lg:flex lg:flex-col lg:border-l lg:border-kal-border lg:pl-8 xl:pl-10">
                 <p className="mb-4 text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-kal-muted sm:mb-5 sm:text-[11px] lg:text-left">
                   Per domain subject
                 </p>
                 <ul
-                  className="mx-auto flex max-w-md flex-col gap-3 border-t border-kal-border pt-5 sm:gap-3.5 sm:pt-6 lg:mx-0 lg:max-w-none lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0"
+                  className="mx-auto flex max-w-md flex-1 flex-col gap-3 border-t border-kal-border pt-5 sm:gap-3.5 sm:pt-6 lg:mx-0 lg:max-w-none lg:border-t-0 lg:pt-0"
                   aria-label={
                     showAdvancedMarksProjection
                       ? "CUET projected marks by subject"
@@ -296,7 +296,7 @@ export function RealitySnapshot({
               </div>
             </div>
           ) : useSyllabusYears && syllabusMultiYear ? (
-            <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-3 lg:gap-x-12 xl:gap-x-14">
+            <div className="grid grid-cols-1 items-stretch gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)] lg:gap-x-8 xl:gap-x-12">
               {/* Left: syllabus mastery % */}
               <div className="flex min-w-0 flex-col items-center text-center lg:items-start lg:text-left">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-kal-muted sm:text-[11px]">
@@ -380,29 +380,29 @@ export function RealitySnapshot({
                 </CircularProgressRing>
               </div>
 
-              {/* Right: all exam years */}
-              <div className="min-w-0">
+              {/* Right: all exam years — border spans full column height */}
+              <div className="min-w-0 lg:flex lg:flex-col lg:border-l lg:border-kal-border lg:pl-8 xl:pl-10">
                 <p className="mb-4 text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-kal-muted sm:mb-5 sm:text-[11px] lg:text-left">
                   Multi-year breakdown
                 </p>
                 <p className="mb-3 hidden text-xs text-kal-text-secondary lg:mb-4 lg:block">
                   Marks columns (720-scale projection per pattern year)
                 </p>
-                <div className="mx-auto max-w-md border-t border-kal-border pt-5 sm:pt-6 lg:mx-0 lg:max-w-none lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
+                <div className="mx-auto w-full max-w-md flex-1 border-t border-kal-border pt-5 sm:pt-6 lg:mx-0 lg:max-w-none lg:border-t-0 lg:pt-0">
                   <ul
-                    className="divide-y divide-kal-border/50 overflow-hidden rounded-xl border border-white/25 bg-white/45 shadow-sm backdrop-blur-sm dark:divide-white/10 dark:border-white/12 dark:bg-zinc-900/50"
+                    className="divide-y divide-kal-border/50 rounded-xl border border-white/25 bg-white/45 shadow-sm backdrop-blur-sm dark:divide-white/10 dark:border-white/12 dark:bg-zinc-900/50"
                     aria-label="Marks secured by exam year"
                   >
                     {syllabusMultiYear.lines.map((line) => (
                       <li
                         key={line.year}
-                        className="flex flex-col gap-2 px-4 py-3.5 text-left sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:py-4"
+                        className="flex min-w-0 flex-col gap-2 px-3 py-3.5 text-left sm:flex-row sm:items-start sm:justify-between sm:gap-3 sm:px-4 sm:py-4"
                       >
-                        <p className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.12em] text-kal-muted">
+                        <p className="min-w-0 shrink text-[11px] font-semibold uppercase tracking-[0.12em] text-kal-muted sm:max-w-[45%] sm:pt-0.5">
                           {examFriendly || examLabel || "Exam"} {line.year}
                         </p>
-                        <div className="min-w-0 sm:text-right">
-                          <p className="inline-flex shrink-0 flex-nowrap items-baseline gap-x-2 whitespace-nowrap text-xl font-bold tabular-nums sm:text-2xl">
+                        <div className="min-w-0 flex-1 sm:text-right">
+                          <p className="inline-flex max-w-full flex-wrap items-baseline justify-end gap-x-1.5 gap-y-0.5 text-lg font-bold tabular-nums sm:justify-end sm:text-xl md:text-2xl">
                             <span className="text-red-600 dark:text-red-300">
                               {line.projectedOutOf720}
                             </span>

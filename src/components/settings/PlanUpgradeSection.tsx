@@ -5,17 +5,25 @@ import { Loader2, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useState, useTransition } from "react";
 
 import {
+  confirmPlanUpgradeSubscriptionAuth,
   createPlanUpgradeOrder,
   getPlanUpgradeQuotes,
+  getSubscriptionMandateCheckoutCredentials,
   verifyPlanUpgradePayment,
   type PlanUpgradeQuote,
 } from "@/actions/subscription";
-import { TIERS } from "@/lib/subscriptionTiers";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
+import { TIERS, type SubscriptionTier } from "@/lib/subscriptionTiers";
 
 type RazorpayOrderHandlerResponse = {
   razorpay_payment_id: string;
   razorpay_order_id: string;
+  razorpay_signature: string;
+};
+
+type RazorpaySubscriptionHandlerResponse = {
+  razorpay_payment_id: string;
+  razorpay_subscription_id: string;
   razorpay_signature: string;
 };
 
@@ -28,6 +36,13 @@ declare global {
   }
 }
 
+type PendingMandate = {
+  keyId: string;
+  subscriptionId: string;
+  targetTier: SubscriptionTier;
+  tierName: string;
+};
+
 export function PlanUpgradeSection() {
   const { refetch } = useSubscriptionAccess();
   const [quotes, setQuotes] = useState<PlanUpgradeQuote[]>([]);
@@ -35,6 +50,7 @@ export function PlanUpgradeSection() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
+  const [pendingMandate, setPendingMandate] = useState<PendingMandate | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const reloadQuotes = useCallback(() => {
@@ -54,10 +70,77 @@ export function PlanUpgradeSection() {
     reloadQuotes();
   }, [reloadQuotes]);
 
+  const openMandateCheckout = useCallback(
+    (m: PendingMandate) => {
+      if (typeof window === "undefined" || !window.Razorpay) {
+        setMessage("Unable to load payment window. Refresh and try again.");
+        setBusyId(null);
+        return false;
+      }
+      const monthlyPaise = TIERS[m.targetTier].monthlyPricePaise;
+      const rzpSub = new window.Razorpay({
+        key: m.keyId,
+        name: "Kalnehi Daily",
+        description: `${m.tierName} — authorize monthly recurring billing (UPI auto-pay)`,
+        subscription_id: m.subscriptionId,
+        amount: monthlyPaise,
+        currency: "INR",
+        theme: { color: "#ef4444" },
+        modal: {
+          ondismiss: () => {
+            setBusyId(null);
+            setPendingMandate(m);
+          },
+        },
+        handler: async (subRes: RazorpaySubscriptionHandlerResponse) => {
+          const c = await confirmPlanUpgradeSubscriptionAuth({
+            razorpay_payment_id: subRes.razorpay_payment_id,
+            razorpay_subscription_id: subRes.razorpay_subscription_id,
+            razorpay_signature: subRes.razorpay_signature,
+          });
+          setBusyId(null);
+          setPendingMandate(null);
+          if (!c.ok) {
+            setMessage(c.error);
+            return;
+          }
+          setMessage(
+            `${m.tierName} is active. Monthly billing and auto-pay are set for the next renewal.`,
+          );
+          refetch();
+          reloadQuotes();
+        },
+      });
+      rzpSub.open();
+      return true;
+    },
+    [refetch, reloadQuotes],
+  );
+
+  const resumeMandateFromServer = useCallback(() => {
+    startTransition(async () => {
+      setMessage(null);
+      const creds = await getSubscriptionMandateCheckoutCredentials();
+      if (!creds.ok) {
+        setMessage(creds.error);
+        return;
+      }
+      setBusyId(creds.tier);
+      const m: PendingMandate = {
+        keyId: creds.keyId,
+        subscriptionId: creds.subscriptionId,
+        targetTier: creds.tier,
+        tierName: TIERS[creds.tier].name,
+      };
+      openMandateCheckout(m);
+    });
+  }, [openMandateCheckout]);
+
   const onUpgrade = useCallback(
     (q: PlanUpgradeQuote) => {
       setMessage(null);
       setWarning(null);
+      setPendingMandate(null);
       setBusyId(q.targetTier);
       startTransition(async () => {
         const created = await createPlanUpgradeOrder(q.targetTier);
@@ -91,13 +174,35 @@ export function PlanUpgradeSection() {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_signature: response.razorpay_signature,
             });
-            setBusyId(null);
             if (!v.ok) {
+              setBusyId(null);
               setMessage(v.error);
               return;
             }
+
+            if ("keyId" in v && "subscriptionId" in v) {
+              if (v.warning) setWarning(v.warning);
+              const mandate: PendingMandate = {
+                keyId: v.keyId,
+                subscriptionId: v.subscriptionId,
+                targetTier: q.targetTier,
+                tierName,
+              };
+              if (!openMandateCheckout(mandate)) {
+                setBusyId(null);
+                setMessage(
+                  "Prorated payment succeeded. Use “Resume monthly authorization” below after checkout loads.",
+                );
+                setPendingMandate(mandate);
+                refetch();
+                reloadQuotes();
+                return;
+              }
+              return;
+            }
+
+            setBusyId(null);
             setMessage(`${tierName} is active now. Your new subscription renews after the current period.`);
-            if ("warning" in v) setWarning(v.warning);
             refetch();
             reloadQuotes();
           },
@@ -105,8 +210,15 @@ export function PlanUpgradeSection() {
         rzp.open();
       });
     },
-    [refetch, reloadQuotes],
+    [openMandateCheckout, refetch, reloadQuotes],
   );
+
+  const resumePendingMandate = useCallback(() => {
+    if (!pendingMandate) return;
+    setMessage(null);
+    setBusyId(pendingMandate.targetTier);
+    openMandateCheckout(pendingMandate);
+  }, [pendingMandate, openMandateCheckout]);
 
   if (loadError) {
     return (
@@ -166,6 +278,28 @@ export function PlanUpgradeSection() {
             </div>
           ))}
         </div>
+        {(pendingMandate || quotes.length > 0) && (
+          <div className="flex flex-wrap gap-2 border-t border-kal-border px-3 py-2">
+            {pendingMandate ? (
+              <button
+                type="button"
+                disabled={Boolean(busyId) || isPending}
+                onClick={resumePendingMandate}
+                className="inline-flex min-h-[36px] items-center justify-center rounded-lg border border-kal-border bg-kal-glass-subtle px-3 text-xs font-semibold text-kal-text disabled:opacity-50"
+              >
+                Continue monthly authorization
+              </button>
+            ) : null}
+            <button
+              type="button"
+              disabled={Boolean(busyId) || isPending}
+              onClick={resumeMandateFromServer}
+              className="inline-flex min-h-[36px] items-center justify-center rounded-lg border border-kal-border bg-kal-glass-subtle px-3 text-xs font-semibold text-kal-text-secondary disabled:opacity-50"
+            >
+              Resume monthly authorization (after refresh)
+            </button>
+          </div>
+        )}
         {isPending && !quotes.length ? (
           <div className="flex justify-center border-t border-kal-border py-4">
             <Loader2 className="h-5 w-5 animate-spin text-kal-accent" />

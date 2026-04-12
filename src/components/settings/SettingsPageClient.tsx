@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 
 import { CameraPlannerSettings } from "@/components/settings/CameraPlannerSettings";
 import { PurposeModePhotos } from "@/components/settings/PurposeModePhotos";
+import { PushNotificationsSettings } from "@/components/settings/PushNotificationsSettings";
 import { SettingsToggles } from "@/components/settings/SettingsToggles";
 import { useSettingsStore } from "@/store/useSettingsStore";
 
@@ -43,6 +44,13 @@ export function SettingsPageClient() {
           Preferences
         </h2>
         <SettingsToggles />
+      </section>
+
+      <section aria-labelledby="push-notifications-heading">
+        <h2 id="push-notifications-heading" className="sr-only">
+          Push notifications
+        </h2>
+        <PushNotificationsSettings />
       </section>
 
       <section aria-labelledby="camera-planner-heading">
