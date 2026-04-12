@@ -1,4 +1,6 @@
-/* Kalnehi Daily — service worker (static caching + offline shell + sync bridge) */
+/* Kalnehi Daily — service worker (static caching + offline shell + sync bridge)
+ * FCM block is injected at request time by src/app/sw.js/route.ts (never commit API keys).
+ */
 const STATIC_CACHE = "kalnehi-static-v3";
 const PAGE_CACHE = "kalnehi-pages-v2";
 const SYNC_TAG = "kalnehi-outbox-sync";
@@ -131,39 +133,4 @@ function networkFirstHtml(request) {
     );
 }
 
-
-
-
-
-
-// --- Firebase Cloud Messaging (injected by scripts/merge-service-worker.mjs) ---
-importScripts("https://www.gstatic.com/firebasejs/12.12.0/firebase-app-compat.js");
-importScripts("https://www.gstatic.com/firebasejs/12.12.0/firebase-messaging-compat.js");
-try {
-  if (!firebase.apps.length) {
-    firebase.initializeApp({"apiKey":"AIzaSyD2EO5qzR_GKJBuLOr9VCle4Pq8W8lqcUk","authDomain":"kalnehi-1.firebaseapp.com","projectId":"kalnehi-1","storageBucket":"kalnehi-1.firebasestorage.app","messagingSenderId":"543640707010","appId":"1:543640707010:web:ed0ecf26714c1b68a0805b"});
-  }
-  if (firebase.messaging && firebase.messaging.isSupported()) {
-    const messaging = firebase.messaging();
-    messaging.onBackgroundMessage((payload) => {
-      const title =
-        payload.notification && payload.notification.title
-          ? payload.notification.title
-          : "Kalnehi Daily";
-      const body =
-        payload.notification && payload.notification.body
-          ? payload.notification.body
-          : "";
-      const options = {
-        body,
-        icon: "/icon-192x192.png",
-        badge: "/icon-192x192.png",
-        data: payload.data || {},
-        tag: payload.data && payload.data.tag ? String(payload.data.tag) : "kalnehi-fcm",
-      };
-      return self.registration.showNotification(title, options);
-    });
-  }
-} catch (e) {
-  console.error("[kalnehi sw] FCM background init failed", e);
-}
+/* __KALNEHI_FCM_INJECT__ */
