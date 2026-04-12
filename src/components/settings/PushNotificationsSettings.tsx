@@ -10,6 +10,7 @@ import {
   revokeFcmToken,
 } from "@/lib/firebase/messagingClient";
 import { showFcmDevTools } from "@/lib/fcm/adminGate";
+import { SITE_NAME } from "@/lib/seo-metadata";
 import { useAuthStore } from "@/store/useAuthStore";
 
 const LS_ENABLED = "kalnehi-fcm-enabled";
@@ -165,7 +166,7 @@ export function PushNotificationsSettings() {
     try {
       if (Notification.permission === "default") {
         setMessage(
-          "Your browser will ask whether Kalnehi Daily can send notifications — choose Allow to continue.",
+          `Your browser will ask whether ${SITE_NAME} can send notifications — choose Allow to continue.`,
         );
         const perm = await Notification.requestPermission();
         if (perm !== "granted") {

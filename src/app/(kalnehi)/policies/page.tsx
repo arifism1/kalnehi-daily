@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 
+import { SITE_NAME } from "@/lib/seo-metadata";
+
 const POLICY_LINKS: { href: string; label: string; description: string }[] =
   [
     {
@@ -11,7 +13,7 @@ const POLICY_LINKS: { href: string; label: string; description: string }[] =
     {
       href: "/terms",
       label: "Terms & Conditions",
-      description: "Rules for using Kalnehi Daily.",
+      description: `Rules for using ${SITE_NAME}.`,
     },
     {
       href: "/refund",
@@ -46,7 +48,7 @@ export default function PoliciesHubPage() {
           Our Policies
         </h1>
         <p className="text-sm leading-relaxed text-kal-text-secondary sm:text-[15px]">
-          Important documents for Kalnehi Daily. Tap a topic to read the full
+          Important documents for {SITE_NAME}. Tap a topic to read the full
           text.
         </p>
       </header>

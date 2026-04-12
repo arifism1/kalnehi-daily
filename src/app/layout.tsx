@@ -12,7 +12,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { SyncProvider } from "@/components/SyncProvider";
 import { ThemeSync } from "@/components/ThemeSync";
-import { defaultSiteMetadata } from "@/lib/seo-metadata";
+import { defaultSiteMetadata, SITE_NAME } from "@/lib/seo-metadata";
 
 import "./globals.css";
 
@@ -86,7 +86,7 @@ export const metadata: Metadata = {
     : {}),
   appleWebApp: {
     capable: true,
-    title: "Kalnehi Daily",
+    title: SITE_NAME,
     statusBarStyle: "black-translucent",
     startupImage: [...appleStartupImages],
   },

@@ -2,12 +2,12 @@ import Link from "next/link";
 
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
+import { SITE_NAME } from "@/lib/seo-metadata";
 
 export const metadata = marketingPageMetadata({
   path: "/boards-study-planner",
-  title: "Board exam planner — school tests & competitive prep together | Kalnehi Daily",
-  description:
-    "Plan Board exam months without dropping daily discipline. Kalnehi Daily combines routines, todos, and study sessions so Class 10–12 students can execute school and entrance prep in one PWA.",
+  title: `Board exam planner — school tests & competitive prep together | ${SITE_NAME}`,
+  description: `Plan Board exam months without dropping daily discipline. ${SITE_NAME} combines routines, todos, and study sessions so Class 10–12 students can execute school and entrance prep in one PWA.`,
 });
 
 export default function BoardsStudyPlannerPage() {
@@ -21,17 +21,17 @@ export default function BoardsStudyPlannerPage() {
         ]}
         faqs={[
           {
-            question: "Is Kalnehi Daily only for JEE and NEET?",
+            question: `Is ${SITE_NAME} only for JEE and NEET?`,
             answer:
               "No. Many students use it for Board-focused schedules while keeping optional competitive prep in the same weekly map — routines and todos adapt to your subjects.",
           },
           {
             question: "How do I avoid burnout during Board month?",
             answer:
-              "Use realistic daily plans, timed study sessions, and short recovery breaks. Kalnehi Daily emphasizes sustainable output — not heroic all-nighters that collapse the next day.",
+              `Use realistic daily plans, timed study sessions, and short recovery breaks. ${SITE_NAME} emphasizes sustainable output — not heroic all-nighters that collapse the next day.`,
           },
           {
-            question: "Can parents or schools use Kalnehi Daily?",
+            question: `Can parents or schools use ${SITE_NAME}?`,
             answer:
               "It is built for students. Accounts are personal; visibility of progress stays with the signed-in user.",
           },
@@ -51,7 +51,7 @@ export default function BoardsStudyPlannerPage() {
             Board exam planner when school, homework, and entrance prep compete
           </h1>
           <p className="text-sm leading-relaxed text-kal-text-secondary sm:text-base">
-            Boards reward clarity and completeness. Kalnehi Daily helps you{" "}
+            Boards reward clarity and completeness. {SITE_NAME} helps you{" "}
             <strong className="text-kal-text">allocate limited hours honestly</strong>: school
             assignments, revision, and mock-style practice — without pretending you can do everything
             every day.
@@ -94,7 +94,7 @@ export default function BoardsStudyPlannerPage() {
             href="/auth"
             className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-xl bg-kal-accent px-6 text-sm font-bold text-kal-accent-foreground"
           >
-            Open Kalnehi Daily
+            Open {SITE_NAME}
           </Link>
           <Link
             href="/guides"

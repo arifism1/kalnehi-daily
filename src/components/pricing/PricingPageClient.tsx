@@ -11,6 +11,7 @@ import {
 } from "@/actions/subscription";
 import { CancelSubscriptionButton } from "@/components/subscription/CancelSubscriptionButton";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
+import { SITE_NAME } from "@/lib/seo-metadata";
 import {
   TIER_ORDER,
   TIERS,
@@ -183,7 +184,7 @@ export function PricingPageClient() {
       const tierConfig = TIERS[tier];
       const rzp = new window.Razorpay({
         key: created.keyId,
-        name: "Kalnehi Daily",
+        name: SITE_NAME,
         description: `${tierConfig.name} 3-Day Trial (${tierConfig.trialPriceDisplay})`,
         subscription_id: created.subscriptionId,
         amount: created.amountPaise,
@@ -237,7 +238,7 @@ export function PricingPageClient() {
         <div className="rounded-2xl border border-rose-300 bg-rose-50 px-5 py-4 dark:border-rose-800 dark:bg-rose-950/30">
           <p className="text-sm font-medium text-rose-800 dark:text-rose-200">
             Your last payment could not be processed. Subscribe again to
-            continue using Kalnehi Daily.
+            continue using {SITE_NAME}.
           </p>
         </div>
       );
@@ -270,7 +271,7 @@ export function PricingPageClient() {
             Pick the plan that fits your goals
           </h1>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-kal-text-secondary">
-            Kalnehi Daily is fully paid — there is no free tier. Start with a
+            {SITE_NAME} is fully paid — there is no free tier. Start with a
             3-day trial, then your plan renews monthly for up to 12 cycles.
             Cancel anytime before the next charge if you change your mind.
           </p>

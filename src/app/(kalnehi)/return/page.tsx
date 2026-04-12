@@ -1,3 +1,5 @@
+import { SITE_NAME } from "@/lib/seo-metadata";
+
 export default function ReturnPolicyPage() {
   return (
     <article className="mx-auto max-w-2xl space-y-4 pb-8 text-[15px] leading-relaxed text-kal-text sm:text-base">
@@ -9,7 +11,7 @@ export default function ReturnPolicyPage() {
       </p>
       <p>
         Neven Academy Assam provides only digital services and subscriptions
-        through Kalnehi Daily.
+        through {SITE_NAME}.
       </p>
       <p>
         <strong>No Returns Allowed</strong>
@@ -38,7 +40,7 @@ export default function ReturnPolicyPage() {
       </p>
       <p>
         We are <strong>not responsible</strong> for any dissatisfaction with
-        the digital service. You use Kalnehi Daily{" "}
+        the digital service. You use {SITE_NAME}{" "}
         <strong>entirely at your own risk</strong>. We have{" "}
         <strong>zero liability</strong> for any request for return or any
         related claim.

@@ -8,6 +8,7 @@ import {
   createExtraCreditsOrder,
   verifyExtraCreditsPayment,
 } from "@/actions/subscription";
+import { SITE_NAME } from "@/lib/seo-metadata";
 import { EXTRA_CREDIT_PACKS, type ExtraCreditPack } from "@/lib/subscriptionTiers";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 
@@ -94,7 +95,7 @@ export function ExtraCreditsSection() {
           key: created.keyId,
           amount: created.amountPaise,
           currency: "INR",
-          name: "Kalnehi Daily",
+          name: SITE_NAME,
           description: pack.label,
           order_id: created.orderId,
           theme: { color: "#ef4444" },

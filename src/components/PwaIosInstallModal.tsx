@@ -4,6 +4,8 @@ import clsx from "clsx";
 import { ArrowRight, PlusSquare, Share2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { SITE_BRAND, SITE_NAME } from "@/lib/seo-metadata";
+
 type PwaIosInstallModalProps = {
   open: boolean;
   onClose: () => void;
@@ -80,7 +82,7 @@ export function PwaIosInstallModal({ open, onClose }: PwaIosInstallModalProps) {
 
         <div className="space-y-4 px-4 py-4 sm:px-5 sm:py-5">
           <p className="text-sm leading-relaxed text-kal-muted">
-            Install Kalnehi Daily like a native app — one tap from your home
+            Install {SITE_NAME} like a native app — one tap from your home
             screen.
           </p>
 
@@ -137,7 +139,8 @@ export function PwaIosInstallModal({ open, onClose }: PwaIosInstallModalProps) {
                 3
               </span>
               <p className="text-sm leading-relaxed text-kal-text-secondary">
-                Open <span className="font-semibold text-kal-text">Kalnehi</span>{" "}
+                Open{" "}
+                <span className="font-semibold text-kal-text">{SITE_BRAND}</span>{" "}
                 from your home screen anytime — full screen, quick launch.
               </p>
             </li>

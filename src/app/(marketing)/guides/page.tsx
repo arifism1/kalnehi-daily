@@ -1,37 +1,66 @@
 import Link from "next/link";
-import { BookOpen, GraduationCap, School } from "lucide-react";
+import {
+  BookOpen,
+  Brain,
+  FileText,
+  GraduationCap,
+  Landmark,
+  School,
+} from "lucide-react";
 
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
+import { SITE_NAME } from "@/lib/seo-metadata";
 
 export const metadata = marketingPageMetadata({
   path: "/guides",
-  title: "Study guides — JEE, NEET & Boards | Kalnehi Daily",
+  title: `Study guides — JEE 2026, NEET 2026, UPSC & Boards | ${SITE_NAME}`,
   description:
-    "Free guides to daily execution for IIT-JEE, NEET-UG, and Board exams. Learn how Kalnehi Daily helps you plan, track syllabus, and install the PWA for focused prep.",
+    `Free SEO guides: best daily planners for JEE 2026, NEET 2026, UPSC CSE, Board exams, Brain Yoga for exam warriors, and how to stay consistent. Install ${SITE_NAME} as a PWA.`,
 });
 
 const guides = [
   {
     href: "/jee-study-planner",
-    title: "JEE study planner",
+    title: "Best daily planner for JEE 2026",
     blurb:
-      "Structure revision for Physics, Chemistry, and Mathematics with weekly intent, deep-work blocks, and habit loops.",
+      "PCM execution: weekly intent, syllabus-linked tasks, timed sessions, and habits for JEE Main & Advanced.",
     icon: GraduationCap,
   },
   {
     href: "/neet-study-planner",
-    title: "NEET study planner",
+    title: "Best daily planner for NEET 2026",
     blurb:
-      "Balance PCB theory, drills, and mock analysis — without losing sight of your daily output.",
+      "PCB throughput: theory, drills, and mock review without losing your daily rhythm.",
     icon: BookOpen,
+  },
+  {
+    href: "/upsc-study-planner",
+    title: "Best daily planner for UPSC CSE",
+    blurb:
+      "GS, optional, and current affairs mapped into weekly execution — Prelims and Mains phases.",
+    icon: Landmark,
   },
   {
     href: "/boards-study-planner",
     title: "Board exam planner",
     blurb:
-      "Ship consistent school days alongside competitive prep using routines, todos, and a realistic daily plan.",
+      "School days alongside competitive prep — routines, todos, and realistic daily plans.",
     icon: School,
+  },
+  {
+    href: "/brain-yoga",
+    title: "Brain Yoga for Exam Warriors",
+    blurb:
+      "Micro-recovery between marathon blocks — breathing, posture, and focus resets.",
+    icon: Brain,
+  },
+  {
+    href: "/guides/how-to-maintain-consistency-in-jee-preparation",
+    title: "How to maintain consistency in JEE preparation",
+    blurb:
+      "Blog-style guide: weekly rhythm, mistake review, sleep, and one execution system.",
+    icon: FileText,
   },
 ] as const;
 
@@ -45,9 +74,9 @@ export default function GuidesHubPage() {
         ]}
         faqs={[
           {
-            question: "What is Kalnehi Daily?",
+            question: `What is ${SITE_NAME}?`,
             answer:
-              "Kalnehi Daily is a web app and installable PWA for Indian exam aspirants: planner, syllabus tracking, study sessions, habits, and optional PrepBrain AI coaching.",
+              `${SITE_NAME} is a web app and installable PWA for Indian exam aspirants: planner, syllabus tracking, study sessions, habits, and optional PrepBrain AI coaching.`,
           },
           {
             question: "Do I need to pay to read these guides?",
@@ -55,9 +84,9 @@ export default function GuidesHubPage() {
               "No. These guides are public. Creating an account is only required when you open the app to plan and track your own prep.",
           },
           {
-            question: "Can I install Kalnehi Daily on Android?",
+            question: `Can I install ${SITE_NAME} on Android?`,
             answer:
-              "Yes. After signing in from Chrome on Android, use Install app or Add to Home screen for a standalone experience with offline-friendly caching.",
+              "Yes. After signing in from Chrome on Android, use Install app or Add to Home screen for a standalone experience with offline-friendly caching — the same signals Google uses for installable PWAs in search.",
           },
         ]}
       />
@@ -70,12 +99,18 @@ export default function GuidesHubPage() {
             Plan heavy exam years without drowning in tools
           </h1>
           <p className="text-sm leading-relaxed text-kal-text-secondary sm:text-base">
-            Pick a guide below to see how Kalnehi Daily maps to JEE Main & Advanced, NEET-UG, or
-            Board exams — then{" "}
-            <Link href="/auth" className="font-medium text-kal-accent-dark underline-offset-2 hover:underline">
+            Landing pages for{" "}
+            <strong className="text-kal-text">JEE 2026</strong>,{" "}
+            <strong className="text-kal-text">NEET 2026</strong>,{" "}
+            <strong className="text-kal-text">UPSC CSE</strong>, Boards, Brain Yoga, and a consistency
+            guide — then{" "}
+            <Link
+              href="/auth"
+              className="font-medium text-kal-accent-dark underline-offset-2 hover:underline"
+            >
               create a free account
             </Link>{" "}
-            to run your own daily execution system.
+            to run your daily execution system in {SITE_NAME}.
           </p>
         </header>
 

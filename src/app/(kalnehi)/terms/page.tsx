@@ -1,3 +1,5 @@
+import { SITE_NAME } from "@/lib/seo-metadata";
+
 export default function TermsPage() {
   return (
     <article className="mx-auto max-w-2xl space-y-4 pb-8 text-[15px] leading-relaxed text-kal-text sm:text-base">
@@ -8,21 +10,21 @@ export default function TermsPage() {
         <strong>Last updated:</strong> April 08, 2026
       </p>
       <p>
-        These Terms &amp; Conditions govern your use of Kalnehi Daily operated
+        These Terms &amp; Conditions govern your use of {SITE_NAME} operated
         by Neven Academy Assam.
       </p>
       <p>
         <strong>Acceptance of Terms</strong>
       </p>
       <p>
-        By accessing or using Kalnehi Daily, you agree to these Terms. If you
+        By accessing or using {SITE_NAME}, you agree to these Terms. If you
         do not agree, you must not use the app.
       </p>
       <p>
         <strong>Description of Service</strong>
       </p>
       <p>
-        Kalnehi Daily is a digital study planning tool for competitive exam
+        {SITE_NAME} is a digital study planning tool for competitive exam
         preparation. It includes AI-powered features like voice dictation,
         planner scanning, progress tracking, and more.
       </p>

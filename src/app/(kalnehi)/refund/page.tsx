@@ -1,3 +1,5 @@
+import { SITE_NAME } from "@/lib/seo-metadata";
+
 export default function RefundPage() {
   return (
     <article className="mx-auto max-w-2xl space-y-4 pb-8 text-[15px] leading-relaxed text-kal-text sm:text-base">
@@ -8,7 +10,7 @@ export default function RefundPage() {
         <strong>Last updated:</strong> April 08, 2026
       </p>
       <p>
-        All purchases made on Kalnehi Daily are{" "}
+        All purchases made on {SITE_NAME} are{" "}
         <strong>final and non-refundable</strong>.
       </p>
       <p>

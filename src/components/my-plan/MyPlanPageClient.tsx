@@ -11,6 +11,7 @@ import { ExtraCreditsSection } from "@/components/settings/ExtraCreditsSection";
 import { PlanUpgradeSection } from "@/components/settings/PlanUpgradeSection";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { useAiGate } from "@/hooks/useAiGate";
+import { SITE_NAME } from "@/lib/seo-metadata";
 import { getTierConfig, type SubscriptionTier } from "@/lib/subscriptionTiers";
 
 function formatDate(iso: string | null): string {
@@ -254,7 +255,7 @@ export function MyPlanPageClient() {
                 </h2>
                 <p className="mt-1 text-sm text-kal-text-secondary">
                   {noActivePlan
-                    ? "Choose a plan to unlock Kalnehi Daily."
+                    ? `Choose a plan to unlock ${SITE_NAME}.`
                     : tierConfig.tagline}
                 </p>
                 {hasPaidAccess && !noActivePlan ? (

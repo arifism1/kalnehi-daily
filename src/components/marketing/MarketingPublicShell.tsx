@@ -1,6 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { PwaInstallPrompt } from "@/components/PwaInstallPrompt";
+import { SITE_NAME } from "@/lib/seo-metadata";
+
 export function MarketingPublicShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-col bg-kal-page text-kal-text">
@@ -18,7 +21,9 @@ export function MarketingPublicShell({ children }: { children: React.ReactNode }
               className="h-9 w-9 object-contain"
               priority
             />
-            <span className="text-sm sm:text-base">Kalnehi Daily</span>
+            <span className="min-w-0 max-w-[min(100%,11rem)] text-left text-[11px] font-semibold leading-snug sm:max-w-[18rem] sm:text-xs md:max-w-none md:text-sm">
+              {SITE_NAME}
+            </span>
           </Link>
           <nav className="flex items-center gap-2 text-sm">
             <Link
@@ -49,8 +54,9 @@ export function MarketingPublicShell({ children }: { children: React.ReactNode }
             Terms
           </Link>
         </p>
-        <p className="mt-2">© {new Date().getFullYear()} Kalnehi Daily</p>
+        <p className="mt-2">© {new Date().getFullYear()} {SITE_NAME}</p>
       </footer>
+      <PwaInstallPrompt />
     </div>
   );
 }

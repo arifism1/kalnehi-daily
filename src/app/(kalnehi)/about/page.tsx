@@ -1,4 +1,4 @@
-import { kalnehiPageMetadata } from "@/lib/seo-metadata";
+import { kalnehiPageMetadata, SITE_NAME } from "@/lib/seo-metadata";
 
 export const metadata = kalnehiPageMetadata("about");
 
@@ -18,7 +18,7 @@ export default function AboutUsPage() {
         tools.
       </p>
       <p>
-        Kalnehi Daily is our flagship digital product — a mobile-first PWA
+        {SITE_NAME} is our flagship digital product — a mobile-first PWA
         designed to bring visibility, execution, and accountability to
         students&apos; daily study routine.
       </p>
@@ -37,7 +37,7 @@ export default function AboutUsPage() {
         <strong>Maybe the AI did it. We are not sure.</strong>
       </p>
       <p>
-        You use Kalnehi Daily <strong>entirely at your own risk</strong>. Neven
+        You use {SITE_NAME} <strong>entirely at your own risk</strong>. Neven
         Academy Assam and its owner have <strong>zero liability</strong> for any
         outcome resulting from the use of this app.
       </p>

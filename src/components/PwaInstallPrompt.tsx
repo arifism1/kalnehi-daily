@@ -4,6 +4,9 @@ import { Download, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { isPublicMarketingPath } from "@/lib/public-paths";
+import { SITE_NAME } from "@/lib/seo-metadata";
+
 const STORAGE_DISMISS_UNTIL = "kalnehi-pwa-dismiss-until";
 const STORAGE_VISIT_COUNT = "kalnehi-pwa-visits";
 const STORAGE_ENGAGED = "kalnehi-pwa-engaged";
@@ -28,7 +31,8 @@ function mightSupportNativeInstall(): boolean {
 }
 
 export function PwaInstallPrompt() {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
+  const marketingLanding = isPublicMarketingPath(pathname);
   const [visible, setVisible] = useState(false);
   const [iosHint, setIosHint] = useState(false);
   const deferred = useRef<{
@@ -90,7 +94,8 @@ export function PwaInstallPrompt() {
     }
 
     const firstVisit = visits <= 1;
-    const afterEngagement = engaged || routeCount >= 3;
+    const routesNeeded = marketingLanding ? 2 : 3;
+    const afterEngagement = engaged || routeCount >= routesNeeded;
 
     if (!firstVisit && !afterEngagement) return;
 
@@ -104,7 +109,7 @@ export function PwaInstallPrompt() {
       setIosHint(true);
       setVisible(true);
     }
-  }, []);
+  }, [marketingLanding]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -131,19 +136,36 @@ export function PwaInstallPrompt() {
       }
     };
 
+    const onScroll = () => {
+      if (typeof document === "undefined") return;
+      const doc = document.documentElement;
+      const scrollable = doc.scrollHeight - window.innerHeight;
+      if (scrollable <= 0) return;
+      if (window.scrollY / scrollable < 0.12) return;
+      try {
+        localStorage.setItem(STORAGE_ENGAGED, "1");
+      } catch {
+        /* ignore */
+      }
+    };
+
     window.addEventListener("beforeinstallprompt", onBeforeInstall);
     window.addEventListener("pointerup", onPointerUp, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
 
-    const t1 = window.setTimeout(tryShow, 12000);
-    const t2 = window.setTimeout(tryShow, 35000);
+    const delayA = marketingLanding ? 6000 : 12000;
+    const delayB = marketingLanding ? 22000 : 35000;
+    const t1 = window.setTimeout(tryShow, delayA);
+    const t2 = window.setTimeout(tryShow, delayB);
 
     return () => {
       window.removeEventListener("beforeinstallprompt", onBeforeInstall);
       window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("scroll", onScroll);
       window.clearTimeout(t1);
       window.clearTimeout(t2);
     };
-  }, [tryShow]);
+  }, [tryShow, marketingLanding]);
 
   useEffect(() => {
     const id = window.setTimeout(tryShow, 600);
@@ -180,7 +202,7 @@ export function PwaInstallPrompt() {
             <Download className="h-5 w-5" aria-hidden />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-kal-text">Install Kalnehi Daily</p>
+            <p className="text-sm font-semibold text-kal-text">Install {SITE_NAME}</p>
             <p className="mt-0.5 text-xs leading-snug text-kal-text-secondary">
               {iosHint ? (
                 <>
@@ -190,8 +212,8 @@ export function PwaInstallPrompt() {
                 </>
               ) : (
                 <>
-                  Add to your home screen for faster load, offline support, and a distraction-free
-                  study shell — optimized for JEE, NEET & Boards prep.
+                  Add to your home screen for faster load, offline-friendly pages you have visited,
+                  and a distraction-free study shell — JEE, NEET, UPSC & Boards.
                 </>
               )}
             </p>

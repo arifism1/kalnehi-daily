@@ -2,15 +2,19 @@ import type { Metadata } from "next";
 
 import { absoluteUrl, getSiteUrl } from "@/lib/site";
 
-export const SITE_NAME = "Kalnehi Daily";
-export const SITE_TAGLINE = "Win Daily — JEE, NEET & Boards";
+/** Full official product name (SEO, manifest, browser tab, install UI). */
+export const SITE_NAME = "Kalnehi Daily - Exam Prep Tracker";
+
+/** Short brand for tight UI and conversational copy where the full name is heavy. */
+export const SITE_BRAND = "Kalnehi Daily";
+
+export const SITE_TAGLINE = "Win Daily — JEE, NEET, UPSC & Boards";
 
 export const OG_IMAGE_PATH = "/icon-512x512.png";
 
 export type KalnehiPageSeoKey =
   | "home"
   | "prepbrain"
-  | "brainYoga"
   | "studySessions"
   | "planner"
   | "pricing"
@@ -29,87 +33,81 @@ const PAGE_SEO: Record<
 > = {
   home: {
     path: "/",
-    title: "Kalnehi Daily — JEE, NEET & Boards planner & study app",
+    title: `${SITE_NAME} — JEE, NEET & Boards planner & study app`,
     description:
-      "Plan every day, track syllabus and marks, build habits, and stay consistent. Kalnehi Daily is the execution planner for serious JEE, NEET, and Boards aspirants — install the PWA and study anywhere.",
+      `Plan every day, track syllabus and marks, build habits, and stay consistent. ${SITE_NAME} is the execution planner for serious JEE, NEET, and Boards aspirants — install the PWA and study anywhere.`,
   },
   prepbrain: {
     path: "/prepbrain",
-    title: "PrepBrain AI — your JEE & NEET study coach",
+    title: `PrepBrain AI — syllabus-aware study coach | ${SITE_NAME}`,
     description:
-      "Ask syllabus-aware questions, get structured help, and stay aligned with your planner. PrepBrain AI in Kalnehi Daily supports high-intensity JEE, NEET, and Boards preparation with context from your routine.",
-  },
-  brainYoga: {
-    path: "/brain-yoga",
-    title: "Brain Yoga — focus & calm for exam preparation",
-    description:
-      "Short, exam-focused mindfulness and breathing routines to reset attention between subjects. Brain Yoga in Kalnehi Daily helps JEE and NEET aspirants manage stress and sustain deep work.",
+      `Ask syllabus-aware questions, get structured help, and stay aligned with your planner. PrepBrain AI in ${SITE_NAME} uses your tracked syllabus, schedule, and study rhythm so answers stay concrete.`,
   },
   studySessions: {
     path: "/study-sessions",
-    title: "Study sessions — timed blocks & deep work",
+    title: `Study sessions — timed blocks & deep work | ${SITE_NAME}`,
     description:
-      "Run focused study sessions with Kalnehi Daily. Track time on task, reduce distraction, and build a repeatable daily rhythm for JEE, NEET, and Boards.",
+      `Run focused study sessions with ${SITE_NAME}. Track time on task, reduce distraction, and build a repeatable daily rhythm for JEE, NEET, and Boards.`,
   },
   planner: {
     path: "/planner",
-    title: "Study planner — weekly schedule, todos & habits",
+    title: `Study planner — weekly schedule, todos & habits | ${SITE_NAME}`,
     description:
-      "Weekly planner, daily todos, routine builder, and habit loops in one place. Kalnehi Daily turns your target exam into a concrete plan you can execute every day.",
+      `Weekly planner, daily todos, routine builder, and habit loops in one place. ${SITE_NAME} turns your target exam into a concrete plan you can execute every day.`,
   },
   pricing: {
     path: "/pricing",
-    title: "Pricing — Kalnehi Daily Pro & Pro Max",
+    title: `Pricing — Pro & Pro Max | ${SITE_NAME}`,
     description:
-      "Simple plans for students who want PrepBrain AI, advanced tracking, and premium execution tools. See Kalnehi Daily pricing for JEE, NEET, and Boards.",
+      `Simple plans for students who want PrepBrain AI, advanced tracking, and premium execution tools. See ${SITE_NAME} pricing for JEE, NEET, and Boards.`,
   },
   about: {
     path: "/about",
-    title: "About Kalnehi Daily",
+    title: `About | ${SITE_NAME}`,
     description:
-      "Kalnehi Daily helps Indian exam aspirants ship consistent study days — planner, syllabus, habits, and optional AI coaching in one installable web app.",
+      `${SITE_NAME} helps Indian exam aspirants ship consistent study days — planner, syllabus, habits, and optional AI coaching in one installable web app.`,
   },
   meditation: {
     path: "/meditation",
-    title: "Meditation & consistency — Kalnehi Daily",
+    title: `Meditation & consistency | ${SITE_NAME}`,
     description:
-      "Guided micro-sessions and consistency tools so you can recover focus between tough chapters. Built for JEE, NEET, and Boards schedules.",
+      `Guided micro-sessions and consistency tools so you can recover focus between tough chapters. Built for JEE, NEET, and Boards schedules.`,
   },
   syllabus: {
     path: "/syllabus",
-    title: "Syllabus tracker — JEE, NEET & Boards",
+    title: `Syllabus tracker — JEE, NEET & Boards | ${SITE_NAME}`,
     description:
-      "Track microtopics, weightage, and completion across your syllabus. Kalnehi Daily connects syllabus progress to daily tasks and marks goals.",
+      `Track microtopics, weightage, and completion across your syllabus. ${SITE_NAME} connects syllabus progress to daily tasks and marks goals.`,
   },
   dailyPlan: {
     path: "/daily-plan",
-    title: "Daily plan — ship today’s study list",
+    title: `Daily plan — ship today’s study list | ${SITE_NAME}`,
     description:
-      "Turn your backlog into a realistic daily plan. Kalnehi Daily helps you assign tasks, time, and marks so each day moves the needle on JEE, NEET, or Boards prep.",
+      `Turn your backlog into a realistic daily plan. ${SITE_NAME} helps you assign tasks, time, and marks so each day moves the needle on JEE, NEET, or Boards prep.`,
   },
   habits: {
     path: "/habits",
-    title: "Habits — streaks & routines for exam prep",
+    title: `Habits — streaks & routines for exam prep | ${SITE_NAME}`,
     description:
-      "Build non-negotiable study habits with streaks and reminders. Kalnehi Daily reinforces the routines that compound into rank-level preparation.",
+      `Build non-negotiable study habits with streaks and reminders. ${SITE_NAME} reinforces the routines that compound into rank-level preparation.`,
   },
   timer: {
     path: "/timer",
-    title: "Study timer — Pomodoro & exam blocks",
+    title: `Study timer — Pomodoro & exam blocks | ${SITE_NAME}`,
     description:
-      "Use Kalnehi Daily’s timer for Pomodoro-style blocks or long exam-style sprints. Stay in flow during JEE, NEET, and Boards revision.",
+      `Use the timer in ${SITE_NAME} for Pomodoro-style blocks or long exam-style sprints. Stay in flow during JEE, NEET, and Boards revision.`,
   },
   motivation: {
     path: "/motivation",
-    title: "Motivation wall — daily fuel for aspirants",
+    title: `Motivation wall — daily fuel for aspirants | ${SITE_NAME}`,
     description:
-      "Curated motivation and wallpapers to keep execution high on hard days. Part of Kalnehi Daily’s premium study environment.",
+      `Curated motivation and wallpapers to keep execution high on hard days. Part of the premium study environment in ${SITE_NAME}.`,
   },
   progress: {
     path: "/progress",
-    title: "Progress — marks, syllabus & reality check",
+    title: `Progress — marks, syllabus & reality check | ${SITE_NAME}`,
     description:
-      "See weighted completion, marks projections, and how your daily work maps to your exam goal. Kalnehi Daily turns effort into visible progress for JEE, NEET, and Boards.",
+      `See weighted completion, marks projections, and how your daily work maps to your exam goal. ${SITE_NAME} turns effort into visible progress for JEE, NEET, and Boards.`,
   },
 };
 
@@ -171,16 +169,20 @@ export function defaultSiteMetadata(): Pick<
     },
     description: desc,
     applicationName: SITE_NAME,
-    authors: [{ name: "Kalnehi Daily" }],
+    authors: [{ name: SITE_NAME }],
     keywords: [
       "JEE preparation app",
       "NEET study planner",
       "Boards exam planner",
-      "Kalnehi Daily",
+      SITE_BRAND,
+      "exam prep tracker",
       "study PWA",
       "installable study app",
       "Indian competitive exams",
       "daily study planner",
+      "UPSC study planner",
+      "JEE 2026 planner",
+      "NEET 2026 planner",
     ],
     category: "education",
     openGraph: {

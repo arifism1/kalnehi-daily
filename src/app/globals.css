@@ -2,7 +2,7 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Light-first Kalnehi Daily — cohesive off-white page, white cards, red accent. */
+/* Light-first Kalnehi Daily - Exam Prep Tracker — cohesive off-white page, white cards, red accent. */
 :root {
   --kal-page: #f8f9fa;
   --kal-card: #ffffff;

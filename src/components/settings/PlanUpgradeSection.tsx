@@ -11,6 +11,7 @@ import {
   type PlanUpgradeQuote,
 } from "@/actions/subscription";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
+import { SITE_NAME } from "@/lib/seo-metadata";
 import { TIERS } from "@/lib/subscriptionTiers";
 
 type RazorpayCheckoutResponse = {
@@ -76,7 +77,7 @@ export function PlanUpgradeSection() {
         const tierName = TIERS[q.targetTier].name;
         const rzp = new window.Razorpay({
           key: created.keyId,
-          name: "Kalnehi Daily",
+          name: SITE_NAME,
           description: `${tierName} — prorated difference now + UPI auto-pay for renewals`,
           subscription_id: created.subscriptionId,
           amount: created.amountPaise,
