@@ -280,6 +280,57 @@ export type Database = {
         }
         Relationships: []
       }
+      helpyji_daily_usage: {
+        Row: {
+          day: string
+          last_message_at: string | null
+          message_count: number
+          subject_key: string
+        }
+        Insert: {
+          day: string
+          last_message_at?: string | null
+          message_count?: number
+          subject_key: string
+        }
+        Update: {
+          day?: string
+          last_message_at?: string | null
+          message_count?: number
+          subject_key?: string
+        }
+        Relationships: []
+      }
+      helpyji_conversations: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          message_role: string
+          session_id: string
+          surface: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          message_role: string
+          session_id: string
+          surface: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          message_role?: string
+          session_id?: string
+          surface?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_motivational_phrases: {
         Row: {
           active: boolean

@@ -191,8 +191,6 @@ export const TIERS: Record<SubscriptionTier, TierConfig> = {
       "Personal Motivation Vault",
       "Meditation + Consistency",
       "Doubt Tracker",
-      "20 AI photo scans / month (after trial)",
-      "40 AI voice minutes / month (after trial)",
     ],
   },
   pro_max: {
@@ -211,8 +209,6 @@ export const TIERS: Record<SubscriptionTier, TierConfig> = {
     tagline: "Maximum power",
     benefits: [
       "Everything in Pro",
-      "50 AI photo scans / month (after trial)",
-      "80 AI voice minutes / month (after trial)",
       "Priority support",
     ],
   },

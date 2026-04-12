@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Script from "next/script";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Check, Crown, Sparkles, Zap } from "lucide-react";
 
 import {
@@ -18,6 +18,9 @@ import {
   type SubscriptionTier,
   type TierConfig,
 } from "@/lib/subscriptionTiers";
+import { HelpyJiChat } from "@/components/helpyji/HelpyJiChat";
+import { isHelpyJiEligibleForPricingPage } from "@/lib/helpyjiVisibility";
+import { useAuthStore } from "@/store/useAuthStore";
 
 type RazorpayCheckoutResponse = {
   razorpay_payment_id: string;
@@ -116,16 +119,15 @@ function TierCard({
         <p className="mt-2 text-xs font-medium leading-relaxed text-kal-text-secondary">
           {trialAiSummary(config)}
         </p>
+        <p className="mt-2 border-t border-kal-accent/25 pt-2 text-xs leading-relaxed text-kal-text-secondary">
+          <span className="font-semibold text-kal-text">Full plan: </span>
+          {fullAiSummary(config)}
+        </p>
       </div>
 
-      <div className="mt-3 text-xs text-kal-text-secondary">
-        <span className="font-medium text-kal-text">Full plan: </span>
-        {fullAiSummary(config)}
-      </div>
-
-      <ul className="mt-4 flex-1 space-y-2">
+      <ul className="mt-4 flex-1 space-y-1.5">
         {config.benefits.map((b) => (
-          <li key={b} className="flex items-start gap-2 text-sm text-kal-text-secondary">
+          <li key={b} className="flex items-start gap-2 text-xs leading-snug text-kal-text-secondary sm:text-sm">
             <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
             <span>{b}</span>
           </li>
@@ -160,8 +162,10 @@ export function PricingPageClient() {
     status: subscriptionStatus,
     tier: currentTier,
   } = useSubscriptionAccess();
+  const user = useAuthStore((s) => s.user);
   const [busy, setBusy] = useState(false);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
+  const helpyjiAnchorRef = useRef<HTMLDivElement>(null);
 
   const showCancel =
     subscriptionStatus === "trial" || subscriptionStatus === "active";
@@ -292,6 +296,19 @@ export function PricingPageClient() {
             />
           ))}
         </div>
+
+        <div
+          ref={helpyjiAnchorRef}
+          className="h-px w-full max-w-5xl scroll-mt-4"
+          aria-hidden
+        />
+
+        {isHelpyJiEligibleForPricingPage(user) ? (
+          <HelpyJiChat
+            surface="pricing"
+            intersectionAnchorRef={helpyjiAnchorRef}
+          />
+        ) : null}
 
         {showCancel && (
           <div className="mx-auto max-w-sm">
