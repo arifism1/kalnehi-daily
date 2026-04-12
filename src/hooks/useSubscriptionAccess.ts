@@ -9,7 +9,7 @@ import {
   totalActiveBonus,
 } from "@/lib/bonusCreditsLedger";
 import { effectiveUsageForDisplay } from "@/lib/subscriptionUsage";
-import type { SubscriptionTier } from "@/lib/subscriptionTiers";
+import { parseSubscriptionTier, type SubscriptionTier } from "@/lib/subscriptionTiers";
 import { useAuthStore } from "@/store/useAuthStore";
 
 export type SubscriptionStatus = "trial" | "active" | "expired" | "cancelled" | null;
@@ -53,11 +53,6 @@ function isCurrentlyPaid(status: SubscriptionStatus, endDate: string | null): bo
   const end = new Date(endDate);
   if (Number.isNaN(end.getTime())) return false;
   return end.getTime() > Date.now();
-}
-
-function normalizeTier(raw: string | null | undefined): SubscriptionTier | null {
-  if (raw === "basic" || raw === "pro" || raw === "pro_max") return raw;
-  return null;
 }
 
 export function useSubscriptionAccess(): SubscriptionData {
@@ -123,7 +118,7 @@ export function useSubscriptionAccess(): SubscriptionData {
             : null;
 
         setStatus(normalizedStatus);
-        setTier(normalizeTier(data?.subscription_tier));
+        setTier(parseSubscriptionTier(data?.subscription_tier ?? undefined));
         setPlan(data?.subscription_plan ?? null);
         setStartDate(data?.subscription_start_date ?? null);
         setEndDate(data?.subscription_end_date ?? null);

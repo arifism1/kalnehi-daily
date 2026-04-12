@@ -985,19 +985,6 @@ export async function createPlanUpgradeOrder(
     return { ok: false, error: "Nothing to pay for this upgrade." };
   }
 
-  const planIdForTarget = resolveRazorpayPlanId(targetTier);
-  if (!planIdForTarget) {
-    console.error("[subscription] createPlanUpgradeOrder: missing or invalid Razorpay plan id", {
-      targetTier,
-      envVar: razorpayPlanEnvVarName(targetTier),
-    });
-    return {
-      ok: false,
-      error:
-        "This upgrade is temporarily unavailable. Please try again later or contact support.",
-    };
-  }
-
   try {
     const razorpay = getRazorpayClient(config);
     const receipt = `up${Date.now()}`.slice(0, 40);
