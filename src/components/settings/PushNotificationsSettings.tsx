@@ -95,9 +95,10 @@ export function PushNotificationsSettings() {
       return;
     }
     try {
-      const token = await obtainFcmToken();
+      const { token, hint } = await obtainFcmToken();
       if (!token) {
         setPushOn(false);
+        if (hint) console.warn("[FCM sync]", hint);
         return;
       }
       tokenRef.current = token;
@@ -167,10 +168,11 @@ export function PushNotificationsSettings() {
         }
       }
 
-      const token = await obtainFcmToken();
+      const { token, hint } = await obtainFcmToken();
       if (!token) {
         setMessage(
-          "Could not get a push token. Check Firebase config and Web Push key (VAPID).",
+          hint ??
+            "Could not get a push token. Check Firebase config and Web Push key (VAPID).",
         );
         setBusy(false);
         return;

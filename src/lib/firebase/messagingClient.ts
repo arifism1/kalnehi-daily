@@ -5,6 +5,12 @@ import type { Messaging } from "firebase/messaging";
 import { getFirebaseAppBrowser } from "@/lib/firebase/client";
 import { readFirebaseWebVapidKey } from "@/lib/firebase/config";
 
+export type ObtainFcmTokenResult = {
+  token: string | null;
+  /** Shown in Settings when token is null */
+  hint?: string;
+};
+
 export async function getMessagingIfSupported(): Promise<Messaging | null> {
   if (typeof window === "undefined") return null;
   const { getMessaging, isSupported } = await import("firebase/messaging");
@@ -12,41 +18,142 @@ export async function getMessagingIfSupported(): Promise<Messaging | null> {
   return getMessaging(getFirebaseAppBrowser());
 }
 
+function isLocalhostDevHostname(hostname: string): boolean {
+  return (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "[::1]"
+  );
+}
+
+/**
+ * Push / FCM requires a [secure context](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts).
+ * `http://192.168.x.x:3000` is NOT secure — PushManager.subscribe fails with
+ * "Registration failed - push service not available" in Chrome.
+ */
+function secureContextHint(): string | undefined {
+  if (typeof window === "undefined") return undefined;
+  if (window.isSecureContext) return undefined;
+  const { hostname, protocol } = window.location;
+  if (protocol === "http:" && isLocalhostDevHostname(hostname)) return undefined;
+  return "Push needs a secure context. Use https in production, or open the app at http://localhost (not a LAN IP like 192.168.x.x) while developing.";
+}
+
+async function waitForRegistrationActive(
+  reg: ServiceWorkerRegistration,
+): Promise<void> {
+  await navigator.serviceWorker.ready;
+  if (reg.active) return;
+  const sw = reg.installing ?? reg.waiting;
+  if (!sw) return;
+  if (sw.state === "activated") return;
+  await new Promise<void>((resolve, reject) => {
+    const timer = window.setTimeout(() => {
+      sw.removeEventListener("statechange", onChange);
+      reject(new Error("Service worker activation timed out"));
+    }, 60_000);
+    const onChange = () => {
+      if (sw.state === "activated") {
+        window.clearTimeout(timer);
+        sw.removeEventListener("statechange", onChange);
+        resolve();
+      } else if (sw.state === "redundant") {
+        window.clearTimeout(timer);
+        sw.removeEventListener("statechange", onChange);
+        reject(new Error("Service worker redundant"));
+      }
+    };
+    sw.addEventListener("statechange", onChange);
+  });
+}
+
+function hintFromGetTokenError(err: unknown): string {
+  const msg = err instanceof Error ? err.message : String(err);
+  const lower = msg.toLowerCase();
+  if (
+    lower.includes("push service not available") ||
+    lower.includes("registration failed")
+  ) {
+    return "The browser could not use the push service. Try: use http://localhost or https (not a LAN IP over http), disable VPN/ad blockers, use Chrome or Edge, or try again on a different network.";
+  }
+  if (lower.includes("aborted") || err instanceof DOMException) {
+    return "Push registration was interrupted. Reload the page, ensure notifications are allowed, and try again.";
+  }
+  return "Could not register for push. Check Firebase Web Push (VAPID) key and try another browser or network.";
+}
+
 /**
  * Registers /sw.js if needed, returns FCM token, or null if unavailable / denied.
+ * Never rejects — avoids unhandled promise rejections (Next.js dev overlay).
  */
-export async function obtainFcmToken(): Promise<string | null> {
+export async function obtainFcmToken(): Promise<ObtainFcmTokenResult> {
   if (typeof window === "undefined" || !("Notification" in window)) {
-    return null;
+    return { token: null, hint: "Notifications are not supported here." };
   }
-  if (!("serviceWorker" in navigator)) return null;
+  if (!("serviceWorker" in navigator)) {
+    return { token: null, hint: "Service workers are not supported in this browser." };
+  }
+  if (!("PushManager" in window)) {
+    return {
+      token: null,
+      hint: "Web Push is not available (no PushManager). Try Chrome or Edge on desktop.",
+    };
+  }
+
+  const secureHint = secureContextHint();
+  if (secureHint) {
+    return { token: null, hint: secureHint };
+  }
 
   let vapidKey: string;
   try {
     vapidKey = readFirebaseWebVapidKey();
   } catch {
-    return null;
+    return { token: null, hint: "Missing NEXT_PUBLIC_FIREBASE_FCM_VAPID_KEY." };
   }
 
-  const messaging = await getMessagingIfSupported();
-  if (!messaging) return null;
+  try {
+    const messaging = await getMessagingIfSupported();
+    if (!messaging) {
+      return {
+        token: null,
+        hint: "Firebase Messaging is not supported in this browser.",
+      };
+    }
 
-  const registration = await navigator.serviceWorker.register("/sw.js", {
-    scope: "/",
-  });
-  await registration.update?.();
-  await navigator.serviceWorker.ready;
+    let registration =
+      (await navigator.serviceWorker.getRegistration("/")) ?? null;
+    if (!registration) {
+      registration = await navigator.serviceWorker.register("/sw.js", {
+        scope: "/",
+      });
+    }
+    await registration.update?.();
+    await waitForRegistrationActive(registration);
 
-  const { getToken } = await import("firebase/messaging");
-  return getToken(messaging, {
-    vapidKey,
-    serviceWorkerRegistration: registration,
-  });
+    const sub = await registration.pushManager.getSubscription();
+    if (sub) {
+      await sub.unsubscribe().catch(() => {});
+    }
+
+    const { getToken } = await import("firebase/messaging");
+    const token = await getToken(messaging, {
+      vapidKey,
+      serviceWorkerRegistration: registration,
+    });
+    if (!token) {
+      return { token: null, hint: "No FCM token returned. Check Firebase project and Web Push key." };
+    }
+    return { token };
+  } catch (err) {
+    console.warn("[FCM] getToken failed:", err);
+    return { token: null, hint: hintFromGetTokenError(err) };
+  }
 }
 
 export async function revokeFcmToken(): Promise<void> {
   const messaging = await getMessagingIfSupported();
   if (!messaging) return;
   const { deleteToken } = await import("firebase/messaging");
-  await deleteToken(messaging);
+  await deleteToken(messaging).catch(() => {});
 }
