@@ -86,7 +86,7 @@ export function MissedTasks() {
 
   return (
     <section
-      className="overflow-hidden rounded-2xl border border-amber-500/25 bg-gradient-to-b from-amber-950/20 to-slate-950/40 p-4 text-neutral-100 shadow-lg shadow-amber-950/20 backdrop-blur-sm sm:rounded-3xl sm:p-5"
+      className="overflow-hidden rounded-2xl border border-amber-400/25 bg-gradient-to-b from-amber-950/30 to-slate-950/45 p-4 text-neutral-100 shadow-lg shadow-amber-950/15 backdrop-blur-md sm:rounded-3xl sm:p-5"
       aria-labelledby="missed-heading"
     >
       <div className="flex items-start gap-2.5 sm:gap-3">

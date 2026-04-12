@@ -53,7 +53,7 @@ const Section = memo(function Section({
       <h2 className="px-3 pb-2 text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
         {title}
       </h2>
-      <div className="overflow-hidden rounded-[1rem] border border-kal-border bg-kal-card kal-shadow-card transition-colors duration-200">
+      <div className="kal-glass-panel overflow-hidden rounded-[1rem] transition-colors duration-200">
         {children}
       </div>
       {footer ? (
@@ -464,7 +464,7 @@ export function ProfileForm() {
                   {scoreRows.map((row, index) => (
                     <li
                       key={row.id}
-                      className="flex flex-col gap-2 rounded-xl border border-kal-border bg-kal-card-muted p-3 sm:flex-row sm:items-end sm:gap-3"
+                      className="kal-glass-subtle flex flex-col gap-2 rounded-xl p-3 sm:flex-row sm:items-end sm:gap-3"
                     >
                       <div className="min-w-0 flex-1">
                         <label
@@ -535,7 +535,7 @@ export function ProfileForm() {
                 <button
                   type="button"
                   onClick={addScoreRow}
-                  className="flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl border border-dashed border-kal-border bg-kal-card py-2.5 text-sm font-semibold text-kal-accent transition-colors hover:border-kal-accent/35 hover:bg-kal-accent-soft"
+                  className="kal-glass-subtle flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl border border-dashed border-white/35 py-2.5 text-sm font-semibold text-kal-accent transition-colors hover:border-kal-accent/35 hover:bg-kal-accent-soft/50 dark:border-white/15"
                 >
                   <Plus className="h-4 w-4" strokeWidth={2.5} aria-hidden />
                   Add another score
@@ -578,7 +578,7 @@ export function ProfileForm() {
               referrerPolicy="no-referrer"
             />
           ) : (
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-kal-border bg-kal-card-muted">
+            <div className="kal-glass-subtle flex h-11 w-11 shrink-0 items-center justify-center rounded-full">
               <UserCircle className="h-8 w-8 text-kal-muted" />
             </div>
           )}
@@ -592,7 +592,7 @@ export function ProfileForm() {
         <div className="border-t border-kal-border px-4 py-3">
           <Link
             href="/my-plan"
-            className="mb-3 flex w-full min-h-[48px] items-center justify-center rounded-xl border border-kal-border bg-kal-card-muted py-3 text-[15px] font-semibold text-kal-text transition-colors hover:bg-kal-card active:opacity-90"
+            className="kal-glass-subtle mb-3 flex w-full min-h-[48px] items-center justify-center rounded-xl py-3 text-[15px] font-semibold text-kal-text transition-colors hover:opacity-95 active:opacity-90"
           >
             My Plan &amp; billing
           </Link>

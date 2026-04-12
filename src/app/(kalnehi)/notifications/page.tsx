@@ -60,7 +60,7 @@ export default function NotificationsPage() {
 
   if (!userId) {
     return (
-      <section className="mx-auto w-full max-w-2xl rounded-[1.25rem] border border-kal-border bg-kal-card p-6 text-center kal-shadow-card sm:p-8">
+      <section className="kal-glass-panel mx-auto w-full max-w-2xl rounded-[1.25rem] p-6 text-center sm:p-8">
         <p className="text-lg font-semibold text-kal-text">Sign in required</p>
         <p className="mt-2 text-sm text-kal-muted">
           Please sign in to view your notifications.
@@ -91,11 +91,11 @@ export default function NotificationsPage() {
       ) : null}
 
       {loading ? (
-        <section className="rounded-[1.25rem] border border-kal-border bg-kal-card p-6 text-center kal-shadow-card sm:p-8">
+        <section className="kal-glass-panel rounded-[1.25rem] p-6 text-center sm:p-8">
           <p className="text-sm text-kal-muted">Loading notifications...</p>
         </section>
       ) : notifications.length === 0 ? (
-        <section className="rounded-[1.25rem] border border-kal-border bg-kal-card p-6 text-center kal-shadow-card sm:p-8">
+        <section className="kal-glass-panel rounded-[1.25rem] p-6 text-center sm:p-8">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-kal-accent-soft text-kal-accent">
             <Bell className="h-6 w-6" aria-hidden />
           </div>
@@ -107,7 +107,7 @@ export default function NotificationsPage() {
           </p>
         </section>
       ) : (
-        <section className="rounded-[1.25rem] border border-kal-border bg-kal-card p-2 kal-shadow-card sm:p-3">
+        <section className="kal-glass-panel rounded-[1.25rem] p-2 sm:p-3">
           <ul aria-label="Notifications list" className="divide-y divide-kal-border">
             {notifications.map((item) => (
               <li key={item.id} className="px-4 py-3">

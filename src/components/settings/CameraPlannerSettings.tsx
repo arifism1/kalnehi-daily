@@ -92,7 +92,7 @@ export function CameraPlannerSettings() {
         onContinue={onPrivacyContinue}
         onDismiss={onPrivacyDismiss}
       />
-      <div className="divide-y divide-kal-border rounded-[1rem] border border-kal-border bg-kal-card kal-shadow-card px-1">
+      <div className="kal-glass-panel divide-y divide-white/15 rounded-[1rem] px-1 dark:divide-white/10">
         <div className="px-3 py-3">
           <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
             Camera &amp; planner

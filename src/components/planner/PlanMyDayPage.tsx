@@ -7,7 +7,7 @@ import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { isFeatureBlocked } from "@/lib/subscriptionTiers";
 
 const plannerCardShell =
-  "group relative flex min-h-0 flex-row items-center gap-3 rounded-xl border-2 border-kal-border px-3 py-2.5 text-left kal-shadow-card sm:gap-3.5 sm:rounded-[1rem] sm:py-3 sm:pl-3.5 sm:pr-4";
+  "kal-glass-card group relative flex min-h-0 flex-row items-center gap-3 rounded-xl border-2 border-white/35 px-3 py-2.5 text-left sm:gap-3.5 sm:rounded-[1rem] sm:py-3 sm:pl-3.5 sm:pr-4 dark:border-white/15";
 
 function PlannerCard({
   href,
@@ -51,9 +51,9 @@ function PlannerCard({
   if (locked) {
     return (
       <div
-        className={`${plannerCardShell} bg-kal-card-muted pr-12 opacity-65 sm:pr-14`}
+        className={`${plannerCardShell} pr-12 opacity-[0.65] saturate-[0.85] sm:pr-14`}
       >
-        <span className="absolute right-2 top-2 flex items-center gap-0.5 rounded-full bg-kal-card px-1.5 py-0.5 text-[9px] font-semibold text-kal-text-secondary ring-1 ring-kal-border/60">
+        <span className="absolute right-2 top-2 flex items-center gap-0.5 rounded-full border border-white/30 bg-white/70 px-1.5 py-0.5 text-[9px] font-semibold text-kal-text-secondary shadow-sm backdrop-blur-sm dark:border-white/12 dark:bg-zinc-900/70">
           <Lock className="h-2.5 w-2.5" />
           Pro
         </span>
@@ -65,7 +65,7 @@ function PlannerCard({
   return (
     <Link
       href={href}
-      className={`${plannerCardShell} bg-kal-card transition-[border-color,background-color,box-shadow,transform] duration-200 will-change-transform hover:border-kal-accent/45 hover:bg-kal-accent-soft/50 hover:shadow-md active:scale-[0.99]`}
+      className={`${plannerCardShell} transition-[border-color,background-color,box-shadow,transform] duration-200 will-change-transform hover:border-kal-accent/40 hover:bg-kal-accent-soft/40 hover:shadow-md active:scale-[0.99] dark:hover:bg-zinc-900/80`}
     >
       {body}
     </Link>

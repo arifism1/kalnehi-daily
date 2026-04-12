@@ -33,7 +33,7 @@ export function EngineCard({
 }) {
   return (
     <section
-      className={`rounded-[1rem] border border-kal-border bg-kal-card p-5 kal-shadow-card sm:p-6 ${className ?? ""}`}
+      className={`kal-glass-panel rounded-[1rem] p-5 sm:p-6 ${className ?? ""}`}
     >
       <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-kal-text-secondary">
         {title}

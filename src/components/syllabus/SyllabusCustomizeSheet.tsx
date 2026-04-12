@@ -179,7 +179,7 @@ export function SyllabusCustomizeSheet({
         disabled={busy}
       />
       <div
-        className="relative z-[71] max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-kal-border bg-kal-card p-6 kal-shadow-card sm:rounded-2xl"
+        className="kal-glass-panel relative z-[71] max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-2xl p-6 sm:rounded-2xl"
         role="dialog"
         aria-modal="true"
         aria-labelledby="syllabus-sheet-title"
@@ -278,7 +278,7 @@ export function SyllabusCustomizeSheet({
             type="button"
             disabled={busy}
             onClick={onClose}
-            className="min-h-[48px] rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-sm font-semibold text-kal-text sm:min-h-[44px]"
+            className="kal-glass-subtle min-h-[48px] rounded-xl px-4 py-3 text-sm font-semibold text-kal-text sm:min-h-[44px]"
           >
             Cancel
           </button>

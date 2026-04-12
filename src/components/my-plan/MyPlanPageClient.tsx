@@ -240,7 +240,7 @@ export function MyPlanPageClient() {
       ) : (
         <>
           {/* Tier spotlight */}
-          <div className="overflow-hidden rounded-2xl border border-kal-accent/25 bg-gradient-to-br from-kal-accent-soft via-kal-card to-kal-card kal-shadow-card">
+          <div className="overflow-hidden rounded-2xl border border-kal-accent/30 bg-gradient-to-br from-kal-accent-soft/95 via-white/65 to-white/80 shadow-lg backdrop-blur-md dark:from-red-950/45 dark:via-zinc-900/75 dark:to-zinc-900/88 dark:border-red-500/25">
             <div className="flex items-start gap-4 p-5 sm:p-6">
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-kal-accent/15 text-kal-accent">
                 {TIER_ICONS[resolvedTier]}
@@ -276,7 +276,7 @@ export function MyPlanPageClient() {
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-[1rem] border border-kal-border bg-kal-card kal-shadow-card">
+          <div className="kal-glass-panel overflow-hidden rounded-[1rem]">
             <ConfirmDialog
               open={confirmOpen}
               title="Cancel subscription?"

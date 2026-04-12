@@ -24,7 +24,7 @@ export function StudySessionsLog({
 }: Props) {
   if (sessions.length === 0) {
     return (
-      <li className="rounded-2xl border border-dashed border-kal-border py-12 text-center text-sm text-kal-muted">
+      <li className="kal-glass-subtle rounded-2xl border border-dashed border-white/35 py-12 text-center text-sm text-kal-muted dark:border-white/15">
         {emptyMessage}
       </li>
     );
@@ -35,7 +35,7 @@ export function StudySessionsLog({
       {sessions.map((s) => (
         <li
           key={s.id}
-          className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-kal-border bg-kal-card-muted px-4 py-3"
+          className="kal-glass-subtle flex flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-3"
         >
           <div className="min-w-0 flex-1">
             <p className="font-semibold text-kal-text">{s.subject}</p>
@@ -51,7 +51,7 @@ export function StudySessionsLog({
                   </span>
                 </span>
               ) : (
-                <span className="rounded-md border border-kal-border bg-kal-card px-1.5 py-0.5 font-medium text-kal-muted">
+                <span className="rounded-md border border-white/30 bg-white/50 px-1.5 py-0.5 font-medium text-kal-muted backdrop-blur-sm dark:border-white/12 dark:bg-zinc-900/55">
                   Claimed
                 </span>
               )}

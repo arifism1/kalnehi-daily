@@ -51,12 +51,12 @@ export default function PoliciesHubPage() {
         </p>
       </header>
 
-      <ul className="divide-y divide-kal-border overflow-hidden rounded-2xl border border-kal-border bg-kal-card kal-shadow-card">
+      <ul className="kal-glass-panel divide-y divide-white/15 overflow-hidden rounded-2xl dark:divide-white/10">
         {POLICY_LINKS.map(({ href, label, description }) => (
           <li key={href}>
             <Link
               href={href}
-              className="group flex min-h-[72px] items-center gap-3 px-4 py-4 transition-colors hover:bg-kal-card-muted active:bg-kal-card-muted sm:px-5"
+              className="group flex min-h-[72px] items-center gap-3 px-4 py-4 transition-colors hover:bg-white/40 active:bg-white/55 dark:hover:bg-zinc-900/50 dark:active:bg-zinc-900/60 sm:px-5"
             >
               <span className="min-w-0 flex-1">
                 <span className="block text-[15px] font-semibold text-kal-text group-hover:text-kal-accent">

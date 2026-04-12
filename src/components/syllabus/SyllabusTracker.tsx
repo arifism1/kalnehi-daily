@@ -332,7 +332,7 @@ export function SyllabusTracker() {
         ) : null}
       </header>
 
-      <section className="overflow-hidden rounded-2xl border border-kal-accent/25 bg-gradient-to-br from-kal-accent-soft via-kal-card to-kal-card p-6 kal-shadow-card dark:border-red-500/25 dark:from-red-950/40 dark:via-slate-900/60 dark:to-slate-900 dark:shadow-lg dark:shadow-red-900/10">
+      <section className="overflow-hidden rounded-2xl border border-kal-accent/30 bg-gradient-to-br from-kal-accent-soft/95 via-white/60 to-white/78 p-6 shadow-lg backdrop-blur-md dark:border-red-500/30 dark:from-red-950/45 dark:via-zinc-900/72 dark:to-zinc-900/88 dark:shadow-lg dark:shadow-red-900/10">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-kal-accent">
@@ -464,7 +464,7 @@ export function SyllabusTracker() {
           return (
             <details
               key={subject}
-              className="group overflow-hidden rounded-2xl border border-kal-border bg-kal-card open:shadow-md kal-shadow-card dark:border-slate-700/90 dark:bg-slate-900/40"
+              className="kal-glass-panel group overflow-hidden rounded-2xl open:shadow-md dark:border-white/12"
             >
               <summary className="flex min-h-[48px] cursor-pointer list-none items-center justify-between gap-2 px-5 py-4 text-base font-semibold text-kal-text marker:hidden [&::-webkit-details-marker]:hidden">
                 <span className="flex min-w-0 items-center gap-2">

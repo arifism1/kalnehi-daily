@@ -193,7 +193,7 @@ export default function AuthPage() {
           </p>
         </div>
 
-        <div className="w-full max-w-sm rounded-2xl border border-kal-border bg-kal-card kal-shadow-card p-4">
+        <div className="kal-glass-panel w-full max-w-sm rounded-2xl p-4">
           <form
             className="space-y-4"
             onSubmit={(e) => {
@@ -279,7 +279,7 @@ export default function AuthPage() {
         </div>
       )}
 
-      <div className="w-full max-w-sm rounded-2xl border border-kal-border bg-kal-card kal-shadow-card p-1">
+      <div className="kal-glass-panel w-full max-w-sm rounded-2xl p-1">
         <div className="flex rounded-xl bg-kal-input-bg/80 p-1">
           <button
             type="button"
@@ -403,7 +403,7 @@ export default function AuthPage() {
             type="button"
             disabled={busy}
             onClick={() => void signInGoogle()}
-            className="mt-3 flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl border border-kal-border bg-kal-card py-3 text-sm font-semibold text-kal-text transition-colors duration-200 hover:bg-kal-card-muted disabled:opacity-50"
+            className="kal-glass-subtle mt-3 flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-kal-text transition-colors duration-200 hover:opacity-95 disabled:opacity-50"
           >
             {busy ? (
               <Loader2 className="h-5 w-5 animate-spin" />

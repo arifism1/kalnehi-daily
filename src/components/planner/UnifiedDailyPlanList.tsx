@@ -19,7 +19,7 @@ function SourceBadge({ source }: { source: string }) {
   const Icon =
     source === "voice" ? Mic : source === "handwritten" ? PenLine : Type;
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-kal-border bg-kal-card-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-kal-muted">
+    <span className="inline-flex items-center gap-1 rounded-full border border-white/30 bg-white/55 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-kal-muted backdrop-blur-sm dark:border-white/12 dark:bg-zinc-900/55">
       <Icon className="h-3 w-3 text-kal-accent" aria-hidden />
       {label}
     </span>
@@ -112,7 +112,7 @@ export function UnifiedDailyPlanList({
 
   return (
     <section
-      className={`rounded-[1.25rem] border border-kal-border bg-kal-card kal-shadow-card p-4 sm:p-6 ${className}`}
+      className={`kal-glass-panel rounded-[1.25rem] p-4 sm:p-6 ${className}`}
     >
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-lg font-bold text-kal-text">{title}</h2>
@@ -129,7 +129,7 @@ export function UnifiedDailyPlanList({
           {error}
         </p>
       ) : tasks.length === 0 ? (
-        <p className="mt-6 rounded-xl border border-dashed border-kal-border py-10 text-center text-sm text-kal-muted">
+        <p className="kal-glass-subtle mt-6 rounded-xl border border-dashed border-white/35 py-10 text-center text-sm text-kal-muted dark:border-white/15">
           Nothing on this plan yet — add from typing, voice, or handwritten above.
         </p>
       ) : (
@@ -144,8 +144,8 @@ export function UnifiedDailyPlanList({
                 key={t.id}
                 className={`rounded-xl border p-3 transition-colors ${
                   done
-                    ? "border-kal-border/60 bg-kal-card-muted/50 opacity-90"
-                    : "border-kal-border bg-kal-card-muted/80"
+                    ? "border-white/20 bg-white/45 opacity-90 backdrop-blur-sm dark:border-white/10 dark:bg-zinc-900/45"
+                    : "kal-glass-subtle border-white/25 dark:border-white/12"
                 }`}
               >
                 <div className="flex flex-wrap items-start justify-between gap-2">
@@ -191,7 +191,7 @@ export function UnifiedDailyPlanList({
                       className={`flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border-2 transition-colors disabled:opacity-40 ${
                         done
                           ? "border-kal-accent bg-kal-accent text-white hover:bg-kal-accent-hover"
-                          : "border-kal-border bg-kal-card text-kal-muted hover:border-kal-accent/50 hover:text-kal-accent"
+                          : "border-white/35 bg-white/60 text-kal-muted backdrop-blur-sm hover:border-kal-accent/50 hover:text-kal-accent dark:border-white/12 dark:bg-zinc-900/65"
                       }`}
                       aria-checked={done}
                       aria-label={

@@ -147,7 +147,7 @@ export function ExamCountdownHero() {
         {breakdown.map((b) => (
           <div
             key={b.label}
-            className="rounded-2xl border border-kal-border/80 bg-kal-card px-3 py-4 text-center kal-shadow-card transition-colors duration-200 hover:border-kal-accent/25 sm:px-4 sm:py-5"
+            className="kal-glass-card rounded-2xl px-3 py-4 text-center transition-colors duration-200 hover:border-kal-accent/30 sm:px-4 sm:py-5"
           >
             <div className="text-2xl font-bold tabular-nums tracking-tight text-kal-text sm:text-[1.65rem] md:text-[1.85rem]">
               {b.value}

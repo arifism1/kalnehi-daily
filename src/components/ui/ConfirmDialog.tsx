@@ -36,7 +36,7 @@ export function ConfirmDialog({
       <button
         type="button"
         aria-label="Dismiss"
-        className="absolute inset-0 bg-kal-overlay backdrop-blur-[2px]"
+        className="absolute inset-0 bg-kal-overlay backdrop-blur-sm"
         onClick={busy ? undefined : onCancel}
         disabled={busy}
       />
@@ -45,7 +45,7 @@ export function ConfirmDialog({
         aria-modal="true"
         aria-labelledby="confirm-dialog-title"
         aria-describedby="confirm-dialog-desc"
-        className="relative z-[81] w-full max-w-md rounded-2xl border border-kal-border bg-kal-card p-6 kal-shadow-card sm:rounded-2xl"
+        className="kal-glass-panel relative z-[81] w-full max-w-md rounded-2xl p-6 sm:rounded-2xl"
       >
         <h2
           id="confirm-dialog-title"
@@ -64,7 +64,7 @@ export function ConfirmDialog({
             type="button"
             disabled={busy}
             onClick={onCancel}
-            className="min-h-[48px] rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-sm font-semibold text-kal-text sm:min-h-[44px] sm:px-5"
+            className="kal-glass-subtle min-h-[48px] rounded-xl px-4 py-3 text-sm font-semibold text-kal-text sm:min-h-[44px] sm:px-5"
           >
             {cancelLabel}
           </button>

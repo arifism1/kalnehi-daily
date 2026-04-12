@@ -50,13 +50,13 @@ export function PwaIosInstallModal({ open, onClose }: PwaIosInstallModalProps) {
       />
       <div
         className={clsx(
-          "relative z-[1] w-full max-w-md overflow-hidden rounded-2xl border border-kal-border bg-kal-card kal-shadow-card transition-all duration-300 ease-out motion-reduce:transition-none motion-reduce:translate-y-0 motion-reduce:opacity-100",
+          "kal-glass-panel relative z-[1] w-full max-w-md overflow-hidden rounded-2xl transition-all duration-300 ease-out motion-reduce:transition-none motion-reduce:translate-y-0 motion-reduce:opacity-100",
           entered
             ? "translate-y-0 opacity-100"
             : "translate-y-8 opacity-0 sm:translate-y-4",
         )}
       >
-        <div className="flex items-center justify-between gap-3 border-b border-kal-border px-4 py-3 sm:px-5">
+        <div className="flex items-center justify-between gap-3 border-b border-white/15 px-4 py-3 backdrop-blur-sm sm:px-5 dark:border-white/10">
           <div>
             <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-kal-accent">
               Install
@@ -71,7 +71,7 @@ export function PwaIosInstallModal({ open, onClose }: PwaIosInstallModalProps) {
           <button
             type="button"
             onClick={onClose}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-kal-border bg-kal-card-muted text-kal-muted transition-colors hover:bg-kal-accent-soft hover:text-kal-accent"
+            className="kal-glass-subtle flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-kal-muted transition-colors hover:bg-kal-accent-soft/80 hover:text-kal-accent"
             aria-label="Close"
           >
             <X className="h-5 w-5" strokeWidth={2.25} />
@@ -110,7 +110,7 @@ export function PwaIosInstallModal({ open, onClose }: PwaIosInstallModalProps) {
               </div>
             </li>
 
-            <li className="flex items-start gap-3 rounded-xl border border-kal-border bg-kal-card-muted/80 px-3 py-3 sm:gap-4 sm:px-4">
+            <li className="kal-glass-subtle flex items-start gap-3 rounded-xl px-3 py-3 sm:gap-4 sm:px-4">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-kal-accent/20 text-xs font-bold text-kal-accent-dark dark:text-kal-accent">
                 2
               </span>
@@ -122,7 +122,7 @@ export function PwaIosInstallModal({ open, onClose }: PwaIosInstallModalProps) {
                   </span>
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-2 text-kal-muted">
-                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-kal-border bg-kal-card px-2 py-1 text-[11px] font-medium text-kal-text-secondary">
+                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-white/30 bg-white/55 px-2 py-1 text-[11px] font-medium text-kal-text-secondary backdrop-blur-sm dark:border-white/12 dark:bg-zinc-900/60">
                     <PlusSquare className="h-3.5 w-3.5 text-kal-accent" />
                     Add to Home Screen
                   </span>

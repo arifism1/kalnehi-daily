@@ -21,7 +21,7 @@ export function PrepBrainPageClient() {
 
   if (!hasAiAccess) {
     return (
-      <div className="mx-auto flex max-w-lg flex-col items-center gap-4 rounded-2xl border border-kal-border bg-kal-card px-5 py-8 text-center kal-shadow-card sm:px-8">
+      <div className="kal-glass-panel mx-auto flex max-w-lg flex-col items-center gap-4 rounded-2xl px-5 py-8 text-center sm:px-8">
         <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-kal-card-muted text-kal-text-secondary ring-1 ring-kal-border">
           <Brain className="h-8 w-8" aria-hidden />
         </span>

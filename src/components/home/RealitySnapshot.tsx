@@ -50,15 +50,15 @@ export type RealitySnapshotProps = {
 function bandTone(b: DailyProgressBand): string {
   switch (b) {
     case "flawless":
-      return "border-red-200 bg-red-50 text-red-900 shadow-sm dark:border-red-500/30 dark:bg-red-950/25 dark:text-red-50 dark:shadow-[0_0_40px_-12px_rgba(239,68,68,0.35)]";
+      return "border-red-200/80 bg-red-50/85 text-red-900 shadow-sm backdrop-blur-md dark:border-red-500/35 dark:bg-red-950/35 dark:text-red-50 dark:shadow-[0_0_40px_-12px_rgba(239,68,68,0.35)]";
     case "strong":
-      return "border-rose-200 bg-rose-50 text-rose-900 dark:border-rose-500/25 dark:bg-rose-950/20 dark:text-rose-50";
+      return "border-rose-200/80 bg-rose-50/85 text-rose-900 backdrop-blur-md dark:border-rose-500/30 dark:bg-rose-950/35 dark:text-rose-50";
     case "mediocre":
-      return "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-500/30 dark:bg-amber-950/20 dark:text-amber-50";
+      return "border-amber-200/80 bg-amber-50/85 text-amber-900 backdrop-blur-md dark:border-amber-500/35 dark:bg-amber-950/35 dark:text-amber-50";
     case "danger":
-      return "border-rose-200 bg-rose-50 text-rose-900 dark:border-rose-500/35 dark:bg-rose-950/25 dark:text-rose-50";
+      return "border-rose-200/80 bg-rose-50/85 text-rose-900 backdrop-blur-md dark:border-rose-500/40 dark:bg-rose-950/38 dark:text-rose-50";
     case "no_plan":
-      return "border-kal-border bg-kal-card-muted text-kal-text dark:border-slate-600/80 dark:bg-slate-950/80 dark:text-kal-text-secondary";
+      return "border-white/30 bg-white/55 text-kal-text shadow-sm backdrop-blur-md dark:border-white/12 dark:bg-zinc-900/65 dark:text-kal-text-secondary";
   }
 }
 
@@ -118,7 +118,7 @@ export function RealitySnapshot({
   return (
     <section
       aria-label="Reality snapshot"
-      className="overflow-hidden rounded-2xl border border-kal-border bg-kal-card kal-shadow-card sm:rounded-2xl"
+      className="kal-glass-panel overflow-hidden rounded-2xl sm:rounded-2xl"
     >
       <ExamCountdownHero />
 
@@ -156,12 +156,12 @@ export function RealitySnapshot({
         {/* Syllabus block: mastery (left) · ring (center) · per-year marks (right) */}
         <div
           className={clsx(
-            "mt-8 rounded-2xl border border-kal-border/90 bg-kal-card-muted/80 p-7 sm:mt-10 sm:p-9 lg:p-11",
+            "kal-glass-subtle mt-8 rounded-2xl p-7 sm:mt-10 sm:p-9 lg:p-11",
             (useSyllabusYears || useCuet) && "lg:py-12",
           )}
         >
           {showSyllabusComingSoonBanner && (examFriendly || examLabel) ? (
-            <div className="mb-5 flex gap-3 rounded-xl border border-kal-accent/25 bg-kal-accent-soft px-4 py-3.5 sm:px-5">
+            <div className="mb-5 flex gap-3 rounded-xl border border-kal-accent/30 bg-kal-accent-soft/90 px-4 py-3.5 shadow-sm backdrop-blur-sm sm:px-5 dark:bg-kal-accent-soft/50">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-kal-accent/15">
                 <Sparkles className="h-5 w-5 text-kal-accent" aria-hidden />
               </div>
@@ -268,7 +268,7 @@ export function RealitySnapshot({
                   {cuetScoring.subjects.map((s) => (
                     <li
                       key={s.subject}
-                      className="rounded-lg border border-kal-border bg-kal-card px-3 py-2.5 text-left"
+                      className="kal-glass-subtle rounded-lg px-3 py-2.5 text-left"
                     >
                       <p className="text-[11px] font-semibold text-red-800 dark:text-red-100/95">
                         {s.subject}
@@ -390,7 +390,7 @@ export function RealitySnapshot({
                 </p>
                 <div className="mx-auto max-w-md border-t border-kal-border pt-5 sm:pt-6 lg:mx-0 lg:max-w-none lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
                   <ul
-                    className="divide-y divide-kal-border/60 overflow-hidden rounded-xl border border-kal-border/70 bg-kal-card/60"
+                    className="divide-y divide-kal-border/50 overflow-hidden rounded-xl border border-white/25 bg-white/45 shadow-sm backdrop-blur-sm dark:divide-white/10 dark:border-white/12 dark:bg-zinc-900/50"
                     aria-label="Marks secured by exam year"
                   >
                     {syllabusMultiYear.lines.map((line) => (

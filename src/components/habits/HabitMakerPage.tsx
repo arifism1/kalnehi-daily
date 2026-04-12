@@ -547,7 +547,7 @@ export function HabitMakerPage() {
 
   if (!userId) {
     return (
-      <div className="rounded-2xl border border-kal-border bg-kal-card p-8 text-center text-kal-muted">
+      <div className="kal-glass-panel rounded-2xl p-8 text-center text-kal-muted">
         Sign in to use Habit Maker.
       </div>
     );
@@ -592,7 +592,7 @@ export function HabitMakerPage() {
         </p>
       ) : null}
 
-      <section className="mb-8 rounded-2xl border border-kal-border bg-kal-card px-5 py-6 kal-shadow-card sm:px-8 sm:py-7">
+      <section className="kal-glass-panel mb-8 rounded-2xl px-5 py-6 sm:px-8 sm:py-7">
         <h2 className="text-sm font-bold text-kal-text">Add new habit</h2>
         <p className="mt-1 text-xs text-kal-text-secondary sm:text-sm">
           Name what you&apos;ll repeat every day — keep it concrete.
@@ -625,7 +625,7 @@ export function HabitMakerPage() {
       </section>
 
       {habits.length === 0 ? (
-        <section className="mb-10 overflow-hidden rounded-3xl border border-dashed border-kal-border/90 bg-gradient-to-br from-kal-accent-soft/60 via-kal-card to-kal-card px-6 py-10 text-center kal-shadow-card sm:px-10 sm:py-12 dark:from-kal-accent-soft/25">
+        <section className="mb-10 overflow-hidden rounded-3xl border border-dashed border-kal-border/70 bg-gradient-to-br from-kal-accent-soft/70 via-white/55 to-white/75 px-6 py-10 text-center shadow-lg backdrop-blur-md sm:px-10 sm:py-12 dark:from-kal-accent-soft/30 dark:via-zinc-900/65 dark:to-zinc-900/82">
           <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-rose-100 to-amber-50 shadow-inner ring-1 ring-rose-200/60 dark:from-rose-950/50 dark:to-kal-card-muted dark:ring-rose-900/40">
             <div className="relative">
               <Sparkles
@@ -656,7 +656,7 @@ export function HabitMakerPage() {
                     disabled={adding || taken}
                     onClick={() => void addPresetHabit(name)}
                     className={clsx(
-                      "group flex w-full items-center gap-3 rounded-2xl border bg-kal-card px-4 py-3.5 text-left text-sm font-semibold text-kal-text shadow-sm transition-all",
+                      "kal-glass-subtle group flex w-full items-center gap-3 rounded-2xl border px-4 py-3.5 text-left text-sm font-semibold text-kal-text shadow-sm transition-all",
                       taken
                         ? "cursor-not-allowed border-kal-border/60 opacity-50"
                         : "border-kal-border hover:border-kal-accent/35 hover:shadow-md motion-safe:hover:-translate-y-0.5",
@@ -682,7 +682,7 @@ export function HabitMakerPage() {
       ) : null}
 
       {habits.length > 0 ? (
-        <section className="relative mb-10 overflow-hidden rounded-3xl border border-kal-border bg-gradient-to-br from-white via-kal-card to-kal-accent-soft/30 px-5 py-8 kal-shadow-card sm:px-10 sm:py-10 dark:from-kal-card dark:via-kal-card dark:to-kal-accent-soft/20">
+        <section className="relative mb-10 overflow-hidden rounded-3xl border border-white/25 bg-gradient-to-br from-white/85 via-white/55 to-kal-accent-soft/35 px-5 py-8 shadow-lg backdrop-blur-md sm:px-10 sm:py-10 dark:border-white/10 dark:from-zinc-900/80 dark:via-zinc-900/70 dark:to-kal-accent-soft/25">
           <div
             className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-kal-accent/5 blur-3xl"
             aria-hidden
@@ -740,7 +740,7 @@ export function HabitMakerPage() {
               return (
                 <li
                   key={`check-${h.id}`}
-                  className="group/check relative overflow-hidden rounded-2xl border border-kal-border/90 bg-kal-card/95 px-5 py-6 shadow-sm transition-[box-shadow,transform,border-color] motion-safe:duration-300 motion-safe:ease-out hover:border-kal-accent/25 hover:shadow-[0_12px_40px_-12px_rgba(239,68,68,0.18)] motion-safe:hover:-translate-y-0.5 dark:bg-kal-card sm:px-8 sm:py-7"
+                  className="kal-glass-subtle group/check relative overflow-hidden rounded-2xl px-5 py-6 shadow-sm transition-[box-shadow,transform,border-color] motion-safe:duration-300 motion-safe:ease-out hover:border-kal-accent/30 hover:shadow-[0_12px_40px_-12px_rgba(239,68,68,0.18)] motion-safe:hover:-translate-y-0.5 sm:px-8 sm:py-7"
                 >
                   {burstKey ? (
                     <ConfettiCelebration burstKey={burstKey} />
@@ -847,7 +847,7 @@ export function HabitMakerPage() {
       ) : null}
 
       {habits.length > 0 && showRecoveryBanner ? (
-        <div className="mb-10 overflow-hidden rounded-2xl border border-orange-200/90 bg-gradient-to-br from-orange-50 via-kal-card to-kal-card px-6 py-7 kal-shadow-card motion-safe:animate-[habit-row-enter_0.6s_ease-out_both] dark:border-orange-900/40 dark:from-orange-950/35 dark:via-kal-card dark:to-kal-card sm:px-8 sm:py-8">
+        <div className="mb-10 overflow-hidden rounded-2xl border border-orange-200/80 bg-gradient-to-br from-orange-50/95 via-white/60 to-white/75 px-6 py-7 shadow-lg backdrop-blur-md motion-safe:animate-[habit-row-enter_0.6s_ease-out_both] dark:border-orange-900/45 dark:from-orange-950/45 dark:via-zinc-900/75 dark:to-zinc-900/88 sm:px-8 sm:py-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 gap-3">
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-200">
@@ -906,8 +906,8 @@ export function HabitMakerPage() {
                 <li
                   key={h.id}
                   className={clsx(
-                    "rounded-2xl border border-kal-border bg-kal-card px-6 py-7 kal-shadow-card transition-[transform,box-shadow] motion-safe:duration-300 motion-safe:ease-out sm:px-8 sm:py-8",
-                    "hover:border-kal-accent/20 hover:shadow-[0_16px_48px_-16px_rgba(15,23,42,0.12)] motion-safe:hover:-translate-y-1 motion-safe:hover:shadow-lg",
+                    "kal-glass-panel rounded-2xl px-6 py-7 transition-[transform,box-shadow] motion-safe:duration-300 motion-safe:ease-out sm:px-8 sm:py-8",
+                    "hover:border-kal-accent/25 hover:shadow-[0_16px_48px_-16px_rgba(15,23,42,0.12)] motion-safe:hover:-translate-y-1 motion-safe:hover:shadow-lg",
                     enterMotion,
                   )}
                 >

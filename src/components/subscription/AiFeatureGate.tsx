@@ -26,7 +26,7 @@ export function AiFeatureGate({ feature, children }: Props) {
 
   if (!hasAiAccess) {
     return (
-      <div className="flex flex-col items-center gap-4 rounded-2xl border border-kal-border bg-kal-card p-8 text-center kal-shadow-card">
+      <div className="kal-glass-panel flex flex-col items-center gap-4 rounded-2xl p-8 text-center">
         <Lock className="h-8 w-8 text-kal-text-secondary" />
         <h3 className="text-lg font-bold text-kal-text">
           {feature === "photo_scan"
@@ -74,7 +74,7 @@ export function AiFeatureGate({ feature, children }: Props) {
           </Link>
           <Link
             href="/my-plan"
-            className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-kal-border bg-kal-card px-5 py-2.5 text-sm font-bold text-kal-text"
+            className="kal-glass-subtle inline-flex min-h-[44px] items-center justify-center rounded-xl px-5 py-2.5 text-sm font-bold text-kal-text"
           >
             Buy Credits
           </Link>
@@ -88,7 +88,7 @@ export function AiFeatureGate({ feature, children }: Props) {
 
   return (
     <>
-      <div className="mb-4 flex items-center justify-between rounded-xl border border-kal-border bg-kal-card-muted px-4 py-2.5">
+      <div className="kal-glass-subtle mb-4 flex items-center justify-between rounded-xl px-4 py-2.5">
         <span className="flex items-center gap-2 text-xs text-kal-text-secondary">
           {isPhoto ? (
             <Camera className="h-3.5 w-3.5" />

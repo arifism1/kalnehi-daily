@@ -8,7 +8,7 @@ export function RoutePageSkeleton() {
       aria-busy="true"
       aria-label="Loading page"
     >
-      <div className="rounded-2xl border border-kal-border bg-kal-card p-6 kal-shadow-card">
+      <div className="kal-glass-panel rounded-2xl p-6">
         <div className="h-3 w-20 animate-pulse rounded-md bg-kal-card-muted" />
         <div className="mt-4 h-8 w-2/3 max-w-xs animate-pulse rounded-lg bg-kal-card-muted" />
         <div className="mt-3 h-3 w-full max-w-lg animate-pulse rounded bg-kal-card-muted/90" />

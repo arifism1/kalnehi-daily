@@ -26,8 +26,8 @@ export default async function SyllabusPage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg rounded-2xl border border-kal-border bg-kal-card px-8 py-12 text-center kal-shadow-card">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-kal-border bg-kal-card-muted">
+    <div className="kal-glass-panel mx-auto max-w-lg rounded-2xl px-8 py-12 text-center">
+      <div className="kal-glass-subtle mx-auto flex h-16 w-16 items-center justify-center rounded-2xl">
         <BookOpen className="h-8 w-8 text-kal-muted" aria-hidden />
       </div>
       <h1 className="mt-6 text-lg font-bold text-kal-text">Choose your target exam</h1>

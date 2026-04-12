@@ -110,7 +110,7 @@ export function PlanUpgradeSection() {
 
   if (loadError) {
     return (
-      <div className="rounded-[1rem] border border-kal-border bg-kal-card px-4 py-3 text-xs text-kal-text-secondary">
+      <div className="kal-glass-subtle rounded-[1rem] px-4 py-3 text-xs text-kal-text-secondary">
         {loadError}
       </div>
     );
@@ -124,7 +124,7 @@ export function PlanUpgradeSection() {
         src="https://checkout.razorpay.com/v1/checkout.js"
         strategy="afterInteractive"
       />
-      <div className="overflow-hidden rounded-[1rem] border border-kal-border bg-kal-card kal-shadow-card">
+      <div className="kal-glass-panel overflow-hidden rounded-[1rem]">
         <div className="border-b border-kal-border px-4 py-3">
           <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-kal-accent">
             <Sparkles className="h-3.5 w-3.5" />
@@ -140,7 +140,7 @@ export function PlanUpgradeSection() {
           {quotes.map((q) => (
             <div
               key={q.targetTier}
-              className="flex flex-col gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+              className="kal-glass-subtle flex flex-col gap-2 rounded-xl px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
             >
               <div>
                 <p className="text-sm font-semibold text-kal-text">

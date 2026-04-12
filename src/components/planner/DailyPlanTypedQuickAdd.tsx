@@ -226,7 +226,7 @@ export function DailyPlanTypedQuickAdd({ planDate, onAdded }: Props) {
   const busy = committing || parsing;
 
   return (
-    <div className="rounded-[1.25rem] border border-kal-border bg-kal-card kal-shadow-card p-4 sm:p-5">
+    <div className="kal-glass-panel rounded-[1.25rem] p-4 sm:p-5">
       <p className="text-xs font-semibold uppercase tracking-wide text-kal-accent">
         Quick add
       </p>
@@ -252,7 +252,7 @@ export function DailyPlanTypedQuickAdd({ planDate, onAdded }: Props) {
           type="button"
           disabled={busy}
           onClick={() => void addNaturalLanguageToPreview()}
-          className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-5 text-sm font-bold text-kal-text-secondary shadow-sm hover:bg-kal-border/30 disabled:opacity-40 sm:w-auto"
+          className="kal-glass-subtle mt-3 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold text-kal-text-secondary shadow-sm hover:opacity-95 disabled:opacity-40 sm:w-auto"
         >
           {parsing ? (
             <>
