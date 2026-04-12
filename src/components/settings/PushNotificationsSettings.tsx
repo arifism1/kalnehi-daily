@@ -13,6 +13,17 @@ import { showFcmDevTools } from "@/lib/fcm/adminGate";
 import { useAuthStore } from "@/store/useAuthStore";
 
 const LS_ENABLED = "kalnehi-fcm-enabled";
+const PUSH_REENABLE_MSG =
+  "Push notifications need to be re-enabled. Please turn the toggle OFF and then ON again.";
+
+function looksLikeStaleFcmTokenError(text: string | undefined): boolean {
+  if (!text?.trim()) return false;
+  const t = text.trim().toLowerCase();
+  return (
+    t.includes("registration-token-not-registered") ||
+    t.includes("invalid-registration-token")
+  );
+}
 
 function SheetSwitch({
   checked,
@@ -241,16 +252,49 @@ export function PushNotificationsSettings() {
         error?: string;
         message?: string;
         sent?: number;
+        code?: string;
       };
       if (!res.ok) {
+        if (res.status === 403) {
+          setMessage("You don't have access to send test notifications.");
+          return;
+        }
+        if (looksLikeStaleFcmTokenError(data.error)) {
+          try {
+            localStorage.removeItem(LS_ENABLED);
+          } catch {
+            /* ignore */
+          }
+          tokenRef.current = null;
+          void revokeFcmToken();
+          setPushOn(false);
+          setMessage(PUSH_REENABLE_MSG);
+          return;
+        }
         setMessage(data.error ?? "Test failed.");
         return;
       }
       if (data.ok && (data.sent ?? 0) > 0) {
         setMessage(data.message ?? "Test sent.");
-      } else {
-        setMessage(data.error ?? data.message ?? "Nothing sent.");
+        return;
       }
+      if (
+        data.code === "push_token_stale" ||
+        looksLikeStaleFcmTokenError(data.error) ||
+        looksLikeStaleFcmTokenError(data.message)
+      ) {
+        try {
+          localStorage.removeItem(LS_ENABLED);
+        } catch {
+          /* ignore */
+        }
+        tokenRef.current = null;
+        void revokeFcmToken();
+        setPushOn(false);
+        setMessage(PUSH_REENABLE_MSG);
+        return;
+      }
+      setMessage(data.error ?? data.message ?? "Nothing sent.");
     } catch {
       setMessage("Test request failed.");
     } finally {
@@ -328,10 +372,10 @@ export function PushNotificationsSettings() {
               </button>
               <p className="mt-2 text-[11px] text-kal-text-secondary">
                 Admin / developer: calls{" "}
-                <span className="font-mono">/api/fcm/test</span>. Broadcasts
-                use <span className="font-mono">/api/fcm/send</span> with{" "}
-                <span className="font-mono">FCM_ADMIN_EMAILS</span> /{" "}
-                <span className="font-mono">FCM_ADMIN_USER_IDS</span>.
+                <span className="font-mono">/api/fcm/test</span>. Use{" "}
+                <span className="font-semibold">Send Push Notification</span>{" "}
+                below for targeted or broadcast sends (
+                <span className="font-mono">/api/fcm/send</span>).
               </p>
             </div>
           )}

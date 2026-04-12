@@ -28,3 +28,15 @@ export function showFcmDevTools(user: User | null): boolean {
   if (devEmail && u && u === devEmail) return true;
   return isFcmAdminUser(user);
 }
+
+/**
+ * Who may use broadcast / targeted admin push (Settings "Send Push Notification").
+ * Server-only env lists work here; optional dev email matches {@link showFcmDevTools} minus the global dev-tools flag.
+ */
+export function canAccessFcmBroadcastTools(user: User | null): boolean {
+  if (!user) return false;
+  if (isFcmAdminUser(user)) return true;
+  const devEmail = process.env.NEXT_PUBLIC_DEV_EMAIL?.trim().toLowerCase();
+  const u = user.email?.toLowerCase();
+  return Boolean(devEmail && u && devEmail === u);
+}

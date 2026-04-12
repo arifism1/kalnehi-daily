@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
+import { AdminSendPushNotification } from "@/components/settings/AdminSendPushNotification";
 import { CameraPlannerSettings } from "@/components/settings/CameraPlannerSettings";
 import { PurposeModePhotos } from "@/components/settings/PurposeModePhotos";
 import { PushNotificationsSettings } from "@/components/settings/PushNotificationsSettings";
@@ -51,6 +52,13 @@ export function SettingsPageClient() {
           Push notifications
         </h2>
         <PushNotificationsSettings />
+      </section>
+
+      <section aria-labelledby="admin-push-heading">
+        <h2 id="admin-push-heading" className="sr-only">
+          Admin push broadcast
+        </h2>
+        <AdminSendPushNotification />
       </section>
 
       <section aria-labelledby="camera-planner-heading">

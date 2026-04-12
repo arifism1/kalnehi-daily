@@ -14,6 +14,7 @@ import {
 } from "react";
 
 import { MainNavigationMenu } from "@/components/MainNavigationMenu";
+import { PwaInstallPrompt } from "@/components/PwaInstallPrompt";
 import { QuickNavBar } from "@/components/QuickNavBar";
 import { QuietSavedToast } from "@/components/QuietSavedToast";
 import { SyncStatusBanner } from "@/components/SyncStatusBanner";
@@ -174,6 +175,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
         <QuietSavedToast />
       </QuietSavedToastBoundary>
       <TimerVisibilityBridge />
+      <PwaInstallPrompt />
     </div>
   );
 }

@@ -14,6 +14,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
+import { trackAuthSuccess } from "@/lib/analytics";
 import { formatSupabaseError, getSupabaseBrowserClient } from "@/lib/supabase";
 import { useAuthStore } from "@/store/useAuthStore";
 
@@ -52,14 +53,20 @@ export default function AuthPage() {
     }
   }, []);
 
-  const redirectAfterAuth = useCallback(async () => {
-    const supabase = getSupabaseBrowserClient();
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (session) setAuth(session);
-    router.replace("/");
-  }, [router, setAuth]);
+  const redirectAfterAuth = useCallback(
+    async (kind: "login" | "sign_up") => {
+      const supabase = getSupabaseBrowserClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session) {
+        setAuth(session);
+        trackAuthSuccess(kind);
+      }
+      router.replace("/");
+    },
+    [router, setAuth],
+  );
 
   const submitEmailAuth = useCallback(async () => {
     setBusy(true);
@@ -84,7 +91,7 @@ export default function AuthPage() {
           password: pw,
         });
         if (signErr) throw signErr;
-        await redirectAfterAuth();
+        await redirectAfterAuth("login");
       } else {
         const { error: signErr } = await supabase.auth.signUp({
           email: em,
@@ -98,7 +105,7 @@ export default function AuthPage() {
           setVerifyEmailSent(true);
           return;
         }
-        await redirectAfterAuth();
+        await redirectAfterAuth("sign_up");
       }
     } catch (e) {
       setError(formatSupabaseError(e));
