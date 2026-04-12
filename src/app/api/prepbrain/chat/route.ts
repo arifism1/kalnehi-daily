@@ -7,7 +7,9 @@ import {
   type PrepBrainContext,
 } from "@/lib/prepBrainContext";
 import { PREPBRAIN_SYSTEM_PROMPT } from "@/lib/prepBrainPrompts";
+import { parseSubscriptionTier } from "@/lib/subscriptionTiers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 import { GROQ_VOICE_MODEL_CANDIDATES } from "@/lib/voiceDictateGroq";
 import { USER_ERROR } from "@/lib/userFacingErrors";
 import {
@@ -52,10 +54,6 @@ function isCurrentlyPaid(
   const end = new Date(endDate);
   if (Number.isNaN(end.getTime())) return false;
   return end.getTime() > Date.now();
-}
-
-function isProTier(raw: string | null | undefined): boolean {
-  return raw === "pro" || raw === "pro_max";
 }
 
 function isRecord(x: unknown): x is Record<string, unknown> {
@@ -138,7 +136,18 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data: profile, error: profileErr } = await supabase
+  const admin = getSupabaseServiceRoleClient();
+  if (!admin) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "AI is temporarily unavailable. Please try again later.",
+      },
+      { status: 503 },
+    );
+  }
+
+  const { data: profile, error: profileErr } = await admin
     .from("user_profiles")
     .select(
       "subscription_status, subscription_end_date, subscription_tier, prepbrain_tokens_used, prepbrain_tokens_month",
@@ -146,9 +155,17 @@ export async function POST(request: Request) {
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (profileErr || !profile) {
+  if (profileErr) {
+    console.error("[prepbrain/chat] profile read failed", profileErr);
     return NextResponse.json(
-      { ok: false, error: "Could not verify subscription." },
+      { ok: false, error: "Could not load your account. Please try again." },
+      { status: 500 },
+    );
+  }
+
+  if (!profile) {
+    return NextResponse.json(
+      { ok: false, error: "PrepBrain AI requires an active Pro or Pro Max plan." },
       { status: 403 },
     );
   }
@@ -157,8 +174,8 @@ export async function POST(request: Request) {
     profile.subscription_status ?? null,
     profile.subscription_end_date ?? null,
   );
-  const tier = profile.subscription_tier ?? null;
-  if (!paid || !isProTier(tier)) {
+  const tier = parseSubscriptionTier(profile.subscription_tier ?? undefined);
+  if (!paid || (tier !== "pro" && tier !== "pro_max")) {
     return NextResponse.json(
       { ok: false, error: "PrepBrain AI requires an active Pro or Pro Max plan." },
       { status: 403 },
@@ -273,7 +290,7 @@ export async function POST(request: Request) {
 
   const delta = Math.max(0, Math.floor(groqTotalTokens));
   const nextUsed = effectiveUsed + delta;
-  const { error: tokenPersistErr } = await supabase
+  const { error: tokenPersistErr } = await admin
     .from("user_profiles")
     .update({
       prepbrain_tokens_used: nextUsed,

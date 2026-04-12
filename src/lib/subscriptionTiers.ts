@@ -222,6 +222,16 @@ export const TIER_ORDER: SubscriptionTier[] = ["basic", "pro", "pro_max"];
 
 export const DEFAULT_TIER: SubscriptionTier = "pro";
 
+/** Normalizes DB or legacy strings to a known tier, or null if not recognized. */
+export function parseSubscriptionTier(
+  raw: string | null | undefined,
+): SubscriptionTier | null {
+  if (raw == null || typeof raw !== "string") return null;
+  const t = raw.trim().toLowerCase().replace(/\s+/g, "_");
+  if (t === "basic" || t === "pro" || t === "pro_max") return t;
+  return null;
+}
+
 export function compareSubscriptionTiers(
   a: SubscriptionTier,
   b: SubscriptionTier,
