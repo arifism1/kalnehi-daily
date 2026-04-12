@@ -96,6 +96,62 @@ function resolveRazorpayPlanId(tier: SubscriptionTier): string | null {
   return null;
 }
 
+/**
+ * When env plan ids are missing (common for Pro Max), resolve by matching the tier's
+ * monthly INR amount against plans in the Razorpay account — same keys as checkout.
+ */
+async function resolveRazorpayPlanIdWithApiFallback(
+  razorpay: InstanceType<typeof Razorpay>,
+  tier: SubscriptionTier,
+): Promise<string | null> {
+  const fromEnv = resolveRazorpayPlanId(tier);
+  if (fromEnv) return fromEnv;
+
+  const expectedPaise = TIERS[tier].monthlyPricePaise;
+  try {
+    const res = (await razorpay.plans.all({ count: 100 })) as {
+      items?: Array<{
+        id?: string;
+        item?: { amount?: number; currency?: string };
+        period?: string;
+      }>;
+    };
+    const plans = res.items ?? [];
+    const matches: string[] = [];
+    for (const p of plans) {
+      const id = p.id?.trim();
+      const amt = Number(p.item?.amount);
+      const cur = (p.item?.currency ?? "INR").toUpperCase();
+      const period = (p.period ?? "").toLowerCase();
+      if (
+        id &&
+        RAZORPAY_PLAN_ID_FORMAT_RE.test(id) &&
+        cur === "INR" &&
+        amt === expectedPaise &&
+        period === "monthly"
+      ) {
+        matches.push(id);
+      }
+    }
+    if (matches.length >= 1) {
+      if (matches.length > 1) {
+        console.warn("[subscription] resolveRazorpayPlanIdWithApiFallback: multiple plans match", {
+          tier,
+          expectedPaise,
+          count: matches.length,
+        });
+      }
+      return matches[0] ?? null;
+    }
+  } catch (e) {
+    console.error("[subscription] resolveRazorpayPlanIdWithApiFallback: plans.all failed", {
+      tier,
+      safeMessage: safeErrorMessage(e),
+    });
+  }
+  return null;
+}
+
 function logRazorpaySubscriptionCreateFailure(
   context: string,
   ctx: Record<string, string | number | undefined>,
@@ -1130,10 +1186,10 @@ export async function verifyPlanUpgradePayment(params: {
       };
     }
 
-    const planId = resolveRazorpayPlanId(targetTier);
+    const planId = await resolveRazorpayPlanIdWithApiFallback(razorpay, targetTier);
     if (!planId) {
       console.error(
-        "[subscription] verifyPlanUpgradePayment: missing or invalid Razorpay plan id (before claim)",
+        "[subscription] verifyPlanUpgradePayment: could not resolve Razorpay plan id (env and plans list)",
         {
           targetTier,
           envVar: razorpayPlanEnvVarName(targetTier),
@@ -1210,12 +1266,27 @@ export async function verifyPlanUpgradePayment(params: {
 
     const oldSubId = profile.razorpay_subscription_id?.trim() ?? "";
 
+    let subscriptionEndToStore = endIso ?? new Date().toISOString();
+    try {
+      const subView = (await razorpay.subscriptions.fetch(newSubId)) as {
+        current_end?: number | null;
+      };
+      if (typeof subView.current_end === "number" && subView.current_end > 0) {
+        subscriptionEndToStore = new Date(subView.current_end * 1000).toISOString();
+      }
+    } catch {
+      /* keep cycle end from profile when Razorpay has not materialized current_end yet */
+    }
+
     const nowIso = new Date().toISOString();
     const { error: updateErr } = await admin
       .from("user_profiles")
       .update({
         subscription_tier: targetTier,
         razorpay_subscription_id: newSubId,
+        subscription_plan: "monthly",
+        subscription_start_date: nowIso,
+        subscription_end_date: subscriptionEndToStore,
         updated_at: nowIso,
       })
       .eq("user_id", userId);
