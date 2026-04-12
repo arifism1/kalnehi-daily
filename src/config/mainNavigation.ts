@@ -138,7 +138,7 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
         shortLabel: "Motivation",
         Icon: Heart,
       },
-      { href: "/meditation", label: "Meditation", Icon: Flower2 },
+      { href: "/meditation", label: "Brain Yoga", Icon: Flower2 },
       { href: "/doubts", label: "Doubt Tracker", shortLabel: "Doubts", Icon: HelpCircle },
     ],
   },

@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { Bell, Calendar, Menu, Mic } from "lucide-react";
+import { Bell, Menu } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -68,10 +68,10 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         {!onboarding && minimalChrome && (
           <header className="kal-glass-header sticky top-0 z-40">
-            <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:h-[3.5rem] sm:px-6 xl:px-8">
+            <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between gap-3 px-3 sm:h-[3.5rem] sm:gap-4 sm:px-6 xl:px-8">
               <Link
                 href="/"
-                className="flex min-w-0 items-center gap-3 rounded-xl py-1 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-kal-accent/40"
+                className="flex shrink-0 items-center rounded-xl py-1 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-kal-accent/40"
                 aria-label="Dashboard"
               >
                 <Image
@@ -79,11 +79,8 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
                   alt=""
                   width={48}
                   height={48}
-                  className="h-10 w-10 flex-shrink-0 object-contain ring-1 ring-white/30 dark:ring-white/15"
+                  className="h-9 w-9 flex-shrink-0 object-contain ring-1 ring-white/30 sm:h-10 sm:w-10 dark:ring-white/15"
                 />
-                <span className="text-lg font-semibold tracking-tight text-black dark:text-white">
-                  kalnehi
-                </span>
               </Link>
               <button
                 type="button"
@@ -97,12 +94,24 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
             </div>
           </header>
         )}
+        {!onboarding && minimalChrome && (
+          <div className="sticky top-14 z-30 border-b border-white/20 bg-white/55 backdrop-blur-md dark:border-white/10 dark:bg-zinc-950/65 sm:top-[3.5rem]">
+            <div
+              className={clsx(
+                "mx-auto w-full px-4 sm:px-6 md:px-8 xl:px-10",
+                "max-w-lg md:max-w-5xl lg:max-w-6xl xl:max-w-7xl 2xl:max-w-[90rem]",
+              )}
+            >
+              <QuickNavBar />
+            </div>
+          </div>
+        )}
         {!onboarding && !minimalChrome && (
           <header className="kal-glass-header sticky top-0 z-40">
-            <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:h-[3.5rem] sm:px-6 xl:px-8">
+            <div className="mx-auto flex h-14 w-full max-w-7xl items-center gap-1.5 px-3 sm:h-[3.5rem] sm:gap-3 sm:px-6 xl:px-8">
               <Link
                 href="/"
-                className="flex min-w-0 items-center gap-3 rounded-xl py-1 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-kal-accent/40"
+                className="flex shrink-0 items-center rounded-xl py-1 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-kal-accent/40"
                 aria-label="Dashboard"
               >
                 <Image
@@ -110,13 +119,13 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
                   alt=""
                   width={48}
                   height={48}
-                  className="h-10 w-10 flex-shrink-0 object-contain ring-1 ring-white/30 dark:ring-white/15"
+                  className="h-9 w-9 flex-shrink-0 object-contain ring-1 ring-white/30 sm:h-10 sm:w-10 dark:ring-white/15"
                 />
-                <span className="text-lg font-semibold tracking-tight text-black dark:text-white">
-                  kalnehi
-                </span>
               </Link>
-              <div className="flex min-w-0 shrink-0 items-center gap-0.5 sm:gap-1">
+              <div className="flex min-h-0 min-w-0 flex-1 items-center overflow-hidden rounded-lg border border-zinc-300/70 dark:border-zinc-600/60">
+                <QuickNavBar />
+              </div>
+              <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
                 <Link
                   href="/notifications"
                   className={clsx(
@@ -132,40 +141,6 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
                     Alerts
                   </span>
                 </Link>
-                <Link
-                  href="/daily-plan"
-                  className={clsx(
-                    "flex h-11 min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-2 text-kal-accent backdrop-blur-md transition-colors active:scale-[0.98] sm:min-w-0 sm:px-3",
-                    pathname === "/daily-plan" || pathname === "/plan-my-day"
-                      ? "border-kal-accent/35 bg-kal-accent-soft shadow-sm ring-1 ring-kal-accent/20"
-                      : "border-white/30 bg-white/45 hover:border-white/45 hover:bg-white/65 dark:border-white/12 dark:bg-zinc-900/50 dark:hover:border-white/18 dark:hover:bg-zinc-900/72",
-                  )}
-                  aria-label="Daily planner"
-                >
-                  <Calendar
-                    className="h-5 w-5 shrink-0"
-                    strokeWidth={2.25}
-                    aria-hidden
-                  />
-                  <span className="hidden max-w-[6rem] truncate text-[11px] font-semibold leading-tight sm:inline sm:max-w-none sm:text-xs">
-                    Daily plan
-                  </span>
-                </Link>
-                <Link
-                  href="/dictate-day"
-                  className={clsx(
-                    "flex h-11 min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-2 text-kal-accent backdrop-blur-md transition-colors active:scale-[0.98] sm:min-w-0 sm:px-3",
-                    pathname === "/dictate-day"
-                      ? "border-kal-accent/35 bg-kal-accent-soft shadow-sm ring-1 ring-kal-accent/20"
-                      : "border-white/30 bg-white/45 hover:border-white/45 hover:bg-white/65 dark:border-white/12 dark:bg-zinc-900/50 dark:hover:border-white/18 dark:hover:bg-zinc-900/72",
-                  )}
-                  aria-label="Dictate My Day"
-                >
-                  <Mic className="h-5 w-5 shrink-0" strokeWidth={2.25} aria-hidden />
-                  <span className="hidden text-[11px] font-semibold leading-tight sm:inline sm:text-xs">
-                    Dictate My Day
-                  </span>
-                </Link>
                 <button
                   type="button"
                   onClick={() => setMenuOpen(true)}
@@ -178,19 +153,6 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
               </div>
             </div>
           </header>
-        )}
-
-        {!onboarding && (
-          <div className="sticky top-14 z-30 border-b border-white/20 bg-white/55 backdrop-blur-md dark:border-white/10 dark:bg-zinc-950/65 sm:top-[3.5rem]">
-            <div
-              className={clsx(
-                "mx-auto w-full px-4 sm:px-6 md:px-8 xl:px-10",
-                "max-w-lg md:max-w-5xl lg:max-w-6xl xl:max-w-7xl 2xl:max-w-[90rem]",
-              )}
-            >
-              <QuickNavBar />
-            </div>
-          </div>
         )}
 
         <main
