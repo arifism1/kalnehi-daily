@@ -43,46 +43,48 @@ export function CircularProgressRing({
 
   return (
     <div
-      className={clsx("relative flex shrink-0 items-center justify-center", className)}
+      className={clsx(
+        "relative flex shrink-0 items-center justify-center",
+        className,
+      )}
       style={{ width: size, height: size }}
     >
-      <svg width={size} height={size} className="-rotate-90" aria-hidden>
-        <defs>
-          <linearGradient
-            id={gradientId}
-            x1="0%"
-            y1="0%"
-            x2="100%"
-            y2="100%"
-          >
-            <stop offset="0%" stopColor="#fca5a5" />
-            <stop offset="50%" stopColor="#ef4444" />
-            <stop offset="100%" stopColor="#b91c1c" />
-          </linearGradient>
-        </defs>
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={strokeWidth}
-          className={trackClassName}
-        />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          fill="none"
-          stroke={`url(#${gradientId})`}
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          strokeDasharray={`${dash} ${c}`}
-          className={progressClassName}
-        />
-      </svg>
       <div
-        className="pointer-events-none absolute flex flex-col items-center justify-center rounded-full px-3 py-2 text-center"
+        className="pointer-events-none absolute inset-0 overflow-hidden rounded-full"
+        aria-hidden
+      >
+        <svg width={size} height={size} className="-rotate-90" aria-hidden>
+          <defs>
+            <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </linearGradient>
+          </defs>
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={strokeWidth}
+            className={trackClassName}
+          />
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            fill="none"
+            stroke={`url(#${gradientId})`}
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+            strokeDasharray={`${dash} ${c}`}
+            className={progressClassName}
+          />
+        </svg>
+      </div>
+      <div
+        className="pointer-events-none absolute z-10 flex flex-col items-center justify-center rounded-full px-3 py-2 text-center"
         style={{ inset: contentInset }}
       >
         {children}

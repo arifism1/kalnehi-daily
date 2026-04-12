@@ -423,9 +423,9 @@ export function RealitySnapshot({
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center gap-10 sm:flex-row sm:items-start sm:justify-center sm:gap-14 md:gap-16">
+            <div className="flex w-full min-w-0 flex-col items-center gap-10 sm:flex-row sm:items-start sm:justify-center sm:gap-x-10 md:gap-x-14 lg:gap-x-16">
               {masteryDisplay != null && (
-                <div className="w-full max-w-[14rem] text-center sm:text-left">
+                <div className="flex w-full max-w-[14rem] flex-col items-center text-center sm:max-w-none sm:flex-1 sm:basis-0">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-kal-muted sm:text-[11px]">
                     Syllabus mastery
                   </p>
@@ -434,8 +434,8 @@ export function RealitySnapshot({
                   </p>
                 </div>
               )}
-              <div className="flex min-w-0 flex-col items-center gap-4">
-                <p className="text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-kal-muted sm:text-[11px]">
+              <div className="flex w-full max-w-[14rem] min-w-0 flex-col items-center gap-4 text-center sm:max-w-none sm:flex-1 sm:basis-0">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-kal-muted sm:text-[11px]">
                   {syllabusMasteryPercent != null && !showAdvancedMarksProjection
                     ? "Syllabus completion"
                     : "Plan-linked projection"}
