@@ -265,7 +265,7 @@ export function MeditationPage() {
     try {
       stopSession();
       await playEndingChime();
-      guidedSpeak("Beautiful work. Session complete. Session saved.");
+      guidedSpeak("Beautiful work. Your Brain Yoga is complete, and your session is saved.");
       await saveCompletedSession();
     } finally {
       autoSaveInFlightRef.current = false;
@@ -283,7 +283,7 @@ export function MeditationPage() {
       setLastCompletedSessionId(null);
       setRunning(true);
       await startAmbient(sound);
-      guidedSpeak(`${type.title}. Settle into your breath and begin.`);
+      guidedSpeak(`${type.title}. Let your breath find its rhythm, and begin when you feel ready.`);
     },
     [guidedSpeak, sound, startAmbient],
   );
@@ -343,50 +343,29 @@ export function MeditationPage() {
   }, [rows]);
 
   if (!userId) {
-    return <div className="kal-glass-panel rounded-2xl p-6">Sign in to use Meditation.</div>;
+    return <div className="kal-glass-panel rounded-2xl p-6">Sign in to use Brain Yoga.</div>;
   }
 
   return (
     <div className="mx-auto max-w-5xl space-y-7 pb-12">
       <header className="rounded-3xl border border-kal-border bg-gradient-to-br from-[#f2f9f6] via-kal-card to-[#eef6ff] p-7">
-        <p className="text-[0.68rem] uppercase tracking-[0.22em] text-kal-accent">Mind training</p>
-        <h1 className="mt-2 text-3xl font-bold text-kal-text">Meditation</h1>
-        <p className="mt-2 text-kal-muted">Train your mind · Sharpen your focus</p>
+        <p className="text-[0.68rem] uppercase tracking-[0.22em] text-kal-accent">Mind–body practice</p>
+        <h1 className="mt-2 text-3xl font-bold text-kal-text">Brain Yoga</h1>
+        <p className="mt-2 text-lg font-semibold leading-snug text-kal-text">
+          Train your mind like a yoga practice
+        </p>
+        <p className="mt-2 text-kal-muted">
+          Mental flexibility, breath awareness, and focus that stretches with you—inner calm for exam prep and beyond.
+        </p>
       </header>
-
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {MEDITATION_TYPES.map((item) => (
-          <article key={item.id} className="kal-glass-panel rounded-2xl p-5">
-            <h2 className="text-base font-semibold text-kal-text">{item.title}</h2>
-            <p className="mt-2 text-sm text-kal-text-secondary">{item.description}</p>
-            <p className="mt-2 text-sm font-medium text-kal-accent">{item.benefit}</p>
-            <p className="mt-1 text-xs uppercase tracking-wide text-kal-muted">Recommended: {item.durationLabel}</p>
-            <div className="mt-4 flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => void beginSession(item, item.durationRangeMinutes[0])}
-                className="inline-flex min-h-[42px] items-center gap-2 rounded-xl bg-kal-accent px-4 text-sm font-semibold text-kal-accent-foreground"
-              >
-                <PlayCircle className="h-4 w-4" />
-                Start
-              </button>
-            </div>
-          </article>
-        ))}
-      </section>
-      <Link
-        href="/meditation/consistency"
-        className="kal-glass-subtle inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold text-kal-text transition-colors hover:opacity-95"
-      >
-        <CalendarDays className="h-5 w-5 text-kal-accent" />
-        View Meditation Consistency
-      </Link>
 
       <section className="kal-glass-panel rounded-2xl p-6">
         <div className="flex flex-wrap items-center gap-3">
           <Timer className="h-5 w-5 text-kal-accent" />
-          <p className="text-sm font-semibold text-kal-text">Meditation Session</p>
-          <span className="text-sm text-kal-muted">{activeType ? activeType.title : "Select a meditation to begin"}</span>
+          <p className="text-sm font-semibold text-kal-text">Brain Yoga session</p>
+          <span className="text-sm text-kal-muted">
+            {activeType ? activeType.title : "Choose a practice below to begin"}
+          </span>
         </div>
         <div className="mt-4 text-5xl font-bold tabular-nums text-kal-text">{formatClock(remainingSeconds)}</div>
         <div className="mt-4 flex flex-wrap gap-2">
@@ -419,7 +398,7 @@ export function MeditationPage() {
             disabled={!activeType}
             className="rounded-xl bg-kal-accent px-3 py-2 text-sm font-semibold text-kal-accent-foreground disabled:opacity-40"
           >
-            Complete session
+            Complete flow
           </button>
         </div>
 
@@ -464,7 +443,7 @@ export function MeditationPage() {
             <textarea
               value={pendingNote}
               onChange={(e) => setPendingNote(e.target.value)}
-              placeholder="How did you feel after this session?"
+              placeholder="How did your mind and body feel after this flow?"
               rows={3}
               className="mt-2 w-full rounded-xl border border-white/30 bg-white/70 px-3 py-2 text-sm backdrop-blur-sm dark:border-white/12 dark:bg-zinc-900/60"
             />
@@ -529,8 +508,48 @@ export function MeditationPage() {
         </div>
       </section>
 
+      <h2 className="text-sm font-semibold tracking-tight text-kal-text sm:text-base">
+        Brain Yoga practices
+      </h2>
+
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {MEDITATION_TYPES.map((item) => (
+          <article key={item.id} className="kal-glass-panel rounded-2xl p-5">
+            <h3 className="text-base font-semibold text-kal-text">{item.title}</h3>
+            <p className="mt-2 text-sm text-kal-text-secondary">{item.description}</p>
+            <p className="mt-2 text-sm font-medium text-kal-accent">{item.benefit}</p>
+            <p className="mt-1 text-xs uppercase tracking-wide text-kal-muted">Recommended: {item.durationLabel}</p>
+            <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-kal-muted">
+              Voice-guided practice · {item.durationLabel}
+            </p>
+            <ol className="mt-2 list-decimal space-y-1.5 pl-[1.15rem] text-sm leading-snug text-kal-text-secondary">
+              {item.voiceGuidedSteps.map((step, stepIdx) => (
+                <li key={stepIdx}>{step}</li>
+              ))}
+            </ol>
+            <div className="mt-4 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => void beginSession(item, item.durationRangeMinutes[0])}
+                className="inline-flex min-h-[42px] items-center gap-2 rounded-xl bg-kal-accent px-4 text-sm font-semibold text-kal-accent-foreground"
+              >
+                <PlayCircle className="h-4 w-4" />
+                Start
+              </button>
+            </div>
+          </article>
+        ))}
+      </section>
+      <Link
+        href="/meditation/consistency"
+        className="kal-glass-subtle inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold text-kal-text transition-colors hover:opacity-95"
+      >
+        <CalendarDays className="h-5 w-5 text-kal-accent" />
+        View Brain Yoga consistency
+      </Link>
+
       <section className="kal-glass-panel rounded-2xl p-6">
-        <h3 className="text-sm font-semibold text-kal-text">Past sessions</h3>
+        <h3 className="text-sm font-semibold text-kal-text">Past Brain Yoga sessions</h3>
         {hydrating ? <p className="mt-3 text-sm text-kal-muted">Loading…</p> : null}
         <ul className="mt-3 space-y-2">
           {rows.slice(0, 25).map((r) => (
@@ -556,16 +575,16 @@ export function MeditationPage() {
           onClick={() => void beginSession(MEDITATION_TYPES[4], 2)}
           className="kal-glass-subtle rounded-xl px-4 py-3 text-left"
         >
-          <p className="text-sm font-semibold text-kal-text">Quick Meditation - 2 min reset</p>
-          <p className="mt-1 text-xs text-kal-muted">Quick Anxiety Reset before a study sprint</p>
+          <p className="text-sm font-semibold text-kal-text">Quick Brain Yoga — 2 min reset</p>
+          <p className="mt-1 text-xs text-kal-muted">Soften nerves before a study sprint</p>
         </button>
         <button
           type="button"
           onClick={() => void beginSession(MEDITATION_TYPES[0], 5)}
           className="kal-glass-subtle rounded-xl px-4 py-3 text-left"
         >
-          <p className="text-sm font-semibold text-kal-text">Quick Meditation - 5 min focus</p>
-          <p className="mt-1 text-xs text-kal-muted">Focus Breath for deep work mode</p>
+          <p className="text-sm font-semibold text-kal-text">Quick Brain Yoga — 5 min focus</p>
+          <p className="mt-1 text-xs text-kal-muted">Focus Breath for deep-work calm</p>
         </button>
       </section>
 

@@ -8,9 +8,9 @@ export function QuickMeditationCards() {
     <section className="kal-glass-panel rounded-2xl p-5">
       <div className="flex items-center gap-2">
         <Wind className="h-4 w-4 text-kal-accent" />
-        <h2 className="text-sm font-semibold text-kal-text">Quick Meditation</h2>
+        <h2 className="text-sm font-semibold text-kal-text">Quick Brain Yoga</h2>
       </div>
-      <p className="mt-2 text-sm text-kal-muted">Calm your mind between study blocks.</p>
+      <p className="mt-2 text-sm text-kal-muted">Calm breath and focus between study blocks.</p>
       <div className="mt-4 grid gap-2 sm:grid-cols-2">
         <Link
           href="/meditation"

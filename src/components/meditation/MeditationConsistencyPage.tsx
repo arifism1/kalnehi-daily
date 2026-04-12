@@ -129,8 +129,9 @@ export function MeditationConsistencyPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6 pb-12">
       <header className="rounded-3xl border border-kal-border bg-gradient-to-br from-[#f2f9f6] via-kal-card to-[#eef6ff] p-7">
-        <p className="text-[0.68rem] uppercase tracking-[0.22em] text-kal-accent">Mind training</p>
-        <h1 className="mt-2 text-3xl font-bold text-kal-text">Meditation Consistency</h1>
+        <p className="text-[0.68rem] uppercase tracking-[0.22em] text-kal-accent">Brain Yoga</p>
+        <h1 className="mt-2 text-3xl font-bold text-kal-text">Brain Yoga consistency</h1>
+        <p className="mt-2 text-kal-muted">Your rhythm of mind-body practice over time</p>
       </header>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -218,7 +219,7 @@ export function MeditationConsistencyPage() {
         {!selectedDate ? (
           <p className="mt-2 text-sm text-kal-muted">Tap a date in the calendar to view minutes and notes.</p>
         ) : selectedRows.length === 0 ? (
-          <p className="mt-2 text-sm text-kal-muted">No meditation logged for this date.</p>
+          <p className="mt-2 text-sm text-kal-muted">No Brain Yoga session logged for this date.</p>
         ) : (
           <div className="mt-3 space-y-2">
             <p className="inline-flex items-center gap-2 text-sm font-medium text-kal-text">
