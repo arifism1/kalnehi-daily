@@ -51,7 +51,7 @@ export function SelfTypeDayPage() {
       </header>
 
       <div className="mb-6 flex flex-wrap items-end gap-3">
-        <div className="flex min-h-[44px] items-center gap-1 rounded-xl border border-kal-border bg-kal-card-muted p-1">
+        <div className="kal-glass-subtle flex min-h-[44px] items-center gap-1 rounded-xl p-1">
           {[
             { id: today, label: "Today" },
             { id: format(addDays(parseISO(today), -1), "yyyy-MM-dd"), label: "Yesterday" },

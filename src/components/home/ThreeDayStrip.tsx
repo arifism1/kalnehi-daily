@@ -71,7 +71,7 @@ export function ThreeDayStrip({
   return (
     <section
       aria-label="Three day execution strip"
-      className="overflow-hidden rounded-2xl border border-kal-border bg-kal-card kal-shadow-card sm:rounded-2xl"
+      className="kal-glass-panel overflow-hidden rounded-2xl sm:rounded-2xl"
     >
       <p className="border-b border-kal-border px-5 py-4 text-[0.6rem] font-semibold uppercase tracking-[0.22em] text-kal-accent sm:px-6 sm:py-5 sm:text-[0.65rem] sm:tracking-[0.28em]">
         3-day execution

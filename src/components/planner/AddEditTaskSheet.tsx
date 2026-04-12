@@ -366,11 +366,11 @@ export function AddEditTaskSheet({
       <button
         type="button"
         aria-label="Close"
-        className="absolute inset-0 bg-[var(--kal-overlay)]"
+        className="absolute inset-0 bg-[var(--kal-overlay)] backdrop-blur-[2px]"
         onClick={handleClose}
       />
       <div
-        className="relative z-10 max-h-[min(92vh,40rem)] w-full max-w-lg overflow-y-auto rounded-t-[1.25rem] border border-kal-border bg-kal-card p-4 kal-shadow-card sm:rounded-[1.25rem] sm:p-6"
+        className="kal-glass-panel relative z-10 max-h-[min(92vh,40rem)] w-full max-w-lg overflow-y-auto rounded-t-[1.25rem] p-4 sm:rounded-[1.25rem] sm:p-6"
         role="dialog"
         aria-modal="true"
       >
@@ -472,7 +472,7 @@ export function AddEditTaskSheet({
             </div>
 
             {hasSyllabus ? (
-              <div className="rounded-2xl border border-kal-border bg-kal-card-muted p-4">
+              <div className="kal-glass-subtle rounded-2xl p-4">
                 <p className="text-xs font-semibold uppercase tracking-wide text-kal-accent">
                   Syllabus &amp; schedule
                 </p>

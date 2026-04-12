@@ -343,7 +343,7 @@ export function MeditationPage() {
   }, [rows]);
 
   if (!userId) {
-    return <div className="rounded-2xl border border-kal-border bg-kal-card p-6">Sign in to use Meditation.</div>;
+    return <div className="kal-glass-panel rounded-2xl p-6">Sign in to use Meditation.</div>;
   }
 
   return (
@@ -356,7 +356,7 @@ export function MeditationPage() {
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {MEDITATION_TYPES.map((item) => (
-          <article key={item.id} className="rounded-2xl border border-kal-border bg-kal-card p-5 kal-shadow-card">
+          <article key={item.id} className="kal-glass-panel rounded-2xl p-5">
             <h2 className="text-base font-semibold text-kal-text">{item.title}</h2>
             <p className="mt-2 text-sm text-kal-text-secondary">{item.description}</p>
             <p className="mt-2 text-sm font-medium text-kal-accent">{item.benefit}</p>
@@ -376,13 +376,13 @@ export function MeditationPage() {
       </section>
       <Link
         href="/meditation/consistency"
-        className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl border border-kal-border bg-kal-card px-4 py-3 text-sm font-semibold text-kal-text transition-colors hover:bg-kal-card-muted"
+        className="kal-glass-subtle inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold text-kal-text transition-colors hover:opacity-95"
       >
         <CalendarDays className="h-5 w-5 text-kal-accent" />
         View Meditation Consistency
       </Link>
 
-      <section className="rounded-2xl border border-kal-border bg-kal-card p-6">
+      <section className="kal-glass-panel rounded-2xl p-6">
         <div className="flex flex-wrap items-center gap-3">
           <Timer className="h-5 w-5 text-kal-accent" />
           <p className="text-sm font-semibold text-kal-text">Meditation Session</p>
@@ -466,7 +466,7 @@ export function MeditationPage() {
               onChange={(e) => setPendingNote(e.target.value)}
               placeholder="How did you feel after this session?"
               rows={3}
-              className="mt-2 w-full rounded-xl border border-kal-border bg-kal-card px-3 py-2 text-sm"
+              className="mt-2 w-full rounded-xl border border-white/30 bg-white/70 px-3 py-2 text-sm backdrop-blur-sm dark:border-white/12 dark:bg-zinc-900/60"
             />
             <button
               type="button"
@@ -482,7 +482,7 @@ export function MeditationPage() {
       </section>
 
       <section className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-2xl border border-kal-border bg-kal-card p-5">
+        <div className="kal-glass-panel rounded-2xl p-5">
           <p className="text-xs uppercase tracking-wide text-kal-muted">Daily streak</p>
           <div className="mt-3 flex items-center gap-4">
             <div
@@ -491,26 +491,26 @@ export function MeditationPage() {
                 background: `conic-gradient(var(--kal-accent) ${Math.min(100, streak * 12)}%, #d7e7de 0)`,
               }}
             >
-              <div className="absolute inset-2 flex items-center justify-center rounded-full bg-kal-card text-lg font-bold text-kal-text">
+              <div className="absolute inset-2 flex items-center justify-center rounded-full bg-white/85 text-lg font-bold text-kal-text backdrop-blur-sm dark:bg-zinc-900/80">
                 {streak}
               </div>
             </div>
             <p className="text-sm text-kal-text-secondary">days in a row</p>
           </div>
         </div>
-        <div className="rounded-2xl border border-kal-border bg-kal-card p-5">
+        <div className="kal-glass-panel rounded-2xl p-5">
           <p className="text-xs uppercase tracking-wide text-kal-muted">Total minutes this month</p>
           <p className="mt-3 text-3xl font-bold tabular-nums text-kal-text">
             {formatMinutesAndSeconds(monthTotalSeconds)}
           </p>
         </div>
-        <div className="rounded-2xl border border-kal-border bg-kal-card p-5">
+        <div className="kal-glass-panel rounded-2xl p-5">
           <p className="text-xs uppercase tracking-wide text-kal-muted">Sessions completed</p>
           <p className="mt-3 text-3xl font-bold tabular-nums text-kal-text">{rows.length}</p>
         </div>
       </section>
 
-      <section className="rounded-2xl border border-kal-border bg-kal-card p-6">
+      <section className="kal-glass-panel rounded-2xl p-6">
         <h3 className="text-sm font-semibold text-kal-text">Calendar view</h3>
         <div className="mt-4 grid grid-cols-7 gap-2 text-center">
           {Array.from({ length: calendar.startOffset }).map((_, i) => (
@@ -529,7 +529,7 @@ export function MeditationPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-kal-border bg-kal-card p-6">
+      <section className="kal-glass-panel rounded-2xl p-6">
         <h3 className="text-sm font-semibold text-kal-text">Past sessions</h3>
         {hydrating ? <p className="mt-3 text-sm text-kal-muted">Loading…</p> : null}
         <ul className="mt-3 space-y-2">
@@ -554,7 +554,7 @@ export function MeditationPage() {
         <button
           type="button"
           onClick={() => void beginSession(MEDITATION_TYPES[4], 2)}
-          className="rounded-xl border border-kal-border bg-kal-card px-4 py-3 text-left"
+          className="kal-glass-subtle rounded-xl px-4 py-3 text-left"
         >
           <p className="text-sm font-semibold text-kal-text">Quick Meditation - 2 min reset</p>
           <p className="mt-1 text-xs text-kal-muted">Quick Anxiety Reset before a study sprint</p>
@@ -562,7 +562,7 @@ export function MeditationPage() {
         <button
           type="button"
           onClick={() => void beginSession(MEDITATION_TYPES[0], 5)}
-          className="rounded-xl border border-kal-border bg-kal-card px-4 py-3 text-left"
+          className="kal-glass-subtle rounded-xl px-4 py-3 text-left"
         >
           <p className="text-sm font-semibold text-kal-text">Quick Meditation - 5 min focus</p>
           <p className="mt-1 text-xs text-kal-muted">Focus Breath for deep work mode</p>

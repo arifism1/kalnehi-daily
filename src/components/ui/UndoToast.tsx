@@ -20,7 +20,7 @@ export function UndoToast() {
     >
       <div
         className={clsx(
-          "pointer-events-auto flex w-full max-w-lg items-center gap-3 rounded-2xl border border-kal-border bg-kal-card px-5 py-4 kal-shadow-card",
+          "kal-glass-panel pointer-events-auto flex w-full max-w-lg items-center gap-3 rounded-2xl px-5 py-4",
         )}
       >
         <p className="min-w-0 flex-1 text-sm font-medium leading-snug text-kal-text">

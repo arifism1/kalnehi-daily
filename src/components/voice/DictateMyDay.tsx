@@ -328,14 +328,14 @@ export function DictateMyDay() {
           <Volume2 className="h-8 w-8 text-kal-accent" aria-hidden />
           Dictate My Day
         </h1>
-        <p className="mt-3 rounded-xl border border-kal-border bg-kal-card-muted px-3 py-2 text-xs leading-relaxed text-kal-muted">
+        <p className="kal-glass-subtle mt-3 rounded-xl px-3 py-2 text-xs leading-relaxed text-kal-muted">
           <span className="font-medium text-kal-text-secondary">Tip:</span> Speak
           naturally, then tap Stop when you&apos;re done.
         </p>
       </header>
 
       <div className="flex flex-wrap items-end gap-3">
-        <div className="flex min-h-[44px] items-center gap-1 rounded-xl border border-kal-border bg-kal-card-muted p-1">
+        <div className="kal-glass-subtle flex min-h-[44px] items-center gap-1 rounded-xl p-1">
           {[
             { id: today, label: "Today" },
             {
@@ -386,7 +386,7 @@ export function DictateMyDay() {
         </label>
       </div>
 
-      <section className="rounded-[1.25rem] border border-kal-border bg-kal-card kal-shadow-card p-6 sm:p-8">
+      <section className="kal-glass-panel rounded-[1.25rem] p-6 sm:p-8">
         <div className="flex flex-col items-center gap-5 text-center">
           <button
             type="button"
@@ -429,7 +429,7 @@ export function DictateMyDay() {
             <button
               type="button"
               onClick={() => void stopListening()}
-              className="min-h-[44px] rounded-xl border border-kal-border px-4 py-2 text-sm font-semibold text-kal-text-secondary hover:bg-kal-card-muted"
+              className="min-h-[44px] rounded-xl border border-white/30 bg-white/50 px-4 py-2 text-sm font-semibold text-kal-text-secondary backdrop-blur-sm hover:bg-white/70 dark:border-white/12 dark:bg-zinc-900/50 dark:hover:bg-zinc-900/70"
             >
               Stop
             </button>
@@ -443,7 +443,7 @@ export function DictateMyDay() {
         </div>
       </section>
 
-      <section className="rounded-[1.25rem] border border-kal-border bg-kal-card kal-shadow-card p-4 sm:p-6">
+      <section className="kal-glass-panel rounded-[1.25rem] p-4 sm:p-6">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-lg font-bold text-kal-text">Preview (not saved yet)</h2>
           <span className="text-xs text-kal-muted">{logDate}</span>
@@ -531,7 +531,7 @@ export function DictateMyDay() {
               placeholder="Edit your note…"
             />
           ) : (
-            <p className="mt-4 rounded-[1rem] border border-kal-border bg-kal-card-muted px-4 py-4 text-lg leading-relaxed text-kal-text">
+            <p className="kal-glass-subtle mt-4 rounded-[1rem] px-4 py-4 text-lg leading-relaxed text-kal-text">
               {fallbackPanel.text}
             </p>
           )}
@@ -548,7 +548,7 @@ export function DictateMyDay() {
               type="button"
               disabled={phase === "processing" || !fallbackPanel.text.trim()}
               onClick={() => void saveFallbackNote()}
-              className="min-h-[52px] flex-1 rounded-xl border-2 border-[var(--kal-warn-border)] bg-kal-card px-6 text-base font-semibold text-[var(--kal-warn-text)] disabled:opacity-40"
+              className="min-h-[52px] flex-1 rounded-xl border-2 border-[var(--kal-warn-border)] bg-white/75 px-6 text-base font-semibold text-[var(--kal-warn-text)] shadow-sm backdrop-blur-sm disabled:opacity-40 dark:bg-zinc-900/70"
             >
               {phase === "processing" ? (
                 <span className="inline-flex items-center justify-center gap-2">
@@ -565,7 +565,7 @@ export function DictateMyDay() {
                 onClick={() =>
                   setFallbackPanel((p) => (p ? { ...p, editMode: true } : p))
                 }
-                className="min-h-[52px] flex-1 rounded-xl border border-kal-border bg-kal-card-muted px-6 text-base font-semibold text-kal-text-secondary disabled:opacity-40"
+                className="kal-glass-subtle min-h-[52px] flex-1 rounded-xl px-6 text-base font-semibold text-kal-text-secondary disabled:opacity-40"
               >
                 Edit text
               </button>
@@ -576,7 +576,7 @@ export function DictateMyDay() {
                 onClick={() =>
                   setFallbackPanel((p) => (p ? { ...p, editMode: false } : p))
                 }
-                className="min-h-[52px] flex-1 rounded-xl border border-kal-border bg-kal-card-muted px-6 text-base font-medium text-kal-text disabled:opacity-40"
+                className="kal-glass-subtle min-h-[52px] flex-1 rounded-xl px-6 text-base font-medium text-kal-text disabled:opacity-40"
               >
                 Preview
               </button>
@@ -585,7 +585,7 @@ export function DictateMyDay() {
               type="button"
               disabled={phase === "processing"}
               onClick={() => setFallbackPanel(null)}
-              className="min-h-[48px] rounded-xl border border-kal-border px-4 text-sm font-medium text-kal-muted hover:bg-kal-card-muted disabled:opacity-40"
+              className="min-h-[48px] rounded-xl border border-white/30 bg-white/45 px-4 text-sm font-medium text-kal-muted backdrop-blur-sm hover:bg-white/65 disabled:opacity-40 dark:border-white/12 dark:bg-zinc-900/45 dark:hover:bg-zinc-900/65"
             >
               Dismiss
             </button>

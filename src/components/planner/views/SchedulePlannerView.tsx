@@ -22,13 +22,13 @@ export function SchedulePlannerView() {
         {rows.map((r) => (
           <div
             key={r.t}
-            className="flex flex-col gap-1 rounded-xl border border-kal-border bg-kal-card px-4 py-4 kal-shadow-card sm:flex-row sm:items-center sm:justify-between"
+            className="kal-glass-card flex flex-col gap-1 rounded-xl px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
           >
             <div>
               <p className="text-xs font-semibold tabular-nums text-kal-accent">
                 {r.t}
               </p>
-              <p className="text-sm font-medium text-white">{r.kind}</p>
+              <p className="text-sm font-medium text-kal-text">{r.kind}</p>
             </div>
             <p className="text-xs text-kal-muted">{r.note}</p>
           </div>

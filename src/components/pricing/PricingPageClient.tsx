@@ -86,8 +86,8 @@ function TierCard({
 
   return (
     <article
-      className={`relative flex flex-col rounded-2xl border-2 bg-kal-card p-5 kal-shadow-card ${
-        highlighted ? "border-kal-accent" : "border-kal-border"
+      className={`kal-glass-card relative flex flex-col rounded-2xl border-2 p-5 ${
+        highlighted ? "border-kal-accent" : "border-white/35 dark:border-white/15"
       }`}
     >
       {highlighted && (
@@ -144,7 +144,7 @@ function TierCard({
         className={`mt-4 inline-flex min-h-[48px] w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-bold disabled:opacity-60 ${
           highlighted
             ? "bg-kal-accent text-kal-accent-foreground"
-            : "border border-kal-border bg-kal-card-muted text-kal-text"
+            : "kal-glass-subtle border border-white/25 text-kal-text dark:border-white/12"
         }`}
       >
         {buttonLabel}
@@ -262,7 +262,7 @@ export function PricingPageClient() {
         strategy="afterInteractive"
       />
       <section className="mx-auto max-w-5xl space-y-8 pb-10">
-        <header className="rounded-2xl border border-kal-border bg-kal-card px-6 py-8 text-center kal-shadow-card">
+        <header className="kal-glass-panel rounded-2xl px-6 py-8 text-center">
           <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-kal-accent">
             Choose Your Plan
           </p>
@@ -299,7 +299,7 @@ export function PricingPageClient() {
         )}
 
         {statusMsg && (
-          <p className="rounded-xl border border-kal-border bg-kal-card px-4 py-3 text-center text-sm text-kal-text">
+          <p className="kal-glass-subtle rounded-xl px-4 py-3 text-center text-sm text-kal-text">
             {statusMsg}
           </p>
         )}

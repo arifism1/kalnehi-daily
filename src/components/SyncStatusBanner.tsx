@@ -106,7 +106,7 @@ export function SyncStatusBanner() {
       <div
         role="status"
         className={clsx(
-          "mb-4 flex items-start gap-2 rounded-[0.875rem] border border-kal-border bg-kal-card-muted px-3 py-2 text-[10px] leading-snug text-kal-muted",
+          "kal-glass-subtle mb-4 flex items-start gap-2 rounded-[0.875rem] px-3 py-2 text-[10px] leading-snug text-kal-muted",
         )}
       >
         <CloudOff className="mt-0.5 h-3 w-3 shrink-0 text-kal-muted" />
@@ -133,7 +133,7 @@ export function SyncStatusBanner() {
       <div
         role="status"
         className={clsx(
-          "mb-4 flex items-center gap-2 rounded-[0.875rem] border border-kal-accent/25 bg-kal-accent-soft px-3 py-2 text-[10px] leading-snug text-kal-text-secondary",
+          "mb-4 flex items-center gap-2 rounded-[0.875rem] border border-kal-accent/30 bg-kal-accent-soft/85 px-3 py-2 text-[10px] leading-snug text-kal-text-secondary shadow-sm backdrop-blur-sm dark:bg-kal-accent-soft/40",
         )}
       >
         <Loader2 className="h-3 w-3 shrink-0 animate-spin text-kal-accent" />

@@ -109,10 +109,10 @@ export function HabitsPlannerView() {
         {habits.map((h) => (
           <li
             key={h.id}
-            className="flex items-start gap-3 rounded-2xl border border-kal-border bg-kal-card p-4 kal-shadow-card dark:border-slate-700 dark:bg-slate-900/40"
+            className="kal-glass-panel flex items-start gap-3 rounded-2xl p-4 dark:border-white/12"
           >
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-white">{h.label}</p>
+              <p className="text-sm font-medium text-kal-text">{h.label}</p>
               <p className="mt-1 text-xs text-zinc-500">
                 Streak:{" "}
                 <span className="font-semibold tabular-nums text-kal-accent">

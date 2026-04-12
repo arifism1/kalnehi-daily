@@ -82,14 +82,14 @@ function TaskQuickSheet({
       <button
         type="button"
         aria-label="Close sheet"
-        className="absolute inset-0 bg-[var(--kal-overlay)]"
+        className="absolute inset-0 bg-[var(--kal-overlay)] backdrop-blur-[2px]"
         onClick={onClose}
       />
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Task actions"
-        className="relative z-10 w-full max-w-lg rounded-t-[1.25rem] border border-kal-border bg-kal-card p-5 kal-shadow-card sm:rounded-[1.25rem]"
+        className="kal-glass-panel relative z-10 w-full max-w-lg rounded-t-[1.25rem] p-5 sm:rounded-[1.25rem]"
       >
         <div className="flex items-start justify-between gap-2 border-b border-kal-border pb-3">
           <p className="min-w-0 break-words text-sm font-semibold text-kal-text [overflow-wrap:anywhere]">
@@ -419,8 +419,8 @@ export function TaskCard({
       className={clsx(
         "group rounded-xl border px-2 py-1.5 kal-shadow-card transition-all duration-200 ease-out sm:rounded-[1rem] sm:px-2.5 sm:py-2 md:px-3 md:py-2.5",
         appearance === "missed"
-          ? "border-amber-300/60 bg-amber-50/80 dark:border-amber-500/25 dark:from-amber-950/20 dark:to-slate-950/40 dark:bg-gradient-to-r"
-          : "border-kal-border bg-kal-card",
+          ? "border-amber-300/60 bg-amber-50/80 backdrop-blur-sm dark:border-amber-500/25 dark:from-amber-950/20 dark:to-slate-950/40 dark:bg-gradient-to-r"
+          : "kal-glass-subtle",
         done && "opacity-[0.95]",
       )}
     >

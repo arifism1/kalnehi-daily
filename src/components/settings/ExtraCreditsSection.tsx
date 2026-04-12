@@ -38,7 +38,7 @@ function CreditCard({
   const isPhoto = pack.type === "photo_scans";
 
   return (
-    <div className="flex items-center justify-between rounded-xl border border-kal-border bg-kal-card px-4 py-3">
+    <div className="kal-glass-subtle flex items-center justify-between rounded-xl px-4 py-3">
       <div className="flex items-center gap-3">
         {isPhoto ? (
           <Camera className="h-4 w-4 text-kal-accent" />
@@ -54,7 +54,7 @@ function CreditCard({
         type="button"
         disabled={disabled}
         onClick={() => onBuy(pack)}
-        className="inline-flex h-8 items-center gap-1 rounded-lg border border-kal-border bg-kal-card-muted px-3 text-xs font-semibold text-kal-text disabled:opacity-50"
+        className="kal-glass-subtle inline-flex h-8 items-center gap-1 rounded-lg px-3 text-xs font-semibold text-kal-text disabled:opacity-50"
       >
         <Plus className="h-3 w-3" />
         Buy
@@ -125,7 +125,7 @@ export function ExtraCreditsSection() {
         src="https://checkout.razorpay.com/v1/checkout.js"
         strategy="afterInteractive"
       />
-      <div className="overflow-hidden rounded-[1rem] border border-kal-border bg-kal-card kal-shadow-card">
+      <div className="kal-glass-panel overflow-hidden rounded-[1rem]">
         <div className="border-b border-kal-border px-4 py-3">
           <h3 className="text-xs font-semibold uppercase tracking-widest text-kal-accent">
             Buy Extra AI Credits

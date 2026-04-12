@@ -263,7 +263,7 @@ export function PasteHandwrittenPlanPage() {
 
       {!userId ? null : (
         <>
-          <section className="rounded-[1.25rem] border border-kal-border bg-kal-card kal-shadow-card p-4 sm:p-6">
+          <section className="kal-glass-panel rounded-[1.25rem] p-4 sm:p-6">
             {formError ? (
               <p
                 className="mb-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-900 dark:border-rose-500/30 dark:bg-rose-950/25 dark:text-rose-100"
@@ -313,7 +313,7 @@ export function PasteHandwrittenPlanPage() {
               </p>
             </div>
 
-            <details className="mt-4 rounded-xl border border-kal-border bg-kal-card-muted/50 text-xs text-kal-muted">
+            <details className="kal-glass-subtle mt-4 rounded-xl text-xs text-kal-muted">
               <summary className="cursor-pointer select-none px-3 py-2.5 font-semibold text-kal-text-secondary">
                 How to write your schedule for best results
               </summary>

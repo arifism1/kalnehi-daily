@@ -66,14 +66,14 @@ export function SettingsToggles() {
   );
 
   return (
-    <div className="divide-y divide-kal-border rounded-[1rem] border border-kal-border bg-kal-card kal-shadow-card px-1">
+    <div className="kal-glass-panel divide-y divide-white/15 rounded-[1rem] px-1 dark:divide-white/10">
       <div className="px-3 py-4">
         <span className="text-[15px] font-medium text-kal-text">Appearance</span>
         <p className="mt-0.5 text-xs text-kal-text-secondary">
           Light is default; System follows your device.
         </p>
         <div
-          className="mt-3 flex gap-1 rounded-xl border border-kal-border bg-kal-card-muted p-1"
+          className="kal-glass-subtle mt-3 flex gap-1 rounded-xl p-1"
           role="group"
           aria-label="Theme"
         >
@@ -85,7 +85,7 @@ export function SettingsToggles() {
               className={clsx(
                 "min-h-[40px] flex-1 rounded-lg text-xs font-semibold transition-colors",
                 appearance === value
-                  ? "bg-kal-card text-kal-text kal-shadow-card"
+                  ? "bg-white/95 text-kal-text shadow-sm backdrop-blur-sm dark:bg-zinc-800/95"
                   : "text-kal-text-secondary hover:text-kal-text",
               )}
             >

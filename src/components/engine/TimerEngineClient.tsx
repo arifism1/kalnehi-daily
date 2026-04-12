@@ -327,7 +327,7 @@ export function TimerEngineClient() {
             {suggestOpen && filteredSuggestions.length > 0 ? (
               <ul
                 role="listbox"
-                className="absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-xl border border-kal-border bg-kal-card py-1 kal-shadow-card dark:border-slate-600 dark:bg-slate-900"
+                className="kal-glass-panel absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-xl py-1 dark:border-white/12"
               >
                 {filteredSuggestions.map((t) => {
                   const line = `${t.assigned_date} · ${taskLabel(t, microRecord)}`;
@@ -356,7 +356,7 @@ export function TimerEngineClient() {
           </div>
 
           {!activeId ? (
-            <div className="flex flex-col items-stretch gap-4 rounded-2xl border border-kal-border/80 bg-kal-card-muted/50 p-4 sm:flex-row sm:items-center dark:border-slate-700/80 dark:bg-slate-950/40">
+            <div className="kal-glass-subtle flex flex-col items-stretch gap-4 rounded-2xl p-4 sm:flex-row sm:items-center">
               <CircularProgressRing
                 percent={0}
                 gradientId={gidPreview}

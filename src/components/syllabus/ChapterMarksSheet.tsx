@@ -154,7 +154,7 @@ export function ChapterMarksSheet({
             return (
               <div
                 key={r.id}
-                className="rounded-xl border border-kal-border bg-kal-card-muted p-3"
+                className="kal-glass-subtle rounded-xl p-3"
               >
                 <p className="text-[13px] font-medium leading-snug text-zinc-200">
                   {r.microtopic}

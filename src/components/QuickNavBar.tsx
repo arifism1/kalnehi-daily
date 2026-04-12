@@ -30,10 +30,10 @@ export function QuickNavBar() {
                 aria-label={item.label}
                 title={item.label}
                 className={clsx(
-                  "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-colors sm:h-9 sm:w-9",
+                  "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border backdrop-blur-md transition-colors sm:h-9 sm:w-9",
                   active
-                    ? "border-kal-accent/30 bg-kal-accent-soft text-kal-accent ring-1 ring-kal-accent/25"
-                    : "border-kal-border/80 bg-kal-card text-kal-text-secondary hover:border-kal-accent/20 hover:bg-kal-card-muted hover:text-kal-text",
+                    ? "border-kal-accent/35 bg-kal-accent-soft text-kal-accent shadow-sm ring-1 ring-kal-accent/25"
+                    : "border-white/35 bg-white/50 text-kal-text-secondary hover:border-kal-accent/25 hover:bg-white/70 hover:text-kal-text dark:border-white/12 dark:bg-zinc-900/55 dark:hover:border-kal-accent/30 dark:hover:bg-zinc-900/75",
                 )}
               >
                 <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" strokeWidth={2} aria-hidden />

@@ -67,7 +67,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-full min-h-dvh flex-col bg-kal-page text-kal-text">
       <div className="flex min-w-0 flex-1 flex-col">
         {!onboarding && minimalChrome && (
-          <header className="sticky top-0 z-40 border-b border-kal-border bg-kal-card kal-nav-shadow">
+          <header className="kal-glass-header sticky top-0 z-40">
             <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:h-[3.5rem] sm:px-6 xl:px-8">
               <Link
                 href="/"
@@ -79,7 +79,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
                   alt=""
                   width={48}
                   height={48}
-                  className="h-10 w-10 flex-shrink-0 object-contain ring-1 ring-kal-border"
+                  className="h-10 w-10 flex-shrink-0 object-contain ring-1 ring-white/30 dark:ring-white/15"
                 />
                 <span className="text-lg font-semibold tracking-tight text-black dark:text-white">
                   kalnehi
@@ -88,7 +88,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
               <button
                 type="button"
                 onClick={() => setMenuOpen(true)}
-                className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-transparent text-kal-text-secondary transition-colors hover:border-kal-border hover:bg-kal-card-muted active:scale-[0.98] dark:hover:bg-kal-card-muted"
+                className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-white/25 bg-white/40 text-kal-text-secondary backdrop-blur-md transition-colors hover:border-white/40 hover:bg-white/55 active:scale-[0.98] dark:border-white/12 dark:bg-zinc-900/50 dark:hover:bg-zinc-900/70"
                 aria-expanded={menuOpen}
                 aria-label="Open navigation menu"
               >
@@ -98,7 +98,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
           </header>
         )}
         {!onboarding && !minimalChrome && (
-          <header className="sticky top-0 z-40 border-b border-kal-border bg-kal-card kal-nav-shadow">
+          <header className="kal-glass-header sticky top-0 z-40">
             <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:h-[3.5rem] sm:px-6 xl:px-8">
               <Link
                 href="/"
@@ -110,7 +110,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
                   alt=""
                   width={48}
                   height={48}
-                  className="h-10 w-10 flex-shrink-0 object-contain ring-1 ring-kal-border"
+                  className="h-10 w-10 flex-shrink-0 object-contain ring-1 ring-white/30 dark:ring-white/15"
                 />
                 <span className="text-lg font-semibold tracking-tight text-black dark:text-white">
                   kalnehi
@@ -120,10 +120,10 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
                 <Link
                   href="/notifications"
                   className={clsx(
-                    "flex h-11 min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-2 text-kal-accent transition-colors hover:border-kal-border hover:bg-kal-card-muted active:scale-[0.98] sm:min-w-0 sm:px-3 dark:hover:bg-kal-card-muted",
+                    "flex h-11 min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-2 text-kal-accent backdrop-blur-md transition-colors active:scale-[0.98] sm:min-w-0 sm:px-3",
                     pathname === "/notifications"
-                      ? "border-kal-accent/30 bg-kal-accent-soft"
-                      : "border-transparent",
+                      ? "border-kal-accent/35 bg-kal-accent-soft shadow-sm ring-1 ring-kal-accent/20"
+                      : "border-white/30 bg-white/45 hover:border-white/45 hover:bg-white/65 dark:border-white/12 dark:bg-zinc-900/50 dark:hover:border-white/18 dark:hover:bg-zinc-900/72",
                   )}
                   aria-label="Notifications"
                 >
@@ -135,10 +135,10 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
                 <Link
                   href="/daily-plan"
                   className={clsx(
-                    "flex h-11 min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-2 text-kal-accent transition-colors hover:border-kal-border hover:bg-kal-card-muted active:scale-[0.98] sm:min-w-0 sm:px-3 dark:hover:bg-kal-card-muted",
+                    "flex h-11 min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-2 text-kal-accent backdrop-blur-md transition-colors active:scale-[0.98] sm:min-w-0 sm:px-3",
                     pathname === "/daily-plan" || pathname === "/plan-my-day"
-                      ? "border-kal-accent/30 bg-kal-accent-soft"
-                      : "border-transparent",
+                      ? "border-kal-accent/35 bg-kal-accent-soft shadow-sm ring-1 ring-kal-accent/20"
+                      : "border-white/30 bg-white/45 hover:border-white/45 hover:bg-white/65 dark:border-white/12 dark:bg-zinc-900/50 dark:hover:border-white/18 dark:hover:bg-zinc-900/72",
                   )}
                   aria-label="Daily planner"
                 >
@@ -154,10 +154,10 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
                 <Link
                   href="/dictate-day"
                   className={clsx(
-                    "flex h-11 min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-2 text-kal-accent transition-colors hover:border-kal-border hover:bg-kal-card-muted active:scale-[0.98] sm:min-w-0 sm:px-3 dark:hover:bg-kal-card-muted",
+                    "flex h-11 min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-2 text-kal-accent backdrop-blur-md transition-colors active:scale-[0.98] sm:min-w-0 sm:px-3",
                     pathname === "/dictate-day"
-                      ? "border-kal-accent/30 bg-kal-accent-soft"
-                      : "border-transparent",
+                      ? "border-kal-accent/35 bg-kal-accent-soft shadow-sm ring-1 ring-kal-accent/20"
+                      : "border-white/30 bg-white/45 hover:border-white/45 hover:bg-white/65 dark:border-white/12 dark:bg-zinc-900/50 dark:hover:border-white/18 dark:hover:bg-zinc-900/72",
                   )}
                   aria-label="Dictate My Day"
                 >
@@ -169,7 +169,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
                 <button
                   type="button"
                   onClick={() => setMenuOpen(true)}
-                  className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-transparent text-kal-text-secondary transition-colors hover:border-kal-border hover:bg-kal-card-muted active:scale-[0.98] dark:hover:bg-kal-card-muted"
+                  className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-white/25 bg-white/40 text-kal-text-secondary backdrop-blur-md transition-colors hover:border-white/40 hover:bg-white/55 active:scale-[0.98] dark:border-white/12 dark:bg-zinc-900/50 dark:hover:bg-zinc-900/70"
                   aria-expanded={menuOpen}
                   aria-label="Open navigation menu"
                 >
@@ -181,7 +181,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
         )}
 
         {!onboarding && (
-          <div className="sticky top-14 z-30 border-b border-kal-border/80 bg-kal-page/95 backdrop-blur-sm sm:top-[3.5rem]">
+          <div className="sticky top-14 z-30 border-b border-white/20 bg-white/55 backdrop-blur-md dark:border-white/10 dark:bg-zinc-950/65 sm:top-[3.5rem]">
             <div
               className={clsx(
                 "mx-auto w-full px-4 sm:px-6 md:px-8 xl:px-10",

@@ -171,7 +171,7 @@ export function ProgressOverview() {
   ]);
 
   return (
-    <section className="rounded-2xl border border-kal-border bg-kal-card p-6 kal-shadow-card sm:p-8">
+    <section className="kal-glass-panel rounded-2xl p-6 sm:p-8">
       <h2 className="text-sm font-semibold text-kal-text">Marks &amp; syllabus</h2>
       <p className="mt-1 text-xs text-kal-muted">
         {syllabusSoon

@@ -37,7 +37,7 @@ const COLUMNS: ColumnDef[] = [
     title: "Current Doubts",
     empty: "No active doubts — keep conquering the syllabus",
     panelClass:
-      "border-kal-border bg-kal-card kal-shadow-card dark:border-slate-700/90 dark:bg-slate-900/35",
+      "kal-glass-panel border-white/25 dark:border-white/12",
     headingClass: "text-kal-text dark:text-slate-200",
   },
   {
@@ -46,7 +46,7 @@ const COLUMNS: ColumnDef[] = [
     empty:
       "Nothing here yet — move a doubt here when you start breaking it down",
     panelClass:
-      "border-violet-200 bg-violet-50 dark:border-violet-500/25 dark:bg-violet-950/15",
+      "border-violet-200/80 bg-violet-50/90 shadow-sm backdrop-blur-md dark:border-violet-500/30 dark:bg-violet-950/35",
     headingClass:
       "text-violet-900 dark:text-violet-200/95",
   },
@@ -55,7 +55,7 @@ const COLUMNS: ColumnDef[] = [
     title: "Solved Doubts",
     empty: "All doubts solved — great progress!",
     panelClass:
-      "border-red-200 bg-red-50 dark:border-red-500/35 dark:bg-red-950/20",
+      "border-red-200/80 bg-red-50/90 shadow-sm backdrop-blur-md dark:border-red-500/35 dark:bg-red-950/40",
     headingClass:
       "text-red-900 dark:text-red-200/95",
   },
@@ -212,7 +212,7 @@ export function DoubtTracker() {
 
   if (hydrateError) {
     return (
-      <div className="rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-xs leading-relaxed text-kal-muted">
+      <div className="kal-glass-subtle rounded-xl px-4 py-3 text-xs leading-relaxed text-kal-muted">
         {hydrateError}
       </div>
     );
@@ -294,7 +294,7 @@ export function DoubtTracker() {
             </h2>
             <div className="mt-2 flex min-h-[min(52dvh,22rem)] flex-1 flex-col gap-2 overflow-y-auto overscroll-contain pr-0.5 [-webkit-overflow-scrolling:touch] sm:mt-3 sm:min-h-[min(56dvh,24rem)] sm:gap-2.5 md:min-h-0 md:max-h-[calc(100dvh-15.5rem)] lg:max-h-[calc(100dvh-14rem)]">
               {byStatus[col.status].length === 0 ? (
-                <p className="rounded-lg border border-dashed border-kal-border bg-kal-card-muted px-2.5 py-6 text-center text-[11px] leading-relaxed text-kal-muted sm:rounded-xl sm:px-3 sm:py-8 sm:text-[12px]">
+                <p className="kal-glass-subtle rounded-lg border border-dashed border-white/35 px-2.5 py-6 text-center text-[11px] leading-relaxed text-kal-muted sm:rounded-xl sm:px-3 sm:py-8 sm:text-[12px] dark:border-white/15">
                   {col.empty}
                 </p>
               ) : (
@@ -306,7 +306,7 @@ export function DoubtTracker() {
                       e.dataTransfer.setData("text/doubt-id", d.id);
                       e.dataTransfer.effectAllowed = "move";
                     }}
-                    className="group relative cursor-grab rounded-lg border border-kal-border bg-kal-card p-2.5 kal-shadow-card transition hover:border-kal-accent/30 active:cursor-grabbing dark:border-slate-800/90 dark:bg-slate-950/60 sm:rounded-xl sm:p-3 lg:p-3.5"
+                    className="kal-glass-subtle group relative cursor-grab rounded-lg p-2.5 transition hover:border-kal-accent/30 active:cursor-grabbing sm:rounded-xl sm:p-3 lg:p-3.5"
                   >
                     <div className="flex gap-1.5 sm:gap-2">
                       <div
@@ -487,7 +487,7 @@ export function DoubtTracker() {
             className="absolute inset-0 bg-black/65"
             onClick={() => !editSaving && setEditingId(null)}
           />
-          <div className="relative z-[61] max-h-[min(92vh,36rem)] w-full max-w-lg overflow-y-auto rounded-t-3xl border border-kal-border bg-kal-card p-6 kal-shadow-card sm:rounded-2xl">
+          <div className="kal-glass-panel relative z-[61] max-h-[min(92vh,36rem)] w-full max-w-lg overflow-y-auto rounded-t-3xl p-6 sm:rounded-2xl">
             <div className="flex items-start justify-between gap-2">
               <h2
                 id={`${baseId}-edit-title`}

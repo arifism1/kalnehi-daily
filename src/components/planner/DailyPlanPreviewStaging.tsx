@@ -56,7 +56,7 @@ export function DailyPlanPreviewStaging({
   return (
     <div
       id={sectionId}
-      className="mt-5 space-y-3 rounded-[1.15rem] border-2 border-kal-accent/25 bg-kal-accent-soft/35 p-4 dark:bg-kal-accent-soft/15"
+      className="mt-5 space-y-3 rounded-[1.15rem] border-2 border-kal-accent/30 bg-kal-accent-soft/45 p-4 shadow-sm backdrop-blur-md dark:bg-kal-accent-soft/20"
     >
       {showHeader ? (
         <div>
@@ -73,7 +73,7 @@ export function DailyPlanPreviewStaging({
         </div>
       ) : null}
       {processing ? (
-        <div className="flex items-center gap-2 rounded-lg border border-kal-border bg-kal-card/80 px-3 py-2 text-xs text-kal-muted">
+        <div className="kal-glass-subtle flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-kal-muted">
           <Loader2 className="h-4 w-4 animate-spin text-kal-accent" />
           {processingLabel}
         </div>
@@ -82,7 +82,7 @@ export function DailyPlanPreviewStaging({
         {rows.map((r) => (
           <li
             key={r.id}
-            className="flex min-w-0 items-start gap-2 overflow-hidden rounded-xl border border-kal-border bg-kal-card p-3"
+            className="kal-glass-subtle flex min-w-0 items-start gap-2 overflow-hidden rounded-xl p-3"
           >
             <input
               type="checkbox"
@@ -149,7 +149,7 @@ export function DailyPlanPreviewStaging({
         type="button"
         onClick={onAddEmptyRow}
         disabled={disabled}
-        className="flex w-full min-h-[40px] items-center justify-center gap-2 rounded-lg border border-dashed border-kal-border text-sm text-kal-muted hover:bg-kal-card-muted disabled:opacity-40"
+        className="flex w-full min-h-[40px] items-center justify-center gap-2 rounded-lg border border-dashed border-white/35 bg-white/30 text-sm text-kal-muted backdrop-blur-sm hover:bg-white/50 disabled:opacity-40 dark:border-white/15 dark:bg-zinc-900/30 dark:hover:bg-zinc-900/50"
       >
         <Plus className="h-4 w-4" />
         {addAnotherLabel}

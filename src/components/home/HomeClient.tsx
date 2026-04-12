@@ -260,7 +260,7 @@ export function HomeClient() {
   return (
     <div className="relative flex min-h-full flex-col gap-6 pb-10 text-kal-text sm:gap-8 md:gap-10 md:pb-14">
       <MotivationWallpaper />
-      <header className="relative z-[1] overflow-hidden rounded-[1rem] border border-kal-border bg-kal-card px-5 py-6 kal-shadow-card sm:rounded-[1.25rem] sm:px-8 sm:py-7 lg:px-10 lg:py-8">
+      <header className="kal-glass-panel relative z-[1] overflow-hidden rounded-[1rem] px-5 py-6 sm:rounded-[1.25rem] sm:px-8 sm:py-7 lg:px-10 lg:py-8">
         <div
           className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-kal-accent/15 blur-3xl"
           aria-hidden
