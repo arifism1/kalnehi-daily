@@ -63,5 +63,5 @@ export function formatUpgradeProrationLabel(
   const rupees = Math.round(amountPaise / 100);
   const r = rupees.toLocaleString("en-IN");
   const daysForCopy = Math.min(Math.max(remainingDays, 1), 30);
-  return `Upgrade now for ₹${r} (prorated for remaining ${daysForCopy} day${daysForCopy === 1 ? "" : "s"})`;
+  return `Pay ₹${r} now (prorated for ${daysForCopy} day${daysForCopy === 1 ? "" : "s"} remaining this month)`;
 }

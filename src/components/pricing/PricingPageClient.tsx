@@ -201,7 +201,7 @@ export function PricingPageClient() {
             return;
           }
           setStatusMsg(
-            `${tierConfig.name} trial started. Your subscription will auto-renew at ${tierConfig.monthlyPriceDisplay}/month after the trial (Razorpay handles the recurring charge).`,
+            `${tierConfig.name} trial started. From next month onwards, you will be charged ${tierConfig.monthlyPriceDisplay} monthly. You can cancel anytime — you will not be charged from next month onwards.`,
           );
           window.location.assign("/");
         },
@@ -231,8 +231,9 @@ export function PricingPageClient() {
             <Link href="/my-plan" className="font-bold underline underline-offset-2">
               My Plan
             </Link>
-            : you&apos;ll pay only a prorated difference for the days left in your
-            current window (up to 30 days), and the upgrade applies immediately.
+            : pay only the prorated amount now for the rest of this month —
+            upgrade applies immediately. From next month onwards, you will be
+            charged the new monthly price. You can cancel anytime.
           </p>
         </div>
       );
@@ -276,8 +277,8 @@ export function PricingPageClient() {
           </h1>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-kal-text-secondary">
             {SITE_NAME} is fully paid — there is no free tier. Start with a
-            3-day trial, then your plan renews monthly for up to 12 cycles.
-            Cancel anytime before the next charge if you change your mind.
+            3-day trial, then your plan renews monthly. You can cancel anytime
+            — you will not be charged from next month onwards.
           </p>
         </header>
 

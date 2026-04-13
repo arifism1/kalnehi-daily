@@ -39,7 +39,7 @@ export function CancelSubscriptionButton({ className }: CancelSubscriptionButton
               setMessage(res.error);
               return;
             }
-            setMessage("Subscription cancelled. No further charges will occur.");
+            setMessage("Subscription cancelled. You will not be charged from next month onwards.");
             router.replace("/pricing");
             router.refresh();
           });

@@ -174,8 +174,8 @@ export function MyPlanPageClient() {
 
   const confirmDescription =
     status === "trial"
-      ? `You'll keep full access until ${formatDate(endDate)}. After that, the app will be locked and the upcoming ${tierConfig.monthlyPriceDisplay} monthly charge will not occur.`
-      : `You'll keep access until the end of the current billing cycle (${formatDate(endDate)}). After that, you will lose access to all features.`;
+      ? `You can cancel anytime — you will not be charged from next month onwards. Your trial access stays active until ${formatDate(endDate)}.`
+      : `You can cancel anytime — you will not be charged from next month onwards. Your plan stays active until the end of this month (${formatDate(endDate)}).`;
 
   const rows: { label: string; value: string; className?: string }[] = [
     {
@@ -205,7 +205,7 @@ export function MyPlanPageClient() {
       label: "Plan",
       value:
         plan === "monthly"
-          ? `${tierConfig.monthlyPriceDisplay}/month (12 months)`
+          ? `${tierConfig.monthlyPriceDisplay}/month · cancel anytime`
           : plan === "trial"
             ? `${tierConfig.trialPriceDisplay} Trial`
             : (plan ?? "—"),
@@ -218,10 +218,10 @@ export function MyPlanPageClient() {
 
   if (endDate && (status === "trial" || status === "active" || isCancelled)) {
     const label = isCancelled
-      ? "Expires on"
+      ? "Active until"
       : status === "trial"
         ? "Trial ends"
-        : "Current cycle ends";
+        : "Month ends on";
     rows.push({ label, value: formatDate(endDate) });
   }
 
@@ -240,7 +240,7 @@ export function MyPlanPageClient() {
         </p>
         <h1 className="mt-1 text-2xl font-bold tracking-tight text-kal-text">My Plan</h1>
         <p className="mt-1 text-sm leading-relaxed text-kal-text-secondary">
-          Your tier, billing, AI usage, upgrades, and extra credits — all in one place.
+          Monthly subscription — billed every month. Cancel anytime.
         </p>
       </div>
 
@@ -301,7 +301,7 @@ export function MyPlanPageClient() {
 
             <div className="border-b border-kal-border px-4 py-3">
               <h3 className="text-xs font-semibold uppercase tracking-widest text-kal-muted">
-                Billing &amp; dates
+                Plan &amp; dates
               </h3>
             </div>
 
@@ -390,8 +390,8 @@ export function MyPlanPageClient() {
             {isCancelled && (
               <div className="border-t border-kal-border bg-amber-50 px-4 py-3 dark:bg-amber-950/20">
                 <p className="text-xs leading-relaxed text-amber-800 dark:text-amber-300">
-                  Subscription is cancelled and will expire on {formatDate(endDate)}.
-                  You will not be charged further.
+                  Subscription cancelled. You will not be charged from next month onwards.
+                  Your plan stays active until {formatDate(endDate)}.
                 </p>
               </div>
             )}
