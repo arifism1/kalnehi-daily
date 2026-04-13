@@ -20,6 +20,10 @@
 # production
 /build
 
+# service worker (generated at build time via scripts/merge-service-worker.mjs)
+# the dynamic route at src/app/sw.js/route.ts serves the authoritative version at runtime
+/public/sw.js
+
 # misc
 .DS_Store
 *.pem

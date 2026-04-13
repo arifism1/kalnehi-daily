@@ -5,6 +5,7 @@ import {
   BookMarked,
   ChevronDown,
   Layers,
+  Lock,
   Pencil,
   Plus,
   SlidersHorizontal,
@@ -544,7 +545,17 @@ export function SyllabusTracker() {
                                 </span>
                               </span>
                             </span>
+                            {syllabusLimited ? (
+                            <span
+                              className="inline-flex shrink-0 items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
+                              title="Upgrade to Pro to expand chapters and see microtopics"
+                            >
+                              <Lock className="h-2.5 w-2.5" aria-hidden />
+                              Pro
+                            </span>
+                          ) : (
                             <ChevronDown className="mt-1 h-5 w-5 shrink-0 text-kal-muted transition-transform group-open/ch:rotate-180" />
+                          )}
                           </div>
 
                           <p className="pl-[2.875rem] text-[11px] tabular-nums text-kal-muted sm:pl-[3.125rem]">

@@ -1,7 +1,7 @@
 "use client";
 
 import { addDays, format, parseISO } from "date-fns";
-import { ArrowLeft, Mic, PenLine, Type, Zap } from "lucide-react";
+import { ArrowLeft, CalendarDays, Mic, PenLine, Type, Zap } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -23,10 +23,12 @@ export function DailyPlanPageContent() {
   }
 
   const DATE_CHIPS = [
-    { id: format(addDays(parseISO(today), -1), "yyyy-MM-dd"), label: "Yesterday" },
     { id: today, label: "Today" },
+    { id: format(addDays(parseISO(today), -1), "yyyy-MM-dd"), label: "Yesterday" },
     { id: format(addDays(parseISO(today), 1), "yyyy-MM-dd"), label: "Tomorrow" },
   ];
+
+  const isChipDate = DATE_CHIPS.some((d) => d.id === logDate);
 
   return (
     <div className="relative mx-auto max-w-2xl pb-16 pt-2 sm:pt-4">
@@ -48,22 +50,43 @@ export function DailyPlanPageContent() {
         </div>
       </header>
 
-      {/* Date chips */}
-      <div className="mb-5 flex min-h-[40px] items-center gap-1 rounded-xl border border-kal-border bg-kal-card-muted p-1 w-fit">
-        {DATE_CHIPS.map((d) => (
-          <button
-            key={d.id}
-            type="button"
-            onClick={() => setLogDate(d.id)}
-            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-              logDate === d.id
-                ? "bg-kal-accent text-white"
-                : "text-kal-muted hover:text-kal-text"
-            }`}
-          >
-            {d.label}
-          </button>
-        ))}
+      {/* Date chips + date picker */}
+      <div className="mb-5 flex flex-wrap items-center gap-2">
+        <div className="flex min-h-[40px] items-center gap-1 rounded-xl border border-kal-border bg-kal-card-muted p-1">
+          {DATE_CHIPS.map((d) => (
+            <button
+              key={d.id}
+              type="button"
+              onClick={() => setLogDate(d.id)}
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                logDate === d.id
+                  ? "bg-kal-accent text-white"
+                  : "text-kal-muted hover:text-kal-text"
+              }`}
+            >
+              {d.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Arbitrary date picker */}
+        <label className="flex min-h-[40px] cursor-pointer items-center gap-1.5 rounded-xl border border-kal-border bg-kal-card-muted px-3 py-1 text-xs font-semibold text-kal-muted transition-colors hover:text-kal-text">
+          <CalendarDays className="h-3.5 w-3.5 text-kal-accent" aria-hidden />
+          <span className="sr-only">Pick a date</span>
+          {!isChipDate && (
+            <span className="text-kal-accent">
+              {format(parseISO(logDate), "d MMM")}
+            </span>
+          )}
+          <input
+            type="date"
+            value={logDate}
+            onChange={(e) => {
+              if (e.target.value) setLogDate(e.target.value);
+            }}
+            className="sr-only"
+          />
+        </label>
       </div>
 
       <UnifiedDailyPlanList planDate={logDate} />

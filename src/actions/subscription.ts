@@ -55,19 +55,6 @@ export type VerifyPlanUpgradePaymentResult =
   | { ok: true; warning?: string }
   | { ok: false; error: string };
 
-export type GetSubscriptionMandateCheckoutCredentialsResult =
-  | {
-      ok: true;
-      keyId: string;
-      subscriptionId: string;
-      monthlyAmountPaise: number;
-      tier: SubscriptionTier;
-    }
-  | { ok: false; error: string };
-
-export type ConfirmPlanUpgradeSubscriptionAuthResult =
-  | { ok: true }
-  | { ok: false; error: string };
 
 const TOTAL_BILLING_CYCLES = 12;
 const TRIAL_DAYS = 3;
@@ -614,7 +601,7 @@ export async function incrementPhotoScanUsage(): Promise<
   const ledger = parseBonusLedger(data.bonus_photo_scans_ledger);
 
   const rawTier = data.subscription_tier;
-  const tierResolved: SubscriptionTier = isValidTier(rawTier) ? rawTier : "pro";
+  const tierResolved: SubscriptionTier = isValidTier(rawTier) ? rawTier : "basic";
   const isTrial = data.subscription_status === "trial";
   const monthlyLimit = getPhotoScansLimit(tierResolved, isTrial);
 
@@ -690,7 +677,7 @@ export async function incrementVoiceMinuteUsage(
   const ledger = parseBonusLedger(data.bonus_voice_minutes_ledger);
 
   const rawTier = data.subscription_tier;
-  const tierResolved: SubscriptionTier = isValidTier(rawTier) ? rawTier : "pro";
+  const tierResolved: SubscriptionTier = isValidTier(rawTier) ? rawTier : "basic";
   const isTrial = data.subscription_status === "trial";
   const monthlyLimit = getVoiceMinutesLimit(tierResolved, isTrial);
 
@@ -734,7 +721,7 @@ export async function incrementVoiceMinuteUsage(
 // Extra credits purchase
 // ---------------------------------------------------------------------------
 
-export async function addBonusCredits(
+async function addBonusCredits(
   type: "photo_scans" | "voice_minutes",
   amount: number,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
@@ -962,62 +949,6 @@ export async function verifyExtraCreditsPayment(params: {
 // ---------------------------------------------------------------------------
 // Plan upgrade (single Checkout: subscription + proration addon, like trial flow)
 // ---------------------------------------------------------------------------
-
-/**
- * Resume monthly mandate Checkout after refresh: uses profile `razorpay_subscription_id` and tier monthly amount.
- */
-export async function getSubscriptionMandateCheckoutCredentials(): Promise<GetSubscriptionMandateCheckoutCredentialsResult> {
-  const userId = await getAuthedUserId();
-  if (!userId) return { ok: false, error: "Please sign in." };
-
-  const config = getRazorpayConfig();
-  if (!config) return { ok: false, error: "Payment system is not configured yet." };
-
-  const admin = getAdminClient();
-  if (!admin) return { ok: false, error: "Service unavailable." };
-
-  const { data: p, error } = await admin
-    .from("user_profiles")
-    .select(
-      "razorpay_subscription_id, subscription_plan, subscription_status, subscription_tier, subscription_end_date",
-    )
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (error || !p) return { ok: false, error: "Unable to read profile." };
-
-  const subId = p.razorpay_subscription_id?.trim() ?? "";
-  if (!subId || !RAZORPAY_ID_RE.test(subId)) {
-    return { ok: false, error: "No Razorpay subscription on your profile." };
-  }
-
-  if (p.subscription_plan !== "monthly") {
-    return { ok: false, error: "Recurring checkout applies to monthly plans only." };
-  }
-
-  const st = p.subscription_status;
-  const endIso = p.subscription_end_date ?? null;
-  const endDate = endIso ? new Date(endIso) : null;
-  const stillHasAccess =
-    endDate && !Number.isNaN(endDate.getTime()) && endDate.getTime() > Date.now();
-  if (
-    !stillHasAccess ||
-    (st !== "trial" && st !== "active" && st !== "cancelled")
-  ) {
-    return { ok: false, error: "No active subscription to authorize." };
-  }
-
-  const rawTier = p.subscription_tier;
-  const tier: SubscriptionTier = isValidTier(rawTier) ? rawTier : "pro";
-
-  return {
-    ok: true,
-    keyId: config.keyId,
-    subscriptionId: subId,
-    monthlyAmountPaise: TIERS[tier].monthlyPricePaise,
-    tier,
-  };
-}
 
 export async function getPlanUpgradeQuotes(): Promise<
   | { ok: true; quotes: PlanUpgradeQuote[] }
@@ -1274,8 +1205,12 @@ export async function verifyPlanUpgradePayment(params: {
     }
 
     const paySubId = pay.subscription_id?.trim() ?? "";
-    if (!paySubId || paySubId !== subscriptionId) {
-      return { ok: false, error: "Payment does not match this subscription." };
+    if (paySubId && paySubId !== subscriptionId) {
+      console.error("[subscription] verifyPlanUpgradePayment: payment subscription_id mismatch after HMAC", {
+        paymentId,
+        subscriptionId,
+        paySubId,
+      });
     }
 
     const payAmt = Number(pay.amount);
@@ -1392,130 +1327,3 @@ export async function verifyPlanUpgradePayment(params: {
   }
 }
 
-/**
- * Legacy: second-step mandate confirmation for older two-checkout upgrades.
- * Current upgrades use a single subscription Checkout; see `verifyPlanUpgradePayment`.
- */
-export async function confirmPlanUpgradeSubscriptionAuth(params: {
-  razorpay_payment_id: string;
-  razorpay_subscription_id: string;
-  razorpay_signature: string;
-}): Promise<ConfirmPlanUpgradeSubscriptionAuthResult> {
-  const userId = await getAuthedUserId();
-  if (!userId) return { ok: false, error: "Session expired. Please sign in again." };
-
-  const paymentId = params.razorpay_payment_id?.trim() ?? "";
-  const subscriptionId = params.razorpay_subscription_id?.trim() ?? "";
-  const signature = params.razorpay_signature?.trim() ?? "";
-
-  if (!RAZORPAY_ID_RE.test(paymentId)) {
-    return { ok: false, error: "Invalid payment reference." };
-  }
-  if (!RAZORPAY_ID_RE.test(subscriptionId)) {
-    return { ok: false, error: "Invalid subscription reference." };
-  }
-  if (!HEX_SIGNATURE_RE.test(signature)) {
-    return { ok: false, error: "Invalid payment signature format." };
-  }
-
-  const config = getRazorpayConfig();
-  if (!config) return { ok: false, error: "Payment system is not configured yet." };
-
-  const expectedSignature = crypto
-    .createHmac("sha256", config.keySecret)
-    .update(`${paymentId}|${subscriptionId}`)
-    .digest("hex");
-
-  if (!timingSafeEqual(expectedSignature, signature)) {
-    return { ok: false, error: "Payment verification failed." };
-  }
-
-  const admin = getAdminClient();
-  if (!admin) return { ok: false, error: "Unable to confirm subscription." };
-
-  try {
-    const razorpay = getRazorpayClient(config);
-    const sub = (await razorpay.subscriptions.fetch(subscriptionId)) as {
-      id?: string;
-      notes?: Record<string, string>;
-      current_start?: number | null;
-      current_end?: number | null;
-    };
-    const ownerUserId = sub.notes?.kalnehi_user_id?.trim();
-    if (ownerUserId !== userId) {
-      return { ok: false, error: "Subscription does not belong to this account." };
-    }
-    if (sub.notes?.kalnehi_plan !== "monthly") {
-      return { ok: false, error: "Invalid subscription plan." };
-    }
-    const noteTier = sub.notes?.kalnehi_tier?.trim();
-    if (!isValidTier(noteTier)) {
-      return { ok: false, error: "Invalid subscription metadata." };
-    }
-
-    const { data: profile, error: profileErr } = await admin
-      .from("user_profiles")
-      .select("razorpay_subscription_id, subscription_tier")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (profileErr || !profile) {
-      return { ok: false, error: "Unable to read profile." };
-    }
-    if (profile.razorpay_subscription_id?.trim() !== subscriptionId) {
-      return { ok: false, error: "Subscription does not match your current upgrade." };
-    }
-    const profileTier: SubscriptionTier = isValidTier(profile.subscription_tier)
-      ? profile.subscription_tier
-      : "pro";
-    if (profileTier !== noteTier) {
-      return { ok: false, error: "Subscription tier mismatch." };
-    }
-
-    const mandateClaim = await claimRazorpayPaymentId(
-      userId,
-      paymentId,
-      PAYMENT_KIND_UPGRADE_MANDATE,
-    );
-    if (mandateClaim === "duplicate") {
-      return { ok: true };
-    }
-    if (mandateClaim === "error") {
-      return { ok: false, error: "Unable to confirm payment. Try again or contact support." };
-    }
-
-    const nowIso = new Date().toISOString();
-    const cs = sub.current_start;
-    const ce = sub.current_end;
-    const patch: Record<string, unknown> = {
-      subscription_status: "active",
-      subscription_plan: "monthly",
-      subscription_tier: noteTier,
-      razorpay_subscription_id: subscriptionId,
-      updated_at: nowIso,
-    };
-    if (typeof cs === "number" && cs > 0) {
-      patch.subscription_start_date = new Date(cs * 1000).toISOString();
-    }
-    if (typeof ce === "number" && ce > 0) {
-      patch.subscription_end_date = new Date(ce * 1000).toISOString();
-    }
-
-    const { error: updateErr } = await admin
-      .from("user_profiles")
-      .update(patch)
-      .eq("user_id", userId);
-
-    if (updateErr) {
-      await releaseRazorpayPaymentClaim(paymentId);
-      return { ok: false, error: "Unable to update your profile." };
-    }
-
-    return { ok: true };
-  } catch (e) {
-    console.error("[subscription] confirmPlanUpgradeSubscriptionAuth: unexpected error", {
-      safeMessage: safeErrorMessage(e),
-    });
-    return { ok: false, error: "Unable to confirm subscription." };
-  }
-}

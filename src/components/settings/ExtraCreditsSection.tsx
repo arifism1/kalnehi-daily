@@ -8,9 +8,12 @@ import {
   createExtraCreditsOrder,
   verifyExtraCreditsPayment,
 } from "@/actions/subscription";
+import { PaymentErrorMailButton } from "@/components/subscription/PaymentErrorMailButton";
 import { SITE_NAME } from "@/lib/seo-metadata";
+import type { PaymentErrorProof } from "@/lib/paymentSupportEmail";
 import { EXTRA_CREDIT_PACKS, type ExtraCreditPack } from "@/lib/subscriptionTiers";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
+import { useAuthStore } from "@/store/useAuthStore";
 
 type RazorpayOrderHandlerResponse = {
   razorpay_payment_id: string;
@@ -66,8 +69,12 @@ function CreditCard({
 
 export function ExtraCreditsSection() {
   const { refetch } = useSubscriptionAccess();
+  const userEmail = useAuthStore((s) => s.user?.email ?? null);
   const [isPending, startTransition] = useTransition();
-  const [message, setMessage] = useState<string | null>(null);
+  const [payError, setPayError] = useState<{
+    text: string;
+    proof?: PaymentErrorProof;
+  } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
@@ -79,15 +86,17 @@ export function ExtraCreditsSection() {
   const openCheckout = useCallback(
     (pack: ExtraCreditPack) => {
       startTransition(async () => {
-        setMessage(null);
+        setPayError(null);
         const created = await createExtraCreditsOrder(pack.id);
         if (!created.ok) {
-          setMessage(created.error);
+          setPayError({ text: created.error });
           return;
         }
 
         if (typeof window === "undefined" || !window.Razorpay) {
-          setMessage("Unable to load payment window. Refresh and try again.");
+          setPayError({
+            text: "Unable to load payment window. Refresh and try again.",
+          });
           return;
         }
 
@@ -106,10 +115,16 @@ export function ExtraCreditsSection() {
               razorpay_signature: response.razorpay_signature,
             });
             if (!v.ok) {
-              setMessage(v.error);
+              setPayError({
+                text: v.error,
+                proof: {
+                  paymentId: response.razorpay_payment_id,
+                  orderId: response.razorpay_order_id,
+                },
+              });
               return;
             }
-            setMessage(null);
+            setPayError(null);
             setToast(`${pack.label} added — valid for 30 days from purchase.`);
             refetch();
           },
@@ -151,13 +166,20 @@ export function ExtraCreditsSection() {
             <Loader2 className="h-4 w-4 animate-spin text-kal-accent" />
           </div>
         )}
-        {message && (
+        {payError ? (
           <div className="border-t border-kal-border px-4 py-2">
             <p className="text-xs text-rose-700 dark:text-rose-300" role="status">
-              {message}
+              {payError.text}
             </p>
+            <PaymentErrorMailButton
+              flow="My Plan — extra AI credits"
+              error={payError.text}
+              userEmail={userEmail}
+              proof={payError.proof}
+              className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-kal-card px-3 py-1.5 text-xs font-semibold text-rose-800 underline-offset-2 hover:underline dark:border-rose-800 dark:text-rose-100"
+            />
           </div>
-        )}
+        ) : null}
       </div>
       {toast ? (
         <div

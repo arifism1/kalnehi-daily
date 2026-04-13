@@ -26,6 +26,7 @@ type UsageData = {
 
 type SubscriptionData = {
   loading: boolean;
+  fetchError: boolean;
   onboardingDone: boolean;
   status: SubscriptionStatus;
   hasPaidAccess: boolean;
@@ -58,6 +59,7 @@ function isCurrentlyPaid(status: SubscriptionStatus, endDate: string | null): bo
 export function useSubscriptionAccess(): SubscriptionData {
   const user = useAuthStore((s) => s.user);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [onboardingDone, setOnboardingDone] = useState(false);
   const [status, setStatus] = useState<SubscriptionStatus>(null);
   const [hasPaidAccess, setHasPaidAccess] = useState(false);
@@ -87,6 +89,7 @@ export function useSubscriptionAccess(): SubscriptionData {
 
     void (async () => {
       setLoading(true);
+      setFetchError(false);
       try {
         const supabase = getSupabaseBrowserClient();
         const { data, error } = await supabase
@@ -99,6 +102,7 @@ export function useSubscriptionAccess(): SubscriptionData {
 
         if (cancelled) return;
         if (error) {
+          setFetchError(true);
           setOnboardingDone(false);
           setStatus(null);
           setHasPaidAccess(false);
@@ -144,6 +148,7 @@ export function useSubscriptionAccess(): SubscriptionData {
         });
       } catch {
         if (!cancelled) {
+          setFetchError(true);
           setOnboardingDone(false);
           setStatus(null);
           setHasPaidAccess(false);
@@ -162,6 +167,7 @@ export function useSubscriptionAccess(): SubscriptionData {
 
   return {
     loading,
+    fetchError,
     onboardingDone,
     status,
     hasPaidAccess,

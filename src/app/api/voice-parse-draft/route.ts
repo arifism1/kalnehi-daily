@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { incrementVoiceMinuteUsage } from "@/actions/subscription";
 import { runVoiceParseDraft } from "@/lib/runVoiceParseDraft";
 
 export async function POST(req: Request) {
@@ -31,6 +32,14 @@ export async function POST(req: Request) {
     return NextResponse.json(
       { ok: false, error: "Nothing was captured to parse." },
       { status: 400 },
+    );
+  }
+
+  const usage = await incrementVoiceMinuteUsage(1);
+  if (!usage.ok) {
+    return NextResponse.json(
+      { ok: false, error: usage.error },
+      { status: 429 },
     );
   }
 
