@@ -1,6 +1,15 @@
 /**
- * Vercel Cron: schedules live in `vercel.json` (morning/evening system push + custom reminders).
- * To pause system pushes without removing crons, set `SYSTEM_PUSH_CRON_TEMPORARILY_DISABLED` to `true`.
+ * Vercel Cron (production): system push Morning Kickstart and Evening Wind-Down.
+ *
+ * Schedules are defined in `vercel.json` and run on **Vercel Pro** (Hobby limits previously blocked
+ * multiple daily crons). Expressions are **UTC**; IST is UTC+5:30:
+ * - Morning Kickstart: 7:00 AM IST → `30 1 * * *` (01:30 UTC)
+ * - Evening Wind-Down: 8:00 PM IST → `30 14 * * *` (14:30 UTC)
+ *
+ * Pro invokes within the scheduled minute (see Vercel cron docs). Duplicate deliveries are handled
+ * by `user_system_push_dedupe` via `reserveSystemPushDedupe` / `releaseSystemPushDedupe`.
+ *
+ * Optional `ist=HHMM` query on cron paths is documentation only (ignored by this handler).
  */
 import { type NextRequest, NextResponse } from "next/server";
 
@@ -31,8 +40,6 @@ import {
 } from "@/lib/systemPush/dedupe";
 import { getIstCalendarDateString } from "@/lib/systemPush/istCalendarDate";
 
-const SYSTEM_PUSH_CRON_TEMPORARILY_DISABLED = false;
-
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
@@ -61,18 +68,6 @@ function fcmDataStrings(
  * Query: `phase=morning` (7:00 IST) or `phase=evening` (8:00 PM IST) — see vercel.json schedules.
  */
 export async function GET(req: NextRequest) {
-  if (SYSTEM_PUSH_CRON_TEMPORARILY_DISABLED) {
-    return NextResponse.json(
-      {
-        ok: false,
-        disabled: true,
-        message:
-          "System push cron is temporarily disabled (Vercel cron limits). Notification code is unchanged; re-enable in vercel.json and route flag.",
-      },
-      { status: 503 },
-    );
-  }
-
   if (!verifyCron(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

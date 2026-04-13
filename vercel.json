@@ -1,11 +1,12 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
     {
-      "path": "/api/cron/system-push?phase=morning",
+      "path": "/api/cron/system-push?phase=morning&ist=0700",
       "schedule": "30 1 * * *"
     },
     {
-      "path": "/api/cron/system-push?phase=evening",
+      "path": "/api/cron/system-push?phase=evening&ist=2000",
       "schedule": "30 14 * * *"
     },
     {
