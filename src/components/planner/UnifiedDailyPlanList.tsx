@@ -1,10 +1,9 @@
 "use client";
 
-import { Check, Loader2, Mic, PenLine, Trash2, Type } from "lucide-react";
+import { Check, Loader2, Mic, PenLine, Type } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
-  deleteDailyTask,
   listDailyPlanTasksForDate,
   updateDailyTask,
   type DailyTaskView,
@@ -28,15 +27,12 @@ function SourceBadge({ source }: { source: string }) {
 
 type Props = {
   planDate: string;
+  /** Optional heading rendered above the list (used by source pages). */
   title?: string;
   className?: string;
 };
 
-export function UnifiedDailyPlanList({
-  planDate,
-  title = "Today's plan",
-  className = "",
-}: Props) {
+export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props) {
   const [tasks, setTasks] = useState<DailyTaskView[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -100,131 +96,106 @@ export function UnifiedDailyPlanList({
     }
   };
 
-  const remove = async (id: string) => {
-    setBusyId(id);
-    try {
-      const res = await deleteDailyTask(id);
-      if (res.ok) await load({ silent: true });
-    } finally {
-      setBusyId(null);
-    }
-  };
+  const doneCount = tasks.filter((t) => isDoneStatus(t.status)).length;
 
   return (
-    <section
-      className={`kal-glass-panel rounded-[1.25rem] p-4 sm:p-6 ${className}`}
-    >
-      <div className="flex items-center justify-between gap-2">
-        <h2 className="text-lg font-bold text-kal-text">{title}</h2>
-        <span className="text-xs text-kal-muted">{planDate}</span>
-      </div>
-
+    <section className={`kal-glass-panel rounded-[1.25rem] p-4 sm:p-6 ${className}`}>
+      {title ? (
+        <h2 className="mb-4 text-lg font-bold text-kal-text">{title}</h2>
+      ) : null}
       {loading ? (
-        <div className="mt-8 flex flex-col items-center gap-2 py-6">
+        <div className="flex flex-col items-center gap-2 py-12">
           <Loader2 className="h-7 w-7 animate-spin text-kal-accent" />
           <p className="text-sm text-kal-muted">Loading plan…</p>
         </div>
       ) : error ? (
-        <p className="mt-4 text-sm text-[var(--kal-danger-text)]" role="alert">
+        <p className="text-sm text-[var(--kal-danger-text)]" role="alert">
           {error}
         </p>
       ) : tasks.length === 0 ? (
-        <p className="kal-glass-subtle mt-6 rounded-xl border border-dashed border-white/35 py-10 text-center text-sm text-kal-muted dark:border-white/15">
-          Nothing on this plan yet — add from typing, voice, or handwritten above.
-        </p>
+        <div className="kal-glass-subtle rounded-xl border border-dashed border-white/35 py-14 text-center dark:border-white/15">
+          <p className="text-sm font-semibold text-kal-text">Nothing here yet</p>
+          <p className="mt-1 text-xs text-kal-muted">
+            Add tasks via Dictate My Day, Self Type, or Handwritten below.
+          </p>
+        </div>
       ) : (
-        <ul className="mt-4 space-y-2">
-          {tasks.map((t) => {
-            const st = t.time_start ? timeDbToInput(t.time_start) : "";
-            const et = t.time_end ? timeDbToInput(t.time_end) : "";
-            const overlap = overlapIds.has(t.id);
-            const done = isDoneStatus(t.status);
-            return (
-              <li
-                key={t.id}
-                className={`rounded-xl border p-3 transition-colors ${
-                  done
-                    ? "border-white/20 bg-white/45 opacity-90 backdrop-blur-sm dark:border-white/10 dark:bg-zinc-900/45"
-                    : "kal-glass-subtle border-white/25 dark:border-white/12"
-                }`}
-              >
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <SourceBadge source={t.source} />
-                      {done ? (
-                        <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 dark:text-emerald-200">
-                          Done
-                        </span>
-                      ) : null}
-                      {overlap ? (
-                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
-                          Possible overlap
-                        </span>
-                      ) : null}
-                    </div>
-                    <p
-                      className={`mt-2 text-sm font-semibold [overflow-wrap:anywhere] ${
-                        done
-                          ? "text-kal-muted line-through decoration-kal-muted"
-                          : "text-kal-text"
-                      }`}
-                    >
-                      {t.title}
-                    </p>
-                    {(st || et) && (
-                      <p className="mt-1 text-xs font-medium text-kal-accent-dark dark:text-kal-accent">
-                        {formatIstSlotRange12h(st, et)}
-                        {t.time_slot && !st && !et ? ` · ${t.time_slot}` : null}
-                      </p>
-                    )}
-                    {!st && !et && t.time_slot ? (
-                      <p className="mt-1 text-xs text-kal-muted">{t.time_slot}</p>
-                    ) : null}
-                  </div>
-                  <div className="flex shrink-0 gap-1">
+        <>
+          {/* Progress summary */}
+          <p className="mb-4 text-xs font-semibold text-kal-muted">
+            {doneCount} / {tasks.length} done
+          </p>
+          <ul className="space-y-2">
+            {tasks.map((t) => {
+              const st = t.time_start ? timeDbToInput(t.time_start) : "";
+              const et = t.time_end ? timeDbToInput(t.time_end) : "";
+              const overlap = overlapIds.has(t.id);
+              const done = isDoneStatus(t.status);
+              return (
+                <li
+                  key={t.id}
+                  className={`rounded-xl border p-3 transition-colors ${
+                    done
+                      ? "border-white/20 bg-white/45 opacity-75 backdrop-blur-sm dark:border-white/10 dark:bg-zinc-900/45"
+                      : "kal-glass-subtle border-white/25 dark:border-white/12"
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    {/* Tick button */}
                     <button
                       type="button"
                       role="checkbox"
                       disabled={busyId === t.id}
                       onClick={() => void toggleDone(t)}
-                      className={`flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border-2 transition-colors disabled:opacity-40 ${
+                      className={`mt-0.5 flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-md border-2 transition-colors disabled:opacity-40 ${
                         done
-                          ? "border-kal-accent bg-kal-accent text-white hover:bg-kal-accent-hover"
-                          : "border-white/35 bg-white/60 text-kal-muted backdrop-blur-sm hover:border-kal-accent/50 hover:text-kal-accent dark:border-white/12 dark:bg-zinc-900/65"
+                          ? "border-kal-accent bg-kal-accent text-white"
+                          : "border-white/40 bg-white/60 text-transparent hover:border-kal-accent/60 dark:border-white/15 dark:bg-zinc-900/65"
                       }`}
                       aria-checked={done}
-                      aria-label={
-                        done ? "Mark as not done" : "Mark as done"
-                      }
-                      title={done ? "Mark as not done" : "Mark as done"}
+                      aria-label={done ? "Mark as not done" : "Mark as done"}
                     >
                       {busyId === t.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : done ? (
-                        <Check className="h-5 w-5" strokeWidth={2.5} />
+                        <Loader2 className="h-3.5 w-3.5 animate-spin text-kal-accent" />
                       ) : (
-                        <span
-                          className="block h-5 w-5 rounded border-2 border-current opacity-60"
-                          aria-hidden
-                        />
+                        <Check className="h-3.5 w-3.5" strokeWidth={3} />
                       )}
                     </button>
-                    <button
-                      type="button"
-                      disabled={busyId === t.id}
-                      onClick={() => void remove(t.id)}
-                      className="rounded-lg border border-kal-border p-2 text-kal-muted hover:bg-rose-500/10 hover:text-rose-600 disabled:opacity-40"
-                      aria-label="Remove from plan"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+
+                    {/* Task content */}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <SourceBadge source={t.source} />
+                        {overlap ? (
+                          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
+                            Overlap
+                          </span>
+                        ) : null}
+                      </div>
+                      <p
+                        className={`mt-1.5 text-sm font-semibold leading-snug [overflow-wrap:anywhere] ${
+                          done
+                            ? "text-kal-muted line-through decoration-kal-muted/60"
+                            : "text-kal-text"
+                        }`}
+                      >
+                        {t.title}
+                      </p>
+                      {(st || et) && (
+                        <p className="mt-1 text-xs font-medium text-kal-accent-dark dark:text-kal-accent">
+                          {formatIstSlotRange12h(st, et)}
+                        </p>
+                      )}
+                      {!st && !et && t.time_slot ? (
+                        <p className="mt-1 text-xs text-kal-muted">{t.time_slot}</p>
+                      ) : null}
+                    </div>
                   </div>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+                </li>
+              );
+            })}
+          </ul>
+        </>
       )}
     </section>
   );
