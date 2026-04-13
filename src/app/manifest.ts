@@ -1,12 +1,14 @@
 import type { MetadataRoute } from "next";
 
-import { SITE_BRAND, SITE_NAME } from "@/lib/seo-metadata";
+import { SITE_NAME } from "@/lib/seo-metadata";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
+    // TWA: `id` must be a stable canonical path — do not change after publishing.
     id: "/",
     name: SITE_NAME,
-    short_name: SITE_BRAND,
+    // "Kalnehi" fits Play Store's 12-char short-name limit and looks clean on the home screen.
+    short_name: "Kalnehi",
     description:
       "Kalnehi Daily - Exam Prep Tracker: best daily planner for JEE 2026, NEET 2026 & UPSC CSE — weekly planner, syllabus, study sessions, habits, PrepBrain AI (Pro). Install the PWA from Chrome for offline-friendly study & push notifications when enabled.",
     start_url: "/",
@@ -14,12 +16,42 @@ export default function manifest(): MetadataRoute.Manifest {
     display: "standalone",
     display_override: ["standalone", "minimal-ui"],
     orientation: "portrait-primary",
-    background_color: "#f8f9fa",
+    // Light premium theme: white shell background, Kalnehi red accent.
+    background_color: "#ffffff",
     theme_color: "#ef4444",
     lang: "en-IN",
     dir: "ltr",
     categories: ["education", "productivity"],
+    // TWA: keep false so Chrome doesn't redirect users to the Play Store listing.
     prefer_related_applications: false,
+    screenshots: [
+      // narrow = phone portrait (Play Store mobile listing preview)
+      {
+        src: "/screenshots/narrow-1.png",
+        sizes: "1080x1920",
+        type: "image/png",
+        form_factor: "narrow",
+        label: "Daily planner — track JEE, NEET & UPSC prep",
+        platform: "play",
+      },
+      {
+        src: "/screenshots/narrow-2.png",
+        sizes: "1080x1920",
+        type: "image/png",
+        form_factor: "narrow",
+        label: "PrepBrain AI — personalised exam guidance",
+        platform: "play",
+      },
+      // wide = tablet landscape (Play Store tablet listing preview)
+      {
+        src: "/screenshots/wide-1.png",
+        sizes: "1920x1080",
+        type: "image/png",
+        form_factor: "wide",
+        label: "Kalnehi Daily on tablet",
+        platform: "play",
+      },
+    ],
     shortcuts: [
       {
         name: "Study guides",
@@ -44,24 +76,21 @@ export default function manifest(): MetadataRoute.Manifest {
       },
     ],
     icons: [
+      // 192 — required minimum for TWA / Chrome install prompt.
       {
         src: "/icon-192x192.png",
         sizes: "192x192",
         type: "image/png",
         purpose: "any",
       },
+      // 512 maskable — used by Android adaptive icon engine (safe-zone cropping).
       {
         src: "/icon-maskable-512.png",
         sizes: "512x512",
         type: "image/png",
         purpose: "maskable",
       },
-      {
-        src: "/icon-maskable-512.png",
-        sizes: "512x512",
-        type: "image/png",
-        purpose: "any",
-      },
+      // 512 any — splash screen, task switcher, Play Store listing icon.
       {
         src: "/icon-512x512.png",
         sizes: "512x512",

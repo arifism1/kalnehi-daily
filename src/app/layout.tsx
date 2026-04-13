@@ -81,6 +81,8 @@ const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?
 
 export const metadata: Metadata = {
   ...baseMeta,
+  // Shown in browser tab UI and used by TWA as the app label fallback.
+  applicationName: SITE_NAME,
   ...(googleSiteVerification
     ? { verification: { google: googleSiteVerification } }
     : {}),
@@ -103,8 +105,14 @@ export const metadata: Metadata = {
     telephone: false,
   },
   other: {
+    // PWA / TWA chrome signals
     "mobile-web-app-capable": "yes",
     "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-title": SITE_NAME,
+    // Disable tap highlight flash inside the TWA chrome shell
+    "msapplication-tap-highlight": "no",
+    // Tile colour for Windows/Edge "pin to start"
+    "msapplication-TileColor": "#ef4444",
   },
 };
 
