@@ -394,20 +394,21 @@ export async function createRazorpayTrialSubscription(
   }
 
   const tierConfig = TIERS[tier];
-  const planId = resolveRazorpayPlanId(tier);
-  if (!planId) {
-    console.error(
-      "[subscription] createRazorpayTrialSubscription: missing or invalid Razorpay plan id",
-      { tier, envVar: razorpayPlanEnvVarName(tier) },
-    );
-    return {
-      ok: false,
-      error: "This plan is not available for checkout yet. Please contact support.",
-    };
-  }
 
   try {
     const razorpay = getRazorpayClient(config);
+    const planId = await resolveRazorpayPlanIdWithApiFallback(razorpay, tier);
+    if (!planId) {
+      console.error(
+        "[subscription] createRazorpayTrialSubscription: missing or invalid Razorpay plan id",
+        { tier, envVar: razorpayPlanEnvVarName(tier) },
+      );
+      return {
+        ok: false,
+        error: "This plan is not available for checkout yet. Please contact support.",
+      };
+    }
+
     const startAt = calculateTrialEnd(new Date());
 
     const created = (await (razorpay.subscriptions.create as unknown as (
