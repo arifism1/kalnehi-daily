@@ -1,7 +1,7 @@
 "use client";
 
 import { addDays, format, parseISO } from "date-fns";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useCalendarDate } from "@/hooks/useCalendarDate";
@@ -165,6 +165,41 @@ export function HomeClient() {
     () => classifyDailyProgressBand(effectiveTodayPercent, effectiveTodayTotal),
     [effectiveTodayPercent, effectiveTodayTotal],
   );
+
+  const lastDangerPushPingAt = useRef(0);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    const total =
+      dailyExec.today.totalCount > 0
+        ? dailyExec.today.totalCount
+        : todayTasks.length;
+    const pct =
+      dailyExec.today.totalCount > 0
+        ? dailyExec.today.percent
+        : todayWeighted;
+    if (total === 0 || pct >= 25) {
+      return;
+    }
+    const now = Date.now();
+    if (now - lastDangerPushPingAt.current < 6 * 60 * 1000) {
+      return;
+    }
+    const t = window.setTimeout(() => {
+      lastDangerPushPingAt.current = Date.now();
+      void fetch("/api/push/danger-zone", {
+        method: "POST",
+        credentials: "include",
+      }).catch(() => {});
+    }, 10_000);
+    return () => window.clearTimeout(t);
+  }, [
+    user?.id,
+    dailyExec.today.totalCount,
+    dailyExec.today.percent,
+    todayWeighted,
+    todayTasks.length,
+  ]);
 
   const { mastered, total } = useMemo(() => {
     if (cuetScoringRollup) {

@@ -85,6 +85,10 @@ export function AdminSendPushNotification() {
           setError(data.error ?? "Request failed.");
           return;
         }
+        if (data.ok === false) {
+          setError(data.error ?? "Push could not be sent.");
+          return;
+        }
         if (data.ok) {
           const n = data.usersNotified ?? 0;
           const sent = data.sent ?? 0;

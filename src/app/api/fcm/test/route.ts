@@ -9,13 +9,14 @@ import {
   fcmFailuresAreOnlyInvalidRegistrations,
   sendFcmToUserTokens,
 } from "@/lib/fcm/sendNotifications";
+import {
+  FCM_NO_TOKENS_SELF_TEST,
+  FCM_STALE_TOKEN_USER_MESSAGE,
+} from "@/lib/fcm/messages";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { SITE_NAME } from "@/lib/seo-metadata";
 
 export const runtime = "nodejs";
-
-const PUSH_TOKEN_STALE_MESSAGE =
-  "Push notifications need to be re-enabled. Please turn the toggle OFF and then ON again.";
 
 /**
  * Sends a test notification to the signed-in user's registered devices only.
@@ -53,39 +54,50 @@ export async function POST() {
       data: { kind: "test" },
     });
 
+    const failureCodes = [...new Set(failures)];
+
     if (sent === 0) {
+      console.warn(
+        `[fcm/test] userId=${user.id} sent=0 failureCodes=${failureCodes.join(",") || "none"}`,
+      );
       if (fcmFailuresAreOnlyInvalidRegistrations(failures)) {
         return NextResponse.json(
           {
             ok: false,
             sent: 0,
             code: "push_token_stale",
-            error: PUSH_TOKEN_STALE_MESSAGE,
+            error: FCM_STALE_TOKEN_USER_MESSAGE,
           },
           { status: 200 },
         );
       }
       const err =
         failures[0] === "No device tokens for user"
-          ? "No registered devices. Turn push on for this device first."
-          : "Could not send the test notification. Try again.";
+          ? FCM_NO_TOKENS_SELF_TEST
+          : "Could not send the test notification. Check server logs or try again.";
       return NextResponse.json(
         {
           ok: false,
           sent: 0,
+          code:
+            failures[0] === "No device tokens for user"
+              ? "no_tokens"
+              : "send_failed",
           error: err,
         },
         { status: 200 },
       );
     }
 
+    console.info(`[fcm/test] userId=${user.id} sent=${sent}`);
     return NextResponse.json({
       ok: true,
       sent,
       message: `Sent to ${sent} device(s).`,
     });
   } catch (e) {
-    console.error("[fcm/test]", e);
+    const msg = e instanceof Error ? e.message : "unknown_error";
+    console.error("[fcm/test] unhandled", msg);
     return NextResponse.json({ error: "Send failed" }, { status: 500 });
   }
 }

@@ -500,6 +500,69 @@ export type Database = {
           },
         ]
       }
+      user_automated_push_daily: {
+        Row: {
+          ist_date: string
+          send_count: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ist_date: string
+          send_count?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ist_date?: string
+          send_count?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_custom_notifications: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          is_active: boolean
+          last_fired_ist_date: string | null
+          repeat_type: string
+          run_once_on_ist_date: string | null
+          scheduled_time: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_fired_ist_date?: string | null
+          repeat_type: string
+          run_once_on_ist_date?: string | null
+          scheduled_time: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_fired_ist_date?: string | null
+          repeat_type?: string
+          run_once_on_ist_date?: string | null
+          scheduled_time?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_notifications: {
         Row: {
           created_at: string
@@ -534,6 +597,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          invalid_registration_streak: number
           last_seen_at: string
           token: string
           user_agent: string | null
@@ -542,6 +606,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          invalid_registration_streak?: number
           last_seen_at?: string
           token: string
           user_agent?: string | null
@@ -550,9 +615,31 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          invalid_registration_streak?: number
           last_seen_at?: string
           token?: string
           user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_system_push_dedupe: {
+        Row: {
+          created_at: string
+          date_key: string
+          kind: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date_key: string
+          kind: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date_key?: string
+          kind?: string
           user_id?: string
         }
         Relationships: []
@@ -583,6 +670,7 @@ export type Database = {
           subscription_start_date: string | null
           subscription_status: string | null
           subscription_tier: string | null
+          system_push_notifications: boolean
           target_exam: string | null
           target_exam_date: string | null
           updated_at: string | null
@@ -615,6 +703,7 @@ export type Database = {
           subscription_start_date?: string | null
           subscription_status?: string | null
           subscription_tier?: string | null
+          system_push_notifications?: boolean
           target_exam?: string | null
           target_exam_date?: string | null
           updated_at?: string | null
@@ -647,6 +736,7 @@ export type Database = {
           subscription_start_date?: string | null
           subscription_status?: string | null
           subscription_tier?: string | null
+          system_push_notifications?: boolean
           target_exam?: string | null
           target_exam_date?: string | null
           updated_at?: string | null
@@ -1026,6 +1116,14 @@ export type Database = {
       get_gated_predicted_score: {
         Args: { target_user_id: string }
         Returns: Json
+      }
+      refund_automated_push_budget: {
+        Args: { p_ist_date: string; p_user_id: string }
+        Returns: null
+      }
+      try_consume_automated_push_budget: {
+        Args: { p_ist_date: string; p_max?: number; p_user_id: string }
+        Returns: boolean
       }
     }
     Enums: {

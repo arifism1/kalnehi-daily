@@ -7,6 +7,12 @@ import {
 import { canAccessFcmBroadcastTools } from "@/lib/fcm/adminGate";
 import { resolveRecipientUserId } from "@/lib/fcm/resolveRecipient";
 import {
+  FCM_NO_TOKENS_ADMIN_SINGLE,
+  FCM_SEND_FAILED_GENERIC,
+  FCM_STALE_TOKEN_USER_MESSAGE,
+} from "@/lib/fcm/messages";
+import {
+  fcmFailuresAreOnlyInvalidRegistrations,
   getDistinctUserIdsWithPushTokens,
   sendFcmToUserTokens,
 } from "@/lib/fcm/sendNotifications";
@@ -134,6 +140,33 @@ export async function POST(req: Request) {
 
       const usersNotified = sent > 0 ? 1 : 0;
 
+      if (sent === 0) {
+        const codes = failures.length ? [...new Set(failures)].join(",") : "none";
+        console.warn(
+          `[fcm/send] single userId=${resolved.userId} sent=0 failureCodes=${codes}`,
+        );
+        let code: string;
+        let error: string;
+        if (failures[0] === "No device tokens for user") {
+          code = "no_tokens";
+          error = FCM_NO_TOKENS_ADMIN_SINGLE;
+        } else if (fcmFailuresAreOnlyInvalidRegistrations(failures)) {
+          code = "push_token_stale";
+          error = FCM_STALE_TOKEN_USER_MESSAGE;
+        } else {
+          code = "send_failed";
+          error = FCM_SEND_FAILED_GENERIC;
+        }
+        return NextResponse.json({
+          ok: false,
+          scope: "single",
+          sent: 0,
+          usersNotified: 0,
+          code,
+          error,
+        });
+      }
+
       return NextResponse.json({
         ok: true,
         scope: "single",
@@ -157,6 +190,10 @@ export async function POST(req: Request) {
       failures.push(...result.failures);
     }
 
+    console.info(
+      `[fcm/send] broadcast recipientUsers=${userIds.length} sent=${sent} failureCount=${failures.length}`,
+    );
+
     return NextResponse.json({
       ok: true,
       scope: "all",
@@ -168,7 +205,8 @@ export async function POST(req: Request) {
         failures.length > 50 ? failures.length - 50 : undefined,
     });
   } catch (e) {
-    console.error("[fcm/send]", e);
+    const msg = e instanceof Error ? e.message : "unknown_error";
+    console.error("[fcm/send] unhandled", msg);
     return NextResponse.json({ error: "Send failed" }, { status: 500 });
   }
 }
