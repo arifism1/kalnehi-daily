@@ -238,7 +238,7 @@ function TierCard({
   if (isCurrentTier) {
     buttonLabel = "Current Plan";
   } else if (hasPaidAccess) {
-    buttonLabel = "Active Subscription";
+    buttonLabel = "Activate Subscription";
   } else if (busy) {
     buttonLabel = "Opening checkout...";
   } else {
