@@ -166,6 +166,12 @@ function networkFirstHtml(request) {
 
 
 
+
+
+
+
+
+
 // --- Firebase Cloud Messaging (injected by scripts/merge-service-worker.mjs) ---
 importScripts("https://www.gstatic.com/firebasejs/12.12.0/firebase-app-compat.js");
 importScripts("https://www.gstatic.com/firebasejs/12.12.0/firebase-messaging-compat.js");

@@ -78,7 +78,7 @@ export function PlanUpgradeSection() {
         const rzp = new window.Razorpay({
           key: created.keyId,
           name: SITE_NAME,
-          description: `${tierName} — prorated difference now + UPI auto-pay for renewals`,
+          description: `${tierName} — pay prorated amount now, then ${TIERS[q.targetTier].monthlyPriceDisplay}/month from next month`,
           subscription_id: created.subscriptionId,
           amount: created.amountPaise,
           currency: "INR",
@@ -99,7 +99,7 @@ export function PlanUpgradeSection() {
             }
             if (v.warning) setWarning(v.warning);
             setMessage(
-              `${tierName} is active. You paid the prorated amount once; monthly billing at the new tier is authorized for upcoming renewals.`,
+              `${tierName} is now active. You paid only the prorated amount now for the rest of this month. From next month onwards, you will be charged ${TIERS[q.targetTier].monthlyPriceDisplay} monthly. You can cancel anytime.`,
             );
             refetch();
             reloadQuotes();
@@ -134,9 +134,9 @@ export function PlanUpgradeSection() {
             Upgrade plan
           </h3>
           <p className="mt-1 text-xs text-kal-text-secondary">
-            One secure checkout: pay only the prorated difference for the rest of this billing
-            window and authorize UPI auto-pay for the new tier. Your higher limits apply
-            immediately; the full monthly price renews at the end of the current period.
+            Pay only the prorated amount now for the rest of this month — your higher limits
+            apply immediately. From next month onwards, you will be charged the new monthly
+            price. You can cancel anytime — you will not be charged from next month onwards.
           </p>
         </div>
         <div className="space-y-2 p-3">
