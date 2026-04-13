@@ -5,6 +5,9 @@
     },
     "firebase": {
       "enabled": true
+    },
+    "vercel": {
+      "enabled": true
     }
   }
 }
