@@ -5,10 +5,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   deleteDailyTask,
+  insertDailyTask,
   listDailyPlanTasksForDate,
   updateDailyTask,
   type DailyTaskView,
 } from "@/actions/dailyPlan";
+import { useUndoStore } from "@/store/useUndoStore";
 import { findOverlappingTaskPairs } from "@/lib/dailyPlanOverlap";
 import { slotFromStartEnd, timeDbToInput } from "@/lib/dailyPlanTime";
 import { formatIstSlotRange12h } from "@/lib/voiceIst";
@@ -190,40 +192,37 @@ function DailyTaskEditSheet({ task, onClose, onSaved }: EditSheetProps) {
   );
 }
 
-// ─── Delete confirmation popover ──────────────────────────────────────────────
+// ─── Loading skeleton (matches task row shape; no blank white spinner card) ─
 
-type DeleteConfirmProps = {
-  taskTitle: string;
-  onConfirm: () => void;
-  onCancel: () => void;
-  busy: boolean;
-};
+const DAILY_PLAN_LOADING_MESSAGE = "Figuring out your genius plan…";
 
-function DeleteConfirmBar({ taskTitle, onConfirm, onCancel, busy }: DeleteConfirmProps) {
+function DailyPlanListSkeleton({ rowCount = 5 }: { rowCount?: number }) {
   return (
-    <div className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-rose-200/70 bg-rose-50/80 px-3 py-2 text-xs backdrop-blur-sm dark:border-rose-500/25 dark:bg-rose-950/30">
-      <p className="min-w-0 flex-1 truncate font-medium text-rose-800 dark:text-rose-200">
-        Remove &ldquo;{taskTitle}&rdquo;?
-      </p>
-      <div className="flex shrink-0 items-center gap-1.5">
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={busy}
-          className="rounded-md px-2 py-1 font-semibold text-rose-700 transition-colors hover:bg-rose-100 dark:text-rose-300 dark:hover:bg-rose-900/40 disabled:opacity-50"
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          onClick={onConfirm}
-          disabled={busy}
-          className="inline-flex items-center gap-1 rounded-md bg-rose-600 px-2.5 py-1 font-semibold text-white transition-colors hover:bg-rose-700 disabled:opacity-50"
-        >
-          {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-          Delete
-        </button>
+    <div className="space-y-2.5" aria-hidden>
+      <div className="mb-4 flex items-center justify-between gap-2">
+        <div className="h-3.5 w-20 animate-pulse rounded-md bg-kal-text/[0.08] dark:bg-white/[0.08]" />
+        <div className="h-3 w-14 animate-pulse rounded-md bg-kal-text/[0.06] dark:bg-white/[0.06]" />
       </div>
+      {Array.from({ length: rowCount }).map((_, i) => (
+        <div
+          key={i}
+          className="flex animate-pulse items-start gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-3 py-3 dark:border-white/10 dark:bg-zinc-900/35"
+        >
+          <div className="h-11 w-11 shrink-0 rounded-xl bg-kal-text/[0.08] dark:bg-white/[0.08]" />
+          <div className="min-w-0 flex-1 space-y-2.5 pt-0.5">
+            <div className="flex gap-2">
+              <div className="h-5 w-16 rounded-full bg-kal-text/[0.07] dark:bg-white/[0.07]" />
+              <div className="h-5 w-14 rounded-full bg-kal-text/[0.05] dark:bg-white/[0.05]" />
+            </div>
+            <div className="h-4 w-[88%] max-w-md rounded-md bg-kal-text/[0.09] dark:bg-white/[0.09]" />
+            <div className="h-3 w-28 rounded-md bg-kal-text/[0.06] dark:bg-white/[0.06]" />
+          </div>
+          <div className="flex shrink-0 gap-1 pt-0.5">
+            <div className="h-7 w-7 rounded-lg bg-kal-text/[0.06] dark:bg-white/[0.06]" />
+            <div className="h-7 w-7 rounded-lg bg-kal-text/[0.06] dark:bg-white/[0.06]" />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -242,14 +241,15 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [editingTask, setEditingTask] = useState<DailyTaskView | null>(null);
-  /** id of the task waiting for delete confirmation */
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const load = useCallback(
     async (opts?: { silent?: boolean }) => {
       const silent = opts?.silent === true;
-      if (!silent) setLoading(true);
+      if (!silent) {
+        setLoading(true);
+        setTasks([]);
+      }
       setError(null);
       try {
         const res = await listDailyPlanTasksForDate(planDate);
@@ -296,17 +296,12 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
     }
   };
 
-  const confirmDelete = (t: DailyTaskView) => {
-    setConfirmDeleteId(t.id);
-  };
-
-  const cancelDelete = () => setConfirmDeleteId(null);
-
-  const executeDelete = async (t: DailyTaskView) => {
+  const deleteTaskNow = async (t: DailyTaskView) => {
     setDeletingId(t.id);
-    setConfirmDeleteId(null);
     setTasks((prev) => prev.filter((x) => x.id !== t.id));
+    const snapshot = t;
     const res = await deleteDailyTask(t.id);
+    setDeletingId(null);
     if (!res.ok) {
       setTasks((prev) => {
         const already = prev.find((x) => x.id === t.id);
@@ -315,8 +310,42 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
           : [...prev, t].sort((a, b) => (a.created_at < b.created_at ? -1 : 1));
       });
       setError(res.error);
+      return;
     }
-    setDeletingId(null);
+
+    const src = snapshot.source;
+    if (src !== "typed" && src !== "voice" && src !== "handwritten") {
+      return;
+    }
+
+    useUndoStore.getState().offerUndo({
+      message: "Task deleted",
+      autoDismissMs: 3000,
+      runUndo: async () => {
+        const ins = await insertDailyTask({
+          plan_date: planDate,
+          id: snapshot.id,
+          title: snapshot.title,
+          time_slot: snapshot.time_slot,
+          time_start: snapshot.time_start,
+          time_end: snapshot.time_end,
+          status: snapshot.status,
+          source: src,
+          source_raw_text: snapshot.source_raw_text,
+          priority: snapshot.priority,
+        });
+        if (!ins.ok) {
+          setError(ins.error);
+          return;
+        }
+        setTasks((prev) => {
+          if (prev.some((x) => x.id === snapshot.id)) return prev;
+          return [...prev, snapshot].sort((a, b) =>
+            a.created_at < b.created_at ? -1 : 1,
+          );
+        });
+      },
+    });
   };
 
   const handleEditSaved = (id: string, patch: Partial<DailyTaskView>) => {
@@ -333,10 +362,20 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
         ) : null}
 
         {loading ? (
-          <div className="flex flex-col items-center gap-2 py-12">
-            <Loader2 className="h-7 w-7 animate-spin text-kal-accent" />
-            <p className="text-sm text-kal-muted">Loading plan…</p>
-          </div>
+          <>
+            <div
+              role="status"
+              aria-live="polite"
+              className="mb-5 flex items-center gap-2.5 text-sm font-medium leading-snug text-kal-muted"
+            >
+              <Loader2
+                className="h-4 w-4 shrink-0 animate-spin text-kal-accent/70"
+                aria-hidden
+              />
+              <span>{DAILY_PLAN_LOADING_MESSAGE}</span>
+            </div>
+            <DailyPlanListSkeleton />
+          </>
         ) : error ? (
           <p className="text-sm text-[var(--kal-danger-text)]" role="alert">
             {error}
@@ -354,65 +393,59 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
               {doneCount} / {tasks.length} done
             </p>
 
-            <ul className="space-y-2">
+            <ul className="space-y-2.5">
               {tasks.map((t) => {
                 const st = t.time_start ? timeDbToInput(t.time_start) : "";
                 const et = t.time_end ? timeDbToInput(t.time_end) : "";
                 const overlap = overlapIds.has(t.id);
                 const done = isDoneStatus(t.status);
                 const isDeleting = deletingId === t.id;
-                const isConfirming = confirmDeleteId === t.id;
 
                 return (
                   <li
                     key={t.id}
                     // `group` enables sm:group-hover to show action buttons on desktop hover
-                    className={`group rounded-xl border p-3 transition-all ${
+                    className={`group rounded-2xl border px-3 py-3 shadow-sm transition-all ${
                       done
                         ? "border-white/20 bg-white/45 opacity-75 backdrop-blur-sm dark:border-white/10 dark:bg-zinc-900/45"
                         : "kal-glass-subtle border-white/25 dark:border-white/12"
                     } ${isDeleting ? "pointer-events-none opacity-40" : ""}`}
                   >
-                    <div className="flex items-start gap-2.5">
-                      {/* Checkbox */}
+                    {/* Layout: checkbox (44px tap) → title/time → badges → edit/delete */}
+                    <div className="flex items-start gap-2">
+                      {/* Checkbox — min 44×44 touch target, primary fill when done */}
                       <button
                         type="button"
                         role="checkbox"
                         disabled={busyId === t.id || isDeleting}
                         onClick={() => void toggleDone(t)}
-                        className={`mt-0.5 flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-md border-2 transition-colors disabled:opacity-40 ${
+                        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent disabled:opacity-40 ${
                           done
                             ? "border-kal-accent bg-kal-accent text-white"
-                            : "border-white/40 bg-white/60 text-transparent hover:border-kal-accent/60 dark:border-white/15 dark:bg-zinc-900/65"
+                            : "border-kal-accent/45 bg-white text-transparent hover:border-kal-accent hover:bg-white dark:border-white/35 dark:bg-zinc-900/90 dark:hover:border-kal-accent/80 dark:hover:bg-zinc-900"
                         }`}
                         aria-checked={done}
                         aria-label={done ? "Mark as not done" : "Mark as done"}
                       >
                         {busyId === t.id ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin text-kal-accent" />
-                        ) : (
-                          <Check className="h-3.5 w-3.5" strokeWidth={3} />
-                        )}
+                          <Loader2
+                            className={`h-5 w-5 animate-spin ${done ? "text-white" : "text-kal-accent"}`}
+                          />
+                        ) : done ? (
+                          <Check className="h-5 w-5 text-white" strokeWidth={2.75} />
+                        ) : null}
                       </button>
 
-                      {/* Task body — clicking opens edit */}
+                      {/* Task body — title & time first, then badges */}
                       <button
                         type="button"
                         disabled={isDeleting}
-                        onClick={() => { setConfirmDeleteId(null); setEditingTask(t); }}
+                        onClick={() => setEditingTask(t)}
                         className="min-w-0 flex-1 text-left disabled:pointer-events-none"
                         aria-label={`Edit "${t.title}"`}
                       >
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <SourceBadge source={t.source} />
-                          {overlap ? (
-                            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
-                              Overlap
-                            </span>
-                          ) : null}
-                        </div>
                         <p
-                          className={`mt-1.5 text-sm font-semibold leading-snug [overflow-wrap:anywhere] ${
+                          className={`text-sm font-semibold leading-snug [overflow-wrap:anywhere] ${
                             done
                               ? "text-kal-muted line-through decoration-kal-muted/60"
                               : "text-kal-text"
@@ -428,61 +461,46 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
                         {!st && !et && t.time_slot ? (
                           <p className="mt-1 text-xs text-kal-muted">{t.time_slot}</p>
                         ) : null}
+                        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                          <SourceBadge source={t.source} />
+                          {overlap ? (
+                            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
+                              Overlap
+                            </span>
+                          ) : null}
+                        </div>
                       </button>
 
                       {/*
-                       * Action buttons
-                       * Mobile: always visible at low opacity, 44×44 touch area via p-2.5
-                       * Desktop (sm+): hidden until the row is hovered or one button is focused
+                       * Action buttons — compact, anchored right
                        */}
-                      <div
-                        className={`flex shrink-0 items-center gap-0.5 transition-opacity duration-150 ${
-                          isConfirming
-                            ? "opacity-100"
-                            : "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100"
-                        }`}
-                      >
+                      <div className="flex shrink-0 items-start gap-0.5 pt-0.5 opacity-90 transition-opacity duration-150 sm:opacity-70 sm:group-hover:opacity-100 sm:focus-within:opacity-100">
                         {/* Edit */}
                         <button
                           type="button"
-                          onClick={() => { setConfirmDeleteId(null); setEditingTask(t); }}
+                          onClick={() => setEditingTask(t)}
                           disabled={isDeleting}
-                          className="flex h-8 w-8 items-center justify-center rounded-lg text-kal-muted transition-colors hover:bg-kal-card-muted hover:text-kal-accent disabled:opacity-40 sm:h-7 sm:w-7"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-kal-muted/80 transition-colors hover:bg-kal-card-muted hover:text-kal-accent disabled:opacity-40 sm:h-7 sm:w-7"
                           aria-label="Edit task"
                         >
-                          <Pencil className="h-[14px] w-[14px]" />
+                          <Pencil className="h-[13px] w-[13px]" strokeWidth={2} />
                         </button>
                         {/* Delete */}
                         <button
                           type="button"
-                          onClick={() => (isConfirming ? cancelDelete() : confirmDelete(t))}
+                          onClick={() => void deleteTaskNow(t)}
                           disabled={isDeleting}
-                          className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors disabled:opacity-40 sm:h-7 sm:w-7 ${
-                            isConfirming
-                              ? "bg-rose-100 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400"
-                              : "text-kal-muted hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-950/30 dark:hover:text-rose-400"
-                          }`}
-                          aria-label={isConfirming ? "Cancel delete" : "Delete task"}
-                          aria-pressed={isConfirming}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-kal-muted/80 transition-colors hover:bg-rose-500/10 hover:text-rose-600 disabled:opacity-40 dark:hover:text-rose-400 sm:h-7 sm:w-7"
+                          aria-label="Delete task"
                         >
                           {isDeleting ? (
-                            <Loader2 className="h-[14px] w-[14px] animate-spin" />
+                            <Loader2 className="h-[13px] w-[13px] animate-spin" />
                           ) : (
-                            <Trash2 className="h-[14px] w-[14px]" />
+                            <Trash2 className="h-[13px] w-[13px]" strokeWidth={2} />
                           )}
                         </button>
                       </div>
                     </div>
-
-                    {/* Inline delete confirmation bar */}
-                    {isConfirming ? (
-                      <DeleteConfirmBar
-                        taskTitle={t.title}
-                        busy={isDeleting}
-                        onConfirm={() => void executeDelete(t)}
-                        onCancel={cancelDelete}
-                      />
-                    ) : null}
                   </li>
                 );
               })}
