@@ -2,11 +2,14 @@ import type { Messaging } from "firebase-admin/messaging";
 
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 
-/** FCM error codes that mean the saved token is dead — safe to remove from DB and ask user to re-enable push. */
+/** FCM error codes that mean the saved token may be stale — increment streak; delete row only after threshold. */
 const INVALID_REGISTRATION_CODES = new Set([
   "messaging/registration-token-not-registered",
   "messaging/invalid-registration-token",
 ]);
+
+/** Remove from DB only after this many consecutive invalid-registration responses for the same row. */
+const INVALID_REGISTRATION_STREAK_DELETE_AT = 3;
 
 /**
  * Firebase Admin attaches `code` on the error object; some transports also expose `errorInfo.code`.
@@ -61,11 +64,17 @@ export async function sendFcmToUserTokens(
 
   const { data: rows, error } = await admin
     .from("user_push_tokens")
-    .select("token")
+    .select("id, token, invalid_registration_streak")
     .eq("user_id", userId);
 
   if (error) throw error;
-  const tokens = (rows ?? []).map((r) => r.token).filter(Boolean);
+  type Row = {
+    id: string;
+    token: string;
+    invalid_registration_streak: number | null;
+  };
+  const typedRows = (rows ?? []) as Row[];
+  const tokens = typedRows.map((r) => r.token).filter(Boolean);
   if (tokens.length === 0) {
     return { sent: 0, failures: ["No device tokens for user"] };
   }
@@ -84,23 +93,42 @@ export async function sendFcmToUserTokens(
   const result = await messaging.sendEach(messages);
   let sent = 0;
   const failures: string[] = [];
-  const deadTokens: string[] = [];
+  const idsToDelete: string[] = [];
 
-  result.responses.forEach((resp, i) => {
-    const token = tokens[i];
+  for (let i = 0; i < result.responses.length; i++) {
+    const resp = result.responses[i];
+    const row = typedRows[i];
+    const token = row?.token;
+    if (!row?.id || !token) continue;
+
     if (resp.success) {
       sent += 1;
-      return;
+      await admin
+        .from("user_push_tokens")
+        .update({ invalid_registration_streak: 0 })
+        .eq("id", row.id);
+      continue;
     }
+
     const code = extractFcmSendErrorCode(resp.error);
     failures.push(code);
-    if (token && isInvalidRegistrationErrorCode(code)) {
-      deadTokens.push(token);
-    }
-  });
 
-  if (deadTokens.length > 0) {
-    await admin.from("user_push_tokens").delete().in("token", deadTokens);
+    if (!isInvalidRegistrationErrorCode(code)) continue;
+
+    const prev = row.invalid_registration_streak ?? 0;
+    const nextStreak = prev + 1;
+    if (nextStreak >= INVALID_REGISTRATION_STREAK_DELETE_AT) {
+      idsToDelete.push(row.id);
+    } else {
+      await admin
+        .from("user_push_tokens")
+        .update({ invalid_registration_streak: nextStreak })
+        .eq("id", row.id);
+    }
+  }
+
+  if (idsToDelete.length > 0) {
+    await admin.from("user_push_tokens").delete().in("id", idsToDelete);
   }
 
   return { sent, failures };

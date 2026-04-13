@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/system-push?phase=morning",
+      "schedule": "30 1 * * *"
+    },
+    {
+      "path": "/api/cron/system-push?phase=evening",
+      "schedule": "30 14 * * *"
+    },
+    {
+      "path": "/api/cron/custom-reminders",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}

@@ -11,6 +11,24 @@ export type ObtainFcmTokenResult = {
   hint?: string;
 };
 
+export type ObtainFcmTokenOptions = {
+  /**
+   * Clear cached FCM token, unsubscribe from Web Push, then request a new token.
+   * Use when enabling notifications or explicitly refreshing — not on routine sync (avoids iOS churn).
+   */
+  forceRefresh?: boolean;
+};
+
+/** True for iPhone / iPad / iPod touch (and iPadOS desktop UA). Used for PWA push UX hints. */
+export function isIosWebPushDevice(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+  return (
+    /iPad|iPhone|iPod/.test(ua) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+  );
+}
+
 export async function getMessagingIfSupported(): Promise<Messaging | null> {
   if (typeof window === "undefined") return null;
   const { getMessaging, isSupported } = await import("firebase/messaging");
@@ -85,8 +103,14 @@ function hintFromGetTokenError(err: unknown): string {
 /**
  * Registers /sw.js if needed, returns FCM token, or null if unavailable / denied.
  * Never rejects — avoids unhandled promise rejections (Next.js dev overlay).
+ *
+ * Pass `{ forceRefresh: true }` after enable or when re-registering so Firebase and the push
+ * subscription are renewed (important on iOS Safari where tokens expire aggressively).
  */
-export async function obtainFcmToken(): Promise<ObtainFcmTokenResult> {
+export async function obtainFcmToken(
+  options?: ObtainFcmTokenOptions,
+): Promise<ObtainFcmTokenResult> {
+  const forceRefresh = options?.forceRefresh === true;
   if (typeof window === "undefined" || !("Notification" in window)) {
     return { token: null, hint: "Notifications are not supported here." };
   }
@@ -131,18 +155,59 @@ export async function obtainFcmToken(): Promise<ObtainFcmTokenResult> {
     await registration.update?.();
     await waitForRegistrationActive(registration);
 
-    const sub = await registration.pushManager.getSubscription();
-    if (sub) {
-      await sub.unsubscribe().catch(() => {});
+    const { getToken, deleteToken } = await import("firebase/messaging");
+
+    if (forceRefresh) {
+      await deleteToken(messaging).catch(() => {});
+      const sub = await registration.pushManager.getSubscription();
+      if (sub) {
+        await sub.unsubscribe().catch(() => {});
+      }
+      if (isIosWebPushDevice()) {
+        await new Promise((r) => window.setTimeout(r, 900));
+      }
     }
 
-    const { getToken } = await import("firebase/messaging");
-    const token = await getToken(messaging, {
+    const getOpts = {
       vapidKey,
       serviceWorkerRegistration: registration,
-    });
+    };
+
+    let token: string | undefined;
+    try {
+      token = await getToken(messaging, getOpts);
+    } catch (firstErr) {
+      if (forceRefresh && isIosWebPushDevice()) {
+        await new Promise((r) => window.setTimeout(r, 850));
+        try {
+          token = await getToken(messaging, getOpts);
+        } catch {
+          console.warn("[FCM] getToken failed (after iOS retry):", firstErr);
+          return { token: null, hint: hintFromGetTokenError(firstErr) };
+        }
+      } else {
+        console.warn("[FCM] getToken failed:", firstErr);
+        return { token: null, hint: hintFromGetTokenError(firstErr) };
+      }
+    }
+
+    if (!token && forceRefresh && isIosWebPushDevice()) {
+      await new Promise((r) => window.setTimeout(r, 700));
+      try {
+        const second = await getToken(messaging, getOpts);
+        if (second) {
+          return { token: second };
+        }
+      } catch {
+        /* fall through */
+      }
+    }
+
     if (!token) {
-      return { token: null, hint: "No FCM token returned. Check Firebase project and Web Push key." };
+      return {
+        token: null,
+        hint: "No FCM token returned. Check Firebase project and Web Push key.",
+      };
     }
     return { token };
   } catch (err) {

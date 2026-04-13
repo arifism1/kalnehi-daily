@@ -1,21 +1,30 @@
 "use client";
 
 import clsx from "clsx";
-import { Bell, Send } from "lucide-react";
+import { Bell, RefreshCw, Send } from "lucide-react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 import { isFirebaseConfigured } from "@/lib/firebase/config";
 import {
+  isIosWebPushDevice,
   obtainFcmToken,
   revokeFcmToken,
 } from "@/lib/firebase/messagingClient";
 import { showFcmDevTools } from "@/lib/fcm/adminGate";
+import { FCM_STALE_TOKEN_USER_MESSAGE } from "@/lib/fcm/messages";
 import { SITE_NAME } from "@/lib/seo-metadata";
 import { useAuthStore } from "@/store/useAuthStore";
 
+import { SettingsSheetSwitch } from "@/components/settings/SettingsSheetSwitch";
+import { useNotificationsToast } from "@/components/settings/notificationsToastContext";
+
 const LS_ENABLED = "kalnehi-fcm-enabled";
-const PUSH_REENABLE_MSG =
-  "Push notifications need to be re-enabled. Please turn the toggle OFF and then ON again.";
+
+/** Stale / unregistered token from API — do not turn the toggle off. */
+const STALE_TOKEN_MESSAGE = FCM_STALE_TOKEN_USER_MESSAGE;
+
+const IOS_PUSH_HINT =
+  "On iOS, if notifications stop working, try turning the toggle off and on again.";
 
 function looksLikeStaleFcmTokenError(text: string | undefined): boolean {
   if (!text?.trim()) return false;
@@ -26,41 +35,15 @@ function looksLikeStaleFcmTokenError(text: string | undefined): boolean {
   );
 }
 
-function SheetSwitch({
-  checked,
-  onChange,
-  disabled,
-  id,
-}: {
-  checked: boolean;
-  onChange: (next: boolean) => void;
-  disabled?: boolean;
-  id: string;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      id={id}
-      aria-checked={checked}
-      disabled={disabled}
-      onClick={() => {
-        if (!disabled) onChange(!checked);
-      }}
-      className={clsx(
-        "relative h-9 w-14 shrink-0 rounded-full transition-[background-color] duration-200",
-        disabled ? "cursor-not-allowed opacity-50" : "",
-        checked ? "bg-kal-accent" : "bg-kal-border",
-      )}
-    >
-      <span
-        className={clsx(
-          "absolute top-1 left-1 h-7 w-7 rounded-full bg-white shadow transition-transform duration-200",
-          checked ? "translate-x-[1.35rem]" : "translate-x-0",
-        )}
-      />
-    </button>
-  );
+function testResponseLooksLikeStaleToken(data: {
+  code?: string;
+  error?: string;
+  message?: string;
+}): boolean {
+  if (data.code === "push_token_stale") return true;
+  if (looksLikeStaleFcmTokenError(data.error)) return true;
+  if (looksLikeStaleFcmTokenError(data.message)) return true;
+  return false;
 }
 
 async function registerTokenOnServer(token: string): Promise<boolean> {
@@ -85,17 +68,28 @@ async function unregisterTokenOnServer(token: string): Promise<boolean> {
   return res.ok;
 }
 
-export function PushNotificationsSettings() {
+export function PushNotificationsSettings({
+  embedded = false,
+}: {
+  embedded?: boolean;
+}) {
   const baseId = useId();
   const user = useAuthStore((s) => s.user);
+  const showToast = useNotificationsToast();
   const tokenRef = useRef<string | null>(null);
 
   const [pushOn, setPushOn] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [refreshBusy, setRefreshBusy] = useState(false);
   const [testBusy, setTestBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [clientIsIos, setClientIsIos] = useState(false);
 
   const configured = isFirebaseConfigured();
+
+  useEffect(() => {
+    setClientIsIos(isIosWebPushDevice());
+  }, []);
 
   const syncFromBrowser = useCallback(async () => {
     if (!configured || typeof window === "undefined") {
@@ -106,26 +100,40 @@ export function PushNotificationsSettings() {
       setPushOn(false);
       return;
     }
+    const want =
+      typeof localStorage !== "undefined" &&
+      localStorage.getItem(LS_ENABLED) === "1";
     try {
       const { token, hint } = await obtainFcmToken();
       if (!token) {
-        setPushOn(false);
         if (hint) console.warn("[FCM sync]", hint);
+        if (want) {
+          setPushOn(true);
+        } else {
+          setPushOn(false);
+        }
         return;
       }
       tokenRef.current = token;
-      const want =
-        typeof localStorage !== "undefined" &&
-        localStorage.getItem(LS_ENABLED) === "1";
       if (!want) {
         setPushOn(false);
         return;
       }
       const ok = await registerTokenOnServer(token);
-      setPushOn(ok);
+      if (ok) {
+        setPushOn(true);
+      } else if (want) {
+        setPushOn(true);
+      } else {
+        setPushOn(false);
+      }
     } catch (e) {
       console.error(e);
-      setPushOn(false);
+      if (want) {
+        setPushOn(true);
+      } else {
+        setPushOn(false);
+      }
     }
   }, [configured]);
 
@@ -180,7 +188,7 @@ export function PushNotificationsSettings() {
         }
       }
 
-      const { token, hint } = await obtainFcmToken();
+      const { token, hint } = await obtainFcmToken({ forceRefresh: true });
       if (!token) {
         setMessage(
           hint ??
@@ -201,13 +209,14 @@ export function PushNotificationsSettings() {
       localStorage.setItem(LS_ENABLED, "1");
       setPushOn(true);
       setMessage("Push notifications are on for this device.");
+      showToast("Push is on for this device.");
     } catch (e) {
       console.error(e);
       setMessage("Something went wrong. Try again or use another browser.");
     } finally {
       setBusy(false);
     }
-  }, [configured]);
+  }, [configured, showToast]);
 
   const disablePush = useCallback(async () => {
     setMessage(null);
@@ -222,6 +231,7 @@ export function PushNotificationsSettings() {
       localStorage.removeItem(LS_ENABLED);
       setPushOn(false);
       setMessage("Push notifications are off for this device.");
+      showToast("Push is off for this device.", "neutral");
     } catch (e) {
       console.error(e);
       setMessage("Could not turn off push completely. Try clearing site data.");
@@ -230,7 +240,66 @@ export function PushNotificationsSettings() {
     } finally {
       setBusy(false);
     }
-  }, []);
+  }, [showToast]);
+
+  const refreshToken = useCallback(async () => {
+    if (!configured) {
+      setMessage("Push is not configured on this deployment.");
+      return;
+    }
+    if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+      setMessage("This browser does not support web push.");
+      return;
+    }
+
+    setMessage(null);
+    setRefreshBusy(true);
+    try {
+      if (Notification.permission === "denied") {
+        setMessage(
+          "Notifications are blocked for this site. Enable them in browser or system settings.",
+        );
+        return;
+      }
+      if (Notification.permission === "default") {
+        const perm = await Notification.requestPermission();
+        if (perm !== "granted") {
+          setMessage(
+            perm === "denied"
+              ? "Permission was denied. You can enable notifications in browser settings."
+              : "Permission was not granted.",
+          );
+          return;
+        }
+      }
+
+      const { token, hint } = await obtainFcmToken({ forceRefresh: true });
+      if (!token) {
+        setMessage(
+          hint ??
+            "Could not refresh the push token. Try again in a moment or reload the page.",
+        );
+        return;
+      }
+
+      const ok = await registerTokenOnServer(token);
+      if (!ok) {
+        setMessage("Could not save this device on the server. Try again.");
+        return;
+      }
+
+      tokenRef.current = token;
+      localStorage.setItem(LS_ENABLED, "1");
+      setPushOn(true);
+      setMessage("Push token refreshed.");
+      showToast("Token refreshed.");
+    } catch (e) {
+      console.error(e);
+      setMessage("Could not refresh the token. Try again.");
+    } finally {
+      setRefreshBusy(false);
+    }
+  }, [configured, showToast]);
 
   const onToggle = useCallback(
     (next: boolean) => {
@@ -261,15 +330,7 @@ export function PushNotificationsSettings() {
           return;
         }
         if (looksLikeStaleFcmTokenError(data.error)) {
-          try {
-            localStorage.removeItem(LS_ENABLED);
-          } catch {
-            /* ignore */
-          }
-          tokenRef.current = null;
-          void revokeFcmToken();
-          setPushOn(false);
-          setMessage(PUSH_REENABLE_MSG);
+          setMessage(STALE_TOKEN_MESSAGE);
           return;
         }
         setMessage(data.error ?? "Test failed.");
@@ -277,22 +338,11 @@ export function PushNotificationsSettings() {
       }
       if (data.ok && (data.sent ?? 0) > 0) {
         setMessage(data.message ?? "Test sent.");
+        showToast("Test notification sent.");
         return;
       }
-      if (
-        data.code === "push_token_stale" ||
-        looksLikeStaleFcmTokenError(data.error) ||
-        looksLikeStaleFcmTokenError(data.message)
-      ) {
-        try {
-          localStorage.removeItem(LS_ENABLED);
-        } catch {
-          /* ignore */
-        }
-        tokenRef.current = null;
-        void revokeFcmToken();
-        setPushOn(false);
-        setMessage(PUSH_REENABLE_MSG);
+      if (testResponseLooksLikeStaleToken(data)) {
+        setMessage(STALE_TOKEN_MESSAGE);
         return;
       }
       setMessage(data.error ?? data.message ?? "Nothing sent.");
@@ -301,7 +351,7 @@ export function PushNotificationsSettings() {
     } finally {
       setTestBusy(false);
     }
-  }, []);
+  }, [showToast]);
 
   if (!user) {
     return null;
@@ -311,27 +361,33 @@ export function PushNotificationsSettings() {
     typeof window !== "undefined" &&
     (!("Notification" in window) || !("serviceWorker" in navigator));
 
+  const shellClass = embedded
+    ? "rounded-xl border border-white/12 bg-white/[0.035] px-3 py-4 dark:border-white/10 dark:bg-black/25"
+    : "kal-glass-panel rounded-[1rem] px-3 py-4";
+
   return (
-    <div className="kal-glass-panel rounded-[1rem] px-3 py-4">
-      <div className="flex items-start gap-2">
-        <Bell
-          className="mt-0.5 h-5 w-5 shrink-0 text-kal-accent"
-          aria-hidden
-        />
-        <div className="min-w-0 flex-1">
-          <p className="text-[15px] font-medium text-kal-text">
-            Push notifications
-          </p>
-          <p className="mt-0.5 text-xs leading-relaxed text-kal-text-secondary">
-            Enable push notifications on my phone (and desktop). Works when the
-            app is closed. On iPhone, add Kalnehi to your Home Screen (iOS 16.4+)
-            and allow notifications for this site.
-          </p>
+    <div className={shellClass}>
+      {!embedded ? (
+        <div className="flex items-start gap-2">
+          <Bell
+            className="mt-0.5 h-5 w-5 shrink-0 text-kal-accent"
+            aria-hidden
+          />
+          <div className="min-w-0 flex-1">
+            <p className="text-[15px] font-medium text-kal-text">
+              Push notifications
+            </p>
+            <p className="mt-0.5 text-xs leading-relaxed text-kal-text-secondary">
+              Enable push notifications on my phone (and desktop). Works when the
+              app is closed. On iPhone, add Kalnehi to your Home Screen (iOS 16.4+)
+              and allow notifications for this site.
+            </p>
+          </div>
         </div>
-      </div>
+      ) : null}
 
       {!configured ? (
-        <p className="mt-3 text-xs text-kal-text-secondary">
+        <p className={clsx("text-xs text-kal-text-secondary", !embedded && "mt-3")}>
           Push is not configured. Add{" "}
           <span className="font-mono text-[11px]">
             NEXT_PUBLIC_FIREBASE_* and NEXT_PUBLIC_FIREBASE_FCM_VAPID_KEY
@@ -343,22 +399,43 @@ export function PushNotificationsSettings() {
           on the server.
         </p>
       ) : unsupported ? (
-        <p className="mt-3 text-xs text-kal-text-secondary">
+        <p className={clsx("text-xs text-kal-text-secondary", !embedded && "mt-3")}>
           This environment does not support web push.
         </p>
       ) : (
         <>
-          <div className="mt-4 flex items-center justify-between gap-3">
+          <div className={clsx("flex items-center justify-between gap-3", embedded ? "mt-1" : "mt-4")}>
             <span className="text-sm font-medium text-kal-text">
               Enable push notifications on my phone
             </span>
-            <SheetSwitch
+            <SettingsSheetSwitch
               id={`${baseId}-push`}
               checked={pushOn}
-              disabled={busy}
+              disabled={busy || refreshBusy}
               onChange={onToggle}
             />
           </div>
+
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => void refreshToken()}
+              disabled={busy || refreshBusy}
+              className="inline-flex min-h-[40px] items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 text-sm font-medium text-kal-text backdrop-blur-sm transition-colors hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <RefreshCw
+                className={clsx("h-4 w-4", refreshBusy && "animate-spin")}
+                aria-hidden
+              />
+              {refreshBusy ? "Refreshing…" : "Refresh token"}
+            </button>
+          </div>
+
+          {clientIsIos ? (
+            <p className="mt-2 text-[11px] leading-relaxed text-kal-text-secondary">
+              {IOS_PUSH_HINT}
+            </p>
+          ) : null}
 
           {showDevTest && (
             <div className="mt-4 border-t border-white/10 pt-4 dark:border-white/10">

@@ -57,6 +57,7 @@ export async function POST(req: Request) {
       token,
       user_agent: userAgent,
       last_seen_at: now,
+      invalid_registration_streak: 0,
     },
     { onConflict: "token" },
   );
