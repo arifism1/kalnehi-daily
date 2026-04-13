@@ -1,3 +1,13 @@
+/**
+ * TEMPORARY (Vercel Hobby/Pro): Cron schedules are cleared in `vercel.json` and this
+ * route short-circuits so deployments are not blocked by cron frequency limits.
+ * Re-enable: restore `vercel.json` crons (see below) and set `SYSTEM_PUSH_CRON_TEMPORARILY_DISABLED` to `false`.
+ *
+ * Previous `vercel.json` entries (paste back into `"crons": [ ... ]`):
+ * - { "path": "/api/cron/system-push?phase=morning",  "schedule": "30 1 * * *" }
+ * - { "path": "/api/cron/system-push?phase=evening", "schedule": "30 14 * * *" }
+ * - { "path": "/api/cron/custom-reminders", "schedule": "* /5 * * * *" } (remove space: every 5 min)
+ */
 import { type NextRequest, NextResponse } from "next/server";
 
 import {
@@ -27,6 +37,8 @@ import {
 } from "@/lib/systemPush/dedupe";
 import { getIstCalendarDateString } from "@/lib/systemPush/istCalendarDate";
 
+const SYSTEM_PUSH_CRON_TEMPORARILY_DISABLED = true;
+
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
@@ -55,6 +67,18 @@ function fcmDataStrings(
  * Query: `phase=morning` (7:00 IST) or `phase=evening` (8:00 PM IST) — see vercel.json schedules.
  */
 export async function GET(req: NextRequest) {
+  if (SYSTEM_PUSH_CRON_TEMPORARILY_DISABLED) {
+    return NextResponse.json(
+      {
+        ok: false,
+        disabled: true,
+        message:
+          "System push cron is temporarily disabled (Vercel cron limits). Notification code is unchanged; re-enable in vercel.json and route flag.",
+      },
+      { status: 503 },
+    );
+  }
+
   if (!verifyCron(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

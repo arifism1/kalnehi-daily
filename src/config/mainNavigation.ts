@@ -95,6 +95,8 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
         Icon: Brain,
       },
       { href: "/syllabus", label: "Syllabus Mastery Tracker", shortLabel: "Syllabus", Icon: BookOpen },
+      { href: "/pending", label: "Pending Tasks", shortLabel: "Pending", Icon: Inbox },
+      { href: "/doubts", label: "Doubt Tracker", shortLabel: "Doubts", Icon: HelpCircle },
     ],
   },
   {
@@ -142,14 +144,12 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
         Icon: Heart,
       },
       { href: "/meditation", label: "Brain Yoga", Icon: Flower2 },
-      { href: "/doubts", label: "Doubt Tracker", shortLabel: "Doubts", Icon: HelpCircle },
     ],
   },
   {
     title: "Account & Legal",
     quickNavGroupLabel: "Account",
     items: [
-      { href: "/pending", label: "Pending Tasks", shortLabel: "Pending", Icon: Inbox },
       {
         href: "/policies",
         label: "Our Policies",
@@ -183,6 +183,8 @@ const QUICK_NAV_HREF_ORDER: readonly string[] = [
   "/prepbrain",
   "/plan-my-day",
   "/syllabus",
+  "/pending",
+  "/doubts",
   "/timer",
   "/study-sessions",
   "/progress",
@@ -192,8 +194,6 @@ const QUICK_NAV_HREF_ORDER: readonly string[] = [
   "/habits",
   "/motivation",
   "/meditation",
-  "/doubts",
-  "/pending",
 ];
 
 /** Not shown in the top quick strip (use the main menu or header links). */

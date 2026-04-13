@@ -125,6 +125,7 @@ export function MyPlanPageClient() {
     plan,
     startDate,
     endDate,
+    autopayMonthsTotal,
     refetch,
   } = useSubscriptionAccess();
   const {
@@ -213,6 +214,18 @@ export function MyPlanPageClient() {
     });
   }
 
+  if (
+    autopayMonthsTotal !== null &&
+    hasPaidAccess &&
+    (status === "trial" || status === "active" || status === "cancelled")
+  ) {
+    rows.push({
+      label: "AutoPay cap",
+      value: `Up to ${autopayMonthsTotal} monthly charge${autopayMonthsTotal === 1 ? "" : "s"} (then renewals stop unless you subscribe again)`,
+      className: "text-kal-text-secondary",
+    });
+  }
+
   if (startDate) {
     rows.push({ label: "Started", value: formatDate(startDate) });
   }
@@ -241,7 +254,9 @@ export function MyPlanPageClient() {
         </p>
         <h1 className="mt-1 text-2xl font-bold tracking-tight text-kal-text">My Plan</h1>
         <p className="mt-1 text-sm leading-relaxed text-kal-text-secondary">
-          Monthly subscription — billed every month. Cancel anytime.
+          Monthly subscription — you are charged once per month. AutoPay is limited to the number of
+          months you chose at signup (shown below when available). Cancel anytime; you keep access
+          through the period you already paid for.
         </p>
       </div>
 

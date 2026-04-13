@@ -2,6 +2,7 @@
 
 import { addDays, format, parseISO } from "date-fns";
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { useCalendarDate } from "@/hooks/useCalendarDate";
@@ -115,29 +116,29 @@ export function HomeClient() {
     };
   }, [taskList, today, yesterday]);
 
-  const todayWeighted = useMemo(
-    () => computeWeightedCompletionPercent(todayTasks, microtopicById),
-    [todayTasks, microtopicById],
-  );
-
   // Unified daily_tasks (plan_date) for Master Today ring + 3-day strip
   const dailyExec = useDailyPlanHomeExecution();
 
-  // Single derived block: avoids any TDZ if fallbacks are reordered vs. dailyExec.
+  // Single derived block: all academic % in one factory (avoids cross-hook TDZ under Turbopack).
   const {
     effectiveTodayPercent,
     effectiveTodayTotal,
     effectiveTodayDone,
     yesterdayStripPercent,
     todayStripPercent,
+    todayWeighted,
   } = useMemo(() => {
+    const todayAcademic = computeWeightedCompletionPercent(
+      todayTasks,
+      microtopicById,
+    );
     const yesterdayAcademic = computeWeightedCompletionPercent(
       yesterdayTasks,
       microtopicById,
     );
     return {
       effectiveTodayPercent:
-        dailyExec.today.totalCount > 0 ? dailyExec.today.percent : todayWeighted,
+        dailyExec.today.totalCount > 0 ? dailyExec.today.percent : todayAcademic,
       effectiveTodayTotal:
         dailyExec.today.totalCount > 0 ? dailyExec.today.totalCount : todayTasks.length,
       effectiveTodayDone:
@@ -147,7 +148,8 @@ export function HomeClient() {
           ? dailyExec.yesterday.percent
           : yesterdayAcademic,
       todayStripPercent:
-        dailyExec.today.totalCount > 0 ? dailyExec.today.percent : todayWeighted,
+        dailyExec.today.totalCount > 0 ? dailyExec.today.percent : todayAcademic,
+      todayWeighted: todayAcademic,
     };
   }, [
     dailyExec.today.totalCount,
@@ -155,8 +157,7 @@ export function HomeClient() {
     dailyExec.today.doneCount,
     dailyExec.yesterday.totalCount,
     dailyExec.yesterday.percent,
-    todayWeighted,
-    todayTasks.length,
+    todayTasks,
     yesterdayTasks,
     microtopicById,
   ]);
@@ -330,6 +331,20 @@ export function HomeClient() {
             </h1>
             <p className="text-sm text-kal-muted sm:text-[0.95rem]">
               <span className="text-kal-text">{`${greetingLead}, ${firstName}`}</span>
+            </p>
+            <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+              <Link
+                href="/what-can-kalnehi-do"
+                className="text-sm font-semibold text-kal-accent underline-offset-4 hover:underline"
+              >
+                What can Kalnehi do? — fun feature tour
+              </Link>
+              <Link
+                href="/best-study-practices"
+                className="text-sm font-semibold text-kal-accent underline-offset-4 hover:underline"
+              >
+                Best Study Practices — the science
+              </Link>
             </p>
           </div>
 

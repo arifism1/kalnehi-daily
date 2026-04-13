@@ -1,7 +1,7 @@
 /* Kalnehi Daily - Exam Prep Tracker — service worker (static caching + offline shell + sync bridge)
  * FCM block is injected at request time by src/app/sw.js/route.ts (never commit API keys).
  */
-const STATIC_CACHE = "kalnehi-static-v3";
+const STATIC_CACHE = "kalnehi-static-v5";
 const PAGE_CACHE = "kalnehi-pages-v2";
 const SYNC_TAG = "kalnehi-outbox-sync";
 
@@ -77,7 +77,7 @@ self.addEventListener("fetch", (event) => {
   const path = new URL(url).pathname;
 
   if (path.startsWith("/_next/static/")) {
-    event.respondWith(cacheFirst(req, STATIC_CACHE));
+    event.respondWith(networkFirstStatic(req, STATIC_CACHE));
     return;
   }
 
@@ -111,6 +111,21 @@ function cacheFirst(request, cacheName) {
   );
 }
 
+/** Next hashed chunks must not be cache-first (stale TDZ-era bundles after HMR / LAN dev hostnames). */
+function networkFirstStatic(request, cacheName) {
+  return fetch(request)
+    .then((response) => {
+      if (response && response.status === 200) {
+        const copy = response.clone();
+        void caches.open(cacheName).then((cache) => cache.put(request, copy));
+      }
+      return response;
+    })
+    .catch(() =>
+      caches.open(cacheName).then((cache) => cache.match(request)),
+    );
+}
+
 function networkFirstHtml(request) {
   return fetch(request)
     .then((response) => {
@@ -132,6 +147,42 @@ function networkFirstHtml(request) {
       ),
     );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

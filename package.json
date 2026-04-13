@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "verify:fcm": "node scripts/verify-fcm-setup.mjs"
+    "verify:fcm": "node scripts/verify-fcm-setup.mjs",
+    "verify:razorpay-sub": "node scripts/verify-razorpay-subscription-counts.mjs"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^0.10.34",

@@ -5,7 +5,10 @@ import {
   FileText,
   GraduationCap,
   Landmark,
+  Layers,
   School,
+  ScrollText,
+  Stethoscope,
 } from "lucide-react";
 
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
@@ -14,52 +17,73 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 
 export const metadata = marketingPageMetadata({
   path: "/guides",
-  title: `Study guides — JEE 2026, NEET 2026, UPSC & Boards | ${SITE_NAME}`,
+  title: `Study guides — JEE, NEET UG & PG, CUET UG, UPSC CSE, Boards & more | ${SITE_NAME}`,
   description:
-    `Free SEO guides: best daily planners for JEE 2026, NEET 2026, UPSC CSE, Board exams, Brain Yoga for exam warriors, and how to stay consistent. Install ${SITE_NAME} as a PWA.`,
+    `Public guides: JEE 2026, NEET UG & NEET PG, CUET UG, UPSC CSE, Boards, Brain Yoga, JEE consistency, and a daily prep system for any exam. Read free — run your plan in ${SITE_NAME} (PWA).`,
 });
 
 const guides = [
   {
     href: "/jee-study-planner",
-    title: "Best daily planner for JEE 2026",
+    title: "JEE Main & Advanced — daily planner",
     blurb:
-      "PCM execution: weekly intent, syllabus-linked tasks, timed sessions, and habits for JEE Main & Advanced.",
+      "PCM in one weekly map: syllabus-linked tasks, timed sessions, and habits that survive bad mocks.",
     icon: GraduationCap,
   },
   {
     href: "/neet-study-planner",
-    title: "Best daily planner for NEET 2026",
+    title: "NEET UG — daily planner",
     blurb:
-      "PCB throughput: theory, drills, and mock review without losing your daily rhythm.",
+      "PCB without losing the thread: theory, drills, mock review, and a checklist you can actually finish.",
     icon: BookOpen,
   },
   {
-    href: "/upsc-study-planner",
-    title: "Best daily planner for UPSC CSE",
+    href: "/neet-pg-study-planner",
+    title: "NEET PG / INI-CET — study planner",
     blurb:
-      "GS, optional, and current affairs mapped into weekly execution — Prelims and Mains phases.",
+      "Internship-proof blocks: clinical MCQ revision when your day is already chopped up.",
+    icon: Stethoscope,
+  },
+  {
+    href: "/cuet-ug-study-planner",
+    title: "CUET UG — study planner",
+    blurb:
+      "Domain subjects + general test in one rhythm — so neither side quietly dies before the form.",
+    icon: Layers,
+  },
+  {
+    href: "/upsc-study-planner",
+    title: "UPSC CSE — daily planner",
+    blurb:
+      "GS, optional, and current affairs in weekly execution — Prelims and Mains without fantasy timetables.",
     icon: Landmark,
   },
   {
     href: "/boards-study-planner",
-    title: "Board exam planner",
+    title: "Board exams — planner",
     blurb:
-      "School days alongside competitive prep — routines, todos, and realistic daily plans.",
+      "School + competitive prep: routines, todos, and daily plans that fit real school weeks.",
     icon: School,
   },
   {
-    href: "/brain-yoga",
-    title: "Brain Yoga for Exam Warriors",
+    href: "/guides/daily-exam-prep-system-any-exam",
+    title: "Daily prep system (any exam)",
     blurb:
-      "Micro-recovery between marathon blocks — breathing, posture, and focus resets.",
+      "One loop for JEE, NEET, CUET, UPSC, or anything else: weeks, days, timers, review — no new notebook required.",
+    icon: ScrollText,
+  },
+  {
+    href: "/brain-yoga",
+    title: "Brain Yoga — short resets",
+    blurb:
+      "Five-minute recovery between heavy blocks so the next session still has a pulse.",
     icon: Brain,
   },
   {
     href: "/guides/how-to-maintain-consistency-in-jee-preparation",
-    title: "How to maintain consistency in JEE preparation",
+    title: "Consistency in JEE prep (deep dive)",
     blurb:
-      "Blog-style guide: weekly rhythm, mistake review, sleep, and one execution system.",
+      "Weekly rhythm, mistake review, sleep, and restarting after a bad day — written for JEE, useful elsewhere.",
     icon: FileText,
   },
 ] as const;
@@ -99,18 +123,20 @@ export default function GuidesHubPage() {
             Plan heavy exam years without drowning in tools
           </h1>
           <p className="text-sm leading-relaxed text-kal-text-secondary sm:text-base">
-            Landing pages for{" "}
-            <strong className="text-kal-text">JEE 2026</strong>,{" "}
-            <strong className="text-kal-text">NEET 2026</strong>,{" "}
-            <strong className="text-kal-text">UPSC CSE</strong>, Boards, Brain Yoga, and a consistency
-            guide — then{" "}
+            Guides for{" "}
+            <strong className="text-kal-text">JEE</strong>,{" "}
+            <strong className="text-kal-text">NEET UG</strong>,{" "}
+            <strong className="text-kal-text">NEET PG</strong>,{" "}
+            <strong className="text-kal-text">CUET UG</strong>,{" "}
+            <strong className="text-kal-text">UPSC CSE</strong>, Boards, Brain Yoga, plus a general
+            daily prep system for any competitive exam. Read the one that matches you — then{" "}
             <Link
               href="/auth"
               className="font-medium text-kal-accent-dark underline-offset-2 hover:underline"
             >
-              create a free account
+              get started
             </Link>{" "}
-            to run your daily execution system in {SITE_NAME}.
+            to run your actual daily prep in {SITE_NAME}.
           </p>
         </header>
 

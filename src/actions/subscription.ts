@@ -25,6 +25,11 @@ import {
   firstOfCurrentMonthDateString,
   needsMonthlyUsageReset,
 } from "@/lib/subscriptionUsage";
+import {
+  AUTOPAY_MONTHS_MIN,
+  clampAutopayMonths,
+  DEFAULT_AUTOPAY_MONTHS,
+} from "@/lib/autopayMonths";
 import { RAZORPAY_PAYMENT_OR_SUB_ID_RE } from "@/lib/razorpayIds";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -56,8 +61,65 @@ export type VerifyPlanUpgradePaymentResult =
   | { ok: false; error: string };
 
 
-const TOTAL_BILLING_CYCLES = 12;
+/** Legacy default for Razorpay fetches / upgrades when counts are missing. */
+const AUTOPAY_FALLBACK_TOTAL_COUNT = 12;
+
 const TRIAL_DAYS = 3;
+
+async function getRemainingBillingCyclesForSubscription(
+  razorpay: InstanceType<typeof Razorpay>,
+  subscriptionId: string,
+): Promise<number> {
+  try {
+    const sub = (await razorpay.subscriptions.fetch(subscriptionId)) as {
+      remaining_count?: unknown;
+      total_count?: unknown;
+      paid_count?: unknown;
+    };
+    let remaining =
+      typeof sub.remaining_count === "number" && Number.isFinite(sub.remaining_count)
+        ? sub.remaining_count
+        : Number.NaN;
+    if (!Number.isFinite(remaining) || remaining < 0) {
+      const total = typeof sub.total_count === "number" ? sub.total_count : Number.NaN;
+      const paid = typeof sub.paid_count === "number" ? sub.paid_count : Number.NaN;
+      if (Number.isFinite(total) && Number.isFinite(paid)) {
+        remaining = Math.max(0, total - paid);
+      }
+    }
+    if (!Number.isFinite(remaining) || remaining < 1) {
+      console.error("[subscription] getRemainingBillingCyclesForSubscription: invalid counts, fallback", {
+        subscriptionId: subscriptionId.slice(0, 14),
+        remaining_count: sub.remaining_count,
+        total_count: sub.total_count,
+        paid_count: sub.paid_count,
+      });
+      return AUTOPAY_FALLBACK_TOTAL_COUNT;
+    }
+    return Math.trunc(remaining);
+  } catch (e) {
+    console.error("[subscription] getRemainingBillingCyclesForSubscription: fetch failed", {
+      subscriptionId: subscriptionId.slice(0, 14),
+      safeMessage: safeErrorMessage(e),
+    });
+    return AUTOPAY_FALLBACK_TOTAL_COUNT;
+  }
+}
+
+function autopayMonthsFromSubscriptionEntity(sub: {
+  notes?: Record<string, string>;
+  total_count?: unknown;
+}): number | null {
+  const fromNote = Number.parseInt(sub.notes?.kalnehi_autopay_months?.trim() ?? "", 10);
+  if (Number.isFinite(fromNote) && fromNote >= AUTOPAY_MONTHS_MIN) {
+    return clampAutopayMonths(fromNote);
+  }
+  const tc = sub.total_count;
+  if (typeof tc === "number" && Number.isFinite(tc) && tc >= AUTOPAY_MONTHS_MIN) {
+    return clampAutopayMonths(tc);
+  }
+  return null;
+}
 
 const RAZORPAY_ID_RE = RAZORPAY_PAYMENT_OR_SUB_ID_RE;
 /** Razorpay requires `start_at` far enough in the future on new subscriptions. */
@@ -297,6 +359,7 @@ async function upsertProfileByUserId(
     subscription_start_date: string;
     subscription_end_date: string;
     razorpay_subscription_id: string;
+    subscription_autopay_months_total?: number | null;
   },
 ) {
   const admin = getAdminClient();
@@ -349,10 +412,13 @@ async function resetMonthlyAiUsageCounters(userId: string) {
 
 export async function createRazorpayTrialSubscription(
   tier: SubscriptionTier = "pro",
+  autopayMonths?: unknown,
 ): Promise<CreateSubscriptionResult> {
   if (!isValidTier(tier)) {
     return { ok: false, error: "Invalid subscription tier." };
   }
+
+  const months = clampAutopayMonths(autopayMonths ?? DEFAULT_AUTOPAY_MONTHS);
 
   const userId = await getAuthedUserId();
   if (!userId) return { ok: false, error: "Please sign in to subscribe." };
@@ -402,7 +468,7 @@ export async function createRazorpayTrialSubscription(
       body: Record<string, unknown>,
     ) => Promise<{ id: string }>)({
       plan_id: planId,
-      total_count: TOTAL_BILLING_CYCLES,
+      total_count: months,
       customer_notify: 1,
       start_at: Math.floor(startAt.getTime() / 1000),
       addons: [
@@ -419,6 +485,7 @@ export async function createRazorpayTrialSubscription(
         kalnehi_plan: "monthly",
         kalnehi_tier: tier,
         kalnehi_trial_days: String(TRIAL_DAYS),
+        kalnehi_autopay_months: String(months),
       },
     })) as { id: string };
 
@@ -472,11 +539,13 @@ export async function activateRazorpaySubscription(params: {
   }
 
   let tier: SubscriptionTier = "pro";
+  let autopayMonthsTotal: number | null = null;
   try {
     const razorpay = getRazorpayClient(config);
     const sub = (await razorpay.subscriptions.fetch(subscriptionId)) as {
       id: string;
       notes?: Record<string, string>;
+      total_count?: unknown;
     };
     const ownerUserId = sub.notes?.kalnehi_user_id?.trim();
     if (ownerUserId !== userId) {
@@ -484,6 +553,7 @@ export async function activateRazorpaySubscription(params: {
     }
     const noteTier = sub.notes?.kalnehi_tier;
     if (isValidTier(noteTier)) tier = noteTier;
+    autopayMonthsTotal = autopayMonthsFromSubscriptionEntity(sub);
   } catch {
     return { ok: false, error: "Unable to verify subscription ownership." };
   }
@@ -497,6 +567,7 @@ export async function activateRazorpaySubscription(params: {
     subscription_start_date: start.toISOString(),
     subscription_end_date: trialEnd.toISOString(),
     razorpay_subscription_id: subscriptionId,
+    subscription_autopay_months_total: autopayMonthsTotal,
   });
   if (!updated.ok) return updated;
 
@@ -1087,11 +1158,21 @@ export async function createPlanUpgradeOrder(
     const fromName = TIERS[fromTier].name;
     const toName = TIERS[targetTier].name;
 
+    const oldSubId = profile.razorpay_subscription_id?.trim() ?? "";
+    let upgradeTotalCount = AUTOPAY_FALLBACK_TOTAL_COUNT;
+    if (oldSubId && RAZORPAY_ID_RE.test(oldSubId)) {
+      upgradeTotalCount = await getRemainingBillingCyclesForSubscription(razorpay, oldSubId);
+    } else {
+      console.error("[subscription] createPlanUpgradeOrder: missing razorpay_subscription_id, fallback total_count", {
+        userIdPrefix: userId.slice(0, 8),
+      });
+    }
+
     const created = (await (razorpay.subscriptions.create as unknown as (
       body: Record<string, unknown>,
     ) => Promise<{ id: string }>)({
       plan_id: planId,
-      total_count: TOTAL_BILLING_CYCLES,
+      total_count: upgradeTotalCount,
       customer_notify: 1,
       start_at: startAtSec,
       addons: [
@@ -1111,6 +1192,7 @@ export async function createPlanUpgradeOrder(
         kalnehi_from_tier: fromTier,
         kalnehi_to_tier: targetTier,
         kalnehi_expected_addon_paise: String(amountPaise),
+        kalnehi_autopay_months: String(upgradeTotalCount),
       },
     })) as { id: string };
 
@@ -1166,6 +1248,7 @@ export async function verifyPlanUpgradePayment(params: {
       notes?: Record<string, string>;
       current_start?: number | null;
       current_end?: number | null;
+      total_count?: unknown;
     };
 
     const ownerUserId = sub.notes?.kalnehi_user_id?.trim();
@@ -1288,6 +1371,8 @@ export async function verifyPlanUpgradePayment(params: {
       subscriptionEndToStore = new Date(sub.current_end * 1000).toISOString();
     }
 
+    const autopayMonthsTotal = autopayMonthsFromSubscriptionEntity(sub);
+
     const nowIso = new Date().toISOString();
     const { error: updateErr } = await admin
       .from("user_profiles")
@@ -1298,6 +1383,9 @@ export async function verifyPlanUpgradePayment(params: {
         subscription_plan: "monthly",
         subscription_start_date: subscriptionStartToStore,
         subscription_end_date: subscriptionEndToStore,
+        ...(autopayMonthsTotal !== null
+          ? { subscription_autopay_months_total: autopayMonthsTotal }
+          : {}),
         updated_at: nowIso,
       })
       .eq("user_id", userId);

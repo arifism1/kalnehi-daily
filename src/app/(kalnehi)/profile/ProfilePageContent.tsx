@@ -21,7 +21,7 @@ export default function ProfilePageContent() {
         </p>
         <h1 className="mt-1 text-xl font-bold text-kal-text">Profile</h1>
         <p className="mt-1 text-sm leading-relaxed text-kal-text-secondary">
-          Goals, exam history, and install — laid out like iOS Settings.
+          Your name, exam goals, past attempts, install options, and account.
         </p>
       </div>
 

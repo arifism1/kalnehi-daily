@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
+import { autopayMonthsFromNotes } from "@/lib/autopayMonths";
 import { RAZORPAY_PAYMENT_OR_SUB_ID_RE } from "@/lib/razorpayIds";
 import { firstOfCurrentMonthDateString } from "@/lib/subscriptionUsage";
 import type { Database } from "@/types/supabase";
@@ -10,9 +11,11 @@ import type { Database } from "@/types/supabase";
 export const runtime = "nodejs";
 
 const MAX_BODY_BYTES = 64 * 1024;
+/** Keep in sync with Razorpay Dashboard → Webhooks (enable these events for this URL). */
 const HANDLED_EVENTS = new Set([
   "subscription.charged",
   "subscription.cancelled",
+  "subscription.completed",
   "payment.failed",
 ]);
 
@@ -191,12 +194,18 @@ export async function POST(request: Request) {
     const patch = buildUpdateFromSubscription(payload);
     if (!patch) return okResponse({ ignored: true });
 
+    const notes = subscriptionEntity?.notes;
+    const autopayFromNotes = autopayMonthsFromNotes(notes);
+
     const effectivePatch: Record<string, unknown> = {
       ...patch,
       subscription_status: "active",
       subscription_plan: "monthly",
       subscription_tier: inferTier(payload),
       razorpay_subscription_id: subscriptionId ?? patch.razorpay_subscription_id,
+      ...(autopayFromNotes !== null
+        ? { subscription_autopay_months_total: autopayFromNotes }
+        : {}),
     };
 
     let priorStatus: string | null = null;
@@ -235,6 +244,28 @@ export async function POST(request: Request) {
   if (event === "subscription.cancelled") {
     const patch: Record<string, unknown> = {
       subscription_status: "cancelled",
+    };
+
+    let updated = false;
+    if (subscriptionId) {
+      updated = await applyBySubscriptionId(supabase, subscriptionId, patch);
+    }
+    if (!updated && userIdFromNotes) {
+      updated = await applyByUserId(supabase, userIdFromNotes, patch);
+    }
+    return okResponse({ updated });
+  }
+
+  if (event === "subscription.completed") {
+    const sub = subscriptionEntity;
+    const currentEnd = typeof sub?.current_end === "number" ? sub.current_end : null;
+    const endIso =
+      currentEnd && currentEnd > 0
+        ? new Date(currentEnd * 1000).toISOString()
+        : new Date().toISOString();
+    const patch: Record<string, unknown> = {
+      subscription_status: "expired",
+      subscription_end_date: endIso,
     };
 
     let updated = false;

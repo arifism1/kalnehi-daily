@@ -665,6 +665,7 @@ export type Database = {
           prev_score_entries: Json
           razorpay_subscription_id: string | null
           primary_exam: string | null
+          subscription_autopay_months_total: number | null
           subscription_end_date: string | null
           subscription_plan: string | null
           subscription_start_date: string | null
@@ -698,6 +699,7 @@ export type Database = {
           prev_score_entries?: Json
           razorpay_subscription_id?: string | null
           primary_exam?: string | null
+          subscription_autopay_months_total?: number | null
           subscription_end_date?: string | null
           subscription_plan?: string | null
           subscription_start_date?: string | null
@@ -731,6 +733,7 @@ export type Database = {
           prev_score_entries?: Json
           razorpay_subscription_id?: string | null
           primary_exam?: string | null
+          subscription_autopay_months_total?: number | null
           subscription_end_date?: string | null
           subscription_plan?: string | null
           subscription_start_date?: string | null

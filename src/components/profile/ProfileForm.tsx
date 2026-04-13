@@ -196,7 +196,7 @@ export function ProfileForm() {
           const rawScore = row.score.trim();
           if (!label && !rawScore) continue;
           if (!label) {
-            setError("Add a label for each score (e.g. UPSC Pre 2025).");
+            setError("Add a label for each past score you enter.");
             return;
           }
           const n = Number(rawScore);
@@ -422,7 +422,7 @@ export function ProfileForm() {
 
         <Section
           title="Exam history"
-          footer="Add each past attempt with a short label and marks (e.g. UPSC Pre 2025, 2024 attempt)."
+          footer="Add each past attempt with a short label and marks. If you tried more than once, note the year or attempt number in the label."
         >
           <Row>
             <span className="min-w-0 flex-1 text-[15px] font-medium text-kal-text-secondary">
@@ -486,7 +486,7 @@ export function ProfileForm() {
                               ),
                             );
                           }}
-                          placeholder="e.g. UPSC Pre 2025"
+                          placeholder="e.g. 2025 — first attempt"
                           autoComplete="off"
                           className="mt-1 w-full rounded-lg border border-kal-border bg-kal-card px-3 py-2 text-[15px] text-kal-text placeholder:text-kal-muted focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
                         />

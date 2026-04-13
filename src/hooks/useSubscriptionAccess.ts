@@ -34,6 +34,8 @@ type SubscriptionData = {
   plan: string | null;
   startDate: string | null;
   endDate: string | null;
+  /** Razorpay `total_count` (monthly charges) for the current subscription, when known. */
+  autopayMonthsTotal: number | null;
   usage: UsageData;
   refetch: () => void;
 };
@@ -67,6 +69,7 @@ export function useSubscriptionAccess(): SubscriptionData {
   const [plan, setPlan] = useState<string | null>(null);
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
+  const [autopayMonthsTotal, setAutopayMonthsTotal] = useState<number | null>(null);
   const [usage, setUsage] = useState<UsageData>(EMPTY_USAGE);
   const [fetchKey, setFetchKey] = useState(0);
 
@@ -82,6 +85,7 @@ export function useSubscriptionAccess(): SubscriptionData {
       setPlan(null);
       setStartDate(null);
       setEndDate(null);
+      setAutopayMonthsTotal(null);
       setUsage(EMPTY_USAGE);
       setLoading(false);
       return;
@@ -95,7 +99,7 @@ export function useSubscriptionAccess(): SubscriptionData {
         const { data, error } = await supabase
           .from("user_profiles")
           .select(
-            "mandatory_onboarding_completed_at, subscription_status, subscription_plan, subscription_start_date, subscription_end_date, subscription_tier, photo_scans_used_this_month, voice_minutes_used_this_month, bonus_photo_scans, bonus_voice_minutes, bonus_photo_scans_ledger, bonus_voice_minutes_ledger, usage_reset_date",
+            "mandatory_onboarding_completed_at, subscription_status, subscription_plan, subscription_start_date, subscription_end_date, subscription_tier, subscription_autopay_months_total, photo_scans_used_this_month, voice_minutes_used_this_month, bonus_photo_scans, bonus_voice_minutes, bonus_photo_scans_ledger, bonus_voice_minutes_ledger, usage_reset_date",
           )
           .eq("user_id", user.id)
           .maybeSingle();
@@ -107,6 +111,7 @@ export function useSubscriptionAccess(): SubscriptionData {
           setStatus(null);
           setHasPaidAccess(false);
           setTier(null);
+          setAutopayMonthsTotal(null);
           setUsage(EMPTY_USAGE);
           return;
         }
@@ -126,6 +131,10 @@ export function useSubscriptionAccess(): SubscriptionData {
         setPlan(data?.subscription_plan ?? null);
         setStartDate(data?.subscription_start_date ?? null);
         setEndDate(data?.subscription_end_date ?? null);
+        const rawAutopay = data?.subscription_autopay_months_total;
+        setAutopayMonthsTotal(
+          typeof rawAutopay === "number" && Number.isFinite(rawAutopay) ? rawAutopay : null,
+        );
         setHasPaidAccess(
           isCurrentlyPaid(normalizedStatus, data?.subscription_end_date ?? null),
         );
@@ -153,6 +162,7 @@ export function useSubscriptionAccess(): SubscriptionData {
           setStatus(null);
           setHasPaidAccess(false);
           setTier(null);
+          setAutopayMonthsTotal(null);
           setUsage(EMPTY_USAGE);
         }
       } finally {
@@ -175,6 +185,7 @@ export function useSubscriptionAccess(): SubscriptionData {
     plan,
     startDate,
     endDate,
+    autopayMonthsTotal,
     usage,
     refetch,
   };

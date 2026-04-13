@@ -1,4 +1,20 @@
 /**
+ * Canonical production origin for Search Console sitemaps.
+ * Never use preview hosts (`*.vercel.app`) here — Google rejects those URLs in the kalnehi.com property.
+ */
+export const SITE_URL = "https://kalnehi.com";
+
+/**
+ * Absolute URL on the public production host only (for `sitemap.xml` entries).
+ */
+export function absoluteProductionUrl(path: string): string {
+  const base = SITE_URL.replace(/\/+$/, "");
+  if (!path || path === "/") return base;
+  const p = path.startsWith("/") ? path : `/${path}`;
+  return `${base}${p}`;
+}
+
+/**
  * Canonical site origin for metadata, JSON-LD, and OG URLs.
  * Set `NEXT_PUBLIC_SITE_URL` in production (e.g. https://kalnehi.com).
  *

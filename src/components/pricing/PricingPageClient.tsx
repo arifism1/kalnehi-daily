@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Script from "next/script";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { Check, Crown, Sparkles, Zap } from "lucide-react";
+import { CalendarClock, Check, Crown, Sparkles, Zap } from "lucide-react";
 
 import {
   activateRazorpaySubscription,
@@ -12,6 +12,12 @@ import {
 import { CancelSubscriptionButton } from "@/components/subscription/CancelSubscriptionButton";
 import { PaymentErrorMailButton } from "@/components/subscription/PaymentErrorMailButton";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
+import {
+  AUTOPAY_MONTHS_MAX,
+  AUTOPAY_MONTHS_MIN,
+  clampAutopayMonths,
+  DEFAULT_AUTOPAY_MONTHS,
+} from "@/lib/autopayMonths";
 import { SITE_NAME } from "@/lib/seo-metadata";
 import {
   TIER_ORDER,
@@ -40,6 +46,151 @@ declare global {
   interface Window {
     Razorpay?: RazorpayConstructor;
   }
+}
+
+const AUTOPAY_PRESET_MONTHS = [1, 3, 6, 12] as const;
+
+function AutopayDurationPanel({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: number;
+  onChange: (months: number) => void;
+  disabled: boolean;
+}) {
+  const monthWord = value === 1 ? "month" : "months";
+
+  return (
+    <div className="mx-auto max-w-2xl space-y-3">
+      <div className="relative overflow-hidden rounded-2xl border border-kal-accent/25 bg-gradient-to-br from-white/95 via-kal-accent-soft/25 to-white/70 shadow-[0_20px_50px_-24px_rgba(0,0,0,0.25)] backdrop-blur-md dark:from-zinc-900/95 dark:via-red-950/30 dark:to-zinc-900/80 dark:border-red-500/20 dark:shadow-[0_24px_60px_-20px_rgba(0,0,0,0.5)]">
+        <div
+          className="pointer-events-none absolute -right-12 -top-16 h-40 w-40 rounded-full bg-kal-accent/15 blur-3xl dark:bg-red-500/10"
+          aria-hidden
+        />
+        <div className="relative p-5 sm:p-6">
+          <div className="flex gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-kal-accent/15 text-kal-accent ring-1 ring-kal-accent/20">
+              <CalendarClock className="h-6 w-6" strokeWidth={2} aria-hidden />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-kal-accent">
+                Before you pick a tier
+              </p>
+              <h2 className="mt-1.5 text-lg font-bold leading-tight tracking-tight text-kal-text sm:text-xl">
+                How long should AutoPay run?
+              </h2>
+              <p className="mt-2 text-sm leading-relaxed text-kal-text-secondary">
+                Billing stays{" "}
+                <span className="font-semibold text-kal-text">monthly</span> (one charge per month).
+                You only choose how many of those monthly charges your UPI or card mandate is allowed
+                to take after your trial. Cancel anytime — you keep access through what you already
+                paid for.
+              </p>
+            </div>
+          </div>
+
+          <fieldset className="mt-6 space-y-5 sm:mt-7" disabled={disabled}>
+            <legend className="sr-only">
+              Number of months to authorize for AutoPay, from {AUTOPAY_MONTHS_MIN} to{" "}
+              {AUTOPAY_MONTHS_MAX}
+            </legend>
+
+            <div>
+              <p
+                className="mb-2 text-xs font-semibold uppercase tracking-wide text-kal-text-secondary"
+                id="autopay-preset-legend"
+              >
+                Quick picks
+              </p>
+              <div
+                className="grid grid-cols-2 gap-1.5 rounded-2xl border border-white/50 bg-black/[0.035] p-1.5 sm:grid-cols-4 sm:gap-1 dark:border-white/10 dark:bg-white/[0.06]"
+                role="group"
+                aria-labelledby="autopay-preset-legend"
+              >
+                {AUTOPAY_PRESET_MONTHS.map((m) => {
+                  const selected = value === m;
+                  return (
+                    <button
+                      key={m}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => onChange(m)}
+                      className={`flex min-h-[52px] flex-col items-center justify-center rounded-xl px-1 py-2 text-center transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kal-accent ${
+                        selected
+                          ? "bg-kal-accent text-kal-accent-foreground shadow-md ring-1 ring-kal-accent/30"
+                          : "text-kal-text-secondary hover:bg-white/60 hover:text-kal-text dark:hover:bg-white/[0.08]"
+                      }`}
+                    >
+                      <span className="text-lg font-bold tabular-nums leading-none">{m}</span>
+                      <span className="mt-0.5 text-[0.65rem] font-semibold leading-none opacity-90">
+                        {m === 1 ? "month" : "months"}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div>
+              <div className="mb-3 flex items-end justify-between gap-3">
+                <label
+                  htmlFor="autopay-months-range"
+                  className="max-w-[70%] text-xs font-semibold leading-snug text-kal-text-secondary sm:text-sm"
+                >
+                  Or drag to any length ({AUTOPAY_MONTHS_MIN}–{AUTOPAY_MONTHS_MAX} months)
+                </label>
+                <span
+                  className="shrink-0 text-right"
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
+                  <span className="block text-3xl font-bold tabular-nums leading-none text-kal-accent">
+                    {value}
+                  </span>
+                  <span className="mt-0.5 block text-[0.7rem] font-medium capitalize text-kal-text-secondary">
+                    {monthWord}
+                  </span>
+                </span>
+              </div>
+              <input
+                id="autopay-months-range"
+                type="range"
+                min={AUTOPAY_MONTHS_MIN}
+                max={AUTOPAY_MONTHS_MAX}
+                step={1}
+                value={value}
+                onChange={(e) => onChange(clampAutopayMonths(e.target.value))}
+                className="h-3 w-full cursor-pointer appearance-none rounded-full bg-kal-card-muted accent-kal-accent disabled:cursor-not-allowed disabled:opacity-50"
+              />
+              <div className="mt-1.5 flex justify-between text-[0.65rem] font-medium tabular-nums text-kal-text-secondary/90">
+                <span>{AUTOPAY_MONTHS_MIN}</span>
+                <span aria-hidden>·</span>
+                <span>{AUTOPAY_MONTHS_MAX}</span>
+              </div>
+            </div>
+
+            <div className="flex gap-3 rounded-xl border border-emerald-500/25 bg-emerald-500/[0.07] px-4 py-3 dark:border-emerald-500/20 dark:bg-emerald-500/[0.08]">
+              <Check
+                className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400"
+                strokeWidth={2.5}
+                aria-hidden
+              />
+              <p className="text-xs leading-relaxed text-kal-text sm:text-sm">
+                <span className="font-semibold text-kal-text">Summary:</span> After your trial, AutoPay
+                can take up to{" "}
+                <span className="font-bold text-kal-accent tabular-nums">{value}</span> monthly
+                payment{value === 1 ? "" : "s"}, then it stops unless you subscribe again.
+              </p>
+            </div>
+          </fieldset>
+        </div>
+      </div>
+      <p className="text-center text-[0.7rem] font-medium uppercase tracking-[0.14em] text-kal-text-secondary">
+        Next — choose your plan below
+      </p>
+    </div>
+  );
 }
 
 const TIER_ICONS: Record<SubscriptionTier, React.ReactNode> = {
@@ -80,7 +231,8 @@ function TierCard({
   isCurrentTier: boolean;
   onSelect: (tier: SubscriptionTier) => void;
 }) {
-  const disabled = busy || hasPaidAccess;
+  const lockedBySubscription = hasPaidAccess;
+  const disabled = busy;
 
   let buttonLabel: string;
   if (isCurrentTier) {
@@ -121,6 +273,11 @@ function TierCard({
         <p className="mt-1 text-sm font-semibold text-kal-text">
           → then {config.monthlyPriceDisplay}/month
         </p>
+        {!hasPaidAccess ? (
+          <p className="mt-2 rounded-lg border border-white/30 bg-white/30 px-2 py-1.5 text-[0.65rem] font-medium leading-snug text-kal-text-secondary dark:border-white/10 dark:bg-black/20">
+            Uses the AutoPay length you set above (still billed monthly).
+          </p>
+        ) : null}
         <p className="mt-2 text-xs font-medium leading-relaxed text-kal-text-secondary">
           {trialAiSummary(config)}
         </p>
@@ -149,12 +306,20 @@ function TierCard({
 
       <button
         type="button"
-        onClick={() => onSelect(config.id)}
+        onClick={() => {
+          if (lockedBySubscription) return;
+          onSelect(config.id);
+        }}
         disabled={disabled}
+        aria-disabled={lockedBySubscription || undefined}
         className={`mt-4 inline-flex min-h-[48px] w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-bold disabled:opacity-60 ${
-          highlighted
-            ? "bg-kal-accent text-kal-accent-foreground"
+          highlighted || lockedBySubscription
+            ? "bg-kal-accent text-kal-accent-foreground shadow-sm ring-1 ring-kal-accent/30"
             : "kal-glass-subtle border border-white/25 text-kal-text dark:border-white/12"
+        } ${
+          lockedBySubscription
+            ? "cursor-default"
+            : "transition hover:brightness-[1.04] active:scale-[0.99]"
         }`}
       >
         {buttonLabel}
@@ -172,6 +337,7 @@ export function PricingPageClient() {
   const user = useAuthStore((s) => s.user);
   const userEmail = user?.email ?? null;
   const [busy, setBusy] = useState(false);
+  const [autopayMonths, setAutopayMonths] = useState(DEFAULT_AUTOPAY_MONTHS);
   const [checkoutError, setCheckoutError] = useState<{
     text: string;
     proof?: PaymentErrorProof;
@@ -185,7 +351,7 @@ export function PricingPageClient() {
     setBusy(true);
     setCheckoutError(null);
     try {
-      const created = await createRazorpayTrialSubscription(tier);
+      const created = await createRazorpayTrialSubscription(tier, autopayMonths);
       if (!created.ok) {
         setCheckoutError({ text: created.error });
         return;
@@ -202,7 +368,7 @@ export function PricingPageClient() {
       const rzp = new window.Razorpay({
         key: created.keyId,
         name: SITE_NAME,
-        description: `${tierConfig.name} 3-Day Trial (${tierConfig.trialPriceDisplay})`,
+        description: `${tierConfig.name} 3-day trial (${tierConfig.trialPriceDisplay}) · then ${tierConfig.monthlyPriceDisplay}/mo · AutoPay up to ${autopayMonths} monthly charge${autopayMonths === 1 ? "" : "s"}`,
         subscription_id: created.subscriptionId,
         amount: created.amountPaise,
         currency: "INR",
@@ -230,7 +396,7 @@ export function PricingPageClient() {
     } finally {
       setBusy(false);
     }
-  }, []);
+  }, [autopayMonths]);
 
   const statusBanner = useMemo(() => {
     if (hasPaidAccess) {
@@ -254,8 +420,9 @@ export function PricingPageClient() {
               My Plan
             </Link>
             : pay only the prorated amount now for the rest of this month —
-            upgrade applies immediately. From next month onwards, you will be
-            charged the new monthly price. You can cancel anytime.
+            upgrade applies immediately. Your remaining AutoPay months carry over (no new 12-month
+            mandate). From the next billing cycle you are charged the new monthly price. You can
+            cancel anytime.
           </p>
         </div>
       );
@@ -281,7 +448,7 @@ export function PricingPageClient() {
       );
     }
     return null;
-  }, [subscriptionStatus, hasPaidAccess]);
+  }, [subscriptionStatus, hasPaidAccess, currentTier]);
 
   return (
     <>
@@ -298,13 +465,35 @@ export function PricingPageClient() {
             Pick the plan that fits your goals
           </h1>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-kal-text-secondary">
-            {SITE_NAME} is fully paid — there is no free tier. Start with a
-            3-day trial, then your plan renews monthly. You can cancel anytime
-            — you will not be charged from next month onwards.
+            {SITE_NAME} is fully paid — there is no free tier. Start with a 3-day trial, then pay
+            monthly. First set how long AutoPay may run, then pick a plan — you can cancel anytime.
           </p>
+          <div className="mx-auto mt-6 max-w-xl rounded-2xl border-2 border-kal-accent/40 bg-gradient-to-br from-kal-accent/12 via-white/50 to-white/30 px-4 py-4 shadow-[0_16px_40px_-24px_rgba(239,68,68,0.35)] backdrop-blur-md dark:from-kal-accent/15 dark:via-zinc-900/40 dark:to-zinc-900/25 sm:px-5">
+            <p className="text-sm font-semibold text-kal-text">
+              New here? Take the 2-minute feature tour first.
+            </p>
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+              <Link
+                href="/what-can-kalnehi-do"
+                className="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-xl bg-kal-accent px-4 py-2.5 text-center text-sm font-bold text-kal-accent-foreground transition hover:brightness-105 active:scale-[0.99]"
+              >
+                What Can Kalnehi Do?
+              </Link>
+              <Link
+                href="/best-study-practices"
+                className="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-xl border border-kal-accent/40 bg-white/60 px-4 py-2.5 text-center text-sm font-semibold text-kal-text transition hover:border-kal-accent hover:bg-kal-accent/10 dark:bg-zinc-800/60 dark:hover:bg-zinc-800"
+              >
+                🔬 Why these practices work
+              </Link>
+            </div>
+          </div>
         </header>
 
         {statusBanner}
+
+        {!hasPaidAccess ? (
+          <AutopayDurationPanel value={autopayMonths} onChange={setAutopayMonths} disabled={busy} />
+        ) : null}
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
           {TIER_ORDER.map((tierId) => (

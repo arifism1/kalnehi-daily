@@ -35,7 +35,7 @@ const PAGE_SEO: Record<
     path: "/",
     title: `${SITE_NAME} — JEE, NEET & Boards planner & study app`,
     description:
-      `Plan every day, track syllabus and marks, build habits, and stay consistent. ${SITE_NAME} is the execution planner for serious JEE, NEET, and Boards aspirants — install the PWA and study anywhere.`,
+      `Daily Plan with live task tracking, Syllabus Mastery Tracker, Brain Yoga focus resets, push Notifications, PrepBrain AI coaching (Basic paid trial includes a bonus sample: 3 photo scans + 2 min voice), habits, and progress analytics — ${SITE_NAME} is the complete execution planner for JEE, NEET, UPSC & Boards aspirants. Install the PWA and study anywhere.`,
   },
   prepbrain: {
     path: "/prepbrain",
@@ -69,9 +69,9 @@ const PAGE_SEO: Record<
   },
   meditation: {
     path: "/meditation",
-    title: `Meditation & consistency | ${SITE_NAME}`,
+    title: `Brain Yoga — guided focus resets for exam prep | ${SITE_NAME}`,
     description:
-      `Guided micro-sessions and consistency tools so you can recover focus between tough chapters. Built for JEE, NEET, and Boards schedules.`,
+      `Guided breathing and focus reset sessions to calm anxiety and restore concentration between study blocks. Brain Yoga in ${SITE_NAME} is built for the JEE, NEET, UPSC & Boards schedule.`,
   },
   syllabus: {
     path: "/syllabus",
@@ -81,9 +81,9 @@ const PAGE_SEO: Record<
   },
   dailyPlan: {
     path: "/daily-plan",
-    title: `Daily plan — ship today’s study list | ${SITE_NAME}`,
+    title: `Daily Plan — live task checklist for exam prep | ${SITE_NAME}`,
     description:
-      `Turn your backlog into a realistic daily plan. ${SITE_NAME} helps you assign tasks, time, and marks so each day moves the needle on JEE, NEET, or Boards prep.`,
+      `Your unified Daily Plan: live tasks with prominent checkboxes, inline edit and delete, Master Today circle, and 3-Day Execution view. ${SITE_NAME} turns each day into concrete progress for JEE, NEET, UPSC & Boards.`,
   },
   habits: {
     path: "/habits",

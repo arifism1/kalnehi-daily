@@ -10,7 +10,7 @@ export default function manifest(): MetadataRoute.Manifest {
     // "Kalnehi" fits Play Store's 12-char short-name limit and looks clean on the home screen.
     short_name: "Kalnehi",
     description:
-      "Kalnehi Daily - Exam Prep Tracker: best daily planner for JEE 2026, NEET 2026 & UPSC CSE — weekly planner, syllabus, study sessions, habits, PrepBrain AI (Pro). Install the PWA from Chrome for offline-friendly study & push notifications when enabled.",
+      "Kalnehi Daily - Exam Prep Tracker: execution planner for JEE, NEET & UPSC aspirants. Daily Plan with live task tracking, Syllabus Mastery Tracker, Brain Yoga focus resets, PrepBrain AI coaching, Notifications & push reminders, study sessions, habits, and progress analytics — Basic paid trial includes a bonus sample of 3 photo AI scans and 2 min voice. All in one offline-ready PWA.",
     start_url: "/",
     scope: "/",
     display: "standalone",
@@ -24,14 +24,16 @@ export default function manifest(): MetadataRoute.Manifest {
     categories: ["education", "productivity"],
     // TWA: keep false so Chrome doesn't redirect users to the Play Store listing.
     prefer_related_applications: false,
+    // Play Store requires ≥2 screenshots per form factor; 8 max per factor.
+    // Replace image files in public/screenshots/ before submitting to Play Console.
     screenshots: [
-      // narrow = phone portrait (Play Store mobile listing preview)
+      // ── Narrow (phone portrait 1080×1920) ──────────────────────────────────
       {
         src: "/screenshots/narrow-1.png",
         sizes: "1080x1920",
         type: "image/png",
         form_factor: "narrow",
-        label: "Daily planner — track JEE, NEET & UPSC prep",
+        label: "Daily Plan — live task checklist for JEE, NEET & UPSC",
         platform: "play",
       },
       {
@@ -39,39 +41,79 @@ export default function manifest(): MetadataRoute.Manifest {
         sizes: "1080x1920",
         type: "image/png",
         form_factor: "narrow",
-        label: "PrepBrain AI — personalised exam guidance",
+        label: "Syllabus Mastery Tracker — chapter and topic progress",
         platform: "play",
       },
-      // wide = tablet landscape (Play Store tablet listing preview)
+      {
+        src: "/screenshots/narrow-3.png",
+        sizes: "1080x1920",
+        type: "image/png",
+        form_factor: "narrow",
+        label: "Brain Yoga — guided focus reset between study blocks",
+        platform: "play",
+      },
+      {
+        src: "/screenshots/narrow-4.png",
+        sizes: "1080x1920",
+        type: "image/png",
+        form_factor: "narrow",
+        label: "Notifications & push reminders — never miss a study slot",
+        platform: "play",
+      },
+      // ── Wide (tablet landscape 1920×1080) ──────────────────────────────────
       {
         src: "/screenshots/wide-1.png",
         sizes: "1920x1080",
         type: "image/png",
         form_factor: "wide",
-        label: "Kalnehi Daily on tablet",
+        label: "Daily Hub — execution signals and 3-Day view on tablet",
+        platform: "play",
+      },
+      {
+        src: "/screenshots/wide-2.png",
+        sizes: "1920x1080",
+        type: "image/png",
+        form_factor: "wide",
+        label: "PrepBrain AI coaching on tablet",
         platform: "play",
       },
     ],
+    // Android long-press shortcuts — max 4 shown by Android launcher; keep most-used first.
     shortcuts: [
       {
-        name: "Study guides",
-        short_name: "Guides",
-        description: "Public SEO guides — JEE, NEET, UPSC & consistency",
-        url: "/guides",
+        name: "Daily Plan",
+        short_name: "Daily Plan",
+        description: "Today's live task list — check off, edit, and execute",
+        url: "/daily-plan",
         icons: [{ src: "/icon-192x192.png", sizes: "192x192", type: "image/png" }],
       },
       {
-        name: "JEE 2026 planner",
-        short_name: "JEE 2026",
-        description: "Best daily planner for JEE 2026",
-        url: "/jee-study-planner",
+        name: "Syllabus Mastery Tracker",
+        short_name: "Syllabus",
+        description: "Track chapter mastery and topic coverage across JEE, NEET & UPSC",
+        url: "/syllabus",
         icons: [{ src: "/icon-192x192.png", sizes: "192x192", type: "image/png" }],
       },
       {
-        name: "NEET 2026 planner",
-        short_name: "NEET 2026",
-        description: "Best daily planner for NEET 2026",
-        url: "/neet-study-planner",
+        name: "Brain Yoga",
+        short_name: "Brain Yoga",
+        description: "Guided focus resets and breathing exercises between study blocks",
+        url: "/meditation",
+        icons: [{ src: "/icon-192x192.png", sizes: "192x192", type: "image/png" }],
+      },
+      {
+        name: "Notifications & Reminders",
+        short_name: "Reminders",
+        description: "Manage study reminders, push alerts, and daily nudges",
+        url: "/settings",
+        icons: [{ src: "/icon-192x192.png", sizes: "192x192", type: "image/png" }],
+      },
+      // 5th shortcut — Android shows max 4 on long-press; My Plan is kept for completeness.
+      {
+        name: "My Plan",
+        short_name: "My Plan",
+        description: "View your subscription, AI credits, and plan details",
+        url: "/my-plan",
         icons: [{ src: "/icon-192x192.png", sizes: "192x192", type: "image/png" }],
       },
     ],

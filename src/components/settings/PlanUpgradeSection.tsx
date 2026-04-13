@@ -89,7 +89,7 @@ export function PlanUpgradeSection() {
         const rzp = new window.Razorpay({
           key: created.keyId,
           name: SITE_NAME,
-          description: `${tierName} — pay prorated amount now, then ${TIERS[q.targetTier].monthlyPriceDisplay}/month from next month`,
+          description: `${tierName} — proration now, then ${TIERS[q.targetTier].monthlyPriceDisplay}/mo. AutoPay keeps your remaining monthly cycles (not a new 12-mo mandate).`,
           subscription_id: created.subscriptionId,
           theme: { color: "#ef4444" },
           modal: {
@@ -114,7 +114,7 @@ export function PlanUpgradeSection() {
             }
             if (v.warning) setWarning(v.warning);
             setSuccessMessage(
-              `${tierName} is now active. You paid only the prorated amount now for the rest of this month. From next month onwards, you will be charged ${TIERS[q.targetTier].monthlyPriceDisplay} monthly. You can cancel anytime.`,
+              `${tierName} is now active. You paid the prorated amount for the rest of this month. AutoPay continues with your remaining monthly cycles (unchanged cap). Next cycle onward: ${TIERS[q.targetTier].monthlyPriceDisplay}/month. You can cancel anytime.`,
             );
             refetch();
             reloadQuotes();
@@ -156,8 +156,10 @@ export function PlanUpgradeSection() {
           </h3>
           <p className="mt-1 text-xs text-kal-text-secondary">
             Pay only the prorated amount now for the rest of this month — your higher limits
-            apply immediately. From next month onwards, you will be charged the new monthly
-            price. You can cancel anytime — you will not be charged from next month onwards.
+            apply immediately. Your new subscription keeps the{" "}
+            <span className="font-semibold text-kal-text">same number of remaining monthly AutoPay</span>{" "}
+            cycles as your current plan (not reset to a new long mandate). From the next cycle
+            you are charged the new monthly price. You can cancel anytime.
           </p>
         </div>
         <div className="space-y-2 p-3">

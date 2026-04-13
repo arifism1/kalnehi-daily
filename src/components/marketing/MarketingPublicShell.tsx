@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { PwaInstallPrompt } from "@/components/PwaInstallPrompt";
 import { SITE_NAME } from "@/lib/seo-metadata";
+import { MarketingNav } from "@/components/marketing/MarketingNav";
 
 export function MarketingPublicShell({ children }: { children: React.ReactNode }) {
   return (
@@ -25,20 +26,7 @@ export function MarketingPublicShell({ children }: { children: React.ReactNode }
               {SITE_NAME}
             </span>
           </Link>
-          <nav className="flex items-center gap-2 text-sm">
-            <Link
-              href="/guides"
-              className="rounded-lg px-2 py-1.5 text-kal-text-secondary hover:text-kal-text"
-            >
-              Guides
-            </Link>
-            <Link
-              href="/auth"
-              className="inline-flex min-h-[40px] items-center justify-center rounded-xl bg-kal-accent px-4 text-sm font-bold text-kal-accent-foreground"
-            >
-              Get started
-            </Link>
-          </nav>
+          <MarketingNav />
         </div>
       </header>
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
