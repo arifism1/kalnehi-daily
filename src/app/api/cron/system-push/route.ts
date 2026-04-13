@@ -1,12 +1,6 @@
 /**
- * TEMPORARY (Vercel Hobby/Pro): Cron schedules are cleared in `vercel.json` and this
- * route short-circuits so deployments are not blocked by cron frequency limits.
- * Re-enable: restore `vercel.json` crons (see below) and set `SYSTEM_PUSH_CRON_TEMPORARILY_DISABLED` to `false`.
- *
- * Previous `vercel.json` entries (paste back into `"crons": [ ... ]`):
- * - { "path": "/api/cron/system-push?phase=morning",  "schedule": "30 1 * * *" }
- * - { "path": "/api/cron/system-push?phase=evening", "schedule": "30 14 * * *" }
- * - { "path": "/api/cron/custom-reminders", "schedule": "* /5 * * * *" } (remove space: every 5 min)
+ * Vercel Cron: schedules live in `vercel.json` (morning/evening system push + custom reminders).
+ * To pause system pushes without removing crons, set `SYSTEM_PUSH_CRON_TEMPORARILY_DISABLED` to `true`.
  */
 import { type NextRequest, NextResponse } from "next/server";
 
@@ -37,7 +31,7 @@ import {
 } from "@/lib/systemPush/dedupe";
 import { getIstCalendarDateString } from "@/lib/systemPush/istCalendarDate";
 
-const SYSTEM_PUSH_CRON_TEMPORARILY_DISABLED = true;
+const SYSTEM_PUSH_CRON_TEMPORARILY_DISABLED = false;
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
