@@ -94,7 +94,7 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
         shortLabel: "PrepBrain",
         Icon: Brain,
       },
-      { href: "/syllabus", label: "Syllabus Tracker", shortLabel: "Syllabus", Icon: BookOpen },
+      { href: "/syllabus", label: "Syllabus Mastery Tracker", shortLabel: "Syllabus", Icon: BookOpen },
     ],
   },
   {

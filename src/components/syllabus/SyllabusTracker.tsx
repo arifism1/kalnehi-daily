@@ -287,7 +287,7 @@ export function SyllabusTracker() {
           {displayExam} syllabus
         </p>
         <h1 className="mt-1 text-2xl font-bold tracking-tight text-kal-text">
-          Syllabus tracker
+          Syllabus Mastery Tracker
         </h1>
         <p className="mt-1 text-sm leading-relaxed text-kal-muted">
           {cuetScoringRollup

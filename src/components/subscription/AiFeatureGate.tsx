@@ -14,6 +14,7 @@ export function AiFeatureGate({ feature, children }: Props) {
   const {
     loading,
     hasAiAccess,
+    isBasicTrial,
     canDoPhotoScan,
     canDoVoiceSession,
     photoScanStatus,
@@ -51,6 +52,34 @@ export function AiFeatureGate({ feature, children }: Props) {
   const atLimit = isPhoto ? !canDoPhotoScan : !canDoVoiceSession;
 
   if (atLimit) {
+    if (isBasicTrial) {
+      return (
+        <div className="flex flex-col items-center gap-4 rounded-2xl border border-amber-200 bg-amber-50 p-8 text-center dark:border-amber-800 dark:bg-amber-950/30">
+          {isPhoto ? (
+            <Camera className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+          ) : (
+            <Mic className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+          )}
+          <h3 className="text-lg font-bold text-kal-text">Trial gift used</h3>
+          <p className="max-w-sm text-sm text-kal-text-secondary">
+            You&apos;ve used your trial bonus{" "}
+            {isPhoto ? "(3 photo scans)" : "(2 voice minutes)"}. Upgrade to Pro
+            to get{" "}
+            {isPhoto
+              ? "20 scans per month"
+              : "40 voice minutes per month"}{" "}
+            and full AI access.
+          </p>
+          <Link
+            href="/pricing"
+            className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-kal-accent px-6 py-2.5 text-sm font-bold text-kal-accent-foreground"
+          >
+            Upgrade to Pro
+          </Link>
+        </div>
+      );
+    }
+
     return (
       <div className="flex flex-col items-center gap-4 rounded-2xl border border-amber-200 bg-amber-50 p-8 text-center dark:border-amber-800 dark:bg-amber-950/30">
         {isPhoto ? (

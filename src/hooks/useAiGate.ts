@@ -16,6 +16,9 @@ type AiGateResult = {
   hasAiAccess: boolean;
   tierName: string;
 
+  /** True when the user is on a Basic plan within their 3-day trial window. */
+  isBasicTrial: boolean;
+
   monthlyPhotoScanLimit: number;
   monthlyVoiceMinuteLimit: number;
 
@@ -66,7 +69,8 @@ export function useAiGate(): AiGateResult {
   const photoScansLimit = monthlyPhotoScanLimit + usage.bonusPhotoScans;
   const voiceMinutesLimit = monthlyVoiceMinuteLimit + usage.bonusVoiceMinutes;
 
-  const hasAiAccess = canUseAi(tier);
+  const isBasicTrial = tier === "basic" && isTrialPeriod;
+  const hasAiAccess = canUseAi(tier, isTrialPeriod);
   const canDoPhotoScan = hasAiAccess && photoScansRemaining > 0;
   const canDoVoiceSession = hasAiAccess && voiceMinutesRemaining > 0;
 
@@ -83,6 +87,7 @@ export function useAiGate(): AiGateResult {
     hasPaidAccess,
     hasAiAccess,
     tierName: tierConfig.name,
+    isBasicTrial,
 
     monthlyPhotoScanLimit,
     monthlyVoiceMinuteLimit,

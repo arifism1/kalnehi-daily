@@ -106,7 +106,7 @@ export const FEATURE_LABELS: Record<FeatureKey, { name: string; upgradeHint: str
   dictate_day: { name: "Dictate My Day", upgradeHint: "Upgrade to Pro for voice-based daily planning." },
   handwritten_scanner: { name: "Handwritten Scanner", upgradeHint: "Upgrade to Pro for AI-powered handwritten plan scanning." },
   self_type_day: { name: "Self Type Day", upgradeHint: "" },
-  syllabus: { name: "Syllabus Tracker", upgradeHint: "Upgrade to Pro for full syllabus with microtopics & predictions." },
+  syllabus: { name: "Syllabus Mastery Tracker", upgradeHint: "Upgrade to Pro for full syllabus with microtopics & predictions." },
   marks_engine: { name: "Marks Engine", upgradeHint: "Upgrade to Pro for marks predictions & microtopic analysis." },
   execution_planner: { name: "Execution Planner", upgradeHint: "Upgrade to Pro for the full execution planner." },
   timer: { name: "Timer", upgradeHint: "Upgrade to Pro for the full execution timer." },
@@ -154,8 +154,8 @@ export const TIERS: Record<SubscriptionTier, TierConfig> = {
     trialPricePaise: 900,
     trialPriceDisplay: "₹9",
     trialDays: 3,
-    trialPhotoScansLimit: 0,
-    trialVoiceMinutesLimit: 0,
+    trialPhotoScansLimit: 3,
+    trialVoiceMinutesLimit: 2,
     photoScansPerMonth: 0,
     voiceMinutesPerMonth: 0,
     maxTasksPerDay: 10,
@@ -263,7 +263,22 @@ export function isFeatureLimited(
   return getFeatureAccess(tier, feature) === "limited";
 }
 
-export function canUseAi(tier: string | null | undefined): boolean {
+/**
+ * Returns true if the user can access AI features.
+ * Basic tier users get a one-time trial taste: 3 photo scans + 2 voice minutes
+ * during their 3-day trial. After the trial they have 0 AI quota.
+ */
+export function canUseAi(
+  tier: string | null | undefined,
+  isTrialPeriod = false,
+): boolean {
+  if (tier === "basic" && isTrialPeriod) {
+    // Grant AI access during trial only if the trial gift quotas are non-zero
+    return (
+      TIERS.basic.trialPhotoScansLimit > 0 ||
+      TIERS.basic.trialVoiceMinutesLimit > 0
+    );
+  }
   return !isFeatureBlocked(tier, "ai_photo_scan");
 }
 
