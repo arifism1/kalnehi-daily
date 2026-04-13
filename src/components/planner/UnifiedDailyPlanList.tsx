@@ -227,6 +227,10 @@ function DailyPlanListSkeleton({ rowCount = 5 }: { rowCount?: number }) {
   );
 }
 
+function dispatchDailyPlanSynced() {
+  window.dispatchEvent(new Event("kalnehi-daily-plan-synced"));
+}
+
 // ─── Main list ────────────────────────────────────────────────────────────────
 
 type Props = {
@@ -277,8 +281,11 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
   const overlapIds = useMemo(() => findOverlappingTaskPairs(tasks), [tasks]);
 
   const isDoneStatus = (s: string) => s === "done";
+  const isSkippedStatus = (s: string) => s === "skipped";
+  const isCompletedStatus = (s: string) => isDoneStatus(s) || isSkippedStatus(s);
 
   const toggleDone = async (t: DailyTaskView) => {
+    if (isSkippedStatus(t.status)) return;
     const next = isDoneStatus(t.status) ? "pending" : "done";
     setError(null);
     setBusyId(t.id);
@@ -290,6 +297,8 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
           prev.map((x) => (x.id === t.id ? { ...x, status: t.status } : x)),
         );
         setError(res.error);
+      } else {
+        dispatchDailyPlanSynced();
       }
     } finally {
       setBusyId(null);
@@ -312,6 +321,8 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
       setError(res.error);
       return;
     }
+
+    dispatchDailyPlanSynced();
 
     const src = snapshot.source;
     if (src !== "typed" && src !== "voice" && src !== "handwritten") {
@@ -350,9 +361,10 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
 
   const handleEditSaved = (id: string, patch: Partial<DailyTaskView>) => {
     setTasks((prev) => prev.map((x) => (x.id === id ? { ...x, ...patch } : x)));
+    dispatchDailyPlanSynced();
   };
 
-  const doneCount = tasks.filter((t) => isDoneStatus(t.status)).length;
+  const doneCount = tasks.filter((t) => isCompletedStatus(t.status)).length;
 
   return (
     <>
@@ -398,8 +410,10 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
                 const st = t.time_start ? timeDbToInput(t.time_start) : "";
                 const et = t.time_end ? timeDbToInput(t.time_end) : "";
                 const overlap = overlapIds.has(t.id);
-                const done = isDoneStatus(t.status);
-                const isDeleting = deletingId === t.id;
+                  const done = isDoneStatus(t.status);
+                  const skipped = isSkippedStatus(t.status);
+                  const completed = done || skipped;
+                  const isDeleting = deletingId === t.id;
 
                 return (
                   <li
@@ -408,7 +422,9 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
                     className={`group rounded-2xl border px-3 py-3 shadow-sm transition-all ${
                       done
                         ? "border-white/20 bg-white/45 opacity-75 backdrop-blur-sm dark:border-white/10 dark:bg-zinc-900/45"
-                        : "kal-glass-subtle border-white/25 dark:border-white/12"
+                        : skipped
+                          ? "border-white/15 bg-white/25 opacity-60 backdrop-blur-sm dark:border-white/8 dark:bg-zinc-900/30"
+                          : "kal-glass-subtle border-white/25 dark:border-white/12"
                     } ${isDeleting ? "pointer-events-none opacity-40" : ""}`}
                   >
                     {/* Layout: checkbox (44px tap) → title/time → badges → edit/delete */}
@@ -417,15 +433,17 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
                       <button
                         type="button"
                         role="checkbox"
-                        disabled={busyId === t.id || isDeleting}
+                        disabled={busyId === t.id || isDeleting || skipped}
                         onClick={() => void toggleDone(t)}
                         className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent disabled:opacity-40 ${
                           done
                             ? "border-kal-accent bg-kal-accent text-white"
-                            : "border-kal-accent/45 bg-white text-transparent hover:border-kal-accent hover:bg-white dark:border-white/35 dark:bg-zinc-900/90 dark:hover:border-kal-accent/80 dark:hover:bg-zinc-900"
+                            : skipped
+                              ? "border-kal-muted/40 bg-kal-muted/10 text-kal-muted cursor-default"
+                              : "border-kal-accent/45 bg-white text-transparent hover:border-kal-accent hover:bg-white dark:border-white/35 dark:bg-zinc-900/90 dark:hover:border-kal-accent/80 dark:hover:bg-zinc-900"
                         }`}
-                        aria-checked={done}
-                        aria-label={done ? "Mark as not done" : "Mark as done"}
+                        aria-checked={completed}
+                        aria-label={done ? "Mark as not done" : skipped ? "Skipped" : "Mark as done"}
                       >
                         {busyId === t.id ? (
                           <Loader2
@@ -433,13 +451,15 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
                           />
                         ) : done ? (
                           <Check className="h-5 w-5 text-white" strokeWidth={2.75} />
+                        ) : skipped ? (
+                          <X className="h-4 w-4 text-kal-muted" strokeWidth={2.5} />
                         ) : null}
                       </button>
 
                       {/* Task body — title & time first, then badges */}
                       <button
                         type="button"
-                        disabled={isDeleting}
+                        disabled={isDeleting || skipped}
                         onClick={() => setEditingTask(t)}
                         className="min-w-0 flex-1 text-left disabled:pointer-events-none"
                         aria-label={`Edit "${t.title}"`}
@@ -448,7 +468,9 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
                           className={`text-sm font-semibold leading-snug [overflow-wrap:anywhere] ${
                             done
                               ? "text-kal-muted line-through decoration-kal-muted/60"
-                              : "text-kal-text"
+                              : skipped
+                                ? "text-kal-muted/70 line-through decoration-kal-muted/40"
+                                : "text-kal-text"
                           }`}
                         >
                           {t.title}

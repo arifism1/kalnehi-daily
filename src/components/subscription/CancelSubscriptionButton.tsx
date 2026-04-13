@@ -1,7 +1,6 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { cancelSubscription } from "@/actions/subscription";
@@ -12,12 +11,23 @@ type CancelSubscriptionButtonProps = {
 };
 
 export function CancelSubscriptionButton({ className }: CancelSubscriptionButtonProps) {
-  const router = useRouter();
-  const { status, loading } = useSubscriptionAccess();
+  const { status, loading, refetch } = useSubscriptionAccess();
   const [message, setMessage] = useState<string | null>(null);
+  const [cancelled, setCancelled] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   if (loading || (status !== "trial" && status !== "active")) return null;
+
+  if (cancelled) {
+    return (
+      <div className="rounded-xl border border-emerald-500/30 bg-emerald-50 px-4 py-3 dark:bg-emerald-950/25">
+        <p className="text-sm font-medium text-emerald-900 dark:text-emerald-200" role="status">
+          Subscription cancelled. You keep access until your current billing period ends — you will
+          not be charged again.
+        </p>
+      </div>
+    );
+  }
 
   const label = status === "trial" ? "Cancel Trial" : "Cancel Subscription";
   const pendingLabel = status === "trial" ? "Cancelling trial..." : "Cancelling...";
@@ -39,9 +49,8 @@ export function CancelSubscriptionButton({ className }: CancelSubscriptionButton
               setMessage(res.error);
               return;
             }
-            setMessage("Subscription cancelled. You will not be charged from next month onwards.");
-            router.replace("/pricing");
-            router.refresh();
+            setCancelled(true);
+            refetch();
           });
         }}
       >
@@ -55,7 +64,7 @@ export function CancelSubscriptionButton({ className }: CancelSubscriptionButton
         )}
       </button>
       {message ? (
-        <p className="text-xs text-kal-text-secondary" role="status">
+        <p className="text-xs text-[var(--kal-danger-text)]" role="alert">
           {message}
         </p>
       ) : null}

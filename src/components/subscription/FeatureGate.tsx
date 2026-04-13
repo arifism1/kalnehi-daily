@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Lock } from "lucide-react";
+import { Loader2, Lock } from "lucide-react";
 
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import {
@@ -18,7 +18,13 @@ type Props = {
 export function FeatureGate({ feature, children }: Props) {
   const { loading, tier } = useSubscriptionAccess();
 
-  if (loading) return <>{children}</>;
+  if (loading) {
+    return (
+      <div className="flex min-h-[200px] items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-kal-accent/60" aria-label="Loading…" />
+      </div>
+    );
+  }
 
   if (isFeatureBlocked(tier, feature)) {
     const label = FEATURE_LABELS[feature];

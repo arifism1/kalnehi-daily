@@ -19,6 +19,26 @@ function LoadingScreen() {
   );
 }
 
+function ProfileErrorScreen({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className="flex min-h-full min-h-dvh flex-1 flex-col items-center justify-center gap-4 bg-kal-page px-6 text-center">
+      <p className="text-sm font-medium text-kal-text">
+        Could not load your plan.
+      </p>
+      <p className="text-xs text-kal-muted">
+        Check your connection — your subscription and data are safe.
+      </p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="mt-1 inline-flex min-h-[44px] items-center justify-center rounded-xl border border-kal-border bg-kal-card-muted px-5 text-sm font-semibold text-kal-text transition-colors hover:bg-kal-accent hover:text-white"
+      >
+        Retry
+      </button>
+    </div>
+  );
+}
+
 const AUTH_PATHS = new Set(["/auth", "/auth/reset"]);
 
 function isAuthPath(p: string) {
@@ -32,8 +52,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const session = useAuthStore((s) => s.session);
   const {
     loading: profileLoading,
+    fetchError,
     onboardingDone,
     hasPaidAccess,
+    refetch,
   } = useSubscriptionAccess();
 
   const authed = !!session;
@@ -50,6 +72,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       if (isAuthPath(pathname) || isLegalPath(pathname))
         return "render";
       return "wait";
+    }
+
+    // Profile loaded but with a network/server error — don't redirect to
+    // paywall or onboarding; show a retry screen instead.
+    if (fetchError && !isAuthPath(pathname) && !isLegalPath(pathname)) {
+      return "error";
     }
 
     if (isAuthPath(pathname)) return "home";
@@ -69,7 +97,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     if (pathname === "/onboarding") return "home";
 
     return "render";
-  }, [initialized, authed, profileLoading, onboardingDone, hasPaidAccess, pathname]);
+  }, [initialized, authed, profileLoading, fetchError, onboardingDone, hasPaidAccess, pathname]);
 
   useEffect(() => {
     switch (gateTarget) {
@@ -87,6 +115,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         break;
     }
   }, [gateTarget, router]);
+
+  if (gateTarget === "error") {
+    return <ProfileErrorScreen onRetry={refetch} />;
+  }
 
   if (gateTarget !== "render") {
     return <LoadingScreen />;

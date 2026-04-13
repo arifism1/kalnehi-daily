@@ -10,9 +10,12 @@ import {
   verifyPlanUpgradePayment,
   type PlanUpgradeQuote,
 } from "@/actions/subscription";
+import { PaymentErrorMailButton } from "@/components/subscription/PaymentErrorMailButton";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
+import type { PaymentErrorProof } from "@/lib/paymentSupportEmail";
 import { SITE_NAME } from "@/lib/seo-metadata";
 import { TIERS } from "@/lib/subscriptionTiers";
+import { useAuthStore } from "@/store/useAuthStore";
 
 type RazorpayCheckoutResponse = {
   razorpay_payment_id: string;
@@ -31,10 +34,15 @@ declare global {
 
 export function PlanUpgradeSection() {
   const { refetch } = useSubscriptionAccess();
+  const userEmail = useAuthStore((s) => s.user?.email ?? null);
   const [quotes, setQuotes] = useState<PlanUpgradeQuote[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [payError, setPayError] = useState<{
+    text: string;
+    proof?: PaymentErrorProof;
+  } | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -57,19 +65,22 @@ export function PlanUpgradeSection() {
 
   const onUpgrade = useCallback(
     (q: PlanUpgradeQuote) => {
-      setMessage(null);
+      setSuccessMessage(null);
+      setPayError(null);
       setWarning(null);
       setBusyId(q.targetTier);
       startTransition(async () => {
         const created = await createPlanUpgradeOrder(q.targetTier);
         if (!created.ok) {
-          setMessage(created.error);
+          setPayError({ text: created.error });
           setBusyId(null);
           return;
         }
 
         if (typeof window === "undefined" || !window.Razorpay) {
-          setMessage("Unable to load payment window. Refresh and try again.");
+          setPayError({
+            text: "Unable to load payment window. Refresh and try again.",
+          });
           setBusyId(null);
           return;
         }
@@ -80,8 +91,6 @@ export function PlanUpgradeSection() {
           name: SITE_NAME,
           description: `${tierName} — pay prorated amount now, then ${TIERS[q.targetTier].monthlyPriceDisplay}/month from next month`,
           subscription_id: created.subscriptionId,
-          amount: created.amountPaise,
-          currency: "INR",
           theme: { color: "#ef4444" },
           modal: {
             ondismiss: () => setBusyId(null),
@@ -94,11 +103,17 @@ export function PlanUpgradeSection() {
             });
             setBusyId(null);
             if (!v.ok) {
-              setMessage(v.error);
+              setPayError({
+                text: v.error,
+                proof: {
+                  paymentId: response.razorpay_payment_id,
+                  subscriptionId: response.razorpay_subscription_id,
+                },
+              });
               return;
             }
             if (v.warning) setWarning(v.warning);
-            setMessage(
+            setSuccessMessage(
               `${tierName} is now active. You paid only the prorated amount now for the rest of this month. From next month onwards, you will be charged ${TIERS[q.targetTier].monthlyPriceDisplay} monthly. You can cancel anytime.`,
             );
             refetch();
@@ -114,7 +129,13 @@ export function PlanUpgradeSection() {
   if (loadError) {
     return (
       <div className="kal-glass-subtle rounded-[1rem] px-4 py-3 text-xs text-kal-text-secondary">
-        {loadError}
+        <p role="status">{loadError}</p>
+        <PaymentErrorMailButton
+          flow="My Plan — load upgrade quotes"
+          error={loadError}
+          userEmail={userEmail}
+          className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-kal-border bg-kal-card px-3 py-1.5 text-xs font-semibold text-kal-accent underline-offset-2 hover:underline"
+        />
       </div>
     );
   }
@@ -174,10 +195,24 @@ export function PlanUpgradeSection() {
             <Loader2 className="h-5 w-5 animate-spin text-kal-accent" />
           </div>
         ) : null}
-        {message ? (
+        {payError ? (
+          <div className="border-t border-kal-border bg-rose-50 px-4 py-2.5 dark:bg-rose-950/25">
+            <p className="text-xs font-medium text-rose-900 dark:text-rose-200" role="status">
+              {payError.text}
+            </p>
+            <PaymentErrorMailButton
+              flow="My Plan — upgrade checkout"
+              error={payError.text}
+              userEmail={userEmail}
+              proof={payError.proof}
+              className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-xs font-semibold text-rose-800 underline-offset-2 hover:underline dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-100"
+            />
+          </div>
+        ) : null}
+        {successMessage ? (
           <div className="border-t border-kal-border bg-emerald-50 px-4 py-2.5 dark:bg-emerald-950/25">
             <p className="text-xs font-medium text-emerald-900 dark:text-emerald-200" role="status">
-              {message}
+              {successMessage}
             </p>
           </div>
         ) : null}

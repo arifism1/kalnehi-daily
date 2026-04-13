@@ -10,6 +10,7 @@ import {
   createRazorpayTrialSubscription,
 } from "@/actions/subscription";
 import { CancelSubscriptionButton } from "@/components/subscription/CancelSubscriptionButton";
+import { PaymentErrorMailButton } from "@/components/subscription/PaymentErrorMailButton";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { SITE_NAME } from "@/lib/seo-metadata";
 import {
@@ -20,6 +21,7 @@ import {
 } from "@/lib/subscriptionTiers";
 import { HelpyJiChat } from "@/components/helpyji/HelpyJiChat";
 import { isHelpyJiEligibleForPricingPage } from "@/lib/helpyjiVisibility";
+import type { PaymentErrorProof } from "@/lib/paymentSupportEmail";
 import { useAuthStore } from "@/store/useAuthStore";
 
 type RazorpayCheckoutResponse = {
@@ -168,8 +170,12 @@ export function PricingPageClient() {
     tier: currentTier,
   } = useSubscriptionAccess();
   const user = useAuthStore((s) => s.user);
+  const userEmail = user?.email ?? null;
   const [busy, setBusy] = useState(false);
-  const [statusMsg, setStatusMsg] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<{
+    text: string;
+    proof?: PaymentErrorProof;
+  } | null>(null);
   const helpyjiAnchorRef = useRef<HTMLDivElement>(null);
 
   const showCancel =
@@ -177,16 +183,18 @@ export function PricingPageClient() {
 
   const startCheckout = useCallback(async (tier: SubscriptionTier) => {
     setBusy(true);
-    setStatusMsg(null);
+    setCheckoutError(null);
     try {
       const created = await createRazorpayTrialSubscription(tier);
       if (!created.ok) {
-        setStatusMsg(created.error);
+        setCheckoutError({ text: created.error });
         return;
       }
 
       if (typeof window === "undefined" || !window.Razorpay) {
-        setStatusMsg("Unable to load payment window. Refresh and try again.");
+        setCheckoutError({
+          text: "Unable to load payment window. Refresh and try again.",
+        });
         return;
       }
 
@@ -202,20 +210,23 @@ export function PricingPageClient() {
         handler: async (response: RazorpayCheckoutResponse) => {
           const updated = await activateRazorpaySubscription({ ...response });
           if (!updated.ok) {
-            setStatusMsg(updated.error);
+            setCheckoutError({
+              text: updated.error,
+              proof: {
+                paymentId: response.razorpay_payment_id,
+                subscriptionId: response.razorpay_subscription_id,
+              },
+            });
             return;
           }
-          setStatusMsg(
-            `${tierConfig.name} trial started. From next month onwards, you will be charged ${tierConfig.monthlyPriceDisplay} monthly. You can cancel anytime — you will not be charged from next month onwards.`,
-          );
           window.location.assign("/");
         },
       });
       rzp.open();
     } catch (error) {
-      setStatusMsg(
-        error instanceof Error ? error.message : "Checkout failed.",
-      );
+      setCheckoutError({
+        text: error instanceof Error ? error.message : "Checkout failed.",
+      });
     } finally {
       setBusy(false);
     }
@@ -328,11 +339,22 @@ export function PricingPageClient() {
           </div>
         )}
 
-        {statusMsg && (
-          <p className="kal-glass-subtle rounded-xl px-4 py-3 text-center text-sm text-kal-text">
-            {statusMsg}
-          </p>
-        )}
+        {checkoutError ? (
+          <div className="kal-glass-subtle rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-center dark:border-rose-900 dark:bg-rose-950/30">
+            <p className="text-sm text-rose-900 dark:text-rose-100" role="status">
+              {checkoutError.text}
+            </p>
+            <div className="mt-1 flex justify-center">
+              <PaymentErrorMailButton
+                flow="Pricing — trial checkout"
+                error={checkoutError.text}
+                userEmail={userEmail}
+                proof={checkoutError.proof}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-rose-300 bg-white px-3 py-1.5 text-xs font-semibold text-rose-900 underline-offset-2 hover:underline dark:border-rose-700 dark:bg-rose-950/50 dark:text-rose-50"
+              />
+            </div>
+          </div>
+        ) : null}
       </section>
     </>
   );

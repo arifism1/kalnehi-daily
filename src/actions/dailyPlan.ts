@@ -236,57 +236,6 @@ export async function deleteDailyTask(
   }
 }
 
-export async function mergeDailyTaskIntoExisting(
-  keepTaskId: string,
-  discardTaskId: string,
-  merged: {
-    title: string;
-    time_slot?: string | null;
-    time_start?: string | null;
-    time_end?: string | null;
-    source_raw_text?: string | null;
-  },
-): Promise<{ ok: true } | { ok: false; error: string }> {
-  if (keepTaskId === discardTaskId) {
-    return { ok: false, error: "Invalid merge." };
-  }
-  const title = merged.title.trim().slice(0, 500);
-  if (!title) return { ok: false, error: "Title required." };
-
-  try {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return { ok: false, error: USER_ERROR.session };
-
-    const { error: uerr } = await supabase
-      .from("daily_tasks")
-      .update({
-        title,
-        time_slot: merged.time_slot ?? null,
-        time_start: merged.time_start ?? null,
-        time_end: merged.time_end ?? null,
-        source_raw_text: merged.source_raw_text?.slice(0, 12000) ?? null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", keepTaskId);
-
-    if (uerr) return { ok: false, error: USER_ERROR.tryAgain };
-
-    const { error: derr } = await supabase
-      .from("daily_tasks")
-      .delete()
-      .eq("id", discardTaskId);
-
-    if (derr) return { ok: false, error: USER_ERROR.tryAgain };
-    revalidateDailyPlanPaths();
-    return { ok: true };
-  } catch (e) {
-    return { ok: false, error: formatSupabaseError(e) };
-  }
-}
-
 /** Typed quick-add: start/end from `<input type="time">` values (HH:MM). */
 export async function appendTypedDailyTaskQuick(input: {
   plan_date: string;
