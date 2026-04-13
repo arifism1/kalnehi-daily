@@ -78,7 +78,7 @@ export function DailyPlanPageContent() {
           Dictate My Day
         </Link>
         <Link
-          href="/self-type"
+          href="/self-type-day"
           className="inline-flex items-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-2.5 text-sm font-semibold text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-text"
         >
           <Type className="h-4 w-4 text-kal-accent" aria-hidden />

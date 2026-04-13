@@ -22,14 +22,12 @@ import {
   computeWeightedMarksTotals,
   filterTasksForDate,
   filterTasksThroughDate,
-  sumEstimatedMinutes,
-  sumPlannedMarksWeight,
 } from "@/lib/progressEngine";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useTaskStore } from "@/store/useTaskStore";
 
-import { useTodayDailyPlanProgress } from "@/hooks/useTodayDailyPlanProgress";
+import { useDailyPlanHomeExecution } from "@/hooks/useDailyPlanHomeExecution";
 
 import { MissedTasks } from "./MissedTasks";
 import { MotivationWallpaper } from "./MotivationWallpaper";
@@ -104,52 +102,68 @@ export function HomeClient() {
     () => format(addDays(parseISO(today), -1), "yyyy-MM-dd"),
     [today],
   );
-  const tomorrow = useMemo(
-    () => format(addDays(parseISO(today), 1), "yyyy-MM-dd"),
-    [today],
-  );
-
   const taskList = useMemo(() => Object.values(tasksRecord), [tasksRecord]);
 
-  const { realityTasks, todayTasks, yesterdayTasks, tomorrowTasks } =
-    useMemo(() => {
-      const reality = filterTasksThroughDate(taskList, today);
-      const todayOnly = filterTasksForDate(taskList, today);
-      const yTasks = filterTasksForDate(taskList, yesterday);
-      const tTasks = filterTasksForDate(taskList, tomorrow);
-      return {
-        realityTasks: reality,
-        todayTasks: todayOnly,
-        yesterdayTasks: yTasks,
-        tomorrowTasks: tTasks,
-      };
-    }, [taskList, today, yesterday, tomorrow]);
+  const { realityTasks, todayTasks, yesterdayTasks } = useMemo(() => {
+    const reality = filterTasksThroughDate(taskList, today);
+    const todayOnly = filterTasksForDate(taskList, today);
+    const yTasks = filterTasksForDate(taskList, yesterday);
+    return {
+      realityTasks: reality,
+      todayTasks: todayOnly,
+      yesterdayTasks: yTasks,
+    };
+  }, [taskList, today, yesterday]);
 
   const todayWeighted = useMemo(
     () => computeWeightedCompletionPercent(todayTasks, microtopicById),
     [todayTasks, microtopicById],
   );
 
-  // Live completion from daily_tasks (voice/typed/handwritten unified plan)
-  const dailyPlanProgress = useTodayDailyPlanProgress();
+  // Unified daily_tasks (plan_date) for Master Today ring + 3-day strip
+  const dailyExec = useDailyPlanHomeExecution();
 
-  // When the user has added daily-plan tasks, prefer those for the ring.
-  // Fall back to academic task completion when no daily-plan tasks exist yet.
-  const effectiveTodayPercent =
-    dailyPlanProgress.totalCount > 0 ? dailyPlanProgress.percent : todayWeighted;
-  const effectiveTodayTotal =
-    dailyPlanProgress.totalCount > 0 ? dailyPlanProgress.totalCount : todayTasks.length;
-  const effectiveTodayDone =
-    dailyPlanProgress.totalCount > 0 ? dailyPlanProgress.doneCount : null;
+  // Single derived block: avoids any TDZ if fallbacks are reordered vs. dailyExec.
+  const {
+    effectiveTodayPercent,
+    effectiveTodayTotal,
+    effectiveTodayDone,
+    yesterdayStripPercent,
+    todayStripPercent,
+  } = useMemo(() => {
+    const yesterdayAcademic = computeWeightedCompletionPercent(
+      yesterdayTasks,
+      microtopicById,
+    );
+    return {
+      effectiveTodayPercent:
+        dailyExec.today.totalCount > 0 ? dailyExec.today.percent : todayWeighted,
+      effectiveTodayTotal:
+        dailyExec.today.totalCount > 0 ? dailyExec.today.totalCount : todayTasks.length,
+      effectiveTodayDone:
+        dailyExec.today.totalCount > 0 ? dailyExec.today.doneCount : null,
+      yesterdayStripPercent:
+        dailyExec.yesterday.totalCount > 0
+          ? dailyExec.yesterday.percent
+          : yesterdayAcademic,
+      todayStripPercent:
+        dailyExec.today.totalCount > 0 ? dailyExec.today.percent : todayWeighted,
+    };
+  }, [
+    dailyExec.today.totalCount,
+    dailyExec.today.percent,
+    dailyExec.today.doneCount,
+    dailyExec.yesterday.totalCount,
+    dailyExec.yesterday.percent,
+    todayWeighted,
+    todayTasks.length,
+    yesterdayTasks,
+    microtopicById,
+  ]);
 
   const dailyBand = useMemo(
     () => classifyDailyProgressBand(effectiveTodayPercent, effectiveTodayTotal),
     [effectiveTodayPercent, effectiveTodayTotal],
-  );
-
-  const yesterdayWeighted = useMemo(
-    () => computeWeightedCompletionPercent(yesterdayTasks, microtopicById),
-    [yesterdayTasks, microtopicById],
   );
 
   const { mastered, total } = useMemo(() => {
@@ -202,16 +216,6 @@ export function HomeClient() {
     syllabusScoreMax,
     primaryMarksYear,
   ]);
-
-  const tomorrowMarks = useMemo(
-    () => sumPlannedMarksWeight(tomorrowTasks, microtopicById),
-    [tomorrowTasks, microtopicById],
-  );
-
-  const tomorrowMinutes = useMemo(
-    () => sumEstimatedMinutes(tomorrowTasks),
-    [tomorrowTasks],
-  );
 
   const welcomeName = useMemo(() => {
     const meta = user?.user_metadata as Record<string, unknown> | undefined;
@@ -345,10 +349,10 @@ export function HomeClient() {
       />
 
       <ThreeDayStrip
-        yesterdayPercent={yesterdayWeighted}
-        todayPercent={todayWeighted}
-        tomorrowMarks={tomorrowMarks}
-        tomorrowMinutes={tomorrowMinutes}
+        yesterdayPercent={yesterdayStripPercent}
+        todayPercent={todayStripPercent}
+        tomorrowTaskCount={dailyExec.tomorrow.taskCount}
+        tomorrowMinutes={dailyExec.tomorrow.totalMinutes}
       />
 
       <QuickMeditationCards />

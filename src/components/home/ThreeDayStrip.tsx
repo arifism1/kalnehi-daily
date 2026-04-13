@@ -3,24 +3,29 @@
 export type ThreeDayStripProps = {
   yesterdayPercent: number;
   todayPercent: number;
-  tomorrowMarks: number;
+  /** Tasks on tomorrow's unified daily plan (`daily_tasks`). */
+  tomorrowTaskCount: number;
+  /** Sum of slot durations (time_start→time_end) for tomorrow's plan, when set. */
   tomorrowMinutes: number;
 };
 
-function formatLoad(marks: number, minutes: number): string {
+function formatMinutesShort(minutes: number): string {
   const m = Math.max(0, Math.round(minutes));
   const h = Math.floor(m / 60);
   const min = m % 60;
-  const time =
-    m <= 0
-      ? "0h"
-      : h === 0
-        ? `${min}m`
-        : min === 0
-          ? `${h}h`
-          : `${h}h ${min}m`;
-  const mk = `${marks.toFixed(0)} marks`;
-  return `${mk} · ${time}`;
+  if (m <= 0) return "0m";
+  if (h === 0) return `${min}m`;
+  if (min === 0) return `${h}h`;
+  return `${h}h ${min}m`;
+}
+
+/** Tomorrow cell: task count plus optional estimated load from timed slots. */
+function formatTomorrowLoad(taskCount: number, totalMinutes: number): string {
+  const n = Math.max(0, Math.round(taskCount));
+  if (n <= 0) return "0 tasks";
+  const mins = Math.max(0, Math.round(totalMinutes));
+  if (mins <= 0) return `${n} task${n === 1 ? "" : "s"}`;
+  return `${n} task${n === 1 ? "" : "s"} · ${formatMinutesShort(mins)}`;
 }
 
 function MiniBar({ percent }: { percent: number }) {
@@ -38,7 +43,7 @@ function MiniBar({ percent }: { percent: number }) {
 export function ThreeDayStrip({
   yesterdayPercent,
   todayPercent,
-  tomorrowMarks,
+  tomorrowTaskCount,
   tomorrowMinutes,
 }: ThreeDayStripProps) {
   const y = Math.min(100, Math.max(0, Math.round(yesterdayPercent)));
@@ -62,7 +67,7 @@ export function ThreeDayStrip({
     {
       label: "Tomorrow",
       sub: "Planned load",
-      main: formatLoad(tomorrowMarks, tomorrowMinutes),
+      main: formatTomorrowLoad(tomorrowTaskCount, tomorrowMinutes),
       bar: null as number | null,
       small: true,
     },
