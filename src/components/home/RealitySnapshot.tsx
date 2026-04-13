@@ -30,6 +30,8 @@ export type RealitySnapshotProps = {
   syllabusMultiYear: SyllabusMultiYearCapture | null;
   todayPercent: number;
   todayTaskCount: number;
+  /** Done count from daily_tasks; null when falling back to academic tasks. */
+  todayDoneCount?: number | null;
   dailyBand: DailyProgressBand;
   /** Profile exam has no syllabus catalog yet (e.g. JEE Main). */
   showSyllabusComingSoonBanner?: boolean;
@@ -69,6 +71,7 @@ export function RealitySnapshot({
   syllabusMultiYear,
   todayPercent,
   todayTaskCount,
+  todayDoneCount = null,
   dailyBand,
   showSyllabusComingSoonBanner = false,
   primaryExamLabel = null,
@@ -496,9 +499,11 @@ export function RealitySnapshot({
               </span>
             </p>
             <p className="mt-2 max-w-[13rem] text-center text-[11px] leading-relaxed text-kal-muted sm:text-xs">
-              {todayTaskCount > 0
-                ? `${todayTaskCount} target${todayTaskCount === 1 ? "" : "s"} locked for today`
-                : "No targets yet — lock them in Plan"}
+              {todayTaskCount === 0
+                ? "Add tasks to start"
+                : todayDoneCount !== null
+                  ? `${todayDoneCount} of ${todayTaskCount} done today`
+                  : `${todayTaskCount} target${todayTaskCount === 1 ? "" : "s"} today`}
             </p>
           </CircularProgressRing>
         </div>

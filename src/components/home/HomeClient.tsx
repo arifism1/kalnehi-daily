@@ -29,6 +29,8 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useTaskStore } from "@/store/useTaskStore";
 
+import { useTodayDailyPlanProgress } from "@/hooks/useTodayDailyPlanProgress";
+
 import { MissedTasks } from "./MissedTasks";
 import { MotivationWallpaper } from "./MotivationWallpaper";
 import { MotivationStrip } from "./MotivationStrip";
@@ -128,9 +130,21 @@ export function HomeClient() {
     [todayTasks, microtopicById],
   );
 
+  // Live completion from daily_tasks (voice/typed/handwritten unified plan)
+  const dailyPlanProgress = useTodayDailyPlanProgress();
+
+  // When the user has added daily-plan tasks, prefer those for the ring.
+  // Fall back to academic task completion when no daily-plan tasks exist yet.
+  const effectiveTodayPercent =
+    dailyPlanProgress.totalCount > 0 ? dailyPlanProgress.percent : todayWeighted;
+  const effectiveTodayTotal =
+    dailyPlanProgress.totalCount > 0 ? dailyPlanProgress.totalCount : todayTasks.length;
+  const effectiveTodayDone =
+    dailyPlanProgress.totalCount > 0 ? dailyPlanProgress.doneCount : null;
+
   const dailyBand = useMemo(
-    () => classifyDailyProgressBand(todayWeighted, todayTasks.length),
-    [todayWeighted, todayTasks.length],
+    () => classifyDailyProgressBand(effectiveTodayPercent, effectiveTodayTotal),
+    [effectiveTodayPercent, effectiveTodayTotal],
   );
 
   const yesterdayWeighted = useMemo(
@@ -318,8 +332,9 @@ export function HomeClient() {
         marksTotal={total}
         syllabusMasteryPercent={syllabusMasteryPercent}
         syllabusMultiYear={syllabusMultiYear}
-        todayPercent={todayWeighted}
-        todayTaskCount={todayTasks.length}
+        todayPercent={effectiveTodayPercent}
+        todayTaskCount={effectiveTodayTotal}
+        todayDoneCount={effectiveTodayDone}
         dailyBand={dailyBand}
         showSyllabusComingSoonBanner={showSyllabusComingSoonBanner}
         examDisplayName={examDisplayName}

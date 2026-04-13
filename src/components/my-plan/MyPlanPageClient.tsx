@@ -129,6 +129,7 @@ export function MyPlanPageClient() {
   } = useSubscriptionAccess();
   const {
     hasAiAccess,
+    isBasicTrial,
     photoScansUsed,
     photoScansLimit,
     voiceMinutesUsed,
@@ -323,15 +324,40 @@ export function MyPlanPageClient() {
               <div className="border-t border-kal-border">
                 <div className="border-b border-kal-border px-4 py-3">
                   <h3 className="text-xs font-semibold uppercase tracking-widest text-kal-muted">
-                    AI usage (monthly)
+                    AI usage {isBasicTrial ? "(trial gift)" : "(monthly)"}
                   </h3>
                 </div>
-                {status === "trial" && (
+
+                {/* Basic trial: bonus gift banner */}
+                {isBasicTrial && (
+                  <div className="border-b border-kal-border bg-kal-accent/5 px-4 py-3">
+                    <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
+                      Bonus gift to taste Pro
+                    </p>
+                    <p className="mt-1 text-xs leading-relaxed text-kal-text-secondary">
+                      During your 3-day trial, enjoy{" "}
+                      <span className="font-medium text-kal-text">
+                        2 minutes of voice dictation
+                      </span>{" "}
+                      and{" "}
+                      <span className="font-medium text-kal-text">
+                        3 handwritten photo scans
+                      </span>{" "}
+                      as a one-time gift. These do not carry over to the regular
+                      Basic plan (₹99/month has no AI).
+                    </p>
+                  </div>
+                )}
+
+                {/* Pro / Pro Max trial generic hint */}
+                {status === "trial" && !isBasicTrial && (
                   <p className="border-b border-kal-border px-4 py-2 text-xs text-kal-text-secondary">
-                    During trial, lower AI limits apply. After your first paid cycle,
-                    full monthly limits apply and trial usage no longer applies.
+                    During trial, lower AI limits apply. After your first paid
+                    cycle, full monthly limits apply and trial usage no longer
+                    applies.
                   </p>
                 )}
+
                 <UsageBar
                   icon={<Camera className="h-4 w-4" />}
                   label="Photo scans"
@@ -369,20 +395,61 @@ export function MyPlanPageClient() {
                     ) : null}
                   </div>
                 )}
-                <div className="border-t border-kal-border px-4 py-2">
-                  <p className="text-[0.65rem] leading-relaxed text-kal-text-secondary">
-                    Bonus credits are used before your monthly allowance. Combined
-                    capacity this month: {photoScansLimit} scans, {voiceMinutesLimit}{" "}
-                    voice minutes.
-                  </p>
+                {!isBasicTrial && (
+                  <>
+                    <div className="border-t border-kal-border px-4 py-2">
+                      <p className="text-[0.65rem] leading-relaxed text-kal-text-secondary">
+                        Bonus credits are used before your monthly allowance. Combined
+                        capacity this month: {photoScansLimit} scans,{" "}
+                        {voiceMinutesLimit} voice minutes.
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between border-t border-kal-border px-4 py-2">
+                      <span className="text-xs text-kal-text-secondary">
+                        Usage resets (calendar month)
+                      </span>
+                      <span className="text-xs font-medium text-kal-text">
+                        {nextResetDate()}
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Permanent Basic plan (after trial): show "0 AI" with upgrade nudge */}
+            {!hasAiAccess && hasPaidAccess && tier === "basic" && (
+              <div className="border-t border-kal-border">
+                <div className="border-b border-kal-border px-4 py-3">
+                  <h3 className="text-xs font-semibold uppercase tracking-widest text-kal-muted">
+                    AI usage
+                  </h3>
                 </div>
-                <div className="flex items-center justify-between border-t border-kal-border px-4 py-2">
-                  <span className="text-xs text-kal-text-secondary">
-                    Usage resets (calendar month)
-                  </span>
-                  <span className="text-xs font-medium text-kal-text">
-                    {nextResetDate()}
-                  </span>
+                <div className="px-4 py-3">
+                  <div className="flex items-center justify-between py-1">
+                    <span className="flex items-center gap-2 text-sm text-kal-text-secondary">
+                      <Camera className="h-4 w-4" />
+                      Photo scans
+                    </span>
+                    <span className="text-sm font-medium text-kal-text">0 / 0</span>
+                  </div>
+                  <div className="flex items-center justify-between py-1">
+                    <span className="flex items-center gap-2 text-sm text-kal-text-secondary">
+                      <Mic className="h-4 w-4" />
+                      Voice minutes
+                    </span>
+                    <span className="text-sm font-medium text-kal-text">0 / 0</span>
+                  </div>
+                  <p className="mt-3 text-xs leading-relaxed text-kal-text-secondary">
+                    The Basic plan (₹99/month) does not include AI features.
+                    Upgrade to Pro for 20 photo scans + 40 voice minutes per month.
+                  </p>
+                  <a
+                    href="/pricing"
+                    className="mt-3 inline-flex min-h-[40px] items-center justify-center rounded-xl bg-kal-accent px-4 py-2 text-sm font-semibold text-kal-accent-foreground"
+                  >
+                    Upgrade to Pro
+                  </a>
                 </div>
               </div>
             )}

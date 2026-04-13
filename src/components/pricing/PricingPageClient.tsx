@@ -50,6 +50,9 @@ function trialAiSummary(config: TierConfig): string {
   if (config.trialPhotoScansLimit === 0 && config.trialVoiceMinutesLimit === 0) {
     return "0 scans + 0 voice minutes during trial";
   }
+  if (config.id === "basic") {
+    return `Bonus gift: ${config.trialPhotoScansLimit} photo scans + ${config.trialVoiceMinutesLimit} voice min (trial only)`;
+  }
   return `Only ${config.trialPhotoScansLimit} scans + ${config.trialVoiceMinutesLimit} voice minutes during trial`;
 }
 
@@ -136,7 +139,9 @@ function TierCard({
 
       {config.photoScansPerMonth === 0 ? (
         <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
-          No AI features (no voice dictation, no handwritten scanner)
+          {config.id === "basic"
+            ? "Regular Basic plan has no AI — the scans + voice minutes above are a one-time trial gift only."
+            : "No AI features (no voice dictation, no handwritten scanner)"}
         </p>
       ) : null}
 
@@ -218,10 +223,16 @@ export function PricingPageClient() {
 
   const statusBanner = useMemo(() => {
     if (hasPaidAccess) {
-      const trialHint =
-        subscriptionStatus === "trial"
-          ? " During the 3-day trial you have the trial AI limits shown on each card. After the first successful charge you get the full monthly quotas for your tier."
-          : "";
+      let trialHint = "";
+      if (subscriptionStatus === "trial") {
+        if (currentTier === "basic") {
+          trialHint =
+            " During your 3-day trial, enjoy 2 minutes of voice dictation and 3 handwritten photo scans as a bonus gift to taste Pro. These are a one-time gift — after your trial, the Basic plan (₹99/month) has no AI features.";
+        } else {
+          trialHint =
+            " During the 3-day trial you have the trial AI limits shown on each card. After the first successful charge you get the full monthly quotas for your tier.";
+        }
+      }
       return (
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 dark:border-emerald-800 dark:bg-emerald-950/30">
           <p className="text-sm font-medium text-emerald-900 dark:text-emerald-100">

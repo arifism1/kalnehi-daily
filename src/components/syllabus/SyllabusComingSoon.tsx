@@ -57,7 +57,7 @@ export function SyllabusComingSoon({
           </div>
 
           <p className="mt-6 text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-kal-accent/90">
-            Syllabus tracker
+            Syllabus Mastery Tracker
           </p>
           <h1
             className={clsx(
