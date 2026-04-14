@@ -9,6 +9,8 @@ export const PUBLIC_MARKETING_PATHS = new Set<string>([
   "/upsc-study-planner",
   "/boards-study-planner",
   "/brain-yoga",
+  "/what-can-kalnehi-do",
+  "/best-study-practices",
 ]);
 
 export function isPublicMarketingPath(pathname: string): boolean {

@@ -4,16 +4,52 @@ import { Bell, BellOff } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 import {
+  NOTIFICATION_PREFS_DEFAULTS,
   loadNotificationPrefs,
   saveNotificationPrefs,
   type NotificationPrefs,
 } from "@/lib/engine/notificationPrefs";
+import {
+  hydrateUserPlannerTextFromServer,
+  plannerTextSetEnginePrefs,
+} from "@/lib/userPlannerTextClient";
+import { getUserPlannerTextBundleCached } from "@/lib/userPlannerTextLocal";
+import { useAuthStore } from "@/store/useAuthStore";
 
 import { EngineCard, EngineHero } from "./EngineHero";
 
 export function NotificationsEngineClient() {
-  const [prefs, setPrefs] = useState<NotificationPrefs>(loadNotificationPrefs);
+  const userId = useAuthStore((s) => s.user?.id);
+  const [prefs, setPrefs] = useState<NotificationPrefs>(
+    NOTIFICATION_PREFS_DEFAULTS,
+  );
   const [perm, setPerm] = useState<string>("unsupported");
+
+  useEffect(() => {
+    void (async () => {
+      if (!userId) {
+        setPrefs(loadNotificationPrefs());
+        return;
+      }
+      const bundle = await hydrateUserPlannerTextFromServer(userId);
+      setPrefs(bundle.enginePrefs);
+    })();
+  }, [userId]);
+
+  useEffect(() => {
+    if (!userId) return;
+    const onPlanner = () => {
+      void getUserPlannerTextBundleCached(userId).then((b) => {
+        if (b) setPrefs(b.enginePrefs);
+      });
+    };
+    window.addEventListener("kalnehi-user-planner-text-changed", onPlanner);
+    return () =>
+      window.removeEventListener(
+        "kalnehi-user-planner-text-changed",
+        onPlanner,
+      );
+  }, [userId]);
 
   useEffect(() => {
     if (typeof window === "undefined" || !("Notification" in window)) {
@@ -23,10 +59,17 @@ export function NotificationsEngineClient() {
     setPerm(Notification.permission);
   }, []);
 
-  const persist = useCallback((next: NotificationPrefs) => {
-    setPrefs(next);
-    saveNotificationPrefs(next);
-  }, []);
+  const persist = useCallback(
+    (next: NotificationPrefs) => {
+      setPrefs(next);
+      if (!userId) {
+        saveNotificationPrefs(next);
+        return;
+      }
+      void plannerTextSetEnginePrefs(userId, next);
+    },
+    [userId],
+  );
 
   const requestBrowser = async () => {
     if (!("Notification" in window)) return;
@@ -149,7 +192,7 @@ export function NotificationsEngineClient() {
             />
           </li>
           <li className="flex items-center justify-between gap-2">
-            <span>Revision due (local queue)</span>
+            <span>Revision due (revision queue)</span>
             <input
               type="checkbox"
               checked={prefs.alertRevision}
@@ -165,10 +208,12 @@ export function NotificationsEngineClient() {
       <div className="flex items-start gap-2 rounded-xl border border-slate-800 bg-slate-950/50 px-3 py-3 text-[11px] text-zinc-500">
         <BellOff className="mt-0.5 h-4 w-4 shrink-0 text-zinc-600" />
         <p>
-          Kalnehi never sends exam content from our servers for notifications —
-          preferences stay on your device. Background delivery depends on your
-          browser and OS; open the app daily for the strongest accountability
-          loop.
+          Kalnehi never sends exam content from our servers for notifications.
+          {userId
+            ? " Preferences sync to your account for backup and multi-device use."
+            : " Preferences stay on this device until you sign in."}{" "}
+          Background delivery depends on your browser and OS; open the app
+          daily for the strongest accountability loop.
         </p>
       </div>
     </div>

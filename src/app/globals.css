@@ -10,7 +10,8 @@
   --kal-border: #e5e7eb;
   --kal-text: #0f172a;
   --kal-text-secondary: #334155;
-  --kal-muted: #475569;
+  /* Darker than slate-600 for AA contrast on small UI copy over --kal-page */
+  --kal-muted: #374151;
   --kal-accent: #ef4444;
   --kal-accent-hover: #dc2626;
   --kal-accent-soft: #fef2f2;
@@ -153,6 +154,20 @@ body {
   .kal-glass-header {
     @apply backdrop-blur-md border-b border-white/20 bg-white/75 dark:border-white/10 dark:bg-zinc-950/80;
     box-shadow: var(--kal-shadow-nav);
+  }
+
+  /**
+   * In-app feature page title — same scale as Doubt Tracker:
+   * text-lg (18px) → sm:text-xl (20px) → md:text-2xl (24px).
+   */
+  .kal-feature-title {
+    @apply text-lg leading-snug tracking-tight text-kal-text sm:text-xl md:text-2xl;
+    font-weight: 700;
+  }
+
+  /** Muted paragraph under feature titles */
+  .kal-feature-lead {
+    @apply text-sm leading-relaxed text-kal-muted sm:text-[15px];
   }
 }
 

@@ -396,7 +396,10 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
           <div className="kal-glass-subtle rounded-xl border border-dashed border-white/35 py-14 text-center dark:border-white/15">
             <p className="text-sm font-semibold text-kal-text">Nothing here yet</p>
             <p className="mt-1 text-xs text-kal-muted">
-              Add tasks via Dictate My Day, Self Type, or Handwritten below.
+              Add tasks via{" "}
+              <span className="font-bold text-kal-text">Dictate My Day</span>,{" "}
+              <span className="font-bold text-kal-text">Self Type</span>, or{" "}
+              <span className="font-bold text-kal-text">Handwritten</span> below.
             </p>
           </div>
         ) : (

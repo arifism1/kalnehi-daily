@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { isLegalPath } from "@/lib/legal-paths";
@@ -48,6 +48,12 @@ function isAuthPath(p: string) {
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  /** Avoid SSR vs first client paint mismatches from auth/subscription state. */
+  const [clientShellReady, setClientShellReady] = useState(false);
+  useEffect(() => {
+    setClientShellReady(true);
+  }, []);
+
   const initialized = useAuthStore((s) => s.initialized);
   const session = useAuthStore((s) => s.session);
   const {
@@ -69,27 +75,44 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       return "auth";
     }
     if (profileLoading) {
-      if (isAuthPath(pathname) || isLegalPath(pathname))
+      if (
+        isAuthPath(pathname) ||
+        isLegalPath(pathname) ||
+        isPublicMarketingPath(pathname)
+      )
         return "render";
       return "wait";
     }
 
     // Profile loaded but with a network/server error — don't redirect to
     // paywall or onboarding; show a retry screen instead.
-    if (fetchError && !isAuthPath(pathname) && !isLegalPath(pathname)) {
+    if (
+      fetchError &&
+      !isAuthPath(pathname) &&
+      !isLegalPath(pathname) &&
+      !isPublicMarketingPath(pathname)
+    ) {
       return "error";
     }
 
     if (isAuthPath(pathname)) return "home";
 
     if (!onboardingDone) {
-      if (pathname === "/onboarding" || isLegalPath(pathname))
+      if (
+        pathname === "/onboarding" ||
+        isLegalPath(pathname) ||
+        isPublicMarketingPath(pathname)
+      )
         return "render";
       return "onboarding";
     }
 
     if (!hasPaidAccess) {
-      if (pathname === "/pricing" || isLegalPath(pathname))
+      if (
+        pathname === "/pricing" ||
+        isLegalPath(pathname) ||
+        isPublicMarketingPath(pathname)
+      )
         return "render";
       return "pricing";
     }
@@ -116,13 +139,33 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }, [gateTarget, router]);
 
+  if (!clientShellReady) {
+    return (
+      <main className="flex min-h-0 min-h-dvh flex-1 flex-col">
+        <LoadingScreen />
+      </main>
+    );
+  }
+
   if (gateTarget === "error") {
-    return <ProfileErrorScreen onRetry={refetch} />;
+    return (
+      <main className="flex min-h-0 min-h-dvh flex-1 flex-col">
+        <ProfileErrorScreen onRetry={refetch} />
+      </main>
+    );
   }
 
   if (gateTarget !== "render") {
-    return <LoadingScreen />;
+    return (
+      <main className="flex min-h-0 min-h-dvh flex-1 flex-col">
+        <LoadingScreen />
+      </main>
+    );
   }
 
-  return <>{children}</>;
+  return (
+    <main id="kalnehi-main" className="flex min-h-0 min-h-dvh flex-1 flex-col">
+      {children}
+    </main>
+  );
 }

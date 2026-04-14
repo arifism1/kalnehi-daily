@@ -29,9 +29,9 @@ export function MarketingPublicShell({ children }: { children: React.ReactNode }
           <MarketingNav />
         </div>
       </header>
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
+      <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
         {children}
-      </main>
+      </div>
       <footer className="border-t border-kal-border bg-kal-card-muted/50 py-6 text-center text-xs text-kal-muted">
         <p>
           <Link href="/privacy" className="underline-offset-2 hover:underline">

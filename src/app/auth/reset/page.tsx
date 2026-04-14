@@ -55,18 +55,18 @@ export default function AuthResetPage() {
   }, [password, confirm, router, setAuth]);
 
   return (
-    <div className="flex min-h-full flex-col items-center justify-center gap-8 bg-[#0f172a] px-6 py-16">
+    <div className="flex min-h-full flex-col items-center justify-center gap-8 bg-kal-page px-6 py-16">
       <div className="text-center">
-        <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
+        <p className="text-[0.65rem] font-bold uppercase tracking-widest text-kal-accent-dark">
           Kalnehi
         </p>
-        <h1 className="mt-2 text-2xl font-bold text-white">Set new password</h1>
-        <p className="mt-2 text-sm text-zinc-400">
+        <h1 className="mt-2 text-2xl font-bold text-kal-text">Set new password</h1>
+        <p className="mt-2 text-sm text-kal-muted">
           Choose a strong password for your account.
         </p>
       </div>
 
-      <div className="w-full max-w-sm rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+      <div className="kal-glass-panel w-full max-w-sm rounded-2xl p-4">
         <form
           className="space-y-4"
           onSubmit={(e) => {
@@ -77,7 +77,7 @@ export default function AuthResetPage() {
           <div>
             <label
               htmlFor="reset-password"
-              className="flex items-center gap-1.5 text-xs font-medium text-zinc-500"
+              className="flex items-center gap-1.5 text-xs font-semibold text-kal-text-secondary"
             >
               <Lock className="h-3.5 w-3.5" />
               New password
@@ -88,14 +88,14 @@ export default function AuthResetPage() {
               autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-[15px] text-white placeholder:text-zinc-600 focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
+              className="mt-1.5 min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-input-bg px-4 py-3 text-[15px] text-kal-text placeholder:text-kal-muted focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
               placeholder="••••••••"
             />
           </div>
           <div>
             <label
               htmlFor="reset-confirm"
-              className="flex items-center gap-1.5 text-xs font-medium text-zinc-500"
+              className="flex items-center gap-1.5 text-xs font-semibold text-kal-text-secondary"
             >
               <Lock className="h-3.5 w-3.5" />
               Confirm password
@@ -106,7 +106,7 @@ export default function AuthResetPage() {
               autoComplete="new-password"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
-              className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-[15px] text-white placeholder:text-zinc-600 focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
+              className="mt-1.5 min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-input-bg px-4 py-3 text-[15px] text-kal-text placeholder:text-kal-muted focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
               placeholder="••••••••"
             />
           </div>
@@ -120,7 +120,7 @@ export default function AuthResetPage() {
           <button
             type="submit"
             disabled={busy}
-            className="flex w-full min-h-[50px] items-center justify-center gap-2 rounded-xl bg-kal-accent py-3 text-sm font-semibold text-white transition-opacity duration-200 disabled:opacity-50"
+            className="flex w-full min-h-[50px] items-center justify-center gap-2 rounded-xl bg-kal-accent py-3 text-sm font-semibold text-white shadow-sm hover:bg-kal-accent-hover transition-opacity duration-200 disabled:opacity-50"
           >
             {busy ? (
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -131,8 +131,11 @@ export default function AuthResetPage() {
           </button>
         </form>
 
-        <p className="mt-4 text-center text-[11px] text-zinc-600">
-          <Link href="/auth" className="text-zinc-500 hover:text-kal-accent">
+        <p className="mt-4 text-center text-[11px] text-kal-muted">
+          <Link
+            href="/auth"
+            className="text-kal-muted underline-offset-2 transition-colors hover:text-kal-accent hover:underline"
+          >
             Back to login
           </Link>
         </p>

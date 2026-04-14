@@ -86,21 +86,21 @@ export function MissedTasks() {
 
   return (
     <section
-      className="overflow-hidden rounded-2xl border border-amber-400/25 bg-gradient-to-b from-amber-950/30 to-slate-950/45 p-4 text-neutral-100 shadow-lg shadow-amber-950/15 backdrop-blur-md sm:rounded-3xl sm:p-5"
+      className="kal-glass-panel overflow-hidden rounded-2xl border border-amber-200/90 bg-gradient-to-br from-amber-50/95 via-white to-kal-accent-soft/25 p-4 shadow-md ring-1 ring-amber-900/[0.06] backdrop-blur-md sm:rounded-3xl sm:p-5 dark:border-amber-500/25 dark:from-amber-950/40 dark:via-zinc-950/55 dark:to-zinc-950/70 dark:ring-white/5"
       aria-labelledby="missed-heading"
     >
       <div className="flex items-start gap-2.5 sm:gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-200 sm:h-11 sm:w-11 sm:rounded-2xl">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-amber-300/80 bg-amber-100 text-amber-800 shadow-sm sm:h-11 sm:w-11 sm:rounded-2xl dark:border-amber-500/35 dark:bg-amber-500/15 dark:text-amber-200">
           <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden />
         </div>
         <div className="min-w-0 flex-1">
           <h2
             id="missed-heading"
-            className="text-xs font-bold uppercase tracking-wide text-amber-100 sm:text-sm"
+            className="text-xs font-bold uppercase tracking-wide text-amber-900 sm:text-sm dark:text-amber-100"
           >
             Carry-over targets
           </h2>
-          <p className="mt-0.5 text-[11px] leading-snug text-amber-200/70 sm:mt-1 sm:text-xs sm:leading-relaxed">
+          <p className="mt-0.5 text-[11px] leading-snug text-kal-text-secondary sm:mt-1 sm:text-xs sm:leading-relaxed dark:text-amber-200/85">
             From days you didn&apos;t close — move them forward or finish them
             today.
           </p>
@@ -128,9 +128,9 @@ export function MissedTasks() {
             <button
               type="button"
               onClick={() => void onMoveToToday(t)}
-              className="flex w-full min-h-[48px] items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/95 py-3 text-xs font-bold uppercase tracking-wide text-slate-900 shadow-md transition-all duration-200 hover:bg-white active:scale-[0.99]"
+              className="flex w-full min-h-[48px] items-center justify-center gap-2 rounded-2xl border-2 border-red-700/15 bg-kal-accent py-3 text-xs font-bold uppercase tracking-wide text-white shadow-md shadow-red-900/10 ring-1 ring-red-900/10 transition-all duration-200 hover:bg-kal-accent-hover active:scale-[0.99] dark:border-red-400/25 dark:shadow-red-950/40"
             >
-              <CalendarCheck className="h-4 w-4" aria-hidden />
+              <CalendarCheck className="h-4 w-4 shrink-0 opacity-95" aria-hidden />
               Move to today
             </button>
           </li>

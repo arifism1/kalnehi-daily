@@ -24,6 +24,7 @@ import { USER_ERROR } from "@/lib/userFacingErrors";
 import type { Json, TablesInsert } from "@/types/supabase";
 import { flushHabitOutbox } from "@/lib/habitSync";
 import { flushMotivationOutbox } from "@/lib/motivationSync";
+import { flushUserPlannerTextOutbox } from "@/lib/userPlannerTextSync";
 import { useSyncStore } from "@/store/useSyncStore";
 
 const MAX_RETRIES = 6;
@@ -471,6 +472,7 @@ export async function reconcileConnectivity(
       void flushOutbox(userId);
       void flushMotivationOutbox(userId);
       void flushHabitOutbox(userId);
+      void flushUserPlannerTextOutbox(userId);
     }
     return;
   }
@@ -481,6 +483,7 @@ export async function reconcileConnectivity(
     void flushOutbox(userId);
     void flushMotivationOutbox(userId);
     void flushHabitOutbox(userId);
+    void flushUserPlannerTextOutbox(userId);
   }
 }
 
@@ -717,6 +720,7 @@ export function initSyncManager(userId: string | undefined): () => void {
     void flushOutbox(userId);
     void flushMotivationOutbox(userId);
     void flushHabitOutbox(userId);
+    void flushUserPlannerTextOutbox(userId);
   };
   const onOffline = () => {
     useSyncStore.getState().setOnline(false);
@@ -754,6 +758,7 @@ export function initSyncManager(userId: string | undefined): () => void {
     void flushOutbox(userId);
     void flushMotivationOutbox(userId);
     void flushHabitOutbox(userId);
+    void flushUserPlannerTextOutbox(userId);
   }
 
   return () => {

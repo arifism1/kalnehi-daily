@@ -350,8 +350,8 @@ export function MeditationPage() {
     <div className="mx-auto max-w-5xl space-y-7 pb-12">
       <header className="rounded-3xl border border-kal-border bg-gradient-to-br from-[#f2f9f6] via-kal-card to-[#eef6ff] p-7">
         <p className="text-[0.68rem] uppercase tracking-[0.22em] text-kal-accent">Mind–body practice</p>
-        <h1 className="mt-2 text-3xl font-bold text-kal-text">Brain Yoga</h1>
-        <p className="mt-2 text-lg font-semibold leading-snug text-kal-text">
+        <h1 className="kal-feature-title mt-2">Brain Yoga</h1>
+        <p className="mt-2 text-base font-semibold leading-snug text-kal-text">
           Train your mind like a yoga practice
         </p>
         <p className="mt-2 text-kal-muted">
@@ -367,7 +367,9 @@ export function MeditationPage() {
             {activeType ? activeType.title : "Choose a practice below to begin"}
           </span>
         </div>
-        <div className="mt-4 text-5xl font-bold tabular-nums text-kal-text">{formatClock(remainingSeconds)}</div>
+        <div className="mt-3 text-3xl font-bold tabular-nums tracking-tight text-kal-text sm:text-4xl">
+          {formatClock(remainingSeconds)}
+        </div>
         <div className="mt-4 flex flex-wrap gap-2">
           {!running ? (
             <button

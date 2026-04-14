@@ -324,8 +324,8 @@ export function DictateMyDay() {
         <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
           Pro · Voice
         </p>
-        <h1 className="mt-1 flex flex-wrap items-center gap-2 text-2xl font-bold text-kal-text">
-          <Volume2 className="h-8 w-8 text-kal-accent" aria-hidden />
+        <h1 className="kal-feature-title mt-1 flex flex-wrap items-center gap-2">
+          <Volume2 className="h-7 w-7 shrink-0 text-kal-accent" aria-hidden />
           Dictate My Day
         </h1>
         <p className="kal-glass-subtle mt-3 rounded-xl px-3 py-2 text-xs leading-relaxed text-kal-muted">
@@ -445,7 +445,7 @@ export function DictateMyDay() {
 
       <section className="kal-glass-panel rounded-[1.25rem] p-4 sm:p-6">
         <div className="flex items-center justify-between gap-2">
-          <h2 className="text-lg font-bold text-kal-text">Preview (not saved yet)</h2>
+          <h2 className="text-sm font-bold text-kal-text">Preview (not saved yet)</h2>
           <span className="text-xs text-kal-muted">{logDate}</span>
         </div>
         <p className="mt-1 text-xs leading-relaxed text-kal-muted">

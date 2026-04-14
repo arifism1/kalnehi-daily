@@ -1,8 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useState, startTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  startTransition,
+} from "react";
 
 import { PlannerPageShell } from "@/components/planner/PlannerPageShell";
+import {
+  hydrateUserPlannerTextFromServer,
+  plannerTextSetProductivity,
+} from "@/lib/userPlannerTextClient";
+import { getUserPlannerTextBundleCached } from "@/lib/userPlannerTextLocal";
+import { useAuthStore } from "@/store/useAuthStore";
 
 const STORAGE_KEY = "kalnehi-productivity-v1";
 
@@ -20,7 +32,7 @@ const defaultState: State = {
   p3: "",
 };
 
-function load(): State {
+function loadLocal(): State {
   if (typeof window === "undefined") return defaultState;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -32,27 +44,74 @@ function load(): State {
   }
 }
 
+function saveLocal(next: State): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    /* ignore */
+  }
+}
+
 export function ProductivityPlannerView() {
+  const userId = useAuthStore((s) => s.user?.id);
   const [s, setS] = useState<State>(defaultState);
   const [hydrated, setHydrated] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const id = requestAnimationFrame(() => {
       startTransition(() => {
-        setS(load());
-        setHydrated(true);
+        void (async () => {
+          if (!userId) {
+            setS(loadLocal());
+            setHydrated(true);
+            return;
+          }
+          const bundle = await hydrateUserPlannerTextFromServer(userId);
+          setS(bundle.productivity);
+          setHydrated(true);
+        })();
       });
     });
     return () => cancelAnimationFrame(id);
-  }, []);
+  }, [userId]);
 
-  const persist = useCallback((next: State) => {
-    setS(next);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    } catch {
-      /* ignore */
-    }
+  useEffect(() => {
+    if (!userId) return;
+    const onPlanner = () => {
+      void getUserPlannerTextBundleCached(userId).then((b) => {
+        if (b) setS(b.productivity);
+      });
+    };
+    window.addEventListener("kalnehi-user-planner-text-changed", onPlanner);
+    return () =>
+      window.removeEventListener(
+        "kalnehi-user-planner-text-changed",
+        onPlanner,
+      );
+  }, [userId]);
+
+  const persist = useCallback(
+    (next: State) => {
+      setS(next);
+      if (!userId) {
+        saveLocal(next);
+        return;
+      }
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        debounceRef.current = null;
+        void plannerTextSetProductivity(userId, next);
+      }, 400);
+    },
+    [userId],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, []);
 
   if (!hydrated) {
@@ -71,7 +130,11 @@ export function ProductivityPlannerView() {
     <PlannerPageShell
       eyebrow="Productivity planner"
       title="NEET / JEE Priority Tasks"
-      subtitle="Three rank-moving priorities and a scratchpad for high-yield revision blocks. Saved on this device only."
+      subtitle={
+        userId
+          ? "Three rank-moving priorities and a scratchpad — synced when you are online, cached on this device."
+          : "Three rank-moving priorities and a scratchpad. Sign in to sync across devices; until then this page saves on this device only."
+      }
     >
       <div className="space-y-3">
         {(["p1", "p2", "p3"] as const).map((key, i) => (

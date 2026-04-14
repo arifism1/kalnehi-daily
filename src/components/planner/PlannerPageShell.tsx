@@ -29,10 +29,8 @@ export function PlannerPageShell({
         <p className="mt-4 text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
           {eyebrow}
         </p>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight text-kal-text md:text-3xl">
-          {title}
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-kal-muted md:text-[15px]">
+        <h1 className="kal-feature-title mt-1">{title}</h1>
+        <p className="kal-feature-lead mt-2 max-w-2xl">
           {subtitle}
         </p>
       </div>

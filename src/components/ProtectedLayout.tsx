@@ -4,11 +4,16 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { isLegalPath } from "@/lib/legal-paths";
+import { isPublicMarketingPath } from "@/lib/public-paths";
 import { useAuthStore } from "@/store/useAuthStore";
+
+function isPublicUnauthedPath(pathname: string) {
+  return isLegalPath(pathname) || isPublicMarketingPath(pathname);
+}
 
 /**
  * Ensures only authenticated users see Kalnehi app chrome & routes.
- * Legal/policy pages render without a session so crawlers and footers work.
+ * Legal/policy and public marketing pages render without a session so crawlers and acquisition flows work.
  * Pair with root AppShell for global /auth routing.
  */
 export function ProtectedLayout({ children }: { children: React.ReactNode }) {
@@ -19,7 +24,7 @@ export function ProtectedLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!initialized) return;
-    if (!session && !isLegalPath(pathname)) {
+    if (!session && !isPublicUnauthedPath(pathname)) {
       router.replace("/auth");
     }
   }, [initialized, session, router, pathname]);
@@ -36,7 +41,7 @@ export function ProtectedLayout({ children }: { children: React.ReactNode }) {
   }
 
   if (!session) {
-    if (isLegalPath(pathname)) return <>{children}</>;
+    if (isPublicUnauthedPath(pathname)) return <>{children}</>;
     return null;
   }
 

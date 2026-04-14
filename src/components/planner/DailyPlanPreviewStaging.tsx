@@ -61,7 +61,7 @@ export function DailyPlanPreviewStaging({
       id={sectionId}
       className={
         compact
-          ? "mt-3 space-y-2 rounded-xl border-2 border-kal-accent/30 bg-kal-accent-soft/45 p-3 shadow-sm backdrop-blur-md dark:bg-kal-accent-soft/20"
+          ? "mt-0 space-y-2.5 rounded-xl border-2 border-kal-accent/35 bg-kal-accent-soft/50 p-3.5 shadow-sm ring-1 ring-rose-900/[0.04] backdrop-blur-md dark:bg-kal-accent-soft/20 dark:ring-white/5"
           : "mt-5 space-y-3 rounded-[1.15rem] border-2 border-kal-accent/30 bg-kal-accent-soft/45 p-4 shadow-sm backdrop-blur-md dark:bg-kal-accent-soft/20"
       }
     >

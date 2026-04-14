@@ -9,14 +9,18 @@ import { useSyllabusTracker } from "@/hooks/useSyllabusTracker";
 import { SyllabusComingSoon } from "@/components/syllabus/SyllabusComingSoon";
 import { shouldShowSyllabusComingSoon } from "@/lib/examProfile";
 import {
-  addRevisionItem,
-  completeRevisionReview,
   dueAndUpcoming,
-  loadRevisionItems,
   type RevisionDifficulty,
   type RevisionItem,
-  removeRevisionItem,
 } from "@/lib/engine/revisionSchedule";
+import {
+  hydrateUserPlannerTextFromServer,
+  plannerTextAppendRevision,
+  plannerTextCompleteRevision,
+  plannerTextRemoveRevision,
+} from "@/lib/userPlannerTextClient";
+import { getUserPlannerTextBundleCached } from "@/lib/userPlannerTextLocal";
+import { useAuthStore } from "@/store/useAuthStore";
 
 import { EngineCard, EngineHero } from "./EngineHero";
 
@@ -28,6 +32,7 @@ const DIFF_LABEL: Record<RevisionDifficulty, string> = {
 
 export function RevisionEngineClient() {
   const today = useCalendarDate();
+  const userId = useAuthStore((s) => s.user?.id);
   const { examLabel, loading: examLoading } = usePrimaryExamLabel();
   const { rows, cuetAwaitingDomainSelection, loading, error } =
     useSyllabusTracker();
@@ -44,23 +49,48 @@ export function RevisionEngineClient() {
   const [title, setTitle] = useState("");
   const [difficulty, setDifficulty] = useState<RevisionDifficulty>("medium");
 
-  const refresh = useCallback(() => {
-    setItems(loadRevisionItems());
-  }, []);
+  const refresh = useCallback(async () => {
+    if (!userId) {
+      setItems([]);
+      return;
+    }
+    const bundle = await hydrateUserPlannerTextFromServer(userId);
+    setItems(bundle.revisionItems);
+  }, [userId]);
 
   useEffect(() => {
-    refresh();
+    void refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !userId) return;
+    const onPlanner = () => {
+      void getUserPlannerTextBundleCached(userId).then((b) => {
+        if (b) setItems(b.revisionItems);
+      });
+    };
+    window.addEventListener("kalnehi-user-planner-text-changed", onPlanner);
+    return () =>
+      window.removeEventListener(
+        "kalnehi-user-planner-text-changed",
+        onPlanner,
+      );
+  }, [refresh, userId]);
 
   const { due, upcoming } = useMemo(
     () => dueAndUpcoming(items, today),
     [items, today],
   );
 
-  const onAdd = () => {
-    addRevisionItem(title, difficulty);
+  const onAdd = async () => {
+    if (!userId) return;
+    const bundle = await plannerTextAppendRevision(
+      userId,
+      title,
+      difficulty,
+    );
+    setItems(bundle.revisionItems);
     setTitle("");
-    refresh();
   };
 
   return (
@@ -75,6 +105,15 @@ export function RevisionEngineClient() {
         <SyllabusComingSoon variant="compact" examLabel={examLabel} />
       ) : null}
 
+      {!userId ? (
+        <EngineCard title="Sign in to sync">
+          <p className="text-sm text-zinc-500">
+            Sign in to save your revision queue across devices. You can still
+            browse the syllabus above.
+          </p>
+        </EngineCard>
+      ) : null}
+
       <EngineCard title="Queue a revision">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <label className="min-w-0 flex-1 text-xs font-medium text-kal-muted">
@@ -83,17 +122,19 @@ export function RevisionEngineClient() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Rotational mechanics — friction edge cases"
-              className="mt-1.5 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-sm text-kal-text outline-none placeholder:text-kal-muted focus-visible:ring-2 focus-visible:ring-kal-accent/35"
+              disabled={!userId}
+              className="mt-1.5 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-sm text-kal-text outline-none placeholder:text-kal-muted focus-visible:ring-2 focus-visible:ring-kal-accent/35 disabled:opacity-50"
             />
           </label>
           <label className="text-xs font-medium text-kal-muted sm:w-48">
             Difficulty
             <select
               value={difficulty}
+              disabled={!userId}
               onChange={(e) =>
                 setDifficulty(e.target.value as RevisionDifficulty)
               }
-              className="mt-1.5 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-sm text-kal-text outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/35"
+              className="mt-1.5 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-sm text-kal-text outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/35 disabled:opacity-50"
             >
               {(Object.keys(DIFF_LABEL) as RevisionDifficulty[]).map((k) => (
                 <option key={k} value={k}>
@@ -104,8 +145,9 @@ export function RevisionEngineClient() {
           </label>
           <button
             type="button"
-            onClick={onAdd}
-            className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-kal-accent px-4 text-sm font-semibold text-white"
+            onClick={() => void onAdd()}
+            disabled={!userId}
+            className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-kal-accent px-4 text-sm font-semibold text-white disabled:opacity-50"
           >
             <Plus className="h-4 w-4" />
             Add
@@ -135,8 +177,12 @@ export function RevisionEngineClient() {
                   <button
                     type="button"
                     onClick={() => {
-                      completeRevisionReview(it.id);
-                      refresh();
+                      if (!userId) return;
+                      void plannerTextCompleteRevision(
+                        userId,
+                        it.id,
+                        today,
+                      ).then((b) => setItems(b.revisionItems));
                     }}
                     className="inline-flex items-center gap-1.5 rounded-lg bg-kal-accent px-3 py-2 text-xs font-semibold text-white"
                   >
@@ -146,8 +192,10 @@ export function RevisionEngineClient() {
                   <button
                     type="button"
                     onClick={() => {
-                      removeRevisionItem(it.id);
-                      refresh();
+                      if (!userId) return;
+                      void plannerTextRemoveRevision(userId, it.id).then((b) =>
+                        setItems(b.revisionItems),
+                      );
                     }}
                     className="inline-flex items-center justify-center rounded-lg border border-slate-600 p-2 text-zinc-400 hover:text-rose-300"
                     aria-label="Remove"
@@ -182,8 +230,9 @@ export function RevisionEngineClient() {
       </EngineCard>
 
       <p className="text-center text-[11px] text-zinc-600">
-        Revision queue is stored on this device only — same privacy as your
-        doubts.
+        {userId
+          ? "Revision queue syncs when you are online — edits stay available offline."
+          : "Sign in to sync your revision queue across devices."}
       </p>
     </div>
   );

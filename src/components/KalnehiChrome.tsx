@@ -156,7 +156,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
           </header>
         )}
 
-        <main
+        <div
           className={clsx(
             "mx-auto w-full flex-1 px-4 py-6 sm:px-6 sm:py-8",
             "max-w-lg md:max-w-5xl lg:max-w-6xl xl:max-w-7xl 2xl:max-w-[90rem]",
@@ -166,7 +166,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
         >
           {!onboarding && !minimalChrome && <SyncStatusBanner />}
           {children}
-        </main>
+        </div>
       </div>
 
       <MainNavigationMenu open={menuOpen} onClose={() => setMenuOpen(false)} />

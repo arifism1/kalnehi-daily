@@ -26,7 +26,7 @@ export function SettingsPageClient() {
         <p className="mt-3 text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
           App
         </p>
-        <h1 className="mt-1 text-xl font-bold text-kal-text">Settings</h1>
+        <h1 className="kal-feature-title mt-1">Settings</h1>
         <p className="mt-1 text-sm leading-relaxed text-kal-text-secondary">
           Shape how Kalnehi feels — every option here is optional. Subscription,
           billing, and AI credits live under{" "}

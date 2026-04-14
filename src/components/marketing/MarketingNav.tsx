@@ -53,6 +53,20 @@ export function MarketingNav() {
       >
         Guides
       </Link>
+      <Link
+        href="/what-can-kalnehi-do"
+        className="hidden max-w-[10.5rem] truncate rounded-lg px-2 py-1.5 text-xs font-medium text-kal-text-secondary hover:text-kal-text md:inline-flex lg:max-w-none lg:text-sm"
+        title="What Can Kalnehi Do?"
+      >
+        What Can Kalnehi Do?
+      </Link>
+      <Link
+        href="/best-study-practices"
+        className="hidden max-w-[9rem] truncate rounded-lg px-2 py-1.5 text-xs font-medium text-kal-text-secondary hover:text-kal-text md:inline-flex lg:max-w-none lg:text-sm"
+        title="Best Study Practices"
+      >
+        Best Study Practices
+      </Link>
 
       {/* Hamburger toggle */}
       <button

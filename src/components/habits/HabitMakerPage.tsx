@@ -577,10 +577,8 @@ export function HabitMakerPage() {
         <p className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-kal-accent">
           Discipline
         </p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight text-kal-text sm:text-4xl">
-          Habit Maker
-        </h1>
-        <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-kal-muted sm:text-base">
+        <h1 className="kal-feature-title mt-2">Habit Maker</h1>
+        <p className="kal-feature-lead mt-3 max-w-xl">
           Small wins, stacked daily — make consistency feel as good as the
           results.
         </p>
@@ -712,7 +710,7 @@ export function HabitMakerPage() {
                 <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-kal-accent">
                   Today&apos;s check-in
                 </h2>
-                <p className="mt-2 text-xl font-bold tracking-tight text-kal-text sm:text-2xl">
+                <p className="mt-2 text-lg font-bold tracking-tight text-kal-text sm:text-xl">
                   {doneTodayCount === habits.length
                     ? "You showed up for all of them."
                     : doneTodayCount > 0
@@ -931,7 +929,7 @@ export function HabitMakerPage() {
                         </p>
                         <p
                           className={clsx(
-                            "flex items-center gap-1.5 text-3xl font-extrabold tabular-nums text-kal-text sm:text-4xl",
+                            "flex items-center gap-1.5 text-2xl font-extrabold tabular-nums text-kal-text sm:text-3xl",
                             streakPopHabitId === h.id &&
                               "motion-safe:animate-[streak-pop_0.55s_ease-out_both] motion-reduce:animate-none",
                           )}

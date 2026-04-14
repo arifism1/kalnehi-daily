@@ -252,7 +252,7 @@ export function MyPlanPageClient() {
         <p className="mt-3 text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
           Subscription
         </p>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight text-kal-text">My Plan</h1>
+        <h1 className="kal-feature-title mt-1">My Plan</h1>
         <p className="mt-1 text-sm leading-relaxed text-kal-text-secondary">
           Monthly subscription — you are charged once per month. AutoPay is limited to the number of
           months you chose at signup (shown below when available). Cancel anytime; you keep access

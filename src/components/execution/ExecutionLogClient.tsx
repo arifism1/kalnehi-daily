@@ -197,11 +197,11 @@ export function ExecutionLogClient() {
           <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
             Execution log
           </p>
-          <h1 className="mt-1 flex items-center gap-2 text-xl font-bold tracking-tight text-kal-text sm:text-2xl">
+          <h1 className="kal-feature-title mt-1 flex items-center gap-2">
             <ScrollText className="h-7 w-7 text-kal-accent" aria-hidden />
             Daily mastery record
           </h1>
-          <p className="mt-2 max-w-xl text-sm leading-relaxed text-kal-muted sm:text-[15px]">
+          <p className="kal-feature-lead mt-2 max-w-xl">
             Time invested in high-yield topics — every ended session and conquered
             target, synced offline-first across months and years.
           </p>
@@ -262,7 +262,7 @@ export function ExecutionLogClient() {
               </button>
               <button
                 type="button"
-                className="ml-2 rounded-xl border border-kal-accent/30 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-kal-accent hover:bg-kal-accent/10"
+                className="ml-2 min-w-[3.25rem] shrink-0 whitespace-nowrap rounded-xl border border-kal-accent/30 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-kal-accent hover:bg-kal-accent/10"
                 onClick={() => setSelectedDay(today)}
               >
                 Today

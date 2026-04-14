@@ -4,6 +4,13 @@ import { Plus, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState, startTransition } from "react";
 
 import { PlannerPageShell } from "@/components/planner/PlannerPageShell";
+import {
+  hydrateUserPlannerTextFromServer,
+  plannerTextSetTodos,
+} from "@/lib/userPlannerTextClient";
+import { getUserPlannerTextBundleCached } from "@/lib/userPlannerTextLocal";
+import type { PlannerTodoState } from "@/lib/userPlannerTextTypes";
+import { useAuthStore } from "@/store/useAuthStore";
 
 const STORAGE_KEY = "kalnehi-exam-todos-v1";
 
@@ -16,7 +23,7 @@ type Todo = {
   done: boolean;
 };
 
-function load(): Todo[] {
+function loadLocal(): Todo[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -28,6 +35,37 @@ function load(): Todo[] {
   }
 }
 
+function saveLocal(rows: Todo[]): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
+  } catch {
+    /* ignore */
+  }
+}
+
+function localRowsToStates(rows: Todo[]): PlannerTodoState[] {
+  const ts = new Date().toISOString();
+  return rows.map((t, i) => ({
+    id: t.id,
+    text: t.text,
+    priority: t.priority,
+    done: t.done,
+    position: i,
+    updatedAt: ts,
+    createdAt: ts,
+  }));
+}
+
+function statesToLocal(rows: PlannerTodoState[]): Todo[] {
+  return rows.map(({ id, text, priority, done }) => ({
+    id,
+    text,
+    priority,
+    done,
+  }));
+}
+
 const priorityStyle: Record<Priority, string> = {
   high: "border-rose-500/40 bg-rose-950/20 text-rose-200",
   med: "border-amber-500/35 bg-amber-950/15 text-amber-100",
@@ -35,27 +73,55 @@ const priorityStyle: Record<Priority, string> = {
 };
 
 export function TodosPlannerView() {
-  const [todos, setTodos] = useState<Todo[]>([]);
+  const userId = useAuthStore((s) => s.user?.id);
+  const [todos, setTodos] = useState<PlannerTodoState[]>([]);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     const id = requestAnimationFrame(() => {
       startTransition(() => {
-        setTodos(load());
-        setHydrated(true);
+        void (async () => {
+          if (!userId) {
+            setTodos(localRowsToStates(loadLocal()));
+            setHydrated(true);
+            return;
+          }
+          const bundle = await hydrateUserPlannerTextFromServer(userId);
+          setTodos(bundle.todos);
+          setHydrated(true);
+        })();
       });
     });
     return () => cancelAnimationFrame(id);
-  }, []);
+  }, [userId]);
 
-  const save = useCallback((next: Todo[]) => {
-    setTodos(next);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    } catch {
-      /* ignore */
-    }
-  }, []);
+  useEffect(() => {
+    if (!userId) return;
+    const onPlanner = () => {
+      void getUserPlannerTextBundleCached(userId).then((b) => {
+        if (b) setTodos(b.todos);
+      });
+    };
+    window.addEventListener("kalnehi-user-planner-text-changed", onPlanner);
+    return () =>
+      window.removeEventListener(
+        "kalnehi-user-planner-text-changed",
+        onPlanner,
+      );
+  }, [userId]);
+
+  const save = useCallback(
+    (next: PlannerTodoState[]) => {
+      const positioned = next.map((t, i) => ({ ...t, position: i }));
+      setTodos(positioned);
+      if (!userId) {
+        saveLocal(statesToLocal(positioned));
+        return;
+      }
+      void plannerTextSetTodos(userId, positioned);
+    },
+    [userId],
+  );
 
   const add = () => {
     const text = window.prompt("Quick exam to-do:");
@@ -64,6 +130,7 @@ export function TodosPlannerView() {
       typeof crypto !== "undefined" && "randomUUID" in crypto
         ? crypto.randomUUID()
         : `t-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const ts = new Date().toISOString();
     save([
       ...todos,
       {
@@ -71,16 +138,19 @@ export function TodosPlannerView() {
         text: text.trim(),
         priority: "high",
         done: false,
+        position: todos.length,
+        updatedAt: ts,
+        createdAt: ts,
       },
     ]);
   };
 
-  const cyclePriority = (id: string) => {
+  const cyclePriority = (tid: string) => {
     const order: Priority[] = ["high", "med", "low"];
     save(
       todos.map((t) => {
-        if (t.id !== id) return t;
-        const i = order.indexOf(t.priority);
+        if (t.id !== tid) return t;
+        const i = order.indexOf(t.priority as Priority);
         const next = order[(i + 1) % order.length]!;
         return { ...t, priority: next };
       }),
@@ -103,7 +173,11 @@ export function TodosPlannerView() {
     <PlannerPageShell
       eyebrow="To-do list"
       title="Quick Exam To-Dos"
-      subtitle="Rank by urgency for your upcoming test — tap priority to cycle high → medium → low. Separate from your main Plan tab; use this for fast capture."
+      subtitle={
+        userId
+          ? "Rank by urgency — synced when online. Separate from your main Plan tab."
+          : "Rank by urgency. Sign in to sync across devices; until then saved on this device only."
+      }
     >
       {todos.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-slate-600 px-4 py-10 text-center text-sm text-zinc-500">
@@ -115,7 +189,7 @@ export function TodosPlannerView() {
           {todos.map((t) => (
             <li
               key={t.id}
-              className={`flex items-start gap-3 rounded-xl border px-3 py-3 ${priorityStyle[t.priority]}`}
+              className={`flex items-start gap-3 rounded-xl border px-3 py-3 ${priorityStyle[t.priority as Priority]}`}
             >
               <input
                 type="checkbox"

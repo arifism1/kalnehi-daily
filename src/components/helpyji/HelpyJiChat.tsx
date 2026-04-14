@@ -17,11 +17,34 @@ import {
   type HelpyJiSurface,
 } from "@/lib/helpyjiPrompts";
 import { usePrepBrainContextSnapshot } from "@/hooks/usePrepBrainContextSnapshot";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { useAuthStore } from "@/store/useAuthStore";
 
 const STORAGE_PREFIX = "helpyji_thread_v3";
 
 type ChatMsg = { role: "user" | "assistant"; content: string };
+
+function parseHelpyJiSessionThread(raw: string | null): ChatMsg[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    const msgs: ChatMsg[] = [];
+    for (const m of parsed) {
+      if (
+        m &&
+        typeof m === "object" &&
+        (m as ChatMsg).role &&
+        typeof (m as ChatMsg).content === "string"
+      ) {
+        msgs.push(m as ChatMsg);
+      }
+    }
+    return msgs;
+  } catch {
+    return [];
+  }
+}
 
 type HelpyJiChatProps = {
   surface: HelpyJiSurface;
@@ -53,28 +76,71 @@ export function HelpyJiChat({
       ? `${STORAGE_PREFIX}:${surface}:${user.id}`
       : `${STORAGE_PREFIX}:${surface}:pending`;
 
-  useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem(storageKey);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as unknown;
-      if (!Array.isArray(parsed)) return;
-      const msgs: ChatMsg[] = [];
-      for (const m of parsed) {
-        if (
-          m &&
-          typeof m === "object" &&
-          (m as ChatMsg).role &&
-          typeof (m as ChatMsg).content === "string"
-        ) {
-          msgs.push(m as ChatMsg);
-        }
-      }
-      if (msgs.length) setMessages(msgs);
-    } catch {
-      /* ignore */
+  const ensureSessionId = useCallback((): string | null => {
+    if (!user?.id || typeof window === "undefined") return null;
+    const k = `helpyji_session_v2:${surface}:${user.id}`;
+    let sid = sessionStorage.getItem(k);
+    if (
+      !sid ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        sid,
+      )
+    ) {
+      sid = crypto.randomUUID();
+      sessionStorage.setItem(k, sid);
     }
-  }, [storageKey]);
+    return sid;
+  }, [user?.id, surface]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const raw = sessionStorage.getItem(storageKey);
+      const localMsgs = parseHelpyJiSessionThread(raw);
+
+      if (!user?.id) {
+        if (localMsgs.length) setMessages(localMsgs);
+        return;
+      }
+
+      const sessionId = ensureSessionId();
+      if (!sessionId) {
+        if (localMsgs.length) setMessages(localMsgs);
+        return;
+      }
+
+      const supabase = getSupabaseBrowserClient();
+      const { data, error } = await supabase
+        .from("helpyji_conversations")
+        .select("message_role, content, created_at")
+        .eq("session_id", sessionId)
+        .order("created_at", { ascending: true });
+
+      if (cancelled) return;
+
+      if (error) {
+        if (localMsgs.length) setMessages(localMsgs);
+        return;
+      }
+
+      const serverMsgs: ChatMsg[] = (data ?? []).map((row) => ({
+        role: row.message_role as ChatMsg["role"],
+        content: row.content,
+      }));
+
+      const merged: ChatMsg[] = [...serverMsgs];
+      for (let k = serverMsgs.length; k < localMsgs.length; k++) {
+        merged.push(localMsgs[k]!);
+      }
+
+      if (merged.length) setMessages(merged);
+      else if (localMsgs.length) setMessages(localMsgs);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [storageKey, user?.id, ensureSessionId]);
 
   useEffect(() => {
     try {
@@ -111,17 +177,6 @@ export function HelpyJiChat({
     !isSending &&
     Date.now() >= clientCooldownUntil &&
     (remaining === null || remaining > 0);
-
-  const ensureSessionId = useCallback((): string | null => {
-    if (!user?.id || typeof window === "undefined") return null;
-    const k = `helpyji_session_v2:${surface}:${user.id}`;
-    let sid = sessionStorage.getItem(k);
-    if (!sid || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(sid)) {
-      sid = crypto.randomUUID();
-      sessionStorage.setItem(k, sid);
-    }
-    return sid;
-  }, [user?.id, surface]);
 
   const send = useCallback(async () => {
     const text = input.trim();

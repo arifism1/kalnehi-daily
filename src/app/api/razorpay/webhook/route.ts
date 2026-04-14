@@ -11,11 +11,24 @@ import type { Database } from "@/types/supabase";
 export const runtime = "nodejs";
 
 const MAX_BODY_BYTES = 64 * 1024;
-/** Keep in sync with Razorpay Dashboard → Webhooks (enable these events for this URL). */
+/**
+ * Events to handle. Must match what is enabled in Razorpay Dashboard → Webhooks for
+ * https://kalnehi.com/api/razorpay/webhook.
+ *
+ * subscription.pending  → Razorpay is auto-retrying a failed charge. No DB change.
+ * subscription.halted   → All retries exhausted (includes mandate revoked from UPI app).
+ *                         Set status="cancelled", preserve end_date so access continues
+ *                         until the paid period ends.
+ * payment.failed        → Acknowledged but not acted on when attached to a subscription
+ *                         (subscription.halted is the terminal signal). Non-subscription
+ *                         payment failures are ignored.
+ */
 const HANDLED_EVENTS = new Set([
   "subscription.charged",
   "subscription.cancelled",
   "subscription.completed",
+  "subscription.pending",
+  "subscription.halted",
   "payment.failed",
 ]);
 
@@ -278,24 +291,49 @@ export async function POST(request: Request) {
     return okResponse({ updated });
   }
 
+  if (event === "subscription.pending") {
+    // Razorpay is actively retrying the charge. Keep the user's current access intact
+    // and wait for either subscription.charged (recovery) or subscription.halted (terminal).
+    console.info("[webhook] subscription.pending: retrying charge, no profile change", {
+      subscriptionId: subscriptionId?.slice(0, 14) ?? "unknown",
+    });
+    return okResponse({ noop: true });
+  }
+
+  if (event === "subscription.halted") {
+    // All retry attempts exhausted — this includes the case where the customer revoked
+    // the UPI autopay mandate from their bank app. Cancel without wiping end_date so the
+    // user retains access through the end of their already-paid billing period.
+    const patch: Record<string, unknown> = {
+      subscription_status: "cancelled",
+    };
+
+    let updated = false;
+    if (subscriptionId) {
+      updated = await applyBySubscriptionId(supabase, subscriptionId, patch);
+    }
+    if (!updated && userIdFromNotes) {
+      updated = await applyByUserId(supabase, userIdFromNotes, patch);
+    }
+    return okResponse({ updated });
+  }
+
   if (event === "payment.failed") {
     const failedPaymentSubId =
       payload.payload?.payment?.entity?.subscription_id?.trim() ?? "";
-    if (
-      !failedPaymentSubId ||
-      !RAZORPAY_PAYMENT_OR_SUB_ID_RE.test(failedPaymentSubId)
-    ) {
+    if (!failedPaymentSubId || !RAZORPAY_PAYMENT_OR_SUB_ID_RE.test(failedPaymentSubId)) {
+      // Not a subscription payment — nothing to act on.
       return okResponse({ ignored: true });
     }
 
-    const nowIso = new Date().toISOString();
-    const patch: Record<string, unknown> = {
-      subscription_status: "expired",
-      subscription_end_date: nowIso,
-    };
-
-    const updated = await applyBySubscriptionId(supabase, failedPaymentSubId, patch);
-    return okResponse({ updated });
+    // For subscription payments Razorpay fires payment.failed on *every* retry attempt,
+    // not just the terminal one. Cutting access here would penalise users during the
+    // normal retry window. subscription.halted is the reliable terminal signal; we
+    // acknowledge this event without changing the profile.
+    console.info("[webhook] payment.failed on subscription: awaiting halted/cancelled", {
+      subscriptionId: failedPaymentSubId.slice(0, 14),
+    });
+    return okResponse({ noop: true });
   }
 
   return okResponse({ ignored: true });

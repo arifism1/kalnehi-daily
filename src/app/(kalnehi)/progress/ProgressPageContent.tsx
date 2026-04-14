@@ -13,10 +13,8 @@ export default function ProgressPageContent() {
         <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
           Momentum
         </p>
-        <h1 className="mt-1 text-xl font-bold tracking-tight text-kal-text sm:text-2xl">
-          Progress
-        </h1>
-        <p className="mt-2 text-sm leading-relaxed text-kal-text-secondary sm:text-[15px]">
+        <h1 className="kal-feature-title mt-1">Progress</h1>
+        <p className="kal-feature-lead mt-2 text-kal-text-secondary">
           Daily execution first — then marks and syllabus so you see both
           discipline and coverage.
         </p>

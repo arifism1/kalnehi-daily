@@ -58,6 +58,7 @@ function isCurrentlyPaid(status: SubscriptionStatus, endDate: string | null): bo
   return end.getTime() > Date.now();
 }
 
+/** Loads subscription/onboarding for the signed-in user; anonymous callers get defaults. Route/public-page gating is in `AppShell` + `public-paths`. */
 export function useSubscriptionAccess(): SubscriptionData {
   const user = useAuthStore((s) => s.user);
   const [loading, setLoading] = useState(true);

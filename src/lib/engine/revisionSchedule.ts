@@ -12,7 +12,8 @@ export type RevisionItem = {
   createdAt: string;
 };
 
-const STORAGE_KEY = "kalnehi-revision-v1";
+/** Legacy localStorage key (one-time import into Supabase-backed IDB). */
+export const REVISION_LEGACY_STORAGE_KEY = "kalnehi-revision-v1";
 
 const OFFSETS: Record<RevisionDifficulty, number> = {
   hard: 1,
@@ -28,24 +29,7 @@ export function nextDueFrom(
   return format(addDays(d, OFFSETS[difficulty]), "yyyy-MM-dd");
 }
 
-export function loadRevisionItems(): RevisionItem[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as RevisionItem[];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-export function saveRevisionItems(items: RevisionItem[]): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-}
-
-export function addRevisionItem(
+export function buildNewRevisionItem(
   title: string,
   difficulty: RevisionDifficulty,
   microtopicId?: string,
@@ -55,7 +39,7 @@ export function addRevisionItem(
     typeof crypto !== "undefined" && crypto.randomUUID
       ? crypto.randomUUID()
       : `rev-${Date.now()}`;
-  const item: RevisionItem = {
+  return {
     id,
     title: title.trim() || "Revision",
     microtopicId,
@@ -64,26 +48,17 @@ export function addRevisionItem(
     lastReviewed: null,
     createdAt: new Date().toISOString(),
   };
-  const all = loadRevisionItems();
-  all.push(item);
-  saveRevisionItems(all);
-  return item;
 }
 
-export function completeRevisionReview(id: string): void {
-  const today = format(new Date(), "yyyy-MM-dd");
-  const all = loadRevisionItems();
-  const i = all.findIndex((x) => x.id === id);
-  if (i < 0) return;
-  const row = all[i]!;
-  row.lastReviewed = today;
-  row.nextDue = nextDueFrom(today, row.difficulty);
-  all[i] = row;
-  saveRevisionItems(all);
-}
-
-export function removeRevisionItem(id: string): void {
-  saveRevisionItems(loadRevisionItems().filter((x) => x.id !== id));
+export function applyLoggedRevision(
+  item: RevisionItem,
+  today: string,
+): RevisionItem {
+  return {
+    ...item,
+    lastReviewed: today,
+    nextDue: nextDueFrom(today, item.difficulty),
+  };
 }
 
 export function dueAndUpcoming(

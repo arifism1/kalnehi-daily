@@ -43,9 +43,11 @@ export function DailyPlanPageContent() {
       <header className="mt-6 mb-5">
         <div className="flex flex-wrap items-center gap-2">
           <Zap className="h-5 w-5 text-kal-accent" aria-hidden />
-          <h1 className="text-2xl font-bold tracking-tight text-kal-text sm:text-3xl">
+          <h1 className="kal-feature-title">
             Today&apos;s plan{" "}
-            <span className="text-base font-semibold text-kal-muted">(live)</span>
+            <span className="text-sm font-semibold text-kal-muted sm:text-base">
+              (live)
+            </span>
           </h1>
         </div>
       </header>
@@ -95,21 +97,21 @@ export function DailyPlanPageContent() {
       <div className="mt-6 flex flex-wrap justify-center gap-3">
         <Link
           href="/dictate-day"
-          className="inline-flex items-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-2.5 text-sm font-semibold text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-text"
+          className="inline-flex items-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-2.5 text-sm font-bold text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-text"
         >
           <Mic className="h-4 w-4 text-kal-accent" aria-hidden />
           Dictate My Day
         </Link>
         <Link
           href="/self-type-day"
-          className="inline-flex items-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-2.5 text-sm font-semibold text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-text"
+          className="inline-flex items-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-2.5 text-sm font-bold text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-text"
         >
           <Type className="h-4 w-4 text-kal-accent" aria-hidden />
           Self Type
         </Link>
         <Link
           href="/paste-handwritten"
-          className="inline-flex items-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-2.5 text-sm font-semibold text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-text"
+          className="inline-flex items-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-2.5 text-sm font-bold text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-text"
         >
           <PenLine className="h-4 w-4 text-kal-accent" aria-hidden />
           Handwritten

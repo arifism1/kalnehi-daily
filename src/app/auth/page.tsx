@@ -3,17 +3,21 @@
 import clsx from "clsx";
 import {
   ArrowLeft,
+  BookOpen,
   KeyRound,
   Loader2,
   Lock,
   LogIn,
   Mail,
+  Sparkles,
   UserPlus,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
+import { AuthAppNavPreviewMenu } from "@/components/auth/AuthAppNavPreviewMenu";
 import { trackAuthSuccess } from "@/lib/analytics";
 import { SITE_NAME } from "@/lib/seo-metadata";
 import { formatSupabaseError, getSupabaseBrowserClient } from "@/lib/supabase";
@@ -31,6 +35,55 @@ function authCallbackUrl(nextPath: string): string {
   const next = encodeURIComponent(nextPath.startsWith("/") ? nextPath : `/${nextPath}`);
   if (!normalizedOrigin) return `/auth/callback?next=${next}`;
   return `${normalizedOrigin}/auth/callback?next=${next}`;
+}
+
+/** Small app mark: grid tile + overflow so the 192px asset cannot flex-grow past the frame. */
+function AuthPageMark({ priority }: { priority?: boolean }) {
+  return (
+    <div className="mb-3 flex shrink-0 justify-center">
+      <div className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-kal-border/70">
+        <Image
+          src="/icon-192x192.png"
+          alt=""
+          width={48}
+          height={48}
+          priority={priority}
+          className="size-10 object-contain"
+        />
+      </div>
+    </div>
+  );
+}
+
+function AuthExploreLinks() {
+  return (
+    <nav className="w-full max-w-md px-1" aria-label="Explore Kalnehi">
+      <p className="mb-2 text-center text-[10px] font-bold uppercase tracking-widest text-kal-muted">
+        Explore
+      </p>
+      <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1.5 text-xs font-bold sm:gap-x-3 sm:text-sm">
+        <Link
+          href="/what-can-kalnehi-do"
+          title="What Can Kalnehi Do?"
+          className="inline-flex items-center gap-1.5 font-bold text-kal-text-secondary transition-colors hover:text-kal-accent"
+        >
+          <Sparkles className="h-3.5 w-3.5 shrink-0 text-kal-accent" aria-hidden />
+          <span className="text-center leading-snug">What Can Kalnehi Do?</span>
+        </Link>
+        <span className="hidden text-kal-border select-none sm:inline" aria-hidden>
+          ·
+        </span>
+        <Link
+          href="/best-study-practices"
+          title="Best Study Practices"
+          className="inline-flex items-center gap-1.5 font-bold text-kal-text-secondary transition-colors hover:text-kal-accent"
+        >
+          <BookOpen className="h-3.5 w-3.5 shrink-0 text-kal-accent" aria-hidden />
+          <span className="text-center leading-snug">Best Study Practices</span>
+        </Link>
+      </div>
+    </nav>
+  );
 }
 
 export default function AuthPage() {
@@ -157,10 +210,10 @@ export default function AuthPage() {
   if (view === "forgot-sent") {
     return (
       <div className="flex min-h-full flex-col items-center justify-center gap-8 bg-kal-page px-6 py-16">
+        <AuthAppNavPreviewMenu />
+        <AuthExploreLinks />
         <div className="text-center">
-          <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
-            Kalnehi
-          </p>
+          <AuthPageMark />
           <h1 className="mt-2 text-2xl font-bold text-kal-text">Check your email</h1>
           <p className="mt-3 max-w-sm text-sm leading-relaxed text-kal-muted">
             Password reset link sent to your email. Check your inbox (and spam
@@ -191,10 +244,10 @@ export default function AuthPage() {
   if (view === "forgot") {
     return (
       <div className="flex min-h-full flex-col items-center justify-center gap-8 bg-kal-page px-6 py-16">
+        <AuthAppNavPreviewMenu />
+        <AuthExploreLinks />
         <div className="text-center">
-          <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
-            Kalnehi
-          </p>
+          <AuthPageMark />
           <h1 className="mt-2 text-2xl font-bold text-kal-text">Forgot password</h1>
           <p className="mt-2 text-sm text-kal-muted">
             We&apos;ll email you a link to reset it.
@@ -212,7 +265,7 @@ export default function AuthPage() {
             <div>
               <label
                 htmlFor="forgot-email"
-                className="flex items-center gap-1.5 text-xs font-medium text-kal-muted"
+                className="flex items-center gap-1.5 text-xs font-semibold text-kal-text-secondary"
               >
                 <Mail className="h-3.5 w-3.5" />
                 Email
@@ -267,10 +320,9 @@ export default function AuthPage() {
 
   return (
     <div className="flex min-h-full flex-col items-center justify-center gap-8 bg-kal-page px-6 py-16">
+      <AuthAppNavPreviewMenu />
       <div className="text-center">
-        <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
-          Kalnehi
-        </p>
+        <AuthPageMark priority />
         <h1 className="mt-2 max-w-md text-balance text-xl font-bold leading-snug text-kal-text sm:text-2xl">
           {SITE_NAME}
         </h1>
@@ -278,6 +330,8 @@ export default function AuthPage() {
           Welcome back — your plan and syllabus stay with you on every device.
         </p>
       </div>
+
+      <AuthExploreLinks />
 
       {verifyEmailSent && (
         <div
@@ -302,7 +356,7 @@ export default function AuthPage() {
               "flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-colors duration-200",
               mode === "login"
                 ? "bg-kal-accent text-white"
-                : "text-kal-muted hover:text-kal-text-secondary",
+                : "text-kal-text-secondary hover:text-kal-text",
             )}
           >
             <LogIn className="h-4 w-4" />
@@ -319,7 +373,7 @@ export default function AuthPage() {
               "flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-colors duration-200",
               mode === "signup"
                 ? "bg-kal-accent text-white"
-                : "text-kal-muted hover:text-kal-text-secondary",
+                : "text-kal-text-secondary hover:text-kal-text",
             )}
           >
             <UserPlus className="h-4 w-4" />
@@ -337,7 +391,7 @@ export default function AuthPage() {
           <div>
             <label
               htmlFor="auth-email"
-              className="flex items-center gap-1.5 text-xs font-medium text-kal-muted"
+              className="flex items-center gap-1.5 text-xs font-semibold text-kal-text-secondary"
             >
               <Mail className="h-3.5 w-3.5" />
               Email
@@ -355,7 +409,7 @@ export default function AuthPage() {
           <div>
             <label
               htmlFor="auth-password"
-              className="flex items-center gap-1.5 text-xs font-medium text-kal-muted"
+              className="flex items-center gap-1.5 text-xs font-semibold text-kal-text-secondary"
             >
               <Lock className="h-3.5 w-3.5" />
               Password

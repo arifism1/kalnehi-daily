@@ -100,10 +100,8 @@ export function PlanMyDayPage() {
         <p className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-kal-accent">
           Planning
         </p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight text-kal-text sm:text-4xl">
-          Plan My Day
-        </h1>
-        <p className="mx-auto mt-3 max-w-xl text-[15px] leading-relaxed text-kal-muted sm:mx-0 sm:text-base">
+        <h1 className="kal-feature-title mt-2">Plan My Day</h1>
+        <p className="kal-feature-lead mx-auto mt-3 max-w-xl sm:mx-0">
           {dictateLocked
             ? "Type your plan below. Upgrade to Pro to unlock voice dictation and handwritten scanning."
             : "One shared plan per day — use voice, scan, or typing. Open the daily planner anytime to see everything together."}

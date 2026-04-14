@@ -9,6 +9,7 @@ import {
   Target,
   User,
 } from "lucide-react";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 import { completeOnboarding } from "@/actions/profile";
@@ -305,6 +306,26 @@ export function OnboardingWizard() {
           </button>
         </section>
       )}
+
+      <div className="mt-10 rounded-2xl border border-kal-border/90 bg-kal-card-muted/40 px-4 py-4 text-center">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-kal-muted">
+          See what you&apos;re unlocking
+        </p>
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:justify-center sm:gap-3">
+          <Link
+            href="/what-can-kalnehi-do"
+            className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-xl border border-kal-border bg-kal-card px-4 text-sm font-semibold text-kal-accent transition-colors hover:border-kal-accent/45 sm:flex-initial"
+          >
+            What Can Kalnehi Do?
+          </Link>
+          <Link
+            href="/best-study-practices"
+            className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-xl border border-kal-border bg-kal-card px-4 text-sm font-semibold text-kal-accent transition-colors hover:border-kal-accent/45 sm:flex-initial"
+          >
+            Best Study Practices
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

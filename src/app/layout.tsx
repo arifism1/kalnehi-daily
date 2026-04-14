@@ -116,15 +116,11 @@ export const metadata: Metadata = {
   },
 };
 
-// userScalable:false and maximumScale:1 lock pinch-to-zoom. This is intentional
-// for the PWA / TWA shell experience where the layout is already mobile-first and
-// browser zoom causes layout breaks. If WCAG 1.4.4 compliance becomes a hard
-// requirement, remove these two values and audit layouts for reflow at 400%.
+// Allow pinch-to-zoom and browser zoom (WCAG 1.4.4 / PageSpeed accessibility).
+// Audit key layouts at ~200–400% zoom if regressions appear.
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   themeColor: "#ef4444",
   colorScheme: "light",
 };

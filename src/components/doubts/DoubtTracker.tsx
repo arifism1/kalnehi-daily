@@ -230,9 +230,7 @@ export function DoubtTracker() {
               <p className="text-[0.6rem] font-semibold uppercase tracking-[0.2em] text-kal-accent sm:text-[0.65rem] sm:tracking-widest">
                 Exam prep
               </p>
-              <h1 className="text-lg font-bold tracking-tight text-kal-text sm:text-xl md:text-2xl">
-                Doubt Tracker
-              </h1>
+              <h1 className="kal-feature-title">Doubt Tracker</h1>
             </div>
           </div>
           <p className="max-w-2xl text-xs leading-relaxed text-kal-muted sm:text-sm">

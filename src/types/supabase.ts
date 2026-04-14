@@ -563,6 +563,120 @@ export type Database = {
         }
         Relationships: []
       }
+      user_engine_notification_prefs: {
+        Row: {
+          prefs: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          prefs?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          prefs?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_productivity_planner: {
+        Row: {
+          notes: string
+          p1: string
+          p2: string
+          p3: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          notes?: string
+          p1?: string
+          p2?: string
+          p3?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          notes?: string
+          p1?: string
+          p2?: string
+          p3?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_quick_exam_todos: {
+        Row: {
+          created_at: string
+          done: boolean
+          id: string
+          position: number
+          priority: string
+          text: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          done?: boolean
+          id?: string
+          position?: number
+          priority: string
+          text: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          done?: boolean
+          id?: string
+          position?: number
+          priority?: string
+          text?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_revision_queue_items: {
+        Row: {
+          created_at: string
+          difficulty: string
+          id: string
+          last_reviewed: string | null
+          microtopic_id: string | null
+          next_due: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          difficulty: string
+          id?: string
+          last_reviewed?: string | null
+          microtopic_id?: string | null
+          next_due: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          difficulty?: string
+          id?: string
+          last_reviewed?: string | null
+          microtopic_id?: string | null
+          next_due?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_notifications: {
         Row: {
           created_at: string

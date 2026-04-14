@@ -89,7 +89,7 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
             <Menu className="h-5 w-5" strokeWidth={2.25} />
           </div>
           <div>
-            <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-kal-accent">
+            <p className="text-[0.6rem] font-bold uppercase tracking-widest text-kal-accent-dark">
               Navigate
             </p>
             <p className="text-xs font-semibold leading-snug text-kal-text sm:text-[13px] sm:leading-tight">

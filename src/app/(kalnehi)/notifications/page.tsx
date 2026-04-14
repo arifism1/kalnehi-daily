@@ -81,7 +81,7 @@ export default function NotificationsPage() {
         <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
           Alerts
         </p>
-        <h1 className="mt-1 text-2xl font-bold text-kal-text">Notifications</h1>
+        <h1 className="kal-feature-title mt-1">Notifications</h1>
       </header>
 
       {error ? (

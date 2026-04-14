@@ -227,23 +227,26 @@ export function PasteHandwrittenPlanPage() {
   const busy = phase !== "idle";
 
   return (
-    <div className="space-y-4">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+    <div className="space-y-5">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
         <h1
           id={`${baseId}-title`}
-          className="flex flex-wrap items-center gap-2 text-xl font-bold text-kal-text sm:text-2xl"
+          className="kal-feature-title min-w-0 flex flex-wrap items-center gap-2"
         >
-          <ClipboardList className="h-7 w-7 shrink-0 text-kal-accent sm:h-8 sm:w-8" aria-hidden />
+          <ClipboardList className="h-7 w-7 shrink-0 text-kal-accent" aria-hidden />
           Handwritten Daily Plan
         </h1>
         {userId ? (
-          <label className="w-full shrink-0 text-[11px] font-medium text-kal-muted sm:max-w-[11.5rem]">
-            Date
+          <label className="block w-full shrink-0 text-left sm:w-[12.5rem] sm:shrink-0">
+            <span className="block text-[11px] font-semibold uppercase tracking-wide text-kal-muted">
+              Date
+            </span>
             <input
               type="date"
               value={logDate}
               onChange={(e) => setLogDate(e.target.value)}
-              className="mt-1 block h-10 w-full rounded-lg border border-kal-border bg-kal-input-bg px-2.5 text-sm leading-none text-kal-text"
+              aria-label="Plan date"
+              className="mt-2 block h-11 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 text-sm font-medium tabular-nums text-kal-text shadow-sm outline-none transition-colors focus:border-kal-accent/50 focus:ring-2 focus:ring-kal-accent/15"
             />
           </label>
         ) : null}
@@ -257,7 +260,7 @@ export function PasteHandwrittenPlanPage() {
 
       {!userId ? null : (
         <>
-          <section className="kal-glass-panel rounded-xl p-3 sm:p-4">
+          <section className="kal-glass-panel rounded-xl p-4 sm:p-5">
             {formError ? (
               <p
                 className="mb-2 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs text-rose-900 dark:border-rose-500/30 dark:bg-rose-950/25 dark:text-rose-100"
@@ -283,12 +286,12 @@ export function PasteHandwrittenPlanPage() {
               onChange={(e) => void onPlannerPhotoSelected(e)}
             />
 
-            <div>
+            <div className="mt-1">
               <button
                 type="button"
                 onClick={() => photoInputRef.current?.click()}
                 disabled={busy || !hydrated}
-                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg border-2 border-kal-accent bg-kal-accent-soft px-3 py-2 text-sm font-semibold text-kal-text shadow-sm transition-colors hover:bg-kal-accent hover:text-white disabled:opacity-40"
+                className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border-2 border-kal-accent/85 bg-white/90 px-4 py-2.5 text-sm font-semibold text-kal-text shadow-sm ring-1 ring-kal-accent/10 transition-colors hover:border-kal-accent hover:bg-kal-accent hover:text-white hover:ring-red-900/15 disabled:opacity-40 dark:bg-zinc-900/40 dark:hover:bg-kal-accent"
               >
                 {phase === "parse" ? (
                   <>
@@ -304,7 +307,7 @@ export function PasteHandwrittenPlanPage() {
               </button>
             </div>
 
-            <details className="kal-glass-subtle mt-2 rounded-lg text-xs text-kal-muted">
+            <details className="kal-glass-subtle mt-4 rounded-lg text-xs text-kal-muted">
               <summary className="cursor-pointer select-none px-2.5 py-2 font-medium text-kal-text-secondary">
                 Tips for scanning
               </summary>
@@ -333,20 +336,22 @@ export function PasteHandwrittenPlanPage() {
             ) : null}
 
             {hydrated ? (
-              <DailyPlanPreviewStaging
-                sectionId="handwritten-staging"
-                title="Preview"
-                subtitle="Edit if needed, then add below."
-                compact
-                rows={rows}
-                onUpdateRow={updateRow}
-                onRemoveRow={removeRow}
-                onAddEmptyRow={addRow}
-                disabled={busy}
-              />
+              <div className="mt-5">
+                <DailyPlanPreviewStaging
+                  sectionId="handwritten-staging"
+                  title="Preview"
+                  subtitle="Edit if needed, then add below."
+                  compact
+                  rows={rows}
+                  onUpdateRow={updateRow}
+                  onRemoveRow={removeRow}
+                  onAddEmptyRow={addRow}
+                  disabled={busy}
+                />
+              </div>
             ) : null}
 
-            <div className="mt-3 border-t border-kal-border pt-3">
+            <div className="mt-5 border-t border-kal-border pt-4">
               <button
                 type="button"
                 disabled={

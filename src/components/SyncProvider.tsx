@@ -8,7 +8,11 @@ import { refreshStudySessionsFromServer } from "@/lib/refreshStudySessionsFromSe
 import { persistTasks } from "@/lib/taskIdb";
 import { refreshTasksFromSupabase } from "@/lib/refreshTasksFromSupabase";
 import { dispatchTasksSync } from "@/lib/taskRefreshDispatch";
+import { flushHabitOutbox } from "@/lib/habitSync";
+import { flushMotivationOutbox } from "@/lib/motivationSync";
 import { flushOutbox, initSyncManager } from "@/lib/sync";
+import { flushUserPlannerTextOutbox } from "@/lib/userPlannerTextSync";
+import { hydrateUserPlannerTextFromServer } from "@/lib/userPlannerTextClient";
 import { usePrimaryExamLabel } from "@/hooks/usePrimaryExamLabel";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useSyncStore } from "@/store/useSyncStore";
@@ -49,6 +53,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       refreshTasksFromSupabase(userId),
       refreshExecutionLogFromServer(),
       refreshStudySessionsFromServer(),
+      hydrateUserPlannerTextFromServer(userId),
     ]).catch(() => {});
   }, [userId, examLabel]);
 
@@ -80,6 +85,9 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (retrySeq > 0 && userId) {
       void flushOutbox(userId);
+      void flushMotivationOutbox(userId);
+      void flushHabitOutbox(userId);
+      void flushUserPlannerTextOutbox(userId);
     }
   }, [retrySeq, userId]);
 
@@ -90,6 +98,9 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     const onMsg = (event: MessageEvent) => {
       if (event.data?.type === "KALNEHI_SYNC" && userId) {
         void flushOutbox(userId);
+        void flushMotivationOutbox(userId);
+        void flushHabitOutbox(userId);
+        void flushUserPlannerTextOutbox(userId);
       }
     };
     navigator.serviceWorker.addEventListener("message", onMsg);

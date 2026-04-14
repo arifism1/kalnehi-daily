@@ -25,7 +25,7 @@ export function PrepBrainPageClient() {
         <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-kal-card-muted text-kal-text-secondary ring-1 ring-kal-border">
           <Brain className="h-8 w-8" aria-hidden />
         </span>
-        <h1 className="text-xl font-bold text-kal-text">PrepBrain AI is a Pro feature</h1>
+        <h1 className="kal-feature-title">PrepBrain AI is a Pro feature</h1>
         <p className="max-w-sm text-sm text-kal-text-secondary">
           Upgrade to Pro or Pro Max for a personalized coach that understands your syllabus,
           daily planner, habits, and more.

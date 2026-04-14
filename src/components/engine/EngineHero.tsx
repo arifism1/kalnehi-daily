@@ -12,12 +12,8 @@ export function EngineHero({ eyebrow, title, description }: Props) {
       <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
         {eyebrow}
       </p>
-      <h1 className="text-xl font-bold tracking-tight text-kal-text sm:text-2xl">
-        {title}
-      </h1>
-      <p className="max-w-2xl text-sm leading-relaxed text-kal-muted">
-        {description}
-      </p>
+      <h1 className="kal-feature-title">{title}</h1>
+      <p className="kal-feature-lead max-w-2xl">{description}</p>
     </header>
   );
 }

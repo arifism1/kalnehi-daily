@@ -130,8 +130,8 @@ export function MeditationConsistencyPage() {
     <div className="mx-auto max-w-6xl space-y-6 pb-12">
       <header className="rounded-3xl border border-kal-border bg-gradient-to-br from-[#f2f9f6] via-kal-card to-[#eef6ff] p-7">
         <p className="text-[0.68rem] uppercase tracking-[0.22em] text-kal-accent">Brain Yoga</p>
-        <h1 className="mt-2 text-3xl font-bold text-kal-text">Brain Yoga consistency</h1>
-        <p className="mt-2 text-kal-muted">Your rhythm of mind-body practice over time</p>
+        <h1 className="kal-feature-title mt-2">Brain Yoga consistency</h1>
+        <p className="kal-feature-lead mt-2">Your rhythm of mind-body practice over time</p>
       </header>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

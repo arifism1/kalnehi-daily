@@ -532,7 +532,7 @@ export function TaskCard({
                     </span>
                   )}
                   {appearance === "missed" && !done && (
-                    <span className="shrink-0 rounded border border-amber-500/35 bg-amber-500/10 px-1 py-px text-[7px] font-bold uppercase tracking-[0.1em] text-amber-200/95 sm:px-1.5 sm:text-[8px] sm:tracking-[0.12em]">
+                    <span className="shrink-0 rounded border border-amber-600/45 bg-amber-100/90 px-1 py-px text-[7px] font-bold uppercase tracking-[0.1em] text-amber-900 sm:px-1.5 sm:text-[8px] sm:tracking-[0.12em] dark:border-amber-500/35 dark:bg-amber-500/15 dark:text-amber-100">
                       Carry
                     </span>
                   )}

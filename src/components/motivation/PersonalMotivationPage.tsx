@@ -663,10 +663,8 @@ export function PersonalMotivationPage() {
         <p className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-kal-accent">
           Inner game
         </p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight text-kal-text sm:text-4xl">
-          Personal Motivation
-        </h1>
-        <p className="mx-auto mt-3 max-w-xl text-[15px] leading-relaxed text-kal-muted sm:mx-0 sm:text-base">
+        <h1 className="kal-feature-title mt-2">Personal Motivation</h1>
+        <p className="kal-feature-lead mx-auto mt-3 max-w-xl sm:mx-0">
           Your daily fuel · Messages to future self
         </p>
       </header>
@@ -677,7 +675,7 @@ export function PersonalMotivationPage() {
             <p className="text-xs font-semibold uppercase tracking-wide text-kal-accent">
               Motivation streak
             </p>
-            <p className="mt-1 text-lg font-bold text-kal-text sm:text-xl">
+            <p className="mt-1 text-base font-semibold text-kal-text sm:text-lg">
               {streak > 0 ? (
                 <>
                   You&apos;ve written to yourself for{" "}

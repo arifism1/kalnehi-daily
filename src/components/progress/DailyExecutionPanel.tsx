@@ -116,7 +116,7 @@ export function DailyExecutionPanel() {
               <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-kal-muted">
                 Today
               </span>
-              <p className="mt-1 text-3xl font-bold tabular-nums text-kal-text sm:text-4xl">
+              <p className="mt-1 text-2xl font-bold tabular-nums text-kal-text sm:text-3xl">
                 {todaySnap.plannedTasks === 0 ? (
                   "—"
                 ) : (

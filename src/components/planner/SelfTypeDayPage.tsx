@@ -42,10 +42,10 @@ export function SelfTypeDayPage() {
         <p className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-kal-accent">
           Planning · Typed
         </p>
-        <h1 className="mt-2 text-2xl font-bold tracking-tight text-kal-text sm:text-3xl">
+        <h1 className="kal-feature-title mt-2">
           Type your day
         </h1>
-        <p className="mt-2 max-w-xl text-sm leading-relaxed text-kal-muted">
+        <p className="kal-feature-lead mt-2 max-w-xl">
           This is the same daily plan as Dictate and Handwritten — one list per date, with typed source badges.
         </p>
       </header>
