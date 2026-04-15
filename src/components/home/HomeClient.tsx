@@ -30,12 +30,11 @@ import { useTaskStore } from "@/store/useTaskStore";
 
 import { useDailyPlanHomeExecution } from "@/hooks/useDailyPlanHomeExecution";
 
-import { MissedTasks } from "./MissedTasks";
 import { MotivationWallpaper } from "./MotivationWallpaper";
 import { MotivationStrip } from "./MotivationStrip";
 import { RealitySnapshot } from "./RealitySnapshot";
 import { ThreeDayStrip } from "./ThreeDayStrip";
-import { QuickMeditationCards } from "./QuickMeditationCards";
+import { HomeAccordionSections } from "./HomeAccordionSections";
 
 export function HomeClient() {
   const router = useRouter();
@@ -405,9 +404,7 @@ export function HomeClient() {
         tomorrowMinutes={dailyExec.tomorrow.totalMinutes}
       />
 
-      <QuickMeditationCards />
-
-      <MissedTasks />
+      <HomeAccordionSections />
     </div>
   );
 }

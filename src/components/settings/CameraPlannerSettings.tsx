@@ -3,6 +3,7 @@
 import clsx from "clsx";
 import { useId, useState } from "react";
 
+import { SettingsExpandableSection } from "@/components/settings/SettingsExpandableSection";
 import { StudyCameraPrivacyModal } from "@/components/study/StudyCameraPrivacyModal";
 import {
   useSettingsStore,
@@ -92,83 +93,81 @@ export function CameraPlannerSettings() {
         onContinue={onPrivacyContinue}
         onDismiss={onPrivacyDismiss}
       />
-      <div className="kal-glass-panel divide-y divide-white/15 rounded-[1rem] px-1 dark:divide-white/10">
-        <div className="px-3 py-3">
-          <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
-            Camera &amp; planner
-          </p>
-          <p className="mt-1 text-xs text-kal-text-secondary">
-            Study camera runs on-device only. No video is uploaded or streamed.
-          </p>
-        </div>
-        <div className="px-3 py-3.5">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <span className="text-[15px] font-medium text-kal-text">
-                Enable Study Camera
-              </span>
-              <p className="mt-2 text-xs leading-relaxed text-kal-text-secondary">
-                Video is processed only on your phone or computer. No data is
-                streamed, uploaded, or shared. Completely private and safe—AI runs
-                on-device (MediaPipe); nothing is sent to our servers.
-              </p>
-            </div>
-            <SheetSwitch
-              checked={studyCameraEnabled}
-              onChange={onStudyCameraSwitchRequest}
-              id={`${baseId}-sc`}
-            />
-          </div>
-        </div>
-        {studyCameraEnabled ? (
-          <>
-            <div className="flex flex-col gap-2 px-3 py-3.5 sm:flex-row sm:items-center sm:justify-between">
-              <div>
+      <SettingsExpandableSection
+        sectionId="camera-planner"
+        title="Camera & planner"
+        description="Study camera runs on-device only. No video is uploaded or streamed."
+      >
+        <div className="kal-glass-panel divide-y divide-white/15 rounded-[1rem] px-1 dark:divide-white/10">
+          <div className="px-3 py-3.5">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
                 <span className="text-[15px] font-medium text-kal-text">
-                  Default camera
+                  Enable Study Camera
                 </span>
-                <p className="mt-0.5 text-xs text-kal-text-secondary">
-                  For camera-proven study sessions. Your choice is remembered.
+                <p className="mt-2 text-xs leading-relaxed text-kal-text-secondary">
+                  Video is processed only on your phone or computer. No data is
+                  streamed, uploaded, or shared. Completely private and safe—AI runs
+                  on-device (MediaPipe); nothing is sent to our servers.
                 </p>
               </div>
-              <select
-                value={studyCameraFacing}
-                onChange={(e) =>
-                  setStudyCameraFacing(e.target.value as StudyCameraFacing)
-                }
-                className="min-h-[44px] rounded-lg border border-kal-border bg-kal-card-muted px-3 py-2 text-sm text-kal-text"
-                aria-label="Default camera for study sessions"
-              >
-                <option value="user">Front (selfie)</option>
-                <option value="environment">Back</option>
-              </select>
+              <SheetSwitch
+                checked={studyCameraEnabled}
+                onChange={onStudyCameraSwitchRequest}
+                id={`${baseId}-sc`}
+              />
             </div>
-            <div className="px-3 py-3.5">
-              <span className="text-[15px] font-medium text-kal-text">
-                Detection sensitivity
-              </span>
-              <p className="mt-1 text-xs leading-relaxed text-kal-text-secondary">
-                Stricter needs clearer head-down + stable pose; Lenient is easier
-                to trigger while still on-device only.
-              </p>
-              <select
-                value={studyDetectionSensitivity}
-                onChange={(e) =>
-                  setStudyDetectionSensitivity(
-                    e.target.value as StudyDetectionSensitivity,
-                  )
-                }
-                className="mt-3 min-h-[44px] w-full max-w-xs rounded-lg border border-kal-border bg-kal-card-muted px-3 py-2 text-sm text-kal-text sm:w-auto"
-                aria-label="Study detection sensitivity"
-              >
-                <option value="strict">Strict</option>
-                <option value="balanced">Balanced</option>
-                <option value="lenient">Lenient</option>
-              </select>
-            </div>
-          </>
-        ) : null}
-      </div>
+          </div>
+          {studyCameraEnabled ? (
+            <>
+              <div className="flex flex-col gap-2 px-3 py-3.5 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <span className="text-[15px] font-medium text-kal-text">
+                    Default camera
+                  </span>
+                  <p className="mt-0.5 text-xs text-kal-text-secondary">
+                    For camera-proven study sessions. Your choice is remembered.
+                  </p>
+                </div>
+                <select
+                  value={studyCameraFacing}
+                  onChange={(e) =>
+                    setStudyCameraFacing(e.target.value as StudyCameraFacing)
+                  }
+                  className="min-h-[44px] rounded-lg border border-kal-border bg-kal-card-muted px-3 py-2 text-sm text-kal-text"
+                  aria-label="Default camera for study sessions"
+                >
+                  <option value="user">Front (selfie)</option>
+                  <option value="environment">Back</option>
+                </select>
+              </div>
+              <div className="px-3 py-3.5">
+                <span className="text-[15px] font-medium text-kal-text">
+                  Detection sensitivity
+                </span>
+                <p className="mt-1 text-xs leading-relaxed text-kal-text-secondary">
+                  Stricter needs clearer head-down + stable pose; Lenient is easier
+                  to trigger while still on-device only.
+                </p>
+                <select
+                  value={studyDetectionSensitivity}
+                  onChange={(e) =>
+                    setStudyDetectionSensitivity(
+                      e.target.value as StudyDetectionSensitivity,
+                    )
+                  }
+                  className="mt-3 min-h-[44px] w-full max-w-xs rounded-lg border border-kal-border bg-kal-card-muted px-3 py-2 text-sm text-kal-text sm:w-auto"
+                  aria-label="Study detection sensitivity"
+                >
+                  <option value="strict">Strict</option>
+                  <option value="balanced">Balanced</option>
+                  <option value="lenient">Lenient</option>
+                </select>
+              </div>
+            </>
+          ) : null}
+        </div>
+      </SettingsExpandableSection>
     </>
   );
 }

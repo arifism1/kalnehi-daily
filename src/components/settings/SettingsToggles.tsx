@@ -12,16 +12,19 @@ function SheetSwitch({
   checked,
   onChange,
   id,
+  label,
 }: {
   checked: boolean;
   onChange: (next: boolean) => void;
   id: string;
+  label: string;
 }) {
   return (
     <button
       type="button"
       role="switch"
       id={id}
+      aria-label={label}
       aria-checked={checked}
       onClick={() => onChange(!checked)}
       className={clsx(
@@ -44,6 +47,21 @@ const APPEARANCE_OPTIONS: { value: AppearanceMode; label: string }[] = [
   { value: "system", label: "System" },
   { value: "dark", label: "Dark" },
 ];
+
+function ToggleStateBadge({ checked }: { checked: boolean }) {
+  return (
+    <span
+      className={clsx(
+        "inline-flex min-w-11 items-center justify-center rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide",
+        checked
+          ? "bg-kal-accent/20 text-kal-accent"
+          : "bg-kal-border/70 text-kal-text-secondary",
+      )}
+    >
+      {checked ? "On" : "Off"}
+    </span>
+  );
+}
 
 export function SettingsToggles() {
   const baseId = useId();
@@ -68,9 +86,9 @@ export function SettingsToggles() {
   return (
     <div className="kal-glass-panel divide-y divide-white/15 rounded-[1rem] px-1 dark:divide-white/10">
       <div className="px-3 py-4">
-        <span className="text-[15px] font-medium text-kal-text">Appearance</span>
+        <span className="text-[15px] font-medium text-kal-text">Theme</span>
         <p className="mt-0.5 text-xs text-kal-text-secondary">
-          Light is default; System follows your device.
+          Choose how Kalnehi looks. System follows your device preference.
         </p>
         <div
           className="kal-glass-subtle mt-3 flex gap-1 rounded-xl p-1"
@@ -96,68 +114,99 @@ export function SettingsToggles() {
       </div>
       <div className="flex items-center justify-between gap-3 px-3 py-3.5">
         <div>
-          <span className="text-[15px] font-medium text-kal-text">
-            Purpose mode
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-[15px] font-medium text-kal-text">
+              Purpose mode
+            </span>
+            <ToggleStateBadge checked={purposeModeEnabled} />
+          </div>
           <p className="mt-0.5 text-xs text-kal-text-secondary">
-            Photos &amp; motivation strip on home
+            Shows your purpose photos and motivation strip on Home.
           </p>
         </div>
         <SheetSwitch
           checked={purposeModeEnabled}
           onChange={setPurposeModeEnabled}
           id={`${baseId}-p`}
+          label="Toggle purpose mode"
         />
       </div>
       <div className="flex items-center justify-between gap-3 px-3 py-3.5">
         <div>
-          <span className="text-[15px] font-medium text-kal-text">
-            Show countdown
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-[15px] font-medium text-kal-text">
+              Exam countdown
+            </span>
+            <ToggleStateBadge checked={showCountdown} />
+          </div>
           <p className="mt-0.5 text-xs text-kal-text-secondary">
-            Kalnehi Eye — exam countdown on home
+            Shows the Kalnehi Eye exam countdown widget on Home.
           </p>
         </div>
         <SheetSwitch
           checked={showCountdown}
           onChange={setShowCountdown}
           id={`${baseId}-e`}
+          label="Toggle exam countdown"
         />
       </div>
       <div className="flex items-center justify-between gap-3 px-3 py-3.5">
         <div>
-          <span className="text-[15px] font-medium text-kal-text">
-            Enable Advanced Marks Projection
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-[15px] font-medium text-kal-text">
+              Projected marks estimate
+            </span>
+            <ToggleStateBadge checked={advancedMarksProjectionEnabled} />
+          </div>
           <p className="mt-0.5 text-xs text-kal-text-secondary">
-            When off, home and progress show syllabus completion % only (no
-            projected marks).
+            When on, Home and Progress show estimated marks from your study trend.
+            When off, only syllabus completion is shown.
           </p>
         </div>
         <SheetSwitch
           checked={advancedMarksProjectionEnabled}
           onChange={setAdvancedMarksProjectionEnabled}
           id={`${baseId}-marks`}
+          label="Toggle projected marks estimate"
         />
       </div>
       <div className="flex items-center justify-between gap-3 px-3 py-3.5">
-        <span className="text-[15px] font-medium text-kal-text">
-          Sound effects
-        </span>
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="text-[15px] font-medium text-kal-text">
+              Sound effects
+            </span>
+            <ToggleStateBadge checked={soundEffects} />
+          </div>
+          <p className="mt-0.5 text-xs text-kal-text-secondary">
+            Plays small UI sounds for actions and feedback.
+          </p>
+        </div>
         <SheetSwitch
           checked={soundEffects}
           onChange={setSoundEffects}
           id={`${baseId}-s`}
+          label="Toggle sound effects"
         />
       </div>
       <div className="flex items-center justify-between gap-3 px-3 py-3.5">
-        <span className="text-[15px] font-medium text-kal-text">
-          Daily reminders
-        </span>
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="text-[15px] font-medium text-kal-text">
+              Daily reminder nudges
+            </span>
+            <ToggleStateBadge checked={dailyReminders} />
+          </div>
+          <p className="mt-0.5 text-xs text-kal-text-secondary">
+            Allows daily reminder nudges. You can customize times below in
+            Notifications.
+          </p>
+        </div>
         <SheetSwitch
           checked={dailyReminders}
           onChange={setDailyReminders}
           id={`${baseId}-r`}
+          label="Toggle daily reminder nudges"
         />
       </div>
     </div>
