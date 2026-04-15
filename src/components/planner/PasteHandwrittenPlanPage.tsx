@@ -307,20 +307,26 @@ export function PasteHandwrittenPlanPage() {
               </button>
             </div>
 
-            <details className="kal-glass-subtle mt-4 rounded-lg text-xs text-kal-muted">
-              <summary className="cursor-pointer select-none px-2.5 py-2 font-medium text-kal-text-secondary">
+            <div className="kal-glass-subtle mt-4 rounded-lg text-xs text-kal-muted">
+              <p className="px-2.5 py-2 font-medium text-kal-text-secondary">
                 Tips for scanning
-              </summary>
+              </p>
               <div className="space-y-1.5 border-t border-kal-border px-2.5 pb-2.5 pt-2">
                 <p className="leading-snug text-kal-muted">
-                  One task per line; put the time range first, then the task. Dark ink on plain paper works best.
+                  One task per line: write the time range first, then what you will do. You do not need a fixed style—
+                  <span className="whitespace-nowrap">6am–7:30 pm</span>,{" "}
+                  <span className="whitespace-nowrap">9:00 am–12:00 pm</span>, or{" "}
+                  <span className="whitespace-nowrap">9 am</span> (with or without{" "}
+                  <span className="whitespace-nowrap">:00</span>) are all fine. Use{" "}
+                  <span className="whitespace-nowrap">am</span>/<span className="whitespace-nowrap">pm</span>{" "}
+                  when it helps you read the times. Dark ink on plain paper works best.
                 </p>
                 <div className="rounded-lg border border-kal-border bg-kal-input-bg px-3 py-2 font-mono text-[11px] leading-[1.6] text-kal-text">
-                  6:00–7:30 &nbsp; Physics<br />
-                  9:00 am–12:00 pm &nbsp; Math
+                  6 am–7:30 pm &nbsp;&nbsp; Physics<br />
+                  9 am–12:00 pm &nbsp;&nbsp; Math
                 </div>
               </div>
-            </details>
+            </div>
 
             {hint ? (
               <p className="mt-2 rounded-lg border border-[var(--kal-warn-border)] bg-[var(--kal-warn-soft)] px-2.5 py-1.5 text-xs text-[var(--kal-warn-text)]">

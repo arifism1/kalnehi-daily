@@ -21,6 +21,8 @@ export type KalnehiPageSeoKey =
   | "about"
   | "meditation"
   | "syllabus"
+  | "targetScoreBlueprint"
+  | "myTarget"
   | "dailyPlan"
   | "habits"
   | "timer"
@@ -78,6 +80,18 @@ const PAGE_SEO: Record<
     title: `Syllabus Mastery Tracker — JEE, NEET & Boards | ${SITE_NAME}`,
     description:
       `Track microtopics, weightage, and chapter-level mastery across your syllabus. ${SITE_NAME} connects syllabus progress to daily tasks and marks goals.`,
+  },
+  targetScoreBlueprint: {
+    path: "/target-score-blueprint",
+    title: `Target Score Blueprint — high-weight chapters for your goal | ${SITE_NAME}`,
+    description:
+      `Turn a target exam score into a prioritized chapter list using official weight patterns and your current mastery. ${SITE_NAME} helps you focus where marks and gaps meet.`,
+  },
+  myTarget: {
+    path: "/my-target",
+    title: `My Target — saved blueprint chapter lists | ${SITE_NAME}`,
+    description:
+      `Review Target Score Blueprint lists you saved, with the date each was added. ${SITE_NAME} keeps your chapter priorities in one place.`,
   },
   dailyPlan: {
     path: "/daily-plan",

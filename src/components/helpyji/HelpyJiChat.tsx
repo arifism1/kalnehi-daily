@@ -11,6 +11,8 @@ import {
   type RefObject,
 } from "react";
 
+import { GroqModelDebugBadge } from "@/components/ai/GroqModelDebugBadge";
+import { useAiModelDebugVisible } from "@/hooks/useAiModelDebugVisible";
 import {
   HELPYJI_DISCLAIMER_PRIMARY,
   HELPYJI_TERMS_LINK_LABEL,
@@ -69,7 +71,9 @@ export function HelpyJiChat({
   const [remaining, setRemaining] = useState<number | null>(null);
   const [limit, setLimit] = useState<number | null>(null);
   const [clientCooldownUntil, setClientCooldownUntil] = useState(0);
+  const [lastGroqModel, setLastGroqModel] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const showModelDebug = useAiModelDebugVisible();
 
   const storageKey =
     user?.id != null
@@ -222,6 +226,7 @@ export function HelpyJiChat({
         remaining?: number;
         limit?: number;
         retryAfterSec?: number;
+        groq_model?: string;
       };
 
       if (typeof data.limit === "number") setLimit(data.limit);
@@ -251,6 +256,10 @@ export function HelpyJiChat({
         return;
       }
 
+      if (typeof data.groq_model === "string" && data.groq_model) {
+        setLastGroqModel(data.groq_model);
+        console.log(`[HelpyJi] Using model: ${data.groq_model}`);
+      }
       setMessages((m) => [...m, { role: "assistant", content: reply }]);
       if (typeof data.remaining === "number") setRemaining(data.remaining);
 
@@ -299,6 +308,11 @@ export function HelpyJiChat({
                     Your guide for plans &amp; fit—here to help you prep smarter, not to
                     pressure you.
                   </p>
+                  <GroqModelDebugBadge
+                    modelId={lastGroqModel}
+                    visible={showModelDebug}
+                    logPrefix="HelpyJi"
+                  />
                   {limit != null && remaining != null ? (
                     <p className="mt-1.5 text-[0.65rem] font-semibold uppercase tracking-wide text-kal-accent">
                       {remaining} of {limit} free today

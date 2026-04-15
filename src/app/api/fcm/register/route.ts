@@ -50,6 +50,23 @@ export async function POST(req: Request) {
     );
   }
 
+  const { data: existingRow, error: existingErr } = await admin
+    .from("user_push_tokens")
+    .select("user_id")
+    .eq("token", token)
+    .maybeSingle();
+
+  if (existingErr) {
+    console.error("[fcm/register] token lookup", existingErr);
+    return NextResponse.json({ error: "Could not verify token" }, { status: 500 });
+  }
+  if (existingRow && existingRow.user_id !== user.id) {
+    return NextResponse.json(
+      { error: "This device is already registered to another account." },
+      { status: 409 },
+    );
+  }
+
   const now = new Date().toISOString();
   const { error } = await admin.from("user_push_tokens").upsert(
     {

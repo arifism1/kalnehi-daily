@@ -4,7 +4,7 @@ import {
   adminFacingFcmCredentialHint,
   tryGetFirebaseMessaging,
 } from "@/lib/fcm/admin";
-import { showFcmDevTools } from "@/lib/fcm/adminGate";
+import { showFcmDevToolsServer } from "@/lib/fcm/adminGate";
 import {
   fcmFailuresAreOnlyInvalidRegistrations,
   sendFcmToUserTokens,
@@ -32,7 +32,7 @@ export async function POST() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if (!showFcmDevTools(user)) {
+    if (!showFcmDevToolsServer(user)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

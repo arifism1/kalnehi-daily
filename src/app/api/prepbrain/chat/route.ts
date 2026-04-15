@@ -10,7 +10,7 @@ import { PREPBRAIN_SYSTEM_PROMPT } from "@/lib/prepBrainPrompts";
 import { parseSubscriptionTier } from "@/lib/subscriptionTiers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
-import { GROQ_VOICE_MODEL_CANDIDATES } from "@/lib/voiceDictateGroq";
+import { resolvePrepbrainGroqModels } from "@/lib/groqPrepbrainModel";
 import { USER_ERROR } from "@/lib/userFacingErrors";
 import {
   buildPrepbrainUsagePayload,
@@ -28,9 +28,8 @@ const MAX_CHAT_MESSAGES = 32;
 const MAX_MESSAGE_CHARS = 12_000;
 /** High enough for week-style plans; default verbosity is controlled in PREPBRAIN_SYSTEM_PROMPT (brevity rules). */
 const MAX_COMPLETION_TOKENS = 2_048;
-/** Best-effort cooldown per user (same server instance; mitigates double-submit / burst). */
+/** Short cooldown between chat completions (backed by `prepbrain_chat_cooldown` for multi-instance). */
 const MIN_MS_BETWEEN_REQUESTS = 1_200;
-const lastPrepBrainRequestAt = new Map<string, number>();
 
 type ChatRole = "user" | "assistant";
 
@@ -58,6 +57,41 @@ function isCurrentlyPaid(
 
 function isRecord(x: unknown): x is Record<string, unknown> {
   return x !== null && typeof x === "object" && !Array.isArray(x);
+}
+
+async function prepbrainCooldownRemainMs(
+  admin: NonNullable<ReturnType<typeof getSupabaseServiceRoleClient>>,
+  userId: string,
+): Promise<number> {
+  const { data, error } = await admin
+    .from("prepbrain_chat_cooldown")
+    .select("last_request_at")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) {
+    console.error("[prepbrain/chat] cooldown read failed", error);
+    return 0;
+  }
+  const raw = data?.last_request_at;
+  if (!raw) return 0;
+  const lastMs = new Date(raw).getTime();
+  if (Number.isNaN(lastMs)) return 0;
+  const elapsed = Date.now() - lastMs;
+  return Math.max(0, MIN_MS_BETWEEN_REQUESTS - elapsed);
+}
+
+async function touchPrepbrainCooldown(
+  admin: NonNullable<ReturnType<typeof getSupabaseServiceRoleClient>>,
+  userId: string,
+): Promise<void> {
+  const now = new Date().toISOString();
+  const { error } = await admin.from("prepbrain_chat_cooldown").upsert(
+    { user_id: userId, last_request_at: now },
+    { onConflict: "user_id" },
+  );
+  if (error) {
+    console.error("[prepbrain/chat] cooldown upsert failed", error);
+  }
 }
 
 function parseMessages(raw: unknown): IncomingMessage[] | null {
@@ -201,16 +235,9 @@ export async function POST(request: Request) {
     );
   }
 
-  const nowMs = Date.now();
-  const lastMs = lastPrepBrainRequestAt.get(user.id);
-  if (
-    lastMs !== undefined &&
-    nowMs - lastMs < MIN_MS_BETWEEN_REQUESTS
-  ) {
-    const retrySec = Math.max(
-      1,
-      Math.ceil((MIN_MS_BETWEEN_REQUESTS - (nowMs - lastMs)) / 1000),
-    );
+  const remainMs = await prepbrainCooldownRemainMs(admin, user.id);
+  if (remainMs > 0) {
+    const retrySec = Math.max(1, Math.ceil(remainMs / 1000));
     return NextResponse.json(
       { ok: false, error: "Please wait a moment before sending again." },
       {
@@ -219,7 +246,6 @@ export async function POST(request: Request) {
       },
     );
   }
-  lastPrepBrainRequestAt.set(user.id, nowMs);
 
   let context: PrepBrainContext;
   try {
@@ -254,9 +280,10 @@ export async function POST(request: Request) {
     ),
   ];
 
-  const models: readonly string[] = GROQ_VOICE_MODEL_CANDIDATES;
+  const models = resolvePrepbrainGroqModels({ request, user });
 
   let assistantText = "";
+  let groqModelUsed = "";
   let lastErr: unknown;
   let groqTotalTokens = 0;
   const groq = new Groq({ apiKey });
@@ -274,7 +301,10 @@ export async function POST(request: Request) {
       groqTotalTokens =
         u?.total_tokens ??
         (u?.prompt_tokens ?? 0) + (u?.completion_tokens ?? 0);
-      if (assistantText) break;
+      if (assistantText) {
+        groqModelUsed = model;
+        break;
+      }
     } catch (e) {
       lastErr = e;
     }
@@ -287,6 +317,10 @@ export async function POST(request: Request) {
       { status: 502 },
     );
   }
+
+  await touchPrepbrainCooldown(admin, user.id);
+
+  console.log("[prepbrain/chat] groq_model=", groqModelUsed);
 
   const delta = Math.max(0, Math.floor(groqTotalTokens));
   const nextUsed = effectiveUsed + delta;
@@ -311,5 +345,10 @@ export async function POST(request: Request) {
     monthKey,
   );
 
-  return NextResponse.json({ ok: true, message: assistantText, usage: usageAfter });
+  return NextResponse.json({
+    ok: true,
+    message: assistantText,
+    usage: usageAfter,
+    groq_model: groqModelUsed,
+  });
 }

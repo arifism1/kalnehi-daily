@@ -12,6 +12,7 @@ import {
   applyMarksOverridesToRows,
   type SyllabusMarksOverrideRow,
 } from "@/lib/applySyllabusMarksOverrides";
+import { dedupeMergedSyllabusRowsByPlacement } from "@/lib/syllabusDedupe";
 import {
   mergeSyllabusWithUserCustomizations,
   type MergedSyllabusRow,
@@ -126,6 +127,7 @@ async function refreshTasksFromSupabaseImpl(userId: string): Promise<void> {
       merged,
       (marksRows ?? []) as SyllabusMarksOverrideRow[],
     );
+    merged = dedupeMergedSyllabusRowsByPlacement(merged).rows;
   }
 
   let microtopics = merged.map((row) => {

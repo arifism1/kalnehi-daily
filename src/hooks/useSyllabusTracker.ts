@@ -21,11 +21,14 @@ import {
 import type { MicrotopicProgressStatus } from "@/lib/syllabusConstants";
 import { normalizeSyllabusMasterId } from "@/lib/syllabusIds";
 import type { SyllabusRow } from "@/lib/syllabusGrouping";
-import { sortSyllabusRows } from "@/lib/syllabusGrouping";
 import {
   applyMarksOverridesToRows,
   type SyllabusMarksOverrideRow,
 } from "@/lib/applySyllabusMarksOverrides";
+import {
+  coalesceProgressByCanonicalIds,
+  dedupeMergedSyllabusRowsByPlacement,
+} from "@/lib/syllabusDedupe";
 import {
   mergeSyllabusWithUserCustomizations,
   type MergedSyllabusRow,
@@ -218,14 +221,20 @@ export function useSyllabusTracker() {
           merged,
           (marksOverrides ?? []) as SyllabusMarksOverrideRow[],
         );
+        const { rows: deduped, droppedToCanonical } =
+          dedupeMergedSyllabusRowsByPlacement(sorted);
         const fullMap = progressRowsToMap(prog ?? []);
-        const map = filterProgressToSyllabusIds(fullMap, sorted);
+        const fullMapCoalesced = coalesceProgressByCanonicalIds(
+          fullMap,
+          droppedToCanonical,
+        );
+        const map = filterProgressToSyllabusIds(fullMapCoalesced, deduped);
 
-        setRows(sorted);
+        setRows(deduped);
         setStatusBySyllabusMasterId(map);
         trackerCache = {
           userId,
-          rows: sorted,
+          rows: deduped,
           statusBySyllabusMasterId: map,
           targetExamLabel: examLabel ?? null,
           cuetDomainSubjects: domains,

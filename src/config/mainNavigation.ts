@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   BarChart3,
+  Bookmark,
   BookOpen,
   Brain,
   Calendar,
@@ -21,6 +22,7 @@ import {
   Settings,
   Shield,
   Sparkles,
+  Target,
   TrendingUp,
   User,
 } from "lucide-react";
@@ -95,6 +97,18 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
         Icon: Brain,
       },
       { href: "/syllabus", label: "Syllabus Mastery Tracker", shortLabel: "Syllabus", Icon: BookOpen },
+      {
+        href: "/target-score-blueprint",
+        label: "Target Score Blueprint",
+        shortLabel: "Blueprint",
+        Icon: Target,
+      },
+      {
+        href: "/my-target",
+        label: "My Target",
+        shortLabel: "My Target",
+        Icon: Bookmark,
+      },
       { href: "/pending", label: "Pending Tasks", shortLabel: "Pending", Icon: Inbox },
       { href: "/doubts", label: "Doubt Tracker", shortLabel: "Doubts", Icon: HelpCircle },
     ],
@@ -183,6 +197,8 @@ const QUICK_NAV_HREF_ORDER: readonly string[] = [
   "/prepbrain",
   "/plan-my-day",
   "/syllabus",
+  "/target-score-blueprint",
+  "/my-target",
   "/pending",
   "/doubts",
   "/timer",

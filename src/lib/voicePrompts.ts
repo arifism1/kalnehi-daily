@@ -19,6 +19,7 @@ Rules:
 - **Spoken clock times always win** over NOW_IST — "from 10 to 11" → 10:00–11:00, not current time.
 - **"Abhi" / "now" / "I've started"** with no clock: first task starts at NOW_IST.
 - "Tonight" / "aaj raat" with hours → evening PM in IST.
+- **Transcript may be OCR of a handwritten timetable** (one line per row, compact times such as 6am, 9 am, 7:30pm). Parse those clock ranges the same way—flexible 12h/24h style—and output 24-hour IST in each object.
 
 Few-shot (use real NOW_IST from the user message where needed):
 
@@ -66,12 +67,15 @@ Rules:
 - Ignore headings and narrative text like:
   "Clean & accurate transcription", "Why this matters", "Date:", comments, tips.
 - Respect student-written times. If time unclear => null.
+- **Flexible times (handwritten / OCR):** Lines may use mixed styles—6am, 6:00 am, 9 am, 7:30pm, with or without :00 for whole hours; separators include hyphen, en dash, em dash, or the word "to", with inconsistent spacing. Normalize **every** start_time and end_time to 24-hour HH:MM in the JSON.
 - Convert times to 24-hour HH:MM.
 - If row has only one time, use start_time and end_time = null.
 - duration should be a compact label if available (e.g. "15m", "2h 30m"), else null.
 - name must be the real activity text from the table's Activity column (or equivalent). Each row needs a distinct, specific name (e.g. "Wakeup + Freshen Up"). Never use the generic word "Task", "TASK", "Activity", or column headers as name.
 - Typical Indian planner patterns to detect as separate rows:
   - "5:00 am - 6:30 am Physics"
+  - "6am–7:30 pm Physics"
+  - "9 am - 12 pm Math"
   - "7:15-8:00 Breakfast / break"
   - "9:00 to 12:00 Coaching"
   - "14:00–15:30 Revision"
@@ -95,5 +99,13 @@ This is a very clear, typical Indian student daily timetable...
 
 Output:
 [{"name":"Wakeup + Freshen Up","start_time":"04:45","end_time":"05:00","duration":"15m"},{"name":"Running","start_time":"05:00","end_time":"05:20","duration":"20m"},{"name":"Freshen up + Breakfast","start_time":"05:20","end_time":"06:00","duration":"50m"},{"name":"Coaching","start_time":"06:00","end_time":"10:30","duration":"5h 30m"}]
+
+Plain lines (flexible times):
+Input:
+6am–7:30 pm Physics
+9 am Revise chapter 2
+
+Output:
+[{"name":"Physics","start_time":"06:00","end_time":"19:30","duration":null},{"name":"Revise chapter 2","start_time":"09:00","end_time":null,"duration":null}]
 
 Return JSON array only.`;

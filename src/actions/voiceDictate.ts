@@ -7,7 +7,6 @@ import { incrementVoiceMinuteUsage } from "@/actions/subscription";
 import { slotFromStartEnd } from "@/lib/dailyPlanTime";
 import {
   fetchVoiceTasksFromGroq,
-  GROQ_VOICE_MODEL,
   type GroqVoiceTask,
 } from "@/lib/voiceDictateGroq";
 import { USER_ERROR } from "@/lib/userFacingErrors";

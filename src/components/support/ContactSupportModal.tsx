@@ -28,6 +28,8 @@ export function ContactSupportModal({
     CONTACT_SUPPORT_SUBJECTS[0].value,
   );
   const [message, setMessage] = useState("");
+  /** Honeypot — must stay empty (bots often fill hidden fields). */
+  const [websiteTrap, setWebsiteTrap] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -94,6 +96,7 @@ export function ContactSupportModal({
   const resetForm = useCallback(() => {
     setSubject(CONTACT_SUPPORT_SUBJECTS[0].value);
     setMessage("");
+    setWebsiteTrap("");
     setError(null);
   }, []);
 
@@ -115,6 +118,7 @@ export function ContactSupportModal({
           email: email.trim(),
           subject,
           message: message.trim(),
+          website: websiteTrap,
         }),
       });
       const data = (await res.json().catch(() => ({}))) as {
@@ -133,7 +137,7 @@ export function ContactSupportModal({
     } finally {
       setBusy(false);
     }
-  }, [name, email, subject, message, onClose, onSent, resetForm]);
+  }, [name, email, subject, message, websiteTrap, onClose, onSent, resetForm]);
 
   if (!open) return null;
 
@@ -188,6 +192,17 @@ export function ContactSupportModal({
             void submit();
           }}
         >
+          <div className="sr-only">
+            <label htmlFor="contact-website">Leave blank</label>
+            <input
+              id="contact-website"
+              type="text"
+              tabIndex={-1}
+              autoComplete="off"
+              value={websiteTrap}
+              onChange={(e) => setWebsiteTrap(e.target.value)}
+            />
+          </div>
           <div className="grid gap-1.5">
             <label
               htmlFor="contact-name"

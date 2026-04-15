@@ -10,7 +10,6 @@ import {
   obtainFcmToken,
   revokeFcmToken,
 } from "@/lib/firebase/messagingClient";
-import { showFcmDevTools } from "@/lib/fcm/adminGate";
 import { FCM_STALE_TOKEN_USER_MESSAGE } from "@/lib/fcm/messages";
 import { SITE_NAME } from "@/lib/seo-metadata";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -84,12 +83,35 @@ export function PushNotificationsSettings({
   const [testBusy, setTestBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [clientIsIos, setClientIsIos] = useState(false);
+  const [showDevTest, setShowDevTest] = useState(false);
 
   const configured = isFirebaseConfigured();
 
   useEffect(() => {
     setClientIsIos(isIosWebPushDevice());
   }, []);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setShowDevTest(false);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch("/api/fcm/capabilities", { credentials: "include" });
+        const data = (await res.json().catch(() => ({}))) as {
+          showDevFcmTools?: boolean;
+        };
+        if (!cancelled) setShowDevTest(Boolean(data.showDevFcmTools));
+      } catch {
+        if (!cancelled) setShowDevTest(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
   const syncFromBrowser = useCallback(async () => {
     if (!configured || typeof window === "undefined") {
@@ -148,8 +170,6 @@ export function PushNotificationsSettings({
     document.addEventListener("visibilitychange", onVis);
     return () => document.removeEventListener("visibilitychange", onVis);
   }, [syncFromBrowser]);
-
-  const showDevTest = showFcmDevTools(user);
 
   const enablePush = useCallback(async () => {
     setMessage(null);

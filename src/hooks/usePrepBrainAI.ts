@@ -24,6 +24,8 @@ export function usePrepBrainAI() {
   const [error, setError] = useState<string | null>(null);
   const [usage, setUsage] = useState<PrepBrainUsagePayload | null>(null);
   const [usageLoading, setUsageLoading] = useState(true);
+  /** Last Groq model id returned by the API (for dev/debug UI). */
+  const [lastGroqModel, setLastGroqModel] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user?.id) {
@@ -81,6 +83,7 @@ export function usePrepBrainAI() {
           message?: string;
           error?: string;
           usage?: PrepBrainUsagePayload;
+          groq_model?: string;
         };
         if (data.usage) setUsage(data.usage);
         const reply = data.message;
@@ -98,6 +101,10 @@ export function usePrepBrainAI() {
           }
           return;
         }
+        if (typeof data.groq_model === "string" && data.groq_model) {
+          setLastGroqModel(data.groq_model);
+          console.log(`[PrepBrain] Using model: ${data.groq_model}`);
+        }
         setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
       } catch {
         setMessages((prev) => prev.slice(0, -1));
@@ -112,6 +119,7 @@ export function usePrepBrainAI() {
   const clearChat = useCallback(() => {
     setMessages([]);
     setError(null);
+    setLastGroqModel(null);
   }, []);
 
   const atTokenLimit =
@@ -133,5 +141,6 @@ export function usePrepBrainAI() {
     usageLoading,
     atTokenLimit,
     tokenLimitMessage,
+    lastGroqModel,
   };
 }

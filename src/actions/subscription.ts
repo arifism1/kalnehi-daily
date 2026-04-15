@@ -146,7 +146,8 @@ function razorpayPlanEnvVarName(tier: SubscriptionTier): string {
 
 /**
  * Resolves a valid Razorpay `plan_id` for the tier, or null if misconfigured.
- * Basic and Pro Max require env; Pro falls back when env is empty (not when env is invalid).
+ * Basic and Pro Max require env. Pro uses a dev-only legacy fallback when env is empty;
+ * production requires `RAZORPAY_PLAN_ID_PRO`.
  */
 function resolveRazorpayPlanId(tier: SubscriptionTier): string | null {
   const envName = razorpayPlanEnvVarName(tier);
@@ -155,6 +156,9 @@ function resolveRazorpayPlanId(tier: SubscriptionTier): string | null {
     return trimmed;
   }
   if (tier === "pro" && trimmed === "") {
+    if (process.env.NODE_ENV === "production") {
+      return null;
+    }
     return RAZORPAY_PLAN_ID_FORMAT_RE.test(RAZORPAY_PLAN_ID_PRO_FALLBACK)
       ? RAZORPAY_PLAN_ID_PRO_FALLBACK
       : null;
@@ -1294,6 +1298,7 @@ export async function verifyPlanUpgradePayment(params: {
         subscriptionId,
         paySubId,
       });
+      return { ok: false, error: "Payment does not match this subscription." };
     }
 
     const payAmt = Number(pay.amount);

@@ -46,7 +46,6 @@ import { useSyllabusTracker } from "@/hooks/useSyllabusTracker";
 import { displayNameForExamCatalog } from "@/lib/examsCatalog";
 import {
   shouldShowSyllabusComingSoon,
-  syllabusCatalogExamName,
 } from "@/lib/examProfile";
 import type { MergedSyllabusRow } from "@/lib/userSyllabusMerge";
 import { useUndoStore } from "@/store/useUndoStore";
@@ -192,8 +191,6 @@ export function SyllabusTracker() {
       displayNameForExamCatalog(activeExamName, examCatalogRows) || "Your exam",
     [activeExamName, examCatalogRows],
   );
-  const catalogName = syllabusCatalogExamName(activeExamName);
-
   const grouped = useMemo(() => groupBySubjectAndChapter(rows), [rows]);
   const subjects = useMemo(
     () => [...grouped.keys()].sort(sortSubjects),
@@ -236,8 +233,8 @@ export function SyllabusTracker() {
           for your papers.
         </p>
         <p className="mt-4 text-xs text-kal-muted">
-          Profile → Target exam <strong className="text-kal-text">CUET</strong>{" "}
-          → CUET domain subjects.
+          Profile → Target exam{" "}
+          <strong className="text-kal-text">CUET UG</strong> → CUET domain subjects.
         </p>
       </div>
     );
@@ -297,39 +294,29 @@ export function SyllabusTracker() {
               ? "Conquer chapters the right way: full chapter weight unlocks only when every microtopic in that chapter is complete."
               : "Track your syllabus by chapter and microtopic — completion % reflects chapters you fully finish."}
         </p>
-        {catalogName ? (
-          <p className="mt-2 text-[11px] leading-relaxed text-kal-text-secondary">
-            Catalog{" "}
-            <span className="font-semibold text-kal-muted">{catalogName}</span>
-            {cuetScoringRollup ? (
-              <>
-                {" "}
-                ·{" "}
-                <span className="font-semibold text-kal-accent">
-                  200 marks per domain
-                </span>{" "}
-                · projected total{" "}
-                <span className="tabular-nums text-kal-text">{maxScore}</span>
-              </>
-            ) : showMarksUi ? (
-              <>
-                {" "}
-                · primary weights{" "}
-                <span className="font-semibold text-kal-accent">
-                  marks_{primaryMarksYear}
-                </span>{" "}
-                · projected out of{" "}
-                <span className="tabular-nums text-kal-text">{maxScore}</span>{" "}
-                for this exam
-              </>
-            ) : (
-              <span className="text-kal-muted">
-                {" "}
-                · completion-based mastery (no chapter-weight columns in this
-                catalog yet)
-              </span>
-            )}
-          </p>
+        {showMarksUi && !cuetScoringRollup ? (
+          <details
+            className="group mt-4 rounded-xl border border-kal-border/70 bg-kal-card-muted/35 shadow-sm backdrop-blur-sm open:bg-kal-card-muted/45 dark:border-zinc-600/50 dark:bg-zinc-900/55 dark:open:bg-zinc-900/65"
+            aria-label="Important marks and weightage disclaimer"
+          >
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium text-kal-text outline-none transition-colors hover:bg-kal-border/15 marker:hidden [&::-webkit-details-marker]:hidden focus-visible:ring-2 focus-visible:ring-kal-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-kal-card dark:text-zinc-100 dark:hover:bg-zinc-800/40 dark:focus-visible:ring-offset-zinc-900">
+              <span>Important marks/weightage disclaimer</span>
+              <ChevronDown
+                aria-hidden
+                className="h-4 w-4 shrink-0 text-kal-accent transition-transform duration-200 group-open:rotate-180"
+              />
+            </summary>
+            <div className="border-t border-kal-border/50 px-4 pb-4 pt-3 text-[13px] leading-relaxed text-kal-muted dark:border-zinc-600/40 dark:text-zinc-400">
+              Chapter marks are gathered from public sources and patterns seen in
+              previous years — a study aid, not an official mark scheme. You can
+              edit chapter marks anytime so they match how you prepare. When an
+              exam does not publish a clear chapter-wise split, we use careful
+              averages or estimates so you still get a fair picture. Totals may
+              not line up exactly with the exam&apos;s full marks (rounding and
+              gaps happen), but they are built to be largely accurate and helpful
+              for planning your time.
+            </div>
+          </details>
         ) : null}
       </header>
 

@@ -1,9 +1,10 @@
 "use client";
 
 import type { TablesInsert } from "@/types/supabase";
+import { chapterKey, type SyllabusRow } from "@/lib/syllabusGrouping";
 import { applyOptimisticTaskCreate } from "@/lib/taskMutations";
 import { toUserFacingLocalError } from "@/lib/userFacingErrors";
-import type { Task } from "@/store/useTaskStore";
+import { useTaskStore, type Task } from "@/store/useTaskStore";
 
 /**
  * Instantly creates a minimal pending task (offline-first: Zustand + IndexedDB + outbox).
@@ -104,6 +105,78 @@ export async function quickCreatePlannedTask(
 
     await applyOptimisticTaskCreate(row, userId, fullTask);
     return { ok: true, id };
+  } catch (e) {
+    return { ok: false, error: toUserFacingLocalError(e) };
+  }
+}
+
+/**
+ * One pending task per microtopic in the given chapters for `assignedDate`.
+ * Skips microtopics that already have a task on that date.
+ */
+export async function bulkAddSyllabusMicrotopicsToDailyPlan(
+  userId: string,
+  assignedDate: string,
+  syllabusRows: SyllabusRow[],
+  chapterKeys: Set<string>,
+): Promise<
+  { ok: true; created: number; skipped: number } | { ok: false; error: string }
+> {
+  try {
+    const existing = new Set<string>();
+    for (const t of Object.values(useTaskStore.getState().tasks)) {
+      if (t.assigned_date !== assignedDate) continue;
+      if (t.microtopic_id && String(t.microtopic_id).length > 0) {
+        existing.add(String(t.microtopic_id));
+      }
+    }
+
+    let created = 0;
+    let skipped = 0;
+    for (const row of syllabusRows) {
+      const key = chapterKey(row.subject || "Other", row.chapter || "General");
+      if (!chapterKeys.has(key)) continue;
+      const mid = String(row.id);
+      if (existing.has(mid)) {
+        skipped++;
+        continue;
+      }
+      const id = crypto.randomUUID();
+      const now = new Date().toISOString();
+      const label = (row.microtopic ?? "").trim() || row.chapter || "Syllabus";
+      const fullTask: Task = {
+        id,
+        user_id: userId,
+        assigned_date: assignedDate,
+        status: "pending",
+        name: label,
+        microtopic_id: mid,
+        created_at: now,
+        updated_at: now,
+        estimated_minutes: row.estimated_minutes ?? null,
+        estimated_time_minutes: null,
+        end_time: null,
+        start_time: null,
+        marks_value: null,
+        marks_weight: null,
+        time_spent_seconds: null,
+      };
+      const insertRow: Omit<TablesInsert<"tasks">, "user_id" | "id"> & {
+        id?: string;
+      } = {
+        assigned_date: assignedDate,
+        status: "pending",
+        name: label,
+        microtopic_id: mid,
+        id,
+        estimated_minutes: row.estimated_minutes ?? null,
+      };
+      const r = await applyOptimisticTaskCreate(insertRow, userId, fullTask);
+      if (!r.ok) return r;
+      existing.add(mid);
+      created++;
+    }
+    return { ok: true, created, skipped };
   } catch (e) {
     return { ok: false, error: toUserFacingLocalError(e) };
   }

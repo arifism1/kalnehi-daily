@@ -17,9 +17,13 @@ const MAX_MESSAGE = 8_000;
 const MAX_NAME = 120;
 const MAX_EMAIL = 320;
 
-/** Simple sliding-window throttle per client IP (best-effort; resets on cold start). */
+/**
+ * Sliding-window throttle per key (best-effort; resets on cold start).
+ * Stricter for anonymous traffic; signed-in users get a higher cap.
+ */
 const WINDOW_MS = 15 * 60 * 1000;
-const MAX_IN_WINDOW = 8;
+const MAX_IN_WINDOW_ANON = 4;
+const MAX_IN_WINDOW_AUTH = 12;
 const hits = new Map<string, number[]>();
 
 function clientIp(req: Request): string {
@@ -31,13 +35,13 @@ function clientIp(req: Request): string {
   return req.headers.get("x-real-ip")?.trim() || "unknown";
 }
 
-function allowRequest(ip: string): boolean {
+function allowRequest(key: string, maxInWindow: number): boolean {
   const now = Date.now();
-  const prev = hits.get(ip) ?? [];
+  const prev = hits.get(key) ?? [];
   const recent = prev.filter((t) => now - t < WINDOW_MS);
   recent.push(now);
-  hits.set(ip, recent);
-  return recent.length <= MAX_IN_WINDOW;
+  hits.set(key, recent);
+  return recent.length <= maxInWindow;
 }
 
 const EMAIL_RE =
@@ -49,13 +53,6 @@ function trimStr(v: unknown, max: number): string {
 }
 
 export async function POST(req: Request) {
-  if (!allowRequest(clientIp(req))) {
-    return NextResponse.json(
-      { ok: false, error: "Too many requests. Please try again later." },
-      { status: 429 },
-    );
-  }
-
   const rawLen = Number(req.headers.get("content-length") ?? 0);
   if (rawLen > MAX_BODY_BYTES) {
     return NextResponse.json(
@@ -82,6 +79,14 @@ export async function POST(req: Request) {
   }
 
   const o = body as Record<string, unknown>;
+  const websiteHoneypot = trimStr(o.website, 240);
+  if (websiteHoneypot.length > 0) {
+    return NextResponse.json(
+      { ok: false, error: "Could not send your message. Try again." },
+      { status: 400 },
+    );
+  }
+
   const name = trimStr(o.name, MAX_NAME);
   const email = trimStr(o.email, MAX_EMAIL).toLowerCase();
   const subjectRaw = trimStr(o.subject, 64);
@@ -116,6 +121,26 @@ export async function POST(req: Request) {
     );
   }
 
+  let sessionUserId: string | null = null;
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    sessionUserId = user?.id ?? null;
+  } catch {
+    sessionUserId = null;
+  }
+
+  const throttleKey = `${clientIp(req)}:${sessionUserId ?? "anon"}`;
+  const maxHits = sessionUserId ? MAX_IN_WINDOW_AUTH : MAX_IN_WINDOW_ANON;
+  if (!allowRequest(throttleKey, maxHits)) {
+    return NextResponse.json(
+      { ok: false, error: "Too many requests. Please try again later." },
+      { status: 429 },
+    );
+  }
+
   const apiKey = process.env.RESEND_API_KEY?.trim();
   const to = process.env.CONTACT_SUPPORT_TO?.trim();
   const from = process.env.RESEND_FROM?.trim();
@@ -131,17 +156,6 @@ export async function POST(req: Request) {
       },
       { status: 503 },
     );
-  }
-
-  let sessionUserId: string | null = null;
-  try {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    sessionUserId = user?.id ?? null;
-  } catch {
-    sessionUserId = null;
   }
 
   const subjectLabel = contactSupportSubjectLabel(subject);

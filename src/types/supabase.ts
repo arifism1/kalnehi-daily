@@ -863,6 +863,21 @@ export type Database = {
         }
         Relationships: []
       }
+      prepbrain_chat_cooldown: {
+        Row: {
+          last_request_at: string
+          user_id: string
+        }
+        Insert: {
+          last_request_at?: string
+          user_id: string
+        }
+        Update: {
+          last_request_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       razorpay_processed_payments: {
         Row: {
           created_at: string
@@ -978,6 +993,51 @@ export type Database = {
           marks_2025?: number | null
           syllabus_master_id?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_target_blueprints: {
+        Row: {
+          chapters: Json
+          created_at: string
+          estimated_marks_at_save: number
+          exam_name: string
+          id: string
+          max_score: number
+          mode: string
+          range_high: number
+          range_low: number
+          target_clamped: number
+          total_marks_covered: number
+          user_id: string
+        }
+        Insert: {
+          chapters?: Json
+          created_at?: string
+          estimated_marks_at_save: number
+          exam_name: string
+          id?: string
+          max_score: number
+          mode: string
+          range_high: number
+          range_low: number
+          target_clamped: number
+          total_marks_covered: number
+          user_id: string
+        }
+        Update: {
+          chapters?: Json
+          created_at?: string
+          estimated_marks_at_save?: number
+          exam_name?: string
+          id?: string
+          max_score?: number
+          mode?: string
+          range_high?: number
+          range_low?: number
+          target_clamped?: number
+          total_marks_covered?: number
           user_id?: string
         }
         Relationships: []

@@ -24,7 +24,7 @@ export function normalizeVoiceHHMM(
   if (!t) return null;
   const m = t.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
   if (!m) return null;
-  let h = Number(m[1]);
+  const h = Number(m[1]);
   const min = Number(m[2]);
   if (h > 23 || min > 59) return null;
   if (m[3] != null) {
@@ -66,10 +66,33 @@ export function minutesBetweenHHMM(
   const [sh, sm] = start.split(":").map(Number);
   const [eh, em] = end.split(":").map(Number);
   if ([sh, sm, eh, em].some((n) => Number.isNaN(n))) return null;
-  let a = sh * 60 + sm;
+  const a = sh * 60 + sm;
   let b = eh * 60 + em;
   if (b < a) b += 24 * 60;
   const diff = b - a;
   if (diff <= 0 || diff > 24 * 60) return null;
   return diff;
+}
+
+/** e.g. 270 → "4h 30m", 45 → "45m". */
+export function formatDurationCompactMinutes(totalMinutes: number): string {
+  if (!Number.isFinite(totalMinutes) || totalMinutes < 0) return "—";
+  const h = Math.floor(totalMinutes / 60);
+  const m = Math.round(totalMinutes % 60);
+  if (h === 0) return `${m}m`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
+}
+
+/**
+ * Human-readable duration between two HH:MM values (preview under time inputs).
+ * Incomplete times → "…"; invalid or zero-length slot → "—".
+ */
+export function formatIstSlotDurationLabel(start: string, end: string): string {
+  const s = start.trim();
+  const e = end.trim();
+  if (!s || !e) return "…";
+  const mins = minutesBetweenHHMM(s, e);
+  if (mins == null) return "—";
+  return formatDurationCompactMinutes(mins);
 }

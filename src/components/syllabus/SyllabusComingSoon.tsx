@@ -1,8 +1,8 @@
 import clsx from "clsx";
-import { BookOpen, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 type Props = {
-  /** User-facing exam label, e.g. "JEE Advanced" or "CBSE Boards". */
+  /** Catalog display name, e.g. "GATE" or "CUET UG". */
   examLabel: string;
   className?: string;
   variant?: "page" | "compact";
@@ -21,67 +21,68 @@ export function SyllabusComingSoon({
     >
       <div
         className={clsx(
-          "relative overflow-hidden border border-kal-accent/25 bg-gradient-to-br from-slate-950/95 via-slate-900/90 to-red-950/30 shadow-xl shadow-red-900/20",
+          "kal-glass-panel relative overflow-hidden border border-kal-border bg-gradient-to-br from-kal-accent-soft/70 via-kal-card to-kal-card-muted/90 kal-shadow-card",
+          "dark:border-white/12 dark:from-kal-accent-soft/25 dark:via-kal-card dark:to-kal-card-muted/80",
           compact ? "rounded-2xl px-4 py-5 sm:px-5 sm:py-6" : "rounded-3xl px-6 py-12 sm:px-10 sm:py-14",
         )}
       >
         <div
-          className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-kal-accent/10 blur-3xl"
+          className="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full bg-kal-accent/15 blur-3xl dark:bg-kal-accent/10"
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute -bottom-12 -left-10 h-32 w-32 rounded-full bg-red-500/10 blur-3xl"
+          className="pointer-events-none absolute -bottom-10 -left-8 h-28 w-28 rounded-full bg-red-400/10 blur-3xl dark:bg-red-500/10"
           aria-hidden
         />
 
         <div className="relative flex flex-col items-center text-center">
           <div
             className={clsx(
-              "flex items-center justify-center rounded-2xl border border-kal-accent/35 bg-kal-accent/10",
+              "flex items-center justify-center rounded-2xl border border-kal-accent/25 bg-kal-card shadow-sm ring-1 ring-kal-border/80 dark:bg-kal-card-muted/60",
               compact ? "h-14 w-14" : "h-20 w-20",
             )}
           >
-            {compact ? (
-              <BookOpen
-                className="h-7 w-7 text-kal-accent"
-                strokeWidth={1.75}
-                aria-hidden
-              />
-            ) : (
-              <Sparkles
-                className="h-10 w-10 text-kal-accent"
-                strokeWidth={1.5}
-                aria-hidden
-              />
-            )}
+            <Sparkles
+              className={clsx(
+                "text-kal-accent",
+                compact ? "h-7 w-7" : "h-10 w-10",
+              )}
+              strokeWidth={1.5}
+              aria-hidden
+            />
           </div>
 
-          <p className="mt-6 text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-kal-accent/90">
-            Syllabus Mastery Tracker
+          <p className="mt-6 text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-kal-accent">
+            Coming soon
           </p>
           <h1
             className={clsx(
-              "mt-2 font-bold tracking-tight text-white",
+              "mt-2 font-bold tracking-tight text-kal-text",
               compact ? "text-lg sm:text-xl" : "text-2xl sm:text-[1.65rem]",
             )}
           >
-            Coming soon
+            {examLabel}
           </h1>
           <p
             className={clsx(
-              "mt-4 max-w-md leading-relaxed text-zinc-400",
+              "mt-4 max-w-md leading-relaxed text-kal-text-secondary",
               compact ? "text-sm" : "text-[15px] sm:text-base",
             )}
           >
-            <span className="font-medium text-red-200/95">
-              {examLabel} syllabus is coming soon.
-            </span>{" "}
-            We are working hard to bring full support for your exam — NEET UG and
-            JEE Main are already here when you pick them in Profile.
+            Full syllabus, chapter-wise marks weightage, Target Score Blueprint,
+            and smart planning for{" "}
+            <span className="font-semibold text-kal-accent">{examLabel}</span>{" "}
+            is coming soon.
           </p>
-          <p className="mt-5 text-xs leading-relaxed text-zinc-500">
-            Planner, doubts, and daily execution stay fully available. Switch your
-            target exam anytime to use a live catalog when it&apos;s ready.
+          <p
+            className={clsx(
+              "mt-4 max-w-md leading-relaxed text-kal-muted",
+              compact ? "text-sm" : "text-[15px] sm:text-base",
+            )}
+          >
+            We&apos;re working hard to bring a tailored experience for{" "}
+            <span className="font-medium text-kal-text">{examLabel}</span>{" "}
+            aspirants.
           </p>
         </div>
       </div>

@@ -10,6 +10,7 @@ export const PROFILE_TARGET_EXAM_OPTIONS = [
   "JEE Advanced",
   "CUET",
   "CBSE Class 12",
+  "CA Foundation",
   "UPSC CSE Prelims",
   "Other",
 ] as const;

@@ -16,6 +16,7 @@ import {
 } from "@/lib/prepBrainContext";
 import { parseSubscriptionTier, type SubscriptionTier } from "@/lib/subscriptionTiers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { resolveHelpyjiGroqModels } from "@/lib/groqHelpyjiModel";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 
 export const runtime = "nodejs";
@@ -90,11 +91,6 @@ function parseSessionId(raw: unknown): string | null {
   return t;
 }
 
-function helpyjiModelCandidates(): readonly string[] {
-  const env = process.env.HELPYJI_GROQ_MODEL?.trim();
-  if (env) return [env, "llama-3.1-8b-instant", "llama-3.2-3b-preview"];
-  return ["llama-3.1-8b-instant", "llama-3.2-3b-preview"];
-}
 
 function buildCommerceBlock(input: {
   surface: HelpyJiSurface;
@@ -363,9 +359,10 @@ ${contextBlock}`;
     ),
   ];
 
-  const models = helpyjiModelCandidates();
+  const models = resolveHelpyjiGroqModels(request);
   const groq = new Groq({ apiKey });
   let assistantText = "";
+  let groqModelUsed = "";
   let lastErr: unknown;
 
   for (const model of models) {
@@ -378,7 +375,10 @@ ${contextBlock}`;
       });
       const raw = completion.choices[0]?.message?.content;
       assistantText = typeof raw === "string" ? raw.trim() : "";
-      if (assistantText) break;
+      if (assistantText) {
+        groqModelUsed = model;
+        break;
+      }
     } catch (e) {
       lastErr = e;
     }
@@ -391,6 +391,8 @@ ${contextBlock}`;
       { status: 502 },
     );
   }
+
+  console.log("[helpyji/chat] groq_model=", groqModelUsed);
 
   const { error: insertAssistantErr } = await admin.from("helpyji_conversations").insert({
     user_id: user.id,
@@ -425,5 +427,6 @@ ${contextBlock}`;
     message: assistantText,
     limit: dailyLimit,
     remaining,
+    groq_model: groqModelUsed,
   });
 }

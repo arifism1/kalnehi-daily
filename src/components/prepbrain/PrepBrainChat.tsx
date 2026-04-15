@@ -4,6 +4,8 @@ import { Brain, Loader2, Send, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
+import { GroqModelDebugBadge } from "@/components/ai/GroqModelDebugBadge";
+import { useAiModelDebugVisible } from "@/hooks/useAiModelDebugVisible";
 import { usePrepBrainAI } from "@/hooks/usePrepBrainAI";
 import { PREPBRAIN_UI_DISCLAIMER } from "@/lib/prepBrainPrompts";
 import { PREPBRAIN_USAGE_WARN_RATIO } from "@/lib/prepbrainTokens";
@@ -27,7 +29,10 @@ export function PrepBrainChat() {
     usageLoading,
     atTokenLimit,
     tokenLimitMessage,
+    lastGroqModel,
   } = usePrepBrainAI();
+
+  const showModelDebug = useAiModelDebugVisible();
 
   const usagePct =
     usage && usage.limit > 0
@@ -74,6 +79,11 @@ export function PrepBrainChat() {
                 Your preparation coach — uses your syllabus, planner, and habits
               </span>
             </p>
+            <GroqModelDebugBadge
+              modelId={lastGroqModel}
+              visible={showModelDebug}
+              logPrefix="PrepBrain"
+            />
           </div>
         </div>
         {messages.length > 0 && (

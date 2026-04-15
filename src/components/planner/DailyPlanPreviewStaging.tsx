@@ -2,7 +2,7 @@
 
 import { Loader2, Plus, Trash2 } from "lucide-react";
 
-import { formatIstSlotRange12h } from "@/lib/voiceIst";
+import { formatIstSlotDurationLabel } from "@/lib/voiceIst";
 
 export type DailyPlanPreviewRow = {
   id: string;
@@ -171,7 +171,7 @@ export function DailyPlanPreviewStaging({
                 </span>
               </div>
               <p className="mt-1 text-[10px] font-medium tracking-tight text-kal-accent-dark dark:text-kal-accent">
-                {formatIstSlotRange12h(r.startInput, r.endInput)}
+                {formatIstSlotDurationLabel(r.startInput, r.endInput)}
               </p>
             </div>
             <button

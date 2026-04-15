@@ -1,6 +1,7 @@
 import Groq from "groq-sdk";
 import type { ChatCompletionMessageParam } from "groq-sdk/resources/chat/completions";
 
+import { getGroqModelCandidates } from "@/lib/groqClient";
 import {
   VOICE_DICTATE_REPAIR_SYSTEM_PROMPT,
   VOICE_DICTATE_SYSTEM_PROMPT,
@@ -8,14 +9,6 @@ import {
 import { isoToIST_HHMM, normalizeVoiceHHMM } from "@/lib/voiceIst";
 import { normalizeVoiceTranscriptForParsing } from "@/lib/voiceTranscriptNormalize";
 
-/** Tried in order: 3.3 first; 3.1 if older env rejects the new id. */
-export const GROQ_VOICE_MODEL_CANDIDATES = [
-  "llama-3.3-70b-versatile",
-  "llama-3.1-70b-versatile",
-] as const;
-
-/** Stored on rows / metadata — primary model id. */
-export const GROQ_VOICE_MODEL = GROQ_VOICE_MODEL_CANDIDATES[0];
 const MAX_TRANSCRIPT_CHARS = 12_000;
 
 /** One actionable row from the model (IST HH:MM or null). */
@@ -181,7 +174,7 @@ async function groqChat(
 ): Promise<string> {
   const groq = new Groq({ apiKey });
   let lastErr: unknown;
-  for (const model of GROQ_VOICE_MODEL_CANDIDATES) {
+  for (const model of getGroqModelCandidates("parsing")) {
     try {
       const completion = await groq.chat.completions.create({
         model,

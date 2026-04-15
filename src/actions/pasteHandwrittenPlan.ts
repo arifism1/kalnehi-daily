@@ -3,6 +3,7 @@
 import Groq from "groq-sdk";
 
 import { incrementPhotoScanUsage } from "@/actions/subscription";
+import { getGroqModelCandidates } from "@/lib/groqClient";
 import { ocrHandwrittenPhoto } from "@/lib/mistralOcr";
 import { PASTE_HANDWRITTEN_PLAN_PROMPT } from "@/lib/voicePrompts";
 import { runVoiceParseDraft } from "@/lib/runVoiceParseDraft";
@@ -18,7 +19,6 @@ type ParseResult =
   | { ok: true; tasks: ParsedPastedPlanTask[] }
   | { ok: false; error: string; tasks: ParsedPastedPlanTask[] };
 
-const MODEL = "llama-3.1-70b-versatile";
 const MAX_TASKS = 60;
 const ALLOWED_PHOTO_MIME = new Set([
   "image/jpeg",
@@ -27,6 +27,23 @@ const ALLOWED_PHOTO_MIME = new Set([
   "image/gif",
 ]);
 const MAX_PHOTO_BASE64_CHARS = 3_750_000;
+
+/**
+ * One clock fragment for local regex (handwritten schedules): `7:30 pm`, `9 am`, `6am`.
+ * Order: H:MM with optional am/pm, then hour + space + am/pm, then glued `6am`.
+ */
+const FLEX_TIME_TOKEN_SRC =
+  "(?:\\d{1,2}:\\d{2}\\s*(?:am|pm)?|\\d{1,2}\\s*(?:am|pm)|\\d{1,2}(?:am|pm))";
+
+const FLEX_SCHEDULE_RANGE_LINE = new RegExp(
+  `^(${FLEX_TIME_TOKEN_SRC})\\s*(?:-|–|—|\\bto\\b)\\s*(${FLEX_TIME_TOKEN_SRC})(.*)$`,
+  "i",
+);
+
+const FLEX_SCHEDULE_SINGLE_LINE = new RegExp(
+  `^(${FLEX_TIME_TOKEN_SRC})(.*)$`,
+  "i",
+);
 
 function normalizeHHMM(raw: string | null | undefined): string | null {
   if (!raw || typeof raw !== "string") return null;
@@ -42,6 +59,16 @@ function normalizeHHMM(raw: string | null | undefined): string | null {
     if (ap === "pm" && h < 12) h += 12;
     if (ap === "am" && h === 12) h = 0;
     return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  }
+
+  const hourAmpm = t.match(/^(\d{1,2})\s*(am|pm)$/i);
+  if (hourAmpm) {
+    let h = Number(hourAmpm[1]);
+    const ap = hourAmpm[2].toLowerCase();
+    if (h < 1 || h > 12) return null;
+    if (ap === "pm" && h < 12) h += 12;
+    if (ap === "am" && h === 12) h = 0;
+    return `${String(h).padStart(2, "0")}:00`;
   }
 
   const hm = t.match(/^(\d{1,2}):(\d{2})$/);
@@ -90,7 +117,7 @@ function sanitizeTasks(raw: unknown[]): ParsedPastedPlanTask[] {
   for (const item of raw.slice(0, MAX_TASKS)) {
     if (!item || typeof item !== "object" || Array.isArray(item)) continue;
     const o = item as Record<string, unknown>;
-    let name = rowActivityText(o);
+    const name = rowActivityText(o);
     const lower = name.toLowerCase();
     if (
       lower === "task" ||
@@ -217,25 +244,27 @@ export async function parseHandwrittenPlannerPhoto(input: {
 
   const apiKey = process.env.GROQ_API_KEY?.trim();
   if (apiKey) {
-    try {
-      const groq = new Groq({ apiKey });
-      const completion = await groq.chat.completions.create({
-        model: MODEL,
-        temperature: 0.1,
-        max_tokens: 2048,
-        messages: [
-          { role: "system", content: PASTE_HANDWRITTEN_PLAN_PROMPT },
-          {
-            role: "user",
-            content: `Extract rows from this OCR text of a handwritten schedule:\n\n${ocrText}\n\nReturn only the JSON array.`,
-          },
-        ],
-      });
-      const content = completion.choices[0]?.message?.content ?? "";
-      const parsed = parseFromGroqContent(content);
-      if (parsed && parsed.length > 0) return { ok: true, tasks: parsed };
-    } catch {
-      // fall through
+    const groq = new Groq({ apiKey });
+    for (const model of getGroqModelCandidates("parsing")) {
+      try {
+        const completion = await groq.chat.completions.create({
+          model,
+          temperature: 0.1,
+          max_tokens: 2048,
+          messages: [
+            { role: "system", content: PASTE_HANDWRITTEN_PLAN_PROMPT },
+            {
+              role: "user",
+              content: `Extract rows from this OCR text of a handwritten schedule:\n\n${ocrText}\n\nReturn only the JSON array.`,
+            },
+          ],
+        });
+        const content = completion.choices[0]?.message?.content ?? "";
+        const parsed = parseFromGroqContent(content);
+        if (parsed && parsed.length > 0) return { ok: true, tasks: parsed };
+      } catch {
+        /* try next parsing candidate */
+      }
     }
   }
 
@@ -267,7 +296,10 @@ function parseFromMarkdownTable(raw: string): ParsedPastedPlanTask[] {
       continue;
     }
     const m = slot.match(
-      /(\d{1,2}:\d{2}\s*(?:am|pm)?)\s*[–—-]\s*(\d{1,2}:\d{2}\s*(?:am|pm)?)/i,
+      new RegExp(
+        `^(${FLEX_TIME_TOKEN_SRC})\\s*[–—-]\\s*(${FLEX_TIME_TOKEN_SRC})$`,
+        "i",
+      ),
     );
     const st = normalizeHHMM(m?.[1] ?? null);
     const et = normalizeHHMM(m?.[2] ?? null);
@@ -308,9 +340,7 @@ function parseFromScheduleLines(raw: string): ParsedPastedPlanTask[] {
       continue;
     }
 
-    const range = line.match(
-      /(\d{1,2}:\d{2}\s*(?:am|pm)?)\s*(?:-|–|—|\bto\b)\s*(\d{1,2}:\d{2}\s*(?:am|pm)?)(.*)$/i,
-    );
+    const range = line.match(FLEX_SCHEDULE_RANGE_LINE);
     if (range) {
       const st = normalizeHHMM(range[1]);
       const et = normalizeHHMM(range[2]);
@@ -326,7 +356,7 @@ function parseFromScheduleLines(raw: string): ParsedPastedPlanTask[] {
       }
     }
 
-    const single = line.match(/(\d{1,2}:\d{2}\s*(?:am|pm)?)(.*)$/i);
+    const single = line.match(FLEX_SCHEDULE_SINGLE_LINE);
     if (single) {
       const st = normalizeHHMM(single[1]);
       const name = cleanupActivityName(single[2] ?? "");

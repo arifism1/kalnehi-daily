@@ -13,6 +13,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 import { completeOnboarding } from "@/actions/profile";
+import { GroupedExamSelect } from "@/components/profile/GroupedExamSelect";
 import {
   EXAMS_CATALOG_FALLBACK,
   dedupeExamsCatalogForUi,
@@ -235,17 +236,15 @@ export function OnboardingWizard() {
             <label className="text-xs font-semibold text-kal-text-secondary">
               Target exam
             </label>
-            <select
-              value={primaryExam}
-              onChange={(e) => setPrimaryExam(e.target.value)}
-              className="mt-2 min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-[15px] text-kal-text transition-colors duration-200 focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
-            >
-              {examOptions.map((opt) => (
-                <option key={opt.exam_name} value={opt.exam_name}>
-                  {opt.display_name}
-                </option>
-              ))}
-            </select>
+            <div className="mt-2">
+              <GroupedExamSelect
+                id="onboarding-target-exam"
+                value={primaryExam}
+                onChange={setPrimaryExam}
+                options={examOptions}
+                className="min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-[15px] text-kal-text transition-colors duration-200 focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
+              />
+            </div>
           </div>
 
           {error && (

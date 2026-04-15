@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "verify:fcm": "node scripts/verify-fcm-setup.mjs",
-    "verify:razorpay-sub": "node scripts/verify-razorpay-subscription-counts.mjs"
+    "verify:razorpay-sub": "node scripts/verify-razorpay-subscription-counts.mjs",
+    "verify:api-pii": "node scripts/check-public-api-pii.mjs"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^0.10.34",

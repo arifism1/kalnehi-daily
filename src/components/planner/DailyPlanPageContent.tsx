@@ -50,6 +50,14 @@ export function DailyPlanPageContent() {
             </span>
           </h1>
         </div>
+        <p className="mt-2">
+          <Link
+            href="/target-score-blueprint"
+            className="text-sm font-semibold text-kal-accent underline-offset-4 hover:underline"
+          >
+            Plan toward a target score
+          </Link>
+        </p>
       </header>
 
       {/* Date chips + date picker */}

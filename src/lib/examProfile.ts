@@ -34,9 +34,20 @@ export function examDisplayLabel(stored: string | null | undefined): string {
     return "JEE Main";
   }
   if (n === "jee advanced") return "JEE Advanced";
-  if (n === "cuet") return "CUET";
+  if (n === "gate") return "GATE";
+  if (n === "cuet") return "CUET UG";
   if (n === "cbse class 12") return "CBSE Class 12";
   if (n === "upsc cse prelims") return "UPSC CSE Prelims";
+  if (n === "ca foundation") return "CA Foundation";
+  if (n === "ca intermediate") return "CA Intermediate";
+  if (n === "ca final") return "CA Final";
+  if (n === "cat") return "CAT";
+  if (n === "gmat") return "GMAT";
+  if (n === "clat" || n === "clat ug") return "CLAT UG";
+  if (n === "nda") return "NDA";
+  if (n === "sat") return "SAT";
+  if (n === "gre") return "GRE";
+  if (n === "ini cet") return "INI-CET";
   if (n === "other") return "Other";
   return stored.trim();
 }
@@ -68,12 +79,23 @@ export function syllabusCatalogExamName(
   if (n === "jee main" || n === "jee mains") return "JEE Main 2025";
 
   if (n === "jee advanced") return "JEE Advanced";
+  if (n === "gate") return "GATE";
   if (n === "cuet") return "CUET";
+  if (n === "ini cet" || n === "ini cet exam") return "INI-CET";
+  if (n === "cat") return "CAT";
+  if (n === "gmat") return "GMAT";
+  if (n === "clat" || n === "clat ug") return "CLAT UG";
+  if (n === "nda") return "NDA";
+  if (n === "sat") return "SAT";
+  if (n === "gre") return "GRE";
+  if (n === "ca intermediate") return "CA Intermediate";
+  if (n === "ca final") return "CA Final";
   if (n === "other") return "Other";
   if (n === "cbse class 12") return "CBSE Class 12";
   if (n === "upsc cse prelims" || n === "upsc cse prelim") {
     return "UPSC CSE Prelims";
   }
+  if (n === "ca foundation") return "CA Foundation";
   /** Legacy profile label → syllabus `exam_name`. */
   if (n === "cbse boards" || n === "boards") return "CBSE Class 12";
 
@@ -184,7 +206,17 @@ export function examScoreMax(
   if (n === "neet pg") return 800;
   if (n === "jee advanced") return 360;
   if (n === "cbse class 12") return 500;
+  if (n === "ca foundation") return 400;
+  if (n === "ca intermediate" || n === "ca final") return 800;
   if (n === "upsc cse prelims") return 400;
+  if (n === "gate") return 100;
+  if (n === "ini cet") return 800;
+  if (n === "cat") return 198;
+  if (n === "gmat") return 805;
+  if (n === "clat" || n === "clat ug") return 120;
+  if (n === "nda") return 900;
+  if (n === "sat") return 1600;
+  if (n === "gre") return 340;
   return 720;
 }
 

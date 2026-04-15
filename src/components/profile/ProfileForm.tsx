@@ -1,14 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import {
-  ChevronRight,
-  Loader2,
-  LogOut,
-  Plus,
-  Trash2,
-  UserCircle,
-} from "lucide-react";
+import { Loader2, LogOut, Plus, Trash2, UserCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -23,6 +16,7 @@ import {
 
 import { upsertUserProfile } from "@/actions/profile";
 import { CuetDomainSubjectPick } from "@/components/profile/CuetDomainSubjectPick";
+import { GroupedExamSelect } from "@/components/profile/GroupedExamSelect";
 import { InstallPWA } from "@/components/InstallPWA";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
@@ -364,25 +358,13 @@ export function ProfileForm() {
             <span className="w-28 shrink-0 text-[15px] font-medium text-kal-text-secondary">
               Target exam
             </span>
-            <div className="relative min-w-0 flex-1">
-              <select
-                id="target-exam"
-                value={targetExam}
-                onChange={(e) => setTargetExam(e.target.value)}
-                className="w-full appearance-none rounded-lg border border-kal-border bg-kal-card-muted py-2.5 pr-10 pl-3 text-[15px] text-kal-text focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
-              >
-                <option value="">Select…</option>
-                {examSelectOptions.map((opt) => (
-                  <option key={opt.exam_name} value={opt.exam_name}>
-                    {opt.display_name}
-                  </option>
-                ))}
-              </select>
-              <ChevronRight
-                className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 rotate-90 text-kal-muted"
-                aria-hidden
-              />
-            </div>
+            <GroupedExamSelect
+              id="target-exam"
+              value={targetExam}
+              onChange={setTargetExam}
+              options={examSelectOptions}
+              placeholder
+            />
           </Row>
           <Row>
             <label

@@ -37,9 +37,10 @@ export async function POST(req: Request) {
 
   const usage = await incrementVoiceMinuteUsage(1);
   if (!usage.ok) {
+    const unauthorized = usage.error === "Please sign in.";
     return NextResponse.json(
       { ok: false, error: usage.error },
-      { status: 429 },
+      { status: unauthorized ? 401 : 429 },
     );
   }
 
