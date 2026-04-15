@@ -3,33 +3,12 @@
 import { Bell } from "lucide-react";
 
 import { CustomRemindersSettings } from "@/components/settings/CustomRemindersSettings";
+import { SettingsExpandableSection } from "@/components/settings/SettingsExpandableSection";
 import {
   NotificationsToastProvider,
 } from "@/components/settings/notificationsToastContext";
 import { PushNotificationsSettings } from "@/components/settings/PushNotificationsSettings";
 import { SystemNotificationsSettings } from "@/components/settings/SystemNotificationsSettings";
-
-function SectionLabel({
-  kicker,
-  title,
-  description,
-}: {
-  kicker: string;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="mb-3 border-b border-kal-border/60 pb-3 dark:border-white/10">
-      <p className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-kal-accent">
-        {kicker}
-      </p>
-      <h3 className="mt-1 text-base font-semibold text-kal-text">{title}</h3>
-      <p className="mt-1 text-xs leading-relaxed text-kal-text-secondary">
-        {description}
-      </p>
-    </div>
-  );
-}
 
 /**
  * Premium grouping for Settings → Notifications: device push, system automations, custom reminders.
@@ -60,33 +39,33 @@ export function NotificationsSettingsGroup() {
           </div>
         </div>
 
-        <div className="mt-6 space-y-8">
-          <div>
-            <SectionLabel
-              kicker="Device"
-              title="Push on this device"
-              description="Register for web push so alerts can reach you when the app is closed."
-            />
+        <div className="mt-6 space-y-3">
+          <SettingsExpandableSection
+            sectionId="notifications-device"
+            kicker="Device"
+            title="Push on this device"
+            description="Register for web push so alerts can reach you when the app is closed."
+          >
             <PushNotificationsSettings embedded />
-          </div>
+          </SettingsExpandableSection>
 
-          <div>
-            <SectionLabel
-              kicker="Automations"
-              title="System notifications"
-              description="Morning kickstart, danger-zone signal, and evening wind-down — India Standard Time. Counts toward the five automated pushes per IST day."
-            />
+          <SettingsExpandableSection
+            sectionId="notifications-system"
+            kicker="Automations"
+            title="System notifications"
+            description="Morning kickstart, danger-zone signal, and evening wind-down — India Standard Time. Counts toward the five automated pushes per IST day."
+          >
             <SystemNotificationsSettings embedded />
-          </div>
+          </SettingsExpandableSection>
 
-          <div>
-            <SectionLabel
-              kicker="You"
-              title="My custom reminders"
-              description="Your titles and times. Respects the same daily send cap as system messages."
-            />
+          <SettingsExpandableSection
+            sectionId="notifications-custom"
+            kicker="You"
+            title="My custom reminders"
+            description="Your titles and times. Respects the same daily send cap as system messages."
+          >
             <CustomRemindersSettings embedded />
-          </div>
+          </SettingsExpandableSection>
         </div>
       </section>
     </NotificationsToastProvider>

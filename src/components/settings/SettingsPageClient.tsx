@@ -28,8 +28,9 @@ export function SettingsPageClient() {
         </p>
         <h1 className="kal-feature-title mt-1">Settings</h1>
         <p className="mt-1 text-sm leading-relaxed text-kal-text-secondary">
-          Shape how Kalnehi feels — every option here is optional. Subscription,
-          billing, and AI credits live under{" "}
+          Start with Theme and Home experience toggles, then set up
+          notifications. Every option here is optional. Subscription, billing,
+          and AI credits live under{" "}
           <Link
             href="/my-plan"
             className="font-semibold text-kal-accent underline underline-offset-2"

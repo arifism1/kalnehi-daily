@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Menu, X } from "lucide-react";
+import { CheckCircle2, Download, Menu, X } from "lucide-react";
+
+import { PwaIosInstallModal } from "@/components/PwaIosInstallModal";
+import { isStandalonePwa, usePwaInstall } from "@/hooks/usePwaInstall";
 
 const NAV_LINKS = [
   { href: "/guides", label: "Guides" },
@@ -16,6 +19,12 @@ export function MarketingNav() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const menuRef = useRef<HTMLDivElement>(null);
+  const { installed, canPromptInstall, needsIosInstallModal, promptInstall, iosDevice } =
+    usePwaInstall();
+  const [installBusy, setInstallBusy] = useState(false);
+  const [iosInstallOpen, setIosInstallOpen] = useState(false);
+  const installUnsupported = !installed && !canPromptInstall && !iosDevice;
+  const showInstallButton = installed || canPromptInstall || needsIosInstallModal;
 
   // Close on route change
   useEffect(() => {
@@ -125,6 +134,48 @@ export function MarketingNav() {
             })}
           </ul>
           <div className="border-t border-kal-border px-4 py-3">
+            {showInstallButton ? (
+              <button
+                type="button"
+                disabled={installBusy || installed}
+                onClick={async () => {
+                  if (canPromptInstall) {
+                    setInstallBusy(true);
+                    await promptInstall();
+                    setInstallBusy(false);
+                    if (isStandalonePwa()) setOpen(false);
+                    return;
+                  }
+                  if (needsIosInstallModal) {
+                    setIosInstallOpen(true);
+                  }
+                }}
+                className={`inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition ${
+                  installed
+                    ? "cursor-default border border-kal-border bg-kal-card-muted text-kal-muted"
+                    : "bg-kal-accent-soft text-kal-accent-dark hover:bg-kal-accent/20"
+                }`}
+              >
+                {installed ? (
+                  <CheckCircle2 className="h-4.5 w-4.5" />
+                ) : (
+                  <Download className="h-4.5 w-4.5" />
+                )}
+                {installed
+                  ? "App Installed"
+                  : installBusy
+                    ? "Opening..."
+                    : canPromptInstall
+                      ? "Install App"
+                      : "Add to Home Screen"}
+              </button>
+            ) : installUnsupported ? (
+              <p className="rounded-xl border border-kal-border bg-kal-card-muted px-3 py-2 text-xs text-kal-muted">
+                Install not supported in this browser.
+              </p>
+            ) : null}
+          </div>
+          <div className="border-t border-kal-border px-4 py-3">
             <Link
               href="/auth"
               onClick={() => setOpen(false)}
@@ -135,6 +186,10 @@ export function MarketingNav() {
           </div>
         </div>
       )}
+      <PwaIosInstallModal
+        open={iosInstallOpen}
+        onClose={() => setIosInstallOpen(false)}
+      />
     </nav>
   );
 }

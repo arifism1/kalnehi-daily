@@ -2,10 +2,12 @@
 
 import clsx from "clsx";
 import type { LucideIcon } from "lucide-react";
-import { Bell, LockKeyhole, Menu } from "lucide-react";
+import { Bell, CheckCircle2, Download, LockKeyhole, Menu } from "lucide-react";
 import { Fragment, useEffect, useState } from "react";
 
+import { PwaIosInstallModal } from "@/components/PwaIosInstallModal";
 import { MAIN_NAV_SECTIONS } from "@/config/mainNavigation";
+import { isStandalonePwa, usePwaInstall } from "@/hooks/usePwaInstall";
 import { SITE_NAME } from "@/lib/seo-metadata";
 
 /**
@@ -15,6 +17,12 @@ import { SITE_NAME } from "@/lib/seo-metadata";
  */
 export function AuthAppNavPreviewMenu() {
   const [open, setOpen] = useState(false);
+  const { installed, canPromptInstall, needsIosInstallModal, promptInstall, iosDevice } =
+    usePwaInstall();
+  const [installBusy, setInstallBusy] = useState(false);
+  const [iosInstallOpen, setIosInstallOpen] = useState(false);
+  const installUnsupported = !installed && !canPromptInstall && !iosDevice;
+  const showInstallCard = installed || canPromptInstall || needsIosInstallModal;
 
   useEffect(() => {
     if (!open) return;
@@ -95,6 +103,77 @@ export function AuthAppNavPreviewMenu() {
               <LockKeyhole className="h-4 w-4" strokeWidth={2.25} />
             </span>
           </div>
+          <div className="border-b border-white/20 px-3 py-3 backdrop-blur-sm sm:px-4 dark:border-white/10">
+            {showInstallCard ? (
+              <div className="rounded-xl border border-kal-accent/35 bg-kal-accent-soft px-2.5 py-3 sm:px-3">
+                <div className="flex items-start gap-2.5">
+                  <span
+                    className={clsx(
+                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
+                      installed
+                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
+                        : "bg-kal-accent/25 text-kal-accent-dark dark:text-kal-accent",
+                    )}
+                  >
+                    {installed ? (
+                      <CheckCircle2 className="h-5 w-5" strokeWidth={2.25} />
+                    ) : (
+                      <Download className="h-5 w-5" strokeWidth={2.25} />
+                    )}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-kal-text sm:text-[15px]">
+                      {installed ? "App installed" : "Install Kalnehi Daily"}
+                    </p>
+                    <p className="mt-0.5 text-xs leading-relaxed text-kal-muted">
+                      {installed
+                        ? "Already running as an installed app."
+                        : "Pin it to your home screen for one-tap launch."}
+                    </p>
+                    <button
+                      type="button"
+                      disabled={installBusy || installed}
+                      onClick={async () => {
+                        if (canPromptInstall) {
+                          setInstallBusy(true);
+                          await promptInstall();
+                          setInstallBusy(false);
+                          if (isStandalonePwa()) setOpen(false);
+                          return;
+                        }
+                        if (needsIosInstallModal) {
+                          setIosInstallOpen(true);
+                        }
+                      }}
+                      className={clsx(
+                        "mt-3 flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold shadow-sm transition-colors active:scale-[0.99] motion-reduce:active:scale-100",
+                        installed
+                          ? "cursor-default border border-kal-border bg-white/70 text-kal-muted shadow-none"
+                          : "bg-kal-accent text-white hover:bg-kal-accent-hover",
+                      )}
+                    >
+                      {installed ? (
+                        <CheckCircle2 className="h-[1.125rem] w-[1.125rem]" strokeWidth={2.5} />
+                      ) : (
+                        <Download className="h-[1.125rem] w-[1.125rem]" strokeWidth={2.5} />
+                      )}
+                      {installed
+                        ? "App Installed"
+                        : installBusy
+                          ? "Opening..."
+                          : canPromptInstall
+                            ? "Install App"
+                            : "Add to Home Screen"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : installUnsupported ? (
+              <p className="rounded-xl border border-kal-border bg-kal-card-muted px-3 py-2 text-xs text-kal-muted">
+                Install not supported in this browser.
+              </p>
+            ) : null}
+          </div>
 
           <nav
             className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-1.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1 sm:px-2"
@@ -133,6 +212,10 @@ export function AuthAppNavPreviewMenu() {
             </ul>
           </nav>
         </div>
+        <PwaIosInstallModal
+          open={iosInstallOpen}
+          onClose={() => setIosInstallOpen(false)}
+        />
       </div>
     </>
   );
