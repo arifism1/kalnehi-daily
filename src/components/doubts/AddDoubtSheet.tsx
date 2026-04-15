@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 
+import { DoubtSubjectSelect } from "@/components/doubts/DoubtSubjectSelect";
 import { LocalPhotoPrivacyNote } from "@/components/ui/LocalPhotoPrivacyNote";
 import { isLikelyImageFile } from "@/lib/purposeStorage";
 import { useDoubtStore } from "@/store/useDoubtStore";
@@ -24,9 +25,15 @@ function revokeAll(pending: PendingPhoto[]) {
 export type AddDoubtSheetProps = {
   open: boolean;
   onClose: () => void;
+  /** Distinct subjects for the user's exam + General (from syllabus_master). */
+  syllabusSubjects: string[];
 };
 
-export function AddDoubtSheet({ open, onClose }: AddDoubtSheetProps) {
+export function AddDoubtSheet({
+  open,
+  onClose,
+  syllabusSubjects,
+}: AddDoubtSheetProps) {
   const baseId = useId();
   const createDoubt = useDoubtStore((s) => s.createDoubt);
   const titleRef = useRef<HTMLTextAreaElement>(null);
@@ -34,6 +41,7 @@ export function AddDoubtSheet({ open, onClose }: AddDoubtSheetProps) {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [subject, setSubject] = useState("");
   const [pending, setPending] = useState<PendingPhoto[]>([]);
   const [showPhotoPrivacy, setShowPhotoPrivacy] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -42,6 +50,7 @@ export function AddDoubtSheet({ open, onClose }: AddDoubtSheetProps) {
   const reset = useCallback(() => {
     setTitle("");
     setDescription("");
+    setSubject("");
     setShowPhotoPrivacy(false);
     setError(null);
     setSaving(false);
@@ -107,6 +116,7 @@ export function AddDoubtSheet({ open, onClose }: AddDoubtSheetProps) {
         title: title.trim(),
         description: description.trim(),
         initialFiles: pending.map((p) => p.file),
+        subject: subject.trim() === "" ? null : subject.trim(),
       });
       reset();
       onClose();
@@ -117,7 +127,17 @@ export function AddDoubtSheet({ open, onClose }: AddDoubtSheetProps) {
     } finally {
       setSaving(false);
     }
-  }, [canSave, saving, createDoubt, title, description, pending, onClose, reset]);
+  }, [
+    canSave,
+    saving,
+    createDoubt,
+    title,
+    description,
+    subject,
+    pending,
+    onClose,
+    reset,
+  ]);
 
   if (!open) return null;
 
@@ -135,11 +155,11 @@ export function AddDoubtSheet({ open, onClose }: AddDoubtSheetProps) {
         onClick={handleClose}
         disabled={saving}
       />
-      <div className="relative z-[61] flex max-h-[min(92dvh,40rem)] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-slate-700 bg-[#0c1220] shadow-2xl sm:max-h-[min(88vh,38rem)] sm:rounded-3xl">
-        <div className="flex shrink-0 items-start justify-between gap-2 border-b border-white/[0.06] px-5 pb-3 pt-4">
+      <div className="kal-glass-panel relative z-[61] flex max-h-[min(92dvh,40rem)] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl shadow-2xl sm:max-h-[min(88vh,38rem)] sm:rounded-3xl">
+        <div className="flex shrink-0 items-start justify-between gap-2 border-b border-kal-border px-5 pb-3 pt-4">
           <h2
             id={`${baseId}-add-title`}
-            className="text-lg font-bold tracking-tight text-white"
+            className="text-lg font-bold tracking-tight text-kal-text"
           >
             New doubt
           </h2>
@@ -147,14 +167,14 @@ export function AddDoubtSheet({ open, onClose }: AddDoubtSheetProps) {
             type="button"
             onClick={handleClose}
             disabled={saving}
-            className="rounded-lg p-2 text-zinc-500 hover:bg-white/5 disabled:opacity-50"
+            className="rounded-lg p-2 text-kal-muted transition-colors hover:bg-kal-card-muted disabled:opacity-50"
           >
             <X className="h-5 w-5" aria-hidden />
           </button>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-          <label className="block text-[11px] font-medium uppercase tracking-wide text-zinc-500">
+          <label className="block text-[11px] font-medium uppercase tracking-wide text-kal-muted">
             What’s the doubt?
             <textarea
               ref={titleRef}
@@ -163,20 +183,29 @@ export function AddDoubtSheet({ open, onClose }: AddDoubtSheetProps) {
               rows={3}
               placeholder="Type here — question, topic, or screenshot context…"
               autoComplete="off"
-              className="mt-2 w-full resize-y rounded-xl border border-slate-700 bg-slate-950/80 px-3 py-3 text-[15px] leading-relaxed text-white outline-none placeholder:text-zinc-600 focus-visible:ring-2 focus-visible:ring-kal-accent/40"
+              className="mt-2 w-full resize-y rounded-xl border border-kal-border bg-kal-input-bg px-3 py-3 text-[15px] leading-relaxed text-kal-text outline-none placeholder:text-kal-muted focus-visible:ring-2 focus-visible:ring-kal-accent/40"
             />
           </label>
 
-          <label className="mt-4 block text-[11px] font-medium uppercase tracking-wide text-zinc-500">
+          <label className="mt-4 block text-[11px] font-medium uppercase tracking-wide text-kal-muted">
             Extra detail (optional)
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
               placeholder="Steps you tried, page number, etc."
-              className="mt-2 w-full resize-y rounded-xl border border-slate-700 bg-slate-950/80 px-3 py-3 text-[15px] leading-relaxed text-white outline-none placeholder:text-zinc-600 focus-visible:ring-2 focus-visible:ring-kal-accent/40"
+              className="mt-2 w-full resize-y rounded-xl border border-kal-border bg-kal-input-bg px-3 py-3 text-[15px] leading-relaxed text-kal-text outline-none placeholder:text-kal-muted focus-visible:ring-2 focus-visible:ring-kal-accent/40"
             />
           </label>
+
+          <DoubtSubjectSelect
+            id={`${baseId}-subject`}
+            className="mt-4"
+            value={subject}
+            onChange={setSubject}
+            options={syllabusSubjects}
+            disabled={saving}
+          />
 
           <div className="mt-5">
             <input
@@ -198,7 +227,7 @@ export function AddDoubtSheet({ open, onClose }: AddDoubtSheetProps) {
               type="button"
               onClick={onAddPhotoClick}
               disabled={saving}
-              className="flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl border border-kal-accent/35 bg-red-950/40 px-4 py-3 text-sm font-semibold text-red-100 transition hover:bg-red-950/60 disabled:opacity-50"
+              className="flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl border border-kal-accent/30 bg-kal-accent-soft px-4 py-3 text-sm font-semibold text-kal-accent-dark transition hover:border-kal-accent/45 hover:bg-kal-accent/10 disabled:opacity-50 dark:hover:bg-red-950/40 dark:hover:text-red-100"
             >
               <Camera className="h-5 w-5 shrink-0" aria-hidden />
               <span>📸 Add photo</span>
@@ -209,7 +238,7 @@ export function AddDoubtSheet({ open, onClose }: AddDoubtSheetProps) {
                 {pending.map((p, i) => (
                   <li
                     key={`${p.url}-${i}`}
-                    className="relative overflow-hidden rounded-lg border border-slate-700/90"
+                    className="relative overflow-hidden rounded-lg border border-kal-border"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -234,19 +263,19 @@ export function AddDoubtSheet({ open, onClose }: AddDoubtSheetProps) {
           {error ? (
             <p
               role="alert"
-              className="mt-4 rounded-lg border border-rose-500/35 bg-rose-950/40 px-3 py-2 text-xs text-rose-100"
+              className="mt-4 rounded-lg border border-[var(--kal-danger-border)] bg-[var(--kal-danger-soft)] px-3 py-2 text-xs text-[var(--kal-danger-text)]"
             >
               {error}
             </p>
           ) : null}
         </div>
 
-        <div className="shrink-0 border-t border-white/[0.06] px-5 py-4">
+        <div className="shrink-0 border-t border-kal-border px-5 py-4">
           <button
             type="button"
             disabled={!canSave || saving}
             onClick={() => void save()}
-            className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-kal-accent py-3 text-sm font-semibold text-white shadow-lg shadow-red-900/25 transition hover:bg-red-500 disabled:opacity-40"
+            className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-kal-accent py-3 text-sm font-semibold text-kal-accent-foreground shadow-sm transition hover:bg-kal-accent-hover disabled:opacity-40"
           >
             {saving ? (
               <>

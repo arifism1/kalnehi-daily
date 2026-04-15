@@ -8,17 +8,21 @@ import {
   CircleHelp,
   GripVertical,
   Loader2,
+  PencilLine,
   Plus,
   Trash2,
   X,
 } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 
+import { useDoubtSyllabusSubjects } from "@/hooks/useDoubtSyllabusSubjects";
 import type { DoubtStatus } from "@/lib/doubtStorage";
+import { normalizeStoredDoubtSubject } from "@/lib/doubtSubjects";
 import { isLikelyImageFile } from "@/lib/purposeStorage";
 import { useDoubtStore } from "@/store/useDoubtStore";
 import { useUndoStore } from "@/store/useUndoStore";
 import { AddDoubtSheet } from "@/components/doubts/AddDoubtSheet";
+import { DoubtSubjectSelect } from "@/components/doubts/DoubtSubjectSelect";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { LocalPhotoPrivacyNote } from "@/components/ui/LocalPhotoPrivacyNote";
 import { TransientNotice } from "@/components/ui/TransientNotice";
@@ -116,8 +120,30 @@ function shiftDoubtStatus(
   return STATUS_ORDER[next]!;
 }
 
+function compareByUpdatedAtDesc(
+  a: { updatedAt: number },
+  b: { updatedAt: number },
+): number {
+  return b.updatedAt - a.updatedAt;
+}
+
+function formatDoubtDate(timestamp: number): string {
+  const now = Date.now();
+  const diffMs = now - timestamp;
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (diffDays >= 1 && diffDays <= 5) {
+    return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
+  }
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(timestamp));
+}
+
 export function DoubtTracker() {
   const baseId = useId();
+  const { subjects: syllabusSubjects } = useDoubtSyllabusSubjects();
   const {
     doubts,
     hydrated,
@@ -136,6 +162,7 @@ export function DoubtTracker() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDesc, setEditDesc] = useState("");
+  const [editSubject, setEditSubject] = useState("");
   const [editSaving, setEditSaving] = useState(false);
   const [editPhotoHint, setEditPhotoHint] = useState(false);
   const editFileInputRef = useRef<HTMLInputElement>(null);
@@ -146,6 +173,7 @@ export function DoubtTracker() {
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [deleteBanner, setDeleteBanner] = useState<string | null>(null);
   const [inlineNotice, setInlineNotice] = useState<string | null>(null);
+  const [subjectFilter, setSubjectFilter] = useState<string>("__all__");
 
   useEffect(() => {
     void hydrate();
@@ -161,20 +189,62 @@ export function DoubtTracker() {
     setEditPhotoHint(false);
   }, [editingId]);
 
+  const filteredDoubts = useMemo(() => {
+    if (subjectFilter === "__all__") return doubts;
+    if (subjectFilter === "__none__") {
+      return doubts.filter((d) => !normalizeStoredDoubtSubject(d.subject));
+    }
+    return doubts.filter(
+      (d) => normalizeStoredDoubtSubject(d.subject) === subjectFilter,
+    );
+  }, [doubts, subjectFilter]);
+
+  const filterChoices = useMemo(() => {
+    const fromDoubts = doubts
+      .map((d) => normalizeStoredDoubtSubject(d.subject))
+      .filter((s): s is string => Boolean(s));
+    const merged = new Set<string>([...syllabusSubjects, ...fromDoubts]);
+    const sorted = [...merged].sort((a, b) => a.localeCompare(b));
+    return [
+      { key: "__all__", label: "All" },
+      { key: "__none__", label: "No subject" },
+      ...sorted.map((s) => ({ key: s, label: s })),
+    ];
+  }, [doubts, syllabusSubjects]);
+
+  const cardNumberById = useMemo(() => {
+    const byStatusAll: Record<DoubtStatus, typeof doubts> = {
+      current: [],
+      working: [],
+      solved: [],
+    };
+    for (const d of doubts) {
+      byStatusAll[d.status].push(d);
+    }
+    const out: Record<string, number> = {};
+    for (const k of Object.keys(byStatusAll) as DoubtStatus[]) {
+      byStatusAll[k].sort(compareByUpdatedAtDesc);
+      for (const [index, d] of byStatusAll[k].entries()) {
+        out[d.id] = index + 1;
+      }
+    }
+    return out;
+  }, [doubts]);
+
   const byStatus = useMemo(() => {
     const m: Record<DoubtStatus, typeof doubts> = {
       current: [],
       working: [],
       solved: [],
     };
-    for (const d of doubts) {
+    for (const d of filteredDoubts) {
       m[d.status].push(d);
     }
     for (const k of Object.keys(m) as DoubtStatus[]) {
-      m[k].sort((a, b) => b.updatedAt - a.updatedAt);
+      m[k].sort(compareByUpdatedAtDesc);
     }
     return m;
-  }, [doubts]);
+  }, [filteredDoubts]);
 
   const editing = editingId
     ? doubts.find((d) => d.id === editingId)
@@ -184,6 +254,7 @@ export function DoubtTracker() {
     if (editing) {
       setEditTitle(editing.title);
       setEditDesc(editing.description);
+      setEditSubject(normalizeStoredDoubtSubject(editing.subject) ?? "");
     }
   }, [editing]);
 
@@ -194,6 +265,7 @@ export function DoubtTracker() {
       await updateDoubtText(editingId, {
         title: editTitle,
         description: editDesc,
+        subject: editSubject.trim() === "" ? null : editSubject.trim(),
       });
       setEditingId(null);
     } finally {
@@ -233,9 +305,10 @@ export function DoubtTracker() {
               <h1 className="kal-feature-title">Doubt Tracker</h1>
             </div>
           </div>
-          <p className="max-w-2xl text-xs leading-relaxed text-kal-muted sm:text-sm">
-            Capture doubts with notes and screenshots — private on this device,
-            for your eyes only.
+          <p className="text-xs leading-relaxed text-zinc-500/90 dark:text-zinc-400">
+            Doubts, notes, and photos are stored only in this browser on this
+            device. They are not saved on our servers and may be permanently
+            lost if you clear browser data or cache.
           </p>
         </div>
         <button
@@ -247,6 +320,36 @@ export function DoubtTracker() {
           Add doubt
         </button>
       </header>
+
+      <div className="space-y-2">
+        <p className="text-[11px] font-medium text-kal-muted">Subject filter</p>
+        <div
+          className="-mx-4 flex gap-2 overflow-x-auto overscroll-x-contain px-4 pb-0.5 [-webkit-overflow-scrolling:touch] sm:mx-0 sm:px-0"
+          role="tablist"
+          aria-label="Filter doubts by subject"
+        >
+          {filterChoices.map((c) => {
+            const selected = subjectFilter === c.key;
+            return (
+              <button
+                key={c.key}
+                type="button"
+                role="tab"
+                aria-selected={selected}
+                onClick={() => setSubjectFilter(c.key)}
+                className={clsx(
+                  "shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition",
+                  selected
+                    ? "border-kal-accent/45 bg-kal-accent-soft text-kal-accent-dark shadow-sm dark:border-red-500/35 dark:bg-red-950/35 dark:text-red-100"
+                    : "border-kal-border bg-kal-card-muted/80 text-kal-muted hover:border-kal-accent/25 hover:bg-kal-card-muted dark:bg-zinc-900/50 dark:hover:border-red-500/25",
+                )}
+              >
+                {c.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       <div
         className={clsx(
@@ -319,6 +422,9 @@ export function DoubtTracker() {
                           onClick={() => setEditingId(d.id)}
                           className="w-full text-left"
                         >
+                          <p className="text-[10px] font-semibold leading-none text-kal-muted sm:text-[11px]">
+                            #{cardNumberById[d.id] ?? "–"}
+                          </p>
                           <p className="text-sm font-semibold leading-snug text-kal-text sm:text-[15px]">
                             {d.title.trim() ? (
                               d.title
@@ -328,6 +434,11 @@ export function DoubtTracker() {
                               </span>
                             )}
                           </p>
+                          {normalizeStoredDoubtSubject(d.subject) ? (
+                            <span className="mt-1 inline-flex max-w-full truncate rounded-full border border-kal-border bg-kal-card-muted/90 px-2 py-0.5 text-[10px] font-medium text-kal-text-secondary sm:text-[11px] dark:bg-zinc-800/75 dark:text-zinc-300">
+                              {normalizeStoredDoubtSubject(d.subject)}
+                            </span>
+                          ) : null}
                           {d.description.trim() ? (
                             <p className="mt-0.5 line-clamp-3 text-[11px] leading-relaxed text-kal-muted sm:mt-1 sm:text-[12px]">
                               {d.description}
@@ -355,7 +466,21 @@ export function DoubtTracker() {
                             ))}
                           </div>
                         ) : null}
+                        <p className="mt-2 text-[11px] leading-none text-zinc-500 dark:text-zinc-400">
+                          Added {formatDoubtDate(d.createdAt)}
+                        </p>
                         <div className="absolute right-1 top-1 flex flex-col items-center gap-0.5 sm:right-2 sm:top-2">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingId(d.id);
+                            }}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-kal-border text-kal-muted transition-opacity hover:bg-kal-card-muted hover:text-kal-text md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100"
+                            aria-label="Edit doubt"
+                          >
+                            <PencilLine className="h-4 w-4" strokeWidth={2.25} />
+                          </button>
                           <button
                             type="button"
                             onClick={(e) => {
@@ -419,8 +544,9 @@ export function DoubtTracker() {
 
       <p className="text-center text-[10px] leading-relaxed text-kal-text-secondary sm:text-[11px]">
         Use the arrows on each card to move between Current → Working → Solved.
-        You can still swipe columns on mobile or drag on larger screens. Tap a
-        card to edit. Stored on this device only.
+        You can still swipe columns on mobile or drag on larger screens. Use
+        Edit on each card to update details (or tap the title and notes).
+        Stored on this device only.
       </p>
 
       <ConfirmDialog
@@ -518,6 +644,14 @@ export function DoubtTracker() {
                 className="mt-1.5 w-full resize-y rounded-xl border border-kal-border bg-kal-input-bg px-3 py-3 text-[15px] text-kal-text outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40"
               />
             </label>
+            <DoubtSubjectSelect
+              id={`${baseId}-edit-subject`}
+              className="mt-4"
+              value={editSubject}
+              onChange={setEditSubject}
+              options={syllabusSubjects}
+              disabled={editSaving}
+            />
             <div className="mt-4">
               <p className="text-xs font-medium text-kal-muted">Photos</p>
               <input
@@ -587,6 +721,7 @@ export function DoubtTracker() {
       <AddDoubtSheet
         open={addSheetOpen}
         onClose={() => setAddSheetOpen(false)}
+        syllabusSubjects={syllabusSubjects}
       />
 
       {lightbox && (

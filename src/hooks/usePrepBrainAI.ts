@@ -8,8 +8,6 @@ import {
 } from "@/lib/prepbrainTokens";
 import { useAuthStore } from "@/store/useAuthStore";
 
-import { usePrepBrainContextSnapshot } from "@/hooks/usePrepBrainContextSnapshot";
-
 export type PrepBrainChatMessage = {
   role: "user" | "assistant";
   content: string;
@@ -17,7 +15,6 @@ export type PrepBrainChatMessage = {
 
 export function usePrepBrainAI() {
   const user = useAuthStore((s) => s.user);
-  const { buildContextSnapshot } = usePrepBrainContextSnapshot();
 
   const [messages, setMessages] = useState<PrepBrainChatMessage[]>([]);
   const [isSending, setIsSending] = useState(false);
@@ -59,23 +56,18 @@ export function usePrepBrainAI() {
       if (!trimmed || isSending) return;
 
       const userMsg: PrepBrainChatMessage = { role: "user", content: trimmed };
-      let threadForApi: PrepBrainChatMessage[] = [];
-      setMessages((prev) => {
-        threadForApi = [...prev, userMsg];
-        return threadForApi;
-      });
+      const threadForApi: PrepBrainChatMessage[] = [...messages, userMsg];
+      setMessages(threadForApi);
       setError(null);
       setIsSending(true);
 
       try {
-        const context = await buildContextSnapshot();
         const res = await fetch("/api/prepbrain/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "same-origin",
           body: JSON.stringify({
             messages: threadForApi,
-            context,
           }),
         });
         const data = (await res.json()) as {
@@ -113,7 +105,7 @@ export function usePrepBrainAI() {
         setIsSending(false);
       }
     },
-    [buildContextSnapshot, isSending],
+    [isSending, messages],
   );
 
   const clearChat = useCallback(() => {
@@ -136,7 +128,6 @@ export function usePrepBrainAI() {
     setError,
     sendMessage,
     clearChat,
-    buildContextSnapshot,
     usage,
     usageLoading,
     atTokenLimit,

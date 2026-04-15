@@ -18,6 +18,8 @@ export type DoubtMeta = {
   title: string;
   description: string;
   status: DoubtStatus;
+  /** Optional syllabus-style tag (e.g. Physics, General). Omitted when unset. */
+  subject?: string;
   photoIds: string[];
   createdAt: number;
   updatedAt: number;
