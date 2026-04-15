@@ -111,6 +111,38 @@ export type PrepBrainContext = {
   };
 };
 
+export type PrepBrainCompactContext = {
+  context_generated_at: string;
+  exam: {
+    label: string;
+    target_exam_date: string | null;
+  };
+  syllabus: {
+    completion_percent: number;
+    marks_secured: number;
+    marks_total: number;
+  };
+  subjects: {
+    weak_top_3: Array<{ subject: string; completion_percent: number }>;
+    strong_top_3: Array<{ subject: string; completion_percent: number }>;
+  };
+  today_plan: {
+    completion_percent: number;
+    execution_status: string;
+    days_behind: number | null;
+    pending_from_past_days: number;
+  };
+  consistency: {
+    execution_sessions_last_7d: number;
+    study_sessions_last_7d: number;
+    camera_proven_sessions_last_7d: number;
+    completed_habit_logs_last_14d: number;
+    meditation_days_last_30d: number;
+    meditation_sessions_last_30d: number;
+  };
+  key_insights: string[];
+};
+
 export type PrepBrainContextInput = {
   nowIso: string;
   calendarToday: string;
@@ -329,6 +361,124 @@ type PrepBrainCuetDomainRow = NonNullable<
   PrepBrainContext["syllabus_snapshot"]["cuet_domain_summary"]
 >["per_domain"][number];
 type PrepBrainRecentTask = PrepBrainContext["recent_tasks_last_two_weeks"][number];
+
+function round1(n: number): number {
+  return Math.round(n * 10) / 10;
+}
+
+function topSubjectsFromWeakChapters(
+  weakest: PrepBrainContext["syllabus_snapshot"]["weakest_chapters"],
+): Array<{ subject: string; completion_percent: number }> {
+  const bySubject = new Map<string, { sum: number; count: number }>();
+  for (const row of weakest) {
+    const key = row.subject?.trim();
+    if (!key) continue;
+    const current = bySubject.get(key) ?? { sum: 0, count: 0 };
+    current.sum += row.percent_of_microtopics_done_in_chapter;
+    current.count += 1;
+    bySubject.set(key, current);
+  }
+  return [...bySubject.entries()]
+    .map(([subject, stats]) => ({
+      subject,
+      completion_percent: round1(stats.sum / Math.max(1, stats.count)),
+    }))
+    .sort((a, b) => a.completion_percent - b.completion_percent);
+}
+
+function topSubjectsFromCuet(
+  cuet: PrepBrainContext["syllabus_snapshot"]["cuet_domain_summary"],
+): Array<{ subject: string; completion_percent: number }> {
+  if (!cuet?.per_domain?.length) return [];
+  return cuet.per_domain
+    .map((d) => ({
+      subject: d.subject,
+      completion_percent: round1(d.completion_percent),
+    }))
+    .sort((a, b) => b.completion_percent - a.completion_percent);
+}
+
+/**
+ * Small, bounded context for chat prompts (token-efficient).
+ */
+export function buildPrepBrainCompactContext(ctx: PrepBrainContext): PrepBrainCompactContext {
+  const weakestBySubject = topSubjectsFromWeakChapters(
+    ctx.syllabus_snapshot.weakest_chapters,
+  );
+  const cuetBySubject = topSubjectsFromCuet(ctx.syllabus_snapshot.cuet_domain_summary);
+
+  const weak_top_3 = weakestBySubject.slice(0, 3);
+  const strong_top_3 =
+    cuetBySubject.length > 0
+      ? cuetBySubject.slice(0, 3)
+      : [...weakestBySubject].reverse().slice(0, 3);
+
+  const insights: string[] = [];
+  const completion = ctx.todays_planned_work.completion_percent_for_todays_planned_tasks;
+  if (completion < 35) {
+    insights.push("Today's planned-task completion is low; execution consistency is the biggest immediate lever.");
+  } else if (completion >= 75) {
+    insights.push("Today's execution is strong; protect this momentum with a fixed revision block.");
+  }
+
+  if (ctx.todays_planned_work.days_behind_on_execution != null) {
+    const d = ctx.todays_planned_work.days_behind_on_execution;
+    if (d >= 3) {
+      insights.push(`Backlog is about ${d} days; recovering old carry-over tasks should be prioritized.`);
+    }
+  }
+
+  if (insights.length < 2 && ctx.meditation_last_30_days.distinct_days_with_a_session < 8) {
+    insights.push("Meditation consistency is low; a daily 5-10 minute anchor habit can improve focus stability.");
+  }
+  if (insights.length === 0) {
+    insights.push("Syllabus and execution data look balanced enough for incremental marks-focused optimization.");
+  }
+
+  return {
+    context_generated_at: ctx.context_generated_at,
+    exam: {
+      label:
+        ctx.exam_profile.exam_display_name ||
+        ctx.exam_profile.exam_label ||
+        "Exam preparation",
+      target_exam_date: ctx.exam_profile.target_exam_date,
+    },
+    syllabus: {
+      completion_percent: round1(
+        ctx.syllabus_snapshot.overall_weighted_completion_percent,
+      ),
+      marks_secured: round1(ctx.syllabus_snapshot.total_marks_secured_in_syllabus_model),
+      marks_total: round1(ctx.syllabus_snapshot.total_marks_pool_in_syllabus_model),
+    },
+    subjects: {
+      weak_top_3,
+      strong_top_3,
+    },
+    today_plan: {
+      completion_percent: round1(
+        ctx.todays_planned_work.completion_percent_for_todays_planned_tasks,
+      ),
+      execution_status: ctx.todays_planned_work.todays_execution_status_label,
+      days_behind: ctx.todays_planned_work.days_behind_on_execution,
+      pending_from_past_days:
+        ctx.todays_planned_work.count_of_incomplete_tasks_from_past_days,
+    },
+    consistency: {
+      execution_sessions_last_7d:
+        ctx.last_7_days.execution_timer_sessions.session_count,
+      study_sessions_last_7d: ctx.last_7_days.study_sessions_with_camera.session_count,
+      camera_proven_sessions_last_7d:
+        ctx.last_7_days.study_sessions_with_camera.sessions_marked_camera_proven,
+      completed_habit_logs_last_14d:
+        ctx.habits_overview.completed_habit_logs_last_14_days,
+      meditation_days_last_30d:
+        ctx.meditation_last_30_days.distinct_days_with_a_session,
+      meditation_sessions_last_30d: ctx.meditation_last_30_days.session_count,
+    },
+    key_insights: insights.slice(0, 2),
+  };
+}
 
 /** Server-side defense: cap oversized client payloads before Groq. Never throws on partial/malformed JSON. */
 export function truncatePrepBrainContextForApi(ctx: PrepBrainContext): PrepBrainContext {

@@ -11,6 +11,7 @@ import {
   restoreDoubtFully,
   saveDoubtMeta,
 } from "@/lib/doubtStorage";
+import { normalizeStoredDoubtSubject } from "@/lib/doubtSubjects";
 import { isLikelyImageFile } from "@/lib/purposeStorage";
 import { toUserFacingLocalError } from "@/lib/userFacingErrors";
 
@@ -48,12 +49,13 @@ type DoubtStore = {
     title: string;
     description: string;
     initialFiles?: File[];
+    subject?: string | null;
   }) => Promise<string>;
   /** Empty card in Current — user types title inline (no modal). */
   quickCreateDoubt: () => Promise<string>;
   updateDoubtText: (
     id: string,
-    patch: { title?: string; description?: string },
+    patch: { title?: string; description?: string; subject?: string | null },
   ) => Promise<void>;
   setDoubtStatus: (id: string, status: DoubtStatus) => Promise<void>;
   addPhoto: (doubtId: string, file: File) => Promise<void>;
@@ -91,11 +93,12 @@ export const useDoubtStore = create<DoubtStore>((set, get) => ({
     }
   },
 
-  createDoubt: async ({ title, description, initialFiles }) => {
+  createDoubt: async ({ title, description, initialFiles, subject }) => {
     const now = Date.now();
     const id = crypto.randomUUID();
     const t = title.trim() || "Untitled doubt";
     const desc = description.trim();
+    const sub = normalizeStoredDoubtSubject(subject);
 
     const meta: DoubtMeta = {
       id,
@@ -105,6 +108,7 @@ export const useDoubtStore = create<DoubtStore>((set, get) => ({
       photoIds: [],
       createdAt: now,
       updatedAt: now,
+      ...(sub ? { subject: sub } : {}),
     };
 
     const files = initialFiles ?? [];
@@ -145,6 +149,10 @@ export const useDoubtStore = create<DoubtStore>((set, get) => ({
   updateDoubtText: async (id, patch) => {
     const cur = get().doubts.find((d) => d.id === id);
     if (!cur) return;
+    const nextSubject =
+      patch.subject !== undefined
+        ? normalizeStoredDoubtSubject(patch.subject)
+        : normalizeStoredDoubtSubject(cur.subject);
     const next: DoubtMeta = {
       ...cur,
       title:
@@ -153,6 +161,8 @@ export const useDoubtStore = create<DoubtStore>((set, get) => ({
         patch.description !== undefined ? patch.description.trim() : cur.description,
       updatedAt: Date.now(),
     };
+    if (nextSubject) next.subject = nextSubject;
+    else delete next.subject;
     await saveDoubtMeta(next);
     set((s) => ({
       doubts: s.doubts.map((d) => (d.id === id ? next : d)),

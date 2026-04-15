@@ -1,11 +1,9 @@
 "use client";
 
-import { Brain, Loader2, Send, Sparkles } from "lucide-react";
+import { Brain, Loader2, Send } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
-import { GroqModelDebugBadge } from "@/components/ai/GroqModelDebugBadge";
-import { useAiModelDebugVisible } from "@/hooks/useAiModelDebugVisible";
 import { usePrepBrainAI } from "@/hooks/usePrepBrainAI";
 import { PREPBRAIN_UI_DISCLAIMER } from "@/lib/prepBrainPrompts";
 import { PREPBRAIN_USAGE_WARN_RATIO } from "@/lib/prepbrainTokens";
@@ -29,10 +27,7 @@ export function PrepBrainChat() {
     usageLoading,
     atTokenLimit,
     tokenLimitMessage,
-    lastGroqModel,
   } = usePrepBrainAI();
-
-  const showModelDebug = useAiModelDebugVisible();
 
   const usagePct =
     usage && usage.limit > 0
@@ -73,17 +68,47 @@ export function PrepBrainChat() {
           </span>
           <div className="min-w-0">
             <h2 className="text-base font-bold text-kal-text sm:text-lg">PrepBrain AI</h2>
-            <p className="text-[11px] leading-snug text-kal-text-secondary sm:text-xs sm:leading-normal">
-              <span className="sm:hidden">Coach using your Kalnehi data</span>
-              <span className="hidden sm:inline">
-                Your preparation coach — uses your syllabus, planner, and habits
-              </span>
-            </p>
-            <GroqModelDebugBadge
-              modelId={lastGroqModel}
-              visible={showModelDebug}
-              logPrefix="PrepBrain"
-            />
+            {usage && !usageLoading ? (
+              <div className="mt-1 space-y-1">
+                <div className="flex items-center justify-between gap-2 text-[10px] sm:text-[11px]">
+                  <span className="truncate font-medium tabular-nums text-kal-text">
+                    Tokens used: {usage.used.toLocaleString("en-IN")} /{" "}
+                    {usage.limit.toLocaleString("en-IN")} this month
+                  </span>
+                  {usageNearLimit && (
+                    <span className="shrink-0 text-[10px] font-semibold leading-none text-amber-800 dark:text-amber-200/90">
+                      Approaching monthly limit
+                    </span>
+                  )}
+                </div>
+                <div
+                  className="h-1.5 w-full overflow-hidden rounded-full bg-kal-border/80"
+                  role="progressbar"
+                  aria-valuenow={Math.round(usagePct)}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label="PrepBrain token usage this month"
+                >
+                  <div
+                    className={`h-full rounded-full transition-[width] duration-300 ${
+                      atTokenLimit
+                        ? "bg-red-500/90"
+                        : usageNearLimit
+                          ? "bg-amber-500/90"
+                          : "bg-kal-accent/90"
+                    }`}
+                    style={{ width: `${usagePct}%` }}
+                  />
+                </div>
+                {tokenLimitMessage ? (
+                  <p className="text-[10px] leading-snug text-red-800 dark:text-red-200/90">
+                    {tokenLimitMessage}
+                  </p>
+                ) : null}
+              </div>
+            ) : usageLoading ? (
+              <p className="mt-1.5 text-[11px] text-kal-text-secondary">Loading usage…</p>
+            ) : null}
           </div>
         </div>
         {messages.length > 0 && (
@@ -97,59 +122,9 @@ export function PrepBrainChat() {
         )}
       </div>
 
-      {usage && !usageLoading && (
-        <div className="shrink-0 border-b border-white/15 bg-white/35 px-3 py-2.5 backdrop-blur-sm sm:px-5 dark:border-white/10 dark:bg-zinc-900/45">
-          <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] sm:text-xs">
-            <span className="font-medium tabular-nums text-kal-text">
-              Tokens used:{" "}
-              {usage.used.toLocaleString("en-IN")} /{" "}
-              {usage.limit.toLocaleString("en-IN")} this month
-            </span>
-            {usageNearLimit && (
-              <span className="font-semibold text-amber-800 dark:text-amber-200/90">
-                Approaching monthly limit
-              </span>
-            )}
-          </div>
-          <div
-            className="mt-2 h-2 w-full overflow-hidden rounded-full bg-kal-border/80"
-            role="progressbar"
-            aria-valuenow={Math.round(usagePct)}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label="PrepBrain token usage this month"
-          >
-            <div
-              className={`h-full rounded-full transition-[width] duration-300 ${
-                atTokenLimit
-                  ? "bg-red-500/90"
-                  : usageNearLimit
-                    ? "bg-amber-500/90"
-                    : "bg-kal-accent/90"
-              }`}
-              style={{ width: `${usagePct}%` }}
-            />
-          </div>
-          {tokenLimitMessage ? (
-            <p className="mt-2 text-[11px] leading-snug text-red-800 dark:text-red-200/90">
-              {tokenLimitMessage}
-            </p>
-          ) : null}
-        </div>
-      )}
-      {usageLoading && (
-        <div className="shrink-0 border-b border-white/15 bg-white/30 px-3 py-2 text-[11px] text-kal-text-secondary backdrop-blur-sm sm:px-5 dark:border-white/10 dark:bg-zinc-900/40">
-          Loading usage…
-        </div>
-      )}
-
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 py-3 [-webkit-overflow-scrolling:touch] sm:px-5 sm:py-4">
         {messages.length === 0 && !isSending && (
           <div className="mx-auto max-w-lg space-y-5 text-center sm:space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/50 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-kal-text-secondary backdrop-blur-sm dark:border-white/12 dark:bg-zinc-900/55">
-              <Sparkles className="h-3.5 w-3.5 shrink-0 text-kal-accent" aria-hidden />
-              Pro / Pro Max
-            </div>
             <p className="text-sm leading-relaxed text-kal-muted">
               Ask anything about your syllabus gaps, daily execution, habits, or calm
               focus. PrepBrain reads your Kalnehi data each time you send a message.
@@ -260,6 +235,9 @@ export function PrepBrainChat() {
             )}
           </button>
         </div>
+        <p className="mt-1.5 text-[10px] leading-snug text-kal-text-secondary">
+          PrepBrain intelligently pulls only the data it needs to answer you.
+        </p>
         {/* Mobile: one-line control; full disclaimer inside expandable panel */}
         <details className="mt-1.5 sm:hidden">
           <summary className="flex min-h-[40px] cursor-pointer list-none items-center text-[10px] leading-none text-kal-text-secondary underline decoration-kal-border decoration-dotted underline-offset-2 [&::-webkit-details-marker]:hidden">
