@@ -387,11 +387,14 @@ export function DoubtTracker() {
           >
             <h2
               className={clsx(
-                "shrink-0 border-b border-kal-border pb-2 text-xs font-bold tracking-tight dark:border-white/[0.06] sm:pb-3 sm:text-sm",
+                "flex shrink-0 items-center justify-between gap-2 border-b border-kal-border pb-2 text-xs font-bold tracking-tight dark:border-white/[0.06] sm:pb-3 sm:text-sm",
                 col.headingClass,
               )}
             >
-              {col.title}
+              <span>{col.title}</span>
+              <span className="inline-flex min-w-[1.5rem] items-center justify-center rounded-full border border-current/25 px-1.5 py-0.5 text-[10px] font-semibold leading-none sm:min-w-[1.625rem] sm:text-[11px]">
+                {byStatus[col.status].length}
+              </span>
             </h2>
             <div className="mt-2 flex min-h-[min(52dvh,22rem)] flex-1 flex-col gap-2 overflow-y-auto overscroll-contain pr-0.5 [-webkit-overflow-scrolling:touch] sm:mt-3 sm:min-h-[min(56dvh,24rem)] sm:gap-2.5 md:min-h-0 md:max-h-[calc(100dvh-15.5rem)] lg:max-h-[calc(100dvh-14rem)]">
               {byStatus[col.status].length === 0 ? (
