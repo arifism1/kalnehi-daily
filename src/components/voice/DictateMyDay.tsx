@@ -2,7 +2,7 @@
 
 import { addDays, format, parseISO } from "date-fns";
 import { Loader2, Mic, Volume2 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { insertDailyTask } from "@/actions/dailyPlan";
 import { saveRawVoiceNote } from "@/actions/voiceDictate";
@@ -15,12 +15,9 @@ import { UnifiedDailyPlanList } from "@/components/planner/UnifiedDailyPlanList"
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
 import { slotFromStartEnd } from "@/lib/dailyPlanTime";
-import { suggestSyllabusIdFromTitle } from "@/lib/suggestDailyTaskSyllabus";
 import type { VoiceDraftTask } from "@/lib/voiceDraftFromGroq";
 import { plannerDurationFromTimeInputs } from "@/lib/voicePlannerSync";
 import { useAuthStore } from "@/store/useAuthStore";
-import type { Microtopic } from "@/store/useTaskStore";
-import { useTaskStore } from "@/store/useTaskStore";
 
 type Phase = "idle" | "listening" | "processing" | "error";
 
@@ -53,21 +50,16 @@ function emptyPreviewRow(): DailyPlanPreviewRow {
 function toPreviewRowsFromParse(
   tasks: VoiceDraftTask[],
   transcriptChunk: string,
-  microtopics: Microtopic[],
 ): DailyPlanPreviewRow[] {
   const chunk = transcriptChunk.slice(0, 12_000);
-  return tasks.map((t) => {
-    const name = t.taskTitle?.trim() ?? "";
-    return {
-      id: crypto.randomUUID(),
-      name,
-      startInput: t.start_time ?? "",
-      endInput: t.end_time ?? "",
-      duration: t.duration ?? null,
-      sourceRaw: chunk,
-      syllabus_master_id: suggestSyllabusIdFromTitle(name, microtopics),
-    };
-  });
+  return tasks.map((t) => ({
+    id: crypto.randomUUID(),
+    name: t.taskTitle?.trim() ?? "",
+    startInput: t.start_time ?? "",
+    endInput: t.end_time ?? "",
+    duration: t.duration ?? null,
+    sourceRaw: chunk,
+  }));
 }
 
 function scrollDictateStaging(): void {
@@ -88,11 +80,6 @@ function scrollDictateLive(): void {
 
 export function DictateMyDay() {
   const user = useAuthStore((s) => s.user);
-  const syllabusById = useTaskStore((s) => s.microtopics);
-  const microtopicsList = useMemo(
-    () => Object.values(syllabusById),
-    [syllabusById],
-  );
   const today = useCalendarDate();
   const [logDate, setLogDate] = useState(today);
   const [lang, setLang] = useState("en-IN");
@@ -155,11 +142,7 @@ export function DictateMyDay() {
         }
         setFallbackPanel(null);
         const chunk = cleaned;
-        const newRows = toPreviewRowsFromParse(
-          res.tasks,
-          chunk,
-          microtopicsList,
-        );
+        const newRows = toPreviewRowsFromParse(res.tasks, chunk);
         setPreviewRows((prev) => {
           const kept = prev.filter(
             (r) => r.name.trim() || r.startInput || r.endInput,
@@ -174,7 +157,7 @@ export function DictateMyDay() {
         setIsProcessing(false);
       }
     },
-    [logDate, microtopicsList],
+    [logDate],
   );
 
   const {
@@ -485,7 +468,6 @@ export function DictateMyDay() {
               ? "Listening…"
               : "Processing your transcript into tasks…"
           }
-          syllabusLinkMode
         />
         {error ? (
           <p

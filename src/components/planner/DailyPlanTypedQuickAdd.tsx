@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2, Plus } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { insertDailyTask } from "@/actions/dailyPlan";
 import {
@@ -10,11 +10,8 @@ import {
   type DailyPlanPreviewRow,
 } from "@/components/planner/DailyPlanPreviewStaging";
 import { slotFromStartEnd } from "@/lib/dailyPlanTime";
-import { suggestSyllabusIdFromTitle } from "@/lib/suggestDailyTaskSyllabus";
 import type { VoiceDraftTask } from "@/lib/voiceDraftFromGroq";
 import { minutesBetweenHHMM } from "@/lib/voiceIst";
-import type { Microtopic } from "@/store/useTaskStore";
-import { useTaskStore } from "@/store/useTaskStore";
 
 type ParseResponse =
   | { ok: true; tasks: VoiceDraftTask[] }
@@ -38,9 +35,7 @@ function emptyPreviewRow(): DailyPlanPreviewRow {
 function voiceDraftToRow(
   t: VoiceDraftTask,
   sourceRaw: string,
-  microtopics: Microtopic[],
 ): DailyPlanPreviewRow {
-  const name = t.taskTitle?.trim() ?? "";
   return {
     id: crypto.randomUUID(),
     name: t.taskTitle,
@@ -48,16 +43,10 @@ function voiceDraftToRow(
     endInput: t.end_time ?? "",
     duration: t.duration,
     sourceRaw,
-    syllabus_master_id: suggestSyllabusIdFromTitle(name, microtopics),
   };
 }
 
 export function DailyPlanTypedQuickAdd({ planDate, onAdded }: Props) {
-  const syllabusById = useTaskStore((s) => s.microtopics);
-  const microtopicsList = useMemo(
-    () => Object.values(syllabusById),
-    [syllabusById],
-  );
   const areaRef = useRef<HTMLTextAreaElement>(null);
   const [inputText, setInputText] = useState("");
   /** Keeps latest text for Add to preview — avoids stale closure if useCallback deps omit inputText. */
@@ -133,9 +122,7 @@ export function DailyPlanTypedQuickAdd({ planDate, onAdded }: Props) {
       }
 
       const chunk = raw.slice(0, 12_000);
-      const newRows = res.tasks.map((t) =>
-        voiceDraftToRow(t, chunk, microtopicsList),
-      );
+      const newRows = res.tasks.map((t) => voiceDraftToRow(t, chunk));
       setPreviewRows((prev) => {
         const kept = prev.filter(
           (r) => r.name.trim() || r.startInput || r.endInput,
@@ -164,7 +151,7 @@ export function DailyPlanTypedQuickAdd({ planDate, onAdded }: Props) {
       setParsing(false);
       setInputText("");
     }
-  }, [planDate, microtopicsList]);
+  }, [planDate]);
 
   const updatePreviewRow = useCallback(
     (id: string, patch: Partial<DailyPlanPreviewRow>) => {
@@ -301,7 +288,6 @@ export function DailyPlanTypedQuickAdd({ planDate, onAdded }: Props) {
         onRemoveRow={removePreviewRow}
         onAddEmptyRow={addEmptyPreviewRow}
         disabled={busy}
-        syllabusLinkMode
       />
 
       <div className="mt-2 border-t border-kal-border pt-4">

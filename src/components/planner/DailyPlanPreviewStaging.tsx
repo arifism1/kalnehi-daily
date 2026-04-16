@@ -1,7 +1,7 @@
 "use client";
 
-import { Loader2, Plus, Trash2 } from "lucide-react";
-import { useMemo } from "react";
+import { Link2, Loader2, Plus, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 import { DailyPlanMicrotopicPicker } from "@/components/planner/DailyPlanMicrotopicPicker";
 import { formatIstSlotDurationLabel } from "@/lib/voiceIst";
@@ -29,6 +29,14 @@ export function isPreviewRowIncluded(r: DailyPlanPreviewRow): boolean {
   return Boolean(r.name.trim()) && r.excludeFromCommit !== true;
 }
 
+const SYLLABUS_SUMMARY_MAX = 96;
+
+function truncateSummary(s: string, max: number): string {
+  const t = s.trim();
+  if (t.length <= max) return t;
+  return `${t.slice(0, max - 1)}…`;
+}
+
 type Props = {
   sectionId: string;
   title: string;
@@ -44,8 +52,6 @@ type Props = {
   processingLabel?: string;
   /** Tighter padding and spacing (e.g. compact mobile preview). */
   compact?: boolean;
-  /** Per-row optional syllabus picker (voice / typed preview). */
-  syllabusLinkMode?: boolean;
 };
 
 export function DailyPlanPreviewStaging({
@@ -61,14 +67,39 @@ export function DailyPlanPreviewStaging({
   processing = false,
   processingLabel = "Processing…",
   compact = false,
-  syllabusLinkMode = false,
 }: Props) {
   const syllabusById = useTaskStore((s) => s.microtopics);
   const microtopicsList = useMemo(
     () => Object.values(syllabusById),
     [syllabusById],
   );
+  const [expandedSyllabusIds, setExpandedSyllabusIds] = useState<Set<string>>(
+    () => new Set(),
+  );
+
+  useEffect(() => {
+    const valid = new Set(rows.map((r) => r.id));
+    setExpandedSyllabusIds((prev) => {
+      let changed = false;
+      const next = new Set<string>();
+      for (const id of prev) {
+        if (valid.has(id)) next.add(id);
+        else changed = true;
+      }
+      return changed ? next : prev;
+    });
+  }, [rows]);
+
   const showHeader = Boolean(title.trim() || subtitle.trim());
+
+  const setExpanded = (id: string, open: boolean) => {
+    setExpandedSyllabusIds((prev) => {
+      const next = new Set(prev);
+      if (open) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
 
   return (
     <div
@@ -108,130 +139,237 @@ export function DailyPlanPreviewStaging({
         </div>
       ) : null}
       <ul className={compact ? "space-y-1.5" : "space-y-2"}>
-        {rows.map((r) => (
-          <li
-            key={r.id}
-            className={
-              compact
-                ? "kal-glass-subtle flex min-w-0 items-start gap-1.5 overflow-hidden rounded-lg p-2"
-                : "kal-glass-subtle flex min-w-0 items-start gap-2 overflow-hidden rounded-xl p-3"
-            }
-          >
-            <input
-              type="checkbox"
-              checked={r.excludeFromCommit === true}
-              onChange={() => {
-                const skip = r.excludeFromCommit === true;
-                onUpdateRow(r.id, { excludeFromCommit: !skip });
-              }}
-              disabled={disabled}
+        {rows.map((r) => {
+          const linkedId = r.syllabus_master_id?.trim() || null;
+          const linkedRow = linkedId ? syllabusById[linkedId] : undefined;
+          const hasValidLink = Boolean(linkedRow);
+          const expanded = expandedSyllabusIds.has(r.id);
+          const summaryText =
+            linkedRow != null
+              ? truncateSummary(
+                  `${linkedRow.chapter} · ${linkedRow.microtopic}`,
+                  SYLLABUS_SUMMARY_MAX,
+                )
+              : "";
+
+          return (
+            <li
+              key={r.id}
               className={
                 compact
-                  ? "mt-1.5 h-4 w-4 shrink-0 rounded border-kal-border bg-kal-input-bg text-kal-accent focus:ring-kal-accent disabled:opacity-50"
-                  : "mt-2.5 h-5 w-5 shrink-0 rounded border-kal-border bg-kal-input-bg text-kal-accent focus:ring-kal-accent disabled:opacity-50"
+                  ? "kal-glass-subtle flex min-w-0 items-start gap-1.5 overflow-hidden rounded-lg p-2"
+                  : "kal-glass-subtle flex min-w-0 items-start gap-2 overflow-hidden rounded-xl p-3"
               }
-              title="Exclude this row from Add to Today's Plan"
-              aria-label="Exclude this row from Add to Today's Plan"
-            />
-            <div className="min-w-0 flex-1">
-              <textarea
-                value={r.name}
-                onChange={(e) => onUpdateRow(r.id, { name: e.target.value })}
-                placeholder="Task name"
-                rows={1}
+            >
+              <input
+                type="checkbox"
+                checked={r.excludeFromCommit === true}
+                onChange={() => {
+                  const skip = r.excludeFromCommit === true;
+                  onUpdateRow(r.id, { excludeFromCommit: !skip });
+                }}
                 disabled={disabled}
                 className={
                   compact
-                    ? "min-h-[36px] min-w-0 w-full resize-y overflow-hidden rounded border border-kal-border bg-kal-input-bg px-2 py-1.5 text-sm font-semibold leading-5 text-kal-text placeholder:text-kal-muted [overflow-wrap:anywhere] disabled:opacity-50"
-                    : "min-h-[40px] min-w-0 w-full resize-y overflow-hidden rounded border border-kal-border bg-kal-input-bg px-2 py-2 text-sm font-semibold leading-5 text-kal-text placeholder:text-kal-muted [overflow-wrap:anywhere] disabled:opacity-50"
+                    ? "mt-1.5 h-4 w-4 shrink-0 rounded border-kal-border bg-kal-input-bg text-kal-accent focus:ring-kal-accent disabled:opacity-50"
+                    : "mt-2.5 h-5 w-5 shrink-0 rounded border-kal-border bg-kal-input-bg text-kal-accent focus:ring-kal-accent disabled:opacity-50"
                 }
-                aria-label="Task name"
+                title="Exclude this row from Add to Today's Plan"
+                aria-label="Exclude this row from Add to Today's Plan"
               />
-              <div
-                className={
-                  compact
-                    ? "mt-1 flex min-w-0 items-center gap-1.5"
-                    : "mt-1.5 flex min-w-0 items-center gap-2"
-                }
-              >
-                <input
-                  type="time"
-                  value={r.startInput}
-                  onChange={(e) =>
-                    onUpdateRow(r.id, { startInput: e.target.value })
-                  }
+              <div className="min-w-0 flex-1">
+                <textarea
+                  value={r.name}
+                  onChange={(e) => onUpdateRow(r.id, { name: e.target.value })}
+                  placeholder="Task name"
+                  rows={1}
                   disabled={disabled}
                   className={
                     compact
-                      ? "min-h-[30px] rounded border border-kal-border bg-kal-input-bg px-1.5 text-[11px] text-kal-text disabled:opacity-50"
-                      : "min-h-[32px] rounded border border-kal-border bg-kal-input-bg px-2 text-[11px] text-kal-text disabled:opacity-50"
+                      ? "min-h-[36px] min-w-0 w-full resize-y overflow-hidden rounded border border-kal-border bg-kal-input-bg px-2 py-1.5 text-sm font-semibold leading-5 text-kal-text placeholder:text-kal-muted [overflow-wrap:anywhere] disabled:opacity-50"
+                      : "min-h-[40px] min-w-0 w-full resize-y overflow-hidden rounded border border-kal-border bg-kal-input-bg px-2 py-2 text-sm font-semibold leading-5 text-kal-text placeholder:text-kal-muted [overflow-wrap:anywhere] disabled:opacity-50"
                   }
-                  aria-label="From time"
+                  aria-label="Task name"
                 />
-                <input
-                  type="time"
-                  value={r.endInput}
-                  onChange={(e) => onUpdateRow(r.id, { endInput: e.target.value })}
-                  disabled={disabled}
+                <div
                   className={
                     compact
-                      ? "min-h-[30px] rounded border border-kal-border bg-kal-input-bg px-1.5 text-[11px] text-kal-text disabled:opacity-50"
-                      : "min-h-[32px] rounded border border-kal-border bg-kal-input-bg px-2 text-[11px] text-kal-text disabled:opacity-50"
+                      ? "mt-1 flex min-w-0 items-center gap-1.5"
+                      : "mt-1.5 flex min-w-0 items-center gap-2"
                   }
-                  aria-label="To time"
-                />
-                <span className="ml-auto text-xs font-medium text-kal-muted">
-                  {r.duration ?? "—"}
-                </span>
-              </div>
-              <p className="mt-1 text-[10px] font-medium tracking-tight text-kal-accent-dark dark:text-kal-accent">
-                {formatIstSlotDurationLabel(r.startInput, r.endInput)}
-              </p>
-              {syllabusLinkMode ? (
+                >
+                  <input
+                    type="time"
+                    value={r.startInput}
+                    onChange={(e) =>
+                      onUpdateRow(r.id, { startInput: e.target.value })
+                    }
+                    disabled={disabled}
+                    className={
+                      compact
+                        ? "min-h-[30px] rounded border border-kal-border bg-kal-input-bg px-1.5 text-[11px] text-kal-text disabled:opacity-50"
+                        : "min-h-[32px] rounded border border-kal-border bg-kal-input-bg px-2 text-[11px] text-kal-text disabled:opacity-50"
+                    }
+                    aria-label="From time"
+                  />
+                  <input
+                    type="time"
+                    value={r.endInput}
+                    onChange={(e) =>
+                      onUpdateRow(r.id, { endInput: e.target.value })
+                    }
+                    disabled={disabled}
+                    className={
+                      compact
+                        ? "min-h-[30px] rounded border border-kal-border bg-kal-input-bg px-1.5 text-[11px] text-kal-text disabled:opacity-50"
+                        : "min-h-[32px] rounded border border-kal-border bg-kal-input-bg px-2 text-[11px] text-kal-text disabled:opacity-50"
+                    }
+                    aria-label="To time"
+                  />
+                  <span className="ml-auto text-xs font-medium text-kal-muted">
+                    {r.duration ?? "—"}
+                  </span>
+                </div>
+                <p className="mt-1 text-[10px] font-medium tracking-tight text-kal-accent-dark dark:text-kal-accent">
+                  {formatIstSlotDurationLabel(r.startInput, r.endInput)}
+                </p>
+
                 <div className="mt-2 border-t border-kal-border/35 pt-2">
-                  <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-[10px] font-semibold uppercase tracking-wide text-kal-muted">
-                      Syllabus (optional)
-                    </span>
+                  {expanded ? (
+                    <div>
+                      <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-[10px] font-semibold uppercase tracking-wide text-kal-muted">
+                          Syllabus (optional)
+                        </span>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            disabled={disabled || !r.name.trim()}
+                            onClick={() => {
+                              const id = suggestSyllabusIdFromTitle(
+                                r.name,
+                                microtopicsList,
+                              );
+                              if (id) onUpdateRow(r.id, { syllabus_master_id: id });
+                            }}
+                            className="text-[10px] font-semibold text-kal-accent hover:underline disabled:opacity-40"
+                          >
+                            Best match
+                          </button>
+                          <button
+                            type="button"
+                            disabled={disabled}
+                            onClick={() => setExpanded(r.id, false)}
+                            className="text-[10px] font-medium text-kal-muted underline-offset-2 hover:text-kal-text hover:underline disabled:opacity-40"
+                          >
+                            Done
+                          </button>
+                        </div>
+                      </div>
+                      <DailyPlanMicrotopicPicker
+                        value={r.syllabus_master_id ?? null}
+                        onChange={(id) =>
+                          onUpdateRow(r.id, { syllabus_master_id: id })
+                        }
+                        disabled={disabled}
+                        compact={compact}
+                      />
+                    </div>
+                  ) : hasValidLink ? (
+                    <div className="flex min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
+                      <p
+                        className="min-w-0 text-[11px] leading-snug text-kal-muted [overflow-wrap:anywhere]"
+                        title={summaryText}
+                      >
+                        <span className="font-medium text-kal-text">
+                          Linked:
+                        </span>{" "}
+                        {summaryText}
+                      </p>
+                      <div className="flex shrink-0 flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          disabled={disabled}
+                          onClick={() => setExpanded(r.id, true)}
+                          className="text-[11px] font-semibold text-kal-accent hover:underline disabled:opacity-40"
+                          aria-expanded={false}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          disabled={disabled}
+                          onClick={() => {
+                            onUpdateRow(r.id, { syllabus_master_id: null });
+                            setExpanded(r.id, false);
+                          }}
+                          className="text-[11px] font-medium text-kal-muted underline-offset-2 hover:text-kal-text hover:underline disabled:opacity-40"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    </div>
+                  ) : linkedId && !linkedRow ? (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-[11px] text-kal-muted">
+                        Syllabus link is outdated — pick again or clear.
+                      </p>
+                      <button
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => setExpanded(r.id, true)}
+                        className="text-[11px] font-semibold text-kal-accent hover:underline disabled:opacity-40"
+                      >
+                        Fix link
+                      </button>
+                      <button
+                        type="button"
+                        disabled={disabled}
+                        onClick={() =>
+                          onUpdateRow(r.id, { syllabus_master_id: null })
+                        }
+                        className="text-[11px] font-medium text-kal-muted underline-offset-2 hover:text-kal-text hover:underline disabled:opacity-40"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  ) : (
                     <button
                       type="button"
-                      disabled={disabled || !r.name.trim()}
-                      onClick={() => {
-                        const id = suggestSyllabusIdFromTitle(
-                          r.name,
-                          microtopicsList,
-                        );
-                        if (id) onUpdateRow(r.id, { syllabus_master_id: id });
-                      }}
-                      className="text-[10px] font-semibold text-kal-accent hover:underline disabled:opacity-40"
+                      disabled={disabled}
+                      onClick={() => setExpanded(r.id, true)}
+                      aria-expanded={false}
+                      className={
+                        compact
+                          ? "inline-flex items-center gap-1.5 rounded-lg border border-kal-border/60 bg-kal-card-muted/40 px-2 py-1 text-[11px] font-medium text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-accent disabled:opacity-40"
+                          : "inline-flex items-center gap-1.5 rounded-lg border border-kal-border/60 bg-kal-card-muted/40 px-2.5 py-1.5 text-xs font-medium text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-accent disabled:opacity-40"
+                      }
                     >
-                      Best match
+                      <Link2
+                        className="h-3.5 w-3.5 shrink-0 text-kal-accent/80"
+                        aria-hidden
+                      />
+                      Link to Syllabus
                     </button>
-                  </div>
-                  <DailyPlanMicrotopicPicker
-                    value={r.syllabus_master_id ?? null}
-                    onChange={(id) => onUpdateRow(r.id, { syllabus_master_id: id })}
-                    disabled={disabled}
-                    compact={compact}
-                  />
+                  )}
                 </div>
-              ) : null}
-            </div>
-            <button
-              type="button"
-              onClick={() => onRemoveRow(r.id)}
-              disabled={disabled}
-              className={
-                compact
-                  ? "mt-0.5 rounded border border-kal-border p-1.5 text-kal-muted hover:bg-kal-card-muted hover:text-kal-danger-text disabled:opacity-40"
-                  : "mt-1 rounded border border-kal-border p-2 text-kal-muted hover:bg-kal-card-muted hover:text-kal-danger-text disabled:opacity-40"
-              }
-              aria-label="Delete row"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
-          </li>
-        ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => onRemoveRow(r.id)}
+                disabled={disabled}
+                className={
+                  compact
+                    ? "mt-0.5 rounded border border-kal-border p-1.5 text-kal-muted hover:bg-kal-card-muted hover:text-kal-danger-text disabled:opacity-40"
+                    : "mt-1 rounded border border-kal-border p-2 text-kal-muted hover:bg-kal-card-muted hover:text-kal-danger-text disabled:opacity-40"
+                }
+                aria-label="Delete row"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </li>
+          );
+        })}
       </ul>
       <button
         type="button"

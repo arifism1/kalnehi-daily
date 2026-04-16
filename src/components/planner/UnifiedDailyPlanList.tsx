@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Loader2, Mic, Pencil, Trash2, Type, X } from "lucide-react";
+import { Check, Link2, Loader2, Mic, Pencil, Trash2, Type, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -45,7 +45,16 @@ type EditSheetProps = {
   onSaved: (patch: Partial<DailyTaskView>) => void;
 };
 
+const EDIT_SYLLABUS_SUMMARY_MAX = 96;
+
+function truncateEditSyllabusSummary(s: string, max: number): string {
+  const t = s.trim();
+  if (t.length <= max) return t;
+  return `${t.slice(0, max - 1)}…`;
+}
+
 function DailyTaskEditSheet({ task, onClose, onSaved }: EditSheetProps) {
+  const syllabusById = useTaskStore((s) => s.microtopics);
   const [title, setTitle] = useState(task.title ?? "");
   const [startInput, setStartInput] = useState(
     task.time_start ? timeDbToInput(task.time_start) : "",
@@ -56,6 +65,7 @@ function DailyTaskEditSheet({ task, onClose, onSaved }: EditSheetProps) {
   const [syllabusMasterId, setSyllabusMasterId] = useState<string | null>(
     task.syllabus_master_id ?? null,
   );
+  const [syllabusSectionExpanded, setSyllabusSectionExpanded] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -69,6 +79,7 @@ function DailyTaskEditSheet({ task, onClose, onSaved }: EditSheetProps) {
     setStartInput(task.time_start ? timeDbToInput(task.time_start) : "");
     setEndInput(task.time_end ? timeDbToInput(task.time_end) : "");
     setSyllabusMasterId(task.syllabus_master_id ?? null);
+    setSyllabusSectionExpanded(false);
   }, [task]);
 
   const handleSave = async () => {
@@ -101,6 +112,20 @@ function DailyTaskEditSheet({ task, onClose, onSaved }: EditSheetProps) {
     });
     onClose();
   };
+
+  const linkedRow =
+    syllabusMasterId != null && syllabusMasterId.trim() !== ""
+      ? syllabusById[syllabusMasterId]
+      : undefined;
+  const hasValidLink = Boolean(linkedRow);
+  const staleLink = Boolean(syllabusMasterId?.trim()) && !linkedRow;
+  const summaryText =
+    linkedRow != null
+      ? truncateEditSyllabusSummary(
+          `${linkedRow.chapter} · ${linkedRow.microtopic}`,
+          EDIT_SYLLABUS_SUMMARY_MAX,
+        )
+      : "";
 
   return (
     <div
@@ -187,26 +212,105 @@ function DailyTaskEditSheet({ task, onClose, onSaved }: EditSheetProps) {
           </div>
 
           <div className="border-t border-kal-border/50 pt-4">
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-muted">
-                Syllabus link (optional)
-              </p>
-              {syllabusMasterId ? (
-                <button
-                  type="button"
-                  onClick={() => setSyllabusMasterId(null)}
+            {syllabusSectionExpanded ? (
+              <>
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-muted">
+                    Syllabus link (optional)
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {syllabusMasterId ? (
+                      <button
+                        type="button"
+                        onClick={() => setSyllabusMasterId(null)}
+                        disabled={saving}
+                        className="text-xs font-medium text-kal-muted underline-offset-2 hover:text-kal-text hover:underline disabled:opacity-50"
+                      >
+                        Clear link
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => setSyllabusSectionExpanded(false)}
+                      disabled={saving}
+                      className="text-xs font-medium text-kal-muted underline-offset-2 hover:text-kal-text hover:underline disabled:opacity-50"
+                    >
+                      Done
+                    </button>
+                  </div>
+                </div>
+                <DailyPlanMicrotopicPicker
+                  value={syllabusMasterId}
+                  onChange={setSyllabusMasterId}
                   disabled={saving}
-                  className="text-xs font-medium text-kal-muted underline-offset-2 hover:text-kal-text hover:underline disabled:opacity-50"
+                />
+              </>
+            ) : hasValidLink ? (
+              <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <p
+                  className="min-w-0 text-xs leading-snug text-kal-muted [overflow-wrap:anywhere]"
+                  title={summaryText}
                 >
-                  Clear link
-                </button>
-              ) : null}
-            </div>
-            <DailyPlanMicrotopicPicker
-              value={syllabusMasterId}
-              onChange={setSyllabusMasterId}
-              disabled={saving}
-            />
+                  <span className="font-medium text-kal-text">Linked:</span>{" "}
+                  {summaryText}
+                </p>
+                <div className="flex shrink-0 flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSyllabusSectionExpanded(true)}
+                    disabled={saving}
+                    className="text-xs font-semibold text-kal-accent hover:underline disabled:opacity-50"
+                  >
+                    Change
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSyllabusMasterId(null)}
+                    disabled={saving}
+                    className="text-xs font-medium text-kal-muted underline-offset-2 hover:text-kal-text hover:underline disabled:opacity-50"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+            ) : staleLink ? (
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-xs text-kal-muted">
+                  Syllabus link is outdated — pick again or clear.
+                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSyllabusSectionExpanded(true)}
+                    disabled={saving}
+                    className="text-xs font-semibold text-kal-accent hover:underline disabled:opacity-50"
+                  >
+                    Fix link
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSyllabusMasterId(null)}
+                    disabled={saving}
+                    className="text-xs font-medium text-kal-muted underline-offset-2 hover:text-kal-text hover:underline disabled:opacity-50"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setSyllabusSectionExpanded(true)}
+                disabled={saving}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-kal-border/60 bg-kal-card-muted/40 px-2.5 py-1.5 text-xs font-medium text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-accent disabled:opacity-50"
+              >
+                <Link2
+                  className="h-3.5 w-3.5 shrink-0 text-kal-accent/80"
+                  aria-hidden
+                />
+                Link to Syllabus
+              </button>
+            )}
           </div>
         </div>
 
