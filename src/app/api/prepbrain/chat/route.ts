@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { PREPBRAIN_SYSTEM_PROMPT } from "@/lib/prepBrainPrompts";
 import {
   getHabitStreakSummary,
+  getMarksIntelligence,
   getMeditationConsistency,
   getRecentStudyCameraData,
   getSyllabusOverview,
@@ -30,9 +31,9 @@ import {
 export const runtime = "nodejs";
 
 const MAX_BODY_BYTES = 512_000;
-const MAX_CHAT_MESSAGES = 6;
+const MAX_CHAT_MESSAGES = 4;
 const MAX_MESSAGE_CHARS = 2_500;
-const MAX_COMPLETION_TOKENS_CONCISE = 340;
+const MAX_COMPLETION_TOKENS_CONCISE = 220;
 const MAX_COMPLETION_TOKENS_DEEP = 700;
 /** Short cooldown between chat completions (backed by `prepbrain_chat_cooldown` for multi-instance). */
 const MIN_MS_BETWEEN_REQUESTS = 1_200;
@@ -51,6 +52,7 @@ type PrepBrainIntent =
   | "today_plan"
   | "syllabus_progress"
   | "weak_vs_strong"
+  | "marks_score"
   | "habits_or_meditation"
   | "study_camera"
   | "target_score"
@@ -157,6 +159,20 @@ function detectPrepBrainIntent(lastUserMessage: string): PrepBrainIntent {
     return "today_plan";
   }
   if (
+    t.includes("mark") ||
+    t.includes("score") ||
+    t.includes("weightage") ||
+    t.includes("focus on") ||
+    t.includes("what to study") ||
+    t.includes("priority") ||
+    t.includes("priorit") ||
+    t.includes("improve") ||
+    t.includes("how many") ||
+    t.includes("rank")
+  ) {
+    return "marks_score";
+  }
+  if (
     t.includes("weak") ||
     t.includes("strong") ||
     t.includes("subject") ||
@@ -195,10 +211,12 @@ function selectToolsForIntent(intent: PrepBrainIntent): PrepbrainToolName[] {
   switch (intent) {
     case "today_plan":
       return ["getTodayPlan", "getWeakStrongSubjects"];
+    case "marks_score":
+      return ["getMarksIntelligence", "getWeakStrongSubjects"];
     case "syllabus_progress":
       return ["getSyllabusOverview", "getWeakStrongSubjects"];
     case "weak_vs_strong":
-      return ["getWeakStrongSubjects", "getSyllabusOverview"];
+      return ["getWeakStrongSubjects", "getMarksIntelligence"];
     case "habits_or_meditation":
       return ["getHabitStreakSummary", "getMeditationConsistency"];
     case "study_camera":
@@ -222,6 +240,8 @@ async function runToolByName(
       return getSyllabusOverview(admin, userId);
     case "getWeakStrongSubjects":
       return getWeakStrongSubjects(admin, userId);
+    case "getMarksIntelligence":
+      return getMarksIntelligence(admin, userId);
     case "getHabitStreakSummary":
       return getHabitStreakSummary(admin, userId);
     case "getMeditationConsistency":

@@ -7,7 +7,9 @@ import { CalendarClock, Check, Crown, Sparkles, Zap } from "lucide-react";
 
 import {
   activateRazorpaySubscription,
+  activateRazorpayMonthlySubscription,
   createRazorpayTrialSubscription,
+  createRazorpayMonthlySubscription,
 } from "@/actions/subscription";
 import { CancelSubscriptionButton } from "@/components/subscription/CancelSubscriptionButton";
 import { PaymentErrorMailButton } from "@/components/subscription/PaymentErrorMailButton";
@@ -54,10 +56,12 @@ function AutopayDurationPanel({
   value,
   onChange,
   disabled,
+  hasHadTrial,
 }: {
   value: number;
   onChange: (months: number) => void;
   disabled: boolean;
+  hasHadTrial: boolean;
 }) {
   const monthWord = value === 1 ? "month" : "months";
 
@@ -82,8 +86,7 @@ function AutopayDurationPanel({
               </h2>
               <p className="mt-1 text-xs leading-snug text-kal-text-secondary sm:mt-1.5">
                 <span className="font-semibold text-kal-text">Monthly</span> billing: set how many
-                post-trial monthly charges your UPI or card mandate may take. Cancel anytime; you keep
-                access for what you&apos;ve already paid.
+                post-trial monthly charges your UPI or card mandate may take. You can cancel anytime &mdash; even before all months are used &mdash; and keep access for what you&apos;ve already paid.
               </p>
             </div>
           </div>
@@ -175,9 +178,20 @@ function AutopayDurationPanel({
                 aria-hidden
               />
               <p className="text-[0.7rem] leading-snug text-kal-text sm:text-xs">
-                <span className="font-semibold text-kal-text">Summary:</span> After trial, up to{" "}
-                <span className="font-bold text-kal-accent tabular-nums">{value}</span> monthly
-                payment{value === 1 ? "" : "s"}, then stops unless you subscribe again.
+                <span className="font-semibold text-kal-text">Summary:</span>{" "}
+                {hasHadTrial ? (
+                  <>
+                    Up to{" "}
+                    <span className="font-bold text-kal-accent tabular-nums">{value}</span> monthly
+                    payment{value === 1 ? "" : "s"}, then stops unless you subscribe again.
+                  </>
+                ) : (
+                  <>
+                    After trial, up to{" "}
+                    <span className="font-bold text-kal-accent tabular-nums">{value}</span> monthly
+                    payment{value === 1 ? "" : "s"}, then stops unless you subscribe again.
+                  </>
+                )}
               </p>
             </div>
           </fieldset>
@@ -212,6 +226,8 @@ function TierCard({
   highlighted,
   busy,
   hasPaidAccess,
+  hasHadTrial,
+  isCancelledWithAccess,
   isCurrentTier,
   onSelect,
 }: {
@@ -219,19 +235,27 @@ function TierCard({
   highlighted: boolean;
   busy: boolean;
   hasPaidAccess: boolean;
+  hasHadTrial: boolean;
+  isCancelledWithAccess: boolean;
   isCurrentTier: boolean;
   onSelect: (tier: SubscriptionTier) => void;
 }) {
-  const lockedBySubscription = hasPaidAccess;
+  const lockedBySubscription = hasPaidAccess && !isCancelledWithAccess;
   const disabled = busy;
 
   let buttonLabel: string;
-  if (isCurrentTier) {
+  if (isCurrentTier && !isCancelledWithAccess) {
     buttonLabel = "Current Plan";
+  } else if (isCancelledWithAccess) {
+    buttonLabel = hasHadTrial
+      ? `Resubscribe — ${config.monthlyPriceDisplay}/month`
+      : `Resubscribe — ${config.trialPriceDisplay} trial`;
   } else if (hasPaidAccess) {
     buttonLabel = "Activate Subscription";
   } else if (busy) {
     buttonLabel = "Opening checkout...";
+  } else if (hasHadTrial) {
+    buttonLabel = `Subscribe — ${config.monthlyPriceDisplay}/month`;
   } else {
     buttonLabel = `Start 3-day trial — ${config.trialPriceDisplay}`;
   }
@@ -258,17 +282,33 @@ function TierCard({
       <p className="mt-1 text-xs text-kal-text-secondary">{config.tagline}</p>
 
       <div className="mt-4 rounded-xl border border-kal-accent/40 bg-kal-accent/10 px-3 py-3">
-        <p className="text-lg font-bold leading-snug text-kal-text">
-          {config.trialPriceDisplay} for 3 days
-        </p>
-        <p className="mt-1 text-sm font-semibold text-kal-text">
-          → then {config.monthlyPriceDisplay}/month
-        </p>
-        {!hasPaidAccess ? (
-          <p className="mt-2 rounded-lg border border-white/30 bg-white/30 px-2 py-1.5 text-[0.65rem] font-medium leading-snug text-kal-text-secondary dark:border-white/10 dark:bg-black/20">
-            Uses the AutoPay length you set above (still billed monthly).
-          </p>
-        ) : null}
+        {hasHadTrial && !hasPaidAccess ? (
+          <>
+            <p className="text-lg font-bold leading-snug text-kal-text">
+              {config.monthlyPriceDisplay}/month
+            </p>
+            <p className="mt-1 text-xs font-medium leading-snug text-kal-text-secondary">
+              No trial — charged monthly from first payment.
+            </p>
+            <p className="mt-2 rounded-lg border border-white/30 bg-white/30 px-2 py-1.5 text-[0.65rem] font-medium leading-snug text-kal-text-secondary dark:border-white/10 dark:bg-black/20">
+              Uses the AutoPay length you set above.
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-lg font-bold leading-snug text-kal-text">
+              {config.trialPriceDisplay} for 3 days
+            </p>
+            <p className="mt-1 text-sm font-semibold text-kal-text">
+              → then {config.monthlyPriceDisplay}/month
+            </p>
+            {!hasPaidAccess ? (
+              <p className="mt-2 rounded-lg border border-white/30 bg-white/30 px-2 py-1.5 text-[0.65rem] font-medium leading-snug text-kal-text-secondary dark:border-white/10 dark:bg-black/20">
+                Uses the AutoPay length you set above (still billed monthly).
+              </p>
+            ) : null}
+          </>
+        )}
         <p className="mt-2 text-xs font-medium leading-relaxed text-kal-text-secondary">
           {tierAiQuotaCopy(config)}
         </p>
@@ -316,9 +356,12 @@ function TierCard({
 export function PricingPageClient() {
   const {
     hasPaidAccess,
+    hasHadTrial,
     status: subscriptionStatus,
     tier: currentTier,
   } = useSubscriptionAccess();
+  const isCancelledWithAccess =
+    subscriptionStatus === "cancelled" && hasPaidAccess;
   const user = useAuthStore((s) => s.user);
   const userEmail = user?.email ?? null;
   const [busy, setBusy] = useState(false);
@@ -337,7 +380,9 @@ export function PricingPageClient() {
     setBusy(true);
     setCheckoutError(null);
     try {
-      const created = await createRazorpayTrialSubscription(tier, autopayMonths);
+      const created = hasHadTrial
+        ? await createRazorpayMonthlySubscription(tier, autopayMonths)
+        : await createRazorpayTrialSubscription(tier, autopayMonths);
       if (!created.ok) {
         setCheckoutError({
           text: created.error,
@@ -354,16 +399,21 @@ export function PricingPageClient() {
       }
 
       const tierConfig = TIERS[tier];
+      const description = hasHadTrial
+        ? `${tierConfig.name} (${tierConfig.monthlyPriceDisplay}/mo) · AutoPay up to ${autopayMonths} monthly charge${autopayMonths === 1 ? "" : "s"}`
+        : `${tierConfig.name} 3-day trial (${tierConfig.trialPriceDisplay}) · then ${tierConfig.monthlyPriceDisplay}/mo · AutoPay up to ${autopayMonths} monthly charge${autopayMonths === 1 ? "" : "s"}`;
       const rzp = new window.Razorpay({
         key: created.keyId,
         name: SITE_NAME,
-        description: `${tierConfig.name} 3-day trial (${tierConfig.trialPriceDisplay}) · then ${tierConfig.monthlyPriceDisplay}/mo · AutoPay up to ${autopayMonths} monthly charge${autopayMonths === 1 ? "" : "s"}`,
+        description,
         subscription_id: created.subscriptionId,
         amount: created.amountPaise,
         currency: "INR",
         theme: { color: "#ef4444" },
         handler: async (response: RazorpayCheckoutResponse) => {
-          const updated = await activateRazorpaySubscription({ ...response });
+          const updated = hasHadTrial
+            ? await activateRazorpayMonthlySubscription({ ...response })
+            : await activateRazorpaySubscription({ ...response });
           if (!updated.ok) {
             setCheckoutError({
               text: updated.error,
@@ -385,9 +435,19 @@ export function PricingPageClient() {
     } finally {
       setBusy(false);
     }
-  }, [autopayMonths]);
+  }, [autopayMonths, hasHadTrial]);
 
   const statusBanner = useMemo(() => {
+    if (isCancelledWithAccess) {
+      return (
+        <div className="rounded-2xl border border-amber-300 bg-amber-50 px-5 py-4 dark:border-amber-800 dark:bg-amber-950/30">
+          <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+            Your subscription is cancelled — your access continues until it expires. You can
+            subscribe again below to start a new plan.
+          </p>
+        </div>
+      );
+    }
     if (hasPaidAccess) {
       let trialHint = "";
       if (subscriptionStatus === "trial") {
@@ -437,7 +497,7 @@ export function PricingPageClient() {
       );
     }
     return null;
-  }, [subscriptionStatus, hasPaidAccess, currentTier]);
+  }, [subscriptionStatus, hasPaidAccess, isCancelledWithAccess, currentTier]);
 
   return (
     <>
@@ -480,8 +540,8 @@ export function PricingPageClient() {
 
         {statusBanner}
 
-        {!hasPaidAccess ? (
-          <AutopayDurationPanel value={autopayMonths} onChange={setAutopayMonths} disabled={busy} />
+        {(!hasPaidAccess || isCancelledWithAccess) ? (
+          <AutopayDurationPanel value={autopayMonths} onChange={setAutopayMonths} disabled={busy} hasHadTrial={hasHadTrial} />
         ) : null}
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
@@ -492,6 +552,8 @@ export function PricingPageClient() {
               highlighted={tierId === "pro"}
               busy={busy}
               hasPaidAccess={hasPaidAccess}
+              hasHadTrial={hasHadTrial}
+              isCancelledWithAccess={isCancelledWithAccess}
               isCurrentTier={currentTier === tierId && hasPaidAccess}
               onSelect={startCheckout}
             />

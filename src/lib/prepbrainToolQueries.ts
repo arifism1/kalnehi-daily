@@ -10,6 +10,17 @@ import {
 } from "@/lib/examProfile";
 import type { Database } from "@/types/supabase";
 
+type MarksIntelligenceRow = {
+  subject: string;
+  chapter: string;
+  marks_2023: number;
+  marks_2024: number;
+  marks_2025: number;
+  total_topics: number;
+  done_topics: number;
+  completion_pct: number;
+};
+
 type AdminClient = SupabaseClient<Database>;
 
 function ymdDaysAgo(days: number): string {
@@ -261,6 +272,41 @@ export async function getTargetScoreBlueprint(admin: AdminClient, userId: string
   };
 }
 
+export async function getMarksIntelligence(admin: AdminClient, userId: string) {
+  const { data: profile } = await admin
+    .from("user_profiles")
+    .select("primary_exam, target_exam")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  const examLabel = resolveSyllabusExam(profile ?? null) ?? null;
+  const examKey = examLabel ? syllabusCatalogExamName(examLabel) : null;
+  if (!examKey) return null;
+
+  // Cast required until supabase types are regenerated after migration is applied.
+  const { data, error } = await (admin as unknown as { rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }> }).rpc(
+    "prepbrain_marks_intelligence",
+    { p_user_id: userId, p_exam_name: examKey, p_limit: 15 },
+  );
+  if (error || !Array.isArray(data) || data.length === 0) return null;
+
+  const lines = (data as MarksIntelligenceRow[]).map((r) => {
+    const recent = r.marks_2025 || r.marks_2024 || r.marks_2023 || 0;
+    const yearLabel = r.marks_2025 > 0 ? "'25" : r.marks_2024 > 0 ? "'24" : "'23";
+    const prior: string[] = [];
+    if (r.marks_2023 > 0 && r.marks_2023 !== recent) prior.push(`${r.marks_2023}M'23`);
+    if (r.marks_2024 > 0 && r.marks_2024 !== recent) prior.push(`${r.marks_2024}M'24`);
+    const priorStr = prior.length ? ` (also ${prior.join(", ")})` : "";
+    return `${r.subject} \u203a ${r.chapter}: ${recent}M${yearLabel}${priorStr}, ${r.completion_pct}% done`;
+  });
+
+  return {
+    exam: examLabel,
+    note: "approx marks from past-year catalog; not official",
+    top_chapters_by_opportunity: lines,
+  };
+}
+
 export type PrepbrainToolName =
   | "getTodayPlan"
   | "getSyllabusOverview"
@@ -268,5 +314,6 @@ export type PrepbrainToolName =
   | "getHabitStreakSummary"
   | "getMeditationConsistency"
   | "getRecentStudyCameraData"
-  | "getTargetScoreBlueprint";
+  | "getTargetScoreBlueprint"
+  | "getMarksIntelligence";
 

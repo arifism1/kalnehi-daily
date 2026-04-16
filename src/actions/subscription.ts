@@ -523,6 +523,7 @@ async function upsertProfileByUserId(
     subscription_end_date: string;
     razorpay_subscription_id: string;
     subscription_autopay_months_total?: number | null;
+    has_had_trial?: boolean;
   },
 ) {
   const admin = getAdminClient();
@@ -619,7 +620,7 @@ export async function createRazorpayTrialSubscription(
       ? new Date(existing.subscription_end_date)
       : null;
     const stillHasAccess = endDate && endDate.getTime() > Date.now();
-    if ((st === "trial" || st === "active" || st === "cancelled") && stillHasAccess) {
+    if ((st === "trial" || st === "active") && stillHasAccess) {
       return { ok: false, error: "You already have an active subscription." };
     }
   }
@@ -783,6 +784,7 @@ export async function activateRazorpaySubscription(params: {
     subscription_end_date: trialEnd.toISOString(),
     razorpay_subscription_id: subscriptionId,
     subscription_autopay_months_total: autopayMonthsTotal,
+    has_had_trial: true,
   });
   if (!updated.ok) return updated;
 
@@ -1695,5 +1697,222 @@ export async function verifyPlanUpgradePayment(params: {
     });
     return { ok: false, error: "Unable to verify payment." };
   }
+}
+
+// ---------------------------------------------------------------------------
+// No-trial monthly subscription (for users who have already used their trial)
+// ---------------------------------------------------------------------------
+
+export async function createRazorpayMonthlySubscription(
+  tier: SubscriptionTier = "pro",
+  autopayMonths?: unknown,
+): Promise<CreateSubscriptionResult> {
+  if (!isValidTier(tier)) {
+    return { ok: false, error: "Invalid subscription tier." };
+  }
+
+  const months = clampAutopayMonths(autopayMonths ?? DEFAULT_AUTOPAY_MONTHS);
+
+  const userId = await getAuthedUserId();
+  if (!userId) return { ok: false, error: "Please sign in to subscribe." };
+
+  const config = getRazorpayConfig();
+  if (!config) {
+    return {
+      ok: false,
+      error: "Payment system is not configured yet.",
+      code: "payment_not_configured",
+      debugHint: "Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in the server environment.",
+    };
+  }
+
+  const admin = getAdminClient();
+  if (!admin) {
+    return {
+      ok: false,
+      error: "Payment system is not configured yet.",
+      code: "payment_not_configured",
+      debugHint: "Set SUPABASE_SERVICE_ROLE_KEY and NEXT_PUBLIC_SUPABASE_URL.",
+    };
+  }
+
+  const { data: existing } = await admin
+    .from("user_profiles")
+    .select("subscription_status, subscription_end_date")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (existing) {
+    const st = existing.subscription_status;
+    const endDate = existing.subscription_end_date
+      ? new Date(existing.subscription_end_date)
+      : null;
+    const stillHasAccess = endDate && endDate.getTime() > Date.now();
+    if ((st === "trial" || st === "active") && stillHasAccess) {
+      return { ok: false, error: "You already have an active subscription." };
+    }
+  }
+
+  const tierConfig = TIERS[tier];
+
+  try {
+    const razorpay = getRazorpayClient(config);
+    const hadEnvPlanId = Boolean(resolveRazorpayPlanId(tier));
+    const resolved = await resolveRazorpayPlanIdWithApiFallback(razorpay, tier);
+    if (!resolved.ok) {
+      console.error(
+        "[subscription] createRazorpayMonthlySubscription: missing or invalid Razorpay plan id",
+        { tier, envVar: resolved.envVar, reason: resolved.reason },
+      );
+      const msg = planCheckoutFailureMessage(tier, resolved, "trial");
+      return { ok: false, error: msg.error, code: msg.code, debugHint: msg.debugHint };
+    }
+
+    const startAt = new Date(Date.now() + MIN_SUBSCRIPTION_START_LEAD_SEC * 1000);
+    const subscriptionCreateBody = {
+      total_count: months,
+      customer_notify: 1,
+      start_at: Math.floor(startAt.getTime() / 1000),
+      addons: [
+        {
+          item: {
+            name: `${tierConfig.name} First Month`,
+            amount: tierConfig.monthlyPricePaise,
+            currency: "INR",
+          },
+        },
+      ],
+      notes: {
+        kalnehi_user_id: userId,
+        kalnehi_plan: "monthly",
+        kalnehi_tier: tier,
+        kalnehi_no_trial: "true",
+        kalnehi_autopay_months: String(months),
+      },
+    };
+
+    const createMonthly = (planId: string) =>
+      (razorpay.subscriptions.create as unknown as (
+        body: Record<string, unknown>,
+      ) => Promise<{ id: string }>)({
+        plan_id: planId,
+        ...subscriptionCreateBody,
+      });
+
+    try {
+      const created = await createMonthly(resolved.planId);
+      return {
+        ok: true,
+        keyId: config.keyId,
+        subscriptionId: created.id,
+        amountPaise: tierConfig.monthlyPricePaise,
+      };
+    } catch (error) {
+      if (hadEnvPlanId && isLikelyInvalidRazorpayPlanIdError(error)) {
+        const fallback = await resolveRazorpayPlanIdWithApiFallback(razorpay, tier, {
+          skipEnv: true,
+        });
+        if (fallback.ok && fallback.planId !== resolved.planId) {
+          try {
+            const created = await createMonthly(fallback.planId);
+            console.warn("[subscription] createRazorpayMonthlySubscription: retried after invalid env plan id", {
+              tier,
+              fallbackPlanIdPrefix: fallback.planId.slice(0, 14),
+            });
+            return {
+              ok: true,
+              keyId: config.keyId,
+              subscriptionId: created.id,
+              amountPaise: tierConfig.monthlyPricePaise,
+            };
+          } catch (retryErr) {
+            logRazorpaySubscriptionCreateFailure("createRazorpayMonthlySubscription (retry)", { tier }, retryErr);
+            return { ok: false, error: safeErrorMessage(retryErr) };
+          }
+        }
+      }
+      logRazorpaySubscriptionCreateFailure("createRazorpayMonthlySubscription", { tier }, error);
+      return { ok: false, error: safeErrorMessage(error) };
+    }
+  } catch (error) {
+    return { ok: false, error: safeErrorMessage(error) };
+  }
+}
+
+export async function activateRazorpayMonthlySubscription(params: {
+  razorpay_payment_id: string;
+  razorpay_subscription_id: string;
+  razorpay_signature: string;
+}): Promise<ActivateSubscriptionResult> {
+  const userId = await getAuthedUserId();
+  if (!userId) return { ok: false, error: "Session expired. Please sign in again." };
+
+  const paymentId = params.razorpay_payment_id?.trim() ?? "";
+  const subscriptionId = params.razorpay_subscription_id?.trim() ?? "";
+  const signature = params.razorpay_signature?.trim() ?? "";
+
+  if (!RAZORPAY_ID_RE.test(paymentId)) {
+    return { ok: false, error: "Invalid payment reference." };
+  }
+  if (!RAZORPAY_ID_RE.test(subscriptionId)) {
+    return { ok: false, error: "Invalid subscription reference." };
+  }
+  if (!HEX_SIGNATURE_RE.test(signature)) {
+    return { ok: false, error: "Invalid payment signature format." };
+  }
+
+  const config = getRazorpayConfig();
+  if (!config) return { ok: false, error: "Payment system is not configured yet." };
+
+  const expectedSignature = crypto
+    .createHmac("sha256", config.keySecret)
+    .update(`${paymentId}|${subscriptionId}`)
+    .digest("hex");
+
+  if (!timingSafeEqual(expectedSignature, signature)) {
+    return { ok: false, error: "Payment verification failed." };
+  }
+
+  let tier: SubscriptionTier = "pro";
+  let autopayMonthsTotal: number | null = null;
+  try {
+    const razorpay = getRazorpayClient(config);
+    const sub = (await razorpay.subscriptions.fetch(subscriptionId)) as {
+      id: string;
+      notes?: Record<string, string>;
+      total_count?: unknown;
+    };
+    const ownerUserId = sub.notes?.kalnehi_user_id?.trim();
+    if (ownerUserId !== userId) {
+      return { ok: false, error: "Subscription does not belong to this account." };
+    }
+    if (sub.notes?.kalnehi_no_trial !== "true") {
+      return { ok: false, error: "Invalid subscription type for this activation path." };
+    }
+    const noteTier = sub.notes?.kalnehi_tier;
+    if (isValidTier(noteTier)) tier = noteTier;
+    autopayMonthsTotal = autopayMonthsFromSubscriptionEntity(sub);
+  } catch {
+    return { ok: false, error: "Unable to verify subscription ownership." };
+  }
+
+  const start = new Date();
+  const monthEnd = new Date(start);
+  monthEnd.setMonth(monthEnd.getMonth() + 1);
+
+  const updated = await upsertProfileByUserId(userId, {
+    subscription_status: "active",
+    subscription_plan: "monthly",
+    subscription_tier: tier,
+    subscription_start_date: start.toISOString(),
+    subscription_end_date: monthEnd.toISOString(),
+    razorpay_subscription_id: subscriptionId,
+    subscription_autopay_months_total: autopayMonthsTotal,
+  });
+  if (!updated.ok) return updated;
+
+  await resetMonthlyAiUsageCounters(userId);
+
+  return { ok: true, subscriptionId };
 }
 
