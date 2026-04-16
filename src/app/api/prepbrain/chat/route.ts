@@ -2,8 +2,9 @@ import Groq from "groq-sdk";
 import type { ChatCompletionMessageParam } from "groq-sdk/resources/chat/completions";
 import { NextResponse } from "next/server";
 
-import { PREPBRAIN_SYSTEM_PROMPT } from "@/lib/prepBrainPrompts";
+import { buildPrepBrainSystemPrompt } from "@/lib/prepBrainPrompts";
 import {
+  fetchSyllabusSubjectCompletion,
   getHabitStreakSummary,
   getMarksIntelligence,
   getMeditationConsistency,
@@ -12,8 +13,14 @@ import {
   getTargetScoreBlueprint,
   getTodayPlan,
   getWeakStrongSubjects,
+  type PrepbrainPrefetchedProfile,
   type PrepbrainToolName,
 } from "@/lib/prepbrainToolQueries";
+import {
+  isRedisConfigured,
+  redisToolGet,
+  redisToolSet,
+} from "@/lib/prepbrainRedisCache";
 import { parseSubscriptionTier } from "@/lib/subscriptionTiers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
@@ -29,6 +36,32 @@ import {
 } from "@/lib/prepbrainTokens";
 
 export const runtime = "nodejs";
+
+/**
+ * Per-user, per-tool in-memory cache for Fluid Compute instance reuse.
+ * Prevents redundant DB round-trips when a user sends multiple messages
+ * in quick succession (very common in chat flows).
+ * TTL is intentionally short (45s) to stay fresh while cutting costs.
+ */
+const TOOL_CACHE_TTL_MS = 45_000;
+const toolDataCache = new Map<string, { result: unknown; cachedAt: number }>();
+
+function toolCacheGet(userId: string, tool: string): unknown {
+  const entry = toolDataCache.get(`${userId}:${tool}`);
+  if (!entry || Date.now() - entry.cachedAt > TOOL_CACHE_TTL_MS) return undefined;
+  return entry.result;
+}
+
+function toolCacheSet(userId: string, tool: string, result: unknown): void {
+  toolDataCache.set(`${userId}:${tool}`, { result, cachedAt: Date.now() });
+  // Prevent unbounded memory growth on long-lived instances
+  if (toolDataCache.size > 2_000) {
+    const now = Date.now();
+    for (const [k, v] of toolDataCache) {
+      if (now - v.cachedAt > TOOL_CACHE_TTL_MS) toolDataCache.delete(k);
+    }
+  }
+}
 
 const MAX_BODY_BYTES = 512_000;
 const MAX_CHAT_MESSAGES = 4;
@@ -228,20 +261,25 @@ function selectToolsForIntent(intent: PrepBrainIntent): PrepbrainToolName[] {
   }
 }
 
+type SyllabusStats = Awaited<ReturnType<typeof fetchSyllabusSubjectCompletion>>;
+
 async function runToolByName(
   tool: PrepbrainToolName,
   admin: NonNullable<ReturnType<typeof getSupabaseServiceRoleClient>>,
   userId: string,
+  prefetchedProfile: PrepbrainPrefetchedProfile,
+  prefetchedSyllabusStats: SyllabusStats | undefined,
+  marksLimit: number,
 ) {
   switch (tool) {
     case "getTodayPlan":
       return getTodayPlan(admin, userId);
     case "getSyllabusOverview":
-      return getSyllabusOverview(admin, userId);
+      return getSyllabusOverview(admin, userId, prefetchedProfile, prefetchedSyllabusStats);
     case "getWeakStrongSubjects":
-      return getWeakStrongSubjects(admin, userId);
+      return getWeakStrongSubjects(admin, userId, prefetchedProfile, prefetchedSyllabusStats);
     case "getMarksIntelligence":
-      return getMarksIntelligence(admin, userId);
+      return getMarksIntelligence(admin, userId, prefetchedProfile, marksLimit);
     case "getHabitStreakSummary":
       return getHabitStreakSummary(admin, userId);
     case "getMeditationConsistency":
@@ -321,7 +359,7 @@ export async function POST(request: Request) {
   const { data: profile, error: profileErr } = await admin
     .from("user_profiles")
     .select(
-      "subscription_status, subscription_end_date, subscription_tier, prepbrain_tokens_used, prepbrain_tokens_month",
+      "subscription_status, subscription_end_date, subscription_tier, prepbrain_tokens_used, prepbrain_tokens_month, primary_exam, target_exam, cuet_domain_subjects",
     )
     .eq("user_id", user.id)
     .maybeSingle();
@@ -397,10 +435,70 @@ export async function POST(request: Request) {
 
   const intent = detectPrepBrainIntent(last.content);
   const selectedTools = selectToolsForIntent(intent);
+
+  // Mode detection moved before tool execution so marksLimit can be derived.
+  const responseMode = detectPrepBrainMode(last.content);
+  // Concise mode: 6 rows (~100 tokens); deep mode: 10 rows.
+  const marksLimit = responseMode === "deep" ? 10 : 6;
+
+  // Prefetched profile — passed to tool queries to eliminate redundant DB calls.
+  // We cast because Supabase types may lag the actual column select.
+  const profileAny = profile as Record<string, unknown>;
+  const prefetchedProfile: PrepbrainPrefetchedProfile = {
+    primary_exam: (profileAny.primary_exam as string | null | undefined) ?? null,
+    target_exam: (profileAny.target_exam as string | null | undefined) ?? null,
+    cuet_domain_subjects: (profileAny.cuet_domain_subjects as string | null | undefined) ?? null,
+  };
+
+  // Pre-fetch syllabus stats once if multiple syllabus tools need them.
+  const syllabusToolNames: PrepbrainToolName[] = ["getSyllabusOverview", "getWeakStrongSubjects"];
+  const syllabusToolsNeeded = selectedTools.filter((t) => syllabusToolNames.includes(t));
+  let prefetchedSyllabusStats: SyllabusStats | undefined;
+  if (syllabusToolsNeeded.length >= 2) {
+    const syllabusStatsCacheKey = "getSyllabusStats";
+    const memHit = toolCacheGet(user.id, syllabusStatsCacheKey);
+    if (memHit !== undefined) {
+      prefetchedSyllabusStats = memHit as SyllabusStats;
+    } else {
+      const redisHit = await redisToolGet(user.id, syllabusStatsCacheKey);
+      if (redisHit !== undefined) {
+        prefetchedSyllabusStats = redisHit as SyllabusStats;
+        toolCacheSet(user.id, syllabusStatsCacheKey, prefetchedSyllabusStats);
+      } else {
+        try {
+          prefetchedSyllabusStats = await fetchSyllabusSubjectCompletion(admin, user.id, prefetchedProfile);
+          toolCacheSet(user.id, syllabusStatsCacheKey, prefetchedSyllabusStats);
+          void redisToolSet(user.id, syllabusStatsCacheKey, prefetchedSyllabusStats);
+        } catch (e) {
+          console.error("[prepbrain/chat] prefetch syllabus stats failed", e);
+        }
+      }
+    }
+  }
+
+  // Cache lookup order: in-memory (45s) → Redis (2-10 min) → Supabase.
+  const toolCacheSources: Record<string, "memory" | "redis" | "supabase"> = {};
   const toolResultsRaw = await Promise.all(
     selectedTools.map(async (tool) => {
+      // 1. In-memory cache (same instance, zero network)
+      const memCached = toolCacheGet(user.id, tool);
+      if (memCached !== undefined) {
+        toolCacheSources[tool] = "memory";
+        return [tool, memCached] as const;
+      }
+      // 2. Redis cache (cross-instance, 2-10 min TTL)
+      const redisCached = await redisToolGet(user.id, tool);
+      if (redisCached !== undefined) {
+        toolCacheSources[tool] = "redis";
+        toolCacheSet(user.id, tool, redisCached); // warm in-memory for this instance
+        return [tool, redisCached] as const;
+      }
+      // 3. Supabase (cold miss)
+      toolCacheSources[tool] = "supabase";
       try {
-        const result = await runToolByName(tool, admin, user.id);
+        const result = await runToolByName(tool, admin, user.id, prefetchedProfile, prefetchedSyllabusStats, marksLimit);
+        toolCacheSet(user.id, tool, result);
+        void redisToolSet(user.id, tool, result);
         return [tool, result] as const;
       } catch (e) {
         console.error(`[prepbrain/chat] tool ${tool} failed`, e);
@@ -411,18 +509,16 @@ export async function POST(request: Request) {
   const toolData = Object.fromEntries(toolResultsRaw);
   const toolDataJson = JSON.stringify(toolData);
 
-  const oldContextChars =
-    isRecord(body.context) ? JSON.stringify(body.context).length : 0;
-  const newToolDataChars = toolDataJson.length;
-  const oldApproxPromptTokens = Math.ceil(oldContextChars / 4);
-  const newApproxPromptTokens = Math.ceil(newToolDataChars / 4);
+  const toolDataChars = toolDataJson.length;
+  const toolDataEstTokens = Math.ceil(toolDataChars / 4);
 
-  const responseMode = detectPrepBrainMode(last.content);
   const modeInstruction =
     responseMode === "concise"
       ? CONCISE_MODE_INSTRUCTION
       : "Deep mode: user explicitly requested detail. You may provide a fuller strategy, but stay practical, structured, and focused on actions.";
-  const systemContent = `${PREPBRAIN_SYSTEM_PROMPT}\n\n--- RESPONSE MODE ---\n${modeInstruction}\n\n--- TOOL-DERIVED USER DATA (JSON; use only what is relevant) ---\n${toolDataJson}\n--- END TOOL DATA ---`;
+  // Intent-aware system prompt: omits ~100-token marks module for non-marks intents.
+  const systemPrompt = buildPrepBrainSystemPrompt(intent);
+  const systemContent = `${systemPrompt}\n\n--- RESPONSE MODE ---\n${modeInstruction}\n\n--- TOOL-DERIVED USER DATA (JSON; use only what is relevant) ---\n${toolDataJson}\n--- END TOOL DATA ---`;
 
   const groqMessages: ChatCompletionMessageParam[] = [
     { role: "system", content: systemContent },
@@ -481,18 +577,19 @@ export async function POST(request: Request) {
   await touchPrepbrainCooldown(admin, user.id);
 
   console.log(
-    "[prepbrain/chat] model=%s mode=%s intent=%s tools=%s prompt_tokens=%d completion_tokens=%d total_tokens=%d old_context_chars=%d new_tool_chars=%d old_ctx_est_tokens=%d new_tool_est_tokens=%d",
+    "[prepbrain/chat] model=%s mode=%s intent=%s tools=%s cache=%s redis=%s prompt_tokens=%d completion_tokens=%d total_tokens=%d tool_chars=%d tool_est_tokens=%d marks_limit=%d",
     groqModelUsed,
     responseMode,
     intent,
     selectedTools.join(","),
+    selectedTools.map((t) => toolCacheSources[t] ?? "?").join(","),
+    isRedisConfigured() ? "yes" : "no",
     groqPromptTokens,
     groqCompletionTokens,
     groqTotalTokens,
-    oldContextChars,
-    newToolDataChars,
-    oldApproxPromptTokens,
-    newApproxPromptTokens,
+    toolDataChars,
+    toolDataEstTokens,
+    marksLimit,
   );
 
   const delta = Math.max(0, Math.floor(groqTotalTokens));
@@ -526,11 +623,11 @@ export async function POST(request: Request) {
     mode: responseMode,
     intent,
     tools_used: selectedTools,
+    cache_sources: toolCacheSources,
     prompt_size: {
-      old_context_chars: oldContextChars,
-      new_tool_chars: newToolDataChars,
-      old_context_est_tokens: oldApproxPromptTokens,
-      new_tool_est_tokens: newApproxPromptTokens,
+      tool_chars: toolDataChars,
+      tool_est_tokens: toolDataEstTokens,
+      marks_limit: marksLimit,
     },
   });
 }

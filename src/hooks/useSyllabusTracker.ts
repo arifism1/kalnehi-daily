@@ -88,7 +88,16 @@ type SyllabusTrackerCache = {
   cuetDomainSubjects: string[];
   upscOptionalSubject: string | null;
   catalogExamKey: string | null;
+  /** Epoch ms when the cache was last written. Used for TTL-gated silent refreshes. */
+  loadedAt: number;
 };
+
+/**
+ * Silent refreshes are throttled to at most once per TTL window.
+ * Multiple components mounting the same route (e.g. ProgressOverview +
+ * MarksEngineClient) would each fire 4 parallel Supabase queries without this.
+ */
+const TRACKER_CACHE_TTL_MS = 30_000;
 
 let trackerCache: SyllabusTrackerCache | null = null;
 
@@ -265,6 +274,7 @@ export function useSyllabusTracker() {
           cuetDomainSubjects: domains,
           upscOptionalSubject: optionalSubject,
           catalogExamKey: examKey,
+          loadedAt: Date.now(),
         };
         if (silent) setError(null);
       } catch (e) {
@@ -299,7 +309,12 @@ export function useSyllabusTracker() {
       setCatalogExamKey(cached.catalogExamKey);
       setLoading(false);
       setError(null);
-      void load({ silent: true });
+      // Only trigger a background refresh when the cache is actually stale.
+      // Without this guard, every component mount fires 4 parallel Supabase
+      // queries even though the data hasn't changed.
+      if (Date.now() - cached.loadedAt > TRACKER_CACHE_TTL_MS) {
+        void load({ silent: true });
+      }
       return;
     }
     void load();
