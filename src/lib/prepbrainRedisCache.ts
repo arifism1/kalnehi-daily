@@ -19,8 +19,14 @@ import { Redis } from "@upstash/redis";
 let redis: Redis | null = null;
 
 try {
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  // Vercel Marketplace provisions KV_REST_API_URL / KV_REST_API_TOKEN.
+  // Also accept the canonical UPSTASH_* names for self-managed setups.
+  const url =
+    process.env.KV_REST_API_URL ??
+    process.env.UPSTASH_REDIS_REST_URL;
+  const token =
+    process.env.KV_REST_API_TOKEN ??
+    process.env.UPSTASH_REDIS_REST_TOKEN;
   if (url && token) {
     redis = new Redis({ url, token });
   }
