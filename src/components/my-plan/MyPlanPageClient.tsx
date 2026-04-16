@@ -1,21 +1,46 @@
 "use client";
 
 import Link from "next/link";
-import { differenceInCalendarDays, format } from "date-fns";
-import { ArrowLeft, Camera, Crown, Loader2, Mic, Sparkles, Zap } from "lucide-react";
-import { useRef, useState, useTransition } from "react";
+import Script from "next/script";
+import { addMonths, differenceInCalendarDays, format } from "date-fns";
+import { ArrowLeft, Camera, Crown, Loader2, Mic, RefreshCw, Sparkles, Zap } from "lucide-react";
+import { useCallback, useRef, useState, useTransition } from "react";
 
-import { cancelSubscription } from "@/actions/subscription";
+import {
+  cancelSubscription,
+  createRazorpayTrialSubscription,
+  activateRazorpaySubscription,
+  createRazorpayMonthlySubscription,
+  activateRazorpayMonthlySubscription,
+} from "@/actions/subscription";
 import { HelpyJiChat } from "@/components/helpyji/HelpyJiChat";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ExtraCreditsSection } from "@/components/settings/ExtraCreditsSection";
 import { PlanUpgradeSection } from "@/components/settings/PlanUpgradeSection";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { useAiGate } from "@/hooks/useAiGate";
+import { clampAutopayMonths, DEFAULT_AUTOPAY_MONTHS } from "@/lib/autopayMonths";
 import { SITE_NAME } from "@/lib/seo-metadata";
-import { getTierConfig, type SubscriptionTier } from "@/lib/subscriptionTiers";
+import { getTierConfig, TIERS, type SubscriptionTier } from "@/lib/subscriptionTiers";
 import { isHelpyJiEligibleForTier } from "@/lib/helpyjiVisibility";
 import { useAuthStore } from "@/store/useAuthStore";
+
+type RazorpayCheckoutResponse = {
+  razorpay_payment_id: string;
+  razorpay_subscription_id: string;
+  razorpay_signature: string;
+};
+
+type RazorpayInstance = { open: () => void };
+type RazorpayConstructor = new (options: Record<string, unknown>) => RazorpayInstance;
+
+declare global {
+  interface Window {
+    Razorpay?: RazorpayConstructor;
+  }
+}
+
+const RESUB_PRESET_MONTHS = [1, 3, 6, 12] as const;
 
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
@@ -121,6 +146,7 @@ export function MyPlanPageClient() {
     loading,
     status,
     hasPaidAccess,
+    hasHadTrial,
     tier,
     plan,
     startDate,
@@ -145,6 +171,9 @@ export function MyPlanPageClient() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [autopayMonths, setAutopayMonths] = useState(DEFAULT_AUTOPAY_MONTHS);
+  const [resubBusy, setResubBusy] = useState(false);
+  const [resubError, setResubError] = useState<string | null>(null);
   const helpyjiUpgradeAnchorRef = useRef<HTMLDivElement>(null);
   const user = useAuthStore((s) => s.user);
 
@@ -158,8 +187,55 @@ export function MyPlanPageClient() {
     tier === "basic" || tier === "pro" || tier === "pro_max" ? tier : "pro";
   const canCancel = status === "trial" || status === "active";
   const isCancelled = status === "cancelled";
+  const isCancelledWithAccess = isCancelled && hasPaidAccess;
   const noActivePlan =
     !status || status === "expired" || (isCancelled && !hasPaidAccess);
+
+  const startResubscribe = useCallback(async () => {
+    setResubBusy(true);
+    setResubError(null);
+    try {
+      const created = hasHadTrial
+        ? await createRazorpayMonthlySubscription(resolvedTier, autopayMonths)
+        : await createRazorpayTrialSubscription(resolvedTier, autopayMonths);
+      if (!created.ok) {
+        setResubError(created.error);
+        return;
+      }
+      if (typeof window === "undefined" || !window.Razorpay) {
+        setResubError("Unable to load payment window. Refresh and try again.");
+        return;
+      }
+      const tc = TIERS[resolvedTier];
+      const description = hasHadTrial
+        ? `${tc.name} (${tc.monthlyPriceDisplay}/mo) · AutoPay up to ${autopayMonths} monthly charge${autopayMonths === 1 ? "" : "s"}`
+        : `${tc.name} 3-day trial (${tc.trialPriceDisplay}) · then ${tc.monthlyPriceDisplay}/mo · AutoPay up to ${autopayMonths} monthly charge${autopayMonths === 1 ? "" : "s"}`;
+      const rzp = new window.Razorpay({
+        key: created.keyId,
+        name: SITE_NAME,
+        description,
+        subscription_id: created.subscriptionId,
+        amount: created.amountPaise,
+        currency: "INR",
+        theme: { color: "#ef4444" },
+        handler: async (response: RazorpayCheckoutResponse) => {
+          const updated = hasHadTrial
+            ? await activateRazorpayMonthlySubscription({ ...response })
+            : await activateRazorpaySubscription({ ...response });
+          if (!updated.ok) {
+            setResubError(updated.error);
+            return;
+          }
+          window.location.assign("/");
+        },
+      });
+      rzp.open();
+    } catch (e) {
+      setResubError(e instanceof Error ? e.message : "Checkout failed.");
+    } finally {
+      setResubBusy(false);
+    }
+  }, [resolvedTier, autopayMonths, hasHadTrial]);
 
   function handleCancel() {
     setConfirmOpen(false);
@@ -239,7 +315,28 @@ export function MyPlanPageClient() {
     rows.push({ label, value: formatDate(endDate) });
   }
 
+  if (
+    status === "trial" &&
+    endDate &&
+    autopayMonthsTotal !== null &&
+    autopayMonthsTotal > 0
+  ) {
+    const paidUntil = addMonths(new Date(endDate), autopayMonthsTotal);
+    rows.push({
+      label: "Paid access until",
+      value: formatDate(paidUntil.toISOString()),
+      className: "text-kal-text-secondary",
+    });
+  }
+
   return (
+    <>
+    {isCancelledWithAccess && (
+      <Script
+        src="https://checkout.razorpay.com/v1/checkout.js"
+        strategy="afterInteractive"
+      />
+    )}
     <div className="mx-auto max-w-lg space-y-6 md:max-w-xl">
       <div>
         <Link
@@ -472,11 +569,83 @@ export function MyPlanPageClient() {
               </div>
             )}
 
-            {isCancelled && (
+            {isCancelledWithAccess && (
+              <div className="border-t border-kal-border">
+                <div className="bg-amber-50 px-4 py-3 dark:bg-amber-950/20">
+                  <p className="text-xs leading-relaxed text-amber-800 dark:text-amber-300">
+                    Subscription cancelled. You will not be charged from next month onwards.
+                    Your plan stays active until {formatDate(endDate)}.
+                  </p>
+                </div>
+                <div className="border-t border-kal-border px-4 py-4 space-y-3">
+                  <div>
+                    <p className="mb-2 text-[0.65rem] font-semibold uppercase tracking-wide text-kal-text-secondary">
+                      AutoPay months for new plan
+                    </p>
+                    <div className="grid grid-cols-4 gap-1 rounded-xl border border-white/50 bg-black/[0.035] p-1 dark:border-white/10 dark:bg-white/[0.06]">
+                      {RESUB_PRESET_MONTHS.map((m) => {
+                        const selected = autopayMonths === m;
+                        return (
+                          <button
+                            key={m}
+                            type="button"
+                            aria-pressed={selected}
+                            onClick={() => setAutopayMonths(clampAutopayMonths(m))}
+                            className={`flex min-h-[40px] flex-col items-center justify-center rounded-lg px-0.5 py-1 text-center transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kal-accent ${
+                              selected
+                                ? "bg-kal-accent text-kal-accent-foreground shadow-sm ring-1 ring-kal-accent/30"
+                                : "text-kal-text-secondary hover:bg-white/60 hover:text-kal-text dark:hover:bg-white/[0.08]"
+                            }`}
+                          >
+                            <span className="text-base font-bold tabular-nums leading-none">{m}</span>
+                            <span className="mt-0.5 text-[0.6rem] font-semibold leading-none opacity-90">
+                              {m === 1 ? "month" : "months"}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={resubBusy}
+                    onClick={startResubscribe}
+                    className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-kal-accent px-4 py-2.5 text-sm font-semibold text-kal-accent-foreground transition hover:brightness-105 active:scale-[0.99] disabled:opacity-60"
+                  >
+                    {resubBusy ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Opening checkout...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="h-4 w-4" />
+                        Resubscribe to {tierConfig.name} —{" "}
+                        {hasHadTrial
+                          ? `${TIERS[resolvedTier].monthlyPriceDisplay}/month`
+                          : `${TIERS[resolvedTier].trialPriceDisplay} trial`}
+                      </>
+                    )}
+                  </button>
+                  {resubError ? (
+                    <p className="text-xs text-[var(--kal-danger-text)]" role="status">
+                      {resubError}
+                    </p>
+                  ) : null}
+                  <p className="text-center text-[0.65rem] text-kal-text-secondary">
+                    Want a different plan?{" "}
+                    <a href="/pricing" className="font-semibold text-kal-accent underline underline-offset-2">
+                      Browse all plans on Pricing
+                    </a>
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {isCancelled && !hasPaidAccess && (
               <div className="border-t border-kal-border bg-amber-50 px-4 py-3 dark:bg-amber-950/20">
                 <p className="text-xs leading-relaxed text-amber-800 dark:text-amber-300">
-                  Subscription cancelled. You will not be charged from next month onwards.
-                  Your plan stays active until {formatDate(endDate)}.
+                  Subscription cancelled and access has ended.
                 </p>
               </div>
             )}
@@ -542,5 +711,6 @@ export function MyPlanPageClient() {
         </>
       )}
     </div>
+    </>
   );
 }

@@ -30,6 +30,7 @@ type SubscriptionData = {
   onboardingDone: boolean;
   status: SubscriptionStatus;
   hasPaidAccess: boolean;
+  hasHadTrial: boolean;
   tier: SubscriptionTier | null;
   plan: string | null;
   startDate: string | null;
@@ -66,6 +67,7 @@ export function useSubscriptionAccess(): SubscriptionData {
   const [onboardingDone, setOnboardingDone] = useState(false);
   const [status, setStatus] = useState<SubscriptionStatus>(null);
   const [hasPaidAccess, setHasPaidAccess] = useState(false);
+  const [hasHadTrial, setHasHadTrial] = useState(false);
   const [tier, setTier] = useState<SubscriptionTier | null>(null);
   const [plan, setPlan] = useState<string | null>(null);
   const [startDate, setStartDate] = useState<string | null>(null);
@@ -82,6 +84,7 @@ export function useSubscriptionAccess(): SubscriptionData {
       setOnboardingDone(false);
       setStatus(null);
       setHasPaidAccess(false);
+      setHasHadTrial(false);
       setTier(null);
       setPlan(null);
       setStartDate(null);
@@ -100,7 +103,7 @@ export function useSubscriptionAccess(): SubscriptionData {
         const { data, error } = await supabase
           .from("user_profiles")
           .select(
-            "mandatory_onboarding_completed_at, subscription_status, subscription_plan, subscription_start_date, subscription_end_date, subscription_tier, subscription_autopay_months_total, photo_scans_used_this_month, voice_minutes_used_this_month, bonus_photo_scans, bonus_voice_minutes, bonus_photo_scans_ledger, bonus_voice_minutes_ledger, usage_reset_date",
+            "mandatory_onboarding_completed_at, subscription_status, subscription_plan, subscription_start_date, subscription_end_date, subscription_tier, subscription_autopay_months_total, has_had_trial, photo_scans_used_this_month, voice_minutes_used_this_month, bonus_photo_scans, bonus_voice_minutes, bonus_photo_scans_ledger, bonus_voice_minutes_ledger, usage_reset_date",
           )
           .eq("user_id", user.id)
           .maybeSingle();
@@ -139,6 +142,7 @@ export function useSubscriptionAccess(): SubscriptionData {
         setHasPaidAccess(
           isCurrentlyPaid(normalizedStatus, data?.subscription_end_date ?? null),
         );
+        setHasHadTrial(!!data?.has_had_trial);
         const eff = effectiveUsageForDisplay(
           data?.usage_reset_date ?? null,
           data?.photo_scans_used_this_month ?? 0,
@@ -182,6 +186,7 @@ export function useSubscriptionAccess(): SubscriptionData {
     onboardingDone,
     status,
     hasPaidAccess,
+    hasHadTrial,
     tier,
     plan,
     startDate,
