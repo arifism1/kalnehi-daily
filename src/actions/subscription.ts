@@ -35,6 +35,13 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type SubscriptionStatus = "trial" | "active" | "expired" | "cancelled";
 
+/** Client-safe codes for pricing / upgrade checkout failures (no secrets). */
+export type SubscriptionCheckoutErrorCode =
+  | "payment_not_configured"
+  | "plan_ambiguous"
+  | "plan_not_found"
+  | "plan_list_unavailable";
+
 type CreateSubscriptionResult =
   | {
       ok: true;
@@ -42,7 +49,13 @@ type CreateSubscriptionResult =
       subscriptionId: string;
       amountPaise: number;
     }
-  | { ok: false; error: string };
+  | {
+      ok: false;
+      error: string;
+      code?: SubscriptionCheckoutErrorCode;
+      /** Non-secret; for dev UI or support — never includes keys. */
+      debugHint?: string;
+    };
 
 type ActivateSubscriptionResult =
   | { ok: true; subscriptionId: string }
@@ -145,15 +158,19 @@ function razorpayPlanEnvVarName(tier: SubscriptionTier): string {
 }
 
 /**
- * Resolves a valid Razorpay `plan_id` for the tier, or null if misconfigured.
- * Basic and Pro Max require env. Pro uses a dev-only legacy fallback when env is empty;
- * production requires `RAZORPAY_PLAN_ID_PRO`.
+ * Env-only resolution. When this returns null, `resolveRazorpayPlanIdWithApiFallback` matches
+ * a monthly INR plan by amount. Pro with empty env uses a dev-only legacy id when not in production.
  */
 function resolveRazorpayPlanId(tier: SubscriptionTier): string | null {
   const envName = razorpayPlanEnvVarName(tier);
   const trimmed = process.env[envName]?.trim() ?? "";
   if (trimmed && RAZORPAY_PLAN_ID_FORMAT_RE.test(trimmed)) {
     return trimmed;
+  }
+  if (trimmed && !RAZORPAY_PLAN_ID_FORMAT_RE.test(trimmed)) {
+    console.warn(
+      `[subscription] ${envName} is set but invalid (expected Razorpay plan id like plan_xxx). Falling back to API amount match or Pro dev fallback.`,
+    );
   }
   if (tier === "pro" && trimmed === "") {
     if (process.env.NODE_ENV === "production") {
@@ -166,27 +183,136 @@ function resolveRazorpayPlanId(tier: SubscriptionTier): string | null {
   return null;
 }
 
+type PlanResolveOutcome =
+  | { ok: true; planId: string }
+  | {
+      ok: false;
+      reason: "ambiguous" | "no_match" | "api_error";
+      envVar: string;
+      expectedPaise: number;
+    };
+
+type PlanListRow = {
+  id?: string;
+  item?: { amount?: number; currency?: string; name?: string };
+  period?: string;
+  created_at?: number;
+};
+
+type PlanCandidate = {
+  id: string;
+  name: string;
+  createdAt: number;
+};
+
+/** Razorpay uses paise for INR; some dashboards mis-enter whole rupees (299 vs 29900). */
+function monthlyInrAmountMatchesTier(amountRaw: number, currency: string, expectedPaise: number): boolean {
+  if (!Number.isFinite(amountRaw)) return false;
+  if (currency.toUpperCase() !== "INR") return false;
+  if (amountRaw === expectedPaise) return true;
+  if (amountRaw > 0 && amountRaw < 100000 && Number.isInteger(amountRaw)) {
+    const asPaise = amountRaw * 100;
+    if (asPaise === expectedPaise) return true;
+  }
+  return false;
+}
+
+function isMonthlyPlanPeriod(periodRaw: string): boolean {
+  const period = periodRaw.trim().toLowerCase();
+  return period === "monthly" || period === "month";
+}
+
+function planNameHintsTier(tier: SubscriptionTier, name: string): boolean {
+  const n = name.toLowerCase();
+  switch (tier) {
+    case "pro_max":
+      return /\bpro\s*max\b|promax|pro_max/.test(n);
+    case "pro":
+      if (/\bpro\s*max\b|promax|pro_max/.test(n)) return false;
+      return /\bpro\b/.test(n);
+    case "basic":
+      if (/\bpro\s*max\b|promax/.test(n)) return false;
+      if (/\bpro\b/.test(n) && !/\bbasic\b/.test(n)) return false;
+      return true;
+    default:
+      return false;
+  }
+}
+
+function dedupeCandidatesById(candidates: PlanCandidate[]): PlanCandidate[] {
+  const seen = new Set<string>();
+  const out: PlanCandidate[] = [];
+  for (const c of candidates) {
+    if (seen.has(c.id)) continue;
+    seen.add(c.id);
+    out.push(c);
+  }
+  return out;
+}
+
 /**
- * When env plan ids are missing (common for Pro Max), resolve by matching the tier's
- * monthly INR amount against plans in the Razorpay account — same keys as checkout.
+ * When several monthly INR plans share the same price, prefer name hints, then newest plan.
+ * Call only when `candidates.length > 0`.
+ */
+function pickPlanIdFromAmountMatches(
+  tier: SubscriptionTier,
+  candidates: PlanCandidate[],
+  ctx: { envVar: string; expectedPaise: number },
+): string {
+  const unique = dedupeCandidatesById(candidates);
+  if (unique.length === 1) return unique[0]!.id;
+
+  const nameMatched = unique.filter((c) => planNameHintsTier(tier, c.name));
+  const pool = nameMatched.length > 0 ? nameMatched : unique;
+  if (pool.length === 1) {
+    console.warn("[subscription] resolved duplicate plan price via tier name hint; pin with env", {
+      tier,
+      envVar: ctx.envVar,
+      planIdPrefix: pool[0]!.id.slice(0, 14),
+    });
+    return pool[0]!.id;
+  }
+
+  pool.sort((a, b) => b.createdAt - a.createdAt);
+  const chosen = pool[0]!;
+  console.warn("[subscription] resolved duplicate plan price by newest created_at; set env to pin", {
+    tier,
+    envVar: ctx.envVar,
+    expectedPaise: ctx.expectedPaise,
+    count: pool.length,
+    chosenIdPrefix: chosen.id.slice(0, 14),
+  });
+  return chosen.id;
+}
+
+function isLikelyInvalidRazorpayPlanIdError(error: unknown): boolean {
+  const msg = safeErrorMessage(error).toLowerCase();
+  if (!msg) return false;
+  if (msg.includes("plan") && (msg.includes("does not exist") || msg.includes("invalid"))) return true;
+  if (msg.includes("input_validation") && msg.includes("plan")) return true;
+  if (msg.includes("no such") && msg.includes("plan")) return true;
+  return false;
+}
+
+/**
+ * When env plan ids are missing, resolve by matching the tier's monthly INR amount
+ * against plans in the Razorpay account (same keys as checkout).
  */
 async function resolveRazorpayPlanIdWithApiFallback(
   razorpay: InstanceType<typeof Razorpay>,
   tier: SubscriptionTier,
-): Promise<string | null> {
-  const fromEnv = resolveRazorpayPlanId(tier);
-  if (fromEnv) return fromEnv;
+  options?: { skipEnv?: boolean },
+): Promise<PlanResolveOutcome> {
+  const envVar = razorpayPlanEnvVarName(tier);
+  const fromEnv = options?.skipEnv ? null : resolveRazorpayPlanId(tier);
+  if (fromEnv) return { ok: true, planId: fromEnv };
 
   const expectedPaise = TIERS[tier].monthlyPricePaise;
   try {
-    const matches: string[] = [];
+    const candidates: PlanCandidate[] = [];
     for (let skip = 0; skip < 1000; skip += 100) {
       const res = (await razorpay.plans.all({ count: 100, skip })) as {
-        items?: Array<{
-          id?: string;
-          item?: { amount?: number; currency?: string };
-          period?: string;
-        }>;
+        items?: PlanListRow[];
       };
       const plans = res.items ?? [];
       if (plans.length === 0) break;
@@ -194,36 +320,69 @@ async function resolveRazorpayPlanIdWithApiFallback(
         const id = p.id?.trim();
         const amt = Number(p.item?.amount);
         const cur = (p.item?.currency ?? "INR").toUpperCase();
-        const period = (p.period ?? "").toLowerCase();
+        const periodRaw = p.period ?? "";
+        const name = (p.item?.name ?? "").trim();
+        const createdAt =
+          typeof p.created_at === "number" && Number.isFinite(p.created_at) ? p.created_at : 0;
         if (
           id &&
           RAZORPAY_PLAN_ID_FORMAT_RE.test(id) &&
-          cur === "INR" &&
-          amt === expectedPaise &&
-          period === "monthly"
+          monthlyInrAmountMatchesTier(amt, cur, expectedPaise) &&
+          isMonthlyPlanPeriod(periodRaw)
         ) {
-          matches.push(id);
+          candidates.push({ id, name, createdAt });
         }
       }
     }
-    if (matches.length === 1) {
-      return matches[0] ?? null;
+    if (candidates.length === 0) {
+      return { ok: false, reason: "no_match", envVar, expectedPaise };
     }
-    if (matches.length > 1) {
-      console.error("[subscription] resolveRazorpayPlanIdWithApiFallback: ambiguous plans (set env)", {
-        tier,
-        expectedPaise,
-        count: matches.length,
-      });
-      return null;
-    }
+    const planId = pickPlanIdFromAmountMatches(tier, candidates, { envVar, expectedPaise });
+    return { ok: true, planId };
   } catch (e) {
     console.error("[subscription] resolveRazorpayPlanIdWithApiFallback: plans.all failed", {
       tier,
       safeMessage: safeErrorMessage(e),
     });
+    return { ok: false, reason: "api_error", envVar, expectedPaise };
   }
-  return null;
+  return { ok: false, reason: "no_match", envVar, expectedPaise };
+}
+
+function planCheckoutFailureMessage(
+  tier: SubscriptionTier,
+  failure: Extract<PlanResolveOutcome, { ok: false }>,
+  context: "trial" | "upgrade",
+): { error: string; code: SubscriptionCheckoutErrorCode; debugHint: string } {
+  const { envVar, expectedPaise, reason } = failure;
+  const tierDisplay = TIERS[tier].monthlyPriceDisplay;
+  switch (reason) {
+    case "ambiguous":
+      return {
+        error:
+          context === "trial"
+            ? "Checkout can’t start: more than one subscription plan in our billing account matches this price. Please contact support."
+            : "Upgrade checkout can’t start: more than one subscription plan matches this price. Please contact support.",
+        code: "plan_ambiguous",
+        debugHint: `Several Razorpay plans match ${expectedPaise} paise/month. Set ${envVar} explicitly or remove duplicate plans in Razorpay.`,
+      };
+    case "api_error":
+      return {
+        error:
+          "We couldn’t verify billing plans with the payment provider. Please try again in a few minutes.",
+        code: "plan_list_unavailable",
+        debugHint: "Razorpay plans list failed; verify RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET match the same mode (test vs live) as your dashboard.",
+      };
+    case "no_match":
+      return {
+        error:
+          context === "trial"
+            ? `Checkout can’t start: no monthly plan was found for ${tierDisplay}/month. Please contact support.`
+            : `Upgrade can’t start: no monthly plan was found for this tier (${tierDisplay}/month). Please contact support.`,
+        code: "plan_not_found",
+        debugHint: `In Razorpay Dashboard create a monthly INR plan for ${expectedPaise} paise, or set ${envVar} to an existing plan id (Vercel → Production env).`,
+      };
+  }
 }
 
 function logRazorpaySubscriptionCreateFailure(
@@ -428,10 +587,25 @@ export async function createRazorpayTrialSubscription(
   if (!userId) return { ok: false, error: "Please sign in to subscribe." };
 
   const config = getRazorpayConfig();
-  if (!config) return { ok: false, error: "Payment system is not configured yet." };
+  if (!config) {
+    return {
+      ok: false,
+      error: "Payment system is not configured yet.",
+      code: "payment_not_configured",
+      debugHint: "Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in the server environment (e.g. Vercel Production).",
+    };
+  }
 
   const admin = getAdminClient();
-  if (!admin) return { ok: false, error: "Payment system is not configured yet." };
+  if (!admin) {
+    return {
+      ok: false,
+      error: "Payment system is not configured yet.",
+      code: "payment_not_configured",
+      debugHint:
+        "Set SUPABASE_SERVICE_ROLE_KEY and NEXT_PUBLIC_SUPABASE_URL so billing can update profiles.",
+    };
+  }
 
   const { data: existing } = await admin
     .from("user_profiles")
@@ -454,24 +628,24 @@ export async function createRazorpayTrialSubscription(
 
   try {
     const razorpay = getRazorpayClient(config);
-    const planId = await resolveRazorpayPlanIdWithApiFallback(razorpay, tier);
-    if (!planId) {
+    const hadEnvPlanId = Boolean(resolveRazorpayPlanId(tier));
+    const resolved = await resolveRazorpayPlanIdWithApiFallback(razorpay, tier);
+    if (!resolved.ok) {
       console.error(
         "[subscription] createRazorpayTrialSubscription: missing or invalid Razorpay plan id",
-        { tier, envVar: razorpayPlanEnvVarName(tier) },
+        { tier, envVar: resolved.envVar, reason: resolved.reason },
       );
+      const msg = planCheckoutFailureMessage(tier, resolved, "trial");
       return {
         ok: false,
-        error: "This plan is not available for checkout yet. Please contact support.",
+        error: msg.error,
+        code: msg.code,
+        debugHint: msg.debugHint,
       };
     }
 
     const startAt = calculateTrialEnd(new Date());
-
-    const created = (await (razorpay.subscriptions.create as unknown as (
-      body: Record<string, unknown>,
-    ) => Promise<{ id: string }>)({
-      plan_id: planId,
+    const subscriptionCreateBody = {
       total_count: months,
       customer_notify: 1,
       start_at: Math.floor(startAt.getTime() / 1000),
@@ -491,14 +665,51 @@ export async function createRazorpayTrialSubscription(
         kalnehi_trial_days: String(TRIAL_DAYS),
         kalnehi_autopay_months: String(months),
       },
-    })) as { id: string };
-
-    return {
-      ok: true,
-      keyId: config.keyId,
-      subscriptionId: created.id,
-      amountPaise: tierConfig.trialPricePaise,
     };
+
+    const createTrial = (planId: string) =>
+      (razorpay.subscriptions.create as unknown as (
+        body: Record<string, unknown>,
+      ) => Promise<{ id: string }>)({
+        plan_id: planId,
+        ...subscriptionCreateBody,
+      });
+
+    try {
+      const created = await createTrial(resolved.planId);
+      return {
+        ok: true,
+        keyId: config.keyId,
+        subscriptionId: created.id,
+        amountPaise: tierConfig.trialPricePaise,
+      };
+    } catch (error) {
+      if (hadEnvPlanId && isLikelyInvalidRazorpayPlanIdError(error)) {
+        const fallback = await resolveRazorpayPlanIdWithApiFallback(razorpay, tier, {
+          skipEnv: true,
+        });
+        if (fallback.ok && fallback.planId !== resolved.planId) {
+          try {
+            const created = await createTrial(fallback.planId);
+            console.warn("[subscription] createRazorpayTrialSubscription: retried after invalid env plan id", {
+              tier,
+              fallbackPlanIdPrefix: fallback.planId.slice(0, 14),
+            });
+            return {
+              ok: true,
+              keyId: config.keyId,
+              subscriptionId: created.id,
+              amountPaise: tierConfig.trialPricePaise,
+            };
+          } catch (retryErr) {
+            logRazorpaySubscriptionCreateFailure("createRazorpayTrialSubscription (retry)", { tier }, retryErr);
+            return { ok: false, error: safeErrorMessage(retryErr) };
+          }
+        }
+      }
+      logRazorpaySubscriptionCreateFailure("createRazorpayTrialSubscription", { tier }, error);
+      return { ok: false, error: safeErrorMessage(error) };
+    }
   } catch (error) {
     return { ok: false, error: safeErrorMessage(error) };
   }
@@ -1081,7 +1292,12 @@ export async function getPlanUpgradeQuotes(): Promise<
 
 type CreatePlanUpgradeOrderResult =
   | { ok: true; keyId: string; subscriptionId: string; amountPaise: number }
-  | { ok: false; error: string };
+  | {
+      ok: false;
+      error: string;
+      code?: SubscriptionCheckoutErrorCode;
+      debugHint?: string;
+    };
 
 export async function createPlanUpgradeOrder(
   targetTier: SubscriptionTier,
@@ -1094,10 +1310,25 @@ export async function createPlanUpgradeOrder(
   if (!userId) return { ok: false, error: "Please sign in." };
 
   const config = getRazorpayConfig();
-  if (!config) return { ok: false, error: "Payment system is not configured yet." };
+  if (!config) {
+    return {
+      ok: false,
+      error: "Payment system is not configured yet.",
+      code: "payment_not_configured",
+      debugHint: "Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in the server environment (e.g. Vercel Production).",
+    };
+  }
 
   const admin = getAdminClient();
-  if (!admin) return { ok: false, error: "Payment system is not configured yet." };
+  if (!admin) {
+    return {
+      ok: false,
+      error: "Payment system is not configured yet.",
+      code: "payment_not_configured",
+      debugHint:
+        "Set SUPABASE_SERVICE_ROLE_KEY and NEXT_PUBLIC_SUPABASE_URL so billing can update profiles.",
+    };
+  }
 
   const { data: profile, error: profileErr } = await admin
     .from("user_profiles")
@@ -1134,20 +1365,24 @@ export async function createPlanUpgradeOrder(
 
   try {
     const razorpay = getRazorpayClient(config);
-    const planId = await resolveRazorpayPlanIdWithApiFallback(razorpay, targetTier);
-    if (!planId) {
+    const hadEnvPlanId = Boolean(resolveRazorpayPlanId(targetTier));
+    const resolved = await resolveRazorpayPlanIdWithApiFallback(razorpay, targetTier);
+    if (!resolved.ok) {
       console.error(
         "[subscription] createPlanUpgradeOrder: could not resolve Razorpay plan id (env and plans list)",
         {
           targetTier,
-          envVar: razorpayPlanEnvVarName(targetTier),
+          envVar: resolved.envVar,
+          reason: resolved.reason,
           userIdPrefix: userId.slice(0, 8),
         },
       );
+      const msg = planCheckoutFailureMessage(targetTier, resolved, "upgrade");
       return {
         ok: false,
-        error:
-          "This upgrade path is not available yet due to a billing configuration issue. Please contact support.",
+        error: msg.error,
+        code: msg.code,
+        debugHint: msg.debugHint,
       };
     }
 
@@ -1172,10 +1407,7 @@ export async function createPlanUpgradeOrder(
       });
     }
 
-    const created = (await (razorpay.subscriptions.create as unknown as (
-      body: Record<string, unknown>,
-    ) => Promise<{ id: string }>)({
-      plan_id: planId,
+    const upgradeCreateBody = {
       total_count: upgradeTotalCount,
       customer_notify: 1,
       start_at: startAtSec,
@@ -1198,14 +1430,59 @@ export async function createPlanUpgradeOrder(
         kalnehi_expected_addon_paise: String(amountPaise),
         kalnehi_autopay_months: String(upgradeTotalCount),
       },
-    })) as { id: string };
-
-    return {
-      ok: true,
-      keyId: config.keyId,
-      subscriptionId: created.id,
-      amountPaise,
     };
+
+    const createUpgrade = (planId: string) =>
+      (razorpay.subscriptions.create as unknown as (
+        body: Record<string, unknown>,
+      ) => Promise<{ id: string }>)({
+        plan_id: planId,
+        ...upgradeCreateBody,
+      });
+
+    try {
+      const created = await createUpgrade(resolved.planId);
+      return {
+        ok: true,
+        keyId: config.keyId,
+        subscriptionId: created.id,
+        amountPaise,
+      };
+    } catch (error) {
+      if (hadEnvPlanId && isLikelyInvalidRazorpayPlanIdError(error)) {
+        const fallback = await resolveRazorpayPlanIdWithApiFallback(razorpay, targetTier, {
+          skipEnv: true,
+        });
+        if (fallback.ok && fallback.planId !== resolved.planId) {
+          try {
+            const created = await createUpgrade(fallback.planId);
+            console.warn("[subscription] createPlanUpgradeOrder: retried after invalid env plan id", {
+              targetTier,
+              fallbackPlanIdPrefix: fallback.planId.slice(0, 14),
+            });
+            return {
+              ok: true,
+              keyId: config.keyId,
+              subscriptionId: created.id,
+              amountPaise,
+            };
+          } catch (retryErr) {
+            logRazorpaySubscriptionCreateFailure(
+              "createPlanUpgradeOrder (retry)",
+              { targetTier, userIdPrefix: userId.slice(0, 8) },
+              retryErr,
+            );
+            return { ok: false, error: safeErrorMessage(retryErr) };
+          }
+        }
+      }
+      logRazorpaySubscriptionCreateFailure(
+        "createPlanUpgradeOrder",
+        { targetTier, userIdPrefix: userId.slice(0, 8) },
+        error,
+      );
+      return { ok: false, error: safeErrorMessage(error) };
+    }
   } catch (error) {
     return { ok: false, error: safeErrorMessage(error) };
   }

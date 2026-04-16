@@ -37,6 +37,7 @@ type VoiceDraftRow = {
   start_time: string | null;
   end_time: string | null;
   duration: string | null;
+  syllabus_master_id?: string | null;
 };
 
 /**
@@ -243,6 +244,7 @@ export async function saveVoiceDraftToTimeline(
       name: t.taskTitle.trim().slice(0, 200),
       start_time: normalizeVoiceHHMM(t.start_time ?? null),
       end_time: normalizeVoiceHHMM(t.end_time ?? null),
+      syllabus_master_id: t.syllabus_master_id ?? null,
     }))
     .filter((t) => t.name.length > 0);
 
@@ -274,6 +276,7 @@ export async function saveVoiceDraftToTimeline(
       time_end,
       source: "voice",
       source_raw_text: raw,
+      syllabus_master_id: task.syllabus_master_id ?? null,
     });
     if (!ins.ok) return { ok: false, error: ins.error };
     entryIds.push(id);

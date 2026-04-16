@@ -245,6 +245,7 @@ async function applyDailyTaskCreate(
       status: payload.status,
       source: payload.source,
       source_raw_text: payload.source_raw_text,
+      syllabus_master_id: payload.syllabus_master_id ?? null,
     });
     if (!error) return { ok: true };
     if (error.code === "23505") return { ok: true };

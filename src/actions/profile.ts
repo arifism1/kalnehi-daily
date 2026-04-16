@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import type { PrevScoreEntry } from "@/lib/prevScoreEntries";
 import { formatSupabaseError } from "@/lib/supabase";
+import { isUpscCseMainsExam } from "@/lib/upscMainsOptionalSubjects";
 import { USER_ERROR } from "@/lib/userFacingErrors";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -51,6 +52,8 @@ export async function upsertUserProfile(fields: {
   prev_score_entries?: PrevScoreEntry[] | null;
   /** CUET domain subjects; ignored for non-CUET exams (stored as [] ). */
   cuet_domain_subjects?: string[] | null;
+  /** UPSC CSE Mains optional subject base name; null for non-mains exams. */
+  upsc_optional_subject?: string | null;
 }): Promise<UpsertProfileResult> {
   console.log("[profile.upsert] incoming payload", fields);
   try {
@@ -84,6 +87,10 @@ export async function upsertUserProfile(fields: {
             (s): s is string => typeof s === "string" && s.trim().length > 0,
           )
         : [];
+    const upscOptional =
+      isUpscCseMainsExam(examToSave) || isUpscCseMainsExam(primaryExam)
+        ? (fields.upsc_optional_subject?.trim() || null)
+        : null;
 
     const patchBase = {
       full_name: fields.full_name?.trim() || null,
@@ -91,6 +98,7 @@ export async function upsertUserProfile(fields: {
       primary_exam: examToSave,
       target_exam: targetExam,
       cuet_domain_subjects: cuetDomains,
+      upsc_optional_subjects: upscOptional ? [upscOptional] : null,
       updated_at: new Date().toISOString(),
     };
     const examHistoryPatch =
@@ -188,6 +196,7 @@ export async function completeOnboarding(fields: {
   class_studying: string;
   primary_exam: string;
   target_exam_date: string;
+  upsc_optional_subject?: string | null;
 }): Promise<UpsertProfileResult> {
   try {
     const supabase = await createSupabaseServerClient();
@@ -222,6 +231,9 @@ export async function completeOnboarding(fields: {
       target_exam: exam,
       target_exam_date: examDate,
       cuet_domain_subjects: [] as string[],
+      upsc_optional_subjects: isUpscCseMainsExam(exam) && fields.upsc_optional_subject?.trim()
+        ? [fields.upsc_optional_subject.trim()]
+        : null,
       mandatory_onboarding_completed_at: now,
       updated_at: now,
     };

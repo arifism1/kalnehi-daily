@@ -3,8 +3,10 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
+import { SubscriptionPaywallInterstitial } from "@/components/subscription/SubscriptionPaywallInterstitial";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { isLegalPath } from "@/lib/legal-paths";
+import { isPaidAccessOverlayExemptPath } from "@/lib/paid-access-exempt-paths";
 import { isPublicMarketingPath } from "@/lib/public-paths";
 import { useAuthStore } from "@/store/useAuthStore";
 
@@ -108,13 +110,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
 
     if (!hasPaidAccess) {
-      if (
-        pathname === "/pricing" ||
-        isLegalPath(pathname) ||
-        isPublicMarketingPath(pathname)
-      )
-        return "render";
-      return "pricing";
+      if (isPaidAccessOverlayExemptPath(pathname)) return "render";
+      return "paywallRender";
     }
 
     if (pathname === "/onboarding") return "home";
@@ -132,9 +129,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         break;
       case "onboarding":
         router.replace("/onboarding");
-        break;
-      case "pricing":
-        router.replace("/pricing");
         break;
     }
   }, [gateTarget, router]);
@@ -155,7 +149,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (gateTarget !== "render") {
+  if (gateTarget !== "render" && gateTarget !== "paywallRender") {
     return (
       <main className="flex min-h-0 min-h-dvh flex-1 flex-col">
         <LoadingScreen />
@@ -165,7 +159,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <main id="kalnehi-main" className="flex min-h-0 min-h-dvh flex-1 flex-col">
-      {children}
+      {gateTarget === "paywallRender" ? (
+        <>
+          <div
+            className="flex min-h-0 min-h-dvh flex-1 flex-col"
+            aria-hidden="true"
+            inert
+          >
+            {children}
+          </div>
+          <SubscriptionPaywallInterstitial />
+        </>
+      ) : (
+        children
+      )}
     </main>
   );
 }

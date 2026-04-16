@@ -33,8 +33,7 @@ export default function AboutUsPage() {
       <p>
         All features, including AI-powered tools, are provided &quot;as
         is&quot;. <strong>We are not responsible</strong> if the app does not
-        meet your expectations or if you do not achieve the desired results.{" "}
-        <strong>Maybe the AI did it. We are not sure.</strong>
+        meet your expectations or if you do not achieve the desired results.
       </p>
       <p>
         You use {SITE_NAME} <strong>entirely at your own risk</strong>. Neven

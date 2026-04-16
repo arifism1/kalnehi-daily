@@ -331,20 +331,6 @@ export function HomeClient() {
             <p className="text-sm text-kal-muted sm:text-[0.95rem]">
               <span className="text-kal-text">{`${greetingLead}, ${firstName}`}</span>
             </p>
-            <p className="mt-2 flex flex-col gap-1">
-              <Link
-                href="/what-can-kalnehi-do"
-                className="text-sm font-semibold text-kal-accent underline-offset-4 hover:underline"
-              >
-                What can Kalnehi do? — fun feature tour
-              </Link>
-              <Link
-                href="/best-study-practices"
-                className="text-sm font-semibold text-kal-accent underline-offset-4 hover:underline"
-              >
-                Best Study Practices — the science
-              </Link>
-            </p>
           </div>
 
           <div className="border-t border-kal-border/80 pt-4 sm:pt-5">

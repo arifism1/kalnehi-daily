@@ -14,6 +14,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { completeOnboarding } from "@/actions/profile";
 import { GroupedExamSelect } from "@/components/profile/GroupedExamSelect";
+import { UpscOptionalSubjectPick } from "@/components/profile/UpscOptionalSubjectPick";
 import {
   EXAMS_CATALOG_FALLBACK,
   dedupeExamsCatalogForUi,
@@ -21,6 +22,10 @@ import {
   type ExamCatalogRow,
 } from "@/lib/examsCatalog";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import {
+  isUpscCseMainsExam,
+} from "@/lib/upscMainsOptionalSubjects";
+
 import { useOnboardingStore } from "@/store/useOnboardingStore";
 
 const STEPS = 3;
@@ -46,6 +51,9 @@ export function OnboardingWizard() {
     dedupeExamsCatalogForUi(EXAMS_CATALOG_FALLBACK),
   );
   const [primaryExam, setPrimaryExam] = useState("NEET UG");
+  const [upscOptionalSubjectOptions, setUpscOptionalSubjectOptions] = useState<string[]>([]);
+  const [upscOptionalSubject, setUpscOptionalSubject] = useState("");
+  const [loadingUpscOptionals, setLoadingUpscOptionals] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,6 +66,34 @@ export function OnboardingWizard() {
       if (neet) setPrimaryExam(neet.exam_name);
     })();
   }, []);
+
+  useEffect(() => {
+    if (!isUpscCseMainsExam(primaryExam)) {
+      setUpscOptionalSubject("");
+      return;
+    }
+    let cancelled = false;
+    setLoadingUpscOptionals(true);
+    void (async () => {
+      try {
+        const supabase = getSupabaseBrowserClient();
+        const { data, error: queryError } = await supabase
+          .rpc("upsc_cse_mains_optional_subjects");
+        if (queryError) throw queryError;
+        if (cancelled) return;
+        setUpscOptionalSubjectOptions(
+          (data ?? []).map((r) => r.base_name).filter(Boolean),
+        );
+      } catch {
+        if (!cancelled) setUpscOptionalSubjectOptions([]);
+      } finally {
+        if (!cancelled) setLoadingUpscOptionals(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [primaryExam]);
 
   const goNext = useCallback(() => {
     setError(null);
@@ -102,6 +138,9 @@ export function OnboardingWizard() {
         class_studying: classStudying,
         primary_exam: primaryExam.trim(),
         target_exam_date: examDate.trim(),
+        upsc_optional_subject: isUpscCseMainsExam(primaryExam)
+          ? (upscOptionalSubject || null)
+          : null,
       });
       if (!res.ok) throw new Error(res.error);
       setLocalCompleted(true);
@@ -111,7 +150,15 @@ export function OnboardingWizard() {
     } finally {
       setBusy(false);
     }
-  }, [fullName, phone, classStudying, primaryExam, examDate, setLocalCompleted]);
+  }, [
+    fullName,
+    phone,
+    classStudying,
+    primaryExam,
+    examDate,
+    upscOptionalSubject,
+    setLocalCompleted,
+  ]);
 
   return (
     <div className="mx-auto flex min-h-[min(100dvh,720px)] max-w-lg flex-col px-4 py-8">
@@ -246,6 +293,30 @@ export function OnboardingWizard() {
               />
             </div>
           </div>
+          {isUpscCseMainsExam(primaryExam) ? (
+            <div>
+              <p className="text-xs font-semibold text-kal-text-secondary">
+                Optional Subject (if any)
+              </p>
+              <p className="mt-1 text-xs text-kal-text-secondary">
+                Optional. Leave as <strong>None</strong> if you are not selecting one now.
+              </p>
+              <div className="mt-2">
+                {loadingUpscOptionals ? (
+                  <p className="text-xs text-kal-text-secondary">
+                    Loading optional subjects...
+                  </p>
+                ) : (
+                  <UpscOptionalSubjectPick
+                    options={upscOptionalSubjectOptions}
+                    selected={upscOptionalSubject}
+                    onChange={setUpscOptionalSubject}
+                    disabled={busy}
+                  />
+                )}
+              </div>
+            </div>
+          ) : null}
 
           {error && (
             <p className="text-sm font-medium text-red-700 dark:text-rose-200">

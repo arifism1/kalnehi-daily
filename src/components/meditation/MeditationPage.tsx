@@ -48,6 +48,30 @@ function formatMinutesAndSeconds(totalSeconds: number): string {
   return `${m}m ${String(rem).padStart(2, "0")}s`;
 }
 
+/** Prefer calmer, higher-quality English voices; avoid common harsh system defaults when possible. */
+function pickPreferredGuidedVoice(synth: SpeechSynthesis): SpeechSynthesisVoice | null {
+  const list = synth.getVoices();
+  if (!list.length) return null;
+  const en = list.filter((v) => /^en([-_]|$)/i.test(v.lang.replace("_", "-")));
+  const pool = en.length ? en : list;
+  let best: SpeechSynthesisVoice | null = null;
+  let bestScore = -Infinity;
+  for (const v of pool) {
+    const id = `${v.name} ${v.voiceURI}`.toLowerCase();
+    let s = 0;
+    if (/premium|enhanced|neural|natural|personal|siri/.test(id)) s += 10;
+    if (/google\s+(en|us|uk)/.test(id)) s += 5;
+    if (/samantha|allison|ava|moira|daniel|karen|thomas|aaron|fred/.test(id)) s += 3;
+    if (/zira|microsoft\s+hazel|microsoft\s+helena|microsoft\s+mark/.test(id)) s -= 9;
+    if (/microsoft/.test(id) && !/premium|natural|neural/.test(id)) s -= 4;
+    if (s > bestScore) {
+      bestScore = s;
+      best = v;
+    }
+  }
+  return best;
+}
+
 export function MeditationPage() {
   const userId = useAuthStore((s) => s.user?.id);
   const [rows, setRows] = useState<MeditationSessionRow[]>([]);
@@ -63,6 +87,9 @@ export function MeditationPage() {
   const [hydrating, setHydrating] = useState(true);
   const tickRef = useRef<number | null>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
+  const guidedVoiceRef = useRef<SpeechSynthesisVoice | null>(null);
+  /** Indices of `voiceGuidedSteps` already spoken this session (meditation-time scheduling). */
+  const guidedStepSpokenRef = useRef<Set<number>>(new Set());
   const audioCtxRef = useRef<AudioContext | null>(null);
   const noiseSourceRef = useRef<AudioBufferSourceNode | OscillatorNode | null>(null);
   const gainRef = useRef<GainNode | null>(null);
@@ -88,6 +115,17 @@ export function MeditationPage() {
 
   useEffect(() => {
     synthRef.current = typeof window !== "undefined" ? window.speechSynthesis : null;
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const synth = window.speechSynthesis;
+    const refresh = () => {
+      guidedVoiceRef.current = pickPreferredGuidedVoice(synth);
+    };
+    refresh();
+    synth.addEventListener("voiceschanged", refresh);
+    return () => synth.removeEventListener("voiceschanged", refresh);
   }, []);
 
   useEffect(() => {
@@ -197,10 +235,21 @@ export function MeditationPage() {
     if (!synth) return;
     synth.cancel();
     const utter = new SpeechSynthesisUtterance(text);
-    utter.rate = 0.92;
-    utter.pitch = 1;
+    const voice = guidedVoiceRef.current ?? pickPreferredGuidedVoice(synth);
+    if (voice) utter.voice = voice;
+    utter.rate = 0.84;
+    utter.pitch = 0.92;
+    utter.volume = 0.72;
     synth.speak(utter);
   }, [guided]);
+
+  const cancelGuidedSpeech = useCallback(() => {
+    try {
+      synthRef.current?.cancel();
+    } catch {
+      // no-op
+    }
+  }, []);
 
   const playEndingChime = useCallback(async () => {
     if (typeof window === "undefined") return;
@@ -227,8 +276,9 @@ export function MeditationPage() {
       tickRef.current = null;
     }
     stopAmbient();
+    cancelGuidedSpeech();
     setRunning(false);
-  }, [stopAmbient]);
+  }, [cancelGuidedSpeech, stopAmbient]);
 
   useEffect(() => () => stopSession(), [stopSession]);
 
@@ -275,6 +325,7 @@ export function MeditationPage() {
   const beginSession = useCallback(
     async (type: MeditationTypeDef, minutes: number) => {
       const sec = Math.max(60, Math.round(minutes * 60));
+      guidedStepSpokenRef.current = new Set();
       setActiveType(type);
       setDurationSeconds(sec);
       setRemainingSeconds(sec);
@@ -287,6 +338,33 @@ export function MeditationPage() {
     },
     [guidedSpeak, sound, startAmbient],
   );
+
+  useEffect(() => {
+    if (!guided) cancelGuidedSpeech();
+  }, [cancelGuidedSpeech, guided]);
+
+  useEffect(() => {
+    if (!running || !guided || !activeType || remainingSeconds <= 0) return;
+    const steps = activeType.voiceGuidedSteps;
+    const n = steps.length;
+    if (n === 0) return;
+    const total = durationSeconds;
+    const elapsed = Math.max(0, total - remainingSeconds);
+    for (let k = 0; k < n; k += 1) {
+      const threshold = Math.round(((k + 1) * total) / (n + 1));
+      if (elapsed >= threshold && !guidedStepSpokenRef.current.has(k)) {
+        guidedStepSpokenRef.current.add(k);
+        guidedSpeak(steps[k] ?? "");
+      }
+    }
+  }, [
+    activeType,
+    durationSeconds,
+    guided,
+    guidedSpeak,
+    remainingSeconds,
+    running,
+  ]);
 
   useEffect(() => {
     if (!running) return;
@@ -387,6 +465,7 @@ export function MeditationPage() {
               onClick={() => {
                 setRunning(false);
                 stopAmbient();
+                cancelGuidedSpeech();
               }}
               className="inline-flex items-center gap-1 rounded-xl border border-kal-border px-3 py-2 text-sm"
             >
@@ -524,11 +603,10 @@ export function MeditationPage() {
             <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-kal-muted">
               Voice-guided practice · {item.durationLabel}
             </p>
-            <ol className="mt-2 list-decimal space-y-1.5 pl-[1.15rem] text-sm leading-snug text-kal-text-secondary">
-              {item.voiceGuidedSteps.map((step, stepIdx) => (
-                <li key={stepIdx}>{step}</li>
-              ))}
-            </ol>
+            <p className="mt-2 text-sm leading-snug text-kal-text-secondary">
+              Spoken cues play during your session when <span className="font-medium text-kal-text">Guided audio (voice)</span>{" "}
+              is on above; silent mode skips them.
+            </p>
             <div className="mt-4 flex items-center gap-2">
               <button
                 type="button"

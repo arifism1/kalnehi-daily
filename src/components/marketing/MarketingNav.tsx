@@ -1,5 +1,6 @@
 "use client";
 
+import clsx from "clsx";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -7,6 +8,7 @@ import { CheckCircle2, Download, Menu, X } from "lucide-react";
 
 import { PwaIosInstallModal } from "@/components/PwaIosInstallModal";
 import { isStandalonePwa, usePwaInstall } from "@/hooks/usePwaInstall";
+import { SITE_NAME } from "@/lib/seo-metadata";
 
 const NAV_LINKS = [
   { href: "/guides", label: "Guides" },
@@ -54,24 +56,27 @@ export function MarketingNav() {
   }, [open]);
 
   return (
-    <nav className="relative flex items-center gap-2 text-sm" ref={menuRef}>
+    <nav
+      className="relative flex shrink-0 items-center gap-3 text-sm sm:gap-4"
+      ref={menuRef}
+    >
       {/* Inline "Guides" link — visible on wider screens */}
       <Link
         href="/guides"
-        className="hidden rounded-lg px-2 py-1.5 text-kal-text-secondary hover:text-kal-text sm:inline-flex"
+        className="hidden whitespace-nowrap rounded-lg px-2.5 py-1.5 text-kal-text-secondary hover:text-kal-text sm:inline-flex"
       >
         Guides
       </Link>
       <Link
         href="/what-can-kalnehi-do"
-        className="hidden max-w-[10.5rem] truncate rounded-lg px-2 py-1.5 text-xs font-medium text-kal-text-secondary hover:text-kal-text md:inline-flex lg:max-w-none lg:text-sm"
+        className="hidden whitespace-nowrap rounded-lg px-2.5 py-1.5 text-sm font-medium text-kal-text-secondary hover:text-kal-text lg:inline-flex"
         title="What Can Kalnehi Do?"
       >
         What Can Kalnehi Do?
       </Link>
       <Link
         href="/best-study-practices"
-        className="hidden max-w-[9rem] truncate rounded-lg px-2 py-1.5 text-xs font-medium text-kal-text-secondary hover:text-kal-text md:inline-flex lg:max-w-none lg:text-sm"
+        className="hidden whitespace-nowrap rounded-lg px-2.5 py-1.5 text-sm font-medium text-kal-text-secondary hover:text-kal-text lg:inline-flex"
         title="Best Study Practices"
       >
         Best Study Practices
@@ -103,10 +108,60 @@ export function MarketingNav() {
       {open && (
         <div
           id="marketing-nav-menu"
-          role="menu"
           className="fixed left-3 right-3 top-14 z-50 overflow-hidden rounded-2xl border border-kal-border bg-kal-card shadow-[0_16px_48px_-12px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-72 sm:shadow-[0_16px_40px_-16px_rgba(0,0,0,0.2)]"
         >
-          <ul className="py-1.5">
+          <div className="border-b border-kal-border px-4 pb-2 pt-3">
+            <p className="text-[0.6rem] font-bold uppercase tracking-widest text-kal-accent-dark">
+              Navigate
+            </p>
+            <p className="mt-0.5 text-xs font-semibold leading-snug text-kal-text sm:text-[13px] sm:leading-tight">
+              {SITE_NAME}
+            </p>
+          </div>
+          <div className="border-b border-kal-border px-4 pb-3 pt-2">
+            {showInstallButton ? (
+              <button
+                type="button"
+                disabled={installBusy || installed}
+                onClick={async () => {
+                  if (canPromptInstall) {
+                    setInstallBusy(true);
+                    await promptInstall();
+                    setInstallBusy(false);
+                    if (isStandalonePwa()) setOpen(false);
+                    return;
+                  }
+                  if (needsIosInstallModal) {
+                    setIosInstallOpen(true);
+                  }
+                }}
+                className={clsx(
+                  "flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition active:scale-[0.99] motion-reduce:active:scale-100",
+                  installed
+                    ? "cursor-default border border-kal-border/70 bg-kal-card-muted text-kal-muted opacity-90 shadow-none"
+                    : "border border-kal-accent/25 bg-kal-accent-soft/90 text-kal-accent-dark shadow-sm hover:border-kal-accent/40 hover:bg-kal-accent-soft",
+                )}
+              >
+                {installed ? (
+                  <CheckCircle2 className="h-[1.125rem] w-[1.125rem] shrink-0" strokeWidth={2.35} />
+                ) : (
+                  <Download className="h-[1.125rem] w-[1.125rem] shrink-0" strokeWidth={2.35} />
+                )}
+                {installed
+                  ? "App Installed"
+                  : installBusy
+                    ? "Opening..."
+                    : canPromptInstall
+                      ? "Install App"
+                      : "Add to Home Screen"}
+              </button>
+            ) : installUnsupported ? (
+              <p className="rounded-xl border border-kal-border/80 bg-kal-card-muted px-3 py-2 text-center text-xs text-kal-muted">
+                Install not supported in this browser.
+              </p>
+            ) : null}
+          </div>
+          <ul className="py-1.5" role="menu" aria-label="Site pages">
             {NAV_LINKS.map(({ href, label }) => {
               const active = pathname === href;
               return (
@@ -133,48 +188,6 @@ export function MarketingNav() {
               );
             })}
           </ul>
-          <div className="border-t border-kal-border px-4 py-3">
-            {showInstallButton ? (
-              <button
-                type="button"
-                disabled={installBusy || installed}
-                onClick={async () => {
-                  if (canPromptInstall) {
-                    setInstallBusy(true);
-                    await promptInstall();
-                    setInstallBusy(false);
-                    if (isStandalonePwa()) setOpen(false);
-                    return;
-                  }
-                  if (needsIosInstallModal) {
-                    setIosInstallOpen(true);
-                  }
-                }}
-                className={`inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition ${
-                  installed
-                    ? "cursor-default border border-kal-border bg-kal-card-muted text-kal-muted"
-                    : "bg-kal-accent-soft text-kal-accent-dark hover:bg-kal-accent/20"
-                }`}
-              >
-                {installed ? (
-                  <CheckCircle2 className="h-4.5 w-4.5" />
-                ) : (
-                  <Download className="h-4.5 w-4.5" />
-                )}
-                {installed
-                  ? "App Installed"
-                  : installBusy
-                    ? "Opening..."
-                    : canPromptInstall
-                      ? "Install App"
-                      : "Add to Home Screen"}
-              </button>
-            ) : installUnsupported ? (
-              <p className="rounded-xl border border-kal-border bg-kal-card-muted px-3 py-2 text-xs text-kal-muted">
-                Install not supported in this browser.
-              </p>
-            ) : null}
-          </div>
           <div className="border-t border-kal-border px-4 py-3">
             <Link
               href="/auth"

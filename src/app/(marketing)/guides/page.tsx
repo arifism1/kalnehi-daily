@@ -115,7 +115,7 @@ export default function GuidesHubPage() {
         ]}
       />
       <article>
-        <header className="space-y-3">
+        <header className="space-y-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-kal-accent">
             Guides
           </p>
@@ -140,12 +140,12 @@ export default function GuidesHubPage() {
           </p>
         </header>
 
-        <ul className="mt-10 grid gap-4">
+        <ul className="mt-10 grid gap-4 sm:grid-cols-2 sm:gap-5">
           {guides.map(({ href, title, blurb, icon: Icon }) => (
             <li key={href}>
               <Link
                 href={href}
-                className="flex gap-4 rounded-2xl border border-kal-border bg-kal-card p-4 shadow-kal-card transition-colors hover:border-kal-accent/35"
+                className="flex h-full gap-4 rounded-2xl border border-kal-border bg-kal-card p-5 shadow-kal-card transition-colors hover:border-kal-accent/35"
               >
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-kal-accent-soft text-kal-accent">
                   <Icon className="h-6 w-6" aria-hidden />

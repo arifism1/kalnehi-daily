@@ -52,6 +52,14 @@ export type FcmPayload = {
   data?: Record<string, string>;
 };
 
+function resolveWebpushLink(data: Record<string, string> | undefined): string {
+  const rawPath = data?.path;
+  if (!rawPath) return "/";
+  const path = rawPath.trim();
+  if (!path.startsWith("/")) return "/";
+  return path;
+}
+
 export async function sendFcmToUserTokens(
   messaging: Messaging,
   userId: string,
@@ -85,7 +93,7 @@ export async function sendFcmToUserTokens(
     data: payload.data ?? {},
     webpush: {
       fcmOptions: {
-        link: "/",
+        link: resolveWebpushLink(payload.data),
       },
     },
   }));

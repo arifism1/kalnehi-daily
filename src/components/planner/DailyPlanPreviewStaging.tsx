@@ -1,8 +1,12 @@
 "use client";
 
 import { Loader2, Plus, Trash2 } from "lucide-react";
+import { useMemo } from "react";
 
+import { DailyPlanMicrotopicPicker } from "@/components/planner/DailyPlanMicrotopicPicker";
 import { formatIstSlotDurationLabel } from "@/lib/voiceIst";
+import { suggestSyllabusIdFromTitle } from "@/lib/suggestDailyTaskSyllabus";
+import { useTaskStore } from "@/store/useTaskStore";
 
 export type DailyPlanPreviewRow = {
   id: string;
@@ -16,6 +20,8 @@ export type DailyPlanPreviewRow = {
    * When true, row is skipped for "Add to Today's Plan". Omitted/false = include named rows.
    */
   excludeFromCommit?: boolean;
+  /** Optional link to `syllabus_master.id` before saving to `daily_tasks`. */
+  syllabus_master_id?: string | null;
 };
 
 /** Whether this row should be committed with the bulk "add to plan" action. */
@@ -38,6 +44,8 @@ type Props = {
   processingLabel?: string;
   /** Tighter padding and spacing (e.g. mobile handwritten scan flow). */
   compact?: boolean;
+  /** Per-row optional syllabus picker (voice / handwritten / typed preview). */
+  syllabusLinkMode?: boolean;
 };
 
 export function DailyPlanPreviewStaging({
@@ -53,7 +61,13 @@ export function DailyPlanPreviewStaging({
   processing = false,
   processingLabel = "Processing…",
   compact = false,
+  syllabusLinkMode = false,
 }: Props) {
+  const syllabusById = useTaskStore((s) => s.microtopics);
+  const microtopicsList = useMemo(
+    () => Object.values(syllabusById),
+    [syllabusById],
+  );
   const showHeader = Boolean(title.trim() || subtitle.trim());
 
   return (
@@ -173,6 +187,35 @@ export function DailyPlanPreviewStaging({
               <p className="mt-1 text-[10px] font-medium tracking-tight text-kal-accent-dark dark:text-kal-accent">
                 {formatIstSlotDurationLabel(r.startInput, r.endInput)}
               </p>
+              {syllabusLinkMode ? (
+                <div className="mt-2 border-t border-kal-border/35 pt-2">
+                  <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-kal-muted">
+                      Syllabus (optional)
+                    </span>
+                    <button
+                      type="button"
+                      disabled={disabled || !r.name.trim()}
+                      onClick={() => {
+                        const id = suggestSyllabusIdFromTitle(
+                          r.name,
+                          microtopicsList,
+                        );
+                        if (id) onUpdateRow(r.id, { syllabus_master_id: id });
+                      }}
+                      className="text-[10px] font-semibold text-kal-accent hover:underline disabled:opacity-40"
+                    >
+                      Best match
+                    </button>
+                  </div>
+                  <DailyPlanMicrotopicPicker
+                    value={r.syllabus_master_id ?? null}
+                    onChange={(id) => onUpdateRow(r.id, { syllabus_master_id: id })}
+                    disabled={disabled}
+                    compact={compact}
+                  />
+                </div>
+              ) : null}
             </div>
             <button
               type="button"

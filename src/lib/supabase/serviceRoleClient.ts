@@ -5,6 +5,7 @@ import type { Database } from "@/types/supabase";
 /**
  * Service-role client for trusted server routes after the user is verified via
  * `createSupabaseServerClient().auth.getUser()`. Bypasses RLS; always filter by `user_id`.
+ * Inventory: `npm run verify:service-role`.
  */
 export function getSupabaseServiceRoleClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();

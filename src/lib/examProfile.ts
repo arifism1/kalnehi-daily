@@ -1,3 +1,5 @@
+import { isUpscCseMainsExam } from "@/lib/upscMainsOptionalSubjects";
+
 /** Normalize exam labels for comparison. */
 function normalizeExamLabel(exam: string): string {
   return exam.trim().toLowerCase().replace(/[\s_-]+/g, " ");
@@ -38,6 +40,7 @@ export function examDisplayLabel(stored: string | null | undefined): string {
   if (n === "cuet") return "CUET UG";
   if (n === "cbse class 12") return "CBSE Class 12";
   if (n === "upsc cse prelims") return "UPSC CSE Prelims";
+  if (isUpscCseMainsExam(stored)) return "UPSC CSE Mains";
   if (n === "ca foundation") return "CA Foundation";
   if (n === "ca intermediate") return "CA Intermediate";
   if (n === "ca final") return "CA Final";
@@ -48,6 +51,9 @@ export function examDisplayLabel(stored: string | null | undefined): string {
   if (n === "sat") return "SAT";
   if (n === "gre") return "GRE";
   if (n === "ini cet") return "INI-CET";
+  if (n === "ipmat indore") return "IPMAT Indore";
+  if (n === "ipmat rohtak") return "IPMAT Rohtak";
+  if (n === "jipmat") return "JIPMAT";
   if (n === "other") return "Other";
   return stored.trim();
 }
@@ -95,7 +101,13 @@ export function syllabusCatalogExamName(
   if (n === "upsc cse prelims" || n === "upsc cse prelim") {
     return "UPSC CSE Prelims";
   }
+  if (isUpscCseMainsExam(trimmed)) {
+    return "UPSC CSE Mains";
+  }
   if (n === "ca foundation") return "CA Foundation";
+  if (n === "ipmat indore") return "IPMAT Indore";
+  if (n === "ipmat rohtak") return "IPMAT Rohtak";
+  if (n === "jipmat") return "JIPMAT";
   /** Legacy profile label → syllabus `exam_name`. */
   if (n === "cbse boards" || n === "boards") return "CBSE Class 12";
 
@@ -209,6 +221,7 @@ export function examScoreMax(
   if (n === "ca foundation") return 400;
   if (n === "ca intermediate" || n === "ca final") return 800;
   if (n === "upsc cse prelims") return 400;
+  if (isUpscCseMainsExam(exam)) return 1750;
   if (n === "gate") return 100;
   if (n === "ini cet") return 800;
   if (n === "cat") return 198;
@@ -217,6 +230,9 @@ export function examScoreMax(
   if (n === "nda") return 900;
   if (n === "sat") return 1600;
   if (n === "gre") return 340;
+  if (n === "ipmat indore") return 300;
+  if (n === "ipmat rohtak") return 300;
+  if (n === "jipmat") return 400;
   return 720;
 }
 

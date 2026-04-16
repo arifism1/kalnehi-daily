@@ -1,6 +1,9 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
+import { SYSTEM_PUSH_KIND } from "@/lib/systemPush/copy";
+import { resolveSystemPushPath } from "@/lib/systemPush/routes";
+
 function readFirebaseVersion(): string {
   try {
     const pkg = JSON.parse(
@@ -44,11 +47,62 @@ export function buildFcmBackgroundInjection(): string {
     measurementId: measurementId || undefined,
   };
   const cfgJson = JSON.stringify(cfg);
+  const fallbackPathByKindJson = JSON.stringify({
+    [SYSTEM_PUSH_KIND.morning]: resolveSystemPushPath(SYSTEM_PUSH_KIND.morning),
+    [SYSTEM_PUSH_KIND.evening]: resolveSystemPushPath(SYSTEM_PUSH_KIND.evening),
+    [SYSTEM_PUSH_KIND.danger]: resolveSystemPushPath(SYSTEM_PUSH_KIND.danger),
+  });
 
   return `
 // --- Firebase Cloud Messaging (injected at runtime by /sw.js route) ---
 importScripts("https://www.gstatic.com/firebasejs/${ver}/firebase-app-compat.js");
 importScripts("https://www.gstatic.com/firebasejs/${ver}/firebase-messaging-compat.js");
+const KALNEHI_FALLBACK_PATH_BY_KIND = ${fallbackPathByKindJson};
+
+function kalnehiResolveNotificationPath(data) {
+  if (!data || typeof data !== "object") return "/";
+  const rawPath = typeof data.path === "string" ? data.path.trim() : "";
+  if (rawPath.startsWith("/")) return rawPath;
+  const kind = typeof data.kind === "string" ? data.kind.trim() : "";
+  return KALNEHI_FALLBACK_PATH_BY_KIND[kind] || "/";
+}
+
+function kalnehiToAbsoluteAppUrl(path) {
+  try {
+    return new URL(path, self.location.origin).toString();
+  } catch {
+    return self.location.origin + "/";
+  }
+}
+
+async function kalnehiFocusOrOpenClient(targetUrl) {
+  const allClients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+  const target = new URL(targetUrl);
+  for (const client of allClients) {
+    if (!client || !client.url) continue;
+    try {
+      const clientUrl = new URL(client.url);
+      if (clientUrl.origin !== target.origin) continue;
+      if ("focus" in client) {
+        await client.focus();
+      }
+      if ("navigate" in client && client.url !== targetUrl) {
+        await client.navigate(targetUrl);
+      }
+      return;
+    } catch {}
+  }
+  await self.clients.openWindow(targetUrl);
+}
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const data = event.notification && event.notification.data ? event.notification.data : {};
+  const path = kalnehiResolveNotificationPath(data);
+  const destinationUrl = kalnehiToAbsoluteAppUrl(path);
+  event.waitUntil(kalnehiFocusOrOpenClient(destinationUrl));
+});
+
 try {
   if (!firebase.apps.length) {
     firebase.initializeApp(${cfgJson});

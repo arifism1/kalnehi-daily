@@ -45,9 +45,8 @@ export default function RefundPage() {
       <p>
         We have <strong>zero responsibility</strong> and{" "}
         <strong>zero liability</strong> for any financial loss you may suffer
-        due to subscription or payment.{" "}
-        <strong>It is not our fault</strong> if you forget to cancel or face
-        any issue.
+        due to subscription or payment. Failure to cancel before the trial ends
+        does not entitle you to a refund.
       </p>
       <p>
         <strong>Contact</strong>

@@ -1,6 +1,7 @@
 /**
  * URLs that render full HTML for anonymous visitors (SEO / acquisition).
- * Must stay in sync with [`AppShell`](src/components/AppShell.tsx) gate logic.
+ * Must stay in sync with [`AppShell`](src/components/AppShell.tsx) and
+ * [`isPaidAccessOverlayExemptPath`](src/lib/paid-access-exempt-paths.ts) for paid-access overlay rules.
  */
 export const PUBLIC_MARKETING_PATHS = new Set<string>([
   "/guides",

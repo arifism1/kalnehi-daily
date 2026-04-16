@@ -25,6 +25,7 @@ export type VoicePlannerSnapshotRow = {
   transcriptRaw?: string;
   /** Unified daily plan source (IDB rows without this default to voice). */
   source?: "typed" | "voice" | "handwritten";
+  syllabus_master_id?: string | null;
 };
 
 export type VoicePlannerSnapshot = {
@@ -143,6 +144,7 @@ export type OutboxMutation = {
     status: string;
     source: "typed" | "voice" | "handwritten";
     source_raw_text: string | null;
+    syllabus_master_id?: string | null;
   };
   dailyTaskPatch?: TablesUpdate<"daily_tasks">;
   /** How many consecutive flush attempts failed for this entry. */

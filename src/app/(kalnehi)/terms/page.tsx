@@ -40,10 +40,9 @@ export default function TermsPage() {
       </p>
       <p>
         The app uses Artificial Intelligence.{" "}
-        <strong>We are not responsible</strong> for any AI output. AI may
-        produce wrong, inaccurate, incomplete, or misleading results.{" "}
-        <strong>Maybe the AI did it. We are not sure.</strong> You use all AI
-        features <strong>entirely at your own risk</strong>.
+        <strong>We are not responsible</strong> for any AI output.         AI may
+        produce wrong, inaccurate, incomplete, or misleading results. You use
+        all AI features <strong>entirely at your own risk</strong>.
       </p>
       <p>
         <strong>No Warranties</strong>
@@ -62,7 +61,7 @@ export default function TermsPage() {
         owner shall have <strong>ZERO LIABILITY</strong> and{" "}
         <strong>ZERO RESPONSIBILITY</strong> for any loss, damage, missed
         opportunity, financial loss, emotional distress, or any other harm
-        resulting from your use of the app. <strong>It is not our fault.</strong>
+        resulting from your use of the app.
       </p>
       <p>
         <strong>Indemnification</strong>
@@ -96,7 +95,7 @@ export default function TermsPage() {
         <br />
         Phone: 9101776379
         <br />
-        Email: curioversitylearning@gmail.com;
+        Email: curioversitylearning@gmail.com
       </p>
     </article>
   );

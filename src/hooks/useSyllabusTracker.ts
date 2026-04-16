@@ -41,6 +41,10 @@ import {
 } from "@/lib/syllabusRollup";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { KALNEHI_PROFILE_UPDATED_EVENT } from "@/lib/profileEvents";
+import {
+  isUpscCseMainsExam,
+  shouldKeepUpscMainsRow,
+} from "@/lib/upscMainsOptionalSubjects";
 import { toUserFacingMessage } from "@/lib/userFacingErrors";
 import { useAuthStore } from "@/store/useAuthStore";
 
@@ -82,6 +86,7 @@ type SyllabusTrackerCache = {
   statusBySyllabusMasterId: Record<string, string>;
   targetExamLabel: string | null;
   cuetDomainSubjects: string[];
+  upscOptionalSubject: string | null;
   catalogExamKey: string | null;
 };
 
@@ -97,6 +102,7 @@ export function useSyllabusTracker() {
   const [targetExamLabel, setTargetExamLabel] = useState<string | null>(null);
   const [cuetDomainSubjects, setCuetDomainSubjects] = useState<string[]>([]);
   const [catalogExamKey, setCatalogExamKey] = useState<string | null>(null);
+  const [upscOptionalSubject, setUpscOptionalSubject] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updateError, setUpdateError] = useState<string | null>(null);
@@ -124,6 +130,7 @@ export function useSyllabusTracker() {
         setStatusBySyllabusMasterId({});
         setTargetExamLabel(null);
         setCuetDomainSubjects([]);
+        setUpscOptionalSubject(null);
         setCatalogExamKey(null);
         setLoading(false);
         return;
@@ -137,7 +144,7 @@ export function useSyllabusTracker() {
 
         const { data: profile, error: profileErr } = await supabase
           .from("user_profiles")
-          .select("primary_exam, target_exam, cuet_domain_subjects")
+          .select("primary_exam, target_exam, cuet_domain_subjects, upsc_optional_subjects")
           .eq("user_id", userId)
           .maybeSingle();
 
@@ -149,7 +156,11 @@ export function useSyllabusTracker() {
         const domains = parseCuetDomainSubjectsJson(
           profile?.cuet_domain_subjects,
         );
+        const optionalSubject = Array.isArray(profile?.upsc_optional_subjects)
+          ? (profile.upsc_optional_subjects[0]?.trim() || null)
+          : null;
         setCuetDomainSubjects(domains);
+        setUpscOptionalSubject(optionalSubject);
 
         if (!examLabel?.trim()) {
           setRows([]);
@@ -171,19 +182,25 @@ export function useSyllabusTracker() {
         }
         setCatalogExamKey(examKey);
 
+        const syllabusQuery = isUpscCseMainsExam(examKey)
+          ? supabase.rpc("upsc_cse_mains_syllabus_rows", {
+              p_optional: optionalSubject ?? null,
+            })
+          : supabase
+              .from("syllabus_master")
+              .select("*")
+              .eq("exam_name", examKey)
+              .order("subject")
+              .order("chapter")
+              .order("microtopic");
+
         const [
           { data: syllabus, error: sErr },
           { data: prog, error: pErr },
           { data: customs, error: cuErr },
           { data: marksOverrides, error: moErr },
         ] = await Promise.all([
-          supabase
-            .from("syllabus_master")
-            .select("*")
-            .eq("exam_name", examKey)
-            .order("subject")
-            .order("chapter")
-            .order("microtopic"),
+          syllabusQuery,
           supabase
             .from("user_microtopic_progress")
             .select("syllabus_master_id, status")
@@ -217,6 +234,14 @@ export function useSyllabusTracker() {
         } else if (examKey === "CUET") {
           merged = [];
         }
+        if (isUpscCseMainsExam(examKey)) {
+          merged = merged.filter((row) =>
+            shouldKeepUpscMainsRow({
+              subject: row.subject,
+              selectedOptional: optionalSubject,
+            }),
+          );
+        }
         const sorted = applyMarksOverridesToRows(
           merged,
           (marksOverrides ?? []) as SyllabusMarksOverrideRow[],
@@ -238,6 +263,7 @@ export function useSyllabusTracker() {
           statusBySyllabusMasterId: map,
           targetExamLabel: examLabel ?? null,
           cuetDomainSubjects: domains,
+          upscOptionalSubject: optionalSubject,
           catalogExamKey: examKey,
         };
         if (silent) setError(null);
@@ -269,6 +295,7 @@ export function useSyllabusTracker() {
       setStatusBySyllabusMasterId(cached.statusBySyllabusMasterId);
       setTargetExamLabel(cached.targetExamLabel);
       setCuetDomainSubjects(cached.cuetDomainSubjects);
+      setUpscOptionalSubject(cached.upscOptionalSubject);
       setCatalogExamKey(cached.catalogExamKey);
       setLoading(false);
       setError(null);
@@ -469,6 +496,7 @@ export function useSyllabusTracker() {
     statusBySyllabusMasterId,
     targetExamLabel,
     cuetDomainSubjects,
+    upscOptionalSubject,
     cuetAwaitingDomainSelection,
     cuetScoringRollup,
     maxScore,

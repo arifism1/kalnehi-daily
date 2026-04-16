@@ -17,6 +17,7 @@ import {
 import { upsertUserProfile } from "@/actions/profile";
 import { CuetDomainSubjectPick } from "@/components/profile/CuetDomainSubjectPick";
 import { GroupedExamSelect } from "@/components/profile/GroupedExamSelect";
+import { UpscOptionalSubjectPick } from "@/components/profile/UpscOptionalSubjectPick";
 import { InstallPWA } from "@/components/InstallPWA";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
@@ -27,6 +28,9 @@ import {
 } from "@/lib/examsCatalog";
 import { isCuetExam } from "@/lib/examProfile";
 import { parseCuetDomainSubjectsJson } from "@/lib/cuetDomainSubjects";
+import {
+  isUpscCseMainsExam,
+} from "@/lib/upscMainsOptionalSubjects";
 import { SITE_NAME } from "@/lib/seo-metadata";
 import { parsePrevScoreEntries } from "@/lib/prevScoreEntries";
 import { KALNEHI_PROFILE_UPDATED_EVENT } from "@/lib/profileEvents";
@@ -91,6 +95,11 @@ export function ProfileForm() {
   const [prevAttempted, setPrevAttempted] = useState(false);
   const [scoreRows, setScoreRows] = useState<ScoreRow[]>([]);
   const [cuetDomainSubjects, setCuetDomainSubjects] = useState<string[]>([]);
+  const [upscOptionalSubject, setUpscOptionalSubject] = useState("");
+  const [upscOptionalSubjectOptions, setUpscOptionalSubjectOptions] = useState<
+    string[]
+  >([]);
+  const [loadingUpscOptionals, setLoadingUpscOptionals] = useState(false);
   const [examRows, setExamRows] = useState(EXAMS_CATALOG_FALLBACK);
   const [initialExamRaw, setInitialExamRaw] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -121,7 +130,7 @@ export function ProfileForm() {
           supabase
             .from("user_profiles")
             .select(
-              "full_name, target_exam_date, primary_exam, target_exam, prev_exam_attempted, prev_score, prev_score_entries, cuet_domain_subjects",
+              "full_name, target_exam_date, primary_exam, target_exam, prev_exam_attempted, prev_score, prev_score_entries, cuet_domain_subjects, upsc_optional_subjects",
             )
             .eq("user_id", user.id)
             .maybeSingle(),
@@ -166,6 +175,11 @@ export function ProfileForm() {
         setCuetDomainSubjects(
           parseCuetDomainSubjectsJson(data?.cuet_domain_subjects),
         );
+        setUpscOptionalSubject(
+          Array.isArray(data?.upsc_optional_subjects)
+            ? (data.upsc_optional_subjects[0]?.trim() ?? "")
+            : "",
+        );
       } catch (e) {
         if (!cancelled) setError(formatSupabaseError(e));
       } finally {
@@ -176,6 +190,34 @@ export function ProfileForm() {
       cancelled = true;
     };
   }, [user?.id]);
+
+  useEffect(() => {
+    if (!isUpscCseMainsExam(targetExam)) {
+      setUpscOptionalSubject("");
+      return;
+    }
+    let cancelled = false;
+    setLoadingUpscOptionals(true);
+    void (async () => {
+      try {
+        const supabase = getSupabaseBrowserClient();
+        const { data, error: queryError } = await supabase
+          .rpc("upsc_cse_mains_optional_subjects");
+        if (queryError) throw queryError;
+        if (cancelled) return;
+        setUpscOptionalSubjectOptions(
+          (data ?? []).map((r) => r.base_name).filter(Boolean),
+        );
+      } catch {
+        if (!cancelled) setUpscOptionalSubjectOptions([]);
+      } finally {
+        if (!cancelled) setLoadingUpscOptionals(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [targetExam]);
 
   const submit = useCallback(async () => {
     if (!user?.id) return;
@@ -223,6 +265,8 @@ export function ProfileForm() {
         prev_score_entries: prevAttempted ? prevEntries : [],
         cuet_domain_subjects:
           examName && isCuetExam(examName) ? cuetDomainSubjects : [],
+        upsc_optional_subject:
+          examName && isUpscCseMainsExam(examName) ? (upscOptionalSubject || null) : null,
       });
       if (!res.ok) {
         setError(res.error);
@@ -245,6 +289,7 @@ export function ProfileForm() {
     prevAttempted,
     scoreRows,
     cuetDomainSubjects,
+    upscOptionalSubject,
     router,
   ]);
 
@@ -397,6 +442,31 @@ export function ProfileForm() {
                   onChange={setCuetDomainSubjects}
                   disabled={saving}
                 />
+              </div>
+            </div>
+          ) : null}
+          {deferredTargetExam && isUpscCseMainsExam(deferredTargetExam) ? (
+            <div className="border-t border-kal-border px-4 py-4">
+              <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
+                Optional Subject (if any)
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-kal-text-secondary">
+                Optional. Keep <strong>None</strong> selected if you only want common
+                papers right now.
+              </p>
+              <div className="mt-4">
+                {loadingUpscOptionals ? (
+                  <p className="text-xs text-kal-text-secondary">
+                    Loading optional subjects...
+                  </p>
+                ) : (
+                  <UpscOptionalSubjectPick
+                    options={upscOptionalSubjectOptions}
+                    selected={upscOptionalSubject}
+                    onChange={setUpscOptionalSubject}
+                    disabled={saving}
+                  />
+                )}
               </div>
             </div>
           ) : null}

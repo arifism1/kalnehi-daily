@@ -240,8 +240,8 @@ export function WhatCanKalnehiDoClient() {
   }, []);
 
   return (
-    <div className="space-y-10 pb-4">
-      <section className="relative overflow-hidden rounded-3xl border border-white/40 bg-gradient-to-br from-white/70 via-white/45 to-kal-accent-soft/30 px-5 py-10 shadow-[0_24px_80px_-32px_rgba(239,68,68,0.35)] backdrop-blur-xl dark:border-white/10 dark:from-zinc-900/80 dark:via-zinc-900/55 dark:to-red-950/25 dark:shadow-[0_28px_90px_-28px_rgba(0,0,0,0.65)] sm:px-8 sm:py-12">
+    <div className="space-y-14 pb-4">
+      <section className="relative overflow-hidden rounded-3xl border border-white/40 bg-gradient-to-br from-white/70 via-white/45 to-kal-accent-soft/30 px-8 py-14 shadow-[0_24px_80px_-32px_rgba(239,68,68,0.35)] backdrop-blur-xl dark:border-white/10 dark:from-zinc-900/80 dark:via-zinc-900/55 dark:to-red-950/25 dark:shadow-[0_28px_90px_-28px_rgba(0,0,0,0.65)] sm:px-12 sm:py-16">
         <div
           className="pointer-events-none absolute -right-20 -top-24 h-56 w-56 rounded-full bg-kal-accent/20 blur-3xl motion-safe:animate-pulse"
           aria-hidden
@@ -266,15 +266,15 @@ export function WhatCanKalnehiDoClient() {
         </div>
       </section>
 
-      <section aria-labelledby="feature-explorer-heading" className="space-y-4">
-        <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-          <h2 id="feature-explorer-heading" className="text-lg font-bold text-kal-text sm:text-xl">
+      <section aria-labelledby="feature-explorer-heading" className="space-y-6">
+        <div className="flex flex-col gap-1.5 sm:flex-row sm:items-end sm:justify-between">
+          <h2 id="feature-explorer-heading" className="text-xl font-bold text-kal-text sm:text-2xl">
             Every feature
           </h2>
           <p className="text-xs font-medium text-kal-muted sm:text-sm">Tap any card to see what it does</p>
         </div>
 
-        <ul className="grid list-none grid-cols-1 gap-4 sm:grid-cols-2">
+        <ul className="grid list-none grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-7">
           {FEATURES.map((f) => {
             const expanded = openId === f.id;
             return (
@@ -289,7 +289,7 @@ export function WhatCanKalnehiDoClient() {
                     className={`pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br opacity-70 transition-opacity duration-300 group-hover:opacity-100 ${f.accent}`}
                     aria-hidden
                   />
-                  <div className="relative flex flex-col gap-3 p-5 sm:p-6">
+                  <div className="relative flex flex-col gap-4 p-6 sm:p-8">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex min-w-0 items-center gap-3">
                         <span
