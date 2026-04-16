@@ -1,7 +1,7 @@
 "use client";
 
 import Script from "next/script";
-import { Camera, Loader2, Mic, Plus } from "lucide-react";
+import { Loader2, Mic, Plus } from "lucide-react";
 import { useCallback, useEffect, useState, useTransition } from "react";
 
 import {
@@ -11,7 +11,7 @@ import {
 import { PaymentErrorMailButton } from "@/components/subscription/PaymentErrorMailButton";
 import { SITE_NAME } from "@/lib/seo-metadata";
 import type { PaymentErrorProof } from "@/lib/paymentSupportEmail";
-import { EXTRA_CREDIT_PACKS, type ExtraCreditPack } from "@/lib/subscriptionTiers";
+import { EXTRA_CREDIT_PACKS_UI, type ExtraCreditPack } from "@/lib/subscriptionTiers";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { useAuthStore } from "@/store/useAuthStore";
 
@@ -39,16 +39,10 @@ function CreditCard({
   onBuy: (pack: ExtraCreditPack) => void;
   disabled: boolean;
 }) {
-  const isPhoto = pack.type === "photo_scans";
-
   return (
     <div className="kal-glass-subtle flex items-center justify-between rounded-xl px-4 py-3">
       <div className="flex items-center gap-3">
-        {isPhoto ? (
-          <Camera className="h-4 w-4 text-kal-accent" />
-        ) : (
-          <Mic className="h-4 w-4 text-kal-accent" />
-        )}
+        <Mic className="h-4 w-4 text-kal-accent" />
         <div>
           <p className="text-sm font-medium text-kal-text">{pack.label}</p>
           <p className="text-xs text-kal-text-secondary">{pack.priceDisplay}</p>
@@ -152,7 +146,7 @@ export function ExtraCreditsSection() {
           </p>
         </div>
         <div className="space-y-2 p-3">
-          {EXTRA_CREDIT_PACKS.map((pack) => (
+          {EXTRA_CREDIT_PACKS_UI.map((pack) => (
             <CreditCard
               key={pack.id}
               pack={pack}

@@ -100,7 +100,7 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
             <div className="space-y-3">
               <div className="flex items-center justify-between gap-2">
                 <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
-                  Camera session
+                  Live verification
                 </p>
                 <button
                   type="button"
@@ -161,16 +161,16 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
                     onClick={enterCamera}
                     className="flex w-full min-h-[52px] items-center justify-center rounded-2xl bg-kal-accent text-base font-semibold text-kal-accent-foreground hover:bg-kal-accent-hover disabled:opacity-40"
                   >
-                    Start camera session
+                    Continue to verification
                   </button>
                 ) : (
                   <div className="rounded-2xl border border-dashed border-kal-border bg-kal-card-muted px-4 py-5 text-center">
                     <p className="text-sm font-semibold text-kal-text">
-                      Camera not enabled
+                      Verification not enabled
                     </p>
                     <p className="mt-1.5 text-xs leading-relaxed text-kal-muted">
-                      Enable Study Camera in Settings to start a camera-verified
-                      session. Video stays on your device only — never uploaded.
+                      Turn on verified sessions in Settings to log with on-device
+                      checks. Video stays on your device only — never uploaded.
                     </p>
                     <Link
                       href="/settings"

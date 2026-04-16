@@ -1,7 +1,7 @@
 "use client";
 
 import { addDays, format, parseISO } from "date-fns";
-import { ArrowLeft, CalendarDays, Mic, PenLine, Type, Zap } from "lucide-react";
+import { ArrowLeft, CalendarDays, Mic, Type, Zap } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -116,13 +116,6 @@ export function DailyPlanPageContent() {
         >
           <Type className="h-4 w-4 text-kal-accent" aria-hidden />
           Self Type
-        </Link>
-        <Link
-          href="/paste-handwritten"
-          className="inline-flex items-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-2.5 text-sm font-bold text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-text"
-        >
-          <PenLine className="h-4 w-4 text-kal-accent" aria-hidden />
-          Handwritten
         </Link>
       </div>
     </div>

@@ -6,7 +6,6 @@ import {
   Clock,
   Flower2,
   HelpCircle,
-  Image,
   Inbox,
   LineChart,
   ListTodo,
@@ -66,12 +65,6 @@ export const DASHBOARD_FEATURES: DashboardFeature[] = [
     title: "Dictate My Day",
     icon: Mic,
     description: "Speak your plan and let AI build your schedule.",
-  },
-  {
-    id: "handwritten-scan",
-    title: "Handwritten Scan",
-    icon: Image,
-    description: "Scan your handwritten timetable and import it instantly.",
   },
   {
     id: "target-score-blueprint",

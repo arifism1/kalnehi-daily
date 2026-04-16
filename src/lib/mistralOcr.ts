@@ -31,7 +31,7 @@ export async function ocrHandwrittenPhoto(
     return {
       ok: false,
       error:
-        "Photo scan needs MISTRAL_API_KEY on the server. You can still paste text below.",
+        "Image processing needs MISTRAL_API_KEY on the server. You can still paste text below.",
     };
   }
 

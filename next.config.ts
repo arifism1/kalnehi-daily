@@ -60,7 +60,7 @@ const CONTENT_SECURITY_POLICY_REPORT_ONLY = [
 const nextConfig: NextConfig = {
   transpilePackages: ["@mediapipe/tasks-vision"],
 
-  // This fixes the "Body exceeded 1 MB limit" error when uploading handwritten planner photos
+  // Large payloads for planner uploads / media (e.g. study camera, attachments)
   experimental: {
     serverActions: {
       bodySizeLimit: "5mb",

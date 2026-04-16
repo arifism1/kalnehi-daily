@@ -915,7 +915,7 @@ async function applyPaidPhotoScanUsage(
   }
 
   if (currentUsed >= monthlyLimit) {
-    return { ok: false, error: "Monthly photo scan limit reached." };
+    return { ok: false, error: "Monthly usage limit reached for this feature." };
   }
 
   const bonusSum = totalActiveBonus(ledger, now);

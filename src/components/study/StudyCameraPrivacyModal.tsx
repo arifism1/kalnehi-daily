@@ -60,8 +60,8 @@ export function StudyCameraPrivacyModal({
               className="mt-1 text-lg font-bold leading-snug text-white"
             >
               {variant === "settings"
-                ? "Study camera stays on your device"
-                : "Before we turn the camera on"}
+                ? "Your video stays on this device"
+                : "Before we open the camera"}
             </h2>
           </div>
         </div>

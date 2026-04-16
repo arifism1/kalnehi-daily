@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Loader2, Mic, Pencil, PenLine, Trash2, Type, X } from "lucide-react";
+import { Check, Loader2, Mic, Pencil, Trash2, Type, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -20,14 +20,19 @@ import { formatIstSlotRange12h } from "@/lib/voiceIst";
 // ─── Source badge ────────────────────────────────────────────────────────────
 
 function SourceBadge({ source }: { source: string }) {
+  const isLegacyPlanImport = source === "handwritten";
   const label =
-    source === "voice" ? "Voice" : source === "handwritten" ? "Handwritten" : "Typed";
-  const Icon =
-    source === "voice" ? Mic : source === "handwritten" ? PenLine : Type;
+    source === "voice" ? "Voice" : isLegacyPlanImport ? "Added from plan" : "Typed";
+  const Icon = source === "voice" ? Mic : Type;
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-white/30 bg-white/55 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-kal-muted backdrop-blur-sm dark:border-white/12 dark:bg-zinc-900/55">
-      <Icon className="h-3 w-3 text-kal-accent" aria-hidden />
-      {label}
+    <span
+      title={isLegacyPlanImport ? "Added from plan" : undefined}
+      className={`inline-flex max-w-[11rem] items-center gap-1 rounded-full border border-white/30 bg-white/55 px-2 py-0.5 text-[10px] font-bold text-kal-muted backdrop-blur-sm dark:border-white/12 dark:bg-zinc-900/55 ${
+        isLegacyPlanImport ? "normal-case tracking-tight" : "uppercase tracking-wide"
+      }`}
+    >
+      <Icon className="h-3 w-3 shrink-0 text-kal-accent" aria-hidden />
+      <span className="min-w-0 truncate">{label}</span>
     </span>
   );
 }
@@ -463,9 +468,8 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
             <p className="text-sm font-semibold text-kal-text">Nothing here yet</p>
             <p className="mt-1 text-xs text-kal-muted">
               Add tasks via{" "}
-              <span className="font-bold text-kal-text">Dictate My Day</span>,{" "}
-              <span className="font-bold text-kal-text">Self Type</span>, or{" "}
-              <span className="font-bold text-kal-text">Handwritten</span> below.
+              <span className="font-bold text-kal-text">Dictate My Day</span> or{" "}
+              <span className="font-bold text-kal-text">Self Type</span> below.
             </p>
           </div>
         ) : (

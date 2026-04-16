@@ -46,7 +46,7 @@ export function SelfTypeDayPage() {
           Type your day
         </h1>
         <p className="kal-feature-lead mt-2 max-w-xl">
-          This is the same daily plan as Dictate and Handwritten — one list per date, with typed source badges.
+          This is the same daily plan as Dictate My Day — one list per date, with typed source badges.
         </p>
       </header>
 

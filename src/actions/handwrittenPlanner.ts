@@ -64,7 +64,7 @@ export async function saveHandwrittenPlannerRows(
     .filter((t) => t.activityName.length > 0);
 
   if (cleaned.length === 0) {
-    return { ok: false, error: "Add at least one handwritten row to save." };
+    return { ok: false, error: "Add at least one row to save." };
   }
 
   const supabase = await createSupabaseServerClient();

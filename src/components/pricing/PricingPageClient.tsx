@@ -214,12 +214,12 @@ const TIER_ICONS: Record<SubscriptionTier, React.ReactNode> = {
 /** Scannable, benefit-focused AI quota line(s) for the tier card (no “missing out” framing). */
 function tierAiQuotaCopy(config: TierConfig): string {
   if (config.id === "basic") {
-    return `Your trial includes ${config.trialPhotoScansLimit} AI photo scans and ${config.trialVoiceMinutesLimit} voice minutes — a quick way to try faster capture.`;
+    return `Your trial includes ${config.trialVoiceMinutesLimit} voice minutes — a quick way to try voice dictation.`;
   }
   if (config.id === "pro") {
-    return "20 AI Scans & 40 Voice Minutes per month (includes 5 scans + 10 mins during 3-day trial)";
+    return "40 voice minutes per month (includes 10 minutes during your 3-day trial)";
   }
-  return "50 AI Scans & 80 Voice Minutes per month (includes 10 scans + 20 mins during 3-day trial)";
+  return "80 voice minutes per month (includes 20 minutes during your 3-day trial)";
 }
 
 function TierCard({
@@ -327,7 +327,7 @@ function TierCard({
 
         {config.id === "basic" ? (
           <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs leading-snug text-amber-800 backdrop-blur-sm dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
-            Want AI Photo Scans and Voice Dictation? Upgrade to Pro for just ₹21 for 3 days.
+            Want AI voice dictation every month? Upgrade to Pro for just ₹21 for 3 days.
           </p>
         ) : null}
       </div>
@@ -359,7 +359,6 @@ export function PricingPageClient() {
     status: subscriptionStatus,
     tier: currentTier,
     freeTrialActive,
-    freeTrialPhotoRemaining,
     freeTrialVoiceSecondsRemaining,
     freeTrialEndsAtIso,
   } = useSubscriptionAccess();
@@ -448,12 +447,11 @@ export function PricingPageClient() {
             24-hour welcome trial is active
           </p>
           <p className="mt-2 text-sm leading-relaxed text-kal-text-secondary">
-            You have <span className="font-semibold text-kal-text">{freeTrialPhotoRemaining} photo scans</span>{" "}
-            and{" "}
+            You have{" "}
             <span className="font-semibold text-kal-text">
               {formatWelcomeVoiceTimeLeft(freeTrialVoiceSecondsRemaining)}
             </span>{" "}
-            on voice in this window
+            of welcome voice time in this window
             {freeTrialEndsAtIso ? (
               <>
                 {" "}
@@ -480,10 +478,10 @@ export function PricingPageClient() {
       if (subscriptionStatus === "trial") {
         if (currentTier === "basic") {
           trialHint =
-            " During your 3-day trial you have 3 AI photo scans and 2 voice minutes to try faster capture. When you’re ready for monthly AI quotas, upgrade to Pro from My Plan.";
+            " During your 3-day trial you have 2 voice minutes to try voice dictation. When you’re ready for monthly voice quotas, upgrade to Pro from My Plan.";
         } else {
           trialHint =
-            " During the 3-day trial you have the trial AI limits shown on each card. After the first successful charge you get the full monthly quotas for your tier.";
+            " During the 3-day trial you have the voice minute limits shown on each card. After the first successful charge you get the full monthly voice quota for your tier.";
         }
       }
       return (
@@ -530,7 +528,6 @@ export function PricingPageClient() {
     isCancelledWithAccess,
     currentTier,
     freeTrialActive,
-    freeTrialPhotoRemaining,
     freeTrialVoiceSecondsRemaining,
     freeTrialEndsAtIso,
   ]);
@@ -551,7 +548,7 @@ export function PricingPageClient() {
           </h1>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-kal-text-secondary">
             New accounts get a one-time <span className="font-semibold text-kal-text">24-hour welcome trial</span>{" "}
-            (5 photo scans + 3 voice minutes). After that, start a{" "}
+            (3 minutes of voice time). After that, start a{" "}
             <span className="font-semibold text-kal-text">3-day paid trial</span> (₹21–₹49), then monthly AutoPay — you
             can cancel anytime.
           </p>

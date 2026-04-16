@@ -23,8 +23,8 @@ export default function PrivacyPolicyPage() {
       </p>
       <p>
         We may collect your name, email address, phone number, exam target,
-        class/year, study habits, task data, voice recordings, handwritten
-        photos, device information, and usage data.
+        class/year, study habits, task data, voice recordings, images you
+        upload where the feature allows, device information, and usage data.
       </p>
       <p>
         <strong>How We Use Your Information</strong>

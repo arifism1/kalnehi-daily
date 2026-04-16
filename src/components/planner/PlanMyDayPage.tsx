@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, CalendarDays, Camera, Lock, Mic, PenLine } from "lucide-react";
+import { ArrowLeft, CalendarDays, Lock, Mic, PenLine } from "lucide-react";
 import Link from "next/link";
 
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
@@ -75,7 +75,6 @@ function PlannerCard({
 export function PlanMyDayPage() {
   const { tier } = useSubscriptionAccess();
   const dictateLocked = isFeatureBlocked(tier, "dictate_day");
-  const handwrittenLocked = isFeatureBlocked(tier, "handwritten_scanner");
 
   return (
     <div className="relative mx-auto max-w-3xl pb-16 pt-2 [contain:layout_style_paint] sm:pt-4">
@@ -103,8 +102,8 @@ export function PlanMyDayPage() {
         <h1 className="kal-feature-title mt-2">Plan My Day</h1>
         <p className="kal-feature-lead mx-auto mt-3 max-w-xl sm:mx-0">
           {dictateLocked
-            ? "Type your plan below. Upgrade to Pro to unlock voice dictation and handwritten scanning."
-            : "One shared plan per day — use voice, scan, or typing. Open the daily planner anytime to see everything together."}
+            ? "Type your plan below. Upgrade to Pro to unlock voice dictation."
+            : "One shared plan per day — use voice or typing. Open the daily planner anytime to see everything together."}
         </p>
       </header>
 
@@ -119,7 +118,7 @@ export function PlanMyDayPage() {
             />
           }
           title="Daily planner"
-          subtitle="Unified list — typed, voice & handwritten"
+          subtitle="Unified list — typed and voice"
           locked={false}
         />
         <PlannerCard
@@ -134,20 +133,6 @@ export function PlanMyDayPage() {
           title="Dictate My Day"
           subtitle="Speak — smart timed tasks"
           locked={dictateLocked}
-        />
-
-        <PlannerCard
-          href="/paste-handwritten"
-          emoji="📸"
-          icon={
-            <Camera
-              className="h-3.5 w-3.5 shrink-0 text-kal-accent opacity-85 group-hover:opacity-100 sm:h-4 sm:w-4"
-              aria-hidden
-            />
-          }
-          title="Handwritten"
-          subtitle="Snap your list — camera & OCR"
-          locked={handwrittenLocked}
         />
 
         <PlannerCard
@@ -168,7 +153,7 @@ export function PlanMyDayPage() {
       {dictateLocked && (
         <div className="relative mt-8 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-center dark:border-amber-800 dark:bg-amber-950/30">
           <p className="text-sm text-amber-800 dark:text-amber-200">
-            Voice dictation and handwritten scanning require{" "}
+            Voice dictation requires{" "}
             <Link href="/pricing" className="font-semibold underline">
               Pro or Pro Max
             </Link>

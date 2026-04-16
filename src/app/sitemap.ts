@@ -109,7 +109,6 @@ const APP_CAPTURE_AND_ONBOARDING: SitemapPath[] = [
   /** Account hub only — never add `/profile/[id]`-style URLs. */
   { path: "/profile", changeFrequency: "monthly", priority: 0.65 },
   { path: "/onboarding", changeFrequency: "monthly", priority: 0.65 },
-  { path: "/paste-handwritten", changeFrequency: "monthly", priority: 0.65 },
   { path: "/dictate-day", changeFrequency: "monthly", priority: 0.65 },
   { path: "/self-type", changeFrequency: "monthly", priority: 0.65 },
   { path: "/self-type-day", changeFrequency: "monthly", priority: 0.65 },

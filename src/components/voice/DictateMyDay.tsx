@@ -468,7 +468,7 @@ export function DictateMyDay() {
         </div>
         <p className="mt-1 text-xs leading-relaxed text-kal-muted">
           Parsed lines land here first. Edit times or names, then add to your plan — the
-          live list below is shared with typed and handwritten entries.
+          live list below is shared with typed entries.
         </p>
         <DailyPlanPreviewStaging
           sectionId="dictate-staging"

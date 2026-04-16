@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 import { AddStudySessionSheet } from "@/components/study/AddStudySessionSheet";
-import { StudyCameraTrialStatus } from "@/components/study/StudyCameraTrialStatus";
 import { StudySessionsLog } from "@/components/study/StudySessionsLog";
 import { getAllStudySessions, type StudySessionLog } from "@/lib/studySessionsIdb";
 import { refreshStudySessionsFromServer } from "@/lib/refreshStudySessionsFromServer";
@@ -40,11 +39,11 @@ export default function StudySessionsPageContent() {
     <div className="space-y-6">
       <header className="max-w-2xl">
         <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
-          Camera study log
+          Verified study log
         </p>
         <h1 className="mt-1 flex items-center gap-2 text-xl font-bold tracking-tight text-kal-text sm:text-2xl">
           <BookOpen className="h-7 w-7 text-kal-accent" aria-hidden />
-          Camera study sessions
+          Verified study sessions
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-kal-muted sm:text-[15px]">
           Every session is verified by your camera on-device — so your logged
@@ -56,14 +55,12 @@ export default function StudySessionsPageContent() {
             Privacy
           </p>
           <p className="mt-1.5 text-xs leading-relaxed text-kal-accent-dark">
-            Camera sessions use AI only on your device. Video is never streamed,
+            On-device verification uses AI locally. Video is never streamed,
             uploaded, or saved on our servers. Your log only stores subject,
             duration, and times—never images or recordings.
           </p>
         </div>
       </header>
-
-      {userId ? <StudyCameraTrialStatus /> : null}
 
       <button
         type="button"
@@ -72,7 +69,7 @@ export default function StudySessionsPageContent() {
         className="flex w-full min-h-[56px] items-center justify-center gap-2 rounded-2xl bg-kal-accent px-4 text-base font-bold text-kal-accent-foreground shadow-sm transition-transform hover:bg-kal-accent-hover active:scale-[0.99] disabled:opacity-50"
       >
         <Plus className="h-5 w-5" strokeWidth={2.5} />
-        Start camera session
+        Start verified session
       </button>
 
       {!userId ? (

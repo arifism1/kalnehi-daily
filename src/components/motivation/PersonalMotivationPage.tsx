@@ -793,10 +793,6 @@ export function PersonalMotivationPage() {
       {tab === "voice" ? (
         <section className="space-y-6 kal-glass-card rounded-2xl px-5 py-6 sm:px-8 sm:py-8">
           <h2 className="text-sm font-bold text-kal-text">Voice Affirmations</h2>
-          <p className="text-xs leading-relaxed text-kal-text-secondary sm:text-sm">
-            Record a note — we transcribe with Groq — then tag it. Playback stays
-            on your device until it syncs.
-          </p>
           <div className="flex flex-wrap gap-2">
             {!recording ? (
               <button

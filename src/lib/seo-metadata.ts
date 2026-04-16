@@ -37,7 +37,7 @@ const PAGE_SEO: Record<
     path: "/",
     title: `${SITE_NAME} — Smart Exam Prep planner & study app`,
     description:
-      `Daily Plan with live task tracking, Syllabus Mastery Tracker, Brain Yoga focus resets, push Notifications, PrepBrain AI coaching (Basic paid trial includes a bonus sample: 3 photo scans + 2 min voice), habits, and progress analytics — ${SITE_NAME} is the complete execution planner for Smart Exam Prep. Install the PWA and study anywhere.`,
+      `Daily Plan with live task tracking, Syllabus Mastery Tracker, Brain Yoga focus resets, push Notifications, PrepBrain AI coaching (Basic paid trial includes a sample of voice minutes), habits, and progress analytics — ${SITE_NAME} is the complete execution planner for Smart Exam Prep. Install the PWA and study anywhere.`,
   },
   prepbrain: {
     path: "/prepbrain",

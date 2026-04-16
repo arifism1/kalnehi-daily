@@ -66,7 +66,7 @@ export function SettingsPageClient() {
 
       <section aria-labelledby="camera-planner-heading">
         <h2 id="camera-planner-heading" className="sr-only">
-          Camera and planner scan
+          Verified study sessions
         </h2>
         <CameraPlannerSettings />
       </section>
