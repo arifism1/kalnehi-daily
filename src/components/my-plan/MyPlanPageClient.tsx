@@ -19,7 +19,12 @@ import { ExtraCreditsSection } from "@/components/settings/ExtraCreditsSection";
 import { PlanUpgradeSection } from "@/components/settings/PlanUpgradeSection";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { useAiGate } from "@/hooks/useAiGate";
+import { useFreeTrialLiveEndsIn } from "@/hooks/useFreeTrialLiveEndsIn";
 import { clampAutopayMonths, DEFAULT_AUTOPAY_MONTHS } from "@/lib/autopayMonths";
+import {
+  formatWelcomeVoiceTimeLeft,
+  FREE_TRIAL_VOICE_CAP_SECONDS,
+} from "@/lib/freeTrial";
 import { SITE_NAME } from "@/lib/seo-metadata";
 import { getTierConfig, TIERS, type SubscriptionTier } from "@/lib/subscriptionTiers";
 import { isHelpyJiEligibleForTier } from "@/lib/helpyjiVisibility";
@@ -152,6 +157,12 @@ export function MyPlanPageClient() {
     startDate,
     endDate,
     autopayMonthsTotal,
+    freeTrialActive,
+    freeTrialEndsAtIso,
+    freeTrialPhotoRemaining,
+    freeTrialVoiceSecondsRemaining,
+    trialVoiceSecondsUsed,
+    welcomeTrialExpiredNoPay,
     refetch,
   } = useSubscriptionAccess();
   const {
@@ -190,6 +201,10 @@ export function MyPlanPageClient() {
   const isCancelledWithAccess = isCancelled && hasPaidAccess;
   const noActivePlan =
     !status || status === "expired" || (isCancelled && !hasPaidAccess);
+
+  const onWelcomeTrial = freeTrialActive && !hasPaidAccess;
+
+  const welcomeEndsIn = useFreeTrialLiveEndsIn(freeTrialEndsAtIso, onWelcomeTrial);
 
   const startResubscribe = useCallback(async () => {
     setResubBusy(true);
@@ -331,7 +346,7 @@ export function MyPlanPageClient() {
 
   return (
     <>
-    {isCancelledWithAccess && (
+    {(isCancelledWithAccess || welcomeTrialExpiredNoPay) && (
       <Script
         src="https://checkout.razorpay.com/v1/checkout.js"
         strategy="afterInteractive"
@@ -363,6 +378,78 @@ export function MyPlanPageClient() {
         </div>
       ) : (
         <>
+          {onWelcomeTrial && freeTrialEndsAtIso ? (
+            <div className="kal-glass-panel overflow-hidden rounded-2xl border border-kal-accent/35 bg-gradient-to-br from-kal-accent/10 to-kal-card-muted shadow-md dark:border-kal-accent/25">
+              <div className="border-b border-kal-border px-5 py-3 sm:px-6">
+                <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
+                  24-hour welcome trial
+                </p>
+                <p className="mt-1 text-sm font-medium text-kal-text">
+                  {freeTrialPhotoRemaining} photo scans ·{" "}
+                  {formatWelcomeVoiceTimeLeft(freeTrialVoiceSecondsRemaining)} on voice
+                </p>
+                {welcomeEndsIn ? (
+                  <p className="mt-1 text-xs font-semibold tabular-nums text-kal-accent">
+                    {welcomeEndsIn}
+                  </p>
+                ) : null}
+                <p className="mt-1 text-xs text-kal-text-secondary">
+                  Limits do not roll over to the next day — use them within this window. After it
+                  ends, start a 3-day paid trial — {TIERS.pro.trialPriceDisplay} (Pro) or{" "}
+                  {TIERS.pro_max.trialPriceDisplay} (Pro Max) — then full AI.
+                </p>
+              </div>
+              <div className="grid gap-0 sm:grid-cols-2">
+                <UsageBar
+                  icon={<Camera className="h-4 w-4" />}
+                  label="Welcome photo scans"
+                  used={5 - freeTrialPhotoRemaining}
+                  limit={5}
+                />
+                <UsageBar
+                  icon={<Mic className="h-4 w-4" />}
+                  label="Welcome voice time"
+                  used={trialVoiceSecondsUsed}
+                  limit={FREE_TRIAL_VOICE_CAP_SECONDS}
+                />
+              </div>
+            </div>
+          ) : null}
+
+          {welcomeTrialExpiredNoPay && !hasPaidAccess ? (
+            <div className="kal-glass-panel rounded-2xl border border-kal-accent/30 bg-kal-accent-soft/40 px-5 py-5 dark:bg-kal-accent/10">
+              <h3 className="text-base font-bold text-kal-text">Free trial ended</h3>
+              <p className="mt-2 text-sm text-kal-text-secondary">
+                Your 24-hour welcome access is over. Unlock a 3-day paid trial —{" "}
+                <span className="font-semibold text-kal-text">
+                  {TIERS.pro.trialPriceDisplay} on Pro
+                </span>
+                ,{" "}
+                <span className="font-semibold text-kal-text">
+                  {TIERS.pro_max.trialPriceDisplay} on Pro Max
+                </span>{" "}
+                — then {TIERS.pro.monthlyPriceDisplay}/month. Cancel anytime.
+              </p>
+              <button
+                type="button"
+                onClick={() => void startResubscribe()}
+                disabled={resubBusy}
+                className="kal-btn-accent mt-4 min-h-[44px] w-full sm:w-auto"
+              >
+                {resubBusy ? (
+                  <Loader2 className="mx-auto h-5 w-5 animate-spin" />
+                ) : (
+                  "Start 3-day paid trial"
+                )}
+              </button>
+              {resubError ? (
+                <p className="mt-3 text-sm text-[var(--kal-danger-text)]" role="status">
+                  {resubError}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+
           {/* Tier spotlight */}
           <div className="kal-glass-panel overflow-hidden rounded-2xl border border-kal-accent/30 shadow-lg dark:border-kal-accent/25">
             <div className="flex items-start gap-4 p-5 sm:p-6">
@@ -374,12 +461,18 @@ export function MyPlanPageClient() {
                   Current plan
                 </p>
                 <h2 className="mt-1.5 text-xl font-bold text-kal-text sm:text-2xl">
-                  {noActivePlan ? "No active plan" : tierConfig.name}
+                  {onWelcomeTrial
+                    ? "Welcome trial (no charge)"
+                    : noActivePlan
+                      ? "No active plan"
+                      : tierConfig.name}
                 </h2>
                 <p className="mt-1 text-sm text-kal-text-secondary">
-                  {noActivePlan
-                    ? `Choose a plan to unlock ${SITE_NAME}.`
-                    : tierConfig.tagline}
+                  {onWelcomeTrial
+                    ? "You're on a one-time 24-hour preview with limited AI photo & voice. Subscribe anytime for full access."
+                    : noActivePlan
+                      ? `Choose a plan to unlock ${SITE_NAME}.`
+                      : tierConfig.tagline}
                 </p>
                 {hasPaidAccess && !noActivePlan ? (
                   <div className="mt-3 flex flex-wrap items-center gap-2">

@@ -1,8 +1,9 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
+import { ensureFreeTrialStarted } from "@/actions/subscription";
 import { SubscriptionPaywallInterstitial } from "@/components/subscription/SubscriptionPaywallInterstitial";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { isLegalPath } from "@/lib/legal-paths";
@@ -63,10 +64,58 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     fetchError,
     onboardingDone,
     hasPaidAccess,
+    freeTrialActive,
+    welcomeTrialEligibleUnstarted,
+    welcomeTrialExpiredNoPay,
     refetch,
   } = useSubscriptionAccess();
 
   const authed = !!session;
+
+  const allowAppWithoutPaid =
+    hasPaidAccess || freeTrialActive || welcomeTrialEligibleUnstarted;
+
+  const freeTrialEnsureRef = useRef(false);
+  useEffect(() => {
+    freeTrialEnsureRef.current = false;
+  }, [session?.user?.id]);
+
+  useEffect(() => {
+    if (!authed || profileLoading || !onboardingDone) return;
+    if (!welcomeTrialEligibleUnstarted) return;
+    const uid = session?.user?.id;
+    if (!uid) return;
+    if (typeof window !== "undefined") {
+      const sessionKey = `kalnehi-trial-ensure-session:${uid}`;
+      try {
+        if (window.sessionStorage.getItem(sessionKey) === "1") return;
+      } catch {
+        /* ignore */
+      }
+    }
+    if (freeTrialEnsureRef.current) return;
+    freeTrialEnsureRef.current = true;
+    void (async () => {
+      const r = await ensureFreeTrialStarted();
+      if (r.ok) {
+        try {
+          window.sessionStorage.setItem(`kalnehi-trial-ensure-session:${uid}`, "1");
+        } catch {
+          /* ignore */
+        }
+        if (r.started) refetch();
+      } else {
+        freeTrialEnsureRef.current = false;
+      }
+    })();
+  }, [
+    authed,
+    profileLoading,
+    onboardingDone,
+    welcomeTrialEligibleUnstarted,
+    refetch,
+    session?.user?.id,
+  ]);
 
   const gateTarget = useMemo(() => {
     if (!initialized) return "wait";
@@ -109,7 +158,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       return "onboarding";
     }
 
-    if (!hasPaidAccess) {
+    if (!allowAppWithoutPaid) {
       if (isPaidAccessOverlayExemptPath(pathname)) return "render";
       return "paywallRender";
     }
@@ -117,7 +166,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     if (pathname === "/onboarding") return "home";
 
     return "render";
-  }, [initialized, authed, profileLoading, fetchError, onboardingDone, hasPaidAccess, pathname]);
+  }, [
+    initialized,
+    authed,
+    profileLoading,
+    fetchError,
+    onboardingDone,
+    allowAppWithoutPaid,
+    pathname,
+  ]);
 
   useEffect(() => {
     switch (gateTarget) {
@@ -168,7 +225,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           >
             {children}
           </div>
-          <SubscriptionPaywallInterstitial />
+          <SubscriptionPaywallInterstitial freeTrialEnded={welcomeTrialExpiredNoPay} />
         </>
       ) : (
         children

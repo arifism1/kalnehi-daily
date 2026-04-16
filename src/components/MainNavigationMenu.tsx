@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { ArrowDown, CheckCircle2, Menu, Smartphone } from "lucide-react";
+import { ArrowDown, CheckCircle2, Loader2, Menu, Smartphone } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Fragment, useCallback, useEffect, useState } from "react";
@@ -10,7 +10,7 @@ import { PwaIosInstallModal } from "@/components/PwaIosInstallModal";
 import { ContactSupportModal } from "@/components/support/ContactSupportModal";
 import { ContactSupportSuccessToast } from "@/components/support/ContactSupportSuccessToast";
 import { filterNavByEnabledFeatures, MAIN_NAV_SECTIONS, navActive } from "@/config/mainNavigation";
-import { isStandalonePwa, usePwaInstall } from "@/hooks/usePwaInstall";
+import { usePwaInstall } from "@/hooks/usePwaInstall";
 import { SITE_NAME } from "@/lib/seo-metadata";
 import { useEnabledFeaturesStore } from "@/store/useEnabledFeaturesStore";
 
@@ -29,12 +29,15 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
     needsIosInstallModal,
     promptInstall,
     iosDevice,
+    installEligibilityKnown,
   } = usePwaInstall();
-  const [installBusy, setInstallBusy] = useState(false);
   const [iosInstallOpen, setIosInstallOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [contactSuccess, setContactSuccess] = useState<string | null>(null);
-  const installUnsupported = !installed && !canPromptInstall && !iosDevice;
+  const checkingInstall =
+    !installed && !canPromptInstall && !iosDevice && !installEligibilityKnown;
+  const installUnsupported =
+    !installed && !canPromptInstall && !iosDevice && installEligibilityKnown;
   const showInstallRow = installed || canPromptInstall || needsIosInstallModal;
 
   const openContactFromMenu = useCallback(() => {
@@ -113,16 +116,15 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
             {showInstallRow ? (
               <button
                 type="button"
-                disabled={installBusy || installed}
-                onClick={async () => {
+                disabled={installed}
+                onClick={() => {
                   if (canPromptInstall) {
-                    setInstallBusy(true);
-                    await promptInstall();
-                    setInstallBusy(false);
-                    if (isStandalonePwa()) onClose();
+                    onClose();
+                    void promptInstall();
                     return;
                   }
                   if (needsIosInstallModal) {
+                    onClose();
                     setIosInstallOpen(true);
                   }
                 }}
@@ -145,14 +147,25 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
                 )}
                 {installed ? (
                   <span className="font-bold tracking-tight">App Installed</span>
-                ) : installBusy ? (
-                  <span>Installing…</span>
                 ) : canPromptInstall ? (
                   <span>Install App in One Click</span>
                 ) : (
                   <span>Install App to Home Screen</span>
                 )}
               </button>
+            ) : checkingInstall ? (
+              <div
+                className="flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl border border-kal-border/60 bg-kal-card-muted/50 px-3 py-2.5 text-sm text-kal-muted dark:border-white/10 dark:bg-white/[0.04]"
+                aria-busy="true"
+                aria-live="polite"
+              >
+                <Loader2
+                  className="h-[1.125rem] w-[1.125rem] shrink-0 animate-spin"
+                  strokeWidth={2.25}
+                  aria-hidden
+                />
+                <span>Checking install options…</span>
+              </div>
             ) : installUnsupported ? (
               <p className="rounded-xl border border-kal-border/80 bg-white/40 px-3 py-2 text-center text-xs text-kal-muted dark:border-white/10 dark:bg-white/5">
                 Install not supported in this browser.

@@ -14,6 +14,7 @@ import {
 } from "react";
 
 import { MainNavigationMenu } from "@/components/MainNavigationMenu";
+import { FreeTrialWelcomeBanner } from "@/components/subscription/FreeTrialWelcomeBanner";
 import { PwaInstallPrompt } from "@/components/PwaInstallPrompt";
 import { QuickNavBar } from "@/components/QuickNavBar";
 import { QuietSavedToast } from "@/components/QuietSavedToast";
@@ -165,6 +166,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
           )}
         >
           {!onboarding && !minimalChrome && <SyncStatusBanner />}
+          {!onboarding && !minimalChrome && <FreeTrialWelcomeBanner />}
           {children}
         </div>
       </div>

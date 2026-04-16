@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { incrementPhotoScanUsage } from "@/actions/subscription";
 import { formatSupabaseError } from "@/lib/supabase";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { TablesInsert } from "@/types/supabase";
@@ -22,6 +23,25 @@ export async function createStudySession(
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
     const { supabase, userId } = await requireUser();
+
+    const { data: existing, error: exErr } = await supabase
+      .from("study_sessions")
+      .select("id")
+      .eq("id", row.id)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (exErr) throw exErr;
+    if (existing) {
+      return { ok: true };
+    }
+
+    if (row.is_camera_proven) {
+      const usage = await incrementPhotoScanUsage();
+      if (!usage.ok) {
+        return { ok: false, error: usage.error };
+      }
+    }
+
     const { error } = await supabase.from("study_sessions").insert({
       id: row.id,
       user_id: userId,

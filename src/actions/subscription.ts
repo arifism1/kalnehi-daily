@@ -22,6 +22,11 @@ import {
   TIERS,
 } from "@/lib/subscriptionTiers";
 import {
+  FREE_TRIAL_PHOTO_CAP,
+  FREE_TRIAL_VOICE_CAP_SECONDS,
+  isPaidSubscriptionAccess,
+} from "@/lib/freeTrial";
+import {
   firstOfCurrentMonthDateString,
   needsMonthlyUsageReset,
 } from "@/lib/subscriptionUsage";
@@ -864,28 +869,23 @@ export async function cancelSubscription(): Promise<
 // Usage tracking: increment counters (called server-side before AI actions)
 // ---------------------------------------------------------------------------
 
-export async function incrementPhotoScanUsage(): Promise<
-  { ok: true; used: number; limit: number } | { ok: false; error: string }
-> {
-  const userId = await getAuthedUserId();
-  if (!userId) return { ok: false, error: "Please sign in." };
+type PaidProfilePhotoRow = {
+  subscription_tier: string | null;
+  subscription_status: string | null;
+  subscription_end_date: string | null;
+  photo_scans_used_this_month: number | null;
+  bonus_photo_scans_ledger: unknown;
+  usage_reset_date: string | null;
+};
 
-  const admin = getAdminClient();
-  if (!admin) return { ok: false, error: "Service unavailable." };
-
-  const { data, error } = await admin
-    .from("user_profiles")
-    .select(
-      "subscription_tier, subscription_status, photo_scans_used_this_month, bonus_photo_scans_ledger, usage_reset_date",
-    )
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (error || !data) return { ok: false, error: "Unable to check usage." };
-
+async function applyPaidPhotoScanUsage(
+  admin: NonNullable<ReturnType<typeof getAdminClient>>,
+  userId: string,
+  data: PaidProfilePhotoRow,
+  now: Date,
+): Promise<{ ok: true; used: number; limit: number } | { ok: false; error: string }> {
   const resetNeeded = needsMonthlyUsageReset(data.usage_reset_date);
   const currentUsed = resetNeeded ? 0 : (data.photo_scans_used_this_month ?? 0);
-  const now = new Date();
   const ledger = parseBonusLedger(data.bonus_photo_scans_ledger);
 
   const rawTier = data.subscription_tier;
@@ -928,40 +928,71 @@ export async function incrementPhotoScanUsage(): Promise<
     patch.usage_reset_date = firstOfCurrentMonthDateString();
   }
 
-  const { error: updateErr } = await admin
-    .from("user_profiles")
-    .update(patch)
-    .eq("user_id", userId);
-
-  if (updateErr) return { ok: false, error: "Unable to update usage." };
+  if (!resetNeeded) {
+    const { data: updatedRow, error: updateErr } = await admin
+      .from("user_profiles")
+      .update(patch)
+      .eq("user_id", userId)
+      .eq("photo_scans_used_this_month", currentUsed)
+      .select("id")
+      .maybeSingle();
+    if (updateErr) return { ok: false, error: "Unable to update usage." };
+    if (!updatedRow) {
+      return { ok: false, error: "Could not apply usage. Please try again." };
+    }
+  } else {
+    const { error: updateErr } = await admin
+      .from("user_profiles")
+      .update(patch)
+      .eq("user_id", userId);
+    if (updateErr) return { ok: false, error: "Unable to update usage." };
+  }
 
   return { ok: true, used: currentUsed + 1, limit: monthlyLimit + bonusSum };
 }
 
-export async function incrementVoiceMinuteUsage(
-  minutes: number = 1,
-): Promise<
-  { ok: true; used: number; limit: number } | { ok: false; error: string }
-> {
-  const userId = await getAuthedUserId();
-  if (!userId) return { ok: false, error: "Please sign in." };
+function parseWelcomeUsageRpc(data: unknown): {
+  ok: boolean;
+  error?: string;
+  used?: number;
+  limit?: number;
+} {
+  if (data === null || data === undefined || typeof data !== "object") {
+    return { ok: false, error: "Unable to update usage." };
+  }
+  const o = data as Record<string, unknown>;
+  if (o.ok === true) {
+    return {
+      ok: true,
+      used: typeof o.used === "number" ? o.used : undefined,
+      limit: typeof o.limit === "number" ? o.limit : undefined,
+    };
+  }
+  return {
+    ok: false,
+    error: typeof o.error === "string" ? o.error : "Unable to update usage.",
+  };
+}
 
-  const admin = getAdminClient();
-  if (!admin) return { ok: false, error: "Service unavailable." };
+type PaidProfileVoiceRow = {
+  subscription_tier: string | null;
+  subscription_status: string | null;
+  subscription_end_date: string | null;
+  voice_minutes_used_this_month: number | null;
+  bonus_voice_minutes_ledger: unknown;
+  usage_reset_date: string | null;
+  photo_scans_used_this_month: number | null;
+};
 
-  const { data, error } = await admin
-    .from("user_profiles")
-    .select(
-      "subscription_tier, subscription_status, voice_minutes_used_this_month, bonus_voice_minutes_ledger, usage_reset_date",
-    )
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (error || !data) return { ok: false, error: "Unable to check usage." };
-
+async function applyPaidVoiceMinuteUsage(
+  admin: NonNullable<ReturnType<typeof getAdminClient>>,
+  userId: string,
+  data: PaidProfileVoiceRow,
+  now: Date,
+  minutes: number,
+): Promise<{ ok: true; used: number; limit: number } | { ok: false; error: string }> {
   const resetNeeded = needsMonthlyUsageReset(data.usage_reset_date);
   const currentUsed = resetNeeded ? 0 : (data.voice_minutes_used_this_month ?? 0);
-  const now = new Date();
   const ledger = parseBonusLedger(data.bonus_voice_minutes_ledger);
 
   const rawTier = data.subscription_tier;
@@ -991,17 +1022,198 @@ export async function incrementVoiceMinuteUsage(
     patch.usage_reset_date = firstOfCurrentMonthDateString();
   }
 
-  const { error: updateErr } = await admin
-    .from("user_profiles")
-    .update(patch)
-    .eq("user_id", userId);
-
-  if (updateErr) return { ok: false, error: "Unable to update usage." };
+  if (!resetNeeded && fromMonthly > 0) {
+    const { data: updatedRow, error: updateErr } = await admin
+      .from("user_profiles")
+      .update(patch)
+      .eq("user_id", userId)
+      .eq("voice_minutes_used_this_month", currentUsed)
+      .select("id")
+      .maybeSingle();
+    if (updateErr) return { ok: false, error: "Unable to update usage." };
+    if (!updatedRow) {
+      return { ok: false, error: "Could not apply usage. Please try again." };
+    }
+  } else {
+    const { error: updateErr } = await admin
+      .from("user_profiles")
+      .update(patch)
+      .eq("user_id", userId);
+    if (updateErr) return { ok: false, error: "Unable to update usage." };
+  }
 
   return {
     ok: true,
     used: currentUsed + fromMonthly,
     limit: monthlyLimit + bonusSum,
+  };
+}
+
+/** Idempotent: starts the one-time 24h welcome trial for eligible new accounts. */
+export async function ensureFreeTrialStarted(): Promise<
+  { ok: true; started: boolean } | { ok: false; error: string }
+> {
+  const userId = await getAuthedUserId();
+  if (!userId) return { ok: false, error: "Please sign in." };
+
+  const admin = getAdminClient();
+  if (!admin) return { ok: false, error: "Service unavailable." };
+
+  const nowIso = new Date().toISOString();
+  const { data, error } = await admin
+    .from("user_profiles")
+    .update({
+      trial_started_at: nowIso,
+      has_used_free_trial: true,
+      updated_at: nowIso,
+    })
+    .eq("user_id", userId)
+    .eq("has_used_free_trial", false)
+    .select("id")
+    .maybeSingle();
+
+  if (error) return { ok: false, error: "Unable to start welcome trial." };
+  return { ok: true, started: !!data };
+}
+
+export async function incrementPhotoScanUsage(): Promise<
+  { ok: true; used: number; limit: number } | { ok: false; error: string }
+> {
+  const userId = await getAuthedUserId();
+  if (!userId) return { ok: false, error: "Please sign in." };
+
+  const admin = getAdminClient();
+  if (!admin) return { ok: false, error: "Service unavailable." };
+
+  const { data, error } = await admin
+    .from("user_profiles")
+    .select(
+      "subscription_tier, subscription_status, subscription_end_date, photo_scans_used_this_month, bonus_photo_scans_ledger, usage_reset_date, trial_started_at, trial_photo_scans_used, has_used_free_trial",
+    )
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error || !data) return { ok: false, error: "Unable to check usage." };
+
+  const now = new Date();
+
+  if (
+    isPaidSubscriptionAccess(data.subscription_status ?? undefined, data.subscription_end_date ?? undefined)
+  ) {
+    return applyPaidPhotoScanUsage(admin, userId, data, now);
+  }
+
+  const { data: rpcRaw, error: rpcErr } = await admin.rpc("consume_welcome_trial_photo_scan", {
+    p_user_id: userId,
+  });
+  if (rpcErr) return { ok: false, error: "Unable to update usage." };
+
+  const welcome = parseWelcomeUsageRpc(rpcRaw);
+  if (welcome.ok) {
+    return {
+      ok: true,
+      used: welcome.used ?? 0,
+      limit: welcome.limit ?? FREE_TRIAL_PHOTO_CAP,
+    };
+  }
+
+  if (welcome.error === "use_paid_path") {
+    const { data: again, error: againErr } = await admin
+      .from("user_profiles")
+      .select(
+        "subscription_tier, subscription_status, subscription_end_date, photo_scans_used_this_month, bonus_photo_scans_ledger, usage_reset_date",
+      )
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (!againErr && again &&
+      isPaidSubscriptionAccess(
+        again.subscription_status ?? undefined,
+        again.subscription_end_date ?? undefined,
+      )) {
+      return applyPaidPhotoScanUsage(admin, userId, again, now);
+    }
+  }
+
+  return {
+    ok: false,
+    error:
+      welcome.error && welcome.error !== "use_paid_path"
+        ? welcome.error
+        : "Unable to update usage.",
+  };
+}
+
+export async function incrementVoiceMinuteUsage(
+  minutes: number = 1,
+): Promise<
+  { ok: true; used: number; limit: number } | { ok: false; error: string }
+> {
+  const userId = await getAuthedUserId();
+  if (!userId) return { ok: false, error: "Please sign in." };
+
+  const admin = getAdminClient();
+  if (!admin) return { ok: false, error: "Service unavailable." };
+
+  const { data, error } = await admin
+    .from("user_profiles")
+    .select(
+      "subscription_tier, subscription_status, subscription_end_date, voice_minutes_used_this_month, bonus_voice_minutes_ledger, usage_reset_date, photo_scans_used_this_month, trial_started_at, trial_voice_seconds_used, has_used_free_trial",
+    )
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error || !data) return { ok: false, error: "Unable to check usage." };
+
+  const now = new Date();
+
+  if (
+    isPaidSubscriptionAccess(data.subscription_status ?? undefined, data.subscription_end_date ?? undefined)
+  ) {
+    return applyPaidVoiceMinuteUsage(admin, userId, data, now, minutes);
+  }
+
+  const addSec = Math.round(Math.max(0, minutes) * 60);
+  const { data: rpcRaw, error: rpcErr } = await admin.rpc(
+    "consume_welcome_trial_voice_seconds",
+    {
+      p_user_id: userId,
+      p_add_seconds: addSec,
+    },
+  );
+  if (rpcErr) return { ok: false, error: "Unable to check usage." };
+
+  const welcome = parseWelcomeUsageRpc(rpcRaw);
+  if (welcome.ok) {
+    return {
+      ok: true,
+      used: welcome.used ?? 0,
+      limit: welcome.limit ?? FREE_TRIAL_VOICE_CAP_SECONDS,
+    };
+  }
+
+  if (welcome.error === "use_paid_path") {
+    const { data: again, error: againErr } = await admin
+      .from("user_profiles")
+      .select(
+        "subscription_tier, subscription_status, subscription_end_date, voice_minutes_used_this_month, bonus_voice_minutes_ledger, usage_reset_date, photo_scans_used_this_month",
+      )
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (!againErr && again &&
+      isPaidSubscriptionAccess(
+        again.subscription_status ?? undefined,
+        again.subscription_end_date ?? undefined,
+      )) {
+      return applyPaidVoiceMinuteUsage(admin, userId, again, now, minutes);
+    }
+  }
+
+  return {
+    ok: false,
+    error:
+      welcome.error && welcome.error !== "use_paid_path"
+        ? welcome.error
+        : "Unable to update usage.",
   };
 }
 

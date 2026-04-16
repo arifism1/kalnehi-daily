@@ -7,7 +7,7 @@ import { PrepBrainChat } from "@/components/prepbrain/PrepBrainChat";
 import { useAiGate } from "@/hooks/useAiGate";
 
 export function PrepBrainPageClient() {
-  const { loading, hasAiAccess } = useAiGate();
+  const { loading, hasPaidAccess } = useAiGate();
 
   if (loading) {
     return (
@@ -19,7 +19,7 @@ export function PrepBrainPageClient() {
     );
   }
 
-  if (!hasAiAccess) {
+  if (!hasPaidAccess) {
     return (
       <div className="kal-glass-panel mx-auto flex max-w-lg flex-col items-center gap-4 rounded-2xl px-5 py-8 text-center sm:px-8">
         <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-kal-card-muted text-kal-text-secondary ring-1 ring-kal-border">

@@ -392,19 +392,26 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
   const endAndLog = useCallback(async () => {
     const started = sessionStartedAtRef.current;
     const durSec = Math.max(0, Math.floor(activeStudyMsRef.current / 1000));
-    sessionPhaseRef.current = "idle";
-    setPhase("idle");
-    sessionStartedAtRef.current = null;
-    activeStudyMsRef.current = 0;
-    setDisplaySeconds(0);
-    setAutoPaused(false);
-    setGentleNotice(false);
-    idleGoodMsRef.current = 0;
-    badMsRef.current = 0;
+
+    const resetSessionUi = () => {
+      sessionPhaseRef.current = "idle";
+      setPhase("idle");
+      sessionStartedAtRef.current = null;
+      activeStudyMsRef.current = 0;
+      setDisplaySeconds(0);
+      setAutoPaused(false);
+      setGentleNotice(false);
+      idleGoodMsRef.current = 0;
+      badMsRef.current = 0;
+    };
+
     if (!started || durSec < 1) {
+      resetSessionUi();
       onDone();
       return;
     }
+
+    resetSessionUi();
     const ended = new Date().toISOString();
     await applyOptimisticStudySessionCreate({
       id: crypto.randomUUID(),
