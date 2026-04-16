@@ -10,7 +10,16 @@ import type { Tables, TablesInsert, TablesUpdate } from "@/types/supabase";
 
 export type DailyTaskRow = Tables<"daily_tasks">;
 
-export type DailyTaskView = DailyTaskRow & { plan_date: string };
+/** Embedded syllabus row returned by listDailyPlanTasksForDate (PostgREST embed). */
+export type DailyTaskSyllabusEmbed = Pick<
+  Tables<"syllabus_master">,
+  "id" | "subject" | "chapter" | "microtopic"
+>;
+
+export type DailyTaskView = DailyTaskRow & {
+  plan_date: string;
+  syllabus_master: DailyTaskSyllabusEmbed | null;
+};
 
 const REVAL_PATHS = [
   "/daily-plan",
@@ -98,7 +107,9 @@ export async function listDailyPlanTasksForDate(
 
     let q = supabase
       .from("daily_tasks")
-      .select("*")
+      .select(
+        "*, syllabus_master:syllabus_master_id ( id, subject, chapter, microtopic )",
+      )
       .eq("daily_plan_id", plan.id)
       .order("created_at", { ascending: true });
 
@@ -109,10 +120,21 @@ export async function listDailyPlanTasksForDate(
     const { data: rows, error } = await q;
     if (error) throw error;
 
-    const tasks: DailyTaskView[] = (rows ?? []).map((r) => ({
-      ...(r as DailyTaskRow),
-      plan_date: planDate,
-    }));
+    const tasks: DailyTaskView[] = (rows ?? []).map((r) => {
+      const row = r as DailyTaskRow & {
+        syllabus_master: DailyTaskSyllabusEmbed | DailyTaskSyllabusEmbed[] | null;
+      };
+      const emb = row.syllabus_master;
+      const syllabus_master = Array.isArray(emb)
+        ? emb[0] ?? null
+        : emb ?? null;
+      const { syllabus_master: _drop, ...rest } = row;
+      return {
+        ...(rest as DailyTaskRow),
+        syllabus_master,
+        plan_date: planDate,
+      };
+    });
 
     return { ok: true, planId: plan.id, tasks };
   } catch (e) {
@@ -137,6 +159,7 @@ export async function insertDailyTask(
     status?: string;
     source: "typed" | "voice" | "handwritten";
     source_raw_text?: string | null;
+    syllabus_master_id?: string | null;
   },
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const planDate = input.plan_date?.trim() ?? "";
@@ -156,6 +179,7 @@ export async function insertDailyTask(
     } = await supabase.auth.getUser();
     if (!user) return { ok: false, error: USER_ERROR.session };
 
+    const sid = input.syllabus_master_id?.trim();
     const row: TablesInsert<"daily_tasks"> = {
       id: input.id,
       daily_plan_id: ensured.planId,
@@ -167,6 +191,7 @@ export async function insertDailyTask(
       status: input.status ?? "pending",
       source: input.source,
       source_raw_text: input.source_raw_text?.slice(0, 12000) ?? null,
+      syllabus_master_id: sid && /^[0-9a-f-]{36}$/i.test(sid) ? sid : null,
     };
 
     const { error } = await supabase.from("daily_tasks").insert(row);
@@ -192,6 +217,7 @@ export async function updateDailyTask(
     | "priority"
     | "status"
     | "source_raw_text"
+    | "syllabus_master_id"
   >,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
@@ -243,6 +269,7 @@ export async function appendTypedDailyTaskQuick(input: {
   start_input?: string;
   end_input?: string;
   source_raw_text?: string | null;
+  syllabus_master_id?: string | null;
 }): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
   const id = crypto.randomUUID();
   const { time_slot, time_start, time_end } = slotFromStartEnd(
@@ -258,6 +285,7 @@ export async function appendTypedDailyTaskQuick(input: {
     time_end,
     source: "typed",
     source_raw_text: input.source_raw_text ?? null,
+    syllabus_master_id: input.syllabus_master_id ?? null,
   });
   if (!res.ok) return res;
   return { ok: true, id };

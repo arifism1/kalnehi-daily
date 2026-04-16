@@ -42,6 +42,7 @@ export function PlanUpgradeSection() {
   const [payError, setPayError] = useState<{
     text: string;
     proof?: PaymentErrorProof;
+    debugHint?: string;
   } | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -72,7 +73,7 @@ export function PlanUpgradeSection() {
       startTransition(async () => {
         const created = await createPlanUpgradeOrder(q.targetTier);
         if (!created.ok) {
-          setPayError({ text: created.error });
+          setPayError({ text: created.error, debugHint: created.debugHint });
           setBusyId(null);
           return;
         }
@@ -202,6 +203,11 @@ export function PlanUpgradeSection() {
             <p className="text-xs font-medium text-rose-900 dark:text-rose-200" role="status">
               {payError.text}
             </p>
+            {process.env.NODE_ENV === "development" && payError.debugHint ? (
+              <p className="mt-1.5 text-[0.65rem] leading-snug text-rose-800/90 dark:text-rose-200/85">
+                {payError.debugHint}
+              </p>
+            ) : null}
             <PaymentErrorMailButton
               flow="My Plan — upgrade checkout"
               error={payError.text}

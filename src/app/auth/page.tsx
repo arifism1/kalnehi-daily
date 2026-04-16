@@ -127,7 +127,6 @@ export default function AuthPage() {
     setError(null);
     setVerifyEmailSent(false);
     try {
-      const supabase = getSupabaseBrowserClient();
       const em = email.trim();
       const pw = password;
       if (!em || !pw) {
@@ -139,19 +138,22 @@ export default function AuthPage() {
         return;
       }
 
-      if (mode === "login") {
-        const { error: signErr } = await supabase.auth.signInWithPassword({
-          email: em,
-          password: pw,
-        });
-        if (signErr) throw signErr;
-        await redirectAfterAuth("login");
-      } else {
-        const { error: signErr } = await supabase.auth.signUp({
-          email: em,
-          password: pw,
-        });
-        if (signErr) throw signErr;
+      const path = mode === "login" ? "/api/auth/login" : "/api/auth/signup";
+      const res = await fetch(path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email: em, password: pw }),
+      });
+      const payload = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        throw new Error(
+          typeof payload.error === "string" ? payload.error : "Something went wrong.",
+        );
+      }
+
+      const supabase = getSupabaseBrowserClient();
+      if (mode === "signup") {
         const {
           data: { session: after },
         } = await supabase.auth.getSession();
@@ -160,6 +162,8 @@ export default function AuthPage() {
           return;
         }
         await redirectAfterAuth("sign_up");
+      } else {
+        await redirectAfterAuth("login");
       }
     } catch (e) {
       setError(formatSupabaseError(e));
@@ -172,17 +176,23 @@ export default function AuthPage() {
     setBusy(true);
     setError(null);
     try {
-      const supabase = getSupabaseBrowserClient();
       const em = email.trim();
       if (!em) {
         setError("Enter your email address.");
         return;
       }
-      /* PKCE: recovery link exchanges the code on /auth/callback, then sends user to /auth/reset */
-      const { error: resetErr } = await supabase.auth.resetPasswordForEmail(em, {
-        redirectTo: authCallbackUrl("/auth/reset"),
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email: em }),
       });
-      if (resetErr) throw resetErr;
+      const payload = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        throw new Error(
+          typeof payload.error === "string" ? payload.error : "Something went wrong.",
+        );
+      }
       setView("forgot-sent");
     } catch (e) {
       setError(formatSupabaseError(e));

@@ -46,11 +46,10 @@ export default function ShippingPolicyPage() {
         connection, device problems, or any third-party service.
       </p>
       <p>
-        <strong>It is not our fault</strong> if you do not receive instant
-        access due to any technical reason on your end or on the payment
-        processor&apos;s end. We have <strong>zero liability</strong> for any
-        inconvenience, loss of time, or any other damage resulting from delivery
-        issues.
+        Delays caused by your device, internet connection, or the payment
+        processor are outside our control and do not create a liability on our
+        part. We have <strong>zero liability</strong> for any inconvenience,
+        loss of time, or any other damage resulting from delivery issues.
       </p>
       <p>
         <strong>Contact</strong>

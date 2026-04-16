@@ -10,7 +10,9 @@ import {
   updateDailyTask,
   type DailyTaskView,
 } from "@/actions/dailyPlan";
+import { DailyPlanMicrotopicPicker } from "@/components/planner/DailyPlanMicrotopicPicker";
 import { useUndoStore } from "@/store/useUndoStore";
+import { useTaskStore } from "@/store/useTaskStore";
 import { findOverlappingTaskPairs } from "@/lib/dailyPlanOverlap";
 import { slotFromStartEnd, timeDbToInput } from "@/lib/dailyPlanTime";
 import { formatIstSlotRange12h } from "@/lib/voiceIst";
@@ -46,6 +48,9 @@ function DailyTaskEditSheet({ task, onClose, onSaved }: EditSheetProps) {
   const [endInput, setEndInput] = useState(
     task.time_end ? timeDbToInput(task.time_end) : "",
   );
+  const [syllabusMasterId, setSyllabusMasterId] = useState<string | null>(
+    task.syllabus_master_id ?? null,
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -53,6 +58,13 @@ function DailyTaskEditSheet({ task, onClose, onSaved }: EditSheetProps) {
   useEffect(() => {
     textareaRef.current?.focus();
   }, []);
+
+  useEffect(() => {
+    setTitle(task.title ?? "");
+    setStartInput(task.time_start ? timeDbToInput(task.time_start) : "");
+    setEndInput(task.time_end ? timeDbToInput(task.time_end) : "");
+    setSyllabusMasterId(task.syllabus_master_id ?? null);
+  }, [task]);
 
   const handleSave = async () => {
     const trimmed = title.trim();
@@ -68,13 +80,20 @@ function DailyTaskEditSheet({ task, onClose, onSaved }: EditSheetProps) {
       time_slot,
       time_start,
       time_end,
+      syllabus_master_id: syllabusMasterId,
     });
     setSaving(false);
     if (!res.ok) {
       setError(res.error);
       return;
     }
-    onSaved({ title: trimmed, time_slot, time_start, time_end });
+    onSaved({
+      title: trimmed,
+      time_slot,
+      time_start,
+      time_end,
+      syllabus_master_id: syllabusMasterId,
+    });
     onClose();
   };
 
@@ -161,6 +180,29 @@ function DailyTaskEditSheet({ task, onClose, onSaved }: EditSheetProps) {
               />
             </div>
           </div>
+
+          <div className="border-t border-kal-border/50 pt-4">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-muted">
+                Syllabus link (optional)
+              </p>
+              {syllabusMasterId ? (
+                <button
+                  type="button"
+                  onClick={() => setSyllabusMasterId(null)}
+                  disabled={saving}
+                  className="text-xs font-medium text-kal-muted underline-offset-2 hover:text-kal-text hover:underline disabled:opacity-50"
+                >
+                  Clear link
+                </button>
+              ) : null}
+            </div>
+            <DailyPlanMicrotopicPicker
+              value={syllabusMasterId}
+              onChange={setSyllabusMasterId}
+              disabled={saving}
+            />
+          </div>
         </div>
 
         {error ? (
@@ -240,6 +282,7 @@ type Props = {
 };
 
 export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props) {
+  const microtopicsById = useTaskStore((s) => s.microtopics);
   const [tasks, setTasks] = useState<DailyTaskView[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -344,6 +387,7 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
           source: src,
           source_raw_text: snapshot.source_raw_text,
           priority: snapshot.priority,
+          syllabus_master_id: snapshot.syllabus_master_id ?? null,
         });
         if (!ins.ok) {
           setError(ins.error);
@@ -360,7 +404,29 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
   };
 
   const handleEditSaved = (id: string, patch: Partial<DailyTaskView>) => {
-    setTasks((prev) => prev.map((x) => (x.id === id ? { ...x, ...patch } : x)));
+    setTasks((prev) =>
+      prev.map((x) => {
+        if (x.id !== id) return x;
+        const merged: DailyTaskView = { ...x, ...patch };
+        const sid =
+          patch.syllabus_master_id !== undefined
+            ? patch.syllabus_master_id
+            : x.syllabus_master_id;
+        merged.syllabus_master_id = sid;
+        if (sid && microtopicsById[sid]) {
+          const r = microtopicsById[sid];
+          merged.syllabus_master = {
+            id: r.id,
+            subject: r.subject,
+            chapter: r.chapter,
+            microtopic: r.microtopic,
+          };
+        } else {
+          merged.syllabus_master = null;
+        }
+        return merged;
+      }),
+    );
     dispatchDailyPlanSynced();
   };
 
@@ -478,6 +544,11 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
                         >
                           {t.title}
                         </p>
+                        {t.syllabus_master_id && t.syllabus_master ? (
+                          <p className="mt-1 text-[10px] font-medium leading-snug text-kal-muted/90 [overflow-wrap:anywhere]">
+                            {t.syllabus_master.chapter} · {t.syllabus_master.microtopic}
+                          </p>
+                        ) : null}
                         {(st || et) && (
                           <p className="mt-1 text-xs font-medium text-kal-accent-dark dark:text-kal-accent">
                             {formatIstSlotRange12h(st, et)}

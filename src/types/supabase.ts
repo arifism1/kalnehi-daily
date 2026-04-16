@@ -14,6 +14,84 @@ export type Database = {
   }
   public: {
     Tables: {
+      auth_rate_limit_config: {
+        Row: {
+          id: number
+          login_block_minutes: number
+          login_max_failures: number
+          login_window_minutes: number
+          otp_block_minutes: number
+          otp_max_failures: number
+          otp_window_minutes: number
+          password_reset_block_minutes: number
+          password_reset_max_per_bucket: number
+          password_reset_window_minutes: number
+          signup_block_minutes: number
+          signup_max_attempts: number
+          signup_window_minutes: number
+        }
+        Insert: {
+          id?: number
+          login_block_minutes?: number
+          login_max_failures?: number
+          login_window_minutes?: number
+          otp_block_minutes?: number
+          otp_max_failures?: number
+          otp_window_minutes?: number
+          password_reset_block_minutes?: number
+          password_reset_max_per_bucket?: number
+          password_reset_window_minutes?: number
+          signup_block_minutes?: number
+          signup_max_attempts?: number
+          signup_window_minutes?: number
+        }
+        Update: {
+          id?: number
+          login_block_minutes?: number
+          login_max_failures?: number
+          login_window_minutes?: number
+          otp_block_minutes?: number
+          otp_max_failures?: number
+          otp_window_minutes?: number
+          password_reset_block_minutes?: number
+          password_reset_max_per_bucket?: number
+          password_reset_window_minutes?: number
+          signup_block_minutes?: number
+          signup_max_attempts?: number
+          signup_window_minutes?: number
+        }
+        Relationships: []
+      }
+      auth_rate_limits: {
+        Row: {
+          action_type: string
+          attempt_count: number
+          blocked_until: string | null
+          bucket_key: string
+          id: string
+          last_attempt_at: string
+          period_started_at: string
+        }
+        Insert: {
+          action_type: string
+          attempt_count?: number
+          blocked_until?: string | null
+          bucket_key: string
+          id?: string
+          last_attempt_at?: string
+          period_started_at?: string
+        }
+        Update: {
+          action_type?: string
+          attempt_count?: number
+          blocked_until?: string | null
+          bucket_key?: string
+          id?: string
+          last_attempt_at?: string
+          period_started_at?: string
+        }
+        Relationships: []
+      }
       exams: {
         Row: {
           created_at: string
@@ -391,6 +469,7 @@ export type Database = {
           source: string
           source_raw_text: string | null
           status: string
+          syllabus_master_id: string | null
           time_end: string | null
           time_slot: string | null
           time_start: string | null
@@ -405,6 +484,7 @@ export type Database = {
           source: string
           source_raw_text?: string | null
           status?: string
+          syllabus_master_id?: string | null
           time_end?: string | null
           time_slot?: string | null
           time_start?: string | null
@@ -419,6 +499,7 @@ export type Database = {
           source?: string
           source_raw_text?: string | null
           status?: string
+          syllabus_master_id?: string | null
           time_end?: string | null
           time_slot?: string | null
           time_start?: string | null
@@ -431,6 +512,13 @@ export type Database = {
             columns: ["daily_plan_id"]
             isOneToOne: false
             referencedRelation: "daily_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_tasks_syllabus_master_id_fkey"
+            columns: ["syllabus_master_id"]
+            isOneToOne: false
+            referencedRelation: "syllabus_master"
             referencedColumns: ["id"]
           },
         ]
@@ -821,6 +909,7 @@ export type Database = {
           system_push_notifications: boolean
           target_exam: string | null
           target_exam_date: string | null
+          upsc_optional_subjects: string[] | null
           updated_at: string | null
           usage_reset_date: string | null
           user_id: string | null
@@ -855,6 +944,7 @@ export type Database = {
           system_push_notifications?: boolean
           target_exam?: string | null
           target_exam_date?: string | null
+          upsc_optional_subjects?: string[] | null
           updated_at?: string | null
           usage_reset_date?: string | null
           user_id?: string | null
@@ -889,6 +979,7 @@ export type Database = {
           system_push_notifications?: boolean
           target_exam?: string | null
           target_exam_date?: string | null
+          upsc_optional_subjects?: string[] | null
           updated_at?: string | null
           usage_reset_date?: string | null
           user_id?: string | null
@@ -1323,6 +1414,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      auth_rate_limit_password_reset: {
+        Args: { p_email: string; p_ip: string; p_step: string }
+        Returns: Json
+      }
+      auth_rate_limit_step: {
+        Args: {
+          p_action_type: string
+          p_bucket_key: string
+          p_step: string
+        }
+        Returns: Json
+      }
       get_gated_predicted_score: {
         Args: { target_user_id: string }
         Returns: Json
@@ -1334,6 +1437,14 @@ export type Database = {
       try_consume_automated_push_budget: {
         Args: { p_ist_date: string; p_max?: number; p_user_id: string }
         Returns: boolean
+      }
+      upsc_cse_mains_optional_subjects: {
+        Args: Record<PropertyKey, never>
+        Returns: { base_name: string }[]
+      }
+      upsc_cse_mains_syllabus_rows: {
+        Args: { p_optional?: string | null }
+        Returns: Database["public"]["Tables"]["syllabus_master"]["Row"][]
       }
     }
     Enums: {

@@ -57,6 +57,7 @@ export function dailyTaskRowToDraftRow(e: DailyTaskRow): VoicePlannerTableRow {
     duration: plannerDurationFromTimeInputs(st, et),
     transcriptRaw: e.source_raw_text?.slice(0, 12_000),
     source: e.source as VoicePlannerTableRow["source"],
+    syllabus_master_id: e.syllabus_master_id ?? null,
   };
 }
 
@@ -72,6 +73,7 @@ export function rowSyncHash(d: VoicePlannerTableRow): string {
     e: d.endInput,
     i: d.include,
     o: d.source ?? "",
+    m: d.syllabus_master_id ?? "",
   });
 }
 

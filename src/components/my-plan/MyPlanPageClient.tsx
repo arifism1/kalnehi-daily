@@ -339,37 +339,50 @@ export function MyPlanPageClient() {
               <div className="border-t border-kal-border">
                 <div className="border-b border-kal-border px-4 py-3">
                   <h3 className="text-xs font-semibold uppercase tracking-widest text-kal-muted">
-                    AI usage {isBasicTrial ? "(trial gift)" : "(monthly)"}
+                    AI usage {isBasicTrial ? "(included in trial)" : "(monthly)"}
                   </h3>
                 </div>
 
-                {/* Basic trial: bonus gift banner */}
+                {/* Basic trial: included AI sample */}
                 {isBasicTrial && (
                   <div className="border-b border-kal-border bg-kal-accent/5 px-4 py-3">
                     <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
-                      Bonus gift to taste Pro
+                      Included with your trial
                     </p>
                     <p className="mt-1 text-xs leading-relaxed text-kal-text-secondary">
-                      During your 3-day trial, enjoy{" "}
+                      Use up to{" "}
                       <span className="font-medium text-kal-text">
-                        2 minutes of voice dictation
+                        2 voice minutes
                       </span>{" "}
                       and{" "}
                       <span className="font-medium text-kal-text">
-                        3 handwritten photo scans
+                        3 AI photo scans
                       </span>{" "}
-                      as a one-time gift. These do not carry over to the regular
-                      Basic plan (₹99/month has no AI).
+                      during your 3-day trial to try faster capture. After the
+                      trial, your Basic subscription continues with the core
+                      features listed on Pricing — upgrade to Pro anytime for
+                      monthly AI scans and voice minutes.
                     </p>
                   </div>
                 )}
 
-                {/* Pro / Pro Max trial generic hint */}
-                {status === "trial" && !isBasicTrial && (
-                  <p className="border-b border-kal-border px-4 py-2 text-xs text-kal-text-secondary">
-                    During trial, lower AI limits apply. After your first paid
-                    cycle, full monthly limits apply and trial usage no longer
-                    applies.
+                {/* Pro / Pro Max trial: scannable quota line */}
+                {status === "trial" && !isBasicTrial && tier === "pro" && (
+                  <p className="border-b border-kal-border px-4 py-2 text-xs leading-relaxed text-kal-text-secondary">
+                    <span className="font-medium text-kal-text">
+                      20 AI Scans &amp; 40 Voice Minutes per month
+                    </span>{" "}
+                    (includes 5 scans + 10 mins during your 3-day trial; full
+                    monthly allowance after your first paid cycle).
+                  </p>
+                )}
+                {status === "trial" && !isBasicTrial && tier === "pro_max" && (
+                  <p className="border-b border-kal-border px-4 py-2 text-xs leading-relaxed text-kal-text-secondary">
+                    <span className="font-medium text-kal-text">
+                      50 AI Scans &amp; 80 Voice Minutes per month
+                    </span>{" "}
+                    (includes 10 scans + 20 mins during your 3-day trial; full
+                    monthly allowance after your first paid cycle).
                   </p>
                 )}
 
@@ -432,38 +445,28 @@ export function MyPlanPageClient() {
               </div>
             )}
 
-            {/* Permanent Basic plan (after trial): show "0 AI" with upgrade nudge */}
+            {/* Basic after trial: benefit-forward upsell (no empty quotas) */}
             {!hasAiAccess && hasPaidAccess && tier === "basic" && (
               <div className="border-t border-kal-border">
                 <div className="border-b border-kal-border px-4 py-3">
                   <h3 className="text-xs font-semibold uppercase tracking-widest text-kal-muted">
-                    AI usage
+                    AI Photo Scans &amp; Voice Dictation
                   </h3>
                 </div>
                 <div className="px-4 py-3">
-                  <div className="flex items-center justify-between py-1">
-                    <span className="flex items-center gap-2 text-sm text-kal-text-secondary">
-                      <Camera className="h-4 w-4" />
-                      Photo scans
-                    </span>
-                    <span className="text-sm font-medium text-kal-text">0 / 0</span>
-                  </div>
-                  <div className="flex items-center justify-between py-1">
-                    <span className="flex items-center gap-2 text-sm text-kal-text-secondary">
-                      <Mic className="h-4 w-4" />
-                      Voice minutes
-                    </span>
-                    <span className="text-sm font-medium text-kal-text">0 / 0</span>
-                  </div>
-                  <p className="mt-3 text-xs leading-relaxed text-kal-text-secondary">
-                    The Basic plan (₹99/month) does not include AI features.
-                    Upgrade to Pro for 20 photo scans + 40 voice minutes per month.
+                  <p className="text-xs leading-relaxed text-kal-text-secondary">
+                    Want AI Photo Scans and Voice Dictation every month? Upgrade
+                    to Pro for{" "}
+                    <span className="font-medium text-kal-text">
+                      20 AI scans &amp; 40 voice minutes per month
+                    </span>{" "}
+                    — start with a 3-day trial for just ₹21 on Pricing.
                   </p>
                   <a
                     href="/pricing"
                     className="mt-3 inline-flex min-h-[40px] items-center justify-center rounded-xl bg-kal-accent px-4 py-2 text-sm font-semibold text-kal-accent-foreground"
                   >
-                    Upgrade to Pro
+                    View plans &amp; upgrade
                   </a>
                 </div>
               </div>

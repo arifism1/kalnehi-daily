@@ -1,3 +1,5 @@
+import { resolveSystemPushPath } from "@/lib/systemPush/routes";
+
 export const SYSTEM_PUSH_KIND = {
   morning: "morning_kickstart",
   evening: "evening_winddown",
@@ -9,26 +11,29 @@ export type SystemPushKind =
 
 export function morningKickstartPayload(firstName: string) {
   const safe = firstName.trim() || "there";
+  const kind = SYSTEM_PUSH_KIND.morning;
   return {
     title: `Good morning, ${safe}!`,
     body: "Time to Master Today 🔥 What's your first task?",
-    data: { kind: SYSTEM_PUSH_KIND.morning },
+    data: { kind, path: resolveSystemPushPath(kind) },
   };
 }
 
 export function eveningWindDownPayload() {
+  const kind = SYSTEM_PUSH_KIND.evening;
   return {
     title: "Great effort today!",
     body: "Log your day and plan tomorrow's wins.",
-    data: { kind: SYSTEM_PUSH_KIND.evening },
+    data: { kind, path: resolveSystemPushPath(kind) },
   };
 }
 
 export function dangerZonePayload() {
+  const kind = SYSTEM_PUSH_KIND.danger;
   return {
     title: "Execution Signal • Danger",
     body: "You're in danger zone. Reclaim your focus now.",
-    data: { kind: SYSTEM_PUSH_KIND.danger },
+    data: { kind, path: resolveSystemPushPath(kind) },
   };
 }
 

@@ -5,6 +5,7 @@ import {
   useCallback,
   useEffect,
   useId,
+  useMemo,
   useRef,
   useState,
   type ChangeEvent,
@@ -23,9 +24,12 @@ import { UnifiedDailyPlanList } from "@/components/planner/UnifiedDailyPlanList"
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { slotFromStartEnd } from "@/lib/dailyPlanTime";
 import { compressImageForUpload } from "@/lib/plannerPhotoClient";
+import { suggestSyllabusIdFromTitle } from "@/lib/suggestDailyTaskSyllabus";
 import { dbTimeToInputValue } from "@/lib/taskTime";
 import { minutesBetweenHHMM } from "@/lib/voiceIst";
+import type { Microtopic } from "@/store/useTaskStore";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useTaskStore } from "@/store/useTaskStore";
 
 type EditableRow = DailyPlanPreviewRow;
 
@@ -39,13 +43,14 @@ function emptyRow(): EditableRow {
   };
 }
 
-function toRows(tasks: ParsedPastedPlanTask[]): EditableRow[] {
+function toRows(tasks: ParsedPastedPlanTask[], microtopics: Microtopic[]): EditableRow[] {
   return tasks.map((t) => ({
     id: crypto.randomUUID(),
     name: t.name,
     startInput: dbTimeToInputValue(t.start_time ? `${t.start_time}:00` : null),
     endInput: dbTimeToInputValue(t.end_time ? `${t.end_time}:00` : null),
     duration: t.duration ?? null,
+    syllabus_master_id: suggestSyllabusIdFromTitle(t.name.trim(), microtopics),
   }));
 }
 
@@ -57,6 +62,7 @@ function buildSaveTasks(rows: EditableRow[]) {
       start_input: r.startInput,
       end_input: r.endInput,
       source_raw_slice: r.name.trim(),
+      syllabus_master_id: r.syllabus_master_id ?? null,
     }));
 }
 
@@ -77,6 +83,11 @@ function scrollLivePlanIntoView(): void {
 }
 
 export function PasteHandwrittenPlanPage() {
+  const syllabusById = useTaskStore((s) => s.microtopics);
+  const microtopicsList = useMemo(
+    () => Object.values(syllabusById),
+    [syllabusById],
+  );
   const baseId = useId();
   const today = useCalendarDate();
   const [logDate, setLogDate] = useState(today);
@@ -131,13 +142,13 @@ export function PasteHandwrittenPlanPage() {
       if (options?.sourceText !== undefined) {
         setRawText(options.sourceText);
       }
-      const next = toRows(tasks);
+      const next = toRows(tasks, microtopicsList);
       setRows(next.length > 0 ? next : [emptyRow()]);
       if (next.length > 0) {
         scrollStagingIntoView();
       }
     },
-    [],
+    [microtopicsList],
   );
 
   const onPlannerPhotoSelected = useCallback(
@@ -204,6 +215,7 @@ export function PasteHandwrittenPlanPage() {
           time_end,
           source: "handwritten",
           source_raw_text: rt || t.source_raw_slice,
+          syllabus_master_id: t.syllabus_master_id ?? null,
         });
         if (!res.ok) {
           setFormError(res.error);
@@ -353,6 +365,7 @@ export function PasteHandwrittenPlanPage() {
                   onRemoveRow={removeRow}
                   onAddEmptyRow={addRow}
                   disabled={busy}
+                  syllabusLinkMode
                 />
               </div>
             ) : null}

@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { CheckCircle2, Download, Menu } from "lucide-react";
+import { ArrowDown, CheckCircle2, Menu, Smartphone } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Fragment, useCallback, useEffect, useState } from "react";
@@ -32,7 +32,7 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
   const [contactOpen, setContactOpen] = useState(false);
   const [contactSuccess, setContactSuccess] = useState<string | null>(null);
   const installUnsupported = !installed && !canPromptInstall && !iosDevice;
-  const showInstallCard = installed || canPromptInstall || needsIosInstallModal;
+  const showInstallRow = installed || canPromptInstall || needsIosInstallModal;
 
   const openContactFromMenu = useCallback(() => {
     onClose();
@@ -91,91 +91,70 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
           open ? "translate-x-0" : "translate-x-full",
         )}
       >
-        <div className="flex shrink-0 items-center gap-2.5 border-b border-white/20 px-3 py-2.5 backdrop-blur-sm sm:px-4 dark:border-white/10">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-kal-accent-soft text-kal-accent">
-            <Menu className="h-5 w-5" strokeWidth={2.25} />
-          </div>
-          <div>
-            <p className="text-[0.6rem] font-bold uppercase tracking-widest text-kal-accent-dark">
-              Navigate
-            </p>
-            <p className="text-xs font-semibold leading-snug text-kal-text sm:text-[13px] sm:leading-tight">
-              {SITE_NAME}
-            </p>
-          </div>
-        </div>
-        <div className="border-b border-white/20 px-3 py-3 backdrop-blur-sm sm:px-4 dark:border-white/10">
-          {showInstallCard ? (
-            <div className="rounded-xl border border-kal-accent/35 bg-kal-accent-soft px-2.5 py-3 sm:px-3">
-              <div className="flex items-start gap-2.5">
-                <span
-                  className={clsx(
-                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
-                    installed
-                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
-                      : "bg-kal-accent/25 text-kal-accent-dark dark:text-kal-accent",
-                  )}
-                >
-                  {installed ? (
-                    <CheckCircle2 className="h-5 w-5" strokeWidth={2.25} />
-                  ) : (
-                    <Download className="h-5 w-5" strokeWidth={2.25} />
-                  )}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-kal-text sm:text-[15px]">
-                    {installed
-                      ? "App installed"
-                      : "Kalnehi on your home screen"}
-                  </p>
-                  <p className="mt-0.5 text-xs leading-relaxed text-kal-muted">
-                    {installed
-                      ? "You are already running the installed experience."
-                      : "Launch in one tap - same calm experience, full screen."}
-                  </p>
-                  <button
-                    type="button"
-                    disabled={installBusy || installed}
-                    onClick={async () => {
-                      if (canPromptInstall) {
-                        setInstallBusy(true);
-                        await promptInstall();
-                        setInstallBusy(false);
-                        if (isStandalonePwa()) onClose();
-                        return;
-                      }
-                      if (needsIosInstallModal) {
-                        setIosInstallOpen(true);
-                      }
-                    }}
-                    className={clsx(
-                      "mt-3 flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold shadow-sm transition-colors active:scale-[0.99] motion-reduce:active:scale-100",
-                      installed
-                        ? "cursor-default border border-kal-border bg-white/70 text-kal-muted shadow-none"
-                        : "bg-kal-accent text-white hover:bg-kal-accent-hover",
-                    )}
-                  >
-                    {installed ? (
-                      <CheckCircle2 className="h-[1.125rem] w-[1.125rem]" strokeWidth={2.5} />
-                    ) : (
-                      <Download className="h-[1.125rem] w-[1.125rem]" strokeWidth={2.5} />
-                    )}
-                    {installed
-                      ? "App Installed"
-                      : installBusy
-                        ? "Opening..."
-                        : canPromptInstall
-                          ? "Install App"
-                          : "Add to Home Screen"}
-                  </button>
-                </div>
-              </div>
+        <div className="shrink-0 border-b border-white/20 backdrop-blur-sm dark:border-white/10">
+          <div className="flex items-start gap-2.5 px-3 py-2.5 sm:px-4">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-kal-accent-soft text-kal-accent">
+              <Menu className="h-5 w-5" strokeWidth={2.25} />
             </div>
-          ) : installUnsupported ? (
-            <p className="rounded-xl border border-kal-border bg-kal-card-muted px-3 py-2 text-xs text-kal-muted">
-              Install not supported in this browser.
-            </p>
-          ) : null}
+            <div className="min-w-0 flex-1 pt-0.5">
+              <p className="text-[0.6rem] font-bold uppercase tracking-widest text-kal-accent-dark">
+                Navigate
+              </p>
+              <p className="text-xs font-semibold leading-snug text-kal-text sm:text-[13px] sm:leading-tight">
+                {SITE_NAME}
+              </p>
+            </div>
+          </div>
+          <div className="px-3 pb-3 sm:px-4">
+            {showInstallRow ? (
+              <button
+                type="button"
+                disabled={installBusy || installed}
+                onClick={async () => {
+                  if (canPromptInstall) {
+                    setInstallBusy(true);
+                    await promptInstall();
+                    setInstallBusy(false);
+                    if (isStandalonePwa()) onClose();
+                    return;
+                  }
+                  if (needsIosInstallModal) {
+                    setIosInstallOpen(true);
+                  }
+                }}
+                className={clsx(
+                  "flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm transition active:scale-[0.99] motion-reduce:active:scale-100",
+                  installed
+                    ? "cursor-not-allowed border border-kal-border/60 bg-kal-card-muted/80 font-medium text-kal-muted opacity-80 shadow-none dark:border-white/10 dark:bg-white/[0.06]"
+                    : "border border-kal-accent/35 bg-kal-accent-soft font-semibold text-kal-accent-dark shadow-sm ring-1 ring-kal-accent/10 hover:border-kal-accent/50 hover:bg-[color-mix(in_srgb,var(--kal-accent-soft)_92%,var(--kal-accent))] hover:ring-kal-accent/20 dark:border-kal-accent/30 dark:bg-red-950/40 dark:text-kal-accent dark:ring-white/5 dark:hover:bg-red-950/55 dark:hover:border-kal-accent/45",
+                )}
+              >
+                {installed ? (
+                  <CheckCircle2
+                    className="h-[1.125rem] w-[1.125rem] shrink-0 text-kal-muted"
+                    strokeWidth={2.35}
+                  />
+                ) : needsIosInstallModal ? (
+                  <Smartphone className="h-[1.125rem] w-[1.125rem] shrink-0" strokeWidth={2.35} />
+                ) : (
+                  <ArrowDown className="h-[1.125rem] w-[1.125rem] shrink-0" strokeWidth={2.5} />
+                )}
+                {installed ? (
+                  <span className="font-bold tracking-tight">App Installed</span>
+                ) : installBusy ? (
+                  <span>Installing…</span>
+                ) : canPromptInstall ? (
+                  <span>Install App in One Click</span>
+                ) : (
+                  <span>Install App to Home Screen</span>
+                )}
+              </button>
+            ) : installUnsupported ? (
+              <p className="rounded-xl border border-kal-border/80 bg-white/40 px-3 py-2 text-center text-xs text-kal-muted dark:border-white/10 dark:bg-white/5">
+                Install not supported in this browser.
+              </p>
+            ) : null}
+          </div>
         </div>
 
         <nav
@@ -260,11 +239,11 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
           </ul>
         </nav>
       </div>
-      <PwaIosInstallModal
-        open={iosInstallOpen}
-        onClose={() => setIosInstallOpen(false)}
-      />
     </div>
+    <PwaIosInstallModal
+      open={iosInstallOpen}
+      onClose={() => setIosInstallOpen(false)}
+    />
     <ContactSupportModal
       open={contactOpen}
       onClose={() => setContactOpen(false)}

@@ -13,7 +13,7 @@ export type MeditationTypeDef = {
   durationRangeMinutes: [number, number];
   benefit: string;
   description: string;
-  /** 6–8 spoken-style steps for voice or read-aloud guidance (Brain Yoga voice). */
+  /** Spoken during a live session (Web Speech); not shown as a list on the practice card. */
   voiceGuidedSteps: readonly string[];
 };
 

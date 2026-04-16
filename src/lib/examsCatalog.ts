@@ -53,11 +53,17 @@ export async function fetchExamsCatalog(
     .from("exams")
     .select("*")
     .order("sort_order", { ascending: true });
-  const raw =
-    !error && data && data.length > 0
-      ? (data as ExamCatalogRow[])
-      : EXAMS_CATALOG_FALLBACK;
-  return dedupeExamsCatalogForUi(raw);
+
+  if (!error && data && data.length > 0) {
+    const dbRows = data as ExamCatalogRow[];
+    const dbNames = new Set(dbRows.map((r) => r.exam_name));
+    // Always supplement with any fallback row not yet seeded into the DB
+    // (e.g. newly added exams like IPMAT Indore / JIPMAT before migration runs).
+    const extras = EXAMS_CATALOG_FALLBACK.filter((r) => !dbNames.has(r.exam_name));
+    return dedupeExamsCatalogForUi([...dbRows, ...extras]);
+  }
+
+  return dedupeExamsCatalogForUi(EXAMS_CATALOG_FALLBACK);
 }
 
 /** User-facing label from `exams.display_name` when `exam_name` is in the catalog. */
@@ -173,6 +179,33 @@ export const EXAMS_CATALOG_FALLBACK: ExamCatalogRow[] = [
     created_at: new Date().toISOString(),
   },
   {
+    id: "00000000-0000-4000-8000-000000000033",
+    exam_name: "IPMAT Indore",
+    display_name: "IPMAT Indore",
+    sort_order: 33,
+    max_score: 300,
+    multi_subject: false,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "00000000-0000-4000-8000-000000000034",
+    exam_name: "IPMAT Rohtak",
+    display_name: "IPMAT Rohtak",
+    sort_order: 34,
+    max_score: 300,
+    multi_subject: false,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "00000000-0000-4000-8000-000000000035",
+    exam_name: "JIPMAT",
+    display_name: "JIPMAT",
+    sort_order: 35,
+    max_score: 400,
+    multi_subject: false,
+    created_at: new Date().toISOString(),
+  },
+  {
     id: "00000000-0000-4000-8000-000000000041",
     exam_name: "CA Foundation",
     display_name: "CA Foundation",
@@ -219,9 +252,18 @@ export const EXAMS_CATALOG_FALLBACK: ExamCatalogRow[] = [
   },
   {
     id: "00000000-0000-4000-8000-000000000052",
+    exam_name: "UPSC CSE Mains",
+    display_name: "UPSC CSE Mains",
+    sort_order: 52,
+    max_score: 1750,
+    multi_subject: true,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "00000000-0000-4000-8000-000000000053",
     exam_name: "NDA",
     display_name: "NDA",
-    sort_order: 52,
+    sort_order: 53,
     max_score: 900,
     multi_subject: false,
     created_at: new Date().toISOString(),

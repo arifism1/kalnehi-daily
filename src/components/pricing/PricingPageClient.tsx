@@ -62,35 +62,33 @@ function AutopayDurationPanel({
   const monthWord = value === 1 ? "month" : "months";
 
   return (
-    <div className="mx-auto max-w-2xl space-y-3">
-      <div className="relative overflow-hidden rounded-2xl border border-kal-accent/25 bg-gradient-to-br from-white/95 via-kal-accent-soft/25 to-white/70 shadow-[0_20px_50px_-24px_rgba(0,0,0,0.25)] backdrop-blur-md dark:from-zinc-900/95 dark:via-red-950/30 dark:to-zinc-900/80 dark:border-red-500/20 dark:shadow-[0_24px_60px_-20px_rgba(0,0,0,0.5)]">
+    <div className="mx-auto max-w-2xl space-y-2">
+      <div className="relative overflow-hidden rounded-xl border border-kal-accent/25 bg-gradient-to-br from-white/95 via-kal-accent-soft/25 to-white/70 shadow-[0_16px_40px_-20px_rgba(0,0,0,0.22)] backdrop-blur-md dark:from-zinc-900/95 dark:via-red-950/30 dark:to-zinc-900/80 dark:border-red-500/20 dark:shadow-[0_20px_48px_-18px_rgba(0,0,0,0.45)]">
         <div
-          className="pointer-events-none absolute -right-12 -top-16 h-40 w-40 rounded-full bg-kal-accent/15 blur-3xl dark:bg-red-500/10"
+          className="pointer-events-none absolute -right-10 -top-12 h-28 w-28 rounded-full bg-kal-accent/12 blur-2xl dark:bg-red-500/10"
           aria-hidden
         />
-        <div className="relative p-5 sm:p-6">
-          <div className="flex gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-kal-accent/15 text-kal-accent ring-1 ring-kal-accent/20">
-              <CalendarClock className="h-6 w-6" strokeWidth={2} aria-hidden />
+        <div className="relative p-3 sm:p-4">
+          <div className="flex gap-2.5 sm:gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-kal-accent/15 text-kal-accent ring-1 ring-kal-accent/20 sm:h-10 sm:w-10">
+              <CalendarClock className="h-4 w-4 sm:h-[1.125rem] sm:w-[1.125rem]" strokeWidth={2} aria-hidden />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-kal-accent">
+              <p className="text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-kal-accent">
                 Before you pick a tier
               </p>
-              <h2 className="mt-1.5 text-lg font-bold leading-tight tracking-tight text-kal-text sm:text-xl">
+              <h2 className="mt-0.5 text-base font-bold leading-tight tracking-tight text-kal-text sm:text-lg">
                 How long should AutoPay run?
               </h2>
-              <p className="mt-2 text-sm leading-relaxed text-kal-text-secondary">
-                Billing stays{" "}
-                <span className="font-semibold text-kal-text">monthly</span> (one charge per month).
-                You only choose how many of those monthly charges your UPI or card mandate is allowed
-                to take after your trial. Cancel anytime — you keep access through what you already
-                paid for.
+              <p className="mt-1 text-xs leading-snug text-kal-text-secondary sm:mt-1.5">
+                <span className="font-semibold text-kal-text">Monthly</span> billing: set how many
+                post-trial monthly charges your UPI or card mandate may take. Cancel anytime; you keep
+                access for what you&apos;ve already paid.
               </p>
             </div>
           </div>
 
-          <fieldset className="mt-6 space-y-5 sm:mt-7" disabled={disabled}>
+          <fieldset className="mt-3 space-y-2.5 sm:mt-3.5" disabled={disabled}>
             <legend className="sr-only">
               Number of months to authorize for AutoPay, from {AUTOPAY_MONTHS_MIN} to{" "}
               {AUTOPAY_MONTHS_MAX}
@@ -98,13 +96,13 @@ function AutopayDurationPanel({
 
             <div>
               <p
-                className="mb-2 text-xs font-semibold uppercase tracking-wide text-kal-text-secondary"
+                className="mb-1 text-[0.65rem] font-semibold uppercase tracking-wide text-kal-text-secondary"
                 id="autopay-preset-legend"
               >
                 Quick picks
               </p>
               <div
-                className="grid grid-cols-2 gap-1.5 rounded-2xl border border-white/50 bg-black/[0.035] p-1.5 sm:grid-cols-4 sm:gap-1 dark:border-white/10 dark:bg-white/[0.06]"
+                className="grid grid-cols-4 gap-1 rounded-xl border border-white/50 bg-black/[0.035] p-1 dark:border-white/10 dark:bg-white/[0.06]"
                 role="group"
                 aria-labelledby="autopay-preset-legend"
               >
@@ -116,14 +114,14 @@ function AutopayDurationPanel({
                       type="button"
                       aria-pressed={selected}
                       onClick={() => onChange(m)}
-                      className={`flex min-h-[52px] flex-col items-center justify-center rounded-xl px-1 py-2 text-center transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kal-accent ${
+                      className={`flex min-h-[40px] flex-col items-center justify-center rounded-lg px-0.5 py-1 text-center transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kal-accent sm:min-h-[44px] ${
                         selected
-                          ? "bg-kal-accent text-kal-accent-foreground shadow-md ring-1 ring-kal-accent/30"
+                          ? "bg-kal-accent text-kal-accent-foreground shadow-sm ring-1 ring-kal-accent/30"
                           : "text-kal-text-secondary hover:bg-white/60 hover:text-kal-text dark:hover:bg-white/[0.08]"
                       }`}
                     >
-                      <span className="text-lg font-bold tabular-nums leading-none">{m}</span>
-                      <span className="mt-0.5 text-[0.65rem] font-semibold leading-none opacity-90">
+                      <span className="text-base font-bold tabular-nums leading-none sm:text-lg">{m}</span>
+                      <span className="mt-0.5 text-[0.6rem] font-semibold leading-none opacity-90">
                         {m === 1 ? "month" : "months"}
                       </span>
                     </button>
@@ -133,22 +131,22 @@ function AutopayDurationPanel({
             </div>
 
             <div>
-              <div className="mb-3 flex items-end justify-between gap-3">
+              <div className="mb-1 flex items-center justify-between gap-2">
                 <label
                   htmlFor="autopay-months-range"
-                  className="max-w-[70%] text-xs font-semibold leading-snug text-kal-text-secondary sm:text-sm"
+                  className="min-w-0 text-[0.7rem] font-semibold leading-tight text-kal-text-secondary sm:text-xs"
                 >
-                  Or drag to any length ({AUTOPAY_MONTHS_MIN}–{AUTOPAY_MONTHS_MAX} months)
+                  Or drag ({AUTOPAY_MONTHS_MIN}–{AUTOPAY_MONTHS_MAX} months)
                 </label>
                 <span
-                  className="shrink-0 text-right"
+                  className="flex shrink-0 items-baseline gap-1 tabular-nums"
                   aria-live="polite"
                   aria-atomic="true"
                 >
-                  <span className="block text-3xl font-bold tabular-nums leading-none text-kal-accent">
+                  <span className="text-2xl font-bold leading-none text-kal-accent sm:text-3xl">
                     {value}
                   </span>
-                  <span className="mt-0.5 block text-[0.7rem] font-medium capitalize text-kal-text-secondary">
+                  <span className="text-[0.65rem] font-medium capitalize text-kal-text-secondary">
                     {monthWord}
                   </span>
                 </span>
@@ -161,32 +159,31 @@ function AutopayDurationPanel({
                 step={1}
                 value={value}
                 onChange={(e) => onChange(clampAutopayMonths(e.target.value))}
-                className="h-3 w-full cursor-pointer appearance-none rounded-full bg-kal-card-muted accent-kal-accent disabled:cursor-not-allowed disabled:opacity-50"
+                className="h-2.5 w-full cursor-pointer appearance-none rounded-full bg-kal-card-muted accent-kal-accent disabled:cursor-not-allowed disabled:opacity-50 sm:h-3"
               />
-              <div className="mt-1.5 flex justify-between text-[0.65rem] font-medium tabular-nums text-kal-text-secondary/90">
+              <div className="mt-1 flex justify-between text-[0.6rem] font-medium tabular-nums text-kal-text-secondary/90">
                 <span>{AUTOPAY_MONTHS_MIN}</span>
                 <span aria-hidden>·</span>
                 <span>{AUTOPAY_MONTHS_MAX}</span>
               </div>
             </div>
 
-            <div className="flex gap-3 rounded-xl border border-emerald-500/25 bg-emerald-500/[0.07] px-4 py-3 dark:border-emerald-500/20 dark:bg-emerald-500/[0.08]">
+            <div className="flex gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/[0.07] px-2.5 py-2 dark:border-emerald-500/20 dark:bg-emerald-500/[0.08]">
               <Check
-                className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400"
+                className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400"
                 strokeWidth={2.5}
                 aria-hidden
               />
-              <p className="text-xs leading-relaxed text-kal-text sm:text-sm">
-                <span className="font-semibold text-kal-text">Summary:</span> After your trial, AutoPay
-                can take up to{" "}
+              <p className="text-[0.7rem] leading-snug text-kal-text sm:text-xs">
+                <span className="font-semibold text-kal-text">Summary:</span> After trial, up to{" "}
                 <span className="font-bold text-kal-accent tabular-nums">{value}</span> monthly
-                payment{value === 1 ? "" : "s"}, then it stops unless you subscribe again.
+                payment{value === 1 ? "" : "s"}, then stops unless you subscribe again.
               </p>
             </div>
           </fieldset>
         </div>
       </div>
-      <p className="text-center text-[0.7rem] font-medium uppercase tracking-[0.14em] text-kal-text-secondary">
+      <p className="text-center text-[0.65rem] font-medium uppercase tracking-[0.12em] text-kal-text-secondary">
         Next — choose your plan below
       </p>
     </div>
@@ -199,21 +196,15 @@ const TIER_ICONS: Record<SubscriptionTier, React.ReactNode> = {
   pro_max: <Sparkles className="h-5 w-5" />,
 };
 
-function trialAiSummary(config: TierConfig): string {
-  if (config.trialPhotoScansLimit === 0 && config.trialVoiceMinutesLimit === 0) {
-    return "0 scans + 0 voice minutes during trial";
-  }
+/** Scannable, benefit-focused AI quota line(s) for the tier card (no “missing out” framing). */
+function tierAiQuotaCopy(config: TierConfig): string {
   if (config.id === "basic") {
-    return `Bonus gift: ${config.trialPhotoScansLimit} photo scans + ${config.trialVoiceMinutesLimit} voice min (trial only)`;
+    return `Your trial includes ${config.trialPhotoScansLimit} AI photo scans and ${config.trialVoiceMinutesLimit} voice minutes — a quick way to try faster capture.`;
   }
-  return `Only ${config.trialPhotoScansLimit} scans + ${config.trialVoiceMinutesLimit} voice minutes during trial`;
-}
-
-function fullAiSummary(config: TierConfig): string {
-  if (config.photoScansPerMonth === 0 && config.voiceMinutesPerMonth === 0) {
-    return "0 scans + 0 voice minutes / month (no AI)";
+  if (config.id === "pro") {
+    return "20 AI Scans & 40 Voice Minutes per month (includes 5 scans + 10 mins during 3-day trial)";
   }
-  return `${config.photoScansPerMonth} scans + ${config.voiceMinutesPerMonth} voice min / month after trial`;
+  return "50 AI Scans & 80 Voice Minutes per month (includes 10 scans + 20 mins during 3-day trial)";
 }
 
 function TierCard({
@@ -279,11 +270,7 @@ function TierCard({
           </p>
         ) : null}
         <p className="mt-2 text-xs font-medium leading-relaxed text-kal-text-secondary">
-          {trialAiSummary(config)}
-        </p>
-        <p className="mt-2 border-t border-kal-accent/25 pt-2 text-xs leading-relaxed text-kal-text-secondary">
-          <span className="font-semibold text-kal-text">Full plan: </span>
-          {fullAiSummary(config)}
+          {tierAiQuotaCopy(config)}
         </p>
       </div>
 
@@ -296,11 +283,9 @@ function TierCard({
         ))}
       </ul>
 
-      {config.photoScansPerMonth === 0 ? (
+      {config.id === "basic" ? (
         <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
-          {config.id === "basic"
-            ? "Regular Basic plan has no AI — the scans + voice minutes above are a one-time trial gift only."
-            : "No AI features (no voice dictation, no handwritten scanner)"}
+          Want AI Photo Scans and Voice Dictation? Upgrade to Pro for just ₹21 for 3 days.
         </p>
       ) : null}
 
@@ -341,6 +326,7 @@ export function PricingPageClient() {
   const [checkoutError, setCheckoutError] = useState<{
     text: string;
     proof?: PaymentErrorProof;
+    debugHint?: string;
   } | null>(null);
   const helpyjiAnchorRef = useRef<HTMLDivElement>(null);
 
@@ -353,7 +339,10 @@ export function PricingPageClient() {
     try {
       const created = await createRazorpayTrialSubscription(tier, autopayMonths);
       if (!created.ok) {
-        setCheckoutError({ text: created.error });
+        setCheckoutError({
+          text: created.error,
+          debugHint: created.debugHint,
+        });
         return;
       }
 
@@ -404,7 +393,7 @@ export function PricingPageClient() {
       if (subscriptionStatus === "trial") {
         if (currentTier === "basic") {
           trialHint =
-            " During your 3-day trial, enjoy 2 minutes of voice dictation and 3 handwritten photo scans as a bonus gift to taste Pro. These are a one-time gift — after your trial, the Basic plan (₹99/month) has no AI features.";
+            " During your 3-day trial you have 3 AI photo scans and 2 voice minutes to try faster capture. When you’re ready for monthly AI quotas, upgrade to Pro from My Plan.";
         } else {
           trialHint =
             " During the 3-day trial you have the trial AI limits shown on each card. After the first successful charge you get the full monthly quotas for your tier.";
@@ -533,6 +522,11 @@ export function PricingPageClient() {
             <p className="text-sm text-rose-900 dark:text-rose-100" role="status">
               {checkoutError.text}
             </p>
+            {checkoutError.debugHint ? (
+              <p className="mt-2 text-left text-xs leading-snug text-rose-800/90 dark:text-rose-200/90">
+                {checkoutError.debugHint}
+              </p>
+            ) : null}
             <div className="mt-1 flex justify-center">
               <PaymentErrorMailButton
                 flow="Pricing — trial checkout"
