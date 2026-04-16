@@ -91,9 +91,15 @@ export async function GET() {
     prepbrain_tokens_month: profile.prepbrain_tokens_month,
   };
 
-  return NextResponse.json({
-    ok: true,
-    usage: buildPrepbrainUsagePayload(tier, row),
-  });
+  return NextResponse.json(
+    { ok: true, usage: buildPrepbrainUsagePayload(tier, row) },
+    {
+      headers: {
+        // Browser caches usage for 30s; serves stale up to 60s while revalidating.
+        // Keeps the usage bar snappy without a DB hit on every page open.
+        "Cache-Control": "private, max-age=30, stale-while-revalidate=60",
+      },
+    },
+  );
 }
 
