@@ -69,13 +69,13 @@ const RESEARCH_SECTIONS: ResearchSection[] = [
     title: "Three Ways to Plan Your Day",
     researchHook: "The plan you don't make doesn't happen. The biggest reason plans don't get made is that starting feels like effort.",
     researchDetail:
-      "BJ Fogg at Stanford calls it activation energy — the friction between intention and action. Reduce it, and follow-through shoots up. The plan you talk out in 90 seconds, or photograph from your handwritten timetable, or type quickly — it gets done. The plan that requires opening a blank doc, formatting, and thinking about format? Often doesn't.",
+      "BJ Fogg at Stanford calls it activation energy — the friction between intention and action. Reduce it, and follow-through shoots up. The plan you talk out in 90 seconds, or type quickly — it gets done. The plan that requires opening a blank doc, formatting, and thinking about format? Often doesn't.",
     citations: [
       "Fogg, B. J. (2019). Tiny Habits: The Small Changes that Change Everything. Houghton Mifflin Harcourt.",
       "Csikszentmihalyi, M. (1990). Flow: The Psychology of Optimal Experience. Harper & Row.",
     ],
     kalnehiConnection:
-      "Voice dictation, photo scan, or type it yourself — three modes, one goal. The plan is in before the excuse to skip it arrives.",
+      "Voice dictation or type it yourself — two modes, one goal. The plan is in before the excuse to skip it arrives.",
     accent: "from-violet-400/20 via-white/40 to-pink-400/15",
     badgeColor: "bg-violet-500/15 text-violet-700 dark:text-violet-400",
   },
@@ -226,16 +226,16 @@ const RESEARCH_SECTIONS: ResearchSection[] = [
   {
     id: "ai-capture",
     emoji: "🎁",
-    title: "AI Voice Dictation & Photo Scanner",
-    researchHook: "Your brain stores verbal and visual information through separate channels — and they reinforce each other.",
+    title: "AI Voice Dictation",
+    researchHook: "Saying your plan out loud engages motor and verbal memory — it sticks faster than vague intention.",
     researchDetail:
-      "Paivio's dual coding research found that activating both channels at once — speaking and seeing — creates stronger, more retrievable memories than text alone. AIIMS Delhi's problem-based learning programme adopted this for exactly that reason. Practically: the plan you talk out loud and photograph in your own handwriting sticks better than the one you typed and forgot you made.",
+      "Paivio's dual coding research found that combining verbal expression with structured output creates stronger, more retrievable plans than keeping everything in your head. Practically: the timetable you dictate and then refine into tasks is harder to ignore than the one you meant to write down later.",
     citations: [
       "Paivio, A. (1986). Mental Representations: A Dual Coding Approach. Oxford University Press.",
       "Mayer, R. E. (2009). Multimedia Learning (2nd ed.). Cambridge University Press — foundational in medical education at AIIMS.",
     ],
     kalnehiConnection:
-      "Talk your plan, photograph your handwritten notes. The app reads both and structures it. Your plan is in before the excuse to skip it has time to form.",
+      "Dictate My Day turns speech into structured tasks you can edit before saving. Your plan is in before the excuse to skip it has time to form.",
     accent: "from-lime-400/15 via-white/40 to-yellow-400/15",
     badgeColor: "bg-lime-500/15 text-lime-700 dark:text-lime-400",
   },

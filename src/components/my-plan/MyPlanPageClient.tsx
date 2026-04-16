@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Script from "next/script";
 import { addMonths, differenceInCalendarDays, format } from "date-fns";
-import { ArrowLeft, Camera, Crown, Loader2, Mic, RefreshCw, Sparkles, Zap } from "lucide-react";
+import { ArrowLeft, Crown, Loader2, Mic, RefreshCw, Sparkles, Zap } from "lucide-react";
 import { useCallback, useRef, useState, useTransition } from "react";
 
 import {
@@ -159,7 +159,6 @@ export function MyPlanPageClient() {
     autopayMonthsTotal,
     freeTrialActive,
     freeTrialEndsAtIso,
-    freeTrialPhotoRemaining,
     freeTrialVoiceSecondsRemaining,
     trialVoiceSecondsUsed,
     welcomeTrialExpiredNoPay,
@@ -168,15 +167,10 @@ export function MyPlanPageClient() {
   const {
     hasAiAccess,
     isBasicTrial,
-    photoScansUsed,
-    photoScansLimit,
     voiceMinutesUsed,
     voiceMinutesLimit,
-    monthlyPhotoScanLimit,
     monthlyVoiceMinuteLimit,
-    bonusPhotoScansRemaining,
     bonusVoiceMinutesRemaining,
-    bonusPhotoScansNextExpiry,
     bonusVoiceMinutesNextExpiry,
   } = useAiGate();
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -385,8 +379,7 @@ export function MyPlanPageClient() {
                   24-hour welcome trial
                 </p>
                 <p className="mt-1 text-sm font-medium text-kal-text">
-                  {freeTrialPhotoRemaining} photo scans ·{" "}
-                  {formatWelcomeVoiceTimeLeft(freeTrialVoiceSecondsRemaining)} on voice
+                  {formatWelcomeVoiceTimeLeft(freeTrialVoiceSecondsRemaining)} of welcome voice time
                 </p>
                 {welcomeEndsIn ? (
                   <p className="mt-1 text-xs font-semibold tabular-nums text-kal-accent">
@@ -396,23 +389,16 @@ export function MyPlanPageClient() {
                 <p className="mt-1 text-xs text-kal-text-secondary">
                   Limits do not roll over to the next day — use them within this window. After it
                   ends, start a 3-day paid trial — {TIERS.pro.trialPriceDisplay} (Pro) or{" "}
-                  {TIERS.pro_max.trialPriceDisplay} (Pro Max) — then full AI.
+                  {TIERS.pro_max.trialPriceDisplay} (Pro Max) — then full voice dictation and typed
+                  planning on your tier.
                 </p>
               </div>
-              <div className="grid gap-0 sm:grid-cols-2">
-                <UsageBar
-                  icon={<Camera className="h-4 w-4" />}
-                  label="Welcome photo scans"
-                  used={5 - freeTrialPhotoRemaining}
-                  limit={5}
-                />
-                <UsageBar
-                  icon={<Mic className="h-4 w-4" />}
-                  label="Welcome voice time"
-                  used={trialVoiceSecondsUsed}
-                  limit={FREE_TRIAL_VOICE_CAP_SECONDS}
-                />
-              </div>
+              <UsageBar
+                icon={<Mic className="h-4 w-4" />}
+                label="Welcome voice time"
+                used={trialVoiceSecondsUsed}
+                limit={FREE_TRIAL_VOICE_CAP_SECONDS}
+              />
             </div>
           ) : null}
 
@@ -469,7 +455,7 @@ export function MyPlanPageClient() {
                 </h2>
                 <p className="mt-1 text-sm text-kal-text-secondary">
                   {onWelcomeTrial
-                    ? "You're on a one-time 24-hour preview with limited AI photo & voice. Subscribe anytime for full access."
+                    ? "You're on a one-time 24-hour preview with limited AI voice time. Subscribe anytime for full access."
                     : noActivePlan
                       ? `Choose a plan to unlock ${SITE_NAME}.`
                       : tierConfig.tagline}
@@ -541,17 +527,10 @@ export function MyPlanPageClient() {
                     </p>
                     <p className="mt-1 text-xs leading-relaxed text-kal-text-secondary">
                       Use up to{" "}
-                      <span className="font-medium text-kal-text">
-                        2 voice minutes
-                      </span>{" "}
-                      and{" "}
-                      <span className="font-medium text-kal-text">
-                        3 AI photo scans
-                      </span>{" "}
-                      during your 3-day trial to try faster capture. After the
-                      trial, your Basic subscription continues with the core
-                      features listed on Pricing — upgrade to Pro anytime for
-                      monthly AI scans and voice minutes.
+                      <span className="font-medium text-kal-text">2 voice minutes</span> during your
+                      3-day trial to try voice dictation. After the trial, your Basic subscription
+                      continues with the core features listed on Pricing — upgrade to Pro anytime for
+                      monthly voice minutes.
                     </p>
                   </div>
                 )}
@@ -559,49 +538,30 @@ export function MyPlanPageClient() {
                 {/* Pro / Pro Max trial: scannable quota line */}
                 {status === "trial" && !isBasicTrial && tier === "pro" && (
                   <p className="border-b border-kal-border px-4 py-2 text-xs leading-relaxed text-kal-text-secondary">
-                    <span className="font-medium text-kal-text">
-                      20 AI Scans &amp; 40 Voice Minutes per month
-                    </span>{" "}
-                    (includes 5 scans + 10 mins during your 3-day trial; full
-                    monthly allowance after your first paid cycle).
+                    <span className="font-medium text-kal-text">40 voice minutes per month</span>{" "}
+                    (includes 10 minutes during your 3-day trial; full monthly allowance after your
+                    first paid cycle).
                   </p>
                 )}
                 {status === "trial" && !isBasicTrial && tier === "pro_max" && (
                   <p className="border-b border-kal-border px-4 py-2 text-xs leading-relaxed text-kal-text-secondary">
-                    <span className="font-medium text-kal-text">
-                      50 AI Scans &amp; 80 Voice Minutes per month
-                    </span>{" "}
-                    (includes 10 scans + 20 mins during your 3-day trial; full
-                    monthly allowance after your first paid cycle).
+                    <span className="font-medium text-kal-text">80 voice minutes per month</span>{" "}
+                    (includes 20 minutes during your 3-day trial; full monthly allowance after your
+                    first paid cycle).
                   </p>
                 )}
 
-                <UsageBar
-                  icon={<Camera className="h-4 w-4" />}
-                  label="Photo scans"
-                  used={photoScansUsed}
-                  limit={monthlyPhotoScanLimit}
-                />
                 <UsageBar
                   icon={<Mic className="h-4 w-4" />}
                   label="Voice minutes"
                   used={voiceMinutesUsed}
                   limit={monthlyVoiceMinuteLimit}
                 />
-                {(bonusPhotoScansRemaining > 0 || bonusVoiceMinutesRemaining > 0) && (
+                {bonusVoiceMinutesRemaining > 0 && (
                   <div className="space-y-2 border-t border-kal-border px-4 py-3">
                     <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
                       Bonus credits
                     </p>
-                    {bonusPhotoScansRemaining > 0 ? (
-                      <p className="text-xs text-kal-text-secondary">
-                        <span className="font-medium text-kal-text">Photo scans: </span>
-                        {bonusPhotoScansRemaining} remaining
-                        {bonusPhotoScansNextExpiry ? (
-                          <> · expires {formatDate(bonusPhotoScansNextExpiry)}</>
-                        ) : null}
-                      </p>
-                    ) : null}
                     {bonusVoiceMinutesRemaining > 0 ? (
                       <p className="text-xs text-kal-text-secondary">
                         <span className="font-medium text-kal-text">Voice minutes: </span>
@@ -617,9 +577,8 @@ export function MyPlanPageClient() {
                   <>
                     <div className="border-t border-kal-border px-4 py-2">
                       <p className="text-[0.65rem] leading-relaxed text-kal-text-secondary">
-                        Bonus credits are used before your monthly allowance. Combined
-                        capacity this month: {photoScansLimit} scans,{" "}
-                        {voiceMinutesLimit} voice minutes.
+                        Bonus credits are used before your monthly allowance. Combined voice
+                        capacity this month: {voiceMinutesLimit} minutes.
                       </p>
                     </div>
                     <div className="flex items-center justify-between border-t border-kal-border px-4 py-2">
@@ -640,17 +599,14 @@ export function MyPlanPageClient() {
               <div className="border-t border-kal-border">
                 <div className="border-b border-kal-border px-4 py-3">
                   <h3 className="text-xs font-semibold uppercase tracking-widest text-kal-muted">
-                    AI Photo Scans &amp; Voice Dictation
+                    AI Voice Dictation
                   </h3>
                 </div>
                 <div className="px-4 py-3">
                   <p className="text-xs leading-relaxed text-kal-text-secondary">
-                    Want AI Photo Scans and Voice Dictation every month? Upgrade
-                    to Pro for{" "}
-                    <span className="font-medium text-kal-text">
-                      20 AI scans &amp; 40 voice minutes per month
-                    </span>{" "}
-                    — start with a 3-day trial for just ₹21 on Pricing.
+                    Want AI voice dictation every month? Upgrade to Pro for{" "}
+                    <span className="font-medium text-kal-text">40 voice minutes per month</span> — start
+                    with a 3-day trial for just ₹21 on Pricing.
                   </p>
                   <a
                     href="/pricing"

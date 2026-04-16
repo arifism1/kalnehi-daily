@@ -63,8 +63,8 @@ export function FreeTrialWelcomeBanner() {
             </p>
           ) : null}
           <p className="mt-1 text-xs leading-relaxed text-kal-text-secondary sm:text-sm">
-            5 photo scans + 3 minutes of voice — use them anytime before the clock above hits zero.
-            Limits don&apos;t roll over daily.
+            3 minutes of voice time — use it anytime before the clock above hits zero. Limits
+            don&apos;t roll over daily.
           </p>
         </div>
         <button

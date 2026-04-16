@@ -14,7 +14,7 @@ const DictateDayPageContent = dynamic(() => import("./DictateDayPageContent"), {
 export default function DictateDayRouteLazy() {
   return (
     <Suspense fallback={<RoutePageSkeleton />}>
-      <AiFeatureGate feature="voice">
+      <AiFeatureGate>
         <DictateDayPageContent />
       </AiFeatureGate>
     </Suspense>

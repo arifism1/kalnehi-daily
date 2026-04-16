@@ -19,7 +19,7 @@ export async function compressImageForUpload(file: File): Promise<{
   mimeType: "image/jpeg";
 }> {
   if (typeof createImageBitmap !== "function") {
-    throw new Error("Photo scan needs a browser that supports images.");
+    throw new Error("This action needs a browser that supports images.");
   }
   const bitmap = await createImageBitmap(file);
   try {

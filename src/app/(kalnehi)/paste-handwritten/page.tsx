@@ -1,5 +1,5 @@
-import PasteHandwrittenRouteLazy from "./PasteHandwrittenRouteLazy";
+import { notFound } from "next/navigation";
 
-export default function PasteHandwrittenRoutePage() {
-  return <PasteHandwrittenRouteLazy />;
+export default function HiddenLegacyPlannerRoutePage() {
+  notFound();
 }

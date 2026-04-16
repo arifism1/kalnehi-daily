@@ -102,9 +102,12 @@ const FEATURE_ACCESS: Record<SubscriptionTier, Record<FeatureKey, FeatureAccess>
 
 /** Human-readable upgrade prompt per blocked feature. */
 export const FEATURE_LABELS: Record<FeatureKey, { name: string; upgradeHint: string }> = {
-  plan_my_day: { name: "Plan My Day", upgradeHint: "Upgrade to Pro for all 3 planners (Dictate, Handwritten, Self Type)." },
+  plan_my_day: { name: "Plan My Day", upgradeHint: "Upgrade to Pro for Dictate My Day and Self Type planning." },
   dictate_day: { name: "Dictate My Day", upgradeHint: "Upgrade to Pro for voice-based daily planning." },
-  handwritten_scanner: { name: "Handwritten Scanner", upgradeHint: "Upgrade to Pro for AI-powered handwritten plan scanning." },
+  handwritten_scanner: {
+    name: "Plan My Day",
+    upgradeHint: "Upgrade to Pro for Dictate My Day and Self Type planning.",
+  },
   self_type_day: { name: "Self Type Day", upgradeHint: "" },
   syllabus: { name: "Syllabus Mastery Tracker", upgradeHint: "Upgrade to Pro for full syllabus with microtopics & predictions." },
   marks_engine: { name: "Marks Engine", upgradeHint: "Upgrade to Pro for marks predictions & microtopic analysis." },
@@ -119,7 +122,10 @@ export const FEATURE_LABELS: Record<FeatureKey, { name: string; upgradeHint: str
   meditation: { name: "Meditation", upgradeHint: "Upgrade to Pro for meditation sessions." },
   meditation_consistency: { name: "Meditation Consistency", upgradeHint: "Upgrade to Pro for meditation consistency tracking." },
   doubts: { name: "Doubt Tracker", upgradeHint: "Upgrade to Pro for doubt tracking." },
-  ai_photo_scan: { name: "AI Photo Scan", upgradeHint: "Upgrade to Pro for AI-powered photo scanning." },
+  ai_photo_scan: {
+    name: "AI Voice Dictation",
+    upgradeHint: "Upgrade to Pro for monthly voice dictation.",
+  },
   ai_voice: { name: "AI Voice Dictation", upgradeHint: "Upgrade to Pro for AI voice dictation." },
   prepbrain_ai: {
     name: "PrepBrain AI",
@@ -182,7 +188,7 @@ export const TIERS: Record<SubscriptionTier, TierConfig> = {
     maxTasksPerDay: null,
     tagline: "Most popular",
     benefits: [
-      "All 3 planners (Dictate + Handwritten + Self Type)",
+      "Dictate My Day + Self Type planners",
       "Full syllabus with microtopics & predictions",
       "Full execution planner + timer",
       "Progress, Daily Log",
@@ -264,22 +270,17 @@ export function isFeatureLimited(
 }
 
 /**
- * Returns true if the user can access AI features.
- * Basic tier users get a one-time trial taste: 3 photo scans + 2 voice minutes
- * during their 3-day trial. After the trial they have 0 AI quota.
+ * Returns true if the user can access AI features (voice dictation and related quotas).
+ * Basic tier users get a trial taste of voice minutes during their 3-day trial.
  */
 export function canUseAi(
   tier: string | null | undefined,
   isTrialPeriod = false,
 ): boolean {
   if (tier === "basic" && isTrialPeriod) {
-    // Grant AI access during trial only if the trial gift quotas are non-zero
-    return (
-      TIERS.basic.trialPhotoScansLimit > 0 ||
-      TIERS.basic.trialVoiceMinutesLimit > 0
-    );
+    return TIERS.basic.trialVoiceMinutesLimit > 0;
   }
-  return !isFeatureBlocked(tier, "ai_photo_scan");
+  return !isFeatureBlocked(tier, "ai_voice");
 }
 
 export function getPhotoScansLimit(
@@ -325,6 +326,10 @@ export type ExtraCreditPack = {
   type: "photo_scans" | "voice_minutes";
 };
 
+/**
+ * All packs (including legacy types) for server checkout lookup.
+ * Use {@link EXTRA_CREDIT_PACKS_UI} in UI — photo-type packs are not sold in-app.
+ */
 export const EXTRA_CREDIT_PACKS: ExtraCreditPack[] = [
   {
     id: "photo_scans_10",
@@ -351,6 +356,11 @@ export const EXTRA_CREDIT_PACKS: ExtraCreditPack[] = [
     type: "voice_minutes",
   },
 ];
+
+/** Extra credit packs shown in My Plan (voice only). */
+export const EXTRA_CREDIT_PACKS_UI: ExtraCreditPack[] = EXTRA_CREDIT_PACKS.filter(
+  (p) => p.type === "voice_minutes",
+);
 
 export const EXTRA_CREDITS_BY_ID: Record<string, ExtraCreditPack> =
   Object.fromEntries(EXTRA_CREDIT_PACKS.map((p) => [p.id, p]));

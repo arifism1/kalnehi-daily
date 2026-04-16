@@ -42,9 +42,9 @@ type Props = {
   /** When true, show a compact loading strip at top of preview (e.g. voice processing). */
   processing?: boolean;
   processingLabel?: string;
-  /** Tighter padding and spacing (e.g. mobile handwritten scan flow). */
+  /** Tighter padding and spacing (e.g. compact mobile preview). */
   compact?: boolean;
-  /** Per-row optional syllabus picker (voice / handwritten / typed preview). */
+  /** Per-row optional syllabus picker (voice / typed preview). */
   syllabusLinkMode?: boolean;
 };
 

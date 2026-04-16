@@ -9,7 +9,6 @@ import {
   Clock,
   Flower2,
   HelpCircle,
-  Image,
   Inbox,
   LayersIcon,
   LineChart,
@@ -35,11 +34,9 @@ import { MissedTasks } from "@/components/home/MissedTasks";
 import { MeditationPage } from "@/components/meditation/MeditationPage";
 import { MyTargetClient } from "@/components/myTarget/MyTargetClient";
 import { PlanMyDayPage } from "@/components/planner/PlanMyDayPage";
-import { PasteHandwrittenPlanPage } from "@/components/planner/PasteHandwrittenPlanPage";
 import { UnifiedDailyPlanList } from "@/components/planner/UnifiedDailyPlanList";
 import { PrepBrainChat } from "@/components/prepbrain/PrepBrainChat";
 import { SyllabusTracker } from "@/components/syllabus/SyllabusTracker";
-import { AiFeatureGate } from "@/components/subscription/AiFeatureGate";
 import { TargetScoreBlueprintClient } from "@/components/targetScoreBlueprint/TargetScoreBlueprintClient";
 import { DictateMyDay } from "@/components/voice/DictateMyDay";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
@@ -129,18 +126,6 @@ export function HomeAccordionSections() {
       title: "Dictate My Day",
       icon: Mic,
       content: <DictateMyDay />,
-    },
-    {
-      id: "handwritten-scan",
-      title: "Handwritten Scan",
-      icon: Image,
-      content: (
-        <AiFeatureGate feature="photo_scan">
-          <div className="mx-auto max-w-2xl">
-            <PasteHandwrittenPlanPage />
-          </div>
-        </AiFeatureGate>
-      ),
     },
     {
       id: "target-score-blueprint",
