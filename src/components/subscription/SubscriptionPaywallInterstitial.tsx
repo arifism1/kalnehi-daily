@@ -74,7 +74,7 @@ export function SubscriptionPaywallInterstitial() {
           <Link
             ref={primaryRef}
             href="/pricing"
-            className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-kal-accent px-4 py-3 text-center text-sm font-bold text-kal-accent-foreground hover:bg-kal-accent-hover sm:min-h-[44px] sm:px-5"
+            className="kal-btn-accent min-h-[48px] sm:min-h-[44px]"
           >
             View plans & pricing
           </Link>

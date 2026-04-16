@@ -56,6 +56,14 @@ export type MainNavItem = {
   isActive?: (pathname: string) => boolean;
   /** Opens in-menu UI (e.g. contact modal) instead of navigating */
   menuAction?: "contact-support";
+  /**
+   * The dashboard feature id this nav item corresponds to (matches
+   * DASHBOARD_FEATURES[n].id). When set the item is hidden from both the
+   * quick-nav bar and the hamburger menu whenever the user has customised their
+   * features and this id is not in the enabled list.
+   * Items without a featureId are always visible (Home, Settings, Profile …).
+   */
+  featureId?: string;
 };
 
 export type MainNavSection = {
@@ -71,46 +79,52 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
     quickNavGroupLabel: "Core",
     items: [
       { href: "/", label: "Dashboard (Home)", shortLabel: "Home", Icon: Home },
-      { href: "/plan-my-day", label: "Plan My Day", Icon: Sparkles },
+      { href: "/plan-my-day", label: "Plan My Day", Icon: Sparkles, featureId: "plan-my-day" },
       {
         href: "/daily-plan",
         label: "Daily Planner",
         shortLabel: "Daily plan",
         Icon: Calendar,
+        featureId: "daily-planner",
       },
       {
         href: "/dictate-day",
         label: "Dictate My Day",
         shortLabel: "Dictate",
         Icon: Mic,
+        featureId: "dictate-my-day",
       },
       {
         href: "/paste-handwritten",
         label: "Handwritten Scan",
         shortLabel: "Scan",
         Icon: Image,
+        featureId: "handwritten-scan",
       },
       {
         href: "/prepbrain",
         label: "PrepBrain AI",
         shortLabel: "PrepBrain",
         Icon: Brain,
+        featureId: "prepbrain-ai",
       },
-      { href: "/syllabus", label: "Syllabus Mastery Tracker", shortLabel: "Syllabus", Icon: BookOpen },
+      { href: "/syllabus", label: "Syllabus Mastery Tracker", shortLabel: "Syllabus", Icon: BookOpen, featureId: "syllabus-mastery-tracker" },
       {
         href: "/target-score-blueprint",
         label: "Target Score Blueprint",
         shortLabel: "Blueprint",
         Icon: Target,
+        featureId: "target-score-blueprint",
       },
       {
         href: "/my-target",
         label: "My Target",
         shortLabel: "My Target",
         Icon: Bookmark,
+        featureId: "my-target",
       },
-      { href: "/pending", label: "Pending Tasks", shortLabel: "Pending", Icon: Inbox },
-      { href: "/doubts", label: "Doubt Tracker", shortLabel: "Doubts", Icon: HelpCircle },
+      { href: "/pending", label: "Pending Tasks", shortLabel: "Pending", Icon: Inbox, featureId: "pending-tasks" },
+      { href: "/doubts", label: "Doubt Tracker", shortLabel: "Doubts", Icon: HelpCircle, featureId: "doubt-tracker" },
     ],
   },
   {
@@ -122,27 +136,30 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
         label: "Study Sessions",
         shortLabel: "Study",
         Icon: PlayCircle,
+        featureId: "study-sessions",
       },
-      { href: "/timer", label: "Timer", Icon: Clock },
+      { href: "/timer", label: "Timer", Icon: Clock, featureId: "timer" },
     ],
   },
   {
     title: "Review & Analysis",
     quickNavGroupLabel: "Review",
     items: [
-      { href: "/progress", label: "Progress", Icon: TrendingUp },
-      { href: "/daily-log", label: "Daily Log", Icon: Notebook },
+      { href: "/progress", label: "Progress", Icon: TrendingUp, featureId: "progress" },
+      { href: "/daily-log", label: "Daily Log", Icon: Notebook, featureId: "daily-log" },
       {
         href: "/revision",
         label: "Revision Engine",
         shortLabel: "Revision",
         Icon: RotateCw,
+        featureId: "revision-engine",
       },
       {
         href: "/consistency-tracker",
         label: "Consistency Tracker",
         shortLabel: "Consistency",
         Icon: BarChart3,
+        featureId: "consistency-tracker",
       },
     ],
   },
@@ -150,14 +167,15 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
     title: "Growth Tools",
     quickNavGroupLabel: "Growth",
     items: [
-      { href: "/habits", label: "Habit Maker", shortLabel: "Habits", Icon: CheckCircle },
+      { href: "/habits", label: "Habit Maker", shortLabel: "Habits", Icon: CheckCircle, featureId: "habit-maker" },
       {
         href: "/motivation",
         label: "Personal Motivation",
         shortLabel: "Motivation",
         Icon: Heart,
+        featureId: "personal-motivation",
       },
-      { href: "/meditation", label: "Brain Yoga", Icon: Flower2 },
+      { href: "/meditation", label: "Brain Yoga", Icon: Flower2, featureId: "brain-yoga" },
     ],
   },
   {
@@ -184,6 +202,26 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
     ],
   },
 ];
+
+/**
+ * Returns only the nav sections/items that are enabled given the user's feature
+ * selection. Items without a featureId are always included.
+ * Pass `null` to get everything (no customisation applied).
+ */
+export function filterNavByEnabledFeatures(
+  sections: MainNavSection[],
+  enabledFeatures: string[] | null,
+): MainNavSection[] {
+  if (enabledFeatures === null) return sections;
+  return sections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter(
+        (item) => !item.featureId || enabledFeatures.includes(item.featureId),
+      ),
+    }))
+    .filter((section) => section.items.length > 0);
+}
 
 /**
  * Quick-nav strip order: earlier = typical daily use first (hub → plan → study → review → rest).
@@ -226,10 +264,14 @@ function quickNavOrderIndex(href: string): number {
 }
 
 /** Flat list of nav items for the scrolling quick bar, frequency-sorted. */
-export function getMainNavItemsInQuickNavOrder(): MainNavItem[] {
+export function getMainNavItemsInQuickNavOrder(
+  enabledFeatures: string[] | null = null,
+): MainNavItem[] {
   const flat = MAIN_NAV_SECTIONS.flatMap((s) => s.items).filter(
     (item) =>
-      !item.menuAction && !QUICK_NAV_EXCLUDED_HREFS.has(item.href),
+      !item.menuAction &&
+      !QUICK_NAV_EXCLUDED_HREFS.has(item.href) &&
+      (enabledFeatures === null || !item.featureId || enabledFeatures.includes(item.featureId)),
   );
   return [...flat].sort(
     (a, b) => quickNavOrderIndex(a.href) - quickNavOrderIndex(b.href),

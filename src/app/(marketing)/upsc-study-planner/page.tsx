@@ -89,7 +89,7 @@ export default function UpscStudyPlannerPage() {
           </ul>
         </section>
 
-        <section className="rounded-2xl border border-kal-border bg-kal-accent-soft/40 px-4 py-5" aria-labelledby="upsc-pwa">
+        <section className="kal-glass-card rounded-2xl px-4 py-5" aria-labelledby="upsc-pwa">
           <h2 id="upsc-pwa" className="text-lg font-semibold text-kal-text">
             Install {SITE_NAME} as a PWA
           </h2>
@@ -121,16 +121,10 @@ export default function UpscStudyPlannerPage() {
         </nav>
 
         <div className="flex flex-col gap-3 sm:flex-row">
-          <Link
-            href="/auth"
-            className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-xl bg-kal-accent px-6 text-sm font-bold text-kal-accent-foreground"
-          >
+          <Link href="/auth" className="kal-btn-accent min-h-[48px] flex-1 text-center">
             Start with {SITE_NAME}
           </Link>
-          <Link
-            href="/guides"
-            className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-xl border border-kal-border bg-kal-card px-6 text-sm font-semibold text-kal-text"
-          >
+          <Link href="/guides" className="kal-btn-ghost min-h-[48px] flex-1 text-center">
             All guides
           </Link>
         </div>

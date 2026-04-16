@@ -38,10 +38,7 @@ export function AiFeatureGate({ feature, children }: Props) {
           Upgrade to Pro or Pro Max to unlock AI-powered features like voice
           planning and handwritten scanner.
         </p>
-        <Link
-          href="/pricing"
-          className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-kal-accent px-6 py-2.5 text-sm font-bold text-kal-accent-foreground"
-        >
+        <Link href="/pricing" className="kal-btn-accent">
           View Plans
         </Link>
       </div>
@@ -70,10 +67,7 @@ export function AiFeatureGate({ feature, children }: Props) {
               : "40 voice minutes per month"}{" "}
             and full AI access.
           </p>
-          <Link
-            href="/pricing"
-            className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-kal-accent px-6 py-2.5 text-sm font-bold text-kal-accent-foreground"
-          >
+          <Link href="/pricing" className="kal-btn-accent">
             Upgrade to Pro
           </Link>
         </div>
@@ -95,10 +89,7 @@ export function AiFeatureGate({ feature, children }: Props) {
           upgrade your plan for higher limits.
         </p>
         <div className="flex gap-3">
-          <Link
-            href="/pricing"
-            className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-kal-accent px-5 py-2.5 text-sm font-bold text-kal-accent-foreground"
-          >
+          <Link href="/pricing" className="kal-btn-accent">
             Upgrade Plan
           </Link>
           <Link

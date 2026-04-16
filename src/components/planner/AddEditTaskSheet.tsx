@@ -399,7 +399,7 @@ export function AddEditTaskSheet({
         </div>
 
         {draftError ? (
-          <p className="mt-4 rounded-xl bg-rose-950/40 px-3 py-2 text-sm text-rose-200">
+          <p className="mt-4 rounded-xl bg-kal-danger-soft border border-kal-danger-border px-3 py-2 text-sm text-kal-danger-text">
             {draftError}
           </p>
         ) : null}
@@ -576,7 +576,7 @@ export function AddEditTaskSheet({
         ) : null}
 
         {error && (
-          <p className="mt-4 rounded-xl bg-rose-950/40 px-3 py-2 text-sm text-rose-200">
+          <p className="mt-4 rounded-xl bg-kal-danger-soft border border-kal-danger-border px-3 py-2 text-sm text-kal-danger-text">
             {error}
           </p>
         )}

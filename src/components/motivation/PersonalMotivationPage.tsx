@@ -638,7 +638,7 @@ export function PersonalMotivationPage() {
 
   if (!userId) {
     return (
-      <div className="rounded-2xl border border-kal-border bg-kal-card p-8 text-center text-kal-muted">
+      <div className="kal-glass-card rounded-2xl p-8 text-center text-kal-muted">
         Sign in to use Personal Motivation.
       </div>
     );
@@ -745,7 +745,7 @@ export function PersonalMotivationPage() {
       </div>
 
       {tab === "letter" ? (
-        <section className="space-y-5 rounded-2xl border border-kal-border bg-kal-card px-5 py-6 kal-shadow-card sm:px-8 sm:py-8">
+        <section className="space-y-5 kal-glass-card rounded-2xl px-5 py-6 sm:px-8 sm:py-8">
           <div className="flex items-baseline justify-between gap-2">
             <h2 className="text-sm font-bold text-kal-text">Letter to Future Self</h2>
             <span className="text-xs font-medium tabular-nums text-kal-muted">
@@ -768,7 +768,7 @@ export function PersonalMotivationPage() {
               type="button"
               disabled={letterSaving}
               onClick={() => void saveLetter(false)}
-              className="inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl bg-kal-accent px-5 py-3 text-xs font-bold uppercase tracking-wide text-kal-accent-foreground shadow-sm transition-colors hover:bg-kal-accent-hover disabled:opacity-50"
+              className="kal-btn-accent flex-1 min-h-[48px]"
             >
               {letterSaving ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -791,7 +791,7 @@ export function PersonalMotivationPage() {
       ) : null}
 
       {tab === "voice" ? (
-        <section className="space-y-6 rounded-2xl border border-kal-border bg-kal-card px-5 py-6 kal-shadow-card sm:px-8 sm:py-8">
+        <section className="space-y-6 kal-glass-card rounded-2xl px-5 py-6 sm:px-8 sm:py-8">
           <h2 className="text-sm font-bold text-kal-text">Voice Affirmations</h2>
           <p className="text-xs leading-relaxed text-kal-text-secondary sm:text-sm">
             Record a note — we transcribe with Groq — then tag it. Playback stays
@@ -802,7 +802,7 @@ export function PersonalMotivationPage() {
               <button
                 type="button"
                 onClick={() => void startRecording()}
-                className="inline-flex items-center gap-2 rounded-xl bg-kal-accent px-4 py-3 text-xs font-bold uppercase tracking-wide text-kal-accent-foreground"
+                className="kal-btn-accent"
               >
                 <Mic className="h-4 w-4" />
                 Record
@@ -811,7 +811,7 @@ export function PersonalMotivationPage() {
               <button
                 type="button"
                 onClick={stopRecording}
-                className="inline-flex items-center gap-2 rounded-xl border border-red-300/80 bg-red-50 px-4 py-3 text-xs font-bold uppercase tracking-wide text-red-700 dark:bg-red-950/40 dark:text-red-200"
+                className="inline-flex items-center gap-2 rounded-xl border border-kal-accent/40 bg-kal-accent-soft px-4 py-3 text-xs font-bold uppercase tracking-wide text-kal-accent-dark dark:text-kal-accent"
               >
                 <Square className="h-4 w-4 fill-current" />
                 Stop
@@ -897,7 +897,7 @@ export function PersonalMotivationPage() {
             type="button"
             disabled={voiceSaving || !voiceTranscript.trim()}
             onClick={() => void saveVoice()}
-            className="w-full min-h-[48px] rounded-xl bg-kal-accent py-3 text-xs font-bold uppercase tracking-wide text-kal-accent-foreground disabled:opacity-45"
+            className="kal-btn-accent w-full min-h-[48px]"
           >
             {voiceSaving ? "Saving…" : "Save affirmation"}
           </button>
@@ -905,7 +905,7 @@ export function PersonalMotivationPage() {
       ) : null}
 
       {tab === "vision" ? (
-        <section className="space-y-6 rounded-2xl border border-kal-border bg-kal-card px-5 py-6 kal-shadow-card sm:px-8 sm:py-8">
+        <section className="space-y-6 kal-glass-card rounded-2xl px-5 py-6 sm:px-8 sm:py-8">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-sm font-bold text-kal-text">Vision Board</h2>
             <input
@@ -936,7 +936,7 @@ export function PersonalMotivationPage() {
                 type="button"
                 disabled={photoBusy}
                 onClick={() => cameraInputRef.current?.click()}
-                className="inline-flex items-center gap-2 rounded-xl bg-kal-accent px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-kal-accent-foreground disabled:opacity-50"
+                className="kal-btn-accent"
               >
                 {photoBusy ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -992,7 +992,7 @@ export function PersonalMotivationPage() {
       ) : null}
 
       {tab === "timeline" ? (
-        <section className="rounded-2xl border border-kal-border bg-kal-card px-5 py-6 kal-shadow-card sm:px-8 sm:py-8">
+        <section className="kal-glass-card rounded-2xl px-5 py-6 sm:px-8 sm:py-8">
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center">
             <h2 className="text-sm font-bold text-kal-text">Timeline</h2>
             <div className="relative flex-1">

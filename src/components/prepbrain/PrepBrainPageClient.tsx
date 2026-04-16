@@ -32,7 +32,7 @@ export function PrepBrainPageClient() {
         </p>
         <Link
           href="/pricing"
-          className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-kal-accent px-6 py-2.5 text-sm font-bold text-kal-accent-foreground"
+          className="kal-btn-accent min-h-[44px] rounded-xl text-sm"
         >
           View Plans
         </Link>

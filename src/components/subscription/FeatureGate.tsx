@@ -37,10 +37,7 @@ export function FeatureGate({ feature, children }: Props) {
         <p className="text-sm leading-relaxed text-kal-text-secondary">
           {label.upgradeHint}
         </p>
-        <Link
-          href="/pricing"
-          className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-kal-accent px-8 py-3 text-sm font-bold text-kal-accent-foreground"
-        >
+        <Link href="/pricing" className="kal-btn-accent min-h-[48px]">
           View Plans
         </Link>
       </div>

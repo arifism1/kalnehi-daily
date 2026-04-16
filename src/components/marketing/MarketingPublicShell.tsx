@@ -7,8 +7,8 @@ import { MarketingNav } from "@/components/marketing/MarketingNav";
 
 export function MarketingPublicShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-dvh flex-col bg-kal-page text-kal-text">
-      <header className="sticky top-0 z-40 border-b border-kal-border bg-kal-card/90 backdrop-blur-md">
+    <div className="kal-page-bg flex min-h-dvh flex-col text-kal-text">
+      <header className="sticky top-0 z-40 kal-glass-header">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 sm:h-[3.5rem] sm:px-6 md:gap-6 md:px-8">
           <Link
             href="/guides"

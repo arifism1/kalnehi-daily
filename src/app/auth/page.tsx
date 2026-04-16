@@ -41,7 +41,7 @@ function authCallbackUrl(nextPath: string): string {
 function AuthPageMark({ priority }: { priority?: boolean }) {
   return (
     <div className="mb-3 flex shrink-0 justify-center">
-      <div className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-kal-border/70">
+      <div className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-2xl bg-[rgba(255,252,248,0.95)] shadow-sm ring-2 ring-kal-accent/20">
         <Image
           src="/icon-192x192.png"
           alt=""
@@ -219,7 +219,7 @@ export default function AuthPage() {
 
   if (view === "forgot-sent") {
     return (
-      <div className="flex min-h-full flex-col items-center justify-center gap-8 bg-kal-page px-6 py-16">
+      <div className="kal-page-bg flex min-h-full flex-col items-center justify-center gap-8 px-6 py-16">
         <AuthAppNavPreviewMenu />
         <AuthExploreLinks />
         <div className="text-center">
@@ -230,8 +230,8 @@ export default function AuthPage() {
             folder).
           </p>
         </div>
-        <div className="w-full max-w-sm rounded-2xl border border-kal-accent/25 bg-red-950/30 px-4 py-5 text-center">
-          <p className="text-sm text-red-100/90">
+        <div className="kal-glass-card w-full max-w-sm rounded-2xl border border-kal-accent/25 px-4 py-5 text-center">
+          <p className="text-sm text-kal-text-secondary">
             When you open the link, you&apos;ll set a new password and return to
             the app.
           </p>
@@ -241,7 +241,7 @@ export default function AuthPage() {
               setView("form");
               setError(null);
             }}
-            className="mt-5 flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl bg-kal-accent py-3 text-sm font-semibold text-white shadow-sm hover:bg-kal-accent-hover transition-opacity hover:opacity-95"
+            className="kal-btn-accent mt-5 flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to login
@@ -253,7 +253,7 @@ export default function AuthPage() {
 
   if (view === "forgot") {
     return (
-      <div className="flex min-h-full flex-col items-center justify-center gap-8 bg-kal-page px-6 py-16">
+      <div className="kal-page-bg flex min-h-full flex-col items-center justify-center gap-8 px-6 py-16">
         <AuthAppNavPreviewMenu />
         <AuthExploreLinks />
         <div className="text-center">
@@ -292,7 +292,7 @@ export default function AuthPage() {
             </div>
 
             {error && (
-              <p className="rounded-xl border border-rose-500/30 bg-rose-950/30 px-3 py-2 text-sm text-rose-200">
+              <p className="rounded-xl border border-kal-danger-border bg-kal-danger-soft px-3 py-2 text-sm text-kal-danger-text">
                 {error}
               </p>
             )}
@@ -300,7 +300,7 @@ export default function AuthPage() {
             <button
               type="submit"
               disabled={busy}
-              className="flex w-full min-h-[50px] items-center justify-center gap-2 rounded-xl bg-kal-accent py-3 text-sm font-semibold text-white shadow-sm hover:bg-kal-accent-hover transition-opacity duration-200 disabled:opacity-50"
+              className="kal-btn-accent flex w-full min-h-[50px] items-center justify-center gap-2 rounded-xl disabled:opacity-50"
             >
               {busy ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -329,7 +329,7 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="flex min-h-full flex-col items-center justify-center gap-8 bg-kal-page px-6 py-16">
+    <div className="kal-page-bg flex min-h-full flex-col items-center justify-center gap-8 px-6 py-16">
       <AuthAppNavPreviewMenu />
       <div className="text-center">
         <AuthPageMark priority />
@@ -345,7 +345,7 @@ export default function AuthPage() {
 
       {verifyEmailSent && (
         <div
-          className="w-full max-w-sm rounded-2xl border border-kal-accent/30 bg-red-950/40 px-4 py-3 text-sm text-red-100"
+          className="kal-glass-card w-full max-w-sm rounded-2xl border border-kal-accent/30 px-4 py-3 text-sm text-kal-text-secondary"
           role="status"
         >
           Check your inbox to confirm your email. After confirming, use{" "}
@@ -452,7 +452,7 @@ export default function AuthPage() {
           </div>
 
           {error && (
-            <p className="rounded-xl border border-rose-500/30 bg-rose-950/30 px-3 py-2 text-sm text-rose-200">
+            <p className="rounded-xl border border-kal-danger-border bg-kal-danger-soft px-3 py-2 text-sm text-kal-danger-text">
               {error}
             </p>
           )}
@@ -460,7 +460,7 @@ export default function AuthPage() {
           <button
             type="submit"
             disabled={busy}
-            className="flex w-full min-h-[50px] items-center justify-center gap-2 rounded-xl bg-kal-accent py-3 text-sm font-semibold text-white shadow-sm hover:bg-kal-accent-hover transition-opacity duration-200 disabled:opacity-50"
+            className="kal-btn-accent flex w-full min-h-[50px] items-center justify-center gap-2 rounded-xl disabled:opacity-50"
           >
             {busy ? (
               <Loader2 className="h-5 w-5 animate-spin" />

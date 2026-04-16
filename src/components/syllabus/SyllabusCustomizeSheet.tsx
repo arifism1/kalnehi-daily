@@ -268,7 +268,7 @@ export function SyllabusCustomizeSheet({
         </div>
 
         {error ? (
-          <p className="mt-3 text-sm text-rose-300" role="alert">
+          <p className="mt-3 text-sm text-kal-danger-text" role="alert">
             {error}
           </p>
         ) : null}

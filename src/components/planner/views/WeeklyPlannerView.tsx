@@ -16,17 +16,17 @@ export function WeeklyPlannerView() {
           {days.map((d) => (
             <div
               key={d}
-              className="min-w-[4.5rem] flex-1 rounded-xl border border-slate-700 bg-slate-900/40 p-2"
+              className="kal-glass-card min-w-[4.5rem] flex-1 rounded-xl border border-kal-border p-2"
             >
               <p className="text-center text-[11px] font-bold text-kal-accent">
                 {d}
               </p>
-              <div className="mt-2 min-h-[5rem] rounded-lg border border-dashed border-slate-600/50 bg-slate-950/50" />
+              <div className="mt-2 min-h-[5rem] rounded-lg border border-dashed border-kal-border/50 bg-kal-card/50" />
             </div>
           ))}
         </div>
       </div>
-      <ul className="space-y-2 rounded-2xl border border-slate-800 bg-slate-900/30 p-4 text-sm text-zinc-400">
+      <ul className="kal-glass-subtle space-y-2 rounded-2xl border border-kal-border p-4 text-sm text-kal-muted">
         <li className="flex gap-2">
           <span className="text-kal-accent">→</span>
           Write one &quot;must finish&quot; chapter per subject per week.

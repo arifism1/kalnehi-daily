@@ -910,6 +910,7 @@ export type Database = {
           system_push_notifications: boolean
           target_exam: string | null
           target_exam_date: string | null
+          enabled_features: string[] | null
           upsc_optional_subjects: string[] | null
           updated_at: string | null
           usage_reset_date: string | null
@@ -946,6 +947,7 @@ export type Database = {
           system_push_notifications?: boolean
           target_exam?: string | null
           target_exam_date?: string | null
+          enabled_features?: string[] | null
           upsc_optional_subjects?: string[] | null
           updated_at?: string | null
           usage_reset_date?: string | null
@@ -982,6 +984,7 @@ export type Database = {
           system_push_notifications?: boolean
           target_exam?: string | null
           target_exam_date?: string | null
+          enabled_features?: string[] | null
           upsc_optional_subjects?: string[] | null
           updated_at?: string | null
           usage_reset_date?: string | null

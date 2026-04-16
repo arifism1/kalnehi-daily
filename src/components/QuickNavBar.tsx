@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { getMainNavItemsInQuickNavOrder, navActive } from "@/config/mainNavigation";
+import { useEnabledFeaturesStore } from "@/store/useEnabledFeaturesStore";
 
 type EdgeHints = { left: boolean; right: boolean };
 
@@ -14,7 +15,11 @@ type EdgeHints = { left: boolean; right: boolean };
  */
 export function QuickNavBar() {
   const pathname = usePathname();
-  const items = useMemo(() => getMainNavItemsInQuickNavOrder(), []);
+  const enabledFeatures = useEnabledFeaturesStore((s) => s.enabledFeatures);
+  const items = useMemo(
+    () => getMainNavItemsInQuickNavOrder(enabledFeatures),
+    [enabledFeatures],
+  );
   const scrollRef = useRef<HTMLDivElement>(null);
   const [edgeHints, setEdgeHints] = useState<EdgeHints>({ left: false, right: false });
 

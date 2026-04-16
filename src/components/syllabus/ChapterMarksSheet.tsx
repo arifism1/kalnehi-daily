@@ -95,7 +95,7 @@ export function ChapterMarksSheet({
         className="absolute inset-0 bg-black/65"
         onClick={() => !busy && onClose()}
       />
-      <div className="relative z-[66] max-h-[min(90dvh,36rem)] w-full max-w-lg overflow-y-auto rounded-t-3xl border border-slate-700 bg-[#0c1220] p-5 shadow-2xl sm:rounded-3xl">
+      <div className="kal-glass-panel relative z-[66] max-h-[min(90dvh,36rem)] w-full max-w-lg overflow-y-auto rounded-t-3xl p-5 shadow-2xl sm:rounded-3xl">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-kal-accent/15 text-kal-accent">
@@ -104,22 +104,22 @@ export function ChapterMarksSheet({
             <div>
               <h2
                 id={`${baseId}-marks-title`}
-                className="text-lg font-bold text-white"
+                className="text-lg font-bold text-kal-text"
               >
                 Chapter marks weights
               </h2>
-              <p className="mt-0.5 text-xs text-zinc-500">{chapterTitle}</p>
+              <p className="mt-0.5 text-xs text-kal-muted">{chapterTitle}</p>
             </div>
           </div>
           <button
             type="button"
             onClick={() => !busy && onClose()}
-            className="rounded-lg p-2 text-zinc-500 hover:bg-white/5"
+            className="rounded-lg p-2 text-kal-muted hover:bg-kal-card-muted"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
-        <p className="mt-3 text-xs leading-relaxed text-zinc-500">
+        <p className="mt-3 text-xs leading-relaxed text-kal-muted">
           Weights are stored for your account only and never change the shared
           syllabus catalog. Leave a year blank to use the catalog value for
           that year. Multi-year projections use 2025 / 2024 / 2023 columns when
@@ -142,7 +142,7 @@ export function ChapterMarksSheet({
         {err ? (
           <p
             role="alert"
-            className="mt-3 rounded-lg border border-rose-500/35 bg-rose-950/40 px-3 py-2 text-xs text-rose-100"
+            className="mt-3 rounded-lg border border-orange-500/35 bg-orange-950/40 px-3 py-2 text-xs text-orange-100"
           >
             {err}
           </p>
@@ -156,11 +156,11 @@ export function ChapterMarksSheet({
                 key={r.id}
                 className="kal-glass-subtle rounded-xl p-3"
               >
-                <p className="text-[13px] font-medium leading-snug text-zinc-200">
+                <p className="text-[13px] font-medium leading-snug text-kal-text">
                   {r.microtopic}
                 </p>
                 <div className="mt-2 grid grid-cols-3 gap-2">
-                  <label className="block text-[10px] font-medium text-zinc-500">
+                  <label className="block text-[10px] font-medium text-kal-muted">
                     2025
                     <input
                       type="text"
@@ -177,7 +177,7 @@ export function ChapterMarksSheet({
                       autoComplete="off"
                     />
                   </label>
-                  <label className="block text-[10px] font-medium text-zinc-500">
+                  <label className="block text-[10px] font-medium text-kal-muted">
                     2024
                     <input
                       type="text"
@@ -194,7 +194,7 @@ export function ChapterMarksSheet({
                       autoComplete="off"
                     />
                   </label>
-                  <label className="block text-[10px] font-medium text-zinc-500">
+                  <label className="block text-[10px] font-medium text-kal-muted">
                     2023
                     <input
                       type="text"
@@ -222,7 +222,7 @@ export function ChapterMarksSheet({
             type="button"
             disabled={busy}
             onClick={() => void save()}
-            className="flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl bg-kal-accent py-3 text-sm font-semibold text-white disabled:opacity-50"
+            className="kal-btn-accent flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold disabled:opacity-50"
           >
             {busy ? (
               <>
@@ -237,7 +237,7 @@ export function ChapterMarksSheet({
             type="button"
             disabled={busy}
             onClick={() => onClose()}
-            className="min-h-[48px] rounded-xl border border-slate-600 px-4 py-3 text-sm font-semibold text-zinc-300"
+            className="kal-btn-ghost min-h-[48px] rounded-xl px-4 py-3 text-sm font-semibold"
           >
             Cancel
           </button>

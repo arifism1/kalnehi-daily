@@ -48,7 +48,7 @@ const FEATURES: FeatureCard[] = [
       "The execution planner turns a vague 'study Physics' into a specific, completable block.",
       "At the end of the day you either did it or you didn't — no grey area.",
     ],
-    accent: "from-rose-400/25 via-white/40 to-red-400/20",
+    accent: "from-orange-400/25 via-white/40 to-amber-400/20",
   },
   {
     id: "three-planners",
@@ -192,7 +192,7 @@ const FEATURES: FeatureCard[] = [
       "On a bad day, open this. It's your voice, not a stranger's.",
       "Most students quit not because it's too hard but because they forgot why they started.",
     ],
-    accent: "from-pink-400/20 via-white/40 to-rose-400/20",
+    accent: "from-pink-400/20 via-white/40 to-orange-400/20",
   },
   {
     id: "notifications",
@@ -241,7 +241,7 @@ export function WhatCanKalnehiDoClient() {
 
   return (
     <div className="space-y-14 pb-4">
-      <section className="relative overflow-hidden rounded-3xl border border-white/40 bg-gradient-to-br from-white/70 via-white/45 to-kal-accent-soft/30 px-8 py-14 shadow-[0_24px_80px_-32px_rgba(239,68,68,0.35)] backdrop-blur-xl dark:border-white/10 dark:from-zinc-900/80 dark:via-zinc-900/55 dark:to-red-950/25 dark:shadow-[0_28px_90px_-28px_rgba(0,0,0,0.65)] sm:px-12 sm:py-16">
+      <section className="relative overflow-hidden rounded-3xl border border-white/40 bg-gradient-to-br from-white/70 via-white/45 to-kal-accent-soft/30 px-8 py-14 shadow-[0_24px_80px_-32px_rgba(255,122,0,0.35)] backdrop-blur-xl dark:border-white/10 dark:from-zinc-900/80 dark:via-zinc-900/55 dark:to-orange-950/25 dark:shadow-[0_28px_90px_-28px_rgba(0,0,0,0.65)] sm:px-12 sm:py-16">
         <div
           className="pointer-events-none absolute -right-20 -top-24 h-56 w-56 rounded-full bg-kal-accent/20 blur-3xl motion-safe:animate-pulse"
           aria-hidden
@@ -283,7 +283,7 @@ export function WhatCanKalnehiDoClient() {
                   type="button"
                   onClick={() => toggle(f.id)}
                   aria-expanded={expanded}
-                  className="group relative w-full rounded-2xl border border-white/45 bg-white/35 text-left shadow-[0_16px_40px_-24px_rgba(0,0,0,0.2)] outline-none backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-kal-accent/45 hover:shadow-[0_22px_50px_-20px_rgba(239,68,68,0.25)] focus-visible:ring-2 focus-visible:ring-kal-accent/50 motion-safe:hover:scale-[1.01] dark:border-white/10 dark:bg-zinc-900/40 dark:hover:border-kal-accent/35"
+                  className="group relative w-full rounded-2xl border border-white/45 bg-white/35 text-left shadow-[0_16px_40px_-24px_rgba(0,0,0,0.2)] outline-none backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-kal-accent/45 hover:shadow-[0_22px_50px_-20px_rgba(255,122,0,0.25)] focus-visible:ring-2 focus-visible:ring-kal-accent/50 motion-safe:hover:scale-[1.01] dark:border-white/10 dark:bg-zinc-900/40 dark:hover:border-kal-accent/35"
                 >
                   <div
                     className={`pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br opacity-70 transition-opacity duration-300 group-hover:opacity-100 ${f.accent}`}
@@ -341,17 +341,17 @@ export function WhatCanKalnehiDoClient() {
 
       <section
         aria-label="Get started"
-        className="sticky bottom-3 z-10 mx-auto flex w-full max-w-lg flex-col gap-3 rounded-2xl border border-kal-accent/35 bg-white/75 p-4 shadow-[0_20px_50px_-24px_rgba(239,68,68,0.4)] backdrop-blur-lg dark:border-kal-accent/25 dark:bg-zinc-900/85 sm:flex-row sm:items-center sm:justify-center sm:p-5"
+        className="sticky bottom-3 z-10 mx-auto flex w-full max-w-lg flex-col gap-3 rounded-2xl border border-kal-accent/35 bg-white/75 p-4 shadow-[0_20px_50px_-24px_rgba(255,122,0,0.4)] backdrop-blur-lg dark:border-kal-accent/25 dark:bg-zinc-900/85 sm:flex-row sm:items-center sm:justify-center sm:p-5"
       >
         <Link
           href="/pricing"
-          className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-xl bg-kal-accent px-5 text-center text-sm font-bold text-kal-accent-foreground shadow-md transition hover:brightness-105 active:scale-[0.99]"
+          className="kal-btn-accent min-h-[48px] flex-1 text-center"
         >
           Start 3-day trial
         </Link>
         <Link
           href="/auth"
-          className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-xl border-2 border-kal-accent/50 bg-white/50 px-5 text-center text-sm font-bold text-kal-text transition hover:border-kal-accent hover:bg-kal-accent/10 dark:bg-zinc-800/60 dark:hover:bg-zinc-800"
+          className="kal-btn-ghost min-h-[48px] flex-1 text-center"
         >
           Sign in
         </Link>

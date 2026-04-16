@@ -9,9 +9,10 @@ import { Fragment, useCallback, useEffect, useState } from "react";
 import { PwaIosInstallModal } from "@/components/PwaIosInstallModal";
 import { ContactSupportModal } from "@/components/support/ContactSupportModal";
 import { ContactSupportSuccessToast } from "@/components/support/ContactSupportSuccessToast";
-import { MAIN_NAV_SECTIONS, navActive } from "@/config/mainNavigation";
+import { filterNavByEnabledFeatures, MAIN_NAV_SECTIONS, navActive } from "@/config/mainNavigation";
 import { isStandalonePwa, usePwaInstall } from "@/hooks/usePwaInstall";
 import { SITE_NAME } from "@/lib/seo-metadata";
+import { useEnabledFeaturesStore } from "@/store/useEnabledFeaturesStore";
 
 type MainNavigationMenuProps = {
   open: boolean;
@@ -20,6 +21,8 @@ type MainNavigationMenuProps = {
 
 export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
   const pathname = usePathname();
+  const enabledFeatures = useEnabledFeaturesStore((s) => s.enabledFeatures);
+  const navSections = filterNavByEnabledFeatures(MAIN_NAV_SECTIONS, enabledFeatures);
   const {
     installed,
     canPromptInstall,
@@ -87,11 +90,12 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
       />
       <div
         className={clsx(
-          "absolute bottom-0 right-0 top-0 flex h-full w-[min(92vw,24rem)] max-w-md flex-col overflow-hidden rounded-l-[1.25rem] border border-white/20 border-r-0 bg-white/80 backdrop-blur-xl transition-transform duration-200 ease-out dark:border-white/10 dark:bg-zinc-950/85 sm:w-[min(80vw,24rem)]",
+          "absolute bottom-0 right-0 top-0 flex h-full w-[min(92vw,24rem)] max-w-md flex-col overflow-hidden rounded-l-[1.25rem] border border-white/30 border-r-0 backdrop-blur-2xl transition-transform duration-200 ease-out dark:border-white/10 sm:w-[min(80vw,24rem)]",
+          "bg-[rgba(255,252,248,0.93)] dark:bg-[rgba(25,18,10,0.92)]",
           open ? "translate-x-0" : "translate-x-full",
         )}
       >
-        <div className="shrink-0 border-b border-white/20 backdrop-blur-sm dark:border-white/10">
+        <div className="shrink-0 border-b backdrop-blur-sm" style={{ borderColor: "var(--kal-border)" }}>
           <div className="flex items-start gap-2.5 px-3 py-2.5 sm:px-4">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-kal-accent-soft text-kal-accent">
               <Menu className="h-5 w-5" strokeWidth={2.25} />
@@ -126,7 +130,7 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
                   "flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm transition active:scale-[0.99] motion-reduce:active:scale-100",
                   installed
                     ? "cursor-not-allowed border border-kal-border/60 bg-kal-card-muted/80 font-medium text-kal-muted opacity-80 shadow-none dark:border-white/10 dark:bg-white/[0.06]"
-                    : "border border-kal-accent/35 bg-kal-accent-soft font-semibold text-kal-accent-dark shadow-sm ring-1 ring-kal-accent/10 hover:border-kal-accent/50 hover:bg-[color-mix(in_srgb,var(--kal-accent-soft)_92%,var(--kal-accent))] hover:ring-kal-accent/20 dark:border-kal-accent/30 dark:bg-red-950/40 dark:text-kal-accent dark:ring-white/5 dark:hover:bg-red-950/55 dark:hover:border-kal-accent/45",
+                    : "border border-kal-accent/35 bg-kal-accent-soft font-semibold text-kal-accent-dark shadow-sm ring-1 ring-kal-accent/10 hover:border-kal-accent/50 hover:bg-[color-mix(in_srgb,var(--kal-accent-soft)_92%,var(--kal-accent))] hover:ring-kal-accent/20 dark:border-kal-accent/30 dark:bg-kal-accent-soft/15 dark:text-kal-accent dark:ring-white/5 dark:hover:bg-kal-accent-soft/25 dark:hover:border-kal-accent/45",
                 )}
               >
                 {installed ? (
@@ -162,7 +166,7 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
           aria-label="Main"
         >
           <ul className="space-y-px">
-            {MAIN_NAV_SECTIONS.map((section, sectionIndex) => (
+            {navSections.map((section, sectionIndex) => (
               <Fragment key={section.title}>
                 <li
                   className={clsx(

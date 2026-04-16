@@ -56,9 +56,9 @@ export function CircularProgressRing({
         <svg width={size} height={size} className="-rotate-90" aria-hidden>
           <defs>
             <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#fca5a5" />
-              <stop offset="50%" stopColor="#ef4444" />
-              <stop offset="100%" stopColor="#b91c1c" />
+              <stop offset="0%" stopColor="#FFCB99" />
+              <stop offset="50%" stopColor="#FF7A00" />
+              <stop offset="100%" stopColor="#B35200" />
             </linearGradient>
           </defs>
           <circle

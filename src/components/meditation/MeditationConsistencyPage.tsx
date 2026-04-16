@@ -128,26 +128,26 @@ export function MeditationConsistencyPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 pb-12">
-      <header className="rounded-3xl border border-kal-border bg-gradient-to-br from-[#f2f9f6] via-kal-card to-[#eef6ff] p-7">
+      <header className="kal-glass-panel rounded-3xl p-7">
         <p className="text-[0.68rem] uppercase tracking-[0.22em] text-kal-accent">Brain Yoga</p>
         <h1 className="kal-feature-title mt-2">Brain Yoga consistency</h1>
         <p className="kal-feature-lead mt-2">Your rhythm of mind-body practice over time</p>
       </header>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-2xl border border-kal-border bg-kal-card p-5">
+        <div className="kal-glass-card rounded-2xl p-5">
           <p className="text-xs uppercase tracking-wide text-kal-muted">This year</p>
           <p className="mt-2 text-2xl font-bold text-kal-text">{fmt(sumSeconds(yearRows))}</p>
         </div>
-        <div className="rounded-2xl border border-kal-border bg-kal-card p-5">
+        <div className="kal-glass-card rounded-2xl p-5">
           <p className="text-xs uppercase tracking-wide text-kal-muted">This month</p>
           <p className="mt-2 text-2xl font-bold text-kal-text">{fmt(sumSeconds(monthRows))}</p>
         </div>
-        <div className="rounded-2xl border border-kal-border bg-kal-card p-5">
+        <div className="kal-glass-card rounded-2xl p-5">
           <p className="text-xs uppercase tracking-wide text-kal-muted">Today</p>
           <p className="mt-2 text-2xl font-bold text-kal-text">{fmt(sumSeconds(todayRows))}</p>
         </div>
-        <div className="rounded-2xl border border-kal-border bg-kal-card p-5">
+        <div className="kal-glass-card rounded-2xl p-5">
           <p className="text-xs uppercase tracking-wide text-kal-muted">Current streak</p>
           <p className="mt-2 inline-flex items-center gap-2 text-2xl font-bold text-kal-text">
             <Flame className="h-5 w-5 text-kal-accent" />
@@ -156,7 +156,7 @@ export function MeditationConsistencyPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-kal-border bg-kal-card p-5">
+      <section className="kal-glass-card rounded-2xl p-5">
         <div className="mb-4 flex items-center gap-2">
           <CalendarDays className="h-5 w-5 text-kal-accent" />
           <h2 className="text-sm font-semibold text-kal-text">{year} Calendar</h2>
@@ -174,7 +174,7 @@ export function MeditationConsistencyPage() {
                     return next;
                   })
                 }
-                className="mb-2 flex w-full items-center justify-between rounded-xl border border-kal-border bg-kal-page px-3 py-2 text-left"
+                className="mb-2 flex w-full items-center justify-between rounded-xl kal-glass-subtle px-3 py-2 text-left"
               >
                 <p className="text-xs font-semibold uppercase tracking-wide text-kal-muted">
                   {m.label}
@@ -196,7 +196,7 @@ export function MeditationConsistencyPage() {
                         d.status === "future"
                           ? "bg-kal-card-muted text-kal-muted"
                           : d.status === "none"
-                          ? "bg-red-100 text-red-700"
+                          ? "bg-orange-100/80 text-orange-700"
                           : d.status === "partial"
                             ? "bg-yellow-100 text-yellow-800"
                             : "bg-emerald-500 text-white"
@@ -212,7 +212,7 @@ export function MeditationConsistencyPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-kal-border bg-kal-card p-5">
+      <section className="kal-glass-card rounded-2xl p-5">
         <h3 className="text-sm font-semibold text-kal-text">
           {selectedDate ? `Daily breakdown · ${selectedDate}` : "Daily breakdown"}
         </h3>
@@ -228,7 +228,7 @@ export function MeditationConsistencyPage() {
             </p>
             <ul className="space-y-2">
               {selectedRows.map((r) => (
-                <li key={r.id} className="rounded-xl border border-kal-border bg-kal-page p-3 text-sm">
+                <li key={r.id} className="kal-glass-subtle rounded-xl p-3 text-sm">
                   <p className="font-medium text-kal-text">
                     {meditationSessionTypeTitle(r.session_type)}
                   </p>

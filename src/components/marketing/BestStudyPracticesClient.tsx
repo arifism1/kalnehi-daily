@@ -60,8 +60,8 @@ const RESEARCH_SECTIONS: ResearchSection[] = [
     ],
     kalnehiConnection:
       "Master Today keeps your one non-negotiable in front of you. The Execution Planner turns \"study Physics\" into a block with a start time and a finish line.",
-    accent: "from-rose-400/20 via-white/40 to-red-400/15",
-    badgeColor: "bg-rose-500/15 text-rose-700 dark:text-rose-400",
+    accent: "from-orange-400/20 via-white/40 to-amber-400/15",
+    badgeColor: "bg-orange-500/15 text-orange-700 dark:text-orange-400",
   },
   {
     id: "three-ways",
@@ -309,7 +309,7 @@ export function BestStudyPracticesClient() {
   return (
     <div className="space-y-14 pb-4">
       {/* Hero */}
-      <section className="relative overflow-hidden rounded-3xl border border-white/40 bg-gradient-to-br from-white/70 via-white/45 to-kal-accent-soft/30 px-8 py-14 shadow-[0_24px_80px_-32px_rgba(239,68,68,0.35)] backdrop-blur-xl dark:border-white/10 dark:from-zinc-900/80 dark:via-zinc-900/55 dark:to-red-950/25 dark:shadow-[0_28px_90px_-28px_rgba(0,0,0,0.65)] sm:px-12 sm:py-16">
+      <section className="relative overflow-hidden rounded-3xl border border-white/40 bg-gradient-to-br from-white/70 via-white/45 to-kal-accent-soft/30 px-8 py-14 shadow-[0_24px_80px_-32px_rgba(255,122,0,0.35)] backdrop-blur-xl dark:border-white/10 dark:from-zinc-900/80 dark:via-zinc-900/55 dark:to-orange-950/25 dark:shadow-[0_28px_90px_-28px_rgba(0,0,0,0.65)] sm:px-12 sm:py-16">
         <div
           className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-kal-accent/20 blur-3xl motion-safe:animate-pulse"
           aria-hidden
@@ -375,7 +375,7 @@ export function BestStudyPracticesClient() {
         <ol className="list-none space-y-7">
           {RESEARCH_SECTIONS.map((s, idx) => (
             <li key={s.id}>
-              <article className="group relative overflow-hidden rounded-2xl border border-white/45 bg-white/35 shadow-[0_16px_40px_-24px_rgba(0,0,0,0.18)] backdrop-blur-md transition-shadow duration-300 hover:shadow-[0_24px_56px_-20px_rgba(239,68,68,0.2)] dark:border-white/10 dark:bg-zinc-900/40">
+              <article className="group relative overflow-hidden rounded-2xl border border-white/45 bg-white/35 shadow-[0_16px_40px_-24px_rgba(0,0,0,0.18)] backdrop-blur-md transition-shadow duration-300 hover:shadow-[0_24px_56px_-20px_rgba(255,122,0,0.2)] dark:border-white/10 dark:bg-zinc-900/40">
                 <div
                   className={`pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br opacity-60 transition-opacity duration-300 group-hover:opacity-90 ${s.accent}`}
                   aria-hidden
@@ -451,7 +451,7 @@ export function BestStudyPracticesClient() {
       {/* Topper quotes strip */}
       <section
         aria-label="What toppers say"
-        className="relative overflow-hidden rounded-2xl border border-white/40 bg-gradient-to-br from-white/60 via-kal-accent-soft/20 to-white/50 p-6 shadow-[0_16px_40px_-20px_rgba(239,68,68,0.2)] backdrop-blur-md dark:border-white/10 dark:from-zinc-900/75 dark:via-red-950/20 dark:to-zinc-900/60 sm:p-8"
+        className="relative overflow-hidden rounded-2xl border border-white/40 bg-gradient-to-br from-white/60 via-kal-accent-soft/20 to-white/50 p-6 shadow-[0_16px_40px_-20px_rgba(255,122,0,0.2)] backdrop-blur-md dark:border-white/10 dark:from-zinc-900/75 dark:via-orange-950/20 dark:to-zinc-900/60 sm:p-8"
       >
         <div
           className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-kal-accent/15 blur-3xl"
@@ -512,7 +512,7 @@ export function BestStudyPracticesClient() {
       {/* CTA */}
       <section
         aria-label="Get started"
-        className="relative overflow-hidden rounded-3xl border border-kal-accent/35 bg-gradient-to-br from-white/75 via-kal-accent-soft/25 to-white/60 p-8 shadow-[0_24px_64px_-28px_rgba(239,68,68,0.4)] backdrop-blur-lg dark:border-kal-accent/25 dark:from-zinc-900/85 dark:via-red-950/25 dark:to-zinc-900/75 sm:p-10"
+        className="relative overflow-hidden rounded-3xl border border-kal-accent/35 bg-gradient-to-br from-white/75 via-kal-accent-soft/25 to-white/60 p-8 shadow-[0_24px_64px_-28px_rgba(255,122,0,0.4)] backdrop-blur-lg dark:border-kal-accent/25 dark:from-zinc-900/85 dark:via-orange-950/25 dark:to-zinc-900/75 sm:p-10"
       >
         <div
           className="pointer-events-none absolute -left-12 -top-16 h-48 w-48 rounded-full bg-kal-accent/20 blur-3xl motion-safe:animate-pulse"
@@ -539,13 +539,13 @@ export function BestStudyPracticesClient() {
           <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
               href="/pricing"
-              className="inline-flex min-h-[52px] w-full items-center justify-center rounded-xl bg-kal-accent px-7 text-center text-sm font-bold text-kal-accent-foreground shadow-md transition hover:brightness-105 active:scale-[0.99] sm:w-auto"
+              className="kal-btn-accent min-h-[52px] w-full text-center sm:w-auto"
             >
               Start Your 3-Day Trial
             </Link>
             <Link
               href="/what-can-kalnehi-do"
-              className="inline-flex min-h-[52px] w-full items-center justify-center rounded-xl border-2 border-kal-accent/50 bg-white/50 px-7 text-center text-sm font-bold text-kal-text transition hover:border-kal-accent hover:bg-kal-accent/10 dark:bg-zinc-800/60 dark:hover:bg-zinc-800 sm:w-auto"
+              className="kal-btn-ghost min-h-[52px] w-full text-center sm:w-auto"
             >
               See all features →
             </Link>

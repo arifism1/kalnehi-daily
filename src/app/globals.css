@@ -2,61 +2,112 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Light-first Kalnehi Daily - Exam Prep Tracker — cohesive off-white page, white cards, red accent. */
+/*
+ * Kalnehi Daily — Premium Glassmorphic Design System
+ * Palette: warm cream/beige background, frosted glass cards, warm orange accent.
+ * Design language: calm, sophisticated, premium — like a high-end wellness/lifestyle app.
+ */
 :root {
-  --kal-page: #f8f9fa;
-  --kal-card: #ffffff;
-  --kal-card-muted: #f3f4f6;
-  --kal-border: #e5e7eb;
-  --kal-text: #0f172a;
-  --kal-text-secondary: #334155;
-  /* Darker than slate-600 for AA contrast on small UI copy over --kal-page */
-  --kal-muted: #374151;
-  --kal-accent: #ef4444;
-  --kal-accent-hover: #dc2626;
-  --kal-accent-soft: #fef2f2;
+  /* ── Surfaces ─────────────────────────────────────────────────────── */
+  --kal-page: #FAF7F2;
+  --kal-page-end: #F5EFE6;
+  --kal-card: rgba(255, 252, 248, 0.88);
+  --kal-card-muted: rgba(250, 245, 238, 0.75);
+  --kal-border: rgba(210, 192, 168, 0.45);
+  --kal-border-strong: rgba(196, 174, 148, 0.65);
+  --kal-input-bg: rgba(255, 253, 249, 0.95);
+
+  /* ── Text ─────────────────────────────────────────────────────────── */
+  --kal-text: #1C1710;
+  --kal-text-secondary: #4A3F33;
+  --kal-muted: #7A6B5A;
+
+  /* ── Accent — warm orange ─────────────────────────────────────────── */
+  --kal-accent: #FF7A00;
+  --kal-accent-hover: #E06500;
+  --kal-accent-soft: #FFF3E8;
   --kal-accent-foreground: #ffffff;
-  /** Readable label on `--kal-accent-soft` (links, chips on tinted panels). */
-  --kal-accent-dark: #991b1b;
-  --kal-overlay: rgba(15, 23, 42, 0.45);
-  --kal-shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04),
-    0 4px 24px rgba(15, 23, 42, 0.06);
-  --kal-shadow-nav: 0 1px 0 rgba(15, 23, 42, 0.06);
-  --kal-input-bg: #ffffff;
-  --kal-danger-soft: #fef2f2;
-  --kal-danger-border: #fecaca;
-  --kal-danger-text: #991b1b;
-  --kal-warn-soft: #fffbeb;
-  --kal-warn-border: #fde68a;
-  --kal-warn-text: #92400e;
+  --kal-accent-dark: #B35200;
+  --kal-accent-glow: rgba(255, 122, 0, 0.22);
+
+  /* ── Effects ──────────────────────────────────────────────────────── */
+  --kal-overlay: rgba(28, 23, 16, 0.42);
+  --kal-shadow-card:
+    0 1px 2px rgba(100, 75, 40, 0.06),
+    0 4px 12px rgba(100, 75, 40, 0.08),
+    0 16px 40px rgba(100, 75, 40, 0.06);
+  --kal-shadow-card-hover:
+    0 2px 4px rgba(100, 75, 40, 0.08),
+    0 8px 24px rgba(100, 75, 40, 0.12),
+    0 24px 56px rgba(100, 75, 40, 0.08);
+  --kal-shadow-nav:
+    0 1px 0 rgba(210, 192, 168, 0.35),
+    0 2px 8px rgba(100, 75, 40, 0.06);
+  --kal-shadow-accent:
+    0 4px 16px rgba(255, 122, 0, 0.28),
+    0 2px 6px rgba(255, 122, 0, 0.18);
+
+  /* ── Semantic status ──────────────────────────────────────────────── */
+  --kal-danger-soft: #FEF2F2;
+  --kal-danger-border: #FECACA;
+  --kal-danger-text: #991B1B;
+  --kal-warn-soft: #FFFBEB;
+  --kal-warn-border: #FDE68A;
+  --kal-warn-text: #92400E;
+  --kal-success-soft: #F0FDF4;
+  --kal-success-border: #BBF7D0;
+  --kal-success-text: #166534;
+
+  /* ── Aliases for generic naming ───────────────────────────────────── */
   --background: var(--kal-page);
   --foreground: var(--kal-text);
 }
 
 .dark {
-  --kal-page: #020617;
-  --kal-card: #0f172a;
-  --kal-card-muted: #1e293b;
-  --kal-border: #334155;
-  --kal-text: #f1f5f9;
-  --kal-text-secondary: #cbd5e1;
-  --kal-muted: #cbd5e1;
-  --kal-accent: #f87171;
-  --kal-accent-hover: #ef4444;
-  --kal-accent-soft: rgba(239, 68, 68, 0.14);
+  --kal-page: #150F0A;
+  --kal-page-end: #1E1610;
+  --kal-card: rgba(35, 28, 20, 0.85);
+  --kal-card-muted: rgba(42, 34, 24, 0.75);
+  --kal-border: rgba(90, 72, 50, 0.55);
+  --kal-border-strong: rgba(110, 88, 60, 0.70);
+  --kal-input-bg: rgba(40, 32, 22, 0.95);
+
+  --kal-text: #F5EFE6;
+  --kal-text-secondary: #CFC0AB;
+  --kal-muted: #9C8A75;
+
+  --kal-accent: #FF8C1A;
+  --kal-accent-hover: #FF7A00;
+  --kal-accent-soft: rgba(255, 122, 0, 0.14);
   --kal-accent-foreground: #ffffff;
-  --kal-accent-dark: #fecaca;
-  --kal-overlay: rgba(0, 0, 0, 0.55);
-  --kal-shadow-card: 0 1px 3px rgba(0, 0, 0, 0.2),
-    0 12px 40px rgba(0, 0, 0, 0.35);
-  --kal-shadow-nav: 0 1px 0 rgba(148, 163, 184, 0.12);
-  --kal-input-bg: #1e293b;
+  --kal-accent-dark: #FFB86C;
+  --kal-accent-glow: rgba(255, 140, 26, 0.28);
+
+  --kal-overlay: rgba(0, 0, 0, 0.58);
+  --kal-shadow-card:
+    0 1px 3px rgba(0, 0, 0, 0.3),
+    0 8px 24px rgba(0, 0, 0, 0.35),
+    0 20px 50px rgba(0, 0, 0, 0.2);
+  --kal-shadow-card-hover:
+    0 2px 6px rgba(0, 0, 0, 0.35),
+    0 12px 36px rgba(0, 0, 0, 0.42);
+  --kal-shadow-nav:
+    0 1px 0 rgba(90, 72, 50, 0.45),
+    0 2px 8px rgba(0, 0, 0, 0.2);
+  --kal-shadow-accent:
+    0 4px 16px rgba(255, 122, 0, 0.35),
+    0 2px 6px rgba(255, 122, 0, 0.22);
+
   --kal-danger-soft: rgba(127, 29, 29, 0.25);
   --kal-danger-border: rgba(248, 113, 113, 0.35);
-  --kal-danger-text: #fecaca;
+  --kal-danger-text: #FECACA;
   --kal-warn-soft: rgba(120, 53, 15, 0.35);
   --kal-warn-border: rgba(251, 191, 36, 0.35);
-  --kal-warn-text: #fde68a;
+  --kal-warn-text: #FDE68A;
+  --kal-success-soft: rgba(20, 83, 45, 0.3);
+  --kal-success-border: rgba(134, 239, 172, 0.3);
+  --kal-success-text: #86EFAC;
+
   --background: var(--kal-page);
   --foreground: var(--kal-text);
 }
@@ -70,6 +121,7 @@
   --color-kal-card: var(--kal-card);
   --color-kal-card-muted: var(--kal-card-muted);
   --color-kal-border: var(--kal-border);
+  --color-kal-border-strong: var(--kal-border-strong);
   --color-kal-text: var(--kal-text);
   --color-kal-text-secondary: var(--kal-text-secondary);
   --color-kal-muted: var(--kal-muted);
@@ -78,25 +130,49 @@
   --color-kal-accent-soft: var(--kal-accent-soft);
   --color-kal-accent-foreground: var(--kal-accent-foreground);
   --color-kal-accent-dark: var(--kal-accent-dark);
+  --color-kal-accent-glow: var(--kal-accent-glow);
   --color-kal-input-bg: var(--kal-input-bg);
-  --radius-kal-card: 1rem;
+  --color-kal-danger-soft: var(--kal-danger-soft);
+  --color-kal-danger-border: var(--kal-danger-border);
+  --color-kal-danger-text: var(--kal-danger-text);
+  --color-kal-warn-soft: var(--kal-warn-soft);
+  --color-kal-warn-border: var(--kal-warn-border);
+  --color-kal-warn-text: var(--kal-warn-text);
+  --color-kal-success-soft: var(--kal-success-soft);
+  --color-kal-success-border: var(--kal-success-border);
+  --color-kal-success-text: var(--kal-success-text);
+  --radius-kal-card: 1.25rem;
+  --radius-kal-btn: 0.75rem;
 }
 
+/* ── Base ─────────────────────────────────────────────────────────────── */
 body {
   background-color: var(--kal-page);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 20% 10%, rgba(255, 200, 140, 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(255, 165, 80, 0.08) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 60% at 50% 50%, rgba(250, 230, 200, 0.06) 0%, transparent 70%);
   color: var(--kal-text);
   font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
-/**
- * Standard content card: white surface, soft shadow, 24px padding (32px md+).
- * Use for major sections; nest kal-card-muted for inner panels.
- */
+.dark body,
+.dark {
+  background-image:
+    radial-gradient(ellipse 80% 50% at 20% 10%, rgba(255, 122, 0, 0.05) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(180, 100, 30, 0.04) 0%, transparent 55%);
+}
+
+/* ── Component Classes ────────────────────────────────────────────────── */
 @layer components {
+
+  /* Standard content card — warm glass surface with soft elevation */
   .kal-card-surface {
-    border-radius: 1rem;
+    border-radius: 1.25rem;
     border: 1px solid var(--kal-border);
     background-color: var(--kal-card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     box-shadow: var(--kal-shadow-card);
     padding: 1.5rem;
   }
@@ -106,188 +182,375 @@ body {
     }
   }
 
-  /**
-   * Glassmorphism utilities (Ventura / iOS-style, frosted over --kal-page):
-   * - kal-glass-header — sticky top bars (nav)
-   * - kal-glass-panel — primary sections / modals / large cards
-   * - kal-glass-card — dense cards, list tiles, planner entrypoints (slightly higher opacity)
-   * - kal-glass-subtle — nested rows, chips, inline panels
+  /* Page background helper — warm gradient wrapper */
+  .kal-page-bg {
+    background-color: var(--kal-page);
+    background-image:
+      radial-gradient(ellipse 70% 40% at 15% 8%, rgba(255, 200, 140, 0.14) 0%, transparent 55%),
+      radial-gradient(ellipse 55% 35% at 85% 85%, rgba(255, 160, 70, 0.09) 0%, transparent 50%);
+    min-height: 100dvh;
+  }
+
+  /*
+   * Glass Panel — primary section cards, modals, feature containers
+   * Heavier blur (24px) + warm inner glow edge
    */
   .kal-glass-panel {
-    @apply backdrop-blur-md border border-white/20 bg-white/70 ring-1 ring-black/[0.04] dark:border-white/10 dark:bg-zinc-900/70 dark:ring-white/[0.06];
+    @apply border border-white/40 bg-white/60 ring-1 ring-black/[0.03] dark:border-white/8 dark:bg-zinc-900/55 dark:ring-white/[0.05];
+    backdrop-filter: blur(24px) saturate(1.4);
+    -webkit-backdrop-filter: blur(24px) saturate(1.4);
+    background-color: rgba(255, 252, 248, 0.80);
     box-shadow:
       var(--kal-shadow-card),
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.45);
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.70),
+      inset 0 -1px 0 0 rgba(200, 180, 150, 0.14);
   }
   .dark .kal-glass-panel {
+    background-color: rgba(35, 28, 20, 0.80);
     box-shadow:
       var(--kal-shadow-card),
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.07);
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.09),
+      inset 0 -1px 0 0 rgba(255, 140, 0, 0.06);
   }
 
-  .kal-glass-subtle {
-    @apply backdrop-blur-sm border border-white/25 bg-white/80 ring-1 ring-black/[0.03] dark:border-white/12 dark:bg-zinc-900/80 dark:ring-white/[0.05];
-    box-shadow:
-      0 1px 2px rgba(15, 23, 42, 0.04),
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.35);
-  }
-  .dark .kal-glass-subtle {
-    box-shadow:
-      0 1px 2px rgba(0, 0, 0, 0.2),
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
-  }
-
-  /** Compact card / tile: readable on light; pairs with border-2 overrides at call sites */
+  /*
+   * Glass Card — compact cards, tiles, list items (blur 18px)
+   */
   .kal-glass-card {
-    @apply backdrop-blur-md border border-white/20 bg-white/80 ring-1 ring-black/[0.04] dark:border-white/10 dark:bg-zinc-900/75 dark:ring-white/[0.06];
+    @apply border border-white/45 bg-white/65 ring-1 ring-black/[0.03] dark:border-white/10 dark:bg-zinc-900/65 dark:ring-white/[0.06];
+    backdrop-filter: blur(18px) saturate(1.3);
+    -webkit-backdrop-filter: blur(18px) saturate(1.3);
+    background-color: rgba(255, 252, 248, 0.84);
     box-shadow:
       var(--kal-shadow-card),
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.42);
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.62);
   }
   .dark .kal-glass-card {
+    background-color: rgba(40, 32, 22, 0.84);
     box-shadow:
       var(--kal-shadow-card),
       inset 0 1px 0 0 rgba(255, 255, 255, 0.07);
   }
 
-  /** Sticky app chrome: translucent bar + blur */
+  /*
+   * Glass Subtle — nested rows, chips, inline sub-panels (blur 10px)
+   */
+  .kal-glass-subtle {
+    @apply border border-white/35 bg-white/55 ring-1 ring-black/[0.02] dark:border-white/8 dark:bg-zinc-900/55 dark:ring-white/[0.04];
+    backdrop-filter: blur(10px) saturate(1.2);
+    -webkit-backdrop-filter: blur(10px) saturate(1.2);
+    background-color: rgba(255, 252, 248, 0.70);
+    box-shadow:
+      0 1px 2px rgba(100, 75, 40, 0.04),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.50);
+  }
+  .dark .kal-glass-subtle {
+    background-color: rgba(40, 32, 22, 0.62);
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.18),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+  }
+
+  /* Sticky app chrome — translucent top bar */
   .kal-glass-header {
-    @apply backdrop-blur-md border-b border-white/20 bg-white/75 dark:border-white/10 dark:bg-zinc-950/80;
+    @apply border-b bg-white/75 dark:bg-zinc-950/80 dark:border-white/8;
+    backdrop-filter: blur(28px) saturate(1.5);
+    -webkit-backdrop-filter: blur(28px) saturate(1.5);
+    border-color: var(--kal-border);
     box-shadow: var(--kal-shadow-nav);
   }
 
-  /**
-   * In-app feature page title — same scale as Doubt Tracker:
-   * text-lg (18px) → sm:text-xl (20px) → md:text-2xl (24px).
-   */
+  /* ── Buttons ──────────────────────────────────────────────────────── */
+
+  /* Primary orange accent button */
+  .kal-btn-accent {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: var(--radius-kal-btn);
+    background: linear-gradient(135deg, #FF8C1A 0%, #FF7A00 50%, #E06500 100%);
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    letter-spacing: 0.01em;
+    padding: 0.6875rem 1.5rem;
+    border: 1px solid rgba(255, 122, 0, 0.25);
+    box-shadow: var(--kal-shadow-accent);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .kal-btn-accent:hover {
+    background: linear-gradient(135deg, #FF9A2E 0%, #FF8C1A 50%, #FF7A00 100%);
+    box-shadow:
+      0 6px 20px rgba(255, 122, 0, 0.36),
+      0 2px 8px rgba(255, 122, 0, 0.22);
+    transform: translateY(-1px);
+  }
+  .kal-btn-accent:active {
+    transform: translateY(0);
+    box-shadow: var(--kal-shadow-accent);
+  }
+  .kal-btn-accent:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Ghost button — warm bordered, no fill */
+  .kal-btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: var(--radius-kal-btn);
+    background: rgba(255, 252, 248, 0.6);
+    color: var(--kal-text-secondary);
+    font-weight: 500;
+    font-size: 0.9375rem;
+    padding: 0.6875rem 1.5rem;
+    border: 1px solid var(--kal-border-strong);
+    backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  .kal-btn-ghost:hover {
+    background: rgba(255, 122, 0, 0.06);
+    border-color: rgba(255, 122, 0, 0.35);
+    color: var(--kal-accent);
+  }
+  .dark .kal-btn-ghost {
+    background: rgba(40, 32, 22, 0.6);
+    color: var(--kal-text-secondary);
+  }
+  .dark .kal-btn-ghost:hover {
+    background: rgba(255, 122, 0, 0.10);
+    border-color: rgba(255, 140, 26, 0.4);
+    color: var(--kal-accent);
+  }
+
+  /* ── Typography ───────────────────────────────────────────────────── */
+
+  /* Feature page title */
   .kal-feature-title {
     @apply text-lg leading-snug tracking-tight text-kal-text sm:text-xl md:text-2xl;
     font-weight: 700;
   }
 
-  /** Muted paragraph under feature titles */
+  /* Section heading — large, generous weight */
+  .kal-section-heading {
+    font-size: 1.125rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.3;
+    color: var(--kal-text);
+  }
+  @media (min-width: 640px) {
+    .kal-section-heading {
+      font-size: 1.25rem;
+    }
+  }
+
+  /* Page-level hero heading */
+  .kal-hero-heading {
+    font-size: 1.75rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+    color: var(--kal-text);
+  }
+  @media (min-width: 640px) {
+    .kal-hero-heading {
+      font-size: 2.25rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .kal-hero-heading {
+      font-size: 2.75rem;
+    }
+  }
+
+  /* Muted paragraph under feature titles */
   .kal-feature-lead {
     @apply text-sm leading-relaxed text-kal-muted sm:text-[15px];
   }
+
+  /* Small tag / chip */
+  .kal-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    border-radius: 9999px;
+    padding: 0.1875rem 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    background: var(--kal-accent-soft);
+    color: var(--kal-accent-dark);
+    border: 1px solid rgba(255, 122, 0, 0.2);
+  }
+
+  /* Accent tag — orange filled */
+  .kal-tag-accent {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    border-radius: 9999px;
+    padding: 0.1875rem 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    background: var(--kal-accent);
+    color: #ffffff;
+    border: 1px solid transparent;
+  }
+
+  /* Input fields — warm glass style */
+  .kal-input {
+    width: 100%;
+    border-radius: 0.75rem;
+    border: 1px solid var(--kal-border-strong);
+    background: var(--kal-input-bg);
+    backdrop-filter: blur(8px);
+    color: var(--kal-text);
+    padding: 0.6875rem 1rem;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    outline: none;
+  }
+  .kal-input::placeholder {
+    color: var(--kal-muted);
+    opacity: 0.7;
+  }
+  .kal-input:focus {
+    border-color: var(--kal-accent);
+    box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.12);
+  }
+
+  /* Divider */
+  .kal-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--kal-border) 30%, var(--kal-border) 70%, transparent);
+    margin: 0;
+    border: none;
+  }
 }
 
+/* ── Utilities ────────────────────────────────────────────────────────── */
 @layer utilities {
   .kal-shadow-card {
     box-shadow: var(--kal-shadow-card);
   }
+  .kal-shadow-hover {
+    box-shadow: var(--kal-shadow-card-hover);
+  }
   .kal-nav-shadow {
     box-shadow: var(--kal-shadow-nav);
   }
+  .kal-shadow-accent {
+    box-shadow: var(--kal-shadow-accent);
+  }
+  .kal-accent-glow {
+    box-shadow: 0 0 24px var(--kal-accent-glow);
+  }
 }
 
+/* ── Keyframes ────────────────────────────────────────────────────────── */
 @keyframes completion-pop {
-  0% {
-    transform: scale(0.88);
-    opacity: 0.65;
-  }
-  45% {
-    transform: scale(1.08);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
+  0% { transform: scale(0.88); opacity: 0.65; }
+  45% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
-/** Habit Maker: new row mount */
 @keyframes habit-row-enter {
-  0% {
-    opacity: 0;
-    transform: translateY(10px) scale(0.98);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  0% { opacity: 0; transform: translateY(10px) scale(0.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/** Habit Maker: streak number bump after check-in */
 @keyframes streak-pop {
-  0% {
-    transform: scale(0.92);
-    opacity: 0.75;
-  }
-  40% {
-    transform: scale(1.12);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
+  0% { transform: scale(0.92); opacity: 0.75; }
+  40% { transform: scale(1.12); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
-/** Habit Maker: lightweight confetti particle */
 @keyframes confetti-burst {
-  0% {
-    transform: translate(0, 0) rotate(0deg);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(var(--dx, 0), var(--dy, -48px)) rotate(var(--dr, 180deg));
-    opacity: 0;
-  }
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+  100% { transform: translate(var(--dx, 0), var(--dy, -48px)) rotate(var(--dr, 180deg)); opacity: 0; }
 }
 
-/** Subtle “tap Share” hint for iOS PWA install modal (respects motion-reduce via Tailwind). */
 @keyframes pwa-share-nudge {
-  0%,
-  100% {
-    transform: translateY(0) scale(1);
-  }
-  35% {
-    transform: translateY(-6px) scale(1.06);
-  }
-  55% {
-    transform: translateY(0) scale(1);
-  }
+  0%, 100% { transform: translateY(0) scale(1); }
+  35% { transform: translateY(-6px) scale(1.06); }
+  55% { transform: translateY(0) scale(1); }
 }
 
-/* Defensive overflow guards: prevent horizontal text spill app-wide. */
+@keyframes kal-fade-up {
+  0% { opacity: 0; transform: translateY(16px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes kal-fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes kal-scale-in {
+  0% { opacity: 0; transform: scale(0.94); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* ── Base overflow & accessibility guards ─────────────────────────────── */
 @layer base {
-  html,
-  body {
+  html, body {
     max-width: 100%;
     overflow-x: hidden;
   }
 
-  /* Flex/grid children must be shrinkable to avoid overflow from long text. */
   :where(.flex, .grid) > * {
     min-width: 0;
   }
 
-  /* Keep controls constrained and wrap long unbroken tokens safely. */
   :where(input, textarea, select, button) {
     max-width: 100%;
   }
 
-  :where(
-      p,
-      span,
-      h1,
-      h2,
-      h3,
-      h4,
-      h5,
-      h6,
-      a,
-      label,
-      button,
-      li,
-      td,
-      th
-    ) {
+  :where(p, span, h1, h2, h3, h4, h5, h6, a, label, button, li, td, th) {
     overflow-wrap: break-word;
     word-break: break-word;
   }
 
   :where(input[type="text"], input[type="search"], input[type="email"], textarea) {
     overflow-wrap: anywhere;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Scrollbar styling — warm tones */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(180, 155, 120, 0.35);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(180, 155, 120, 0.55);
+  }
+
+  /* Focus ring — orange tinted */
+  :focus-visible {
+    outline: 2px solid var(--kal-accent);
+    outline-offset: 2px;
+    border-radius: 4px;
   }
 }

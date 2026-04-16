@@ -44,7 +44,7 @@ export function DailyEngineClient() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <EngineCard title="Today · weighted completion">
-          <p className="text-4xl font-bold tabular-nums text-kal-accent dark:text-red-300">
+          <p className="text-4xl font-bold tabular-nums text-kal-accent">
             {Math.round(snap.todayWeightedPercent * 10) / 10}%
           </p>
           <p className="mt-2 text-sm text-kal-muted">
@@ -65,7 +65,7 @@ export function DailyEngineClient() {
         </EngineCard>
 
         <EngineCard title="Reality scope (to date)">
-          <p className="text-4xl font-bold tabular-nums text-red-700 dark:text-red-300">
+          <p className="text-4xl font-bold tabular-nums text-kal-accent">
             {Math.round(snap.realityWeightedPercent * 10) / 10}%
           </p>
           <p className="mt-2 text-sm text-kal-muted">

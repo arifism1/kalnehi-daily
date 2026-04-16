@@ -223,8 +223,8 @@ export function DailyPlanPreviewStaging({
               disabled={disabled}
               className={
                 compact
-                  ? "mt-0.5 rounded border border-kal-border p-1.5 text-kal-muted hover:bg-kal-card-muted hover:text-rose-600 disabled:opacity-40 dark:hover:text-rose-300"
-                  : "mt-1 rounded border border-kal-border p-2 text-kal-muted hover:bg-kal-card-muted hover:text-rose-600 disabled:opacity-40 dark:hover:text-rose-300"
+                  ? "mt-0.5 rounded border border-kal-border p-1.5 text-kal-muted hover:bg-kal-card-muted hover:text-kal-danger-text disabled:opacity-40"
+                  : "mt-1 rounded border border-kal-border p-2 text-kal-muted hover:bg-kal-card-muted hover:text-kal-danger-text disabled:opacity-40"
               }
               aria-label="Delete row"
             >

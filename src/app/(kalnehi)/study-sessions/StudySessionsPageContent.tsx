@@ -54,7 +54,7 @@ export default function StudySessionsPageContent() {
           <p className="text-[11px] font-semibold uppercase tracking-wide text-kal-accent">
             Privacy
           </p>
-          <p className="mt-1.5 text-xs leading-relaxed text-red-900 dark:text-red-100/85">
+          <p className="mt-1.5 text-xs leading-relaxed text-kal-accent-dark">
             Camera sessions use AI only on your device. Video is never streamed,
             uploaded, or saved on our servers. Your log only stores subject,
             duration, and times—never images or recordings.

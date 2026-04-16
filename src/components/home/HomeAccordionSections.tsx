@@ -11,6 +11,7 @@ import {
   HelpCircle,
   Image,
   Inbox,
+  LayersIcon,
   LineChart,
   ListTodo,
   MessageSquare,
@@ -21,6 +22,7 @@ import {
   Sparkles,
   Target,
   TrendingUp,
+  X,
 } from "lucide-react";
 import clsx from "clsx";
 import dynamic from "next/dynamic";
@@ -41,6 +43,7 @@ import { AiFeatureGate } from "@/components/subscription/AiFeatureGate";
 import { TargetScoreBlueprintClient } from "@/components/targetScoreBlueprint/TargetScoreBlueprintClient";
 import { DictateMyDay } from "@/components/voice/DictateMyDay";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
+import { useEnabledFeaturesStore } from "@/store/useEnabledFeaturesStore";
 
 type AccordionSection = {
   id: string;
@@ -81,8 +84,16 @@ const MotivationRouteLazy = dynamic(
 export function HomeAccordionSections() {
   const today = useCalendarDate();
   const [openSectionId, setOpenSectionId] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
-  const sections: AccordionSection[] = [
+  const enabledFeatures = useEnabledFeaturesStore((s) => s.enabledFeatures);
+
+  /**
+   * All sections — order and IDs must stay in sync with DASHBOARD_FEATURES in
+   * src/lib/dashboardFeatures.ts. When a new feature is added to the registry,
+   * add the matching section entry here with the same `id`.
+   */
+  const allSections: AccordionSection[] = [
     {
       id: "doubt-tracker",
       title: "Doubt Tracker",
@@ -108,8 +119,8 @@ export function HomeAccordionSections() {
       content: (
         <UnifiedDailyPlanList
           planDate={today}
-          title="Today’s Daily Planner"
-          className="rounded-2xl border border-kal-border/70 bg-white/45 p-4 dark:bg-zinc-900/30"
+          title="Today's Daily Planner"
+          className="kal-glass-subtle rounded-2xl border-kal-border/60 p-4"
         />
       ),
     },
@@ -217,24 +228,65 @@ export function HomeAccordionSections() {
     },
   ];
 
+  // null = all features enabled (no customisation set)
+  const hasCustomisation = enabledFeatures !== null;
+
+  const visibleSections =
+    showAll || !hasCustomisation
+      ? allSections
+      : allSections.filter((s) => enabledFeatures.includes(s.id));
+
+  const hiddenCount = allSections.length - visibleSections.length;
+
   return (
     <section
       className="relative z-[1] space-y-3 sm:space-y-4"
       aria-label="Dashboard feature sections"
     >
-      <header className="px-1">
-        <p className="text-[0.66rem] font-semibold uppercase tracking-[0.2em] text-kal-muted">
-          Dashboard
-        </p>
-        <h2 className="mt-1 text-xl font-semibold tracking-tight text-kal-text sm:text-2xl">
-          Explore Our Features
-        </h2>
-        <p className="mt-1 text-sm text-kal-muted">
-          Open any section to use it directly here.
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-2 px-1">
+        <div>
+          <p className="text-[0.66rem] font-semibold uppercase tracking-[0.2em] text-kal-muted">
+            Dashboard
+          </p>
+          <h2 className="mt-1 text-xl font-semibold tracking-tight text-kal-text sm:text-2xl">
+            {showAll ? "All Features" : "My Features"}
+          </h2>
+          <p className="mt-1 text-sm text-kal-muted">
+            Open any section to use it directly here.
+          </p>
+        </div>
+
+        {hasCustomisation && (
+          <div className="shrink-0">
+            {showAll ? (
+              <button
+                type="button"
+                onClick={() => setShowAll(false)}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-kal-accent/40 bg-kal-accent/10 px-3.5 py-2 text-xs font-semibold text-kal-accent transition-colors hover:bg-kal-accent/20"
+              >
+                <X className="h-3.5 w-3.5" aria-hidden />
+                Back to My Features
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowAll(true)}
+                className="kal-glass-subtle inline-flex items-center gap-1.5 rounded-xl border-kal-border/70 px-3.5 py-2 text-xs font-semibold text-kal-text-secondary transition-colors hover:border-kal-accent/40 hover:text-kal-accent"
+              >
+                <LayersIcon className="h-3.5 w-3.5" aria-hidden />
+                Show All Features
+                {hiddenCount > 0 && (
+                  <span className="ml-0.5 rounded-full bg-kal-accent/15 px-1.5 py-0.5 text-[10px] font-bold text-kal-accent">
+                    +{hiddenCount}
+                  </span>
+                )}
+              </button>
+            )}
+          </div>
+        )}
       </header>
 
-      {sections.map((section) => {
+      {visibleSections.map((section) => {
         const isOpen = openSectionId === section.id;
         const panelId = `${section.id}-panel`;
         const buttonId = `${section.id}-button`;
@@ -243,10 +295,10 @@ export function HomeAccordionSections() {
           <article
             key={section.id}
             className={clsx(
-              "overflow-hidden rounded-2xl border bg-white/65 shadow-[0_10px_30px_rgba(15,23,42,0.08)] backdrop-blur-sm transition-all duration-300 dark:bg-zinc-900/35",
+              "kal-glass-card overflow-hidden rounded-2xl transition-all duration-300",
               isOpen
-                ? "border-kal-accent/35 shadow-[0_14px_36px_rgba(15,23,42,0.14)]"
-                : "border-kal-border/80 hover:border-kal-accent/30",
+                ? "border-kal-accent/40 shadow-[0_14px_40px_rgba(100,75,40,0.14),inset_0_1px_0_0_rgba(255,255,255,0.65)]"
+                : "border-kal-border/70 hover:border-kal-accent/30",
             )}
           >
             <h2>
@@ -263,7 +315,7 @@ export function HomeAccordionSections() {
                 className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left sm:px-5 sm:py-4"
               >
                 <span className="flex items-center gap-3">
-                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-kal-border/80 bg-white/70 text-kal-accent dark:bg-zinc-900/40">
+                  <span className="kal-glass-subtle inline-flex h-9 w-9 items-center justify-center rounded-xl border-kal-border/70 text-kal-accent">
                     <Icon className="h-4.5 w-4.5" aria-hidden />
                   </span>
                   <span className="text-sm font-semibold tracking-tight text-kal-text sm:text-[0.98rem]">
@@ -299,6 +351,30 @@ export function HomeAccordionSections() {
           </article>
         );
       })}
+
+      {/* When showing My Features and some are hidden, show a hint */}
+      {hasCustomisation && !showAll && hiddenCount > 0 && (
+        <div className="rounded-2xl border border-dashed border-kal-border/60 bg-transparent px-4 py-3.5 text-center">
+          <p className="text-xs text-kal-muted">
+            {hiddenCount} feature{hiddenCount > 1 ? "s" : ""} hidden.{" "}
+            <button
+              type="button"
+              onClick={() => setShowAll(true)}
+              className="font-semibold text-kal-accent underline underline-offset-2"
+            >
+              Show all
+            </button>{" "}
+            or customise in{" "}
+            <a
+              href="/settings"
+              className="font-semibold text-kal-accent underline underline-offset-2"
+            >
+              Settings
+            </a>
+            .
+          </p>
+        </div>
+      )}
     </section>
   );
 }

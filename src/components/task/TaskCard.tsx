@@ -571,7 +571,7 @@ export function TaskCard({
                           title={`Pause (${elapsedDisplay ?? "0:00"})`}
                           onClick={() => pauseTimer()}
                           disabled={busy}
-                          className="flex h-9 min-w-9 min-h-[44px] items-center justify-center gap-0.5 rounded-lg bg-kal-accent px-1.5 text-kal-accent-foreground shadow-sm shadow-red-950/30 transition-colors hover:bg-kal-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/50 disabled:opacity-40 sm:h-8 sm:min-h-0 sm:min-w-8"
+                          className="flex h-9 min-w-9 min-h-[44px] items-center justify-center gap-0.5 rounded-lg bg-kal-accent px-1.5 text-kal-accent-foreground shadow-sm shadow-kal-accent/25 transition-colors hover:bg-kal-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/50 disabled:opacity-40 sm:h-8 sm:min-h-0 sm:min-w-8"
                         >
                           <Pause className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" aria-hidden />
                           <span className="max-w-[2.75rem] truncate text-[8px] font-bold tabular-nums leading-none sm:text-[9px] md:text-[10px]">
@@ -634,7 +634,7 @@ export function TaskCard({
               e.stopPropagation();
               onEdit();
             }}
-            className="flex h-10 w-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-slate-800/80 hover:text-kal-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/30 sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0"
+            className="flex h-10 w-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-kal-muted transition-colors hover:bg-kal-card-muted hover:text-kal-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/30 sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0"
             aria-label="Edit task"
           >
             <Pencil className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2} />
@@ -656,7 +656,7 @@ export function TaskCard({
               e.stopPropagation();
               openQuickSheet();
             }}
-            className="flex h-10 w-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-slate-800/80 hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/10 sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0"
+            className="flex h-10 w-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-kal-muted transition-colors hover:bg-kal-card-muted hover:text-kal-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-border sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0"
             aria-label="More actions"
           >
             <ChevronDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2.5} />

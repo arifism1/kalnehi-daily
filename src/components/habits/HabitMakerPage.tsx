@@ -209,7 +209,7 @@ function ConfettiCelebration({
       const dy = `${Math.sin(angle) * dist - 12}px`;
       const dr = `${180 + (i % 5) * 40}deg`;
       const colors = [
-        "bg-rose-400",
+        "bg-orange-400",
         "bg-amber-400",
         "bg-emerald-400",
         "bg-sky-400",
@@ -569,7 +569,7 @@ export function HabitMakerPage() {
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute -right-10 bottom-40 h-40 w-40 rounded-full bg-rose-200/30 blur-3xl dark:bg-rose-900/20"
+        className="pointer-events-none absolute -right-10 bottom-40 h-40 w-40 rounded-full bg-kal-accent-soft/40 blur-3xl"
         aria-hidden
       />
 
@@ -610,7 +610,7 @@ export function HabitMakerPage() {
             type="button"
             disabled={adding || !newName.trim()}
             onClick={() => void addHabitFromInput()}
-            className="inline-flex min-h-[48px] shrink-0 items-center justify-center gap-2 rounded-xl bg-kal-accent px-5 py-3 text-xs font-bold uppercase tracking-wide text-kal-accent-foreground shadow-sm transition-colors hover:bg-kal-accent-hover enabled:motion-safe:active:scale-[0.98] disabled:opacity-45 motion-reduce:enabled:active:scale-100"
+            className="kal-btn-accent min-h-[48px] shrink-0 rounded-xl px-5 py-3 text-xs uppercase tracking-wide enabled:motion-safe:active:scale-[0.98] disabled:opacity-45 motion-reduce:enabled:active:scale-100"
           >
             {adding ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -623,11 +623,11 @@ export function HabitMakerPage() {
       </section>
 
       {habits.length === 0 ? (
-        <section className="mb-10 overflow-hidden rounded-3xl border border-dashed border-kal-border/70 bg-gradient-to-br from-kal-accent-soft/70 via-white/55 to-white/75 px-6 py-10 text-center shadow-lg backdrop-blur-md sm:px-10 sm:py-12 dark:from-kal-accent-soft/30 dark:via-zinc-900/65 dark:to-zinc-900/82">
-          <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-rose-100 to-amber-50 shadow-inner ring-1 ring-rose-200/60 dark:from-rose-950/50 dark:to-kal-card-muted dark:ring-rose-900/40">
+        <section className="kal-glass-panel mb-10 overflow-hidden rounded-3xl border border-dashed border-kal-border/70 bg-gradient-to-br from-kal-accent-soft/50 via-kal-card/90 to-kal-card/95 px-6 py-10 text-center sm:px-10 sm:py-12">
+          <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-kal-accent-soft to-amber-50/90 shadow-inner ring-1 ring-kal-accent/20">
             <div className="relative">
               <Sparkles
-                className="h-11 w-11 text-rose-500 dark:text-rose-300"
+                className="h-11 w-11 text-kal-accent"
                 strokeWidth={1.75}
               />
               <span className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-kal-accent text-[11px] font-bold text-kal-accent-foreground shadow-md">
@@ -665,7 +665,7 @@ export function HabitMakerPage() {
                         "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition-colors",
                         taken
                           ? "border-kal-border bg-kal-card-muted text-kal-muted"
-                          : "border-rose-100 bg-rose-50 text-rose-600 group-hover:border-kal-accent/30 group-hover:bg-kal-accent-soft dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-200",
+                          : "border-kal-accent/20 bg-kal-accent-soft/50 text-kal-accent group-hover:border-kal-accent/40 group-hover:bg-kal-accent-soft",
                       )}
                     >
                       <Icon className="h-5 w-5" strokeWidth={2} />
@@ -680,7 +680,7 @@ export function HabitMakerPage() {
       ) : null}
 
       {habits.length > 0 ? (
-        <section className="relative mb-10 overflow-hidden rounded-3xl border border-white/25 bg-gradient-to-br from-white/85 via-white/55 to-kal-accent-soft/35 px-5 py-8 shadow-lg backdrop-blur-md sm:px-10 sm:py-10 dark:border-white/10 dark:from-zinc-900/80 dark:via-zinc-900/70 dark:to-kal-accent-soft/25">
+        <section className="kal-glass-panel relative mb-10 overflow-hidden rounded-3xl bg-gradient-to-br from-kal-card/95 via-white/60 to-kal-accent-soft/30 px-5 py-8 sm:px-10 sm:py-10">
           <div
             className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-kal-accent/5 blur-3xl"
             aria-hidden
@@ -738,7 +738,7 @@ export function HabitMakerPage() {
               return (
                 <li
                   key={`check-${h.id}`}
-                  className="kal-glass-subtle group/check relative overflow-hidden rounded-2xl px-5 py-6 shadow-sm transition-[box-shadow,transform,border-color] motion-safe:duration-300 motion-safe:ease-out hover:border-kal-accent/30 hover:shadow-[0_12px_40px_-12px_rgba(239,68,68,0.18)] motion-safe:hover:-translate-y-0.5 sm:px-8 sm:py-7"
+                  className="kal-glass-subtle group/check relative overflow-hidden rounded-2xl px-5 py-6 shadow-sm transition-[box-shadow,transform,border-color] motion-safe:duration-300 motion-safe:ease-out hover:border-kal-accent/30 hover:shadow-[0_12px_40px_-12px_rgba(255,122,0,0.18)] motion-safe:hover:-translate-y-0.5 sm:px-8 sm:py-7"
                 >
                   {burstKey ? (
                     <ConfettiCelebration burstKey={burstKey} />
@@ -865,7 +865,7 @@ export function HabitMakerPage() {
               type="button"
               disabled={recoveryBusy}
               onClick={() => void startNewStreakToday()}
-              className="inline-flex min-h-[52px] w-full shrink-0 items-center justify-center rounded-xl bg-kal-accent px-6 py-3.5 text-sm font-bold text-kal-accent-foreground shadow-sm transition-colors hover:bg-kal-accent-hover enabled:motion-safe:active:scale-[0.99] disabled:opacity-50 sm:w-auto sm:min-w-[14rem] motion-reduce:enabled:active:scale-100"
+              className="kal-btn-accent min-h-[52px] w-full shrink-0 rounded-xl px-6 py-3.5 text-sm enabled:motion-safe:active:scale-[0.99] disabled:opacity-50 sm:w-auto sm:min-w-[14rem] motion-reduce:enabled:active:scale-100"
             >
               {recoveryBusy ? (
                 <Loader2 className="h-5 w-5 animate-spin" />

@@ -426,7 +426,7 @@ export function MeditationPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-7 pb-12">
-      <header className="rounded-3xl border border-kal-border bg-gradient-to-br from-[#f2f9f6] via-kal-card to-[#eef6ff] p-7">
+      <header className="kal-glass-panel rounded-3xl p-7">
         <p className="text-[0.68rem] uppercase tracking-[0.22em] text-kal-accent">Mind–body practice</p>
         <h1 className="kal-feature-title mt-2">Brain Yoga</h1>
         <p className="mt-2 text-base font-semibold leading-snug text-kal-text">
@@ -454,7 +454,7 @@ export function MeditationPage() {
               type="button"
               disabled={!activeType || remainingSeconds <= 0}
               onClick={() => setRunning(true)}
-              className="inline-flex items-center gap-1 rounded-xl border border-kal-border px-3 py-2 text-sm"
+              className="inline-flex items-center gap-1 rounded-xl border border-kal-border bg-kal-card/80 px-3 py-2 text-sm backdrop-blur-sm"
             >
               <CirclePlay className="h-4 w-4" />
               Resume
@@ -467,7 +467,7 @@ export function MeditationPage() {
                 stopAmbient();
                 cancelGuidedSpeech();
               }}
-              className="inline-flex items-center gap-1 rounded-xl border border-kal-border px-3 py-2 text-sm"
+              className="inline-flex items-center gap-1 rounded-xl border border-kal-border bg-kal-card/80 px-3 py-2 text-sm backdrop-blur-sm"
             >
               <CirclePause className="h-4 w-4" />
               Pause
@@ -477,14 +477,14 @@ export function MeditationPage() {
             type="button"
             onClick={() => void completeSession()}
             disabled={!activeType}
-            className="rounded-xl bg-kal-accent px-3 py-2 text-sm font-semibold text-kal-accent-foreground disabled:opacity-40"
+            className="kal-btn-accent rounded-xl px-3 py-2 text-sm disabled:opacity-40"
           >
             Complete flow
           </button>
         </div>
 
         <div className="mt-5 grid gap-4 md:grid-cols-2">
-          <div className="rounded-xl border border-kal-border bg-kal-page p-4">
+          <div className="kal-glass-subtle rounded-xl border border-kal-border p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-kal-muted">Mode</p>
             <button
               type="button"
@@ -494,7 +494,7 @@ export function MeditationPage() {
               {guided ? "Guided audio (voice)" : "Silent mode"}
             </button>
           </div>
-          <div className="rounded-xl border border-kal-border bg-kal-page p-4">
+          <div className="kal-glass-subtle rounded-xl border border-kal-border p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-kal-muted">Background sound</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {MEDITATION_SOUNDS.map((s) => (
@@ -508,7 +508,7 @@ export function MeditationPage() {
                   className={`rounded-full px-3 py-1.5 text-xs ${
                     sound === s
                       ? "bg-kal-accent-soft text-kal-accent ring-1 ring-kal-accent/40"
-                      : "bg-kal-card-muted text-kal-muted"
+                      : "kal-glass-subtle text-kal-muted"
                   }`}
                 >
                   {s}
@@ -519,20 +519,20 @@ export function MeditationPage() {
         </div>
 
         {showNoteInput ? (
-          <div className="mt-5 rounded-xl border border-kal-border bg-kal-page p-4">
+          <div className="kal-glass-subtle mt-5 rounded-xl border border-kal-border p-4">
             <p className="text-sm font-semibold text-kal-text">Add a short reflection note</p>
             <textarea
               value={pendingNote}
               onChange={(e) => setPendingNote(e.target.value)}
               placeholder="How did your mind and body feel after this flow?"
               rows={3}
-              className="mt-2 w-full rounded-xl border border-white/30 bg-white/70 px-3 py-2 text-sm backdrop-blur-sm dark:border-white/12 dark:bg-zinc-900/60"
+              className="mt-2 w-full rounded-xl border border-kal-border/60 bg-kal-input-bg px-3 py-2 text-sm backdrop-blur-sm"
             />
             <button
               type="button"
               onClick={() => void saveNoteForCompletedSession()}
               disabled={!lastCompletedSessionId}
-              className="mt-3 inline-flex items-center gap-2 rounded-xl bg-kal-accent px-4 py-2 text-sm font-semibold text-kal-accent-foreground"
+              className="kal-btn-accent mt-3 rounded-xl px-4 py-2 text-sm"
             >
               <CheckCircle2 className="h-4 w-4" />
               Save note
@@ -548,10 +548,10 @@ export function MeditationPage() {
             <div
               className="relative h-20 w-20 rounded-full"
               style={{
-                background: `conic-gradient(var(--kal-accent) ${Math.min(100, streak * 12)}%, #d7e7de 0)`,
+                background: `conic-gradient(var(--kal-accent) ${Math.min(100, streak * 12)}%, var(--kal-success-border) 0)`,
               }}
             >
-              <div className="absolute inset-2 flex items-center justify-center rounded-full bg-white/85 text-lg font-bold text-kal-text backdrop-blur-sm dark:bg-zinc-900/80">
+              <div className="absolute inset-2 flex items-center justify-center rounded-full bg-kal-card/90 text-lg font-bold text-kal-text backdrop-blur-sm">
                 {streak}
               </div>
             </div>
@@ -611,7 +611,7 @@ export function MeditationPage() {
               <button
                 type="button"
                 onClick={() => void beginSession(item, item.durationRangeMinutes[0])}
-                className="inline-flex min-h-[42px] items-center gap-2 rounded-xl bg-kal-accent px-4 text-sm font-semibold text-kal-accent-foreground"
+                className="kal-btn-accent min-h-[42px] rounded-xl px-4 text-sm"
               >
                 <PlayCircle className="h-4 w-4" />
                 Start
@@ -633,7 +633,7 @@ export function MeditationPage() {
         {hydrating ? <p className="mt-3 text-sm text-kal-muted">Loading…</p> : null}
         <ul className="mt-3 space-y-2">
           {rows.slice(0, 25).map((r) => (
-            <li key={r.id} className="rounded-xl border border-kal-border bg-kal-page p-3 text-sm">
+            <li key={r.id} className="kal-glass-subtle rounded-xl border border-kal-border p-3 text-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="font-medium text-kal-text">
                   {meditationSessionTypeTitle(r.session_type)}
@@ -649,7 +649,7 @@ export function MeditationPage() {
         </ul>
       </section>
 
-      <section className="grid gap-3 rounded-2xl border border-kal-border bg-gradient-to-r from-[#edf7f2] to-[#ebf4ff] p-5 md:grid-cols-2">
+      <section className="kal-glass-panel grid gap-3 rounded-2xl p-5 md:grid-cols-2">
         <button
           type="button"
           onClick={() => void beginSession(MEDITATION_TYPES[4], 2)}

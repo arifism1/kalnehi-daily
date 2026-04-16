@@ -67,9 +67,9 @@ function AutopayDurationPanel({
 
   return (
     <div className="mx-auto max-w-2xl space-y-2">
-      <div className="relative overflow-hidden rounded-xl border border-kal-accent/25 bg-gradient-to-br from-white/95 via-kal-accent-soft/25 to-white/70 shadow-[0_16px_40px_-20px_rgba(0,0,0,0.22)] backdrop-blur-md dark:from-zinc-900/95 dark:via-red-950/30 dark:to-zinc-900/80 dark:border-red-500/20 dark:shadow-[0_20px_48px_-18px_rgba(0,0,0,0.45)]">
+      <div className="kal-glass-panel relative overflow-hidden rounded-xl border border-kal-accent/25 shadow-[0_16px_40px_-20px_rgba(0,0,0,0.22)] dark:border-kal-accent/20 dark:shadow-[0_20px_48px_-18px_rgba(0,0,0,0.45)]">
         <div
-          className="pointer-events-none absolute -right-10 -top-12 h-28 w-28 rounded-full bg-kal-accent/12 blur-2xl dark:bg-red-500/10"
+          className="pointer-events-none absolute -right-10 -top-12 h-28 w-28 rounded-full bg-kal-accent/12 blur-2xl dark:bg-kal-accent/10"
           aria-hidden
         />
         <div className="relative p-3 sm:p-4">
@@ -105,7 +105,7 @@ function AutopayDurationPanel({
                 Quick picks
               </p>
               <div
-                className="grid grid-cols-4 gap-1 rounded-xl border border-white/50 bg-black/[0.035] p-1 dark:border-white/10 dark:bg-white/[0.06]"
+                className="kal-glass-subtle grid grid-cols-4 gap-1 rounded-xl border border-white/50 p-1 dark:border-white/10"
                 role="group"
                 aria-labelledby="autopay-preset-legend"
               >
@@ -120,7 +120,7 @@ function AutopayDurationPanel({
                       className={`flex min-h-[40px] flex-col items-center justify-center rounded-lg px-0.5 py-1 text-center transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kal-accent sm:min-h-[44px] ${
                         selected
                           ? "bg-kal-accent text-kal-accent-foreground shadow-sm ring-1 ring-kal-accent/30"
-                          : "text-kal-text-secondary hover:bg-white/60 hover:text-kal-text dark:hover:bg-white/[0.08]"
+                          : "text-kal-text-secondary hover:bg-kal-card-muted hover:text-kal-text"
                       }`}
                     >
                       <span className="text-base font-bold tabular-nums leading-none sm:text-lg">{m}</span>
@@ -171,7 +171,7 @@ function AutopayDurationPanel({
               </div>
             </div>
 
-            <div className="flex gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/[0.07] px-2.5 py-2 dark:border-emerald-500/20 dark:bg-emerald-500/[0.08]">
+            <div className="flex gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/[0.07] px-2.5 py-2 backdrop-blur-sm dark:border-emerald-500/20 dark:bg-emerald-500/[0.08]">
               <Check
                 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400"
                 strokeWidth={2.5}
@@ -262,8 +262,8 @@ function TierCard({
 
   return (
     <article
-      className={`kal-glass-card relative flex flex-col rounded-2xl border-2 p-5 ${
-        highlighted ? "border-kal-accent" : "border-white/35 dark:border-white/15"
+      className={`kal-glass-panel relative flex flex-col rounded-2xl border-2 p-5 ${
+        highlighted ? "border-kal-accent/50 ring-2 ring-kal-accent/30" : "border-white/35 dark:border-white/15"
       }`}
     >
       {highlighted && (
@@ -290,7 +290,7 @@ function TierCard({
             <p className="mt-1 text-xs font-medium leading-snug text-kal-text-secondary">
               No trial — charged monthly from first payment.
             </p>
-            <p className="mt-2 rounded-lg border border-white/30 bg-white/30 px-2 py-1.5 text-[0.65rem] font-medium leading-snug text-kal-text-secondary dark:border-white/10 dark:bg-black/20">
+            <p className="kal-glass-subtle mt-2 rounded-lg border border-white/30 px-2 py-1.5 text-[0.65rem] font-medium leading-snug text-kal-text-secondary dark:border-white/10">
               Uses the AutoPay length you set above.
             </p>
           </>
@@ -303,7 +303,7 @@ function TierCard({
               → then {config.monthlyPriceDisplay}/month
             </p>
             {!hasPaidAccess ? (
-              <p className="mt-2 rounded-lg border border-white/30 bg-white/30 px-2 py-1.5 text-[0.65rem] font-medium leading-snug text-kal-text-secondary dark:border-white/10 dark:bg-black/20">
+              <p className="kal-glass-subtle mt-2 rounded-lg border border-white/30 px-2 py-1.5 text-[0.65rem] font-medium leading-snug text-kal-text-secondary dark:border-white/10">
                 Uses the AutoPay length you set above (still billed monthly).
               </p>
             ) : null}
@@ -324,7 +324,7 @@ function TierCard({
       </ul>
 
       {config.id === "basic" ? (
-        <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
+        <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 backdrop-blur-sm dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
           Want AI Photo Scans and Voice Dictation? Upgrade to Pro for just ₹21 for 3 days.
         </p>
       ) : null}
@@ -337,14 +337,14 @@ function TierCard({
         }}
         disabled={disabled}
         aria-disabled={lockedBySubscription || undefined}
-        className={`mt-4 inline-flex min-h-[48px] w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-bold disabled:opacity-60 ${
+        className={`mt-4 min-h-[48px] w-full disabled:opacity-60 ${
           highlighted || lockedBySubscription
-            ? "bg-kal-accent text-kal-accent-foreground shadow-sm ring-1 ring-kal-accent/30"
-            : "kal-glass-subtle border border-white/25 text-kal-text dark:border-white/12"
+            ? "kal-btn-accent"
+            : "kal-glass-subtle inline-flex items-center justify-center rounded-xl border border-white/25 px-4 py-3 text-sm font-bold text-kal-text dark:border-white/12"
         } ${
           lockedBySubscription
             ? "cursor-default"
-            : "transition hover:brightness-[1.04] active:scale-[0.99]"
+            : "transition"
         }`}
       >
         {buttonLabel}
@@ -409,7 +409,7 @@ export function PricingPageClient() {
         subscription_id: created.subscriptionId,
         amount: created.amountPaise,
         currency: "INR",
-        theme: { color: "#ef4444" },
+        theme: { color: "#FF7A00" },
         handler: async (response: RazorpayCheckoutResponse) => {
           const updated = hasHadTrial
             ? await activateRazorpayMonthlySubscription({ ...response })
@@ -440,7 +440,7 @@ export function PricingPageClient() {
   const statusBanner = useMemo(() => {
     if (isCancelledWithAccess) {
       return (
-        <div className="rounded-2xl border border-amber-300 bg-amber-50 px-5 py-4 dark:border-amber-800 dark:bg-amber-950/30">
+        <div className="rounded-2xl border border-amber-300 bg-amber-50 px-5 py-4 backdrop-blur-sm dark:border-amber-800 dark:bg-amber-950/30">
           <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
             Your subscription is cancelled — your access continues until it expires. You can
             subscribe again below to start a new plan.
@@ -460,7 +460,7 @@ export function PricingPageClient() {
         }
       }
       return (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 dark:border-emerald-800 dark:bg-emerald-950/30">
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 backdrop-blur-sm dark:border-emerald-800 dark:bg-emerald-950/30">
           <p className="text-sm font-medium text-emerald-900 dark:text-emerald-100">
             You already have access.
             {trialHint}{" "}
@@ -478,8 +478,8 @@ export function PricingPageClient() {
     }
     if (subscriptionStatus === "expired") {
       return (
-        <div className="rounded-2xl border border-rose-300 bg-rose-50 px-5 py-4 dark:border-rose-800 dark:bg-rose-950/30">
-          <p className="text-sm font-medium text-rose-800 dark:text-rose-200">
+        <div className="rounded-2xl border border-kal-accent/30 bg-kal-accent-soft/50 px-5 py-4 dark:border-kal-accent/25 dark:bg-kal-accent/10">
+          <p className="text-sm font-medium text-kal-accent-dark dark:text-kal-accent">
             Your last payment could not be processed. Subscribe again to
             continue using {SITE_NAME}.
           </p>
@@ -488,7 +488,7 @@ export function PricingPageClient() {
     }
     if (subscriptionStatus === "cancelled" && !hasPaidAccess) {
       return (
-        <div className="rounded-2xl border border-amber-300 bg-amber-50 px-5 py-4 dark:border-amber-800 dark:bg-amber-950/30">
+        <div className="rounded-2xl border border-amber-300 bg-amber-50 px-5 py-4 backdrop-blur-sm dark:border-amber-800 dark:bg-amber-950/30">
           <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
             Your subscription has been cancelled and access has ended.
             Choose a plan to get back to your daily routine.
@@ -517,7 +517,7 @@ export function PricingPageClient() {
             {SITE_NAME} is fully paid — there is no free tier. Start with a 3-day trial, then pay
             monthly. First set how long AutoPay may run, then pick a plan — you can cancel anytime.
           </p>
-          <div className="mx-auto mt-6 max-w-xl rounded-2xl border-2 border-kal-accent/40 bg-gradient-to-br from-kal-accent/12 via-white/50 to-white/30 px-4 py-4 shadow-[0_16px_40px_-24px_rgba(239,68,68,0.35)] backdrop-blur-md dark:from-kal-accent/15 dark:via-zinc-900/40 dark:to-zinc-900/25 sm:px-5">
+          <div className="kal-glass-panel mx-auto mt-6 max-w-xl rounded-2xl border-2 border-kal-accent/40 px-4 py-4 shadow-[0_16px_40px_-24px_rgba(255,122,0,0.25)] sm:px-5">
             <p className="text-sm font-semibold text-kal-text">
               New here? Take the 2-minute feature tour first.
             </p>
@@ -530,7 +530,7 @@ export function PricingPageClient() {
               </Link>
               <Link
                 href="/best-study-practices"
-                className="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-xl border border-kal-accent/40 bg-white/60 px-4 py-2.5 text-center text-sm font-semibold text-kal-text transition hover:border-kal-accent hover:bg-kal-accent/10 dark:bg-zinc-800/60 dark:hover:bg-zinc-800"
+                className="kal-btn-ghost inline-flex min-h-[44px] flex-1 items-center justify-center rounded-xl px-4 py-2.5 text-center text-sm font-semibold transition"
               >
                 🔬 Why these practices work
               </Link>
@@ -580,12 +580,12 @@ export function PricingPageClient() {
         )}
 
         {checkoutError ? (
-          <div className="kal-glass-subtle rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-center dark:border-rose-900 dark:bg-rose-950/30">
-            <p className="text-sm text-rose-900 dark:text-rose-100" role="status">
+          <div className="kal-glass-subtle rounded-xl border border-kal-accent/25 bg-kal-accent-soft px-4 py-3 text-center dark:border-kal-accent/20 dark:bg-kal-accent/[0.08]">
+            <p className="text-sm text-kal-accent-dark dark:text-kal-accent" role="status">
               {checkoutError.text}
             </p>
             {checkoutError.debugHint ? (
-              <p className="mt-2 text-left text-xs leading-snug text-rose-800/90 dark:text-rose-200/90">
+              <p className="mt-2 text-left text-xs leading-snug text-kal-accent-dark/90 dark:text-kal-accent/90">
                 {checkoutError.debugHint}
               </p>
             ) : null}
@@ -595,7 +595,7 @@ export function PricingPageClient() {
                 error={checkoutError.text}
                 userEmail={userEmail}
                 proof={checkoutError.proof}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-rose-300 bg-white px-3 py-1.5 text-xs font-semibold text-rose-900 underline-offset-2 hover:underline dark:border-rose-700 dark:bg-rose-950/50 dark:text-rose-50"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-kal-accent/30 bg-kal-accent-soft px-3 py-1.5 text-xs font-semibold text-kal-accent-dark underline-offset-2 hover:underline dark:border-kal-accent/25 dark:bg-kal-accent/10 dark:text-kal-accent"
               />
             </div>
           </div>

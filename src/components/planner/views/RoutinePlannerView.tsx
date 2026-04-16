@@ -7,7 +7,7 @@ const blocks = [
     label: "Morning · High yield",
     hint: "Theory + new concepts — when focus is freshest",
     accent:
-      "from-red-50 to-red-100 dark:from-red-600/20 dark:to-red-700/10",
+      "from-kal-accent-soft to-orange-100 dark:from-orange-600/20 dark:to-orange-700/10",
   },
   {
     label: "Afternoon · PYQ & drills",

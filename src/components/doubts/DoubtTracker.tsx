@@ -59,9 +59,9 @@ const COLUMNS: ColumnDef[] = [
     title: "Solved Doubts",
     empty: "All doubts solved — great progress!",
     panelClass:
-      "border-red-200/80 bg-red-50/90 shadow-sm backdrop-blur-md dark:border-red-500/35 dark:bg-red-950/40",
+      "border-emerald-200/70 bg-emerald-50/80 shadow-sm backdrop-blur-md dark:border-emerald-500/30 dark:bg-emerald-950/30",
     headingClass:
-      "text-red-900 dark:text-red-200/95",
+      "text-emerald-900 dark:text-emerald-200/95",
   },
 ];
 
@@ -314,7 +314,7 @@ export function DoubtTracker() {
         <button
           type="button"
           onClick={() => setAddSheetOpen(true)}
-          className="inline-flex min-h-[48px] w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-kal-accent px-5 py-3 text-xs font-semibold text-kal-accent-foreground shadow-sm transition hover:bg-kal-accent-hover active:scale-[0.99] sm:min-h-[52px] sm:w-auto sm:min-w-[12.5rem] sm:rounded-xl sm:px-6 sm:py-3.5 sm:text-sm"
+          className="kal-btn-accent min-h-[48px] w-full shrink-0 rounded-xl px-5 py-3 text-xs active:scale-[0.99] sm:min-h-[52px] sm:w-auto sm:min-w-[12.5rem] sm:px-6 sm:py-3.5 sm:text-sm"
         >
           <Plus className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden />
           Add doubt
@@ -340,8 +340,8 @@ export function DoubtTracker() {
                 className={clsx(
                   "shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition",
                   selected
-                    ? "border-kal-accent/45 bg-kal-accent-soft text-kal-accent-dark shadow-sm dark:border-red-500/35 dark:bg-red-950/35 dark:text-red-100"
-                    : "border-kal-border bg-kal-card-muted/80 text-kal-muted hover:border-kal-accent/25 hover:bg-kal-card-muted dark:bg-zinc-900/50 dark:hover:border-red-500/25",
+                    ? "border-kal-accent/45 bg-kal-accent-soft text-kal-accent-dark shadow-sm dark:border-kal-accent/30 dark:bg-kal-accent/12 dark:text-kal-accent-dark"
+                    : "border-kal-border bg-kal-card-muted/80 text-kal-muted hover:border-kal-accent/25 hover:bg-kal-card-muted",
                 )}
               >
                 {c.label}
@@ -490,7 +490,7 @@ export function DoubtTracker() {
                               e.stopPropagation();
                               setPendingDeleteId(d.id);
                             }}
-                            className="flex h-8 w-8 items-center justify-center rounded-lg text-rose-400/90 transition-opacity hover:bg-rose-950/50 hover:text-rose-300 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100"
+                            className="flex h-8 w-8 items-center justify-center rounded-lg text-orange-500/90 transition-opacity hover:bg-orange-100/60 hover:text-orange-600 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 dark:hover:bg-orange-950/30 dark:hover:text-orange-300"
                             aria-label="Delete doubt"
                           >
                             <Trash2 className="h-4 w-4" strokeWidth={2.25} />
@@ -683,7 +683,7 @@ export function DoubtTracker() {
                   editFileInputRef.current?.click();
                 }}
                 disabled={editSaving}
-                className="mt-2 flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl border border-kal-accent/35 bg-red-950/40 px-4 py-3 text-sm font-semibold text-red-100 transition hover:bg-red-950/55 disabled:opacity-50"
+                className="mt-2 flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl border border-kal-accent/35 bg-kal-accent-soft px-4 py-3 text-sm font-semibold text-kal-accent-dark transition hover:bg-kal-accent-soft/80 disabled:opacity-50"
               >
                 <Camera className="h-5 w-5 shrink-0" aria-hidden />
                 <span>📸 Add photo</span>
@@ -704,14 +704,14 @@ export function DoubtTracker() {
                 type="button"
                 disabled={editSaving}
                 onClick={() => void saveEdit()}
-                className="min-h-[48px] flex-1 rounded-xl bg-kal-accent py-3 text-sm font-semibold text-kal-accent-foreground hover:bg-kal-accent-hover disabled:opacity-50"
+                className="kal-btn-accent min-h-[48px] flex-1 rounded-xl py-3 text-sm disabled:opacity-50"
               >
                 {editSaving ? "Saving…" : "Save changes"}
               </button>
               <button
                 type="button"
                 onClick={() => setPendingDeleteId(editing.id)}
-                className="flex min-h-[48px] items-center justify-center gap-2 rounded-xl border border-rose-500/40 bg-rose-950/30 py-3 text-sm font-semibold text-rose-200"
+                className="flex min-h-[48px] items-center justify-center gap-2 rounded-xl border border-orange-400/40 bg-orange-50/80 py-3 text-sm font-semibold text-orange-700 dark:bg-orange-950/25 dark:text-orange-200"
               >
                 <Trash2 className="h-4 w-4" />
                 Delete doubt

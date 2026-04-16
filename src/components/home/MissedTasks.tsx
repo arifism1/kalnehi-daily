@@ -128,7 +128,7 @@ export function MissedTasks() {
             <button
               type="button"
               onClick={() => void onMoveToToday(t)}
-              className="flex w-full min-h-[48px] items-center justify-center gap-2 rounded-2xl border-2 border-red-700/15 bg-kal-accent py-3 text-xs font-bold uppercase tracking-wide text-white shadow-md shadow-red-900/10 ring-1 ring-red-900/10 transition-all duration-200 hover:bg-kal-accent-hover active:scale-[0.99] dark:border-red-400/25 dark:shadow-red-950/40"
+              className="kal-btn-accent flex w-full min-h-[48px] items-center justify-center gap-2 rounded-2xl py-3 text-xs font-bold uppercase tracking-wide active:scale-[0.99]"
             >
               <CalendarCheck className="h-4 w-4 shrink-0 opacity-95" aria-hidden />
               Move to today

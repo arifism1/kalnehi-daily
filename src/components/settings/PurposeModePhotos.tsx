@@ -124,7 +124,7 @@ export function PurposeModePhotos() {
           {saveError ? (
             <p
               role="alert"
-              className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-900 dark:border-rose-500/35 dark:bg-rose-950/40 dark:text-rose-100"
+              className="mt-3 rounded-lg border border-kal-danger-border bg-kal-danger-soft px-3 py-2 text-xs text-kal-danger-text"
             >
               {saveError}
             </p>
@@ -183,7 +183,7 @@ export function PurposeModePhotos() {
                       <button
                         type="button"
                         onClick={() => void onRemove(slot)}
-                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-800 transition hover:bg-red-100 dark:border-rose-500/30 dark:bg-rose-950/20 dark:text-rose-200 dark:hover:bg-rose-950/40"
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-kal-danger-border bg-kal-danger-soft px-3 py-2 text-xs font-medium text-kal-danger-text transition hover:bg-kal-danger-border/30"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                         Remove photo

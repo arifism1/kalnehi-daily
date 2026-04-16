@@ -81,7 +81,7 @@ export function MarksEngineClient() {
             {Math.round(snap.syllabusMastered)} /{" "}
             {Math.round(snap.syllabusPool)}
           </p>
-          <p className="mt-2 text-sm text-zinc-400">
+          <p className="mt-2 text-sm text-kal-muted">
             {syllabusSoon
               ? `Chapter-weight pool for ${examLabel} is coming soon. Numbers stay on plan scope until your exam’s syllabus ships.`
               : cuetScoringRollup
@@ -91,20 +91,20 @@ export function MarksEngineClient() {
         </EngineCard>
 
         <EngineCard title="Marks at risk (missed)">
-          <p className="text-3xl font-bold tabular-nums text-amber-300">
+          <p className="text-3xl font-bold tabular-nums text-kal-warn-text dark:text-amber-300">
             {Math.round(snap.marksAtRisk)}
           </p>
-          <p className="mt-2 text-sm text-zinc-400">
+          <p className="mt-2 text-sm text-kal-muted">
             {snap.missedTaskCount} open past task
             {snap.missedTaskCount === 1 ? "" : "s"} — reallocate or crush them.
           </p>
         </EngineCard>
 
         <EngineCard title="Gained today (plan)">
-          <p className="text-3xl font-bold tabular-nums text-red-300">
+          <p className="text-3xl font-bold tabular-nums text-kal-accent">
             +{Math.round(snap.gainedToday)}
           </p>
-          <p className="mt-2 text-sm text-zinc-400">
+          <p className="mt-2 text-sm text-kal-muted">
             Weighted marks from tasks completed today.
           </p>
         </EngineCard>
@@ -112,12 +112,12 @@ export function MarksEngineClient() {
 
       <EngineCard title="Year projections · chapter weights">
         {syllabusSoon ? (
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-kal-muted">
             Year-by-year projections appear when your target exam has a syllabus
             catalog loaded.
           </p>
         ) : snap.neetByYear.length === 0 ? (
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-kal-muted">
             Load syllabus weights (2025–2023 columns) to unlock per-year
             projections (scaled to your exam&apos;s max score).
           </p>
@@ -128,12 +128,12 @@ export function MarksEngineClient() {
                 key={y.year}
                 className="flex items-baseline justify-between gap-3 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3"
               >
-                <span className="text-sm font-semibold text-zinc-300">
+                <span className="text-sm font-semibold text-kal-text-secondary">
                   {examLabel ?? "Exam"} {y.year}
                 </span>
                 <span className="text-2xl font-bold tabular-nums text-kal-accent">
                   {y.mastered720}
-                  <span className="text-base font-semibold text-zinc-500">
+                  <span className="text-base font-semibold text-kal-muted">
                     {" "}
                     / {y.scoreMax}
                   </span>
@@ -145,17 +145,17 @@ export function MarksEngineClient() {
       </EngineCard>
 
       <EngineCard title="Plan scope (all tasks)">
-        <p className="text-lg text-zinc-200">
-          <span className="font-semibold text-white tabular-nums">
+        <p className="text-lg text-kal-text-secondary">
+          <span className="font-semibold text-kal-text tabular-nums">
             {Math.round(snap.taskMastered)}
           </span>{" "}
           mastered of{" "}
           <span className="tabular-nums">{Math.round(snap.taskTotalWeight)}</span>{" "}
           weighted load
         </p>
-        <p className="mt-2 text-sm text-zinc-500">
+        <p className="mt-2 text-sm text-kal-muted">
           Remaining plan weight:{" "}
-          <span className="font-medium text-zinc-300 tabular-nums">
+          <span className="font-medium text-kal-text-secondary tabular-nums">
             {Math.round(snap.remainingPlanWeight)}
           </span>
         </p>

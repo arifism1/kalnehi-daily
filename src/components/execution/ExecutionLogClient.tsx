@@ -247,7 +247,7 @@ export function ExecutionLogClient() {
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
-              <span className="min-w-[10rem] text-center text-sm font-semibold tabular-nums text-red-200/90">
+              <span className="min-w-[10rem] text-center text-sm font-semibold tabular-nums text-kal-accent/90">
                 {selectedDay}
               </span>
               <button
@@ -298,11 +298,11 @@ export function ExecutionLogClient() {
           </div>
 
           {(dayStats.subjects.size > 0 || dayStats.chapters.size > 0) && (
-            <div className="mt-4 rounded-2xl border border-kal-accent/15 bg-red-950/20 px-4 py-3">
+            <div className="mt-4 rounded-2xl border border-kal-accent/20 bg-kal-accent-soft/30 px-4 py-3">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-kal-accent">
                 High-yield coverage
               </p>
-              <p className="mt-2 text-xs text-red-100/80">
+              <p className="mt-2 text-xs text-kal-text-secondary/80">
                 {Array.from(dayStats.subjects).join(" · ") || "—"}
               </p>
               {dayStats.chapters.size > 0 && (
@@ -395,7 +395,7 @@ export function ExecutionLogClient() {
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
-              <span className="min-w-[8rem] text-center text-sm font-semibold text-red-200/90">
+              <span className="min-w-[8rem] text-center text-sm font-semibold text-kal-accent/90">
                 {format(monthCursor, "MMMM yyyy")}
               </span>
               <button
@@ -441,7 +441,7 @@ export function ExecutionLogClient() {
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
-              <span className="min-w-[4rem] text-center text-sm font-semibold text-red-200/90">
+              <span className="min-w-[4rem] text-center text-sm font-semibold text-kal-accent/90">
                 {format(yearCursor, "yyyy")}
               </span>
               <button

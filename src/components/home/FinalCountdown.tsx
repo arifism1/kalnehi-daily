@@ -99,13 +99,13 @@ export function FinalCountdown() {
             key={b.label}
             className={clsx(
               "rounded-xl px-2 py-3 text-center ring-1 ring-kal-accent/25",
-              "bg-red-950/40",
+              "bg-kal-accent-soft/60 backdrop-blur-sm",
             )}
           >
             <div className="text-xl font-bold tabular-nums text-kal-accent">
               {b.value}
             </div>
-            <div className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">
+            <div className="text-[10px] font-medium uppercase tracking-wide text-kal-muted">
               {b.label}
             </div>
           </div>

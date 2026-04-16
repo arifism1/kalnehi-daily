@@ -28,7 +28,7 @@ export function JsonLd() {
       name: SITE_NAME,
       url: site,
       description:
-        `${SITE_NAME}: daily execution planner and PWA for JEE, NEET, UPSC, and Boards — syllabus, habits, study sessions, and optional AI coaching.`,
+        `${SITE_NAME}: daily execution planner and installable PWA for Smart Exam Prep — syllabus, habits, study sessions, and optional AI coaching.`,
       publisher: { "@id": `${site}/#organization` },
       inLanguage: "en-IN",
     },
@@ -47,7 +47,7 @@ export function JsonLd() {
       },
       image: logo,
       description:
-        `Install ${SITE_NAME} as a Progressive Web App on Android and desktop. Planner, syllabus tracking, study sessions, UPSC & JEE/NEET workflows, and PrepBrain AI (on Pro).`,
+        `Install ${SITE_NAME} as a Progressive Web App on Android and desktop. Planner, syllabus tracking, study sessions, Smart Exam Prep workflows, and PrepBrain AI (on Pro).`,
       url: site,
       author: { "@id": `${site}/#organization` },
     },

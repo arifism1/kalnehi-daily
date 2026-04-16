@@ -67,7 +67,7 @@ export default function NotificationsPage() {
         </p>
         <Link
           href="/auth"
-          className="mt-5 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-kal-accent px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-kal-accent-hover"
+          className="kal-btn-accent mt-5 min-h-[44px]"
         >
           Go to sign in
         </Link>

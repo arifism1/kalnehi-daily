@@ -55,7 +55,7 @@ export default function AuthResetPage() {
   }, [password, confirm, router, setAuth]);
 
   return (
-    <div className="flex min-h-full flex-col items-center justify-center gap-8 bg-kal-page px-6 py-16">
+    <div className="kal-page-bg flex min-h-full flex-col items-center justify-center gap-8 px-6 py-16">
       <div className="text-center">
         <p className="text-[0.65rem] font-bold uppercase tracking-widest text-kal-accent-dark">
           Kalnehi
@@ -112,7 +112,7 @@ export default function AuthResetPage() {
           </div>
 
           {error && (
-            <p className="rounded-xl border border-rose-500/30 bg-rose-950/30 px-3 py-2 text-sm text-rose-200">
+            <p className="rounded-xl border border-kal-danger-border bg-kal-danger-soft px-3 py-2 text-sm text-kal-danger-text">
               {error}
             </p>
           )}
@@ -120,7 +120,7 @@ export default function AuthResetPage() {
           <button
             type="submit"
             disabled={busy}
-            className="flex w-full min-h-[50px] items-center justify-center gap-2 rounded-xl bg-kal-accent py-3 text-sm font-semibold text-white shadow-sm hover:bg-kal-accent-hover transition-opacity duration-200 disabled:opacity-50"
+            className="kal-btn-accent flex w-full min-h-[50px] items-center justify-center gap-2 rounded-xl disabled:opacity-50"
           >
             {busy ? (
               <Loader2 className="h-5 w-5 animate-spin" />

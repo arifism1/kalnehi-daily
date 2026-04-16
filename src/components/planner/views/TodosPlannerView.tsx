@@ -67,9 +67,9 @@ function statesToLocal(rows: PlannerTodoState[]): Todo[] {
 }
 
 const priorityStyle: Record<Priority, string> = {
-  high: "border-rose-500/40 bg-rose-950/20 text-rose-200",
+  high: "border-orange-500/40 bg-kal-accent-soft text-kal-accent-dark",
   med: "border-amber-500/35 bg-amber-950/15 text-amber-100",
-  low: "border-slate-600 bg-slate-900/50 text-zinc-300",
+  low: "border-kal-border bg-kal-card-muted text-kal-muted",
 };
 
 export function TodosPlannerView() {
@@ -164,7 +164,7 @@ export function TodosPlannerView() {
         title="Quick Exam To-Dos"
         subtitle="Loading…"
       >
-        <div className="h-32 animate-pulse rounded-2xl bg-slate-800/50" />
+        <div className="h-32 animate-pulse rounded-2xl bg-kal-border/60" />
       </PlannerPageShell>
     );
   }
@@ -180,7 +180,7 @@ export function TodosPlannerView() {
       }
     >
       {todos.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-slate-600 px-4 py-10 text-center text-sm text-zinc-500">
+        <p className="rounded-2xl border border-dashed border-kal-border px-4 py-10 text-center text-sm text-kal-muted">
           No to-dos yet. Add rank-critical items — formula sheets, mock review,
           chapter deadlines.
         </p>
@@ -201,18 +201,18 @@ export function TodosPlannerView() {
                     ),
                   )
                 }
-                className="mt-1 h-5 w-5 rounded border-slate-500 bg-slate-950 text-kal-accent"
+                className="mt-1 h-5 w-5 rounded border-kal-border bg-kal-input-bg text-kal-accent"
               />
               <div className="min-w-0 flex-1">
                 <p
-                  className={`text-sm font-medium ${t.done ? "text-zinc-500 line-through" : "text-white"}`}
+                  className={`text-sm font-medium ${t.done ? "text-kal-muted line-through" : "text-kal-text"}`}
                 >
                   {t.text}
                 </p>
                 <button
                   type="button"
                   onClick={() => cyclePriority(t.id)}
-                  className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-500 hover:text-kal-accent"
+                  className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-kal-muted hover:text-kal-accent"
                 >
                   Priority: {t.priority}
                 </button>
@@ -220,7 +220,7 @@ export function TodosPlannerView() {
               <button
                 type="button"
                 onClick={() => save(todos.filter((x) => x.id !== t.id))}
-                className="rounded-lg p-2 text-zinc-500 hover:bg-black/20 hover:text-rose-300"
+                className="rounded-lg p-2 text-kal-muted hover:bg-kal-accent-soft hover:text-orange-500"
                 aria-label="Delete"
               >
                 <Trash2 className="h-4 w-4" />
@@ -232,7 +232,7 @@ export function TodosPlannerView() {
       <button
         type="button"
         onClick={add}
-        className="flex w-full min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-kal-accent py-3.5 text-sm font-semibold text-white shadow-lg shadow-red-900/20"
+        className="kal-btn-accent flex w-full min-h-[48px] items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-semibold shadow-lg shadow-orange-900/20"
       >
         <Plus className="h-4 w-4" />
         Add to-do

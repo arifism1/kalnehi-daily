@@ -30,8 +30,8 @@ function Ring({ percent, gid }: { percent: number; gid: string }) {
     >
       <defs>
         <linearGradient id={gid} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#f87171" />
-          <stop offset="100%" stopColor="#dc2626" />
+          <stop offset="0%" stopColor="#FF9A3C" />
+          <stop offset="100%" stopColor="#B35200" />
         </linearGradient>
       </defs>
       <circle
@@ -179,7 +179,7 @@ export function ProgressOverview() {
           : "Chapter-level capture — full credit when every microtopic in a chapter is done"}
       </p>
       {syllabusSoon ? (
-        <div className="mt-3 rounded-xl border border-kal-accent/25 bg-kal-accent-soft px-4 py-3 text-xs leading-relaxed text-red-900 dark:border-red-500/20 dark:bg-red-950/20 dark:text-red-100/90">
+        <div className="mt-3 rounded-xl border border-kal-accent/25 bg-kal-accent-soft px-4 py-3 text-xs leading-relaxed text-kal-accent-dark dark:border-kal-accent/20 dark:bg-kal-accent/10 dark:text-kal-accent/90">
           We&apos;re working on full chapter-weight support for{" "}
           {examTitle || examLabel}. Keep
           executing daily — your planner and tasks stay fully usable.
@@ -190,7 +190,7 @@ export function ProgressOverview() {
         <div className="min-w-0 flex-1 space-y-3 text-sm">
           {!advancedMarksProjectionEnabled && cuetScoringRollup ? (
             <p className="text-kal-text-secondary">
-              <span className="font-semibold text-kal-accent dark:text-red-400 tabular-nums">
+              <span className="font-semibold text-kal-accent dark:text-kal-accent/90 tabular-nums">
                 {cuetScoringRollup.overallPercent % 1 === 0
                   ? cuetScoringRollup.overallPercent.toFixed(0)
                   : cuetScoringRollup.overallPercent.toFixed(1)}
@@ -203,7 +203,7 @@ export function ProgressOverview() {
             </p>
           ) : !advancedMarksProjectionEnabled && syllabusRows.length > 0 ? (
             <p className="text-kal-text-secondary">
-              <span className="font-semibold text-kal-accent dark:text-red-400 tabular-nums">
+              <span className="font-semibold text-kal-accent dark:text-kal-accent/90 tabular-nums">
                 {syllabusRollup.overallPercent % 1 === 0
                   ? syllabusRollup.overallPercent.toFixed(0)
                   : syllabusRollup.overallPercent.toFixed(1)}
@@ -214,7 +214,7 @@ export function ProgressOverview() {
           ) : cuetScoringRollup && advancedMarksProjectionEnabled ? (
             <>
               <p className="text-kal-text-secondary">
-                <span className="font-semibold text-kal-accent dark:text-red-400 tabular-nums">
+                <span className="font-semibold text-kal-accent dark:text-kal-accent/90 tabular-nums">
                   {secured}
                 </span>
                 <span className="text-kal-muted">
@@ -236,7 +236,7 @@ export function ProgressOverview() {
                         <span className="font-semibold text-kal-muted">
                           {examTitle || examLabel || "Exam"} {line.year}
                         </span>
-                        <span className="tabular-nums text-kal-accent dark:text-red-400">
+                        <span className="tabular-nums text-kal-accent dark:text-kal-accent/90">
                           {line.projectedOutOf720}
                         </span>
                         <span className="text-kal-muted">
@@ -251,7 +251,7 @@ export function ProgressOverview() {
           ) : syllabusMultiYear ? (
             <>
               <p className="text-kal-text-secondary">
-                <span className="font-semibold text-kal-accent dark:text-red-400 tabular-nums">
+                <span className="font-semibold text-kal-accent dark:text-kal-accent/90 tabular-nums">
                   {syllabusMultiYear.ringProjected}
                 </span>
                 <span className="text-kal-muted">
@@ -274,7 +274,7 @@ export function ProgressOverview() {
                     <span className="font-semibold text-kal-muted">
                       {examTitle || examLabel || "Exam"} {line.year}
                     </span>
-                    <span className="tabular-nums text-kal-accent dark:text-red-400">
+                    <span className="tabular-nums text-kal-accent dark:text-kal-accent/90">
                       {line.projectedOutOf720}
                     </span>
                     <span className="text-kal-muted">
@@ -286,7 +286,7 @@ export function ProgressOverview() {
             </>
           ) : syllabusRows.length > 0 ? (
             <p className="text-kal-text-secondary">
-              <span className="font-semibold text-kal-accent dark:text-red-400 tabular-nums">
+              <span className="font-semibold text-kal-accent dark:text-kal-accent/90 tabular-nums">
                 {Math.round(syllabusRollup.totalMarksMastered)}
               </span>
               <span className="text-kal-muted">
@@ -301,7 +301,7 @@ export function ProgressOverview() {
             </p>
           ) : (
             <p className="text-kal-text-secondary">
-              <span className="font-semibold text-kal-accent dark:text-red-400 tabular-nums">
+              <span className="font-semibold text-kal-accent dark:text-kal-accent/90 tabular-nums">
                 {secured}
               </span>
               <span className="text-kal-muted"> / {denom} plan marks</span>
@@ -324,7 +324,7 @@ export function ProgressOverview() {
                     className="flex flex-wrap items-baseline justify-between gap-2"
                   >
                     <span className="font-medium text-kal-text-secondary">{s.subject}</span>
-                    <span className="tabular-nums text-kal-accent dark:text-kal-accent/90">
+                    <span className="tabular-nums text-kal-accent">
                       {s.completionPercent % 1 === 0
                         ? s.completionPercent.toFixed(0)
                         : s.completionPercent.toFixed(1)}

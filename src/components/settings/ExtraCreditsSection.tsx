@@ -168,7 +168,7 @@ export function ExtraCreditsSection() {
         )}
         {payError ? (
           <div className="border-t border-kal-border px-4 py-2">
-            <p className="text-xs text-rose-700 dark:text-rose-300" role="status">
+            <p className="text-xs text-kal-danger-text" role="status">
               {payError.text}
             </p>
             <PaymentErrorMailButton
@@ -176,7 +176,7 @@ export function ExtraCreditsSection() {
               error={payError.text}
               userEmail={userEmail}
               proof={payError.proof}
-              className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-kal-card px-3 py-1.5 text-xs font-semibold text-rose-800 underline-offset-2 hover:underline dark:border-rose-800 dark:text-rose-100"
+              className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-kal-danger-border bg-kal-card px-3 py-1.5 text-xs font-semibold text-kal-danger-text underline-offset-2 hover:underline"
             />
           </div>
         ) : null}

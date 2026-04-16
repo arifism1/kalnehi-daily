@@ -81,7 +81,7 @@ export function MotivationStrip() {
   return (
     <section
       aria-labelledby="motivation-heading"
-      className="overflow-hidden rounded-2xl border border-kal-border bg-kal-card px-5 py-5 kal-shadow-card sm:rounded-2xl sm:px-6 sm:py-6"
+      className="kal-glass-card overflow-hidden rounded-2xl px-5 py-5 sm:rounded-2xl sm:px-6 sm:py-6"
     >
       <div className="mb-2 flex items-baseline justify-between gap-2 sm:mb-3">
         <h2

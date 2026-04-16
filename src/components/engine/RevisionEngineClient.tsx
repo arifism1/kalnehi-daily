@@ -107,7 +107,7 @@ export function RevisionEngineClient() {
 
       {!userId ? (
         <EngineCard title="Sign in to sync">
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-kal-muted">
             Sign in to save your revision queue across devices. You can still
             browse the syllabus above.
           </p>
@@ -157,7 +157,7 @@ export function RevisionEngineClient() {
 
       <EngineCard title="Due now">
         {due.length === 0 ? (
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-kal-muted">
             Nothing due — add topics or clear your backlog to stay sharp.
           </p>
         ) : (
@@ -165,11 +165,11 @@ export function RevisionEngineClient() {
             {due.map((it) => (
               <li
                 key={it.id}
-                className="flex flex-col gap-2 rounded-xl border border-kal-accent/25 bg-red-950/15 px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col gap-2 rounded-xl border border-kal-accent/25 bg-kal-accent-soft/30 px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div>
-                  <p className="font-medium text-white">{it.title}</p>
-                  <p className="text-xs text-zinc-500">
+                  <p className="font-medium text-kal-text">{it.title}</p>
+                  <p className="text-xs text-kal-muted">
                     Due {it.nextDue} · {DIFF_LABEL[it.difficulty]}
                   </p>
                 </div>
@@ -197,7 +197,7 @@ export function RevisionEngineClient() {
                         setItems(b.revisionItems),
                       );
                     }}
-                    className="inline-flex items-center justify-center rounded-lg border border-slate-600 p-2 text-zinc-400 hover:text-rose-300"
+                    className="inline-flex items-center justify-center rounded-lg border border-kal-border p-2 text-kal-muted hover:border-[var(--kal-danger-border)] hover:text-[var(--kal-danger-text)]"
                     aria-label="Remove"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -211,16 +211,16 @@ export function RevisionEngineClient() {
 
       <EngineCard title="Upcoming">
         {upcoming.length === 0 ? (
-          <p className="text-sm text-zinc-500">No upcoming slots.</p>
+          <p className="text-sm text-kal-muted">No upcoming slots.</p>
         ) : (
-          <ul className="space-y-2 text-sm text-zinc-300">
+          <ul className="space-y-2 text-sm text-kal-text-secondary">
             {upcoming.map((it) => (
               <li
                 key={it.id}
-                className="flex justify-between gap-2 border-b border-white/[0.04] py-2 last:border-0"
+                className="flex justify-between gap-2 border-b border-kal-border/40 py-2 last:border-0"
               >
                 <span className="min-w-0">{it.title}</span>
-                <span className="shrink-0 text-xs text-zinc-500">
+                <span className="shrink-0 text-xs text-kal-muted">
                   {it.nextDue}
                 </span>
               </li>
@@ -229,7 +229,7 @@ export function RevisionEngineClient() {
         )}
       </EngineCard>
 
-      <p className="text-center text-[11px] text-zinc-600">
+      <p className="text-center text-[11px] text-kal-muted">
         {userId
           ? "Revision queue syncs when you are online — edits stay available offline."
           : "Sign in to sync your revision queue across devices."}

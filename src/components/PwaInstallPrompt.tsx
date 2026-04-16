@@ -213,7 +213,7 @@ export function PwaInstallPrompt() {
               ) : (
                 <>
                   Add to your home screen for faster load, offline-friendly pages you have visited,
-                  and a distraction-free study shell — JEE, NEET, UPSC & Boards.
+                  and a distraction-free study shell for Smart Exam Prep.
                 </>
               )}
             </p>
@@ -231,7 +231,7 @@ export function PwaInstallPrompt() {
           <button
             type="button"
             onClick={onInstall}
-            className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-kal-accent px-4 text-sm font-bold text-kal-accent-foreground"
+            className="kal-btn-accent w-full"
           >
             <Download className="h-4 w-4" aria-hidden />
             Install app

@@ -10,15 +10,15 @@ export default function manifest(): MetadataRoute.Manifest {
     // "Kalnehi" fits Play Store's 12-char short-name limit and looks clean on the home screen.
     short_name: "Kalnehi",
     description:
-      "Kalnehi Daily - Exam Prep Tracker: execution planner for JEE, NEET & UPSC aspirants. Daily Plan with live task tracking, Syllabus Mastery Tracker, Brain Yoga focus resets, PrepBrain AI coaching, Notifications & push reminders, study sessions, habits, and progress analytics — Basic paid trial includes a bonus sample of 3 photo AI scans and 2 min voice. All in one offline-ready PWA.",
+      "Kalnehi Daily - Exam Prep Tracker: execution planner for Smart Exam Prep. Daily Plan with live task tracking, Syllabus Mastery Tracker, Brain Yoga focus resets, PrepBrain AI coaching, Notifications & push reminders, study sessions, habits, and progress analytics — Basic paid trial includes a bonus sample of 3 photo AI scans and 2 min voice. All in one offline-ready PWA.",
     start_url: "/",
     scope: "/",
     display: "standalone",
     display_override: ["standalone", "minimal-ui"],
     orientation: "portrait-primary",
-    // Light premium theme: white shell background, Kalnehi red accent.
-    background_color: "#ffffff",
-    theme_color: "#ef4444",
+    // Premium glassmorphic theme: warm cream background, Kalnehi warm orange accent.
+    background_color: "#FAF7F2",
+    theme_color: "#FF7A00",
     lang: "en-IN",
     dir: "ltr",
     categories: ["education", "productivity"],
@@ -33,7 +33,7 @@ export default function manifest(): MetadataRoute.Manifest {
         sizes: "1080x1920",
         type: "image/png",
         form_factor: "narrow",
-        label: "Daily Plan — live task checklist for JEE, NEET & UPSC",
+        label: "Daily Plan — live task checklist for Smart Exam Prep",
         platform: "play",
       },
       {
@@ -90,7 +90,7 @@ export default function manifest(): MetadataRoute.Manifest {
       {
         name: "Syllabus Mastery Tracker",
         short_name: "Syllabus",
-        description: "Track chapter mastery and topic coverage across JEE, NEET & UPSC",
+        description: "Track chapter mastery and topic coverage across your syllabus",
         url: "/syllabus",
         icons: [{ src: "/icon-192x192.png", sizes: "192x192", type: "image/png" }],
       },

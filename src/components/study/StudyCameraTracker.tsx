@@ -626,7 +626,7 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
       </div>
 
       {/* ── Camera positioning instruction — always visible ── */}
-      <div className="flex items-start gap-2.5 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3">
+      <div className="kal-glass-subtle flex items-start gap-2.5 rounded-xl px-4 py-3">
         <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-kal-accent" aria-hidden />
         <p className="text-xs leading-relaxed text-kal-muted">
           <span className="font-semibold text-kal-text-secondary">Camera tip:</span>{" "}
@@ -638,7 +638,7 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
 
       {/* ── Back camera suggestion (only when front camera is active) ── */}
       {facing === "user" ? (
-        <div className="flex items-center gap-3 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3">
+        <div className="kal-glass-subtle flex items-center gap-3 rounded-xl px-4 py-3">
           <p className="min-w-0 flex-1 text-xs leading-relaxed text-kal-muted">
             If seeing yourself is distracting, switch to back camera so the
             screen faces away from you and points toward your book or desk.
@@ -671,7 +671,7 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
           statusLabel.tone === "yellow" &&
             "border-amber-400/60 bg-amber-50 dark:bg-amber-950/30",
           statusLabel.tone === "red" &&
-            "border-rose-400/60 bg-rose-50 dark:bg-rose-950/30",
+            "border-orange-400/60 bg-orange-50 dark:bg-orange-950/30",
           statusLabel.tone === "neutral" && "border-kal-border bg-kal-card-muted",
         )}
       >
@@ -680,7 +680,7 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
             "text-sm font-bold",
             statusLabel.tone === "green" && "text-emerald-800 dark:text-emerald-200",
             statusLabel.tone === "yellow" && "text-amber-800 dark:text-amber-200",
-            statusLabel.tone === "red" && "text-rose-800 dark:text-rose-200",
+            statusLabel.tone === "red" && "text-orange-800 dark:text-orange-200",
             statusLabel.tone === "neutral" && "text-kal-text",
           )}
         >
@@ -691,7 +691,7 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
             "mt-1 text-xs",
             statusLabel.tone === "green" && "text-emerald-700 dark:text-emerald-300/80",
             statusLabel.tone === "yellow" && "text-amber-700 dark:text-amber-300/80",
-            statusLabel.tone === "red" && "text-rose-700 dark:text-rose-300/80",
+            statusLabel.tone === "red" && "text-orange-700 dark:text-orange-300/80",
             statusLabel.tone === "neutral" && "text-kal-muted",
           )}
         >
@@ -710,7 +710,7 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
               "text-[11px] font-bold tabular-nums transition-colors duration-300",
               confTone === "green" && "text-emerald-600 dark:text-emerald-400",
               confTone === "yellow" && "text-amber-600 dark:text-amber-400",
-              confTone === "red" && "text-rose-600 dark:text-rose-400",
+              confTone === "red" && "text-orange-600 dark:text-orange-400",
             )}
           >
             {smoothedConfidence}%
@@ -722,7 +722,7 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
               "h-full rounded-full transition-all duration-300 ease-out",
               confTone === "green" && "bg-emerald-500 dark:bg-emerald-400",
               confTone === "yellow" && "bg-amber-500 dark:bg-amber-400",
-              confTone === "red" && "bg-rose-500",
+              confTone === "red" && "bg-orange-500",
             )}
             style={{ width: `${smoothedConfidence}%` }}
           />
@@ -786,7 +786,7 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
       ) : null}
 
       {loadError ? (
-        <p className="text-xs text-rose-600 dark:text-rose-300">{loadError}</p>
+        <p className="text-xs text-kal-danger-text">{loadError}</p>
       ) : !modelsReady ? (
         <p className="text-xs text-kal-muted">
           Loading face, pose, and hand models (on-device)…
@@ -800,7 +800,7 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
             type="button"
             onClick={startSession}
             disabled={!modelsReady}
-            className="inline-flex min-h-[52px] min-w-[10rem] items-center justify-center gap-2 rounded-2xl bg-kal-accent px-6 text-base font-semibold text-white disabled:opacity-40"
+            className="kal-btn-accent inline-flex min-h-[52px] min-w-[10rem] items-center justify-center gap-2 px-6 text-base disabled:opacity-40"
           >
             <Play className="h-5 w-5" />
             Start session
@@ -829,7 +829,7 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
           <button
             type="button"
             onClick={resumeSession}
-            className="inline-flex min-h-[52px] min-w-[8rem] items-center justify-center gap-2 rounded-2xl bg-kal-accent px-5 text-base font-semibold text-white"
+            className="kal-btn-accent inline-flex min-h-[52px] min-w-[8rem] items-center justify-center gap-2 px-5 text-base"
           >
             <Play className="h-5 w-5" />
             Resume
@@ -840,7 +840,7 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
           <button
             type="button"
             onClick={() => void endAndLog()}
-            className="inline-flex min-h-[52px] min-w-[8rem] items-center justify-center gap-2 rounded-2xl border-2 border-rose-500/50 bg-rose-50 px-5 text-base font-semibold text-rose-700 dark:bg-rose-950/50 dark:text-rose-100"
+            className="inline-flex min-h-[52px] min-w-[8rem] items-center justify-center gap-2 rounded-2xl border-2 border-kal-danger-border bg-kal-danger-soft px-5 text-base font-semibold text-kal-danger-text"
           >
             <Square className="h-5 w-5" />
             End session

@@ -576,7 +576,7 @@ export function ProfileForm() {
                           )
                         }
                         disabled={scoreRows.length <= 1}
-                        className="flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 rounded-lg border border-kal-border bg-kal-card px-3 py-2 text-xs font-semibold text-kal-text-secondary transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-800 disabled:pointer-events-none disabled:opacity-40 dark:hover:border-rose-500/30 dark:hover:bg-rose-950/30 dark:hover:text-rose-200"
+                        className="flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 rounded-lg border border-kal-border bg-kal-card px-3 py-2 text-xs font-semibold text-kal-text-secondary transition-colors hover:border-[var(--kal-danger-border)] hover:bg-[var(--kal-danger-soft)] hover:text-[var(--kal-danger-text)] disabled:pointer-events-none disabled:opacity-40"
                         aria-label={`Remove score row ${index + 1}`}
                       >
                         <Trash2 className="h-4 w-4" aria-hidden />
@@ -599,7 +599,7 @@ export function ProfileForm() {
         </Section>
 
         {error && (
-          <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 dark:border-rose-500/30 dark:bg-rose-950/30 dark:text-rose-200">
+          <p className="rounded-2xl border border-[var(--kal-danger-border)] bg-[var(--kal-danger-soft)] px-4 py-3 text-sm text-[var(--kal-danger-text)]">
             {error}
           </p>
         )}
@@ -613,7 +613,7 @@ export function ProfileForm() {
         <button
           type="submit"
           disabled={saving}
-          className="flex w-full min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-kal-accent py-3.5 text-[15px] font-semibold text-kal-accent-foreground shadow-sm transition-opacity duration-200 disabled:opacity-50"
+          className="kal-btn-accent flex w-full min-h-[52px] items-center justify-center gap-2 py-3.5 text-[15px] transition-opacity duration-200 disabled:opacity-50"
         >
           {saving && <Loader2 className="h-4 w-4 animate-spin" />}
           Save profile

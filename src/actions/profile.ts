@@ -190,6 +190,34 @@ export async function upsertUserProfile(fields: {
   }
 }
 
+export async function saveEnabledFeatures(
+  featureIds: string[] | null,
+): Promise<UpsertProfileResult> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+      error: authErr,
+    } = await supabase.auth.getUser();
+    if (authErr || !user) {
+      return { ok: false, error: USER_ERROR.session };
+    }
+
+    const { error } = await supabase
+      .from("user_profiles")
+      .update({ enabled_features: featureIds })
+      .eq("user_id", user.id);
+
+    if (error) throw error;
+    revalidatePath("/");
+    return { ok: true };
+  } catch (e) {
+    const detailed = toDetailedSupabaseError(e);
+    console.error("[profile.saveEnabledFeatures] failed", { error: detailed, raw: e });
+    return { ok: false, error: detailed };
+  }
+}
+
 export async function completeOnboarding(fields: {
   full_name: string;
   phone_number: string;

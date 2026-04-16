@@ -115,11 +115,11 @@ export default function GuidesHubPage() {
         ]}
       />
       <article>
-        <header className="space-y-4">
+        <header className="kal-glass-panel mb-8 rounded-2xl px-6 py-8 space-y-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-kal-accent">
             Guides
           </p>
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+          <h1 className="kal-hero-heading">
             Plan heavy exam years without drowning in tools
           </h1>
           <p className="text-sm leading-relaxed text-kal-text-secondary sm:text-base">
@@ -140,12 +140,12 @@ export default function GuidesHubPage() {
           </p>
         </header>
 
-        <ul className="mt-10 grid gap-4 sm:grid-cols-2 sm:gap-5">
+        <ul className="mt-4 grid gap-4 sm:grid-cols-2 sm:gap-5">
           {guides.map(({ href, title, blurb, icon: Icon }) => (
             <li key={href}>
               <Link
                 href={href}
-                className="flex h-full gap-4 rounded-2xl border border-kal-border bg-kal-card p-5 shadow-kal-card transition-colors hover:border-kal-accent/35"
+                className="kal-glass-card flex h-full gap-4 rounded-2xl p-5 transition-all hover:-translate-y-0.5 hover:shadow-[0_16px_40px_-16px_rgba(255,122,0,0.2)]"
               >
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-kal-accent-soft text-kal-accent">
                   <Icon className="h-6 w-6" aria-hidden />

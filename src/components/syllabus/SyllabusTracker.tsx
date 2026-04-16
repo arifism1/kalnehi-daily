@@ -53,15 +53,15 @@ import { useUndoStore } from "@/store/useUndoStore";
 function statusSelectClasses(status: MicrotopicProgressStatus): string {
   switch (status) {
     case "not_begun":
-      return "border-kal-border bg-kal-card-muted text-kal-text dark:border-zinc-500 dark:bg-zinc-800/80 dark:text-zinc-200";
+      return "border-kal-border bg-kal-card-muted text-kal-text";
     case "in_progress":
       return "border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-500/60 dark:bg-blue-950/50 dark:text-blue-100";
     case "completed":
-      return "border-red-200 bg-red-50 text-red-900 dark:border-red-500/70 dark:bg-red-950/45 dark:text-red-100";
+      return "border-orange-200 bg-orange-50 text-orange-900 dark:border-orange-500/70 dark:bg-orange-950/45 dark:text-orange-100";
     case "need_revision":
       return "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-500/60 dark:bg-amber-950/40 dark:text-amber-100";
     default:
-      return "border-kal-border bg-kal-card-muted text-kal-text dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-200";
+      return "border-kal-border bg-kal-card-muted text-kal-text";
   }
 }
 
@@ -84,9 +84,9 @@ function resolveStatus(
 function ChapterBar({ percent }: { percent: number }) {
   const w = Math.min(100, Math.max(0, percent));
   return (
-    <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-kal-border dark:bg-slate-800">
+    <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-kal-card-muted">
       <div
-        className="h-full rounded-full bg-gradient-to-r from-kal-accent to-red-600 transition-[width] duration-300"
+        className="h-full rounded-full bg-gradient-to-r from-kal-accent to-orange-600 transition-[width] duration-300"
         style={{ width: `${w}%` }}
       />
     </div>
@@ -122,7 +122,7 @@ function ChapterToggle({
     >
       <span
         className={clsx(
-          "pointer-events-none inline-block h-[1.35rem] w-[1.35rem] rounded-full bg-white shadow-sm transition-transform duration-200",
+          "pointer-events-none inline-block h-[1.35rem] w-[1.35rem] rounded-full bg-kal-input-bg shadow-sm transition-transform duration-200",
           checked ? "translate-x-[1.55rem]" : "translate-x-0.5",
         )}
       />
@@ -296,17 +296,17 @@ export function SyllabusTracker() {
         </p>
         {showMarksUi && !cuetScoringRollup ? (
           <details
-            className="group mt-4 rounded-xl border border-kal-border/70 bg-kal-card-muted/35 shadow-sm backdrop-blur-sm open:bg-kal-card-muted/45 dark:border-zinc-600/50 dark:bg-zinc-900/55 dark:open:bg-zinc-900/65"
+            className="kal-glass-subtle group mt-4 rounded-xl border-kal-border/60 shadow-sm open:bg-kal-card-muted/45"
             aria-label="Important marks and weightage disclaimer"
           >
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium text-kal-text outline-none transition-colors hover:bg-kal-border/15 marker:hidden [&::-webkit-details-marker]:hidden focus-visible:ring-2 focus-visible:ring-kal-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-kal-card dark:text-zinc-100 dark:hover:bg-zinc-800/40 dark:focus-visible:ring-offset-zinc-900">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium text-kal-text outline-none transition-colors hover:bg-kal-card-muted marker:hidden [&::-webkit-details-marker]:hidden focus-visible:ring-2 focus-visible:ring-kal-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-kal-card">
               <span>Important marks/weightage disclaimer</span>
               <ChevronDown
                 aria-hidden
                 className="h-4 w-4 shrink-0 text-kal-accent transition-transform duration-200 group-open:rotate-180"
               />
             </summary>
-            <div className="border-t border-kal-border/50 px-4 pb-4 pt-3 text-[13px] leading-relaxed text-kal-muted dark:border-zinc-600/40 dark:text-zinc-400">
+            <div className="border-t border-kal-border/50 px-4 pb-4 pt-3 text-[13px] leading-relaxed text-kal-muted">
               Chapter marks are gathered from public sources and patterns seen in
               previous years — a study aid, not an official mark scheme. You can
               edit chapter marks anytime so they match how you prepare. When an
@@ -320,7 +320,7 @@ export function SyllabusTracker() {
         ) : null}
       </header>
 
-      <section className="overflow-hidden rounded-2xl border border-kal-accent/30 bg-gradient-to-br from-kal-accent-soft/95 via-white/60 to-white/78 p-6 shadow-lg backdrop-blur-md dark:border-red-500/30 dark:from-red-950/45 dark:via-zinc-900/72 dark:to-zinc-900/88 dark:shadow-lg dark:shadow-red-900/10">
+      <section className="kal-glass-panel overflow-hidden rounded-2xl border-kal-accent/35 p-6 shadow-lg">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-kal-accent">
@@ -349,7 +349,7 @@ export function SyllabusTracker() {
             {cuetScoringRollup ? (
               <div>
                 <p className="text-xs text-kal-muted">Projected total</p>
-                <p className="text-lg font-semibold tabular-nums text-red-600 dark:text-red-300">
+                <p className="text-lg font-semibold tabular-nums text-orange-600 dark:text-orange-300">
                   {cuetScoringRollup.totalProjected}
                   <span className="text-kal-muted">
                     {" "}
@@ -373,7 +373,7 @@ export function SyllabusTracker() {
                   <p className="text-[11px] font-semibold text-kal-accent">
                     {displayExam} {p.year}
                   </p>
-                  <p className="mt-0.5 text-xl font-bold tabular-nums text-red-600 dark:text-red-300">
+                  <p className="mt-0.5 text-xl font-bold tabular-nums text-orange-600 dark:text-orange-300">
                     {p.projectedOutOf720}
                     <span className="text-base font-semibold text-kal-muted">
                       {" "}
@@ -388,7 +388,7 @@ export function SyllabusTracker() {
             ) : showMarksUi ? (
               <div>
                 <p className="text-xs text-kal-muted">Marks secured</p>
-                <p className="text-lg font-semibold tabular-nums text-red-600 dark:text-red-300">
+                <p className="text-lg font-semibold tabular-nums text-orange-600 dark:text-orange-300">
                   {rollup.totalMarksMastered.toFixed(0)}
                   <span className="text-kal-muted">
                     {" "}
@@ -407,9 +407,9 @@ export function SyllabusTracker() {
             )}
           </div>
         </div>
-        <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-kal-border dark:bg-slate-800">
+        <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-kal-card-muted">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-kal-accent via-red-600 to-red-700 transition-[width] duration-500"
+            className="h-full rounded-full bg-gradient-to-r from-kal-accent via-orange-600 to-orange-700 transition-[width] duration-500"
             style={{
               width: `${Math.min(100, (cuetScoringRollup ?? rollup).overallPercent)}%`,
             }}
@@ -427,14 +427,14 @@ export function SyllabusTracker() {
         <p
           role="status"
           aria-live="polite"
-          className="rounded-xl border border-kal-accent/35 bg-red-950/35 px-3 py-2 text-sm font-medium text-red-200"
+          className="rounded-xl border border-kal-accent/35 bg-orange-950/35 px-3 py-2 text-sm font-medium text-orange-200"
         >
           {saveFeedback}
         </p>
       )}
 
       {syllabusLimited && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-center dark:border-amber-800 dark:bg-amber-950/30">
+        <div className="rounded-xl border border-amber-200 bg-kal-warn-soft px-4 py-3 text-center backdrop-blur-sm dark:border-amber-800">
           <p className="text-sm text-amber-800 dark:text-amber-200">
             Basic plan: subjects &amp; chapters only.{" "}
             <a href="/pricing" className="font-semibold underline">
@@ -467,7 +467,7 @@ export function SyllabusTracker() {
                     <button
                       type="button"
                       title="Add chapter"
-                      className="inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg border border-kal-accent/30 bg-red-950/40 text-kal-accent hover:bg-red-900/50 sm:px-2"
+                      className="inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg border border-kal-accent/30 bg-orange-950/40 text-kal-accent hover:bg-orange-900/50 sm:px-2"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -487,7 +487,7 @@ export function SyllabusTracker() {
                   <ChevronDown className="h-5 w-5 shrink-0 text-kal-muted transition-transform duration-200 group-open:rotate-180" />
                 </span>
               </summary>
-              <div className="border-t border-kal-border dark:border-slate-800">
+              <div className="border-t border-kal-border">
                 {chapterNames.map((chapter, chapterIdx) => {
                   const chapterNumber = chapterIdx + 1;
                   const list = chapters.get(chapter)!;
@@ -505,14 +505,14 @@ export function SyllabusTracker() {
                   return (
                     <details
                       key={chapter}
-                      className="group/ch mb-5 border-b border-kal-border pb-5 last:mb-0 last:border-b-0 last:pb-0 dark:border-slate-800"
+                      className="group/ch mb-5 border-b border-kal-border pb-5 last:mb-0 last:border-b-0 last:pb-0"
                       onToggle={syllabusLimited ? (e) => { (e.currentTarget as HTMLDetailsElement).open = false; } : undefined}
                     >
-                      <summary className="cursor-pointer list-none rounded-xl border border-kal-border/90 bg-gradient-to-br from-kal-accent-soft/70 via-kal-card-muted to-kal-card-muted px-0 py-0 shadow-sm marker:hidden ring-1 ring-black/[0.03] dark:border-slate-700/80 dark:from-red-950/35 dark:via-slate-950/60 dark:to-slate-950/40 dark:ring-white/[0.04] [&::-webkit-details-marker]:hidden">
+                      <summary className="kal-glass-card cursor-pointer list-none rounded-xl border border-kal-border/90 px-0 py-0 shadow-sm marker:hidden ring-1 ring-black/[0.03] dark:ring-white/[0.04] [&::-webkit-details-marker]:hidden">
                         <div className="flex flex-col gap-3.5 border-l-[4px] border-l-kal-accent py-4 pl-4 pr-3 sm:py-5 sm:pl-5 sm:pr-4">
                           <div className="flex items-start justify-between gap-3">
                             <span className="flex min-w-0 items-start gap-2.5">
-                              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-kal-card shadow-sm ring-1 ring-kal-border/50 dark:bg-slate-900/80 dark:ring-slate-700/80">
+                              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-kal-card shadow-sm ring-1 ring-kal-border/50">
                                 <Layers
                                   className="h-[1.15rem] w-[1.15rem] text-kal-accent"
                                   aria-hidden
@@ -523,7 +523,7 @@ export function SyllabusTracker() {
                                   Chapter
                                 </span>
                                 <span className="mt-1 flex min-w-0 items-baseline gap-2.5 sm:gap-3">
-                                  <span className="shrink-0 border-r border-kal-border/55 pr-2.5 text-xl font-bold tabular-nums leading-none tracking-tight text-kal-text dark:border-slate-600/55 sm:pr-3 sm:text-2xl">
+                                  <span className="shrink-0 border-r border-kal-border/55 pr-2.5 text-xl font-bold tabular-nums leading-none tracking-tight text-kal-text sm:pr-3 sm:text-2xl">
                                     {chapterNumber}.
                                   </span>
                                   <span className="min-w-0 flex-1 truncate text-base font-bold leading-snug tracking-tight text-kal-text sm:text-lg">
@@ -577,13 +577,13 @@ export function SyllabusTracker() {
                             )}
                           </p>
 
-                          <div className="flex flex-wrap items-center gap-2 border-t border-kal-border/50 pt-3.5 dark:border-slate-700/60">
+                          <div className="flex flex-wrap items-center gap-2 border-t border-kal-border/50 pt-3.5">
                             {canCustomize && catalogExamKey ? (
                               <>
                                 <button
                                   type="button"
                                   title="Add microtopic here"
-                                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-kal-accent/30 text-kal-accent hover:bg-kal-accent-soft dark:border-red-500/25 dark:text-red-400 dark:hover:bg-red-950/50"
+                                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-kal-accent/30 text-kal-accent hover:bg-kal-accent-soft dark:border-orange-500/25 dark:text-orange-400 dark:hover:bg-orange-950/50"
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
@@ -600,7 +600,7 @@ export function SyllabusTracker() {
                                 <button
                                   type="button"
                                   title="Rename chapter"
-                                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-kal-border text-kal-muted hover:bg-kal-card-muted dark:border-slate-600 dark:hover:bg-slate-800/80"
+                                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-kal-border text-kal-muted hover:bg-kal-card-muted"
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
@@ -618,7 +618,7 @@ export function SyllabusTracker() {
                                 <button
                                   type="button"
                                   title="Hide chapter (for you)"
-                                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-rose-500/25 text-rose-300/90 hover:bg-rose-950/30"
+                                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-orange-500/25 text-orange-400/90 hover:bg-orange-950/30"
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
@@ -684,7 +684,7 @@ export function SyllabusTracker() {
                           </div>
                         </div>
                       </summary>
-                      <ul className="mt-3 space-y-0 rounded-xl border border-kal-border/60 bg-kal-card/40 py-1 pl-2 pr-1 shadow-inner dark:border-slate-800/90 dark:bg-slate-950/25 sm:mt-4 sm:pl-3 sm:pr-2">
+                        <ul className="kal-glass-subtle mt-3 space-y-0 rounded-xl border border-kal-border/60 py-1 pl-2 pr-1 shadow-inner sm:mt-4 sm:pl-3 sm:pr-2">
                         {list.map((row, rowIdx) => {
                           const mr = row as MergedSyllabusRow;
                           const st = resolveStatus(
@@ -701,16 +701,16 @@ export function SyllabusTracker() {
                             <li
                               key={row.id}
                               className={clsx(
-                                "border-l-2 border-kal-accent/20 py-2 pl-3 pr-2 sm:pl-4 sm:pr-3 dark:border-red-500/15",
+                                "border-l-2 border-kal-accent/20 py-2 pl-3 pr-2 sm:pl-4 sm:pr-3 dark:border-orange-500/15",
                                 rowIdx > 0 &&
-                                  "mt-0 border-t border-kal-border/40 pt-3 dark:border-slate-800/70",
+                                  "mt-0 border-t border-kal-border/40 pt-3",
                               )}
                             >
                               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
                                 <div className="min-w-0 flex-1">
                                   <div className="flex items-start gap-2.5">
                                     <span
-                                      className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-kal-muted/45 ring-1 ring-kal-border/30 dark:bg-slate-500/50 dark:ring-slate-600/50"
+                                      className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-kal-muted/45 ring-1 ring-kal-border/30"
                                       aria-hidden
                                     />
                                     <div className="min-w-0 flex-1 space-y-1.5">
@@ -741,7 +741,7 @@ export function SyllabusTracker() {
                                     <div className="mt-2.5 flex items-center gap-2 pl-3.5 sm:pl-4">
                                       <button
                                         type="button"
-                                        className="inline-flex h-8 items-center gap-1 rounded-lg border border-kal-border px-2 text-[11px] font-medium text-kal-text-secondary hover:bg-kal-card-muted dark:border-slate-600 dark:hover:bg-slate-800/80"
+                                        className="inline-flex h-8 items-center gap-1 rounded-lg border border-kal-border px-2 text-[11px] font-medium text-kal-text-secondary hover:bg-kal-card-muted"
                                         onClick={() => {
                                           if (mr.userSyllabus?.isUserAdded) {
                                             openSheet({
@@ -774,7 +774,7 @@ export function SyllabusTracker() {
                                       </button>
                                       <button
                                         type="button"
-                                        className="inline-flex h-8 items-center gap-1 rounded-lg border border-rose-500/25 px-2 text-[11px] font-medium text-rose-300/95 hover:bg-rose-950/25"
+                                        className="inline-flex h-8 items-center gap-1 rounded-lg border border-orange-500/25 px-2 text-[11px] font-medium text-orange-400/95 hover:bg-orange-950/25"
                                         onClick={() => {
                                           setConfirmState({
                                             title: mr.userSyllabus?.isUserAdded

@@ -121,7 +121,7 @@ export function ProductivityPlannerView() {
         title="NEET / JEE Priority Tasks"
         subtitle="Loading…"
       >
-        <div className="h-32 animate-pulse rounded-2xl bg-slate-800/50" />
+        <div className="h-32 animate-pulse rounded-2xl bg-kal-border/60" />
       </PlannerPageShell>
     );
   }
@@ -139,7 +139,7 @@ export function ProductivityPlannerView() {
       <div className="space-y-3">
         {(["p1", "p2", "p3"] as const).map((key, i) => (
           <label key={key} className="block">
-            <span className="text-xs font-medium text-zinc-500">
+            <span className="text-xs font-medium text-kal-muted">
               Priority {i + 1} · marks impact
             </span>
             <input
@@ -151,13 +151,13 @@ export function ProductivityPlannerView() {
                   ? "e.g. Electrostatics PYQs + mistakes"
                   : "e.g. Organic name reactions drill"
               }
-              className="mt-1.5 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2.5 text-[15px] text-white placeholder:text-zinc-600 focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
+              className="mt-1.5 min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-card-muted px-3 py-2.5 text-[15px] text-kal-text placeholder:text-kal-muted focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
             />
           </label>
         ))}
       </div>
       <label className="block">
-        <span className="text-xs font-medium text-zinc-500">
+        <span className="text-xs font-medium text-kal-muted">
           Focus notes & revision blocks
         </span>
         <textarea
@@ -165,7 +165,7 @@ export function ProductivityPlannerView() {
           onChange={(e) => persist({ ...s, notes: e.target.value })}
           rows={6}
           placeholder="High-yield topics for this week, mock analysis takeaways, coach assignments…"
-          className="mt-1.5 w-full resize-y rounded-2xl border border-slate-700 bg-slate-900/80 px-3 py-3 text-sm text-white placeholder:text-zinc-600 focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
+          className="mt-1.5 w-full resize-y rounded-2xl border border-kal-border bg-kal-card-muted px-3 py-3 text-sm text-kal-text placeholder:text-kal-muted focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
         />
       </label>
     </PlannerPageShell>

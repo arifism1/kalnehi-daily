@@ -117,7 +117,7 @@ export function ExamCountdownHero() {
   return (
     <div className="relative overflow-hidden px-6 pb-9 pt-8 sm:px-8 sm:pb-11 sm:pt-9">
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,rgba(239,68,68,0.12),transparent)] dark:bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,rgba(239,68,68,0.18),transparent)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,rgba(255,122,0,0.12),transparent)] dark:bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,rgba(255,122,0,0.18),transparent)]"
         aria-hidden
       />
       <p className="text-center text-[0.65rem] font-semibold uppercase tracking-[0.35em] text-kal-accent">
@@ -125,7 +125,7 @@ export function ExamCountdownHero() {
       </p>
       <div className="relative mx-auto mt-4 flex max-w-sm flex-col items-center">
         <div
-          className="relative flex h-[min(52vw,220px)] w-[min(52vw,220px)] items-center justify-center rounded-full border border-kal-accent/25 bg-kal-card-muted shadow-[0_8px_40px_-12px_rgba(239,68,68,0.2)] dark:border-red-500/20 dark:bg-slate-950/60 dark:shadow-[0_0_60px_-12px_rgba(239,68,68,0.35)]"
+          className="relative flex h-[min(52vw,220px)] w-[min(52vw,220px)] items-center justify-center rounded-full border border-kal-accent/30 bg-kal-card shadow-[0_8px_40px_-12px_rgba(255,122,0,0.25)] backdrop-blur-lg dark:border-kal-accent/25 dark:shadow-[0_0_60px_-12px_rgba(255,122,0,0.40)]"
           aria-live="polite"
         >
           <div
@@ -133,7 +133,7 @@ export function ExamCountdownHero() {
             aria-hidden
           />
           <span
-            className="bg-gradient-to-br from-kal-text via-kal-text to-red-600 bg-clip-text text-[clamp(3.5rem,18vw,5.75rem)] font-bold leading-none tabular-nums tracking-tighter text-transparent dark:from-white dark:via-white dark:to-red-300/90 dark:drop-shadow-[0_2px_32px_rgba(239,68,68,0.25)]"
+            className="bg-gradient-to-br from-kal-text via-kal-text to-kal-accent bg-clip-text text-[clamp(3.5rem,18vw,5.75rem)] font-bold leading-none tabular-nums tracking-tighter text-transparent dark:from-white dark:via-white dark:to-kal-accent/90 dark:drop-shadow-[0_2px_32px_rgba(255,122,0,0.25)]"
           >
             {totalDays}
           </span>

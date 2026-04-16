@@ -61,7 +61,7 @@ export function PrepBrainChat() {
         "sm:h-auto sm:min-h-[min(70vh,560px)] sm:max-h-none",
       ].join(" ")}
     >
-      <div className="flex shrink-0 items-start justify-between gap-2 border-b border-white/15 bg-white/30 px-3 py-3 backdrop-blur-sm sm:items-center sm:gap-3 sm:px-5 dark:border-white/10 dark:bg-zinc-900/40">
+      <div className="flex shrink-0 items-start justify-between gap-2 border-b border-kal-border/60 bg-kal-card/80 px-3 py-3 backdrop-blur-sm sm:items-center sm:gap-3 sm:px-5">
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-kal-accent-soft text-kal-accent ring-1 ring-kal-accent/20 sm:h-11 sm:w-11">
             <Brain className="h-5 w-5" strokeWidth={2} aria-hidden />
@@ -92,16 +92,16 @@ export function PrepBrainChat() {
                   <div
                     className={`h-full rounded-full transition-[width] duration-300 ${
                       atTokenLimit
-                        ? "bg-red-500/90"
+                        ? "bg-kal-accent/90"
                         : usageNearLimit
-                          ? "bg-amber-500/90"
+                          ? "bg-kal-warn-border/90"
                           : "bg-kal-accent/90"
                     }`}
                     style={{ width: `${usagePct}%` }}
                   />
                 </div>
                 {tokenLimitMessage ? (
-                  <p className="text-[10px] leading-snug text-red-800 dark:text-red-200/90">
+                  <p className="text-[10px] leading-snug text-[var(--kal-danger-text)]">
                     {tokenLimitMessage}
                   </p>
                 ) : null}
@@ -115,7 +115,7 @@ export function PrepBrainChat() {
           <button
             type="button"
             onClick={() => clearChat()}
-            className="touch-manipulation shrink-0 rounded-lg border border-white/30 bg-white/50 px-3 py-2 text-xs font-semibold leading-none text-kal-text-secondary backdrop-blur-sm transition-colors hover:border-kal-accent/30 hover:bg-white/70 hover:text-kal-text active:scale-[0.98] dark:border-white/12 dark:bg-zinc-900/50 dark:hover:bg-zinc-900/70 sm:min-h-0 sm:py-1.5"
+            className="touch-manipulation shrink-0 rounded-lg border border-kal-border/60 bg-kal-card/70 px-3 py-2 text-xs font-semibold leading-none text-kal-text-secondary backdrop-blur-sm transition-colors hover:border-kal-accent/30 hover:bg-kal-card hover:text-kal-text active:scale-[0.98] sm:min-h-0 sm:py-1.5"
           >
             Clear
           </button>
@@ -143,7 +143,7 @@ export function PrepBrainChat() {
                       void sendMessage(q);
                     }}
                     disabled={isSending || atTokenLimit}
-                    className="touch-manipulation rounded-xl border border-white/30 bg-white/55 px-3 py-3 text-left text-sm leading-snug text-kal-text backdrop-blur-sm transition-colors hover:border-kal-accent/35 hover:bg-kal-accent-soft/50 active:bg-kal-accent-soft/60 disabled:opacity-50 dark:border-white/12 dark:bg-zinc-900/55 dark:hover:bg-zinc-900/75 sm:min-h-0 sm:py-2.5"
+                    className="touch-manipulation rounded-xl border border-kal-border/50 bg-kal-card/75 px-3 py-3 text-left text-sm leading-snug text-kal-text backdrop-blur-sm transition-colors hover:border-kal-accent/35 hover:bg-kal-accent-soft/50 active:bg-kal-accent-soft/60 disabled:opacity-50 sm:min-h-0 sm:py-2.5"
                   >
                     {q}
                   </button>
@@ -166,8 +166,8 @@ export function PrepBrainChat() {
               <div
                 className={
                   m.role === "user"
-                    ? "max-w-[min(100%,20rem)] rounded-2xl rounded-br-md bg-kal-accent px-3.5 py-2.5 text-sm font-medium text-kal-accent-foreground shadow-sm sm:max-w-[min(100%,28rem)]"
-                    : "w-full max-w-full rounded-2xl rounded-bl-md border border-white/30 bg-white/60 px-3.5 py-2.5 text-sm leading-relaxed text-kal-text shadow-sm backdrop-blur-md sm:w-auto sm:max-w-[min(100%,34rem)] dark:border-white/12 dark:bg-zinc-900/65"
+                    ? "max-w-[min(100%,20rem)] rounded-2xl rounded-br-md border border-kal-accent/30 bg-kal-accent-soft/85 px-3.5 py-2.5 text-sm font-medium text-kal-text shadow-sm backdrop-blur-sm sm:max-w-[min(100%,28rem)]"
+                    : "w-full max-w-full rounded-2xl rounded-bl-md border border-kal-border/50 bg-kal-card/90 px-3.5 py-2.5 text-sm leading-relaxed text-kal-text shadow-sm backdrop-blur-md sm:w-auto sm:max-w-[min(100%,34rem)]"
                 }
               >
                 <p className="break-words whitespace-pre-wrap">{m.content}</p>
@@ -176,7 +176,7 @@ export function PrepBrainChat() {
           ))}
           {isSending && (
             <div className="flex justify-start">
-              <div className="flex items-center gap-2 rounded-2xl rounded-bl-md border border-white/30 bg-white/50 px-3.5 py-2.5 text-sm text-kal-text-secondary backdrop-blur-md dark:border-white/12 dark:bg-zinc-900/60">
+              <div className="flex items-center gap-2 rounded-2xl rounded-bl-md border border-kal-border/50 bg-kal-card/85 px-3.5 py-2.5 text-sm text-kal-text-secondary backdrop-blur-md">
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
                 PrepBrain is thinking…
               </div>
@@ -187,7 +187,7 @@ export function PrepBrainChat() {
       </div>
 
       {error && (
-        <div className="shrink-0 border-t border-red-200 bg-red-50 px-3 py-2.5 text-center text-sm leading-snug text-red-900 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-100 sm:px-4">
+        <div className="shrink-0 border-t border-kal-warn-border bg-kal-warn-soft px-3 py-2.5 text-center text-sm leading-snug text-kal-warn-text backdrop-blur-sm sm:px-4">
           {error}
           <button
             type="button"
@@ -201,7 +201,7 @@ export function PrepBrainChat() {
 
       <form
         onSubmit={onSubmit}
-        className="shrink-0 border-t border-white/15 bg-white/40 p-2.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-md sm:p-4 sm:pb-4 dark:border-white/10 dark:bg-zinc-950/55"
+        className="shrink-0 border-t border-kal-border/60 bg-kal-card/70 p-2.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-md sm:p-4 sm:pb-4"
       >
         <div className="flex gap-2 sm:gap-2.5">
           <textarea
@@ -220,7 +220,7 @@ export function PrepBrainChat() {
             disabled={isSending || atTokenLimit}
             enterKeyHint="send"
             autoComplete="off"
-            className="min-h-[44px] min-w-0 flex-1 resize-y rounded-xl border border-white/35 bg-white/60 px-3 py-2.5 text-base leading-normal text-kal-text placeholder:text-kal-text-secondary/70 backdrop-blur-sm focus:border-kal-accent/50 focus:outline-none focus:ring-2 focus:ring-kal-accent/20 disabled:opacity-60 dark:border-white/12 dark:bg-zinc-900/55 sm:min-h-[48px] sm:py-3 sm:text-sm"
+            className="min-h-[44px] min-w-0 flex-1 resize-y rounded-xl border border-kal-border/60 bg-kal-input-bg px-3 py-2.5 text-base leading-normal text-kal-text placeholder:text-kal-text-secondary/70 backdrop-blur-sm focus:border-kal-accent/50 focus:outline-none focus:ring-2 focus:ring-kal-accent/20 disabled:opacity-60 sm:min-h-[48px] sm:py-3 sm:text-sm"
           />
           <button
             type="submit"

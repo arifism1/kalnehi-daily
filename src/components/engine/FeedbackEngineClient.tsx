@@ -16,9 +16,9 @@ const TONE: Record<
   "positive" | "neutral" | "urgent",
   string
 > = {
-  positive: "border-kal-accent/30 bg-red-950/25",
-  neutral: "border-slate-700 bg-slate-950/40",
-  urgent: "border-amber-500/35 bg-amber-950/20",
+  positive: "border-kal-accent/30 bg-kal-accent-soft/30",
+  neutral: "border-kal-border bg-kal-card-muted/60",
+  urgent: "border-kal-warn-border/60 bg-kal-warn-soft/60",
 };
 
 export function FeedbackEngineClient() {
@@ -69,7 +69,7 @@ export function FeedbackEngineClient() {
             <p className="text-xs font-semibold uppercase tracking-wide text-kal-accent/90">
               {ins.title}
             </p>
-            <p className="mt-2 text-sm leading-relaxed text-zinc-200">
+            <p className="mt-2 text-sm leading-relaxed text-kal-text-secondary">
               {ins.body}
             </p>
           </div>
@@ -77,7 +77,7 @@ export function FeedbackEngineClient() {
       </div>
 
       <EngineCard title="How this works">
-        <p className="text-sm text-zinc-500">
+        <p className="text-sm text-kal-muted">
           We combine today&apos;s weighted completion, your syllabus mastery
           snapshot, and missed backlog — then translate into rank-aware language.
           Execute daily for sharper, more personal signals.

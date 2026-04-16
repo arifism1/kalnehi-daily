@@ -33,7 +33,7 @@ function MiniBar({ percent }: { percent: number }) {
   return (
     <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-kal-border/80">
       <div
-        className="h-full rounded-full bg-gradient-to-r from-kal-accent to-red-400 transition-[width] duration-500 ease-out"
+        className="h-full rounded-full bg-gradient-to-r from-kal-accent to-[var(--kal-accent-dark)] transition-[width] duration-500 ease-out"
         style={{ width: `${p}%` }}
       />
     </div>

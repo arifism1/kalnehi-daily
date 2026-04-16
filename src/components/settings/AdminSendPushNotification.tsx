@@ -244,7 +244,7 @@ export function AdminSendPushNotification() {
           ) : null}
 
           {error ? (
-            <p className="text-xs text-rose-600 dark:text-rose-300" role="alert">
+            <p className="text-xs text-kal-danger-text" role="alert">
               {error}
             </p>
           ) : null}

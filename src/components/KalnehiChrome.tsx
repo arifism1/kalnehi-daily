@@ -96,7 +96,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
           </header>
         )}
         {!onboarding && minimalChrome && (
-          <div className="sticky top-14 z-30 border-b border-white/20 bg-white/55 backdrop-blur-md dark:border-white/10 dark:bg-zinc-950/65 sm:top-[3.5rem]">
+          <div className="sticky top-14 z-30 border-b backdrop-blur-xl sm:top-[3.5rem]" style={{ borderColor: "var(--kal-border)", backgroundColor: "rgba(250,247,242,0.82)" }}>
             <div
               className={clsx(
                 "mx-auto w-full px-4 sm:px-6 md:px-8 xl:px-10",

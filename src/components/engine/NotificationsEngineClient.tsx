@@ -87,15 +87,15 @@ export function NotificationsEngineClient() {
 
       <EngineCard title="Browser permission">
         {perm === "unsupported" ? (
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-kal-muted">
             Browser notifications aren&apos;t available in this environment.
             Reminders still save locally for when you open the app.
           </p>
         ) : (
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-zinc-400">
+            <p className="text-sm text-kal-muted">
               Status:{" "}
-              <span className="font-semibold text-zinc-200">{perm}</span>
+              <span className="font-semibold text-kal-text">{perm}</span>
             </p>
             <button
               type="button"
@@ -110,19 +110,19 @@ export function NotificationsEngineClient() {
       </EngineCard>
 
       <EngineCard title="Reminder schedule">
-        <label className="flex flex-wrap items-center gap-2 text-sm text-zinc-300">
+        <label className="flex flex-wrap items-center gap-2 text-sm text-kal-text-secondary">
           <input
             type="checkbox"
             checked={prefs.enabled}
             onChange={(e) =>
               persist({ ...prefs, enabled: e.target.checked })
             }
-            className="h-4 w-4 rounded border-slate-600"
+            className="h-4 w-4 rounded border-kal-border accent-kal-accent"
           />
           Daily planning reminder
         </label>
         <div className="mt-4 flex flex-wrap gap-3">
-          <label className="text-xs text-zinc-500">
+          <label className="text-xs text-kal-muted">
             Hour (0–23)
             <input
               type="number"
@@ -138,10 +138,10 @@ export function NotificationsEngineClient() {
                   ),
                 })
               }
-              className="mt-1 block w-24 rounded-xl border border-slate-700 bg-slate-950/80 px-3 py-2 text-sm text-white"
+              className="mt-1 block w-24 rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2 text-sm text-kal-text"
             />
           </label>
-          <label className="text-xs text-zinc-500">
+          <label className="text-xs text-kal-muted">
             Minute
             <input
               type="number"
@@ -157,18 +157,18 @@ export function NotificationsEngineClient() {
                   ),
                 })
               }
-              className="mt-1 block w-24 rounded-xl border border-slate-700 bg-slate-950/80 px-3 py-2 text-sm text-white"
+              className="mt-1 block w-24 rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2 text-sm text-kal-text"
             />
           </label>
         </div>
-        <p className="mt-3 text-[11px] text-zinc-600">
+        <p className="mt-3 text-[11px] text-kal-muted">
           Times use your device clock. For reliable delivery, keep Kalnehi
           installed as a PWA and allow notifications.
         </p>
       </EngineCard>
 
       <EngineCard title="Dynamic alerts">
-        <ul className="space-y-3 text-sm text-zinc-300">
+        <ul className="space-y-3 text-sm text-kal-text-secondary">
           <li className="flex items-center justify-between gap-2">
             <span>Pending / missed tasks</span>
             <input
@@ -177,7 +177,7 @@ export function NotificationsEngineClient() {
               onChange={(e) =>
                 persist({ ...prefs, alertPending: e.target.checked })
               }
-              className="h-4 w-4"
+              className="h-4 w-4 accent-kal-accent"
             />
           </li>
           <li className="flex items-center justify-between gap-2">
@@ -188,7 +188,7 @@ export function NotificationsEngineClient() {
               onChange={(e) =>
                 persist({ ...prefs, alertLowExecution: e.target.checked })
               }
-              className="h-4 w-4"
+              className="h-4 w-4 accent-kal-accent"
             />
           </li>
           <li className="flex items-center justify-between gap-2">
@@ -199,14 +199,14 @@ export function NotificationsEngineClient() {
               onChange={(e) =>
                 persist({ ...prefs, alertRevision: e.target.checked })
               }
-              className="h-4 w-4"
+              className="h-4 w-4 accent-kal-accent"
             />
           </li>
         </ul>
       </EngineCard>
 
-      <div className="flex items-start gap-2 rounded-xl border border-slate-800 bg-slate-950/50 px-3 py-3 text-[11px] text-zinc-500">
-        <BellOff className="mt-0.5 h-4 w-4 shrink-0 text-zinc-600" />
+      <div className="kal-glass-subtle flex items-start gap-2 rounded-xl px-3 py-3 text-[11px] text-kal-muted">
+        <BellOff className="mt-0.5 h-4 w-4 shrink-0 text-kal-muted" />
         <p>
           Kalnehi never sends exam content from our servers for notifications.
           {userId

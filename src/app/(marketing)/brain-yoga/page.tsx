@@ -59,7 +59,7 @@ export default function BrainYogaMarketingPage() {
           </p>
         </header>
 
-        <section className="space-y-4 rounded-2xl border border-kal-border bg-kal-card p-5 shadow-kal-card">
+        <section className="kal-glass-card space-y-4 rounded-2xl p-5">
           <h2 className="flex items-center gap-2 text-lg font-semibold text-kal-text">
             <Wind className="h-5 w-5 text-kal-accent" aria-hidden />
             What to practice (5–10 minutes total)
@@ -95,7 +95,7 @@ export default function BrainYogaMarketingPage() {
           </ul>
         </section>
 
-        <section className="flex flex-col gap-4 rounded-2xl border border-dashed border-kal-border bg-kal-accent-soft/30 p-5 sm:flex-row sm:items-center sm:justify-between">
+        <section className="kal-glass-panel flex flex-col gap-4 rounded-2xl p-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
             <Leaf className="mt-0.5 h-8 w-8 shrink-0 text-kal-accent" aria-hidden />
             <div>
@@ -106,10 +106,7 @@ export default function BrainYogaMarketingPage() {
               </p>
             </div>
           </div>
-          <Link
-            href="/auth"
-            className="inline-flex min-h-[44px] shrink-0 items-center justify-center rounded-xl bg-kal-accent px-5 text-sm font-bold text-kal-accent-foreground"
-          >
+          <Link href="/auth" className="kal-btn-accent min-h-[44px] shrink-0">
             Sign in to open app
           </Link>
         </section>

@@ -134,7 +134,7 @@ export function MyTargetClient() {
       </header>
 
       {error ? (
-        <p className="rounded-xl border border-rose-500/40 bg-rose-950/30 px-4 py-3 text-sm text-rose-100">
+        <p className="rounded-xl border border-kal-accent/40 bg-kal-accent-soft/40 px-4 py-3 text-sm text-kal-text">
           {error}
         </p>
       ) : null}
@@ -192,7 +192,7 @@ export function MyTargetClient() {
                     title="Remove this saved list"
                     disabled={deletingId === row.id}
                     onClick={() => void onDelete(row.id)}
-                    className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-kal-border px-3 py-2 text-xs font-semibold text-kal-muted hover:border-rose-500/50 hover:text-rose-600 disabled:opacity-50 dark:hover:text-rose-300"
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-kal-border px-3 py-2 text-xs font-semibold text-kal-muted hover:border-kal-accent/50 hover:text-kal-accent disabled:opacity-50"
                   >
                     {deletingId === row.id ? (
                       <Loader2 className="h-4 w-4 animate-spin" aria-hidden />

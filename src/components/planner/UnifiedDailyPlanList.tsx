@@ -206,7 +206,7 @@ function DailyTaskEditSheet({ task, onClose, onSaved }: EditSheetProps) {
         </div>
 
         {error ? (
-          <p className="mt-3 rounded-xl bg-rose-950/40 px-3 py-2 text-sm text-rose-200">
+          <p className="mt-3 rounded-xl bg-orange-950/40 px-3 py-2 text-sm text-orange-200">
             {error}
           </p>
         ) : null}
@@ -224,7 +224,7 @@ function DailyTaskEditSheet({ task, onClose, onSaved }: EditSheetProps) {
             type="button"
             onClick={() => void handleSave()}
             disabled={saving}
-            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-kal-accent py-3 text-sm font-semibold text-white transition-opacity hover:bg-kal-accent-hover disabled:opacity-50"
+            className="kal-btn-accent flex flex-1 items-center justify-center gap-2 rounded-2xl py-3 text-sm font-semibold disabled:opacity-50"
           >
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
           </button>
@@ -586,7 +586,7 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
                           type="button"
                           onClick={() => void deleteTaskNow(t)}
                           disabled={isDeleting}
-                          className="flex h-8 w-8 items-center justify-center rounded-lg text-kal-muted/80 transition-colors hover:bg-rose-500/10 hover:text-rose-600 disabled:opacity-40 dark:hover:text-rose-400 sm:h-7 sm:w-7"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-kal-muted/80 transition-colors hover:bg-orange-500/10 hover:text-orange-600 disabled:opacity-40 dark:hover:text-orange-400 sm:h-7 sm:w-7"
                           aria-label="Delete task"
                         >
                           {isDeleting ? (

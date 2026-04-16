@@ -27,9 +27,9 @@ const HEAT: Record<
   yellow:
     "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-500/35 dark:bg-amber-500/15 dark:text-amber-100 dark:shadow-[inset_0_0_0_1px_rgba(245,158,11,0.2)]",
   red:
-    "border-red-200 bg-red-50 text-red-900 dark:border-red-500/40 dark:bg-red-500/20 dark:text-red-100 dark:shadow-[inset_0_0_0_1px_rgba(239,68,68,0.2)]",
+    "border-orange-200 bg-orange-50 text-orange-900 dark:border-orange-500/40 dark:bg-orange-500/20 dark:text-orange-100 dark:shadow-[inset_0_0_0_1px_rgba(249,115,22,0.2)]",
   grey:
-    "border-kal-border bg-kal-card-muted text-kal-muted dark:border-slate-700/80 dark:bg-slate-800/40 dark:text-zinc-500",
+    "border-kal-border bg-kal-card-muted text-kal-muted",
 };
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -94,7 +94,7 @@ export function CalendarEngineClient() {
             <span className="h-3 w-3 rounded-sm bg-amber-500/45" /> 50–80%
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-sm bg-red-500/50" /> &lt;50%
+            <span className="h-3 w-3 rounded-sm bg-orange-500/50" /> &lt;50%
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="h-3 w-3 rounded-sm bg-kal-border" /> No data

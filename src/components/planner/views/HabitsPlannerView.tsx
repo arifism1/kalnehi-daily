@@ -113,7 +113,7 @@ export function HabitsPlannerView() {
           >
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-kal-text">{h.label}</p>
-              <p className="mt-1 text-xs text-zinc-500">
+              <p className="mt-1 text-xs text-kal-muted">
                 Streak:{" "}
                 <span className="font-semibold tabular-nums text-kal-accent">
                   {h.streak}
@@ -125,7 +125,7 @@ export function HabitsPlannerView() {
               <button
                 type="button"
                 onClick={() => bump(h.id)}
-                className="rounded-xl bg-kal-accent px-3 py-2 text-xs font-semibold text-white active:bg-red-500"
+                className="kal-btn-accent rounded-xl px-3 py-2 text-xs font-semibold active:opacity-80"
                 aria-label={`Log ${h.label}`}
               >
                 +1 today
@@ -145,7 +145,7 @@ export function HabitsPlannerView() {
       <button
         type="button"
         onClick={add}
-        className="flex w-full min-h-[48px] items-center justify-center gap-2 rounded-2xl border border-dashed border-kal-accent/40 py-3 text-sm font-semibold text-kal-accent hover:bg-red-950/30"
+        className="flex w-full min-h-[48px] items-center justify-center gap-2 rounded-2xl border border-dashed border-kal-accent/40 py-3 text-sm font-semibold text-kal-accent hover:bg-kal-accent-soft"
       >
         <Plus className="h-4 w-4" />
         Add exam habit

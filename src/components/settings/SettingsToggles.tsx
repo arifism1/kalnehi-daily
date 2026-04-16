@@ -68,8 +68,6 @@ export function SettingsToggles() {
 
   const appearance = useSettingsStore((s) => s.appearance ?? "light");
   const setAppearance = useSettingsStore((s) => s.setAppearance);
-  const purposeModeEnabled = useSettingsStore((s) => s.purposeModeEnabled);
-  const setPurposeModeEnabled = useSettingsStore((s) => s.setPurposeModeEnabled);
   const showCountdown = useSettingsStore((s) => s.showCountdown);
   const setShowCountdown = useSettingsStore((s) => s.setShowCountdown);
   const soundEffects = useSettingsStore((s) => s.soundEffects);
@@ -111,25 +109,6 @@ export function SettingsToggles() {
             </button>
           ))}
         </div>
-      </div>
-      <div className="flex items-center justify-between gap-3 px-3 py-3.5">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-[15px] font-medium text-kal-text">
-              Purpose mode
-            </span>
-            <ToggleStateBadge checked={purposeModeEnabled} />
-          </div>
-          <p className="mt-0.5 text-xs text-kal-text-secondary">
-            Shows your purpose photos and motivation strip on Home.
-          </p>
-        </div>
-        <SheetSwitch
-          checked={purposeModeEnabled}
-          onChange={setPurposeModeEnabled}
-          id={`${baseId}-p`}
-          label="Toggle purpose mode"
-        />
       </div>
       <div className="flex items-center justify-between gap-3 px-3 py-3.5">
         <div>

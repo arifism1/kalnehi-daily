@@ -112,7 +112,7 @@ export const metadata: Metadata = {
     // Disable tap highlight flash inside the TWA chrome shell
     "msapplication-tap-highlight": "no",
     // Tile colour for Windows/Edge "pin to start"
-    "msapplication-TileColor": "#ef4444",
+    "msapplication-TileColor": "#FF7A00",
   },
 };
 
@@ -121,7 +121,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#ef4444",
+  themeColor: "#FF7A00",
   colorScheme: "light",
 };
 

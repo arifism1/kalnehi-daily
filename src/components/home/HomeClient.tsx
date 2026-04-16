@@ -25,6 +25,7 @@ import {
   filterTasksThroughDate,
 } from "@/lib/progressEngine";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useEnabledFeaturesStore } from "@/store/useEnabledFeaturesStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useTaskStore } from "@/store/useTaskStore";
 
@@ -39,7 +40,15 @@ import { HomeAccordionSections } from "./HomeAccordionSections";
 export function HomeClient() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
+  const fetchEnabledFeatures = useEnabledFeaturesStore((s) => s.fetch);
+
   useRefreshTasksOnHomeFocus();
+
+  useEffect(() => {
+    if (user?.id) {
+      void fetchEnabledFeatures(user.id);
+    }
+  }, [user?.id, fetchEnabledFeatures]);
   useEffect(() => {
     router.prefetch("/syllabus");
     router.prefetch("/plan-my-day");

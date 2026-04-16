@@ -199,12 +199,12 @@ export function PlanUpgradeSection() {
           </div>
         ) : null}
         {payError ? (
-          <div className="border-t border-kal-border bg-rose-50 px-4 py-2.5 dark:bg-rose-950/25">
-            <p className="text-xs font-medium text-rose-900 dark:text-rose-200" role="status">
+          <div className="border-t border-kal-danger-border bg-kal-danger-soft px-4 py-2.5">
+            <p className="text-xs font-medium text-kal-danger-text" role="status">
               {payError.text}
             </p>
             {process.env.NODE_ENV === "development" && payError.debugHint ? (
-              <p className="mt-1.5 text-[0.65rem] leading-snug text-rose-800/90 dark:text-rose-200/85">
+              <p className="mt-1.5 text-[0.65rem] leading-snug text-kal-danger-text/80">
                 {payError.debugHint}
               </p>
             ) : null}
@@ -213,7 +213,7 @@ export function PlanUpgradeSection() {
               error={payError.text}
               userEmail={userEmail}
               proof={payError.proof}
-              className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-xs font-semibold text-rose-800 underline-offset-2 hover:underline dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-100"
+              className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-kal-danger-border bg-white px-3 py-1.5 text-xs font-semibold text-kal-danger-text underline-offset-2 hover:underline"
             />
           </div>
         ) : null}

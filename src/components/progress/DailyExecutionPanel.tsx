@@ -89,7 +89,7 @@ export function DailyExecutionPanel() {
   const BAR_MAX_PX = 100;
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-kal-border bg-kal-card kal-shadow-card">
+    <section className="kal-glass-card overflow-hidden rounded-2xl">
       <div className="border-b border-kal-border/80 bg-kal-card-muted/40 px-6 py-5 sm:px-8 sm:py-6">
         <p className="text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-kal-accent sm:text-[0.7rem]">
           Daily execution
@@ -227,7 +227,7 @@ export function DailyExecutionPanel() {
                             p.hasPlan
                               ? p.date === today
                                 ? "bg-kal-accent"
-                                : "bg-kal-accent/55 dark:bg-red-500/50"
+                                : "bg-kal-accent/55 dark:bg-kal-accent/45"
                               : "bg-kal-border/60 dark:bg-slate-700",
                           )}
                           style={{ height: `${barPx}px` }}
@@ -248,7 +248,7 @@ export function DailyExecutionPanel() {
             </div>
 
             {(insights.length > 0 || todaySnap.plannedTasks > 0) && (
-              <ul className="space-y-2 rounded-xl border border-kal-accent/20 bg-kal-accent-soft/50 px-4 py-3.5 text-sm leading-relaxed text-kal-text dark:border-red-500/20 dark:bg-red-950/20 dark:text-red-50/95">
+              <ul className="space-y-2 rounded-xl border border-kal-accent/20 bg-kal-accent-soft/50 px-4 py-3.5 text-sm leading-relaxed text-kal-text dark:border-kal-accent/20 dark:bg-kal-accent-dark/20">
                 {todaySnap.plannedTasks > 0 && (
                   <li className="font-medium">
                     {band === "flawless" && "Flawless — you won the day."}

@@ -260,8 +260,8 @@ export function TimerEngineClient() {
                     className={clsx(
                       "rounded-full border px-3.5 py-2 text-xs font-semibold transition-colors duration-200",
                       selected
-                        ? "border-kal-accent bg-kal-accent-soft text-kal-accent shadow-sm dark:border-red-500/50 dark:bg-red-950/30 dark:text-red-100"
-                        : "border-kal-border bg-kal-card-muted text-kal-text hover:border-kal-accent/35 hover:bg-kal-accent-soft/60 dark:border-slate-600 dark:bg-slate-900/80 dark:text-zinc-200",
+                        ? "border-kal-accent bg-kal-accent-soft text-kal-accent shadow-sm dark:border-kal-accent/50 dark:bg-kal-accent-soft/20 dark:text-kal-accent"
+                        : "border-kal-border bg-kal-card-muted text-kal-text hover:border-kal-accent/35 hover:bg-kal-accent-soft/60",
                     )}
                   >
                     <span className="tabular-nums">{p.label}</span>
@@ -271,7 +271,7 @@ export function TimerEngineClient() {
                   </button>
                 );
               })}
-              <label className="ml-0 flex items-center gap-2 rounded-full border border-dashed border-kal-border px-3 py-2 dark:border-slate-600">
+              <label className="ml-0 flex items-center gap-2 rounded-full border border-dashed border-kal-border px-3 py-2">
                 <span className="text-xs font-medium text-kal-text-secondary">
                   Custom
                 </span>
@@ -285,7 +285,7 @@ export function TimerEngineClient() {
                     if (!Number.isFinite(m) || m <= 0) return;
                     setCustomSec(m * 60);
                   }}
-                  className="w-12 rounded-lg border border-kal-border bg-kal-input-bg px-2 py-1 text-center text-sm font-semibold tabular-nums text-kal-text focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20 dark:border-slate-700 dark:bg-slate-950/80 dark:text-white"
+                  className="w-12 rounded-lg border border-kal-border bg-kal-input-bg px-2 py-1 text-center text-sm font-semibold tabular-nums text-kal-text focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
                   aria-label="Custom block length in minutes"
                 />
                 <span className="text-xs text-kal-text-secondary">min</span>
@@ -293,7 +293,7 @@ export function TimerEngineClient() {
             </div>
           </div>
 
-          <div className="relative border-t border-kal-border pt-6 dark:border-slate-700/80">
+          <div className="relative border-t border-kal-border pt-6">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-kal-text-secondary sm:text-[11px] sm:tracking-[0.2em]">
               Link to task
             </p>
@@ -320,14 +320,14 @@ export function TimerEngineClient() {
               }}
               placeholder="Type a task or pick from your list…"
               autoComplete="off"
-              className="mt-3 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-3 text-sm text-kal-text placeholder:text-kal-text-secondary placeholder:opacity-90 focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20 dark:border-slate-700 dark:bg-slate-950/80 dark:text-white dark:placeholder:text-zinc-400 dark:focus:border-kal-accent/50"
+              className="mt-3 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-3 text-sm text-kal-text placeholder:text-kal-muted focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
               aria-autocomplete="list"
               aria-expanded={suggestOpen && filteredSuggestions.length > 0}
             />
             {suggestOpen && filteredSuggestions.length > 0 ? (
               <ul
                 role="listbox"
-                className="kal-glass-panel absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-xl py-1 dark:border-white/12"
+                className="kal-glass-panel absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-xl py-1"
               >
                 {filteredSuggestions.map((t) => {
                   const line = `${t.assigned_date} · ${taskLabel(t, microRecord)}`;
@@ -335,7 +335,7 @@ export function TimerEngineClient() {
                     <li key={t.id} role="option">
                       <button
                         type="button"
-                        className="w-full px-3 py-2.5 text-left text-sm text-kal-text hover:bg-kal-card-muted dark:text-zinc-200 dark:hover:bg-slate-800"
+                        className="w-full px-3 py-2.5 text-left text-sm text-kal-text hover:bg-kal-card-muted"
                         onMouseDown={(e) => e.preventDefault()}
                         onClick={() => {
                           setPickedTaskId(t.id);
@@ -363,7 +363,7 @@ export function TimerEngineClient() {
                 size={112}
                 strokeWidth={8}
                 className="mx-auto shrink-0 sm:mx-0"
-                trackClassName="text-slate-200 dark:text-slate-600"
+                trackClassName="text-stone-200 dark:text-stone-600"
               >
                 <span className="text-sm font-bold tabular-nums text-kal-text">
                   {blockMinutes}
@@ -473,7 +473,7 @@ export function TimerEngineClient() {
                       useActiveTimerStore.getState().resume();
                       setTick((n) => n + 1);
                     }}
-                    className="inline-flex items-center gap-2 rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-semibold text-amber-950"
+                    className="inline-flex items-center gap-2 rounded-xl bg-kal-accent px-4 py-2.5 text-sm font-semibold text-kal-accent-foreground hover:bg-kal-accent-hover"
                   >
                     <Play className="h-4 w-4" />
                     Resume
@@ -482,7 +482,7 @@ export function TimerEngineClient() {
                 <button
                   type="button"
                   onClick={() => void stopAndSave()}
-                  className="inline-flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-800 hover:bg-rose-100 dark:border-rose-500/40 dark:bg-rose-950/40 dark:text-rose-100 dark:hover:bg-rose-950/60"
+                  className="inline-flex items-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-2.5 text-sm font-semibold text-kal-text hover:bg-kal-card hover:border-kal-border-strong"
                 >
                   <Square className="h-4 w-4" />
                   End &amp; log session

@@ -48,7 +48,7 @@ export default function PlannerLandingPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-8">
       <header className="space-y-2">
-        <h1 className="text-2xl font-bold tracking-tight text-kal-text sm:text-3xl">
+        <h1 className="kal-hero-heading">
           Study planner — built for JEE, NEET & Boards
         </h1>
         <p className="text-sm leading-relaxed text-kal-text-secondary sm:text-base">
@@ -63,7 +63,7 @@ export default function PlannerLandingPage() {
           <li key={href}>
             <Link
               href={href}
-              className="flex h-full flex-col gap-2 rounded-2xl border border-kal-border bg-kal-card p-4 shadow-kal-card transition-colors hover:border-kal-accent/30 hover:bg-kal-accent-soft/40"
+              className="flex h-full flex-col gap-2 kal-glass-card rounded-2xl p-4 transition-colors hover:border-kal-accent/30 hover:bg-kal-accent-soft/40"
             >
               <span className="flex items-center gap-2 font-semibold text-kal-text">
                 <Icon className="h-5 w-5 shrink-0 text-kal-accent" aria-hidden />
@@ -76,7 +76,7 @@ export default function PlannerLandingPage() {
       </ul>
 
       <section
-        className="rounded-2xl border border-kal-border bg-kal-card-muted/60 px-4 py-5 text-sm leading-relaxed text-kal-text-secondary"
+        className="kal-glass-subtle rounded-2xl px-4 py-5 text-sm leading-relaxed text-kal-text-secondary"
         aria-labelledby="planner-seo-more"
       >
         <h2 id="planner-seo-more" className="text-base font-semibold text-kal-text">

@@ -221,7 +221,7 @@ export function TargetScoreBlueprintClient() {
 
   if (error) {
     return (
-      <p className="rounded-xl border border-rose-500/40 bg-rose-950/30 px-4 py-3 text-sm text-rose-100">
+      <p className="rounded-xl border border-kal-accent/40 bg-kal-accent-soft/40 px-4 py-3 text-sm text-kal-text">
         {error}
       </p>
     );
@@ -348,7 +348,7 @@ export function TargetScoreBlueprintClient() {
         </div>
 
         {range ? (
-          <div className="rounded-xl border border-kal-accent/25 bg-kal-accent-soft/40 px-4 py-3 text-sm dark:bg-red-950/25">
+          <div className="rounded-xl border border-kal-accent/25 bg-kal-accent-soft/40 px-4 py-3 text-sm dark:bg-kal-accent-soft/10">
             <p className="font-medium text-kal-text">
               Realistic band:{" "}
               <span className="tabular-nums text-kal-accent">
@@ -508,7 +508,7 @@ export function TargetScoreBlueprintClient() {
               type="button"
               disabled={addingPlan || blueprint.selected.length === 0}
               onClick={() => void onAddToDailyPlan()}
-              className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-kal-accent px-4 py-2.5 text-sm font-semibold text-kal-accent-foreground disabled:cursor-not-allowed disabled:opacity-50"
+              className="kal-btn-accent min-h-[44px] disabled:cursor-not-allowed"
             >
               {addingPlan ? (
                 <>

@@ -52,15 +52,15 @@ export type RealitySnapshotProps = {
 function bandTone(b: DailyProgressBand): string {
   switch (b) {
     case "flawless":
-      return "border-red-200/80 bg-red-50/85 text-red-900 shadow-sm backdrop-blur-md dark:border-red-500/35 dark:bg-red-950/35 dark:text-red-50 dark:shadow-[0_0_40px_-12px_rgba(239,68,68,0.35)]";
+      return "border-kal-accent/30 bg-kal-accent-soft/90 text-kal-accent-dark shadow-sm backdrop-blur-md dark:border-kal-accent/35 dark:bg-kal-accent/10 dark:text-kal-accent dark:shadow-[0_0_40px_-12px_rgba(255,122,0,0.35)]";
     case "strong":
-      return "border-rose-200/80 bg-rose-50/85 text-rose-900 backdrop-blur-md dark:border-rose-500/30 dark:bg-rose-950/35 dark:text-rose-50";
+      return "border-kal-accent/25 bg-kal-accent-soft/70 text-kal-accent-dark backdrop-blur-md dark:border-kal-accent/25 dark:bg-kal-accent/8 dark:text-kal-accent";
     case "mediocre":
       return "border-amber-200/80 bg-amber-50/85 text-amber-900 backdrop-blur-md dark:border-amber-500/35 dark:bg-amber-950/35 dark:text-amber-50";
     case "danger":
-      return "border-rose-200/80 bg-rose-50/85 text-rose-900 backdrop-blur-md dark:border-rose-500/40 dark:bg-rose-950/38 dark:text-rose-50";
+      return "border-amber-300/80 bg-amber-50/85 text-amber-900 backdrop-blur-md dark:border-amber-500/40 dark:bg-amber-950/38 dark:text-amber-100";
     case "no_plan":
-      return "border-white/30 bg-white/55 text-kal-text shadow-sm backdrop-blur-md dark:border-white/12 dark:bg-zinc-900/65 dark:text-kal-text-secondary";
+      return "kal-glass-card border-kal-border/50 text-kal-text shadow-sm";
   }
 }
 
@@ -226,7 +226,7 @@ export function RealitySnapshot({
                   {showAdvancedMarksProjection ? (
                     <div className="flex flex-col items-center gap-2">
                       <p className="inline-flex shrink-0 flex-nowrap items-baseline justify-center gap-1.5 whitespace-nowrap text-3xl font-bold tabular-nums sm:text-[2.125rem] md:text-4xl">
-                        <span className="text-red-600 dark:text-red-300">
+                        <span className="text-kal-accent dark:text-kal-accent/90">
                           {cuetScoring.totalProjected}
                         </span>
                         <span className="text-lg font-semibold text-kal-text-secondary sm:text-xl">
@@ -273,7 +273,7 @@ export function RealitySnapshot({
                       key={s.subject}
                       className="kal-glass-subtle rounded-lg px-3 py-2.5 text-left"
                     >
-                      <p className="text-[11px] font-semibold text-red-800 dark:text-red-100/95">
+                      <p className="text-[11px] font-semibold text-kal-accent-dark dark:text-kal-accent/95">
                         {s.subject}
                       </p>
                       <p className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm tabular-nums">
@@ -284,7 +284,7 @@ export function RealitySnapshot({
                           % syllabus
                         </span>
                         {showAdvancedMarksProjection ? (
-                          <span className="text-red-600 dark:text-red-300">
+                          <span className="text-kal-accent dark:text-kal-accent/90">
                             → {s.projectedMarks}/{s.maxPerSubject}
                           </span>
                         ) : null}
@@ -353,7 +353,7 @@ export function RealitySnapshot({
                   {showAdvancedMarksProjection ? (
                     <div className="flex flex-col items-center gap-2">
                       <p className="inline-flex shrink-0 flex-nowrap items-baseline justify-center gap-1.5 whitespace-nowrap text-3xl font-bold tabular-nums sm:text-[2.125rem] md:text-4xl">
-                        <span className="text-red-600 dark:text-red-300">
+                        <span className="text-kal-accent dark:text-kal-accent/90">
                           {syllabusMultiYear.ringProjected}
                         </span>
                         <span className="text-lg font-semibold text-kal-text-secondary sm:text-xl">
@@ -392,8 +392,8 @@ export function RealitySnapshot({
                   Marks columns (720-scale projection per pattern year)
                 </p>
                 <div className="mx-auto w-full max-w-md flex-1 border-t border-kal-border pt-5 sm:pt-6 lg:mx-0 lg:max-w-none lg:border-t-0 lg:pt-0">
-                  <ul
-                    className="divide-y divide-kal-border/50 rounded-xl border border-white/25 bg-white/45 shadow-sm backdrop-blur-sm dark:divide-white/10 dark:border-white/12 dark:bg-zinc-900/50"
+                    <ul
+                      className="kal-glass-subtle divide-y divide-kal-border/50 rounded-xl border-kal-border/40 shadow-sm dark:divide-white/10"
                     aria-label="Marks secured by exam year"
                   >
                     {syllabusMultiYear.lines.map((line) => (
@@ -406,7 +406,7 @@ export function RealitySnapshot({
                         </p>
                         <div className="min-w-0 flex-1 sm:text-right">
                           <p className="inline-flex max-w-full flex-wrap items-baseline justify-end gap-x-1.5 gap-y-0.5 text-lg font-bold tabular-nums sm:justify-end sm:text-xl md:text-2xl">
-                            <span className="text-red-600 dark:text-red-300">
+                            <span className="text-kal-accent dark:text-kal-accent/90">
                               {line.projectedOutOf720}
                             </span>
                             <span className="text-sm font-semibold text-kal-muted sm:text-base">
@@ -460,7 +460,7 @@ export function RealitySnapshot({
                   ) : (
                     <div className="flex flex-col items-center gap-2">
                       <p className="inline-flex shrink-0 flex-nowrap items-baseline justify-center gap-1.5 whitespace-nowrap text-3xl font-bold tabular-nums sm:text-[2.125rem] md:text-4xl">
-                        <span className="text-red-600 dark:text-red-300">
+                        <span className="text-kal-accent dark:text-kal-accent/90">
                           {marksMastered.toFixed(0)}
                         </span>
                         <span className="text-lg font-semibold text-kal-text-secondary sm:text-xl">

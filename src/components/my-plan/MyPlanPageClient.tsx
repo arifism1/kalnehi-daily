@@ -217,7 +217,7 @@ export function MyPlanPageClient() {
         subscription_id: created.subscriptionId,
         amount: created.amountPaise,
         currency: "INR",
-        theme: { color: "#ef4444" },
+        theme: { color: "#FF7A00" },
         handler: async (response: RazorpayCheckoutResponse) => {
           const updated = hasHadTrial
             ? await activateRazorpayMonthlySubscription({ ...response })
@@ -364,7 +364,7 @@ export function MyPlanPageClient() {
       ) : (
         <>
           {/* Tier spotlight */}
-          <div className="overflow-hidden rounded-2xl border border-kal-accent/30 bg-gradient-to-br from-kal-accent-soft/95 via-white/65 to-white/80 shadow-lg backdrop-blur-md dark:from-red-950/45 dark:via-zinc-900/75 dark:to-zinc-900/88 dark:border-red-500/25">
+          <div className="kal-glass-panel overflow-hidden rounded-2xl border border-kal-accent/30 shadow-lg dark:border-kal-accent/25">
             <div className="flex items-start gap-4 p-5 sm:p-6">
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-kal-accent/15 text-kal-accent">
                 {TIER_ICONS[resolvedTier]}
@@ -384,7 +384,7 @@ export function MyPlanPageClient() {
                 {hasPaidAccess && !noActivePlan ? (
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <span
-                      className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${status === "trial" || status === "active" ? "bg-emerald-100 text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-200" : "bg-amber-100 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200"}`}
+                      className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${status === "trial" || status === "active" ? "bg-kal-success-soft border-kal-success-border text-kal-success-text" : "bg-kal-warn-soft border-kal-warn-border text-kal-warn-text"}`}
                     >
                       {statusLabel(status)}
                     </span>
@@ -571,7 +571,7 @@ export function MyPlanPageClient() {
 
             {isCancelledWithAccess && (
               <div className="border-t border-kal-border">
-                <div className="bg-amber-50 px-4 py-3 dark:bg-amber-950/20">
+                <div className="bg-kal-warn-soft border border-kal-warn-border px-4 py-3">
                   <p className="text-xs leading-relaxed text-amber-800 dark:text-amber-300">
                     Subscription cancelled. You will not be charged from next month onwards.
                     Your plan stays active until {formatDate(endDate)}.
@@ -582,7 +582,7 @@ export function MyPlanPageClient() {
                     <p className="mb-2 text-[0.65rem] font-semibold uppercase tracking-wide text-kal-text-secondary">
                       AutoPay months for new plan
                     </p>
-                    <div className="grid grid-cols-4 gap-1 rounded-xl border border-white/50 bg-black/[0.035] p-1 dark:border-white/10 dark:bg-white/[0.06]">
+                    <div className="kal-glass-subtle grid grid-cols-4 gap-1 rounded-xl border border-white/50 p-1 dark:border-white/10">
                       {RESUB_PRESET_MONTHS.map((m) => {
                         const selected = autopayMonths === m;
                         return (
@@ -594,7 +594,7 @@ export function MyPlanPageClient() {
                             className={`flex min-h-[40px] flex-col items-center justify-center rounded-lg px-0.5 py-1 text-center transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kal-accent ${
                               selected
                                 ? "bg-kal-accent text-kal-accent-foreground shadow-sm ring-1 ring-kal-accent/30"
-                                : "text-kal-text-secondary hover:bg-white/60 hover:text-kal-text dark:hover:bg-white/[0.08]"
+                                : "text-kal-text-secondary hover:bg-kal-card-muted hover:text-kal-text"
                             }`}
                           >
                             <span className="text-base font-bold tabular-nums leading-none">{m}</span>
@@ -643,7 +643,7 @@ export function MyPlanPageClient() {
             )}
 
             {isCancelled && !hasPaidAccess && (
-              <div className="border-t border-kal-border bg-amber-50 px-4 py-3 dark:bg-amber-950/20">
+              <div className="border-t border-kal-warn-border bg-kal-warn-soft px-4 py-3">
                 <p className="text-xs leading-relaxed text-amber-800 dark:text-amber-300">
                   Subscription cancelled and access has ended.
                 </p>

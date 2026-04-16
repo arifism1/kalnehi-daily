@@ -289,12 +289,12 @@ export function HelpyJiChat({
     <div className="pointer-events-none fixed bottom-4 right-4 z-[60] flex flex-col items-end gap-2 p-0 md:bottom-6 md:right-6">
       {open ? (
         <div
-          className="pointer-events-auto flex max-h-[min(76vh,560px)] w-[min(100vw-1.5rem,400px)] flex-col overflow-hidden rounded-2xl border border-kal-accent/25 bg-gradient-to-b from-white/95 via-kal-card/98 to-kal-card/95 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.18)] backdrop-blur-xl dark:border-white/10 dark:from-zinc-900/98 dark:via-zinc-900/95 dark:to-zinc-950/98 dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.45)]"
+          className="kal-glass-panel pointer-events-auto flex max-h-[min(76vh,560px)] w-[min(100vw-1.5rem,400px)] flex-col overflow-hidden rounded-2xl border-kal-accent/25 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.18)] backdrop-blur-xl"
           role="dialog"
           aria-modal="true"
           aria-labelledby={labelId}
         >
-          <div className="relative shrink-0 border-b border-kal-border/80 bg-gradient-to-r from-kal-accent/12 via-transparent to-kal-accent/8 px-4 py-3.5 dark:from-kal-accent/15 dark:to-transparent">
+          <div className="relative shrink-0 border-b border-kal-border/80 bg-gradient-to-r from-kal-accent-soft/60 via-transparent to-kal-accent-soft/30 px-4 py-3.5">
             <div className="flex items-start justify-between gap-2">
               <div className="flex min-w-0 gap-2.5">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-kal-accent/20 text-kal-accent dark:bg-kal-accent/25">
@@ -346,8 +346,8 @@ export function HelpyJiChat({
                 key={`${m.role}-${i}`}
                 className={`max-w-[92%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed shadow-sm ${
                   m.role === "user"
-                    ? "ml-auto border border-kal-accent/20 bg-kal-accent/12 text-kal-text dark:bg-kal-accent/18"
-                    : "mr-auto border border-kal-border/60 bg-kal-card-muted/90 text-kal-text dark:bg-zinc-800/80"
+                    ? "ml-auto border border-kal-accent/30 bg-kal-accent-soft/85 text-kal-text backdrop-blur-sm"
+                    : "mr-auto border border-kal-border/60 bg-kal-card/92 text-kal-text backdrop-blur-sm"
                 }`}
               >
                 {m.content}
@@ -363,7 +363,7 @@ export function HelpyJiChat({
             ) : null}
           </div>
 
-          <div className="shrink-0 border-t border-kal-border/80 bg-kal-bg/40 px-3 py-3 dark:bg-zinc-950/40">
+          <div className="shrink-0 border-t border-kal-border/80 bg-kal-card/60 px-3 py-3 backdrop-blur-sm">
             <div className="flex gap-2">
               <input
                 type="text"
@@ -376,7 +376,7 @@ export function HelpyJiChat({
                   }
                 }}
                 placeholder="Ask anything about plans or your prep…"
-                className="min-h-[44px] flex-1 rounded-xl border border-kal-border/90 bg-white/80 px-3 text-sm text-kal-text shadow-inner placeholder:text-kal-muted focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/25 dark:bg-zinc-900/80 dark:placeholder:text-zinc-500"
+                className="min-h-[44px] flex-1 rounded-xl border border-kal-border/90 bg-kal-input-bg px-3 text-sm text-kal-text shadow-inner placeholder:text-kal-muted focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/25"
                 disabled={isSending || (remaining !== null && remaining <= 0)}
                 maxLength={2000}
                 autoComplete="off"
@@ -393,7 +393,7 @@ export function HelpyJiChat({
             </div>
           </div>
 
-          <footer className="shrink-0 border-t border-kal-border/70 bg-kal-card-muted/50 px-3 py-2.5 dark:bg-zinc-900/60">
+          <footer className="shrink-0 border-t border-kal-border/70 bg-kal-card-muted/60 px-3 py-2.5 backdrop-blur-sm">
             <p className="text-[0.65rem] leading-relaxed text-kal-text-secondary">
               {HELPYJI_DISCLAIMER_PRIMARY}{" "}
               <Link
@@ -411,7 +411,7 @@ export function HelpyJiChat({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="pointer-events-auto inline-flex min-h-[52px] items-center gap-2 rounded-full border border-kal-accent/35 bg-gradient-to-br from-kal-accent-soft via-white/95 to-white/85 px-4 py-3 text-sm font-bold tracking-tight text-kal-text shadow-lg ring-1 ring-white/40 backdrop-blur-md transition hover:border-kal-accent/60 hover:shadow-xl dark:from-red-950/55 dark:via-zinc-900/92 dark:to-zinc-900/98 dark:text-zinc-100 dark:ring-white/10"
+        className="pointer-events-auto inline-flex min-h-[52px] items-center gap-2 rounded-full border border-kal-accent/35 bg-gradient-to-br from-kal-accent-soft via-kal-card/95 to-kal-card/88 px-4 py-3 text-sm font-bold tracking-tight text-kal-text shadow-lg ring-1 ring-white/40 backdrop-blur-md transition hover:border-kal-accent/60 hover:shadow-xl"
         aria-expanded={open}
         aria-haspopup="dialog"
       >

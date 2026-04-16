@@ -8,7 +8,7 @@ export const SITE_NAME = "Kalnehi Daily - Exam Prep Tracker";
 /** Short brand for tight UI and conversational copy where the full name is heavy. */
 export const SITE_BRAND = "Kalnehi Daily";
 
-export const SITE_TAGLINE = "Win Daily — JEE, NEET, UPSC & Boards";
+export const SITE_TAGLINE = "Win Daily — Smart Exam Prep";
 
 export const OG_IMAGE_PATH = "/icon-512x512.png";
 
@@ -35,9 +35,9 @@ const PAGE_SEO: Record<
 > = {
   home: {
     path: "/",
-    title: `${SITE_NAME} — JEE, NEET & Boards planner & study app`,
+    title: `${SITE_NAME} — Smart Exam Prep planner & study app`,
     description:
-      `Daily Plan with live task tracking, Syllabus Mastery Tracker, Brain Yoga focus resets, push Notifications, PrepBrain AI coaching (Basic paid trial includes a bonus sample: 3 photo scans + 2 min voice), habits, and progress analytics — ${SITE_NAME} is the complete execution planner for JEE, NEET, UPSC & Boards aspirants. Install the PWA and study anywhere.`,
+      `Daily Plan with live task tracking, Syllabus Mastery Tracker, Brain Yoga focus resets, push Notifications, PrepBrain AI coaching (Basic paid trial includes a bonus sample: 3 photo scans + 2 min voice), habits, and progress analytics — ${SITE_NAME} is the complete execution planner for Smart Exam Prep. Install the PWA and study anywhere.`,
   },
   prepbrain: {
     path: "/prepbrain",
@@ -185,18 +185,17 @@ export function defaultSiteMetadata(): Pick<
     applicationName: SITE_NAME,
     authors: [{ name: SITE_NAME }],
     keywords: [
-      "JEE preparation app",
-      "NEET study planner",
-      "Boards exam planner",
+      "Smart Exam Prep planner",
+      "Smart Exam Prep study app",
+      "exam prep PWA",
       SITE_BRAND,
       "exam prep tracker",
       "study PWA",
       "installable study app",
       "Indian competitive exams",
       "daily study planner",
-      "UPSC study planner",
-      "JEE 2026 planner",
-      "NEET 2026 planner",
+      "syllabus tracker",
+      "execution planner app",
     ],
     category: "education",
     openGraph: {

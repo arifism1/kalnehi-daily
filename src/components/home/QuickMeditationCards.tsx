@@ -14,13 +14,13 @@ export function QuickMeditationCards() {
       <div className="mt-4 grid gap-2 sm:grid-cols-2">
         <Link
           href="/meditation"
-          className="rounded-xl border border-white/30 bg-white/45 px-4 py-3 text-sm backdrop-blur-sm transition-colors hover:border-white/45 hover:bg-white/65 dark:border-white/12 dark:bg-zinc-900/45 dark:hover:bg-zinc-900/70"
+          className="rounded-xl border border-kal-border/50 bg-[rgba(255,252,248,0.5)] px-4 py-3 text-sm backdrop-blur-sm transition-colors hover:border-kal-accent/30 hover:bg-[rgba(255,252,248,0.72)] dark:border-white/12 dark:bg-zinc-900/45 dark:hover:bg-zinc-900/70"
         >
           2-min Anxiety Reset
         </Link>
         <Link
           href="/meditation"
-          className="rounded-xl border border-white/30 bg-white/45 px-4 py-3 text-sm backdrop-blur-sm transition-colors hover:border-white/45 hover:bg-white/65 dark:border-white/12 dark:bg-zinc-900/45 dark:hover:bg-zinc-900/70"
+          className="rounded-xl border border-kal-border/50 bg-[rgba(255,252,248,0.5)] px-4 py-3 text-sm backdrop-blur-sm transition-colors hover:border-kal-accent/30 hover:bg-[rgba(255,252,248,0.72)] dark:border-white/12 dark:bg-zinc-900/45 dark:hover:bg-zinc-900/70"
         >
           5-min Focus Breath
         </Link>

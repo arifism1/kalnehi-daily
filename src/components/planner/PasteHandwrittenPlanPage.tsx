@@ -275,7 +275,7 @@ export function PasteHandwrittenPlanPage() {
           <section className="kal-glass-panel rounded-xl p-4 sm:p-5">
             {formError ? (
               <p
-                className="mb-2 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs text-rose-900 dark:border-rose-500/30 dark:bg-rose-950/25 dark:text-rose-100"
+                className="mb-2 rounded-lg border border-orange-200 bg-orange-50 px-2.5 py-1.5 text-xs text-orange-900 dark:border-orange-500/30 dark:bg-orange-950/25 dark:text-orange-100"
                 role="alert"
               >
                 {formError}
@@ -303,7 +303,7 @@ export function PasteHandwrittenPlanPage() {
                 type="button"
                 onClick={() => photoInputRef.current?.click()}
                 disabled={busy || !hydrated}
-                className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border-2 border-kal-accent/85 bg-white/90 px-4 py-2.5 text-sm font-semibold text-kal-text shadow-sm ring-1 ring-kal-accent/10 transition-colors hover:border-kal-accent hover:bg-kal-accent hover:text-white hover:ring-red-900/15 disabled:opacity-40 dark:bg-zinc-900/40 dark:hover:bg-kal-accent"
+                className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border-2 border-kal-accent/85 bg-white/90 px-4 py-2.5 text-sm font-semibold text-kal-text shadow-sm ring-1 ring-kal-accent/10 transition-colors hover:border-kal-accent hover:bg-kal-accent hover:text-white hover:ring-orange-900/15 disabled:opacity-40 dark:bg-zinc-900/40 dark:hover:bg-kal-accent"
               >
                 {phase === "parse" ? (
                   <>
@@ -379,7 +379,7 @@ export function PasteHandwrittenPlanPage() {
                   !rows.some((r) => r.name.trim().length > 0)
                 }
                 onClick={() => void addCheckedToPlan()}
-                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-kal-accent px-4 text-sm font-semibold text-white shadow-sm hover:bg-kal-accent-hover disabled:opacity-40"
+                className="kal-btn-accent inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold disabled:opacity-40"
               >
                 {phase === "save" ? (
                   <>

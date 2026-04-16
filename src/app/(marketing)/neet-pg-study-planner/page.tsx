@@ -120,13 +120,13 @@ export default function NeetPgStudyPlannerPage() {
         <div className="flex flex-col gap-3 sm:flex-row">
           <Link
             href="/auth"
-            className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-xl bg-kal-accent px-6 text-sm font-bold text-kal-accent-foreground"
+            className="kal-btn-accent flex-1 min-h-[48px]"
           >
             Start your PG prep plan
           </Link>
           <Link
             href="/guides"
-            className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-xl border border-kal-border bg-kal-card px-6 text-sm font-semibold text-kal-text"
+            className="kal-btn-ghost flex-1 min-h-[48px]"
           >
             All guides
           </Link>

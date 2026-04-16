@@ -5,6 +5,7 @@ import {
   CalendarDays,
   ChevronLeft,
   GraduationCap,
+  LayoutDashboard,
   Phone,
   Target,
   User,
@@ -12,7 +13,8 @@ import {
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
-import { completeOnboarding } from "@/actions/profile";
+import { completeOnboarding, saveEnabledFeatures } from "@/actions/profile";
+import { FeatureSelector } from "@/components/features/FeatureSelector";
 import { GroupedExamSelect } from "@/components/profile/GroupedExamSelect";
 import { UpscOptionalSubjectPick } from "@/components/profile/UpscOptionalSubjectPick";
 import {
@@ -21,14 +23,16 @@ import {
   fetchExamsCatalog,
   type ExamCatalogRow,
 } from "@/lib/examsCatalog";
+import { ALL_FEATURE_IDS } from "@/lib/dashboardFeatures";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import {
   isUpscCseMainsExam,
 } from "@/lib/upscMainsOptionalSubjects";
+import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 
 import { useOnboardingStore } from "@/store/useOnboardingStore";
 
-const STEPS = 3;
+const STEPS = 4;
 
 const CLASS_OPTIONS = [
   "Class 10",
@@ -41,6 +45,7 @@ const CLASS_OPTIONS = [
 
 export function OnboardingWizard() {
   const setLocalCompleted = useOnboardingStore((s) => s.setOnboardingCompleted);
+  const { hasPaidAccess } = useSubscriptionAccess();
 
   const [step, setStep] = useState(1);
   const [fullName, setFullName] = useState("");
@@ -56,6 +61,9 @@ export function OnboardingWizard() {
   const [loadingUpscOptionals, setLoadingUpscOptionals] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Feature selection state (step 4) — all pre-selected
+  const [selectedFeatures, setSelectedFeatures] = useState<string[]>(ALL_FEATURE_IDS);
 
   useEffect(() => {
     void (async () => {
@@ -144,7 +152,14 @@ export function OnboardingWizard() {
       });
       if (!res.ok) throw new Error(res.error);
       setLocalCompleted(true);
-      window.location.assign("/");
+
+      // For paid users, show feature selection (step 4).
+      // For basic/free users, go directly to home.
+      if (hasPaidAccess) {
+        setStep(4);
+      } else {
+        window.location.assign("/");
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
@@ -158,15 +173,46 @@ export function OnboardingWizard() {
     examDate,
     upscOptionalSubject,
     setLocalCompleted,
+    hasPaidAccess,
   ]);
 
+  const finishWithFeatures = useCallback(async (featureIds: string[]) => {
+    setBusy(true);
+    setError(null);
+    try {
+      // If user selected all features, save null (= show all, no restriction).
+      const toSave =
+        featureIds.length === ALL_FEATURE_IDS.length ? null : featureIds;
+      await saveEnabledFeatures(toSave);
+    } catch {
+      // Non-critical — feature selection failure shouldn't block navigation.
+    } finally {
+      setBusy(false);
+    }
+    window.location.assign("/");
+  }, []);
+
+  const skipFeatureSelection = useCallback(() => {
+    window.location.assign("/");
+  }, []);
+
+  // Shown only for paid users inside the step 4 block; visually masked step count
+  const displayStep = step === 4 ? 4 : step;
+  const totalStepsDisplay = hasPaidAccess ? 4 : 3;
+
   return (
-    <div className="mx-auto flex min-h-[min(100dvh,720px)] max-w-lg flex-col px-4 py-8">
+    <div className="kal-page-bg mx-auto flex min-h-[min(100dvh,720px)] max-w-lg flex-col px-4 py-8">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-kal-accent">
-          Setup · {step}/{STEPS}
+          Setup · {displayStep}/{totalStepsDisplay}
         </p>
-        {step > 1 && (
+        <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-kal-border/60">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-kal-accent to-[var(--kal-accent-dark)] transition-[width] duration-500 ease-out"
+            style={{ width: `${(displayStep / totalStepsDisplay) * 100}%` }}
+          />
+        </div>
+        {step > 1 && step < 4 && (
           <button
             type="button"
             onClick={() => {
@@ -182,12 +228,14 @@ export function OnboardingWizard() {
         )}
       </div>
 
-      <p className="mb-6 text-center text-[11px] leading-relaxed text-kal-text-secondary">
-        Quick setup takes {STEPS} steps. This helps us personalise your daily plan.
-      </p>
+      {step < 4 && (
+        <p className="mb-6 text-center text-[11px] leading-relaxed text-kal-text-secondary">
+          Quick setup takes {totalStepsDisplay} steps. This helps us personalise your daily plan.
+        </p>
+      )}
 
       {step === 1 && (
-        <section className="flex flex-1 flex-col gap-5">
+        <section className="kal-glass-panel flex flex-1 flex-col gap-5 rounded-2xl p-5 sm:p-6">
           <div className="flex items-center gap-2">
             <User className="h-6 w-6 text-kal-accent" />
             <div>
@@ -249,7 +297,7 @@ export function OnboardingWizard() {
           </div>
 
           {error && (
-            <p className="text-sm font-medium text-red-700 dark:text-rose-200">
+            <p className="text-sm font-medium text-kal-accent-dark dark:text-kal-accent">
               {error}
             </p>
           )}
@@ -258,7 +306,7 @@ export function OnboardingWizard() {
             type="button"
             onClick={validateStep1}
             disabled={busy}
-            className="mt-auto flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-kal-accent py-3.5 text-sm font-semibold text-kal-accent-foreground shadow-sm transition-opacity duration-200 disabled:opacity-50"
+            className="kal-btn-accent mt-auto flex min-h-[52px] items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-semibold disabled:opacity-50"
           >
             Continue
             <ArrowRight className="h-4 w-4" />
@@ -267,7 +315,7 @@ export function OnboardingWizard() {
       )}
 
       {step === 2 && (
-        <section className="flex flex-1 flex-col gap-6">
+        <section className="kal-glass-panel flex flex-1 flex-col gap-6 rounded-2xl p-5 sm:p-6">
           <div className="flex items-center gap-2">
             <Target className="h-6 w-6 text-kal-accent" />
             <div>
@@ -319,7 +367,7 @@ export function OnboardingWizard() {
           ) : null}
 
           {error && (
-            <p className="text-sm font-medium text-red-700 dark:text-rose-200">
+            <p className="text-sm font-medium text-kal-accent-dark dark:text-kal-accent">
               {error}
             </p>
           )}
@@ -328,7 +376,7 @@ export function OnboardingWizard() {
             type="button"
             disabled={busy || !primaryExam.trim()}
             onClick={validateStep2}
-            className="mt-auto flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-kal-accent py-3.5 text-sm font-semibold text-kal-accent-foreground shadow-sm transition-opacity duration-200 disabled:opacity-50"
+            className="kal-btn-accent mt-auto flex min-h-[52px] items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-semibold disabled:opacity-50"
           >
             Continue
             <ArrowRight className="h-4 w-4" />
@@ -337,7 +385,7 @@ export function OnboardingWizard() {
       )}
 
       {step === 3 && (
-        <section className="flex flex-1 flex-col gap-6">
+        <section className="kal-glass-panel flex flex-1 flex-col gap-6 rounded-2xl p-5 sm:p-6">
           <div className="flex items-center gap-2">
             <CalendarDays className="h-6 w-6 text-kal-accent" />
             <div>
@@ -361,7 +409,7 @@ export function OnboardingWizard() {
             />
           </div>
           {error && (
-            <p className="text-sm font-medium text-red-700 dark:text-rose-200">
+            <p className="text-sm font-medium text-kal-accent-dark dark:text-kal-accent">
               {error}
             </p>
           )}
@@ -369,7 +417,7 @@ export function OnboardingWizard() {
             type="button"
             disabled={busy}
             onClick={() => void submitProfile()}
-            className="mt-auto flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-kal-accent py-3.5 text-sm font-semibold text-kal-accent-foreground shadow-sm transition-opacity duration-200 disabled:opacity-50"
+            className="kal-btn-accent mt-auto flex min-h-[52px] items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-semibold disabled:opacity-50"
           >
             {busy ? "Saving…" : "Finish setup"}
             <ArrowRight className="h-4 w-4" />
@@ -377,25 +425,75 @@ export function OnboardingWizard() {
         </section>
       )}
 
-      <div className="mt-10 rounded-2xl border border-kal-border/90 bg-kal-card-muted/40 px-4 py-4 text-center">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-kal-muted">
-          See what you&apos;re unlocking
-        </p>
-        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:justify-center sm:gap-3">
-          <Link
-            href="/what-can-kalnehi-do"
-            className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-xl border border-kal-border bg-kal-card px-4 text-sm font-semibold text-kal-accent transition-colors hover:border-kal-accent/45 sm:flex-initial"
+      {step === 4 && (
+        <section className="kal-glass-panel flex flex-1 flex-col gap-5 rounded-2xl p-5 sm:p-6">
+          <div className="flex items-center gap-2">
+            <LayoutDashboard className="h-6 w-6 text-kal-accent" />
+            <div>
+              <h1 className="text-xl font-bold tracking-tight text-kal-text">
+                Choose your features
+              </h1>
+              <p className="text-sm leading-relaxed text-kal-text-secondary">
+                Select the tools you want to see every day. You can change this
+                anytime in Settings.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto">
+            <FeatureSelector
+              selected={selectedFeatures}
+              onChange={setSelectedFeatures}
+            />
+          </div>
+
+          {error && (
+            <p className="text-sm font-medium text-kal-accent-dark dark:text-kal-accent">
+              {error}
+            </p>
+          )}
+
+          <button
+            type="button"
+            disabled={busy || selectedFeatures.length === 0}
+            onClick={() => void finishWithFeatures(selectedFeatures)}
+            className="kal-btn-accent flex min-h-[52px] items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-semibold disabled:opacity-50"
           >
-            What Can Kalnehi Do?
-          </Link>
-          <Link
-            href="/best-study-practices"
-            className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-xl border border-kal-border bg-kal-card px-4 text-sm font-semibold text-kal-accent transition-colors hover:border-kal-accent/45 sm:flex-initial"
+            {busy ? "Saving…" : "Start using Kalnehi"}
+            <ArrowRight className="h-4 w-4" />
+          </button>
+
+          <button
+            type="button"
+            onClick={skipFeatureSelection}
+            className="text-center text-xs font-medium text-kal-text-secondary underline underline-offset-2 hover:text-kal-accent"
           >
-            Best Study Practices
-          </Link>
+            Skip — show all features
+          </button>
+        </section>
+      )}
+
+      {step < 4 && (
+        <div className="mt-10 rounded-2xl border border-kal-border/90 bg-kal-card-muted/40 px-4 py-4 text-center">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-kal-muted">
+            See what you&apos;re unlocking
+          </p>
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:justify-center sm:gap-3">
+            <Link
+              href="/what-can-kalnehi-do"
+              className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-xl border border-kal-border bg-kal-card px-4 text-sm font-semibold text-kal-accent transition-colors hover:border-kal-accent/45 sm:flex-initial"
+            >
+              What Can Kalnehi Do?
+            </Link>
+            <Link
+              href="/best-study-practices"
+              className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-xl border border-kal-border bg-kal-card px-4 text-sm font-semibold text-kal-accent transition-colors hover:border-kal-accent/45 sm:flex-initial"
+            >
+              Best Study Practices
+            </Link>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

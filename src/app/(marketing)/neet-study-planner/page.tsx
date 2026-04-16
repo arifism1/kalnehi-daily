@@ -111,16 +111,10 @@ export default function NeetStudyPlannerPage() {
         </nav>
 
         <div className="flex flex-col gap-3 sm:flex-row">
-          <Link
-            href="/auth"
-            className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-xl bg-kal-accent px-6 text-sm font-bold text-kal-accent-foreground"
-          >
+          <Link href="/auth" className="kal-btn-accent min-h-[48px] flex-1 text-center">
             Build your NEET 2026 plan
           </Link>
-          <Link
-            href="/guides"
-            className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-xl border border-kal-border bg-kal-card px-6 text-sm font-semibold text-kal-text"
-          >
+          <Link href="/guides" className="kal-btn-ghost min-h-[48px] flex-1 text-center">
             All guides
           </Link>
         </div>
