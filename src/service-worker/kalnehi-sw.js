@@ -1,7 +1,7 @@
 /* Kalnehi Daily - Exam Prep Tracker — service worker (static caching + offline shell + sync bridge)
  * FCM block is injected at request time by src/app/sw.js/route.ts (never commit API keys).
  */
-const STATIC_CACHE = "kalnehi-static-v5";
+const STATIC_CACHE = "kalnehi-static-v6";
 const PAGE_CACHE = "kalnehi-pages-v2";
 const SYNC_TAG = "kalnehi-outbox-sync";
 
