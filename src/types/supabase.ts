@@ -889,6 +889,7 @@ export type Database = {
           class_studying: string | null
           cuet_domain_subjects: Json
           full_name: string | null
+          has_had_trial: boolean
           id: string
           mandatory_onboarding_completed_at: string | null
           phone_number: string | null
@@ -924,6 +925,7 @@ export type Database = {
           class_studying?: string | null
           cuet_domain_subjects?: Json
           full_name?: string | null
+          has_had_trial?: boolean
           id?: string
           mandatory_onboarding_completed_at?: string | null
           phone_number?: string | null
@@ -959,6 +961,7 @@ export type Database = {
           class_studying?: string | null
           cuet_domain_subjects?: Json
           full_name?: string | null
+          has_had_trial?: boolean
           id?: string
           mandatory_onboarding_completed_at?: string | null
           phone_number?: string | null
