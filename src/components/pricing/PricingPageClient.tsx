@@ -20,6 +20,7 @@ import {
   clampAutopayMonths,
   DEFAULT_AUTOPAY_MONTHS,
 } from "@/lib/autopayMonths";
+import { formatWelcomeVoiceTimeLeft } from "@/lib/freeTrial";
 import { SITE_NAME } from "@/lib/seo-metadata";
 import {
   TIER_ORDER,
@@ -262,7 +263,7 @@ function TierCard({
 
   return (
     <article
-      className={`kal-glass-panel relative flex flex-col rounded-2xl border-2 p-5 ${
+      className={`kal-glass-panel relative flex h-full min-h-0 flex-col rounded-2xl border-2 p-5 pb-6 ${
         highlighted ? "border-kal-accent/50 ring-2 ring-kal-accent/30" : "border-white/35 dark:border-white/15"
       }`}
     >
@@ -314,20 +315,22 @@ function TierCard({
         </p>
       </div>
 
-      <ul className="mt-4 flex-1 space-y-1.5">
-        {config.benefits.map((b) => (
-          <li key={b} className="flex items-start gap-2 text-xs leading-snug text-kal-text-secondary sm:text-sm">
-            <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
-            <span>{b}</span>
-          </li>
-        ))}
-      </ul>
+      <div className="mt-4 flex min-h-0 flex-1 flex-col">
+        <ul className="space-y-2">
+          {config.benefits.map((b) => (
+            <li key={b} className="flex items-start gap-2 text-xs leading-snug text-kal-text-secondary sm:text-sm">
+              <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
+              <span>{b}</span>
+            </li>
+          ))}
+        </ul>
 
-      {config.id === "basic" ? (
-        <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 backdrop-blur-sm dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
-          Want AI Photo Scans and Voice Dictation? Upgrade to Pro for just ₹21 for 3 days.
-        </p>
-      ) : null}
+        {config.id === "basic" ? (
+          <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs leading-snug text-amber-800 backdrop-blur-sm dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
+            Want AI Photo Scans and Voice Dictation? Upgrade to Pro for just ₹21 for 3 days.
+          </p>
+        ) : null}
+      </div>
 
       <button
         type="button"
@@ -337,15 +340,11 @@ function TierCard({
         }}
         disabled={disabled}
         aria-disabled={lockedBySubscription || undefined}
-        className={`mt-4 min-h-[48px] w-full disabled:opacity-60 ${
+        className={`mt-5 min-h-[48px] w-full shrink-0 text-center leading-snug disabled:opacity-60 ${
           highlighted || lockedBySubscription
-            ? "kal-btn-accent"
-            : "kal-glass-subtle inline-flex items-center justify-center rounded-xl border border-white/25 px-4 py-3 text-sm font-bold text-kal-text dark:border-white/12"
-        } ${
-          lockedBySubscription
-            ? "cursor-default"
-            : "transition"
-        }`}
+            ? "kal-btn-accent inline-flex items-center justify-center whitespace-normal px-5 py-3 text-sm"
+            : "kal-glass-subtle inline-flex items-center justify-center whitespace-normal rounded-xl border border-white/25 px-4 py-3 text-sm font-bold text-kal-text dark:border-white/12"
+        } ${lockedBySubscription ? "cursor-default" : "transition"}`}
       >
         {buttonLabel}
       </button>
@@ -359,6 +358,10 @@ export function PricingPageClient() {
     hasHadTrial,
     status: subscriptionStatus,
     tier: currentTier,
+    freeTrialActive,
+    freeTrialPhotoRemaining,
+    freeTrialVoiceSecondsRemaining,
+    freeTrialEndsAtIso,
   } = useSubscriptionAccess();
   const isCancelledWithAccess =
     subscriptionStatus === "cancelled" && hasPaidAccess;
@@ -438,6 +441,30 @@ export function PricingPageClient() {
   }, [autopayMonths, hasHadTrial]);
 
   const statusBanner = useMemo(() => {
+    if (freeTrialActive && !hasPaidAccess) {
+      return (
+        <div className="rounded-2xl border border-kal-accent/35 bg-gradient-to-br from-kal-accent/12 to-kal-card-muted px-5 py-4 shadow-sm dark:border-kal-accent/25">
+          <p className="text-sm font-semibold text-kal-text">
+            24-hour welcome trial is active
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-kal-text-secondary">
+            You have <span className="font-semibold text-kal-text">{freeTrialPhotoRemaining} photo scans</span>{" "}
+            and{" "}
+            <span className="font-semibold text-kal-text">
+              {formatWelcomeVoiceTimeLeft(freeTrialVoiceSecondsRemaining)}
+            </span>{" "}
+            on voice in this window
+            {freeTrialEndsAtIso ? (
+              <>
+                {" "}
+                (ends {new Date(freeTrialEndsAtIso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })})
+              </>
+            ) : null}
+            . When it ends, start a 3-day paid trial (₹21 or ₹49), then ₹299/month AutoPay — cancel anytime.
+          </p>
+        </div>
+      );
+    }
     if (isCancelledWithAccess) {
       return (
         <div className="rounded-2xl border border-amber-300 bg-amber-50 px-5 py-4 backdrop-blur-sm dark:border-amber-800 dark:bg-amber-950/30">
@@ -497,7 +524,16 @@ export function PricingPageClient() {
       );
     }
     return null;
-  }, [subscriptionStatus, hasPaidAccess, isCancelledWithAccess, currentTier]);
+  }, [
+    subscriptionStatus,
+    hasPaidAccess,
+    isCancelledWithAccess,
+    currentTier,
+    freeTrialActive,
+    freeTrialPhotoRemaining,
+    freeTrialVoiceSecondsRemaining,
+    freeTrialEndsAtIso,
+  ]);
 
   return (
     <>
@@ -514,8 +550,10 @@ export function PricingPageClient() {
             Pick the plan that fits your goals
           </h1>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-kal-text-secondary">
-            {SITE_NAME} is fully paid — there is no free tier. Start with a 3-day trial, then pay
-            monthly. First set how long AutoPay may run, then pick a plan — you can cancel anytime.
+            New accounts get a one-time <span className="font-semibold text-kal-text">24-hour welcome trial</span>{" "}
+            (5 photo scans + 3 voice minutes). After that, start a{" "}
+            <span className="font-semibold text-kal-text">3-day paid trial</span> (₹21–₹49), then monthly AutoPay — you
+            can cancel anytime.
           </p>
           <div className="kal-glass-panel mx-auto mt-6 max-w-xl rounded-2xl border-2 border-kal-accent/40 px-4 py-4 shadow-[0_16px_40px_-24px_rgba(255,122,0,0.25)] sm:px-5">
             <p className="text-sm font-semibold text-kal-text">
@@ -544,7 +582,7 @@ export function PricingPageClient() {
           <AutopayDurationPanel value={autopayMonths} onChange={setAutopayMonths} disabled={busy} hasHadTrial={hasHadTrial} />
         ) : null}
 
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+        <div className="grid grid-cols-1 items-stretch gap-5 md:grid-cols-3">
           {TIER_ORDER.map((tierId) => (
             <TierCard
               key={tierId}

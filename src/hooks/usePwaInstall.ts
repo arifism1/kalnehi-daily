@@ -36,12 +36,18 @@ export function isStandalonePwa(): boolean {
   return readStandalone();
 }
 
+/** Wait this long before showing "install not supported" so `beforeinstallprompt` can fire. */
+const INSTALL_ELIGIBILITY_PROBE_MS = 1_000;
+
 export function usePwaInstall() {
   const [installed, setInstalled] = useState(false);
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(
     null,
   );
   const [iosDevice, setIosDevice] = useState(false);
+  /** True after deferred prompt, iOS detection, installed state, or probe timeout — avoids a false "unsupported" flash on Chromium. */
+  const [installEligibilityKnown, setInstallEligibilityKnown] =
+    useState(false);
 
   useLayoutEffect(() => {
     setInstalled(readStandalone());
@@ -89,6 +95,25 @@ export function usePwaInstall() {
     };
   }, []);
 
+  useEffect(() => {
+    if (deferred) setInstallEligibilityKnown(true);
+  }, [deferred]);
+
+  useEffect(() => {
+    if (iosDevice) setInstallEligibilityKnown(true);
+  }, [iosDevice]);
+
+  useEffect(() => {
+    if (installed) setInstallEligibilityKnown(true);
+  }, [installed]);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      setInstallEligibilityKnown(true);
+    }, INSTALL_ELIGIBILITY_PROBE_MS);
+    return () => window.clearTimeout(id);
+  }, []);
+
   const promptInstall = useCallback(async () => {
     if (!deferred) return { ok: false as const, reason: "no_prompt" as const };
     try {
@@ -122,6 +147,8 @@ export function usePwaInstall() {
     needsIosInstallModal,
     /** Hide install CTA in standalone or after successful install flow. */
     showInstallButton,
+    /** When false, defer showing "install not supported" for non‑iOS (BIP may arrive late). */
+    installEligibilityKnown,
     iosDevice,
     promptInstall,
   };

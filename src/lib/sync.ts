@@ -327,35 +327,24 @@ async function applyVoiceTimelineDelete(
 }
 
 /**
- * Study sessions must sync with the same Supabase session as the UI.
- * Server actions use cookie-backed `createSupabaseServerClient()`; if cookies
- * lag behind the browser session, inserts fail with Unauthorized. Outbox flush
- * runs only on the client, so we insert via `getSupabaseBrowserClient()`.
+ * Study sessions sync through the server action so photo-scan quota is enforced
+ * (camera-proven sessions share the same pool as handwritten scans).
  */
 async function applyStudySessionCreate(
   row: NonNullable<OutboxMutation["studySessionInsert"]>,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
-    const supabase = getSupabaseBrowserClient();
-    const {
-      data: { user },
-      error: authErr,
-    } = await supabase.auth.getUser();
-    if (authErr || !user) {
-      return { ok: false, error: USER_ERROR.session };
-    }
-    const { error } = await supabase.from("study_sessions").insert({
+    const { createStudySession } = await import("@/actions/userStudySessions");
+    const res = await createStudySession({
       id: row.id,
-      user_id: user.id,
       subject: row.subject,
       duration_seconds: row.duration_seconds,
       is_camera_proven: row.is_camera_proven ?? false,
       started_at: row.started_at,
       ended_at: row.ended_at,
     });
-    if (!error) return { ok: true };
-    if (error.code === "23505") return { ok: true };
-    return { ok: false, error: formatSupabaseError(error) };
+    if (res.ok) return { ok: true };
+    return { ok: false, error: res.error };
   } catch (e) {
     return { ok: false, error: formatSupabaseError(e) };
   }

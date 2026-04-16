@@ -890,6 +890,7 @@ export type Database = {
           cuet_domain_subjects: Json
           full_name: string | null
           has_had_trial: boolean
+          has_used_free_trial: boolean
           id: string
           mandatory_onboarding_completed_at: string | null
           phone_number: string | null
@@ -912,6 +913,9 @@ export type Database = {
           target_exam_date: string | null
           enabled_features: string[] | null
           upsc_optional_subjects: string[] | null
+          trial_photo_scans_used: number
+          trial_started_at: string | null
+          trial_voice_seconds_used: number
           updated_at: string | null
           usage_reset_date: string | null
           user_id: string | null
@@ -927,6 +931,7 @@ export type Database = {
           cuet_domain_subjects?: Json
           full_name?: string | null
           has_had_trial?: boolean
+          has_used_free_trial?: boolean
           id?: string
           mandatory_onboarding_completed_at?: string | null
           phone_number?: string | null
@@ -949,6 +954,9 @@ export type Database = {
           target_exam_date?: string | null
           enabled_features?: string[] | null
           upsc_optional_subjects?: string[] | null
+          trial_photo_scans_used?: number
+          trial_started_at?: string | null
+          trial_voice_seconds_used?: number
           updated_at?: string | null
           usage_reset_date?: string | null
           user_id?: string | null
@@ -964,6 +972,7 @@ export type Database = {
           cuet_domain_subjects?: Json
           full_name?: string | null
           has_had_trial?: boolean
+          has_used_free_trial?: boolean
           id?: string
           mandatory_onboarding_completed_at?: string | null
           phone_number?: string | null
@@ -986,6 +995,9 @@ export type Database = {
           target_exam_date?: string | null
           enabled_features?: string[] | null
           upsc_optional_subjects?: string[] | null
+          trial_photo_scans_used?: number
+          trial_started_at?: string | null
+          trial_voice_seconds_used?: number
           updated_at?: string | null
           usage_reset_date?: string | null
           user_id?: string | null
@@ -1430,6 +1442,14 @@ export type Database = {
           p_bucket_key: string
           p_step: string
         }
+        Returns: Json
+      }
+      consume_welcome_trial_photo_scan: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
+      consume_welcome_trial_voice_seconds: {
+        Args: { p_add_seconds: number; p_user_id: string }
         Returns: Json
       }
       get_gated_predicted_score: {

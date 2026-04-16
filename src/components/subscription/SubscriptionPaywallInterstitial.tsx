@@ -5,11 +5,18 @@ import { useRouter } from "next/navigation";
 import { Lock } from "lucide-react";
 import { useEffect, useId, useRef } from "react";
 
+import { TIERS } from "@/lib/subscriptionTiers";
+
 /**
  * Blocks interaction with the route underneath while subscription is inactive.
  * Rendered by AppShell over inert main content.
  */
-export function SubscriptionPaywallInterstitial() {
+export function SubscriptionPaywallInterstitial({
+  freeTrialEnded = false,
+}: {
+  /** After the 24h welcome trial ended without a paid plan. */
+  freeTrialEnded?: boolean;
+}) {
   const router = useRouter();
   const titleId = useId();
   const descId = useId();
@@ -54,14 +61,26 @@ export function SubscriptionPaywallInterstitial() {
           id={titleId}
           className="text-center text-lg font-bold tracking-tight text-kal-text"
         >
-          Active plan required
+          {freeTrialEnded ? "Free trial ended" : "Active plan required"}
         </h2>
         <p
           id={descId}
           className="mt-2 text-center text-sm leading-relaxed text-kal-muted"
         >
-          Kalnehi Daily is a paid app — there is no free tier. Your subscription
-          is not active right now. Choose a plan to keep using the app.
+          {freeTrialEnded ? (
+            <>
+              Your 24-hour welcome trial is over. Start a 3-day paid trial —{" "}
+              <span className="font-semibold text-kal-text">{TIERS.pro.trialPriceDisplay}</span> on
+              Pro or <span className="font-semibold text-kal-text">{TIERS.pro_max.trialPriceDisplay}</span>{" "}
+              on Pro Max — full access, then {TIERS.pro.monthlyPriceDisplay}/month on AutoPay. Cancel
+              anytime.
+            </>
+          ) : (
+            <>
+              Kalnehi Daily is a paid app — there is no free tier. Your subscription
+              is not active right now. Choose a plan to keep using the app.
+            </>
+          )}
         </p>
         <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button
@@ -76,7 +95,7 @@ export function SubscriptionPaywallInterstitial() {
             href="/pricing"
             className="kal-btn-accent min-h-[48px] sm:min-h-[44px]"
           >
-            View plans & pricing
+            {freeTrialEnded ? "Start paid trial" : "View plans & pricing"}
           </Link>
         </div>
       </div>

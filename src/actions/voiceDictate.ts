@@ -86,6 +86,11 @@ export async function runVoiceDictationPipeline(
     return { ok: true, mode: "fallback", transcript: raw };
   }
 
+  const usageCheck = await incrementVoiceMinuteUsage(1);
+  if (!usageCheck.ok) {
+    return { ok: false, error: usageCheck.error };
+  }
+
   const entryIds: string[] = [];
   let preview: ParsedVoiceDayEntry | undefined;
 
@@ -136,6 +141,11 @@ export async function saveRawVoiceNote(
   const raw = (input.transcript ?? "").trim().slice(0, 12_000);
   if (!raw) {
     return { ok: false, error: "Nothing to save." };
+  }
+
+  const usageCheck = await incrementVoiceMinuteUsage(1);
+  if (!usageCheck.ok) {
+    return { ok: false, error: usageCheck.error };
   }
 
   const occurredAt = input.occurred_at ?? new Date().toISOString();

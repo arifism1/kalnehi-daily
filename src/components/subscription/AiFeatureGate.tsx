@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import { Camera, Lock, Mic } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { useAiGate } from "@/hooks/useAiGate";
+import { formatWelcomeTrialEndsIn } from "@/lib/freeTrial";
+import { TIERS } from "@/lib/subscriptionTiers";
 
 type Props = {
   feature: "photo_scan" | "voice";
@@ -14,14 +17,24 @@ export function AiFeatureGate({ feature, children }: Props) {
   const {
     loading,
     hasAiAccess,
+    hasPaidAccess,
     isBasicTrial,
+    isWelcomeTrial,
     canDoPhotoScan,
     canDoVoiceSession,
     photoScanStatus,
     voiceMinuteStatus,
     photoScansRemaining,
     voiceMinutesRemaining,
+    freeTrialEndsAtIso,
   } = useAiGate();
+
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    if (!isWelcomeTrial || !freeTrialEndsAtIso) return;
+    const id = window.setInterval(() => setNowMs(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [isWelcomeTrial, freeTrialEndsAtIso]);
 
   if (loading) return <>{children}</>;
 
@@ -49,6 +62,28 @@ export function AiFeatureGate({ feature, children }: Props) {
   const atLimit = isPhoto ? !canDoPhotoScan : !canDoVoiceSession;
 
   if (atLimit) {
+    if (isWelcomeTrial && !hasPaidAccess) {
+      return (
+        <div className="flex flex-col items-center gap-4 rounded-2xl border border-kal-accent/25 bg-gradient-to-br from-kal-accent/10 to-kal-card-muted p-8 text-center shadow-inner dark:border-kal-accent/20">
+          {isPhoto ? (
+            <Camera className="h-8 w-8 text-kal-accent" />
+          ) : (
+            <Mic className="h-8 w-8 text-kal-accent" />
+          )}
+          <h3 className="text-lg font-bold text-kal-text">Welcome trial limit reached</h3>
+          <p className="max-w-sm text-sm text-kal-text-secondary">
+            You&apos;ve used all {isPhoto ? "5 welcome photo scans" : "3 minutes of welcome voice time"}{" "}
+            in your 24-hour trial. Start a 3-day paid trial — {TIERS.pro.trialPriceDisplay} (Pro) or{" "}
+            {TIERS.pro_max.trialPriceDisplay} (Pro Max) — then {TIERS.pro.monthlyPriceDisplay}/month.
+            Cancel anytime.
+          </p>
+          <Link href="/pricing" className="kal-btn-accent">
+            Start 3-day paid trial
+          </Link>
+        </div>
+      );
+    }
+
     if (isBasicTrial) {
       return (
         <div className="flex flex-col items-center gap-4 rounded-2xl border border-amber-200 bg-amber-50 p-8 text-center dark:border-amber-800 dark:bg-amber-950/30">
@@ -105,26 +140,44 @@ export function AiFeatureGate({ feature, children }: Props) {
 
   const remaining = isPhoto ? photoScansRemaining : voiceMinutesRemaining;
   const statusText = isPhoto ? photoScanStatus : voiceMinuteStatus;
+  const countdown =
+    isWelcomeTrial && freeTrialEndsAtIso
+      ? formatWelcomeTrialEndsIn(freeTrialEndsAtIso, nowMs)
+      : null;
 
   return (
     <>
-      <div className="kal-glass-subtle mb-2 flex min-h-0 items-center justify-between rounded-lg px-3 py-1.5">
-        <span className="flex items-center gap-2 text-xs text-kal-text-secondary">
+      <div className="kal-glass-subtle mb-2 flex min-h-0 flex-wrap items-center justify-between gap-x-2 gap-y-1 rounded-lg px-3 py-1.5">
+        <span className="flex min-w-0 items-center gap-2 text-xs text-kal-text-secondary">
           {isPhoto ? (
-            <Camera className="h-3.5 w-3.5" />
+            <Camera className="h-3.5 w-3.5 shrink-0" />
           ) : (
-            <Mic className="h-3.5 w-3.5" />
+            <Mic className="h-3.5 w-3.5 shrink-0" />
           )}
-          {statusText}
+          <span className="min-w-0">{statusText}</span>
         </span>
-        {remaining <= 3 && (
-          <Link
-            href="/my-plan"
-            className="text-xs font-semibold text-kal-accent hover:underline"
-          >
-            Buy more
-          </Link>
-        )}
+        <div className="flex shrink-0 items-center gap-2">
+          {countdown ? (
+            <span className="text-[0.65rem] font-semibold tabular-nums text-kal-accent sm:text-xs">
+              {countdown}
+            </span>
+          ) : null}
+          {remaining <= 3 && hasPaidAccess ? (
+            <Link
+              href="/my-plan"
+              className="text-xs font-semibold text-kal-accent hover:underline"
+            >
+              Buy more
+            </Link>
+          ) : isWelcomeTrial ? (
+            <Link
+              href="/pricing"
+              className="text-xs font-semibold text-kal-accent hover:underline"
+            >
+              Upgrade
+            </Link>
+          ) : null}
+        </div>
       </div>
       {children}
     </>

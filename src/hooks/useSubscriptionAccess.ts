@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import {
@@ -8,6 +8,13 @@ import {
   parseBonusLedger,
   totalActiveBonus,
 } from "@/lib/bonusCreditsLedger";
+import {
+  freeTrialEndsAt,
+  isFreeTrialWindowActive,
+  isWelcomeTrialExpired,
+  remainingPhotoScansTrial,
+  remainingVoiceSecondsTrial,
+} from "@/lib/freeTrial";
 import { effectiveUsageForDisplay } from "@/lib/subscriptionUsage";
 import { parseSubscriptionTier, type SubscriptionTier } from "@/lib/subscriptionTiers";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -38,6 +45,21 @@ type SubscriptionData = {
   /** Razorpay `total_count` (monthly charges) for the current subscription, when known. */
   autopayMonthsTotal: number | null;
   usage: UsageData;
+  /** 24h welcome trial (not Razorpay). */
+  trialStartedAt: string | null;
+  trialPhotoScansUsed: number;
+  trialVoiceSecondsUsed: number;
+  hasUsedFreeTrial: boolean;
+  /** True while the 24h window is open and the user has no paid access. */
+  freeTrialActive: boolean;
+  /** Eligible new account before `ensureFreeTrialStarted` runs (has_used_free_trial = false). */
+  welcomeTrialEligibleUnstarted: boolean;
+  freeTrialEndsAtIso: string | null;
+  freeTrialPhotoRemaining: number;
+  /** Seconds of voice remaining in welcome trial (0–180). */
+  freeTrialVoiceSecondsRemaining: number;
+  /** Welcome trial clock ended, still no paid plan. */
+  welcomeTrialExpiredNoPay: boolean;
   refetch: () => void;
 };
 
@@ -74,9 +96,44 @@ export function useSubscriptionAccess(): SubscriptionData {
   const [endDate, setEndDate] = useState<string | null>(null);
   const [autopayMonthsTotal, setAutopayMonthsTotal] = useState<number | null>(null);
   const [usage, setUsage] = useState<UsageData>(EMPTY_USAGE);
+  const [trialStartedAt, setTrialStartedAt] = useState<string | null>(null);
+  const [trialPhotoScansUsed, setTrialPhotoScansUsed] = useState(0);
+  const [trialVoiceSecondsUsed, setTrialVoiceSecondsUsed] = useState(0);
+  const [hasUsedFreeTrial, setHasUsedFreeTrial] = useState(false);
   const [fetchKey, setFetchKey] = useState(0);
 
   const refetch = useCallback(() => setFetchKey((k) => k + 1), []);
+
+  const freeTrialActive = useMemo(() => {
+    if (hasPaidAccess) return false;
+    if (!trialStartedAt) return false;
+    return isFreeTrialWindowActive(trialStartedAt);
+  }, [hasPaidAccess, trialStartedAt]);
+
+  const welcomeTrialEligibleUnstarted = useMemo(
+    () => !hasPaidAccess && !hasUsedFreeTrial,
+    [hasPaidAccess, hasUsedFreeTrial],
+  );
+
+  const freeTrialEndsAtIso = useMemo(() => {
+    const end = freeTrialEndsAt(trialStartedAt);
+    return end ? end.toISOString() : null;
+  }, [trialStartedAt]);
+
+  const freeTrialPhotoRemaining = useMemo(
+    () => remainingPhotoScansTrial(trialPhotoScansUsed),
+    [trialPhotoScansUsed],
+  );
+
+  const freeTrialVoiceSecondsRemaining = useMemo(
+    () => remainingVoiceSecondsTrial(trialVoiceSecondsUsed),
+    [trialVoiceSecondsUsed],
+  );
+
+  const welcomeTrialExpiredNoPay = useMemo(
+    () => isWelcomeTrialExpired(trialStartedAt, hasPaidAccess),
+    [trialStartedAt, hasPaidAccess],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -91,6 +148,10 @@ export function useSubscriptionAccess(): SubscriptionData {
       setEndDate(null);
       setAutopayMonthsTotal(null);
       setUsage(EMPTY_USAGE);
+      setTrialStartedAt(null);
+      setTrialPhotoScansUsed(0);
+      setTrialVoiceSecondsUsed(0);
+      setHasUsedFreeTrial(false);
       setLoading(false);
       return;
     }
@@ -103,7 +164,7 @@ export function useSubscriptionAccess(): SubscriptionData {
         const { data, error } = await supabase
           .from("user_profiles")
           .select(
-            "mandatory_onboarding_completed_at, subscription_status, subscription_plan, subscription_start_date, subscription_end_date, subscription_tier, subscription_autopay_months_total, has_had_trial, photo_scans_used_this_month, voice_minutes_used_this_month, bonus_photo_scans, bonus_voice_minutes, bonus_photo_scans_ledger, bonus_voice_minutes_ledger, usage_reset_date",
+            "mandatory_onboarding_completed_at, subscription_status, subscription_plan, subscription_start_date, subscription_end_date, subscription_tier, subscription_autopay_months_total, has_had_trial, photo_scans_used_this_month, voice_minutes_used_this_month, bonus_photo_scans, bonus_voice_minutes, bonus_photo_scans_ledger, bonus_voice_minutes_ledger, usage_reset_date, trial_started_at, trial_photo_scans_used, trial_voice_seconds_used, has_used_free_trial",
           )
           .eq("user_id", user.id)
           .maybeSingle();
@@ -117,6 +178,10 @@ export function useSubscriptionAccess(): SubscriptionData {
           setTier(null);
           setAutopayMonthsTotal(null);
           setUsage(EMPTY_USAGE);
+          setTrialStartedAt(null);
+          setTrialPhotoScansUsed(0);
+          setTrialVoiceSecondsUsed(0);
+          setHasUsedFreeTrial(false);
           return;
         }
 
@@ -143,6 +208,16 @@ export function useSubscriptionAccess(): SubscriptionData {
           isCurrentlyPaid(normalizedStatus, data?.subscription_end_date ?? null),
         );
         setHasHadTrial(!!data?.has_had_trial);
+        setTrialStartedAt(
+          typeof data?.trial_started_at === "string" ? data.trial_started_at : null,
+        );
+        setTrialPhotoScansUsed(
+          typeof data?.trial_photo_scans_used === "number" ? data.trial_photo_scans_used : 0,
+        );
+        setTrialVoiceSecondsUsed(
+          typeof data?.trial_voice_seconds_used === "number" ? data.trial_voice_seconds_used : 0,
+        );
+        setHasUsedFreeTrial(!!data?.has_used_free_trial);
         const eff = effectiveUsageForDisplay(
           data?.usage_reset_date ?? null,
           data?.photo_scans_used_this_month ?? 0,
@@ -169,6 +244,10 @@ export function useSubscriptionAccess(): SubscriptionData {
           setTier(null);
           setAutopayMonthsTotal(null);
           setUsage(EMPTY_USAGE);
+          setTrialStartedAt(null);
+          setTrialPhotoScansUsed(0);
+          setTrialVoiceSecondsUsed(0);
+          setHasUsedFreeTrial(false);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -193,6 +272,16 @@ export function useSubscriptionAccess(): SubscriptionData {
     endDate,
     autopayMonthsTotal,
     usage,
+    trialStartedAt,
+    trialPhotoScansUsed,
+    trialVoiceSecondsUsed,
+    hasUsedFreeTrial,
+    freeTrialActive,
+    welcomeTrialEligibleUnstarted,
+    freeTrialEndsAtIso,
+    freeTrialPhotoRemaining,
+    freeTrialVoiceSecondsRemaining,
+    welcomeTrialExpiredNoPay,
     refetch,
   };
 }
