@@ -15,6 +15,7 @@ import { useUndoStore } from "@/store/useUndoStore";
 import { useTaskStore } from "@/store/useTaskStore";
 import { findOverlappingTaskPairs } from "@/lib/dailyPlanOverlap";
 import { slotFromStartEnd, timeDbToInput } from "@/lib/dailyPlanTime";
+import { suggestSyllabusIdFromTitle } from "@/lib/suggestDailyTaskSyllabus";
 import { formatIstSlotRange12h } from "@/lib/voiceIst";
 
 // ─── Source badge ────────────────────────────────────────────────────────────
@@ -55,6 +56,10 @@ function truncateEditSyllabusSummary(s: string, max: number): string {
 
 function DailyTaskEditSheet({ task, onClose, onSaved }: EditSheetProps) {
   const syllabusById = useTaskStore((s) => s.microtopics);
+  const microtopicsList = useMemo(
+    () => Object.values(syllabusById),
+    [syllabusById],
+  );
   const [title, setTitle] = useState(task.title ?? "");
   const [startInput, setStartInput] = useState(
     task.time_start ? timeDbToInput(task.time_start) : "",
@@ -126,6 +131,15 @@ function DailyTaskEditSheet({ task, onClose, onSaved }: EditSheetProps) {
           EDIT_SYLLABUS_SUMMARY_MAX,
         )
       : "";
+
+  const openSyllabusWithOptionalBestMatch = (applyBestMatch: boolean) => {
+    setSyllabusSectionExpanded(true);
+    if (!applyBestMatch) return;
+    const trimmed = title.trim();
+    if (!trimmed) return;
+    const id = suggestSyllabusIdFromTitle(trimmed, microtopicsList);
+    if (id) setSyllabusMasterId(id);
+  };
 
   return (
     <div
@@ -219,6 +233,22 @@ function DailyTaskEditSheet({ task, onClose, onSaved }: EditSheetProps) {
                     Syllabus link (optional)
                   </p>
                   <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={saving || !title.trim()}
+                      onClick={() => {
+                        const trimmed = title.trim();
+                        if (!trimmed) return;
+                        const id = suggestSyllabusIdFromTitle(
+                          trimmed,
+                          microtopicsList,
+                        );
+                        if (id) setSyllabusMasterId(id);
+                      }}
+                      className="text-xs font-semibold text-kal-accent hover:underline disabled:opacity-50"
+                    >
+                      Best match
+                    </button>
                     {syllabusMasterId ? (
                       <button
                         type="button"
@@ -257,7 +287,7 @@ function DailyTaskEditSheet({ task, onClose, onSaved }: EditSheetProps) {
                 <div className="flex shrink-0 flex-wrap items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => setSyllabusSectionExpanded(true)}
+                    onClick={() => openSyllabusWithOptionalBestMatch(false)}
                     disabled={saving}
                     className="text-xs font-semibold text-kal-accent hover:underline disabled:opacity-50"
                   >
@@ -281,7 +311,7 @@ function DailyTaskEditSheet({ task, onClose, onSaved }: EditSheetProps) {
                 <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => setSyllabusSectionExpanded(true)}
+                    onClick={() => openSyllabusWithOptionalBestMatch(true)}
                     disabled={saving}
                     className="text-xs font-semibold text-kal-accent hover:underline disabled:opacity-50"
                   >
@@ -300,7 +330,7 @@ function DailyTaskEditSheet({ task, onClose, onSaved }: EditSheetProps) {
             ) : (
               <button
                 type="button"
-                onClick={() => setSyllabusSectionExpanded(true)}
+                onClick={() => openSyllabusWithOptionalBestMatch(true)}
                 disabled={saving}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-kal-border/60 bg-kal-card-muted/40 px-2.5 py-1.5 text-xs font-medium text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-accent disabled:opacity-50"
               >

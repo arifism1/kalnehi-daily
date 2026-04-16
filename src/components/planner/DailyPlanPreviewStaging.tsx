@@ -1,7 +1,7 @@
 "use client";
 
 import { Link2, Loader2, Plus, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { DailyPlanMicrotopicPicker } from "@/components/planner/DailyPlanMicrotopicPicker";
 import { formatIstSlotDurationLabel } from "@/lib/voiceIst";
@@ -100,6 +100,19 @@ export function DailyPlanPreviewStaging({
       return next;
     });
   };
+
+  /** Expand syllabus editor; optionally run best-match from task title (Link / Fix link). */
+  const openSyllabusEditor = useCallback(
+    (rowId: string, taskTitle: string, applyBestMatch: boolean) => {
+      setExpanded(rowId, true);
+      if (!applyBestMatch) return;
+      const trimmed = taskTitle.trim();
+      if (!trimmed) return;
+      const id = suggestSyllabusIdFromTitle(trimmed, microtopicsList);
+      if (id) onUpdateRow(rowId, { syllabus_master_id: id });
+    },
+    [microtopicsList, onUpdateRow],
+  );
 
   return (
     <div
@@ -290,7 +303,7 @@ export function DailyPlanPreviewStaging({
                         <button
                           type="button"
                           disabled={disabled}
-                          onClick={() => setExpanded(r.id, true)}
+                          onClick={() => openSyllabusEditor(r.id, r.name, false)}
                           className="text-[11px] font-semibold text-kal-accent hover:underline disabled:opacity-40"
                           aria-expanded={false}
                         >
@@ -317,7 +330,7 @@ export function DailyPlanPreviewStaging({
                       <button
                         type="button"
                         disabled={disabled}
-                        onClick={() => setExpanded(r.id, true)}
+                        onClick={() => openSyllabusEditor(r.id, r.name, true)}
                         className="text-[11px] font-semibold text-kal-accent hover:underline disabled:opacity-40"
                       >
                         Fix link
@@ -337,7 +350,7 @@ export function DailyPlanPreviewStaging({
                     <button
                       type="button"
                       disabled={disabled}
-                      onClick={() => setExpanded(r.id, true)}
+                      onClick={() => openSyllabusEditor(r.id, r.name, true)}
                       aria-expanded={false}
                       className={
                         compact
