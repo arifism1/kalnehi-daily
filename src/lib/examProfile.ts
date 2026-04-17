@@ -221,7 +221,13 @@ export function examScoreMax(
   if (n === "ca foundation") return 400;
   if (n === "ca intermediate" || n === "ca final") return 800;
   if (n === "upsc cse prelims") return 400;
-  if (isUpscCseMainsExam(exam)) return 1750;
+  /**
+   * UPSC CSE Mains written maximum: merit 1750 + qualifying papers 600 = 2350.
+   * Projection rings use this cap. Syllabus Mastery "Marks secured" denominator is
+   * `rollup.totalMarksPool` (sum of chapter weights from loaded `syllabus_master` rows);
+   * it aims at 2350 but may differ slightly if catalog weights use estimates/rounding.
+   */
+  if (isUpscCseMainsExam(exam)) return 2350;
   if (n === "gate") return 100;
   if (n === "ini cet") return 800;
   if (n === "cat") return 198;

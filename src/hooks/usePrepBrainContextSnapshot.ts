@@ -3,6 +3,11 @@
 import { useCallback } from "react";
 
 import { buildPrepBrainContext, type PrepBrainContext } from "@/lib/prepBrainContext";
+import {
+  isUpscCseMainsExam,
+  UPSC_CSE_MAINS_UI_TOTAL_MARKS,
+  upscMainsSyllabusUiPercent,
+} from "@/lib/upscMainsOptionalSubjects";
 import { getHabitBundleCached } from "@/lib/habitLocal";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { getAllExecutionSessions } from "@/lib/taskIdb";
@@ -53,6 +58,7 @@ export function usePrepBrainContextSnapshot() {
     cuetScoringRollup,
     maxScore,
     primaryMarksYear,
+    catalogExamKey,
   } = useSyllabusTracker();
 
   const buildContextSnapshot = useCallback(async (): Promise<PrepBrainContext> => {
@@ -68,6 +74,16 @@ export function usePrepBrainContextSnapshot() {
           ? fetchMeditation30d(user.id)
           : Promise.resolve({ sessionCount: 0, distinctDays: 0 }),
       ]);
+
+    const upscUi =
+      isUpscCseMainsExam(catalogExamKey) && rollup
+        ? {
+            overall_weighted_completion_percent: upscMainsSyllabusUiPercent(
+              rollup.totalMarksMastered,
+            ),
+            total_marks_pool_in_syllabus_model: UPSC_CSE_MAINS_UI_TOTAL_MARKS,
+          }
+        : null;
 
     return buildPrepBrainContext({
       nowIso,
@@ -86,6 +102,7 @@ export function usePrepBrainContextSnapshot() {
       studySessions,
       habitBundle,
       meditation30d,
+      syllabus_snapshot_overrides: upscUi,
     });
   }, [
     tasksRecord,
@@ -100,6 +117,7 @@ export function usePrepBrainContextSnapshot() {
     neetYearProjections,
     cuetScoringRollup,
     user,
+    catalogExamKey,
   ]);
 
   return { buildContextSnapshot };

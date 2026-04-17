@@ -9,6 +9,7 @@ import type {
   NeetYearProjection,
   SyllabusRollup,
 } from "@/lib/syllabusRollup";
+import { upscMainsSyllabusUiPercent } from "@/lib/upscMainsOptionalSubjects";
 import type { Microtopic, Task } from "@/store/useTaskStore";
 
 export type MarksEngineSnapshot = {
@@ -44,6 +45,8 @@ export function buildMarksEngineSnapshot(
   neetProjections: NeetYearProjection[],
   scoreMax: number = 720,
   cuetScoring?: CuetScoringRollup | null,
+  /** UPSC CSE Mains: force syllabus card "pool" denominator (2350) and matching %. */
+  syllabusMarksUiPoolDenominator?: number | null,
 ): MarksEngineSnapshot {
   const { mastered: taskMastered, total: taskTotalWeight } =
     computeWeightedMarksTotals(allTasks, microtopicById);
@@ -81,8 +84,16 @@ export function buildMarksEngineSnapshot(
     syllabusPercent = cuetScoring.overallPercent;
   } else if (syllabusRollup) {
     syllabusMastered = syllabusRollup.totalMarksMastered;
-    syllabusPool = syllabusRollup.totalMarksPool;
-    syllabusPercent = syllabusRollup.overallPercent;
+    if (
+      syllabusMarksUiPoolDenominator != null &&
+      syllabusMarksUiPoolDenominator > 0
+    ) {
+      syllabusPool = syllabusMarksUiPoolDenominator;
+      syllabusPercent = upscMainsSyllabusUiPercent(syllabusMastered);
+    } else {
+      syllabusPool = syllabusRollup.totalMarksPool;
+      syllabusPercent = syllabusRollup.overallPercent;
+    }
   }
 
   return {

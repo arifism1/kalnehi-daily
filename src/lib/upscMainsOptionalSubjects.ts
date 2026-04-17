@@ -1,5 +1,20 @@
 export const UPSC_CSE_MAINS_EXAM_NAME = "UPSC CSE Mains";
 
+/**
+ * UPSC CSE Mains total = 2350 (1750 merit + 600 qualifying). Qualifying marks are included
+ * in the syllabus rollup numerator (`totalMarksMastered`). The UI uses this fixed value
+ * as the denominator for “marks secured” and headline % when the catalog chapter-weight
+ * sum (`rollup.totalMarksPool`) differs from 2350.
+ */
+export const UPSC_CSE_MAINS_UI_TOTAL_MARKS = 2350;
+
+/** Headline % for Syllabus Mastery / related UI: mastered ÷ 2350 (cap 100%). */
+export function upscMainsSyllabusUiPercent(totalMarksMastered: number): number {
+  const d = UPSC_CSE_MAINS_UI_TOTAL_MARKS;
+  if (d <= 0) return 0;
+  return Math.min(100, Math.round((totalMarksMastered / d) * 1000) / 10);
+}
+
 function normalizeLabel(value: string): string {
   return value.trim().toLowerCase().replace(/[\s_-]+/g, " ");
 }
@@ -9,13 +24,37 @@ export function isUpscCseMainsExam(exam: string | null | undefined): boolean {
   return normalizeLabel(exam) === normalizeLabel(UPSC_CSE_MAINS_EXAM_NAME);
 }
 
+function matchesUpscQualifyingPaperName(normalized: string): boolean {
+  return (
+    normalized.includes("qualifying") ||
+    normalized.includes("paper a") ||
+    normalized.includes("paper b") ||
+    normalized.includes("indian language") ||
+    normalized.includes("english")
+  );
+}
+
 function isUpscMainsCommonSubject(subject: string): boolean {
   const normalized = normalizeLabel(subject);
   if (!normalized) return false;
+  // Optional papers are matched separately; never treat as common.
+  if (normalized.includes("(optional)")) return false;
   if (normalized === "essay" || normalized.includes("essay paper")) return true;
   if (normalized.startsWith("general studies")) return true;
-  if (normalized.includes("qualifying paper")) return true;
+  if (matchesUpscQualifyingPaperName(normalized)) return true;
   return false;
+}
+
+/**
+ * English / Indian Language / Paper A–B / Qualifying labels only (not Essay or GS).
+ * For UPSC Mains UI hints; rollup already includes these when rows are loaded.
+ */
+export function isUpscMainsQualifyingPaperSubject(subject: string): boolean {
+  const normalized = normalizeLabel(subject);
+  if (!normalized || normalized.includes("(optional)")) return false;
+  if (normalized === "essay" || normalized.includes("essay paper")) return false;
+  if (normalized.startsWith("general studies")) return false;
+  return matchesUpscQualifyingPaperName(normalized);
 }
 
 /**

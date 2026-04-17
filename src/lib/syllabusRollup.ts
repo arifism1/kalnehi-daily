@@ -113,6 +113,11 @@ export function buildSyllabusMultiYearCapture(
   maxScore: number = 720,
   /** Prefer this calendar year’s column for the main ring (e.g. 2025 for NEET / JEE Main 2025). */
   preferRingYear?: number,
+  /**
+   * When set (UPSC CSE Mains: 2350), ring % uses `totalMarksMastered ÷ this` instead of
+   * ÷ catalog `totalMarksPool` so Progress/Home match the fixed Mains total in UI.
+   */
+  overallPercentScaleDenominator?: number,
 ): SyllabusMultiYearCapture | null {
   if (projections.length === 0) return null;
   const primary =
@@ -121,15 +126,21 @@ export function buildSyllabusMultiYearCapture(
       : undefined) ??
     projections.find((p) => p.year === NEET_PRIMARY_YEAR) ??
     projections[0];
+  const scaleDenom = overallPercentScaleDenominator;
   const ringPercent =
-    primary.totalMarksPool > 0
+    scaleDenom != null && scaleDenom > 0
       ? Math.min(
           100,
-          Math.round(
-            (primary.totalMarksMastered / primary.totalMarksPool) * 1000,
-          ) / 10,
+          Math.round((primary.totalMarksMastered / scaleDenom) * 1000) / 10,
         )
-      : 0;
+      : primary.totalMarksPool > 0
+        ? Math.min(
+            100,
+            Math.round(
+              (primary.totalMarksMastered / primary.totalMarksPool) * 1000,
+            ) / 10,
+          )
+        : 0;
   return {
     ringPercent,
     ringYear: primary.year,
@@ -346,6 +357,10 @@ function labelsForYear(year: number): {
  * Chapter-based mastery: a chapter contributes its full weight only if
  * **every** microtopic under it has status `completed`. Primary pool uses
  * the `marks_20xx` column for `primaryMarksYear` (from the user’s target exam).
+ *
+ * For UPSC CSE Mains, qualifying-paper rows must be present in `rows` (see
+ * `shouldKeepUpscMainsRow` / `isUpscMainsCommonSubject`); there is no separate
+ * merge step — every included chapter pool is summed once (no double-count).
  */
 export function computeSyllabusRollup(
   rows: SyllabusRow[],

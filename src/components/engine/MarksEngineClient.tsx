@@ -9,6 +9,10 @@ import { useSyllabusTracker } from "@/hooks/useSyllabusTracker";
 import { SyllabusComingSoon } from "@/components/syllabus/SyllabusComingSoon";
 import { shouldShowSyllabusComingSoon } from "@/lib/examProfile";
 import { buildMarksEngineSnapshot } from "@/lib/engine/marksEngineStats";
+import {
+  isUpscCseMainsExam,
+  UPSC_CSE_MAINS_UI_TOTAL_MARKS,
+} from "@/lib/upscMainsOptionalSubjects";
 import { useTaskStore } from "@/store/useTaskStore";
 
 import { EngineCard, EngineHero } from "./EngineHero";
@@ -24,6 +28,7 @@ export function MarksEngineClient() {
     rows,
     rollup,
     neetYearProjections,
+    catalogExamKey,
     cuetScoringRollup,
     cuetAwaitingDomainSelection,
     loading: syllabusLoading,
@@ -51,6 +56,9 @@ export function MarksEngineClient() {
       neetYearProjections,
       maxScore,
       cuetScoringRollup,
+      isUpscCseMainsExam(catalogExamKey)
+        ? UPSC_CSE_MAINS_UI_TOTAL_MARKS
+        : null,
     );
   }, [
     today,
@@ -61,6 +69,7 @@ export function MarksEngineClient() {
     neetYearProjections,
     maxScore,
     cuetScoringRollup,
+    catalogExamKey,
   ]);
 
   return (

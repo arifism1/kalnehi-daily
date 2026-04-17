@@ -160,6 +160,13 @@ export type PrepBrainContextInput = {
   studySessions: StudySessionLog[];
   habitBundle: HabitBundle | null;
   meditation30d: { sessionCount: number; distinctDays: number };
+  /**
+   * UPSC CSE Mains: align LLM snapshot with fixed 2350 UI denominator and % on that scale.
+   */
+  syllabus_snapshot_overrides?: {
+    overall_weighted_completion_percent: number;
+    total_marks_pool_in_syllabus_model: number;
+  } | null;
 };
 
 function taskTitle(task: Task, microtopicById: Record<string, Microtopic>): string {
@@ -240,6 +247,7 @@ export function buildPrepBrainContext(input: PrepBrainContextInput): PrepBrainCo
     studySessions,
     habitBundle,
     meditation30d,
+    syllabus_snapshot_overrides,
   } = input;
 
   const allThroughToday = filterTasksThroughDate(tasks, calendarToday);
@@ -309,9 +317,15 @@ export function buildPrepBrainContext(input: PrepBrainContextInput): PrepBrainCo
       primary_marks_year: primaryMarksYear ?? null,
     },
     syllabus_snapshot: {
-      overall_weighted_completion_percent: r?.overallPercent ?? 0,
+      overall_weighted_completion_percent:
+        syllabus_snapshot_overrides?.overall_weighted_completion_percent ??
+        r?.overallPercent ??
+        0,
       total_marks_secured_in_syllabus_model: r?.totalMarksMastered ?? 0,
-      total_marks_pool_in_syllabus_model: r?.totalMarksPool ?? 0,
+      total_marks_pool_in_syllabus_model:
+        syllabus_snapshot_overrides?.total_marks_pool_in_syllabus_model ??
+        r?.totalMarksPool ??
+        0,
       weakest_chapters: weakChaptersFromRollup(r),
       neet_style_projections_by_year: neetYearProjections.map((p) => ({
         exam_year: p.year,

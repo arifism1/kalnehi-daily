@@ -8,6 +8,10 @@ import { useRefreshTasksOnHomeFocus } from "@/hooks/useRefreshTasksOnHomeFocus";
 import { useSyllabusTracker } from "@/hooks/useSyllabusTracker";
 import { buildFeedbackInsights } from "@/lib/engine/feedbackInsights";
 import { shouldShowSyllabusComingSoon } from "@/lib/examProfile";
+import {
+  isUpscCseMainsExam,
+  upscMainsSyllabusUiPercent,
+} from "@/lib/upscMainsOptionalSubjects";
 import { useTaskStore } from "@/store/useTaskStore";
 
 import { EngineCard, EngineHero } from "./EngineHero";
@@ -31,6 +35,7 @@ export function FeedbackEngineClient() {
   const {
     rollup,
     rows,
+    catalogExamKey,
     cuetAwaitingDomainSelection,
     loading: syllabusLoading,
     error: syllabusError,
@@ -48,9 +53,21 @@ export function FeedbackEngineClient() {
   const insights = useMemo(() => {
     const tasks = Object.values(tasksRecord);
     const syllabusPct =
-      rows.length > 0 ? rollup.overallPercent : null;
+      rows.length > 0
+        ? isUpscCseMainsExam(catalogExamKey)
+          ? upscMainsSyllabusUiPercent(rollup.totalMarksMastered)
+          : rollup.overallPercent
+        : null;
     return buildFeedbackInsights(today, tasks, microRecord, syllabusPct);
-  }, [today, tasksRecord, microRecord, rows.length, rollup.overallPercent]);
+  }, [
+    today,
+    tasksRecord,
+    microRecord,
+    rows.length,
+    rollup.overallPercent,
+    rollup.totalMarksMastered,
+    catalogExamKey,
+  ]);
 
   return (
     <div className="space-y-6">

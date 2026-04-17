@@ -255,7 +255,7 @@ export const EXAMS_CATALOG_FALLBACK: ExamCatalogRow[] = [
     exam_name: "UPSC CSE Mains",
     display_name: "UPSC CSE Mains",
     sort_order: 52,
-    max_score: 1750,
+    max_score: 2350,
     multi_subject: true,
     created_at: new Date().toISOString(),
   },

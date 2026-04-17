@@ -7,6 +7,11 @@ import { useSyllabusTracker } from "@/hooks/useSyllabusTracker";
 import { useTargetExamDisplay } from "@/hooks/useTargetExamDisplay";
 import { shouldShowSyllabusComingSoon } from "@/lib/examProfile";
 import {
+  isUpscCseMainsExam,
+  UPSC_CSE_MAINS_UI_TOTAL_MARKS,
+  upscMainsSyllabusUiPercent,
+} from "@/lib/upscMainsOptionalSubjects";
+import {
   computeWeightedMarksTotals,
   filterTasksThroughDate,
 } from "@/lib/progressEngine";
@@ -73,11 +78,14 @@ export function ProgressOverview() {
     neetYearProjections,
     primaryMarksYear,
     maxScore: syllabusScoreMax,
+    catalogExamKey,
     cuetScoringRollup,
     cuetAwaitingDomainSelection,
     loading: syllabusLoading,
     error: syllabusError,
   } = useSyllabusTracker();
+
+  const isUpscMainsUi = isUpscCseMainsExam(catalogExamKey);
 
   const advancedMarksProjectionEnabled = useSettingsStore(
     (s) => s.advancedMarksProjectionEnabled,
@@ -106,6 +114,7 @@ export function ProgressOverview() {
       neetYearProjections,
       syllabusScoreMax,
       primaryMarksYear,
+      isUpscMainsUi ? UPSC_CSE_MAINS_UI_TOTAL_MARKS : undefined,
     );
   }, [
     advancedMarksProjectionEnabled,
@@ -113,6 +122,7 @@ export function ProgressOverview() {
     neetYearProjections,
     syllabusScoreMax,
     primaryMarksYear,
+    isUpscMainsUi,
   ]);
 
   const { secured, denom, marksPercent } = useMemo(() => {
@@ -127,9 +137,17 @@ export function ProgressOverview() {
       secured = 0;
       denom = 0;
     } else if (!advancedMarksProjectionEnabled && syllabusRows.length > 0) {
-      marksPercent = syllabusRollup.overallPercent;
-      secured = 0;
-      denom = 0;
+      if (isUpscMainsUi) {
+        marksPercent = upscMainsSyllabusUiPercent(
+          syllabusRollup.totalMarksMastered,
+        );
+        secured = Math.round(syllabusRollup.totalMarksMastered);
+        denom = UPSC_CSE_MAINS_UI_TOTAL_MARKS;
+      } else {
+        marksPercent = syllabusRollup.overallPercent;
+        secured = 0;
+        denom = 0;
+      }
     } else if (cuetScoringRollup) {
       marksPercent = cuetScoringRollup.overallPercent;
       secured = cuetScoringRollup.totalProjected;
@@ -139,13 +157,18 @@ export function ProgressOverview() {
       secured = syllabusMultiYear.ringProjected;
       denom = syllabusMultiYear.ringOutOf;
     } else if (syllabusRows.length > 0) {
-      marksPercent = syllabusRollup.overallPercent;
       secured = Math.round(syllabusRollup.totalMarksMastered);
-      denom = Math.round(syllabusRollup.totalMarksPool);
-      if (denom <= 0) {
-        secured = 0;
-        denom = 720;
-        marksPercent = 0;
+      if (isUpscMainsUi) {
+        denom = UPSC_CSE_MAINS_UI_TOTAL_MARKS;
+        marksPercent = upscMainsSyllabusUiPercent(syllabusRollup.totalMarksMastered);
+      } else {
+        marksPercent = syllabusRollup.overallPercent;
+        denom = Math.round(syllabusRollup.totalMarksPool);
+        if (denom <= 0) {
+          secured = 0;
+          denom = 720;
+          marksPercent = 0;
+        }
       }
     } else {
       const { mastered, total } = computeWeightedMarksTotals(
@@ -168,6 +191,7 @@ export function ProgressOverview() {
     syllabusRollup.totalMarksMastered,
     syllabusRollup.totalMarksPool,
     realityTasks,
+    isUpscMainsUi,
   ]);
 
   return (
@@ -204,12 +228,16 @@ export function ProgressOverview() {
           ) : !advancedMarksProjectionEnabled && syllabusRows.length > 0 ? (
             <p className="text-kal-text-secondary">
               <span className="font-semibold text-kal-accent dark:text-kal-accent/90 tabular-nums">
-                {syllabusRollup.overallPercent % 1 === 0
-                  ? syllabusRollup.overallPercent.toFixed(0)
-                  : syllabusRollup.overallPercent.toFixed(1)}
+                {marksPercent % 1 === 0
+                  ? marksPercent.toFixed(0)
+                  : marksPercent.toFixed(1)}
                 %
               </span>
-              <span className="text-kal-muted"> chapter-level completion</span>
+              <span className="text-kal-muted">
+                {isUpscMainsUi
+                  ? " on full Mains scale (2350)"
+                  : " chapter-level completion"}
+              </span>
             </p>
           ) : cuetScoringRollup && advancedMarksProjectionEnabled ? (
             <>
@@ -291,12 +319,18 @@ export function ProgressOverview() {
               </span>
               <span className="text-kal-muted">
                 {" "}
-                / {Math.round(syllabusRollup.totalMarksPool)} chapter-weight
-                pool
+                /{" "}
+                {isUpscMainsUi
+                  ? UPSC_CSE_MAINS_UI_TOTAL_MARKS
+                  : Math.round(syllabusRollup.totalMarksPool)}{" "}
+                {isUpscMainsUi
+                  ? "full Mains written (2350)"
+                  : "chapter-weight pool"}
               </span>
               <span className="mt-1 block text-xs text-kal-muted">
-                Add per-year syllabus weights to see multi-year projections (out
-                of {syllabusScoreMax}).
+                {isUpscMainsUi
+                  ? "UPSC CSE Mains total = 2350 (1750 merit + 600 qualifying). Qualifying marks are included."
+                  : `Add per-year syllabus weights to see multi-year projections (out of ${syllabusScoreMax}).`}
               </span>
             </p>
           ) : (

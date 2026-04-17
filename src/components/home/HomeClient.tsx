@@ -18,6 +18,11 @@ import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { buildSyllabusMultiYearCapture } from "@/lib/syllabusRollup";
 import { shouldShowSyllabusComingSoon } from "@/lib/examProfile";
 import {
+  isUpscCseMainsExam,
+  UPSC_CSE_MAINS_UI_TOTAL_MARKS,
+  upscMainsSyllabusUiPercent,
+} from "@/lib/upscMainsOptionalSubjects";
+import {
   classifyDailyProgressBand,
   computeWeightedCompletionPercent,
   computeWeightedMarksTotals,
@@ -87,11 +92,14 @@ export function HomeClient() {
     neetYearProjections,
     primaryMarksYear,
     maxScore: syllabusScoreMax,
+    catalogExamKey,
     cuetScoringRollup,
     cuetAwaitingDomainSelection,
     loading: syllabusLoading,
     error: syllabusError,
   } = useSyllabusTracker();
+
+  const isUpscMainsUi = isUpscCseMainsExam(catalogExamKey);
 
   const advancedMarksProjectionEnabled = useSettingsStore(
     (s) => s.advancedMarksProjectionEnabled,
@@ -220,7 +228,9 @@ export function HomeClient() {
     if (syllabusRows.length > 0) {
       return {
         mastered: syllabusRollup.totalMarksMastered,
-        total: syllabusRollup.totalMarksPool,
+        total: isUpscMainsUi
+          ? UPSC_CSE_MAINS_UI_TOTAL_MARKS
+          : syllabusRollup.totalMarksPool,
       };
     }
     return computeWeightedMarksTotals(realityTasks, microtopicById);
@@ -231,16 +241,24 @@ export function HomeClient() {
     syllabusRollup.totalMarksPool,
     realityTasks,
     microtopicById,
+    isUpscMainsUi,
   ]);
 
   const syllabusMasteryPercent = useMemo(() => {
     if (cuetScoringRollup) return cuetScoringRollup.overallPercent;
-    if (syllabusRows.length > 0) return syllabusRollup.overallPercent;
+    if (syllabusRows.length > 0) {
+      if (isUpscMainsUi) {
+        return upscMainsSyllabusUiPercent(syllabusRollup.totalMarksMastered);
+      }
+      return syllabusRollup.overallPercent;
+    }
     return null;
   }, [
     cuetScoringRollup,
     syllabusRows.length,
     syllabusRollup.overallPercent,
+    syllabusRollup.totalMarksMastered,
+    isUpscMainsUi,
   ]);
 
   const syllabusMultiYear = useMemo(() => {
@@ -252,6 +270,7 @@ export function HomeClient() {
       neetYearProjections,
       syllabusScoreMax,
       primaryMarksYear,
+      isUpscMainsUi ? UPSC_CSE_MAINS_UI_TOTAL_MARKS : undefined,
     );
   }, [
     advancedMarksProjectionEnabled,
@@ -259,6 +278,7 @@ export function HomeClient() {
     neetYearProjections,
     syllabusScoreMax,
     primaryMarksYear,
+    isUpscMainsUi,
   ]);
 
   const welcomeName = useMemo(() => {

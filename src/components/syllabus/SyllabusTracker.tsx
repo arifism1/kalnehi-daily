@@ -47,6 +47,12 @@ import { displayNameForExamCatalog } from "@/lib/examsCatalog";
 import {
   shouldShowSyllabusComingSoon,
 } from "@/lib/examProfile";
+import {
+  isUpscCseMainsExam,
+  isUpscMainsQualifyingPaperSubject,
+  UPSC_CSE_MAINS_UI_TOTAL_MARKS,
+  upscMainsSyllabusUiPercent,
+} from "@/lib/upscMainsOptionalSubjects";
 import type { MergedSyllabusRow } from "@/lib/userSyllabusMerge";
 import { useUndoStore } from "@/store/useUndoStore";
 
@@ -81,13 +87,39 @@ function resolveStatus(
   return "not_begun";
 }
 
-function ChapterBar({ percent }: { percent: number }) {
+function ChapterBar({
+  percent,
+  size = "chapter",
+  progressAriaLabel,
+}: {
+  percent: number;
+  size?: "chapter" | "subject";
+  progressAriaLabel?: string;
+}) {
   const w = Math.min(100, Math.max(0, percent));
+  const a11yProps =
+    progressAriaLabel != null
+      ? {
+          role: "progressbar" as const,
+          "aria-valuenow": Math.round(w),
+          "aria-valuemin": 0,
+          "aria-valuemax": 100,
+          "aria-label": progressAriaLabel,
+        }
+      : {};
+
   return (
-    <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-kal-card-muted">
+    <div
+      {...a11yProps}
+      className={clsx(
+        "w-full overflow-hidden rounded-full bg-kal-card-muted",
+        size === "chapter" ? "mt-2 h-2" : "h-1.5",
+      )}
+    >
       <div
         className="h-full rounded-full bg-gradient-to-r from-kal-accent to-orange-600 transition-[width] duration-300"
         style={{ width: `${w}%` }}
+        aria-hidden={progressAriaLabel != null ? true : undefined}
       />
     </div>
   );
@@ -205,8 +237,50 @@ export function SyllabusTracker() {
     return m;
   }, [rollup.chapters]);
 
+  /** Sum chapter rollups per subject — same microtopic ratio as chapter rows. */
+  const subjectMicrotopicMap = useMemo(() => {
+    const accum = new Map<string, { completed: number; total: number }>();
+    for (const ch of rollup.chapters) {
+      const prev = accum.get(ch.subject) ?? { completed: 0, total: 0 };
+      accum.set(ch.subject, {
+        completed: prev.completed + ch.completedCount,
+        total: prev.total + ch.totalCount,
+      });
+    }
+    const out = new Map<
+      string,
+      { completed: number; total: number; percent: number }
+    >();
+    for (const [subject, { completed, total }] of accum) {
+      const percent =
+        total > 0 ? Math.round((completed / total) * 1000) / 10 : 0;
+      out.set(subject, { completed, total, percent });
+    }
+    return out;
+  }, [rollup.chapters]);
+
   /** CUET uses domain scoring; other exams need real marks_* (or overrides), not legacy 1× fallbacks. */
   const showMarksUi = Boolean(cuetScoringRollup) || syllabusHasCatalogMarksData(rows);
+
+  /**
+   * UPSC CSE Mains total = 2350 (1750 merit + 600 qualifying). Qualifying marks are included.
+   * Headline % and “marks secured” denominator use the fixed 2350 scale; numerator stays
+   * `rollup.totalMarksMastered` from the syllabus model (chapter all-or-nothing).
+   */
+  const isUpscMainsUi = isUpscCseMainsExam(catalogExamKey);
+  const syllabusHeaderPercent = useMemo(() => {
+    if (cuetScoringRollup) return cuetScoringRollup.overallPercent;
+    if (isUpscMainsUi && showMarksUi) {
+      return upscMainsSyllabusUiPercent(rollup.totalMarksMastered);
+    }
+    return rollup.overallPercent;
+  }, [
+    cuetScoringRollup,
+    isUpscMainsUi,
+    showMarksUi,
+    rollup.totalMarksMastered,
+    rollup.overallPercent,
+  ]);
 
   const comingSoon = shouldShowSyllabusComingSoon({
     examLabel,
@@ -335,13 +409,15 @@ export function SyllabusTracker() {
               className="mt-1 text-4xl font-bold tabular-nums text-kal-text"
               aria-live="polite"
             >
-              {(cuetScoringRollup ?? rollup).overallPercent}%
+              {syllabusHeaderPercent}%
             </p>
             <p className="mt-1 text-[11px] text-kal-muted">
               {cuetScoringRollup
                 ? "Microtopic completion across selected domains"
                 : showMarksUi
-                  ? `Overall marks_${primaryMarksYear} chapter pool`
+                  ? isUpscMainsUi
+                    ? `Full Mains written scale (${UPSC_CSE_MAINS_UI_TOTAL_MARKS} max, marks_${primaryMarksYear} weights)`
+                    : `Overall marks_${primaryMarksYear} chapter pool`
                   : `Overall progress: ${rollup.overallPercent % 1 === 0 ? rollup.overallPercent.toFixed(0) : rollup.overallPercent.toFixed(1)}%`}
             </p>
           </div>
@@ -374,10 +450,15 @@ export function SyllabusTracker() {
                     {displayExam} {p.year}
                   </p>
                   <p className="mt-0.5 text-xl font-bold tabular-nums text-orange-600 dark:text-orange-300">
-                    {p.projectedOutOf720}
+                    {isUpscMainsUi
+                      ? rollup.totalMarksMastered.toFixed(0)
+                      : p.projectedOutOf720}
                     <span className="text-base font-semibold text-kal-muted">
                       {" "}
-                      / {maxScore}
+                      /{" "}
+                      {isUpscMainsUi
+                        ? UPSC_CSE_MAINS_UI_TOTAL_MARKS
+                        : maxScore}
                     </span>
                   </p>
                   <p className="mt-0.5 text-[10px] leading-snug text-kal-muted">
@@ -392,7 +473,10 @@ export function SyllabusTracker() {
                   {rollup.totalMarksMastered.toFixed(0)}
                   <span className="text-kal-muted">
                     {" "}
-                    / {rollup.totalMarksPool.toFixed(0)}
+                    /{" "}
+                    {isUpscMainsUi
+                      ? UPSC_CSE_MAINS_UI_TOTAL_MARKS
+                      : rollup.totalMarksPool.toFixed(0)}
                   </span>
                 </p>
               </div>
@@ -411,7 +495,7 @@ export function SyllabusTracker() {
           <div
             className="h-full rounded-full bg-gradient-to-r from-kal-accent via-orange-600 to-orange-700 transition-[width] duration-500"
             style={{
-              width: `${Math.min(100, (cuetScoringRollup ?? rollup).overallPercent)}%`,
+              width: `${Math.min(100, syllabusHeaderPercent)}%`,
             }}
           />
         </div>
@@ -449,43 +533,72 @@ export function SyllabusTracker() {
         {subjects.map((subject) => {
           const chapters = grouped.get(subject)!;
           const chapterNames = sortChapterNameList([...chapters.keys()]);
+          const subRoll =
+            subjectMicrotopicMap.get(subject) ?? {
+              completed: 0,
+              total: 0,
+              percent: 0,
+            };
           return (
             <details
               key={subject}
               className="kal-glass-panel group overflow-hidden rounded-2xl open:shadow-md dark:border-white/12"
             >
-              <summary className="flex min-h-[48px] cursor-pointer list-none items-center justify-between gap-2 px-5 py-4 text-base font-semibold text-kal-text marker:hidden [&::-webkit-details-marker]:hidden">
-                <span className="flex min-w-0 items-center gap-2">
-                  <BookMarked
-                    className="h-5 w-5 shrink-0 text-kal-accent"
-                    aria-hidden
-                  />
-                  <span className="truncate">{subject}</span>
-                </span>
-                <span className="flex shrink-0 items-center gap-1.5">
-                  {canCustomize && catalogExamKey ? (
-                    <button
-                      type="button"
-                      title="Add chapter"
-                      className="inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg border border-kal-accent/30 bg-orange-950/40 text-kal-accent hover:bg-orange-900/50 sm:px-2"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        openSheet({
-                          kind: "add_chapter_block",
-                          examName: catalogExamKey,
-                          defaultSubject: subject,
-                        });
-                      }}
-                    >
-                      <Plus className="h-4 w-4" aria-hidden />
-                      <span className="sr-only sm:not-sr-only sm:ml-1 sm:text-[11px] sm:font-semibold">
-                        Chapter
+              <summary className="cursor-pointer list-none px-5 py-4 text-base font-semibold text-kal-text marker:hidden [&::-webkit-details-marker]:hidden">
+                <div className="flex min-h-[48px] items-center justify-between gap-2">
+                  <span className="flex min-w-0 items-center gap-2">
+                    <BookMarked
+                      className="h-5 w-5 shrink-0 text-kal-accent"
+                      aria-hidden
+                    />
+                    <span className="truncate">{subject}</span>
+                    {isUpscCseMainsExam(catalogExamKey) &&
+                    isUpscMainsQualifyingPaperSubject(subject) ? (
+                      <span
+                        className="inline-flex max-w-[min(100%,11rem)] shrink-0 rounded-md border border-kal-border/80 bg-kal-card-muted px-1.5 py-0.5 text-[9px] font-medium leading-tight text-kal-muted sm:max-w-none sm:px-2 sm:text-[10px]"
+                        title="Qualifying papers (300+300 marks) are part of the full Mains total (2350) and this progress bar."
+                      >
+                        Qualifying · in total
                       </span>
-                    </button>
-                  ) : null}
-                  <ChevronDown className="h-5 w-5 shrink-0 text-kal-muted transition-transform duration-200 group-open:rotate-180" />
-                </span>
+                    ) : null}
+                  </span>
+                  <span className="flex shrink-0 items-center gap-1.5">
+                    {canCustomize && catalogExamKey ? (
+                      <button
+                        type="button"
+                        title="Add chapter"
+                        className="inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg border border-kal-accent/30 bg-orange-950/40 text-kal-accent hover:bg-orange-900/50 sm:px-2"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          openSheet({
+                            kind: "add_chapter_block",
+                            examName: catalogExamKey,
+                            defaultSubject: subject,
+                          });
+                        }}
+                      >
+                        <Plus className="h-4 w-4" aria-hidden />
+                        <span className="sr-only sm:not-sr-only sm:ml-1 sm:text-[11px] sm:font-semibold">
+                          Chapter
+                        </span>
+                      </button>
+                    ) : null}
+                    <ChevronDown className="h-5 w-5 shrink-0 text-kal-muted transition-transform duration-200 group-open:rotate-180" />
+                  </span>
+                </div>
+                <p
+                  className="mt-2 text-[11px] tabular-nums text-kal-muted"
+                  aria-hidden
+                >
+                  {subRoll.completed}/{subRoll.total} microtopics done ·{" "}
+                  {subRoll.percent}%
+                </p>
+                <ChapterBar
+                  size="subject"
+                  percent={subRoll.percent}
+                  progressAriaLabel={`${subject}: ${subRoll.completed} of ${subRoll.total} microtopics complete, ${subRoll.percent} percent`}
+                />
               </summary>
               <div className="border-t border-kal-border">
                 {chapterNames.map((chapter, chapterIdx) => {
