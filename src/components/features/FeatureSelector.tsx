@@ -11,7 +11,11 @@ type FeatureSelectorProps = {
 };
 
 export function FeatureSelector({ selected, onChange }: FeatureSelectorProps) {
-  const allSelected = selected.length === DASHBOARD_FEATURES.length;
+  // Safety net: keep retired/internal features hidden even if stale data still references them.
+  const visibleFeatures = DASHBOARD_FEATURES.filter((feature) => feature.id !== "daily-log");
+  const visibleFeatureIds = new Set(visibleFeatures.map((feature) => feature.id));
+  const visibleSelectedCount = selected.filter((id) => visibleFeatureIds.has(id)).length;
+  const allSelected = visibleSelectedCount === visibleFeatures.length;
 
   function toggle(id: string) {
     if (selected.includes(id)) {
@@ -25,7 +29,7 @@ export function FeatureSelector({ selected, onChange }: FeatureSelectorProps) {
     if (allSelected) {
       onChange([]);
     } else {
-      onChange(DASHBOARD_FEATURES.map((f) => f.id));
+      onChange(visibleFeatures.map((f) => f.id));
     }
   }
 
@@ -34,8 +38,8 @@ export function FeatureSelector({ selected, onChange }: FeatureSelectorProps) {
       {/* Select all / Deselect all */}
       <div className="flex items-center justify-between">
         <p className="text-xs text-kal-text-secondary">
-          <span className="font-semibold text-kal-accent">{selected.length}</span> of{" "}
-          {DASHBOARD_FEATURES.length} selected
+          <span className="font-semibold text-kal-accent">{visibleSelectedCount}</span> of{" "}
+          {visibleFeatures.length} selected
         </p>
         <button
           type="button"
@@ -48,7 +52,7 @@ export function FeatureSelector({ selected, onChange }: FeatureSelectorProps) {
 
       {/* Feature cards grid */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {DASHBOARD_FEATURES.map((feature) => {
+        {visibleFeatures.map((feature) => {
           const isOn = selected.includes(feature.id);
           const Icon = feature.icon;
           return (

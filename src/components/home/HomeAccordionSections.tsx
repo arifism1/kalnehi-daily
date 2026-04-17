@@ -15,7 +15,6 @@ import {
   ListTodo,
   MessageSquare,
   Mic,
-  NotebookPen,
   PenTool,
   PlayCircle,
   Sparkles,
@@ -55,10 +54,6 @@ const StudySessionsPageContent = dynamic(
 );
 const ProgressRouteLazy = dynamic(
   () => import("@/app/(kalnehi)/progress/ProgressRouteLazy"),
-  { ssr: false },
-);
-const DailyLogRouteLazy = dynamic(
-  () => import("@/app/(kalnehi)/daily-log/DailyLogRouteLazy"),
   { ssr: false },
 );
 const RevisionRouteLazy = dynamic(
@@ -174,12 +169,6 @@ export function HomeAccordionSections() {
       title: "Progress",
       icon: TrendingUp,
       content: <ProgressRouteLazy />,
-    },
-    {
-      id: "daily-log",
-      title: "Daily Log",
-      icon: NotebookPen,
-      content: <DailyLogRouteLazy />,
     },
     {
       id: "revision-engine",

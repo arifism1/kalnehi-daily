@@ -5,6 +5,7 @@ import {
   BookOpen,
   Brain,
   Calendar,
+  CalendarDays,
   CheckCircle,
   Clock,
   Crown,
@@ -14,7 +15,6 @@ import {
   Home,
   Inbox,
   Mic,
-  Notebook,
   PlayCircle,
   LifeBuoy,
   RotateCw,
@@ -87,6 +87,12 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
         featureId: "daily-planner",
       },
       {
+        href: "/saved-plans",
+        label: "Saved Daily Plans",
+        shortLabel: "Saved plans",
+        Icon: CalendarDays,
+      },
+      {
         href: "/dictate-day",
         label: "Dictate My Day",
         shortLabel: "Dictate",
@@ -138,7 +144,6 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
     quickNavGroupLabel: "Review",
     items: [
       { href: "/progress", label: "Progress", Icon: TrendingUp, featureId: "progress" },
-      { href: "/daily-log", label: "Daily Log", Icon: Notebook, featureId: "daily-log" },
       {
         href: "/revision",
         label: "Revision Engine",
@@ -222,6 +227,7 @@ export function filterNavByEnabledFeatures(
 const QUICK_NAV_HREF_ORDER: readonly string[] = [
   "/",
   "/daily-plan",
+  "/saved-plans",
   "/dictate-day",
   "/prepbrain",
   "/plan-my-day",
@@ -233,7 +239,6 @@ const QUICK_NAV_HREF_ORDER: readonly string[] = [
   "/timer",
   "/study-sessions",
   "/progress",
-  "/daily-log",
   "/revision",
   "/consistency-tracker",
   "/habits",
