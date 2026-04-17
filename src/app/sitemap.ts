@@ -89,7 +89,6 @@ const APP_PLANNER_AND_STUDY: SitemapPath[] = [
   { path: "/marks-engine", changeFrequency: "weekly", priority: 0.72 },
   { path: "/daily-engine", changeFrequency: "weekly", priority: 0.72 },
   { path: "/revision", changeFrequency: "weekly", priority: 0.72 },
-  { path: "/daily-log", changeFrequency: "weekly", priority: 0.7 },
 ];
 
 const APP_PROGRESS_AND_TOOLS: SitemapPath[] = [

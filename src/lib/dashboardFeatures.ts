@@ -11,7 +11,6 @@ import {
   ListTodo,
   MessageSquare,
   Mic,
-  NotebookPen,
   PenTool,
   PlayCircle,
   Sparkles,
@@ -113,12 +112,6 @@ export const DASHBOARD_FEATURES: DashboardFeature[] = [
     title: "Progress",
     icon: TrendingUp,
     description: "See your preparation trajectory at a glance.",
-  },
-  {
-    id: "daily-log",
-    title: "Daily Log",
-    icon: NotebookPen,
-    description: "Capture what you studied each day for a rich history.",
   },
   {
     id: "revision-engine",

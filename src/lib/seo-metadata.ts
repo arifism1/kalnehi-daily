@@ -24,6 +24,7 @@ export type KalnehiPageSeoKey =
   | "targetScoreBlueprint"
   | "myTarget"
   | "dailyPlan"
+  | "savedPlans"
   | "habits"
   | "timer"
   | "motivation"
@@ -98,6 +99,12 @@ const PAGE_SEO: Record<
     title: `Daily Plan — live task checklist for exam prep | ${SITE_NAME}`,
     description:
       `Your unified Daily Plan: live tasks with prominent checkboxes, inline edit and delete, Master Today circle, and 3-Day Execution view. ${SITE_NAME} turns each day into concrete progress for JEE, NEET, UPSC & Boards.`,
+  },
+  savedPlans: {
+    path: "/saved-plans",
+    title: `Saved Daily Plans — your plan history archive | ${SITE_NAME}`,
+    description:
+      `Browse all your saved daily plans in a clean date-wise history, with completion percentages and quick task previews. ${SITE_NAME} keeps your last year of planning visible at a glance.`,
   },
   habits: {
     path: "/habits",

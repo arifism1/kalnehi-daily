@@ -33,6 +33,7 @@ import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { useOnboardingStore } from "@/store/useOnboardingStore";
 
 const STEPS = 4;
+const ONBOARDING_VISIBLE_FEATURE_IDS = ALL_FEATURE_IDS.filter((id) => id !== "daily-log");
 
 const CLASS_OPTIONS = [
   "Class 10",
@@ -63,7 +64,9 @@ export function OnboardingWizard() {
   const [error, setError] = useState<string | null>(null);
 
   // Feature selection state (step 4) — all pre-selected
-  const [selectedFeatures, setSelectedFeatures] = useState<string[]>(ALL_FEATURE_IDS);
+  const [selectedFeatures, setSelectedFeatures] = useState<string[]>(
+    ONBOARDING_VISIBLE_FEATURE_IDS,
+  );
 
   useEffect(() => {
     void (async () => {
@@ -180,9 +183,12 @@ export function OnboardingWizard() {
     setBusy(true);
     setError(null);
     try {
+      const sanitizedFeatureIds = featureIds.filter((id) => id !== "daily-log");
       // If user selected all features, save null (= show all, no restriction).
       const toSave =
-        featureIds.length === ALL_FEATURE_IDS.length ? null : featureIds;
+        sanitizedFeatureIds.length === ONBOARDING_VISIBLE_FEATURE_IDS.length
+          ? null
+          : sanitizedFeatureIds;
       await saveEnabledFeatures(toSave);
     } catch {
       // Non-critical — feature selection failure shouldn't block navigation.
