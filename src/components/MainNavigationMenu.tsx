@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { ArrowDown, CheckCircle2, Loader2, Menu, Smartphone } from "lucide-react";
+import { ArrowDown, CheckCircle2, Menu, Share2, Smartphone } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Fragment, useCallback, useEffect, useState } from "react";
@@ -34,16 +34,87 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
   const [iosInstallOpen, setIosInstallOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [contactSuccess, setContactSuccess] = useState<string | null>(null);
-  const checkingInstall =
-    !installed && !canPromptInstall && !iosDevice && !installEligibilityKnown;
-  const installUnsupported =
-    !installed && !canPromptInstall && !iosDevice && installEligibilityKnown;
-  const showInstallRow = installed || canPromptInstall || needsIosInstallModal;
+  const [shareFeedback, setShareFeedback] = useState<string | null>(null);
+  const installHelpText =
+    !installed && !canPromptInstall && !needsIosInstallModal && installEligibilityKnown
+      ? "Open this in Chrome or Safari, then use Add to Home Screen."
+      : null;
 
   const openContactFromMenu = useCallback(() => {
     onClose();
     setContactOpen(true);
   }, [onClose]);
+
+  const copyWithExecCommand = useCallback((value: string): boolean => {
+    try {
+      const textarea = document.createElement("textarea");
+      textarea.value = value;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.top = "0";
+      textarea.style.left = "0";
+      textarea.style.opacity = "0";
+      textarea.style.pointerEvents = "none";
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      textarea.setSelectionRange(0, textarea.value.length);
+      const copied = document.execCommand("copy");
+      document.body.removeChild(textarea);
+      return copied;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  const handleShareApp = useCallback(async () => {
+    const appUrl = window.location.origin;
+    const shareData = {
+      title: SITE_NAME,
+      text: `Check out ${SITE_NAME}!`,
+      url: appUrl,
+    };
+
+    const canUseNativeShare =
+      typeof navigator.share === "function" &&
+      (typeof navigator.canShare !== "function" || navigator.canShare(shareData));
+
+    if (canUseNativeShare) {
+      try {
+        await navigator.share(shareData);
+        setShareFeedback("Thanks for sharing!");
+        return;
+      } catch (error) {
+        if (
+          error &&
+          typeof error === "object" &&
+          "name" in error &&
+          error.name === "AbortError"
+        ) {
+          return;
+        }
+        // Non-cancel native-share errors fall through to clipboard fallback.
+      }
+    }
+
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(appUrl);
+        setShareFeedback("Copied app link. Now you can share it by pasting the link.");
+        return;
+      }
+    } catch {
+      // Continue to legacy fallback.
+    }
+
+    if (copyWithExecCommand(appUrl)) {
+      setShareFeedback("Copied app link. Now you can share it by pasting the link.");
+      return;
+    }
+
+    window.prompt("Copy and share this app link:", appUrl);
+    setShareFeedback("Opened copy prompt. Copy the link and share it.");
+  }, [copyWithExecCommand]);
 
   useEffect(() => {
     if (!open) return;
@@ -70,6 +141,12 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
     const t = window.setTimeout(() => setContactSuccess(null), 5_000);
     return () => window.clearTimeout(t);
   }, [contactSuccess]);
+
+  useEffect(() => {
+    if (!shareFeedback) return;
+    const t = window.setTimeout(() => setShareFeedback(null), 4_000);
+    return () => window.clearTimeout(t);
+  }, [shareFeedback]);
 
   return (
     <>
@@ -113,69 +190,55 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
             </div>
           </div>
           <div className="px-3 pb-3 sm:px-4">
-            {showInstallRow ? (
-              <button
-                type="button"
-                disabled={installed}
-                onClick={() => {
-                  if (canPromptInstall) {
-                    onClose();
-                    void promptInstall();
-                    return;
-                  }
-                  if (needsIosInstallModal) {
-                    onClose();
-                    setIosInstallOpen(true);
-                  }
-                }}
-                className={clsx(
-                  "flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm transition active:scale-[0.99] motion-reduce:active:scale-100",
-                  installed
-                    ? "cursor-not-allowed border border-kal-border/60 bg-kal-card-muted/80 font-medium text-kal-muted opacity-80 shadow-none dark:border-white/10 dark:bg-white/[0.06]"
-                    : "border border-kal-accent/35 bg-kal-accent-soft font-semibold text-kal-accent-dark shadow-sm ring-1 ring-kal-accent/10 hover:border-kal-accent/50 hover:bg-[color-mix(in_srgb,var(--kal-accent-soft)_92%,var(--kal-accent))] hover:ring-kal-accent/20 dark:border-kal-accent/30 dark:bg-kal-accent-soft/15 dark:text-kal-accent dark:ring-white/5 dark:hover:bg-kal-accent-soft/25 dark:hover:border-kal-accent/45",
-                )}
-              >
-                {installed ? (
-                  <CheckCircle2
-                    className="h-[1.125rem] w-[1.125rem] shrink-0 text-kal-muted"
-                    strokeWidth={2.35}
-                  />
-                ) : needsIosInstallModal ? (
-                  <Smartphone className="h-[1.125rem] w-[1.125rem] shrink-0" strokeWidth={2.35} />
-                ) : (
-                  <ArrowDown className="h-[1.125rem] w-[1.125rem] shrink-0" strokeWidth={2.5} />
-                )}
-                {installed ? (
-                  <span className="font-bold tracking-tight">App Installed</span>
-                ) : canPromptInstall ? (
-                  <span>Install App in One Click</span>
-                ) : (
-                  <span>Install App to Home Screen</span>
-                )}
-              </button>
-            ) : checkingInstall ? (
-              <div
-                className="flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl border border-kal-border/60 bg-kal-card-muted/50 px-3 py-2.5 text-sm text-kal-muted dark:border-white/10 dark:bg-white/[0.04]"
-                aria-busy="true"
-                aria-live="polite"
-              >
-                <Loader2
-                  className="h-[1.125rem] w-[1.125rem] shrink-0 animate-spin"
-                  strokeWidth={2.25}
-                  aria-hidden
+            <button
+              type="button"
+              disabled={installed}
+              onClick={() => {
+                if (canPromptInstall) {
+                  onClose();
+                  void promptInstall();
+                  return;
+                }
+                if (needsIosInstallModal) {
+                  onClose();
+                  setIosInstallOpen(true);
+                }
+              }}
+              className={clsx(
+                "flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm transition active:scale-[0.99] motion-reduce:active:scale-100",
+                installed
+                  ? "cursor-not-allowed border border-kal-border/60 bg-kal-card-muted/80 font-medium text-kal-muted opacity-80 shadow-none dark:border-white/10 dark:bg-white/[0.06]"
+                  : "border border-kal-accent/35 bg-kal-accent-soft font-semibold text-kal-accent-dark shadow-sm ring-1 ring-kal-accent/10 hover:border-kal-accent/50 hover:bg-[color-mix(in_srgb,var(--kal-accent-soft)_92%,var(--kal-accent))] hover:ring-kal-accent/20 dark:border-kal-accent/30 dark:bg-kal-accent-soft/15 dark:text-kal-accent dark:ring-white/5 dark:hover:bg-kal-accent-soft/25 dark:hover:border-kal-accent/45",
+              )}
+            >
+              {installed ? (
+                <CheckCircle2
+                  className="h-[1.125rem] w-[1.125rem] shrink-0 text-kal-muted"
+                  strokeWidth={2.35}
                 />
-                <span>Checking install options…</span>
-              </div>
-            ) : installUnsupported ? (
-              <p className="rounded-xl border border-kal-border/80 bg-white/40 px-3 py-2 text-center text-xs text-kal-muted dark:border-white/10 dark:bg-white/5">
-                Install not supported in this browser.
+              ) : needsIosInstallModal ? (
+                <Smartphone className="h-[1.125rem] w-[1.125rem] shrink-0" strokeWidth={2.35} />
+              ) : (
+                <ArrowDown className="h-[1.125rem] w-[1.125rem] shrink-0" strokeWidth={2.5} />
+              )}
+              {installed ? (
+                <span className="font-bold tracking-tight">App Installed</span>
+              ) : canPromptInstall ? (
+                <span>Install App in One Click</span>
+              ) : (
+                <span>Install App to Home Screen</span>
+              )}
+            </button>
+            {installHelpText ? (
+              <p className="mt-1 rounded-xl border border-kal-border/80 bg-white/40 px-3 py-2 text-center text-xs text-kal-muted dark:border-white/10 dark:bg-white/5">
+                {installHelpText}
               </p>
             ) : null}
           </div>
         </div>
 
         <nav
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-1.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1 sm:px-2"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-1.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1 sm:px-2"
           aria-label="Main"
         >
           <ul className="space-y-px">
@@ -252,7 +315,25 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
                 )}
               </Fragment>
             ))}
-
+            <li className="list-none px-2.5 pb-0.5 pt-3 sm:pt-3.5">
+              <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-kal-muted">
+                Share
+              </p>
+            </li>
+            <li>
+              <button
+                type="button"
+                onClick={() => void handleShareApp()}
+                className="flex w-full min-h-[44px] touch-manipulation items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-left transition-colors hover:bg-kal-card-muted active:bg-kal-card-muted sm:gap-3"
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-kal-card-muted text-kal-muted sm:h-10 sm:w-10">
+                  <Share2 className="h-[1.125rem] w-[1.125rem] sm:h-5 sm:w-5" strokeWidth={2} />
+                </span>
+                <span className="min-w-0 flex-1 text-sm font-semibold leading-tight text-kal-text">
+                  Share App
+                </span>
+              </button>
+            </li>
           </ul>
         </nav>
       </div>
@@ -269,6 +350,10 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
     <ContactSupportSuccessToast
       message={contactSuccess}
       onDismiss={() => setContactSuccess(null)}
+    />
+    <ContactSupportSuccessToast
+      message={shareFeedback}
+      onDismiss={() => setShareFeedback(null)}
     />
     </>
   );

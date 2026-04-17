@@ -85,28 +85,36 @@ export default function manifest(): MetadataRoute.Manifest {
         short_name: "Daily Plan",
         description: "Today's live task list — check off, edit, and execute",
         url: "/daily-plan",
-        icons: [{ src: "/icon-192x192.png", sizes: "192x192", type: "image/png" }],
+        icons: [
+          { src: "/icon-maskable-192.png", sizes: "192x192", type: "image/png" },
+        ],
       },
       {
         name: "Syllabus Mastery Tracker",
         short_name: "Syllabus",
         description: "Track chapter mastery and topic coverage across your syllabus",
         url: "/syllabus",
-        icons: [{ src: "/icon-192x192.png", sizes: "192x192", type: "image/png" }],
+        icons: [
+          { src: "/icon-maskable-192.png", sizes: "192x192", type: "image/png" },
+        ],
       },
       {
         name: "Brain Yoga",
         short_name: "Brain Yoga",
         description: "Guided focus resets and breathing exercises between study blocks",
         url: "/meditation",
-        icons: [{ src: "/icon-192x192.png", sizes: "192x192", type: "image/png" }],
+        icons: [
+          { src: "/icon-maskable-192.png", sizes: "192x192", type: "image/png" },
+        ],
       },
       {
         name: "Notifications & Reminders",
         short_name: "Reminders",
         description: "Manage study reminders, push alerts, and daily nudges",
         url: "/settings",
-        icons: [{ src: "/icon-192x192.png", sizes: "192x192", type: "image/png" }],
+        icons: [
+          { src: "/icon-maskable-192.png", sizes: "192x192", type: "image/png" },
+        ],
       },
       // 5th shortcut — Android shows max 4 on long-press; My Plan is kept for completeness.
       {
@@ -114,7 +122,9 @@ export default function manifest(): MetadataRoute.Manifest {
         short_name: "My Plan",
         description: "View your subscription, AI credits, and plan details",
         url: "/my-plan",
-        icons: [{ src: "/icon-192x192.png", sizes: "192x192", type: "image/png" }],
+        icons: [
+          { src: "/icon-maskable-192.png", sizes: "192x192", type: "image/png" },
+        ],
       },
     ],
     icons: [
@@ -124,6 +134,13 @@ export default function manifest(): MetadataRoute.Manifest {
         sizes: "192x192",
         type: "image/png",
         purpose: "any",
+      },
+      // 192 maskable — shortcuts / contexts that apply the same mask as the launcher tile.
+      {
+        src: "/icon-maskable-192.png",
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "maskable",
       },
       // 512 maskable — used by Android adaptive icon engine (safe-zone cropping).
       {

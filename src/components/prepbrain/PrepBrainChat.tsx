@@ -122,7 +122,7 @@ export function PrepBrainChat() {
         )}
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 py-3 [-webkit-overflow-scrolling:touch] sm:px-5 sm:py-4">
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3 [-webkit-overflow-scrolling:touch] sm:px-5 sm:py-4">
         {messages.length === 0 && !isSending && (
           <div className="mx-auto max-w-lg space-y-5 text-center sm:space-y-6">
             <p className="text-sm leading-relaxed text-kal-muted">

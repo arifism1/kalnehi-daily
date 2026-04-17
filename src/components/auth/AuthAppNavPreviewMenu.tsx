@@ -176,7 +176,7 @@ export function AuthAppNavPreviewMenu() {
           </div>
 
           <nav
-            className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-1.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1 sm:px-2"
+            className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-1.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1 sm:px-2"
             aria-label="App areas after sign-in (preview)"
           >
             <ul className="space-y-px">

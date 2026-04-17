@@ -73,6 +73,7 @@ function pickPreferredGuidedVoice(synth: SpeechSynthesis): SpeechSynthesisVoice 
 }
 
 export function MeditationPage() {
+  type GuidanceLevel = "light" | "high";
   const userId = useAuthStore((s) => s.user?.id);
   const [rows, setRows] = useState<MeditationSessionRow[]>([]);
   const [activeType, setActiveType] = useState<MeditationTypeDef | null>(null);
@@ -80,6 +81,7 @@ export function MeditationPage() {
   const [remainingSeconds, setRemainingSeconds] = useState(300);
   const [running, setRunning] = useState(false);
   const [guided, setGuided] = useState(true);
+  const [guidanceLevel, setGuidanceLevel] = useState<GuidanceLevel>("high");
   const [sound, setSound] = useState<MeditationSound>("Rain");
   const [pendingNote, setPendingNote] = useState("");
   const [showNoteInput, setShowNoteInput] = useState(false);
@@ -237,9 +239,10 @@ export function MeditationPage() {
     const utter = new SpeechSynthesisUtterance(text);
     const voice = guidedVoiceRef.current ?? pickPreferredGuidedVoice(synth);
     if (voice) utter.voice = voice;
-    utter.rate = 0.84;
-    utter.pitch = 0.92;
-    utter.volume = 0.72;
+    // Slightly faster and brighter than before for a more natural coach-like cadence.
+    utter.rate = 0.9;
+    utter.pitch = 0.98;
+    utter.volume = 0.8;
     synth.speak(utter);
   }, [guided]);
 
@@ -282,6 +285,18 @@ export function MeditationPage() {
 
   useEffect(() => () => stopSession(), [stopSession]);
 
+  const getGuidedStepsForLevel = useCallback(
+    (steps: readonly string[]): string[] => {
+      if (guidanceLevel === "high") return [...steps];
+      if (steps.length <= 3) return [...steps];
+      const selected = steps.filter((_, index) => index % 2 === 0);
+      const last = steps[steps.length - 1];
+      if (last && selected[selected.length - 1] !== last) selected.push(last);
+      return selected;
+    },
+    [guidanceLevel],
+  );
+
   const saveCompletedSession = useCallback(async () => {
     if (!userId || !activeType) return null;
     if (elapsedSeconds <= 0) return null;
@@ -315,7 +330,7 @@ export function MeditationPage() {
     try {
       stopSession();
       await playEndingChime();
-      guidedSpeak("Beautiful work. Your Brain Yoga is complete, and your session is saved.");
+      guidedSpeak("Nice work. Session complete. Take this calm into your next block.");
       await saveCompletedSession();
     } finally {
       autoSaveInFlightRef.current = false;
@@ -334,7 +349,7 @@ export function MeditationPage() {
       setLastCompletedSessionId(null);
       setRunning(true);
       await startAmbient(sound);
-      guidedSpeak(`${type.title}. Let your breath find its rhythm, and begin when you feel ready.`);
+      guidedSpeak(`${type.title}. Settle in. One slow breath, then begin.`);
     },
     [guidedSpeak, sound, startAmbient],
   );
@@ -345,7 +360,7 @@ export function MeditationPage() {
 
   useEffect(() => {
     if (!running || !guided || !activeType || remainingSeconds <= 0) return;
-    const steps = activeType.voiceGuidedSteps;
+    const steps = getGuidedStepsForLevel(activeType.voiceGuidedSteps);
     const n = steps.length;
     if (n === 0) return;
     const total = durationSeconds;
@@ -360,6 +375,7 @@ export function MeditationPage() {
   }, [
     activeType,
     durationSeconds,
+    getGuidedStepsForLevel,
     guided,
     guidedSpeak,
     remainingSeconds,
@@ -493,6 +509,32 @@ export function MeditationPage() {
             >
               {guided ? "Guided audio (voice)" : "Silent mode"}
             </button>
+            {guided ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setGuidanceLevel("light")}
+                  className={`rounded-full px-3 py-1.5 text-xs ${
+                    guidanceLevel === "light"
+                      ? "bg-kal-accent-soft text-kal-accent ring-1 ring-kal-accent/40"
+                      : "kal-glass-subtle text-kal-muted"
+                  }`}
+                >
+                  Light guidance
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setGuidanceLevel("high")}
+                  className={`rounded-full px-3 py-1.5 text-xs ${
+                    guidanceLevel === "high"
+                      ? "bg-kal-accent-soft text-kal-accent ring-1 ring-kal-accent/40"
+                      : "kal-glass-subtle text-kal-muted"
+                  }`}
+                >
+                  High guidance
+                </button>
+              </div>
+            ) : null}
           </div>
           <div className="kal-glass-subtle rounded-xl border border-kal-border p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-kal-muted">Background sound</p>

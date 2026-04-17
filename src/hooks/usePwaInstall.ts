@@ -36,11 +36,33 @@ export function isStandalonePwa(): boolean {
   return readStandalone();
 }
 
+const INSTALL_STATE_STORAGE_KEY = "kalnehi-pwa-installed";
+
+function readStoredInstalled(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return localStorage.getItem(INSTALL_STATE_STORAGE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writeStoredInstalled(value: boolean) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(INSTALL_STATE_STORAGE_KEY, value ? "1" : "0");
+  } catch {
+    // Ignore storage write failures (private mode / quota / blocked storage).
+  }
+}
+
 /** Wait this long before showing "install not supported" so `beforeinstallprompt` can fire. */
 const INSTALL_ELIGIBILITY_PROBE_MS = 1_000;
 
 export function usePwaInstall() {
-  const [installed, setInstalled] = useState(false);
+  const [installed, setInstalled] = useState(() =>
+    typeof window === "undefined" ? false : readStandalone() || readStoredInstalled(),
+  );
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(
     null,
   );
@@ -50,32 +72,42 @@ export function usePwaInstall() {
     useState(false);
 
   useLayoutEffect(() => {
-    setInstalled(readStandalone());
+    setInstalled(readStandalone() || readStoredInstalled());
     setIosDevice(isIOSDevice());
   }, []);
 
   useEffect(() => {
-    const sync = () =>
+    const syncInstalledState = () => {
+      const standalone = readStandalone();
+      writeStoredInstalled(standalone);
       startTransition(() => {
-        setInstalled(readStandalone());
+        setInstalled(standalone);
       });
+    };
 
     const onBip = (e: Event) => {
       e.preventDefault();
       setDeferred(e as BeforeInstallPromptEvent);
+      startTransition(() => setInstalled(false));
+      writeStoredInstalled(false);
+      setInstallEligibilityKnown(true);
     };
 
     const onAppInstalled = () => {
       setDeferred(null);
+      writeStoredInstalled(true);
+      setInstallEligibilityKnown(true);
       startTransition(() => setInstalled(true));
     };
 
     const mq = window.matchMedia("(display-mode: standalone)");
-    const onDisplayModeChange = () => sync();
+    const onDisplayModeChange = () => syncInstalledState();
 
     window.addEventListener("beforeinstallprompt", onBip);
     window.addEventListener("appinstalled", onAppInstalled);
-    document.addEventListener("visibilitychange", sync);
+    window.addEventListener("focus", syncInstalledState);
+    window.addEventListener("pageshow", syncInstalledState);
+    document.addEventListener("visibilitychange", syncInstalledState);
 
     if (typeof mq.addEventListener === "function") {
       mq.addEventListener("change", onDisplayModeChange);
@@ -86,7 +118,9 @@ export function usePwaInstall() {
     return () => {
       window.removeEventListener("beforeinstallprompt", onBip);
       window.removeEventListener("appinstalled", onAppInstalled);
-      document.removeEventListener("visibilitychange", sync);
+      window.removeEventListener("focus", syncInstalledState);
+      window.removeEventListener("pageshow", syncInstalledState);
+      document.removeEventListener("visibilitychange", syncInstalledState);
       if (typeof mq.removeEventListener === "function") {
         mq.removeEventListener("change", onDisplayModeChange);
       } else {

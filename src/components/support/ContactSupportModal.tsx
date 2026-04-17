@@ -186,7 +186,7 @@ export function ContactSupportModal({
         </div>
 
         <form
-          className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-5 py-4"
+          className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-y-contain px-5 py-4"
           onSubmit={(e) => {
             e.preventDefault();
             void submit();
