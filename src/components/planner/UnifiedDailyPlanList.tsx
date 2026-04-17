@@ -6,13 +6,19 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   deleteDailyTask,
   insertDailyTask,
-  listDailyPlanTasksForDate,
   updateDailyTask,
   type DailyTaskView,
 } from "@/actions/dailyPlan";
+import {
+  clearDailyPlanTasksCache,
+  fetchDailyPlanTasksForClient,
+  fetchDailyTaskSourceRawTextForUndo,
+  peekDailyPlanTasksCache,
+  putDailyPlanTasksCache,
+} from "@/lib/fetchDailyPlanTasksForClient";
 import { DailyPlanMicrotopicPicker } from "@/components/planner/DailyPlanMicrotopicPicker";
 import { useUndoStore } from "@/store/useUndoStore";
-import { useTaskStore } from "@/store/useTaskStore";
+import { useTaskStore, type Microtopic } from "@/store/useTaskStore";
 import { findOverlappingTaskPairs } from "@/lib/dailyPlanOverlap";
 import { slotFromStartEnd, timeDbToInput } from "@/lib/dailyPlanTime";
 import { suggestSyllabusIdFromTitle } from "@/lib/suggestDailyTaskSyllabus";
@@ -42,6 +48,8 @@ function SourceBadge({ source }: { source: string }) {
 
 type EditSheetProps = {
   task: DailyTaskView;
+  /** Open the syllabus section immediately (e.g. from list “Link to syllabus”). */
+  initialSyllabusExpanded?: boolean;
   onClose: () => void;
   onSaved: (patch: Partial<DailyTaskView>) => void;
 };
@@ -54,7 +62,30 @@ function truncateEditSyllabusSummary(s: string, max: number): string {
   return `${t.slice(0, max - 1)}…`;
 }
 
-function DailyTaskEditSheet({ task, onClose, onSaved }: EditSheetProps) {
+/** Prefer server embed; fall back to client syllabus catalog so links show after save. */
+function resolveSyllabusForListRow(
+  t: DailyTaskView,
+  catalog: Record<string, Microtopic>,
+): DailyTaskView["syllabus_master"] {
+  if (t.syllabus_master) return t.syllabus_master;
+  const sid = t.syllabus_master_id?.trim() ?? "";
+  if (!sid) return null;
+  const row = catalog[sid];
+  if (!row) return null;
+  return {
+    id: row.id,
+    subject: row.subject,
+    chapter: row.chapter,
+    microtopic: row.microtopic,
+  };
+}
+
+function DailyTaskEditSheet({
+  task,
+  initialSyllabusExpanded = false,
+  onClose,
+  onSaved,
+}: EditSheetProps) {
   const syllabusById = useTaskStore((s) => s.microtopics);
   const microtopicsList = useMemo(
     () => Object.values(syllabusById),
@@ -84,8 +115,8 @@ function DailyTaskEditSheet({ task, onClose, onSaved }: EditSheetProps) {
     setStartInput(task.time_start ? timeDbToInput(task.time_start) : "");
     setEndInput(task.time_end ? timeDbToInput(task.time_end) : "");
     setSyllabusMasterId(task.syllabus_master_id ?? null);
-    setSyllabusSectionExpanded(false);
-  }, [task]);
+    setSyllabusSectionExpanded(initialSyllabusExpanded);
+  }, [task, initialSyllabusExpanded]);
 
   const handleSave = async () => {
     const trimmed = title.trim();
@@ -426,25 +457,41 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [editingTask, setEditingTask] = useState<DailyTaskView | null>(null);
+  const [editing, setEditing] = useState<{
+    task: DailyTaskView;
+    initialSyllabusExpanded: boolean;
+  } | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const load = useCallback(
     async (opts?: { silent?: boolean }) => {
       const silent = opts?.silent === true;
+      const cached = peekDailyPlanTasksCache(planDate);
+
       if (!silent) {
-        setLoading(true);
-        setTasks([]);
+        if (cached) {
+          setTasks(cached.tasks);
+          setLoading(false);
+        } else {
+          setLoading(true);
+          setTasks([]);
+        }
+        setError(null);
       }
-      setError(null);
+
       try {
-        const res = await listDailyPlanTasksForDate(planDate);
-        if (res.ok) setTasks(res.tasks);
-        else setError(res.error);
+        const res = await fetchDailyPlanTasksForClient(planDate);
+        if (res.ok) {
+          setTasks(res.tasks);
+          putDailyPlanTasksCache(planDate, res.planId, res.tasks);
+          if (!silent) setError(null);
+        } else if (!silent && !cached) {
+          setError(res.error);
+        }
       } catch {
-        setError("Could not load plan.");
+        if (!silent && !cached) setError("Could not load plan.");
       } finally {
-        if (!silent) setLoading(false);
+        if (!silent && !cached) setLoading(false);
       }
     },
     [planDate],
@@ -455,7 +502,10 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
   }, [load]);
 
   useEffect(() => {
-    const onSync = () => void load({ silent: true });
+    const onSync = () => {
+      clearDailyPlanTasksCache();
+      void load({ silent: true });
+    };
     window.addEventListener("kalnehi-daily-plan-synced", onSync);
     return () => window.removeEventListener("kalnehi-daily-plan-synced", onSync);
   }, [load]);
@@ -490,7 +540,8 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
   const deleteTaskNow = async (t: DailyTaskView) => {
     setDeletingId(t.id);
     setTasks((prev) => prev.filter((x) => x.id !== t.id));
-    const snapshot = t;
+    const sourceRaw = await fetchDailyTaskSourceRawTextForUndo(t.id);
+    const snapshot: DailyTaskView = { ...t, source_raw_text: sourceRaw };
     const res = await deleteDailyTask(t.id);
     setDeletingId(null);
     if (!res.ok) {
@@ -601,9 +652,9 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
           <div className="kal-glass-subtle rounded-xl border border-dashed border-white/35 py-14 text-center dark:border-white/15">
             <p className="text-sm font-semibold text-kal-text">Nothing here yet</p>
             <p className="mt-1 text-xs text-kal-muted">
-              Add tasks via{" "}
+              Add tasks with{" "}
               <span className="font-bold text-kal-text">Dictate My Day</span> or{" "}
-              <span className="font-bold text-kal-text">Self Type</span> below.
+              <span className="font-bold text-kal-text">Self Type</span> for this date.
             </p>
           </div>
         ) : (
@@ -617,10 +668,19 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
                 const st = t.time_start ? timeDbToInput(t.time_start) : "";
                 const et = t.time_end ? timeDbToInput(t.time_end) : "";
                 const overlap = overlapIds.has(t.id);
-                  const done = isDoneStatus(t.status);
-                  const skipped = isSkippedStatus(t.status);
-                  const completed = done || skipped;
-                  const isDeleting = deletingId === t.id;
+                const done = isDoneStatus(t.status);
+                const skipped = isSkippedStatus(t.status);
+                const completed = done || skipped;
+                const isDeleting = deletingId === t.id;
+                const resolvedSyllabus = resolveSyllabusForListRow(
+                  t,
+                  microtopicsById,
+                );
+                const sid = t.syllabus_master_id?.trim() ?? "";
+                const showSyllabusLinkCta =
+                  !skipped && !done && resolvedSyllabus == null;
+                const syllabusCtaLabel =
+                  sid && !resolvedSyllabus ? "Fix syllabus link" : "Link to syllabus";
 
                 return (
                   <li
@@ -664,46 +724,72 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
                       </button>
 
                       {/* Task body — title & time first, then badges */}
-                      <button
-                        type="button"
-                        disabled={isDeleting || skipped}
-                        onClick={() => setEditingTask(t)}
-                        className="min-w-0 flex-1 text-left disabled:pointer-events-none"
-                        aria-label={`Edit "${t.title}"`}
-                      >
-                        <p
-                          className={`text-sm font-semibold leading-snug [overflow-wrap:anywhere] ${
-                            done
-                              ? "text-kal-muted line-through decoration-kal-muted/60"
-                              : skipped
-                                ? "text-kal-muted/70 line-through decoration-kal-muted/40"
-                                : "text-kal-text"
-                          }`}
+                      <div className="min-w-0 flex-1">
+                        <button
+                          type="button"
+                          disabled={isDeleting || skipped}
+                          onClick={() =>
+                            setEditing({
+                              task: t,
+                              initialSyllabusExpanded: false,
+                            })
+                          }
+                          className="w-full text-left disabled:pointer-events-none"
+                          aria-label={`Edit "${t.title}"`}
                         >
-                          {t.title}
-                        </p>
-                        {t.syllabus_master_id && t.syllabus_master ? (
-                          <p className="mt-1 text-[10px] font-medium leading-snug text-kal-muted/90 [overflow-wrap:anywhere]">
-                            {t.syllabus_master.chapter} · {t.syllabus_master.microtopic}
+                          <p
+                            className={`text-sm font-semibold leading-snug [overflow-wrap:anywhere] ${
+                              done
+                                ? "text-kal-muted line-through decoration-kal-muted/60"
+                                : skipped
+                                  ? "text-kal-muted/70 line-through decoration-kal-muted/40"
+                                  : "text-kal-text"
+                            }`}
+                          >
+                            {t.title}
                           </p>
-                        ) : null}
-                        {(st || et) && (
-                          <p className="mt-1 text-xs font-medium text-kal-accent-dark dark:text-kal-accent">
-                            {formatIstSlotRange12h(st, et)}
-                          </p>
-                        )}
-                        {!st && !et && t.time_slot ? (
-                          <p className="mt-1 text-xs text-kal-muted">{t.time_slot}</p>
-                        ) : null}
-                        <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                          <SourceBadge source={t.source} />
-                          {overlap ? (
-                            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
-                              Overlap
-                            </span>
+                          {resolvedSyllabus ? (
+                            <p className="mt-1 text-[10px] font-medium leading-snug text-kal-muted/90 [overflow-wrap:anywhere]">
+                              {resolvedSyllabus.chapter} · {resolvedSyllabus.microtopic}
+                            </p>
                           ) : null}
-                        </div>
-                      </button>
+                          {(st || et) && (
+                            <p className="mt-1 text-xs font-medium text-kal-accent-dark dark:text-kal-accent">
+                              {formatIstSlotRange12h(st, et)}
+                            </p>
+                          )}
+                          {!st && !et && t.time_slot ? (
+                            <p className="mt-1 text-xs text-kal-muted">{t.time_slot}</p>
+                          ) : null}
+                          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                            <SourceBadge source={t.source} />
+                            {overlap ? (
+                              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
+                                Overlap
+                              </span>
+                            ) : null}
+                          </div>
+                        </button>
+                        {showSyllabusLinkCta ? (
+                          <button
+                            type="button"
+                            disabled={isDeleting}
+                            onClick={() =>
+                              setEditing({
+                                task: t,
+                                initialSyllabusExpanded: true,
+                              })
+                            }
+                            className="mt-2 inline-flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-xl border border-kal-border/60 bg-kal-card-muted/40 px-3 py-2 text-xs font-semibold text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-accent disabled:opacity-40 sm:w-auto sm:justify-start"
+                          >
+                            <Link2
+                              className="h-3.5 w-3.5 shrink-0 text-kal-accent/80"
+                              aria-hidden
+                            />
+                            {syllabusCtaLabel}
+                          </button>
+                        ) : null}
+                      </div>
 
                       {/*
                        * Action buttons — compact, anchored right
@@ -712,7 +798,12 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
                         {/* Edit */}
                         <button
                           type="button"
-                          onClick={() => setEditingTask(t)}
+                          onClick={() =>
+                            setEditing({
+                              task: t,
+                              initialSyllabusExpanded: false,
+                            })
+                          }
                           disabled={isDeleting}
                           className="flex h-8 w-8 items-center justify-center rounded-lg text-kal-muted/80 transition-colors hover:bg-kal-card-muted hover:text-kal-accent disabled:opacity-40 sm:h-7 sm:w-7"
                           aria-label="Edit task"
@@ -744,12 +835,14 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
       </section>
 
       {/* Edit sheet */}
-      {editingTask ? (
+      {editing ? (
         <DailyTaskEditSheet
-          task={editingTask}
-          onClose={() => setEditingTask(null)}
+          key={`${editing.task.id}-${editing.initialSyllabusExpanded}`}
+          task={editing.task}
+          initialSyllabusExpanded={editing.initialSyllabusExpanded}
+          onClose={() => setEditing(null)}
           onSaved={(patch) => {
-            handleEditSaved(editingTask.id, patch);
+            handleEditSaved(editing.task.id, patch);
           }}
         />
       ) : null}

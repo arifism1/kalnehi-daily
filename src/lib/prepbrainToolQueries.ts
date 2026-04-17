@@ -8,6 +8,7 @@ import {
   resolveSyllabusExam,
   syllabusCatalogExamName,
 } from "@/lib/examProfile";
+import { fetchSyllabusMasterRowsForExam } from "@/lib/syllabusMasterQuery";
 import type { Database } from "@/types/supabase";
 
 /** Minimal profile shape used by syllabus/marks tool queries. Pass this in to avoid a redundant DB round-trip. */
@@ -16,6 +17,8 @@ export type PrepbrainPrefetchedProfile = {
   target_exam?: string | null;
   /** Stored as JSON in Supabase — `parseCuetDomainSubjectsJson` handles all shapes. */
   cuet_domain_subjects?: unknown;
+  /** First optional paper base name for UPSC CSE Mains RPC parity. */
+  upsc_optional_subjects?: unknown;
 };
 
 type MarksIntelligenceRow = {
@@ -69,7 +72,7 @@ export async function fetchSyllabusSubjectCompletion(
   if (!profile) {
     const { data, error: profileErr } = await admin
       .from("user_profiles")
-      .select("primary_exam, target_exam, cuet_domain_subjects")
+      .select("primary_exam, target_exam, cuet_domain_subjects, upsc_optional_subjects")
       .eq("user_id", userId)
       .maybeSingle();
     if (profileErr) throw profileErr;
@@ -82,19 +85,27 @@ export async function fetchSyllabusSubjectCompletion(
     return { exam_label: examLabel, overall_completion_percent: 0, by_subject: [] };
   }
 
-  const { data: syllabusRows, error: syllabusErr } = await admin
-    .from("syllabus_master")
-    .select("id, subject")
-    .eq("exam_name", examKey);
-  if (syllabusErr) throw syllabusErr;
+  const upscOptional = Array.isArray(profile?.upsc_optional_subjects)
+    ? (profile.upsc_optional_subjects[0]?.trim() || null)
+    : null;
+
+  const fullRows = await fetchSyllabusMasterRowsForExam(
+    admin,
+    examKey,
+    upscOptional,
+  );
+  const syllabusRows = fullRows.map((r) => ({
+    id: r.id,
+    subject: r.subject,
+  }));
 
   const domains = parseCuetDomainSubjectsJson(profile?.cuet_domain_subjects ?? null);
   const filtered =
     examKey === "CUET" && domains.length > 0
-      ? (syllabusRows ?? []).filter((r) =>
+      ? syllabusRows.filter((r) =>
           syllabusSubjectInCuetDomains(r.subject, domains),
         )
-      : syllabusRows ?? [];
+      : syllabusRows;
 
   if (filtered.length === 0) {
     return { exam_label: examLabel, overall_completion_percent: 0, by_subject: [] };

@@ -29,6 +29,7 @@ import {
   coalesceProgressByCanonicalIds,
   dedupeMergedSyllabusRowsByPlacement,
 } from "@/lib/syllabusDedupe";
+import { fetchUserMicrotopicProgressForSyllabusIds } from "@/lib/fetchUserMicrotopicProgressForSyllabusIds";
 import {
   mergeSyllabusWithUserCustomizations,
   type MergedSyllabusRow,
@@ -41,6 +42,7 @@ import {
 } from "@/lib/syllabusRollup";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { KALNEHI_PROFILE_UPDATED_EVENT } from "@/lib/profileEvents";
+import { fetchSyllabusMasterRowsForExam } from "@/lib/syllabusMasterQuery";
 import {
   isUpscCseMainsExam,
   shouldKeepUpscMainsRow,
@@ -191,29 +193,12 @@ export function useSyllabusTracker() {
         }
         setCatalogExamKey(examKey);
 
-        const syllabusQuery = isUpscCseMainsExam(examKey)
-          ? supabase.rpc("upsc_cse_mains_syllabus_rows", {
-              p_optional: optionalSubject ?? null,
-            })
-          : supabase
-              .from("syllabus_master")
-              .select("*")
-              .eq("exam_name", examKey)
-              .order("subject")
-              .order("chapter")
-              .order("microtopic");
-
-        const [
-          { data: syllabus, error: sErr },
-          { data: prog, error: pErr },
-          { data: customs, error: cuErr },
-          { data: marksOverrides, error: moErr },
-        ] = await Promise.all([
-          syllabusQuery,
-          supabase
-            .from("user_microtopic_progress")
-            .select("syllabus_master_id, status")
-            .eq("user_id", userId),
+        const [syllabus, customsRes, marksRes] = await Promise.all([
+          fetchSyllabusMasterRowsForExam(
+            supabase,
+            examKey,
+            optionalSubject ?? null,
+          ),
           supabase
             .from("user_syllabus_customizations")
             .select("*")
@@ -226,13 +211,13 @@ export function useSyllabusTracker() {
             .eq("exam_name", examKey),
         ]);
 
-        if (sErr) throw sErr;
-        if (pErr) throw pErr;
+        const { data: customs, error: cuErr } = customsRes;
+        const { data: marksOverrides, error: moErr } = marksRes;
         if (cuErr) throw cuErr;
         if (moErr) throw moErr;
 
         let merged = mergeSyllabusWithUserCustomizations(
-          (syllabus ?? []) as SyllabusRow[],
+          syllabus,
           customs ?? [],
           examKey,
         );
@@ -255,9 +240,17 @@ export function useSyllabusTracker() {
           merged,
           (marksOverrides ?? []) as SyllabusMarksOverrideRow[],
         );
+        const syllabusIdsForProgress = sorted.map((r) =>
+          normalizeSyllabusMasterId(r.id),
+        );
+        const prog = await fetchUserMicrotopicProgressForSyllabusIds(
+          supabase,
+          userId,
+          syllabusIdsForProgress,
+        );
         const { rows: deduped, droppedToCanonical } =
           dedupeMergedSyllabusRowsByPlacement(sorted);
-        const fullMap = progressRowsToMap(prog ?? []);
+        const fullMap = progressRowsToMap(prog);
         const fullMapCoalesced = coalesceProgressByCanonicalIds(
           fullMap,
           droppedToCanonical,

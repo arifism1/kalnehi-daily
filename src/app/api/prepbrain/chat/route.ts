@@ -359,7 +359,7 @@ export async function POST(request: Request) {
   const { data: profile, error: profileErr } = await admin
     .from("user_profiles")
     .select(
-      "subscription_status, subscription_end_date, subscription_tier, prepbrain_tokens_used, prepbrain_tokens_month, primary_exam, target_exam, cuet_domain_subjects",
+      "subscription_status, subscription_end_date, subscription_tier, prepbrain_tokens_used, prepbrain_tokens_month, primary_exam, target_exam, cuet_domain_subjects, upsc_optional_subjects",
     )
     .eq("user_id", user.id)
     .maybeSingle();
@@ -448,6 +448,7 @@ export async function POST(request: Request) {
     primary_exam: (profileAny.primary_exam as string | null | undefined) ?? null,
     target_exam: (profileAny.target_exam as string | null | undefined) ?? null,
     cuet_domain_subjects: (profileAny.cuet_domain_subjects as string | null | undefined) ?? null,
+    upsc_optional_subjects: profileAny.upsc_optional_subjects ?? null,
   };
 
   // Pre-fetch syllabus stats once if multiple syllabus tools need them.

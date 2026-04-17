@@ -9,6 +9,10 @@ import { USER_ERROR } from "@/lib/userFacingErrors";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { normalizeSyllabusMasterId } from "@/lib/syllabusIds";
 import {
+  assertSyllabusBelongsToUserExam,
+  SyllabusExamScopeError,
+} from "@/lib/syllabusMasterWriteGuards";
+import {
   isMicrotopicProgressStatus,
   type MicrotopicProgressStatus,
 } from "@/lib/syllabusConstants";
@@ -49,6 +53,15 @@ export async function bulkUpdateChapterMicrotopics(
 
     if (authErr || !user) {
       return { ok: false, error: USER_ERROR.session };
+    }
+
+    try {
+      await assertSyllabusBelongsToUserExam(supabase, user.id, syllabusMasterIds);
+    } catch (e) {
+      if (e instanceof SyllabusExamScopeError) {
+        return { ok: false, error: USER_ERROR.tryAgain };
+      }
+      throw e;
     }
 
     const status = newStatus as MicrotopicProgressStatus;
@@ -101,6 +114,15 @@ export async function updateMicrotopicStatus(
     if (!user) {
       console.error("[syllabus] updateMicrotopicStatus: no user session");
       return { ok: false, error: USER_ERROR.session };
+    }
+
+    try {
+      await assertSyllabusBelongsToUserExam(supabase, user.id, [normalizedId]);
+    } catch (e) {
+      if (e instanceof SyllabusExamScopeError) {
+        return { ok: false, error: USER_ERROR.tryAgain };
+      }
+      throw e;
     }
 
     const status = newStatus as MicrotopicProgressStatus;

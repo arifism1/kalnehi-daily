@@ -3,14 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { DOUBT_GENERAL_SUBJECT } from "@/lib/doubtSubjects";
-import {
-  resolveSyllabusExam,
-  syllabusCatalogExamName,
-} from "@/lib/examProfile";
-import {
-  parseCuetDomainSubjectsJson,
-  syllabusSubjectInCuetDomains,
-} from "@/lib/cuetDomainSubjects";
+import { fetchDoubtVoiceTagSyllabusRows } from "@/lib/doubtVoiceTagSyllabus";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { toUserFacingMessage } from "@/lib/userFacingErrors";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -36,43 +29,11 @@ export function useDoubtSyllabusSubjects() {
     setError(null);
     try {
       const supabase = getSupabaseBrowserClient();
-      const { data: profile, error: profileErr } = await supabase
-        .from("user_profiles")
-        .select("primary_exam, target_exam, cuet_domain_subjects")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (profileErr) throw profileErr;
-
-      const examLabel = resolveSyllabusExam(profile);
-      const examKey = examLabel ? syllabusCatalogExamName(examLabel) : null;
-      if (!examKey) {
-        setSubjects([DOUBT_GENERAL_SUBJECT]);
-        return;
-      }
-
-      const { data: rows, error: sErr } = await supabase
-        .from("syllabus_master")
-        .select("subject")
-        .eq("exam_name", examKey);
-
-      if (sErr) throw sErr;
-
-      const domains = parseCuetDomainSubjectsJson(
-        profile?.cuet_domain_subjects,
-      );
-      let list = rows ?? [];
-      if (examKey === "CUET" && domains.length > 0) {
-        list = list.filter((r) =>
-          syllabusSubjectInCuetDomains(r.subject, domains),
-        );
-      } else if (examKey === "CUET") {
-        list = [];
-      }
+      const { rows } = await fetchDoubtVoiceTagSyllabusRows(supabase, userId);
 
       const uniq = [
         ...new Set(
-          list
+          rows
             .map((r) => r.subject?.trim())
             .filter((s): s is string => Boolean(s)),
         ),

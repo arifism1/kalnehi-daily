@@ -4,6 +4,11 @@ import { revalidatePath } from "next/cache";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { normalizeSyllabusMasterId } from "@/lib/syllabusIds";
+import {
+  assertSyllabusBelongsToUserExam,
+  getUserCatalogExamContext,
+  SyllabusExamScopeError,
+} from "@/lib/syllabusMasterWriteGuards";
 import { USER_ERROR } from "@/lib/userFacingErrors";
 import { formatSupabaseError } from "@/lib/supabase";
 
@@ -34,6 +39,20 @@ export async function upsertSyllabusMarksOverride(
     }
 
     const sid = normalizeSyllabusMasterId(payload.syllabusMasterId);
+
+    const ctx = await getUserCatalogExamContext(supabase, user.id);
+    if (!ctx || ctx.examKey !== payload.examName.trim()) {
+      return { ok: false, error: USER_ERROR.tryAgain };
+    }
+    try {
+      await assertSyllabusBelongsToUserExam(supabase, user.id, [sid]);
+    } catch (e) {
+      if (e instanceof SyllabusExamScopeError) {
+        return { ok: false, error: USER_ERROR.tryAgain };
+      }
+      throw e;
+    }
+
     const allNull =
       payload.marks_2025 == null &&
       payload.marks_2024 == null &&

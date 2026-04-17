@@ -3,16 +3,32 @@
 import { addDays, format, parseISO } from "date-fns";
 import { ArrowLeft, CalendarDays, Mic, Type, Zap } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { UnifiedDailyPlanList } from "@/components/planner/UnifiedDailyPlanList";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
+import { usePlannerDateMidnightRollover } from "@/hooks/usePlannerDateMidnightRollover";
+import {
+  dailyPlanLiveHeading,
+  dailyPlanPageHeroTitle,
+} from "@/lib/dailyPlanUiDate";
 import { useAuthStore } from "@/store/useAuthStore";
 
 export function DailyPlanPageContent() {
   const user = useAuthStore((s) => s.user);
   const today = useCalendarDate();
   const [logDate, setLogDate] = useState(today);
+
+  usePlannerDateMidnightRollover(today, setLogDate);
+
+  const heroTitle = useMemo(
+    () => dailyPlanPageHeroTitle(logDate, today),
+    [logDate, today],
+  );
+  const listTitle = useMemo(
+    () => dailyPlanLiveHeading(logDate, today),
+    [logDate, today],
+  );
 
   if (!user) {
     return (
@@ -44,7 +60,7 @@ export function DailyPlanPageContent() {
         <div className="flex flex-wrap items-center gap-2">
           <Zap className="h-5 w-5 text-kal-accent" aria-hidden />
           <h1 className="kal-feature-title">
-            Today&apos;s plan{" "}
+            {heroTitle}{" "}
             <span className="text-sm font-semibold text-kal-muted sm:text-base">
               (live)
             </span>
@@ -99,19 +115,19 @@ export function DailyPlanPageContent() {
         </label>
       </div>
 
-      <UnifiedDailyPlanList planDate={logDate} />
+      <UnifiedDailyPlanList planDate={logDate} title={listTitle} />
 
       {/* Add tasks via source pages */}
       <div className="mt-6 flex flex-wrap justify-center gap-3">
         <Link
-          href="/dictate-day"
+          href={`/dictate-day?planDate=${encodeURIComponent(logDate)}`}
           className="inline-flex items-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-2.5 text-sm font-bold text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-text"
         >
           <Mic className="h-4 w-4 text-kal-accent" aria-hidden />
           Dictate My Day
         </Link>
         <Link
-          href="/self-type-day"
+          href={`/self-type-day?planDate=${encodeURIComponent(logDate)}`}
           className="inline-flex items-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-2.5 text-sm font-bold text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-text"
         >
           <Type className="h-4 w-4 text-kal-accent" aria-hidden />

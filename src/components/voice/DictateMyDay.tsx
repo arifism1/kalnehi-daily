@@ -2,7 +2,7 @@
 
 import { addDays, format, parseISO } from "date-fns";
 import { Loader2, Mic, Volume2 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { insertDailyTask } from "@/actions/dailyPlan";
 import { saveRawVoiceNote } from "@/actions/voiceDictate";
@@ -13,6 +13,12 @@ import {
 } from "@/components/planner/DailyPlanPreviewStaging";
 import { UnifiedDailyPlanList } from "@/components/planner/UnifiedDailyPlanList";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
+import { usePlannerDateMidnightRollover } from "@/hooks/usePlannerDateMidnightRollover";
+import {
+  addToPlanButtonLabel,
+  dailyPlanLiveHeading,
+  isValidPlanDateString,
+} from "@/lib/dailyPlanUiDate";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
 import { slotFromStartEnd } from "@/lib/dailyPlanTime";
 import type { VoiceDraftTask } from "@/lib/voiceDraftFromGroq";
@@ -78,10 +84,27 @@ function scrollDictateLive(): void {
   }, 200);
 }
 
-export function DictateMyDay() {
+type DictateMyDayProps = {
+  /** Deep link from `/dictate-day?planDate=yyyy-MM-dd` (also accepts legacy `date`). */
+  urlInitialPlanDate?: string | null;
+};
+
+export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
   const user = useAuthStore((s) => s.user);
   const today = useCalendarDate();
-  const [logDate, setLogDate] = useState(today);
+  const [logDate, setLogDate] = useState(() =>
+    urlInitialPlanDate && isValidPlanDateString(urlInitialPlanDate)
+      ? urlInitialPlanDate
+      : today,
+  );
+  const addPlanLabel = useMemo(
+    () => addToPlanButtonLabel(logDate, today),
+    [logDate, today],
+  );
+  const livePlanTitle = useMemo(
+    () => dailyPlanLiveHeading(logDate, today),
+    [logDate, today],
+  );
   const [lang, setLang] = useState("en-IN");
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -105,8 +128,12 @@ export function DictateMyDay() {
   }, [logDate]);
 
   useEffect(() => {
-    setLogDate(today);
-  }, [today]);
+    if (urlInitialPlanDate && isValidPlanDateString(urlInitialPlanDate)) {
+      setLogDate(urlInitialPlanDate);
+    }
+  }, [urlInitialPlanDate]);
+
+  usePlannerDateMidnightRollover(today, setLogDate);
 
   const sendTranscript = useCallback(
     async (transcript: string, occurredAt: string) => {
@@ -363,7 +390,7 @@ export function DictateMyDay() {
           ))}
         </div>
         <label className="block text-[11px] font-medium text-kal-muted">
-          Log date
+          Plan date
           <input
             type="date"
             value={logDate}
@@ -450,8 +477,9 @@ export function DictateMyDay() {
           <span className="text-xs text-kal-muted">{logDate}</span>
         </div>
         <p className="mt-1 text-xs leading-relaxed text-kal-muted">
-          Parsed lines land here first. Edit times or names, then add to your plan — the
-          live list below is shared with typed entries.
+          Parsed lines land here first. Edit times or names, then use{" "}
+          <span className="font-semibold text-kal-text-secondary">{addPlanLabel}</span> — the
+          live list below shows the same date ({logDate}) and stays in sync with Self Type.
         </p>
         <DailyPlanPreviewStaging
           sectionId="dictate-staging"
@@ -468,7 +496,12 @@ export function DictateMyDay() {
               ? "Listening…"
               : "Processing your transcript into tasks…"
           }
+          excludeFromSaveHint="Exclude this row from the next save"
         />
+        <p className="mt-2 text-[11px] leading-snug text-kal-muted">
+          Tip: changing subject or chapter clears the microtopic link until you pick a
+          microtopic again.
+        </p>
         {error ? (
           <p
             className="mt-2 text-xs text-[var(--kal-danger-text)]"
@@ -493,7 +526,7 @@ export function DictateMyDay() {
                 Adding…
               </>
             ) : (
-              "Add to Today's Plan"
+              addPlanLabel
             )}
           </button>
         </div>
@@ -503,7 +536,7 @@ export function DictateMyDay() {
         <UnifiedDailyPlanList
           key={planListKey}
           planDate={logDate}
-          title="Today's plan (live)"
+          title={livePlanTitle}
         />
       </div>
 
