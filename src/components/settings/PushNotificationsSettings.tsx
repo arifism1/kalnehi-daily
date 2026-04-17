@@ -311,8 +311,8 @@ export function PushNotificationsSettings({
       tokenRef.current = token;
       localStorage.setItem(LS_ENABLED, "1");
       setPushOn(true);
-      setMessage("Push token refreshed.");
-      showToast("Token refreshed.");
+      setMessage("Push registration refreshed.");
+      showToast("Push registration refreshed.");
     } catch (e) {
       console.error(e);
       setMessage("Could not refresh the token. Try again.");
@@ -436,21 +436,6 @@ export function PushNotificationsSettings({
             />
           </div>
 
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => void refreshToken()}
-              disabled={busy || refreshBusy}
-              className="inline-flex min-h-[40px] items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 text-sm font-medium text-kal-text backdrop-blur-sm transition-colors hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <RefreshCw
-                className={clsx("h-4 w-4", refreshBusy && "animate-spin")}
-                aria-hidden
-              />
-              {refreshBusy ? "Refreshing…" : "Refresh token"}
-            </button>
-          </div>
-
           {clientIsIos ? (
             <p className="mt-2 text-[11px] leading-relaxed text-kal-text-secondary">
               {IOS_PUSH_HINT}
@@ -459,15 +444,29 @@ export function PushNotificationsSettings({
 
           {showDevTest && (
             <div className="mt-4 border-t border-white/10 pt-4 dark:border-white/10">
-              <button
-                type="button"
-                onClick={() => void sendTest()}
-                disabled={testBusy || !pushOn}
-                className="inline-flex min-h-[40px] items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 text-sm font-medium text-kal-text backdrop-blur-sm transition-colors hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <Send className="h-4 w-4" aria-hidden />
-                {testBusy ? "Sending…" : "Send test notification"}
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => void refreshToken()}
+                  disabled={busy || refreshBusy}
+                  className="inline-flex min-h-[40px] items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 text-sm font-medium text-kal-text backdrop-blur-sm transition-colors hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <RefreshCw
+                    className={clsx("h-4 w-4", refreshBusy && "animate-spin")}
+                    aria-hidden
+                  />
+                  {refreshBusy ? "Refreshing…" : "Refresh push registration"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void sendTest()}
+                  disabled={testBusy || !pushOn}
+                  className="inline-flex min-h-[40px] items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 text-sm font-medium text-kal-text backdrop-blur-sm transition-colors hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Send className="h-4 w-4" aria-hidden />
+                  {testBusy ? "Sending…" : "Send test notification"}
+                </button>
+              </div>
               <p className="mt-2 text-[11px] text-kal-text-secondary">
                 Admin / developer: calls{" "}
                 <span className="font-mono">/api/fcm/test</span>. Use{" "}

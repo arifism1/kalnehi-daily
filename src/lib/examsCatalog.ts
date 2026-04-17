@@ -103,7 +103,8 @@ export function resolveInitialTargetExamName(
 
 /**
  * Used when `exams` table is empty or fetch fails — keep in sync with catalog
- * migrations (e.g. `20260409120000_exams_catalog.sql`, `20260415120000_exam_catalog_expansion.sql`).
+ * migrations (e.g. `20260409120000_exams_catalog.sql`, `20260415120000_exam_catalog_expansion.sql`,
+ * `20260418150000_exams_ssc_banking_catalog.sql`, `20260419120000_exams_ssc_banking_max_score_official.sql`).
  */
 export const EXAMS_CATALOG_FALLBACK: ExamCatalogRow[] = [
   {
@@ -265,6 +266,46 @@ export const EXAMS_CATALOG_FALLBACK: ExamCatalogRow[] = [
     display_name: "NDA",
     sort_order: 53,
     max_score: 900,
+    multi_subject: false,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "00000000-0000-4000-8000-000000000054",
+    exam_name: "SSC CHSL",
+    display_name: "SSC CHSL",
+    sort_order: 54,
+    /** Tier-II CBT scored total (405); Tier-I qualifying; skill/typing qualifying — sync with migration + examScoreMax */
+    max_score: 405,
+    multi_subject: false,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "00000000-0000-4000-8000-000000000055",
+    exam_name: "SSC CGL",
+    display_name: "SSC CGL",
+    sort_order: 55,
+    /** Tier-II Paper-I compulsory (450); Tier-I qualifying — sync with migration + examScoreMax */
+    max_score: 450,
+    multi_subject: false,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "00000000-0000-4000-8000-000000000056",
+    exam_name: "IBPS PO",
+    display_name: "IBPS PO",
+    sort_order: 56,
+    /** CWE Mains 200 + English descriptive 25 — sync with migration + examScoreMax */
+    max_score: 225,
+    multi_subject: false,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "00000000-0000-4000-8000-000000000057",
+    exam_name: "SBI PO",
+    display_name: "SBI PO",
+    sort_order: 57,
+    /** Phase-II Mains 200 objective + 50 descriptive — sync with migration + examScoreMax */
+    max_score: 250,
     multi_subject: false,
     created_at: new Date().toISOString(),
   },
