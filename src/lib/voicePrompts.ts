@@ -4,7 +4,7 @@
  */
 
 /**
- * Groq Llama 3.3 / 3.1 70B (configured in voiceDictateGroq) — transcript → structured tasks (IST).
+ * Groq Llama 3.1 8B Instant (via getGroqModelCandidates("parsing")) — transcript → structured tasks (IST).
  * User message includes NOW_IST and LOG_DATE. Output must be a JSON array (not wrapped in an object).
  */
 export const VOICE_DICTATE_SYSTEM_PROMPT = `You are an expert at turning REAL spoken student voice (Indian English + Hinglish, messy fillers, false starts) into clean, separate study tasks.

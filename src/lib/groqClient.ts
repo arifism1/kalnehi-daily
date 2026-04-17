@@ -2,7 +2,7 @@
  * Central Groq **chat completions** routing by task kind.
  *
  * Env overrides (optional):
- * - `GROQ_MODEL_PARSING` — Dictate / voice-parse-draft / handwritten structured parse (default: strong 70B).
+ * - `GROQ_MODEL_PARSING` — Dictate / voice-parse-draft / handwritten structured parse (default: cheap 8B).
  * - `GROQ_MODEL_CHAT` — PrepBrain & HelpyJi chat (default: 8B).
  * - `GROQ_MODEL_REASONING` — reserved for future use (default: same as parsing).
  *
@@ -16,13 +16,13 @@ export type GroqTaskType = "parsing" | "chat" | "reasoning";
 /** Default chat (cheap) — PrepBrain / HelpyJi. */
 export const GROQ_DEFAULT_CHAT_ID = "llama-3.1-8b-instant" as const;
 
-/** Default parsing / reasoning (strong) — voice, paste plan, etc. */
-export const GROQ_DEFAULT_PARSING_ID = "llama-3.3-70b-versatile" as const;
+/** Default parsing / reasoning (cheap) — voice, paste plan, etc. */
+export const GROQ_DEFAULT_PARSING_ID = "llama-3.1-8b-instant" as const;
 
 /** Same id as {@link GROQ_DEFAULT_CHAT_ID} — dev `?model=8b` shortcuts. */
 export const GROQ_CHAT_8B_INSTANT = GROQ_DEFAULT_CHAT_ID;
 
-/** Legacy 70B pair — dev `?model=70b`, plus parsing/reasoning failover after the primary model. */
+/** Legacy 70B pair — dev `?model=70b`, plus failover after the primary model for chat/parsing/reasoning. */
 export const GROQ_LEGACY_70B_VERSATILE_CHAIN: readonly string[] = [
   "llama-3.3-70b-versatile",
   "llama-3.1-70b-versatile",
@@ -51,11 +51,10 @@ export function getGroqModel(taskType: GroqTaskType): string {
 
 /**
  * Models to try in order for `chat.completions` (wrong-model / decommission retries).
- * Chat: single primary. Parsing/reasoning: primary plus legacy 70B chain (deduped).
+ * All task kinds: primary (defaults to cheap 8B) plus legacy 70B chain (deduped).
  */
 export function getGroqModelCandidates(taskType: GroqTaskType): string[] {
   const primary = getGroqModel(taskType);
-  if (taskType === "chat") return [primary];
   const out: string[] = [primary];
   for (const m of GROQ_LEGACY_70B_VERSATILE_CHAIN) {
     if (!out.includes(m)) out.push(m);
