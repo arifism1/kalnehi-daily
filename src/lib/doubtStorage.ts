@@ -7,7 +7,8 @@ import { openDB, type DBSchema } from "idb";
 import { compressImageFileToDataUrl } from "@/lib/purposeStorage";
 
 const DB_NAME = "kalnehi-doubts";
-const DB_VERSION = 1;
+/** v2: optional `topic` on {@link DoubtMeta} (chapter — microtopic). */
+const DB_VERSION = 2;
 const DOUBTS_STORE = "doubts" as const;
 const DOUBT_PHOTOS_STORE = "doubt_photos" as const;
 
@@ -20,6 +21,8 @@ export type DoubtMeta = {
   status: DoubtStatus;
   /** Optional syllabus-style tag (e.g. Physics, General). Omitted when unset. */
   subject?: string;
+  /** Optional syllabus chapter/microtopic line (`chapter — microtopic`). */
+  topic?: string;
   photoIds: string[];
   createdAt: number;
   updatedAt: number;
@@ -46,13 +49,14 @@ function photoKey(doubtId: string, photoId: string): string {
 
 async function getDb() {
   return openDB<DoubtDBSchema>(DB_NAME, DB_VERSION, {
-    upgrade(db) {
+    upgrade(db, oldVersion) {
       if (!db.objectStoreNames.contains(DOUBTS_STORE)) {
         db.createObjectStore(DOUBTS_STORE);
       }
       if (!db.objectStoreNames.contains(DOUBT_PHOTOS_STORE)) {
         db.createObjectStore(DOUBT_PHOTOS_STORE);
       }
+      void oldVersion;
     },
   });
 }

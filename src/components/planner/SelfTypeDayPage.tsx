@@ -3,18 +3,37 @@
 import { addDays, format, parseISO } from "date-fns";
 import { ArrowLeft, Home } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 
 import { DailyPlanTypedQuickAdd } from "@/components/planner/DailyPlanTypedQuickAdd";
 import { UnifiedDailyPlanList } from "@/components/planner/UnifiedDailyPlanList";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
+import { usePlannerDateMidnightRollover } from "@/hooks/usePlannerDateMidnightRollover";
+import { dailyPlanLiveHeading, isValidPlanDateString } from "@/lib/dailyPlanUiDate";
 import { useAuthStore } from "@/store/useAuthStore";
 
 export function SelfTypeDayPage() {
   const user = useAuthStore((s) => s.user);
   const today = useCalendarDate();
-  const [logDate, setLogDate] = useState(today);
+  const searchParams = useSearchParams();
+  const rawPlanDate = searchParams.get("planDate") ?? searchParams.get("date");
+  const urlPlanDate =
+    rawPlanDate && isValidPlanDateString(rawPlanDate) ? rawPlanDate : null;
+
+  const [logDate, setLogDate] = useState(() => urlPlanDate ?? today);
   const [planListKey, bumpPlanList] = useState(0);
+
+  useEffect(() => {
+    if (urlPlanDate) setLogDate(urlPlanDate);
+  }, [urlPlanDate]);
+
+  usePlannerDateMidnightRollover(today, setLogDate);
+
+  const livePlanTitle = useMemo(
+    () => dailyPlanLiveHeading(logDate, today),
+    [logDate, today],
+  );
 
   if (!user) {
     return (
@@ -91,7 +110,7 @@ export function SelfTypeDayPage() {
         <UnifiedDailyPlanList
           key={planListKey}
           planDate={logDate}
-          title="Today's plan (live)"
+          title={livePlanTitle}
         />
       </div>
 

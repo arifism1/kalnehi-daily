@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2, Plus } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { insertDailyTask } from "@/actions/dailyPlan";
 import {
@@ -9,6 +9,8 @@ import {
   isPreviewRowIncluded,
   type DailyPlanPreviewRow,
 } from "@/components/planner/DailyPlanPreviewStaging";
+import { useCalendarDate } from "@/hooks/useCalendarDate";
+import { addToPlanButtonLabel } from "@/lib/dailyPlanUiDate";
 import { slotFromStartEnd } from "@/lib/dailyPlanTime";
 import type { VoiceDraftTask } from "@/lib/voiceDraftFromGroq";
 import { minutesBetweenHHMM } from "@/lib/voiceIst";
@@ -47,6 +49,16 @@ function voiceDraftToRow(
 }
 
 export function DailyPlanTypedQuickAdd({ planDate, onAdded }: Props) {
+  const calendarToday = useCalendarDate();
+  const addPlanLabel = useMemo(
+    () => addToPlanButtonLabel(planDate, calendarToday),
+    [planDate, calendarToday],
+  );
+  const previewSubtitle = useMemo(
+    () =>
+      `All named rows are added by default. Check the box on a row only to exclude it. Edit title or times if needed, then tap ${addPlanLabel}.`,
+    [addPlanLabel],
+  );
   const areaRef = useRef<HTMLTextAreaElement>(null);
   const [inputText, setInputText] = useState("");
   /** Keeps latest text for Add to preview — avoids stale closure if useCallback deps omit inputText. */
@@ -282,13 +294,18 @@ export function DailyPlanTypedQuickAdd({ planDate, onAdded }: Props) {
       <DailyPlanPreviewStaging
         sectionId="typed-plan-staging"
         title="Preview (not saved yet)"
-        subtitle="All named rows are added by default. Check the box on a row only to exclude it. Edit title or times if needed, then tap Add to Today's Plan."
+        subtitle={previewSubtitle}
         rows={previewRows}
         onUpdateRow={updatePreviewRow}
         onRemoveRow={removePreviewRow}
         onAddEmptyRow={addEmptyPreviewRow}
         disabled={busy}
+        excludeFromSaveHint="Exclude this row from the next save"
       />
+      <p className="mt-2 text-[11px] leading-snug text-kal-muted">
+        Tip: changing subject or chapter clears the microtopic link until you pick a
+        microtopic again.
+      </p>
 
       <div className="mt-2 border-t border-kal-border pt-4">
         <button
@@ -306,7 +323,7 @@ export function DailyPlanTypedQuickAdd({ planDate, onAdded }: Props) {
               Adding…
             </>
           ) : (
-            "Add to Today's Plan"
+            addPlanLabel
           )}
         </button>
       </div>

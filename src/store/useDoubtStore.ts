@@ -11,7 +11,10 @@ import {
   restoreDoubtFully,
   saveDoubtMeta,
 } from "@/lib/doubtStorage";
-import { normalizeStoredDoubtSubject } from "@/lib/doubtSubjects";
+import {
+  normalizeStoredDoubtSubject,
+  normalizeStoredDoubtTopic,
+} from "@/lib/doubtSubjects";
 import { isLikelyImageFile } from "@/lib/purposeStorage";
 import { toUserFacingLocalError } from "@/lib/userFacingErrors";
 
@@ -50,12 +53,18 @@ type DoubtStore = {
     description: string;
     initialFiles?: File[];
     subject?: string | null;
+    topic?: string | null;
   }) => Promise<string>;
   /** Empty card in Current — user types title inline (no modal). */
   quickCreateDoubt: () => Promise<string>;
   updateDoubtText: (
     id: string,
-    patch: { title?: string; description?: string; subject?: string | null },
+    patch: {
+      title?: string;
+      description?: string;
+      subject?: string | null;
+      topic?: string | null;
+    },
   ) => Promise<void>;
   setDoubtStatus: (id: string, status: DoubtStatus) => Promise<void>;
   addPhoto: (doubtId: string, file: File) => Promise<void>;
@@ -93,12 +102,13 @@ export const useDoubtStore = create<DoubtStore>((set, get) => ({
     }
   },
 
-  createDoubt: async ({ title, description, initialFiles, subject }) => {
+  createDoubt: async ({ title, description, initialFiles, subject, topic }) => {
     const now = Date.now();
     const id = crypto.randomUUID();
     const t = title.trim() || "Untitled doubt";
     const desc = description.trim();
     const sub = normalizeStoredDoubtSubject(subject);
+    const top = normalizeStoredDoubtTopic(topic);
 
     const meta: DoubtMeta = {
       id,
@@ -109,6 +119,7 @@ export const useDoubtStore = create<DoubtStore>((set, get) => ({
       createdAt: now,
       updatedAt: now,
       ...(sub ? { subject: sub } : {}),
+      ...(top ? { topic: top } : {}),
     };
 
     const files = initialFiles ?? [];
@@ -153,6 +164,10 @@ export const useDoubtStore = create<DoubtStore>((set, get) => ({
       patch.subject !== undefined
         ? normalizeStoredDoubtSubject(patch.subject)
         : normalizeStoredDoubtSubject(cur.subject);
+    const nextTopic =
+      patch.topic !== undefined
+        ? normalizeStoredDoubtTopic(patch.topic)
+        : normalizeStoredDoubtTopic(cur.topic);
     const next: DoubtMeta = {
       ...cur,
       title:
@@ -163,6 +178,8 @@ export const useDoubtStore = create<DoubtStore>((set, get) => ({
     };
     if (nextSubject) next.subject = nextSubject;
     else delete next.subject;
+    if (nextTopic) next.topic = nextTopic;
+    else delete next.topic;
     await saveDoubtMeta(next);
     set((s) => ({
       doubts: s.doubts.map((d) => (d.id === id ? next : d)),

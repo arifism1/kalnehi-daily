@@ -1472,6 +1472,21 @@ export type Database = {
         Args: { p_optional?: string | null }
         Returns: Database["public"]["Tables"]["syllabus_master"]["Row"][]
       }
+      fetch_task_sessions_for_log: {
+        Args: { p_since: string; p_limit?: number }
+        Returns: {
+          id: string
+          task_id: string
+          start_time: string
+          end_time: string
+          duration_seconds: number | null
+          created_at: string | null
+          task_name: string | null
+          microtopic_id: string | null
+          assigned_date: string
+          task_status: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

@@ -8,21 +8,41 @@ import {
   CircleHelp,
   GripVertical,
   Loader2,
+  Mic,
   PencilLine,
   Plus,
   Trash2,
   X,
 } from "lucide-react";
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
+import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
 import { useDoubtSyllabusSubjects } from "@/hooks/useDoubtSyllabusSubjects";
+import { useDoubtSyllabusTopicOptions } from "@/hooks/useDoubtSyllabusTopicOptions";
+import { usePrepBrainContextSnapshot } from "@/hooks/usePrepBrainContextSnapshot";
 import type { DoubtStatus } from "@/lib/doubtStorage";
-import { normalizeStoredDoubtSubject } from "@/lib/doubtSubjects";
+import {
+  normalizeStoredDoubtSubject,
+  normalizeStoredDoubtTopic,
+  resolveSubjectAgainstCatalog,
+} from "@/lib/doubtSubjects";
+import { resolveTopicLineAgainstCatalog } from "@/lib/doubtVoiceTagSyllabus";
+import { trimPrepBrainContextForDoubtTag } from "@/lib/prepBrainContextTrimForDoubt";
 import { isLikelyImageFile } from "@/lib/purposeStorage";
+import { useAuthStore } from "@/store/useAuthStore";
 import { useDoubtStore } from "@/store/useDoubtStore";
 import { useUndoStore } from "@/store/useUndoStore";
 import { AddDoubtSheet } from "@/components/doubts/AddDoubtSheet";
 import { DoubtSubjectSelect } from "@/components/doubts/DoubtSubjectSelect";
+import { DoubtTopicSelect } from "@/components/doubts/DoubtTopicSelect";
+import { VoiceDoubtPreviewSheet } from "@/components/doubts/VoiceDoubtPreviewSheet";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { LocalPhotoPrivacyNote } from "@/components/ui/LocalPhotoPrivacyNote";
 import { TransientNotice } from "@/components/ui/TransientNotice";
@@ -141,9 +161,18 @@ function formatDoubtDate(timestamp: number): string {
   }).format(new Date(timestamp));
 }
 
+const VOICE_LANGS: { value: string; label: string }[] = [
+  { value: "en-IN", label: "English (India)" },
+  { value: "hi-IN", label: "Hindi (India)" },
+  { value: "en-US", label: "English (US)" },
+];
+
 export function DoubtTracker() {
   const baseId = useId();
+  const user = useAuthStore((s) => s.user);
   const { subjects: syllabusSubjects } = useDoubtSyllabusSubjects();
+  const { linesForSubject } = useDoubtSyllabusTopicOptions();
+  const { buildContextSnapshot } = usePrepBrainContextSnapshot();
   const {
     doubts,
     hydrated,
@@ -159,10 +188,23 @@ export function DoubtTracker() {
 
   const [addSheetOpen, setAddSheetOpen] = useState(false);
 
+  const [voiceLang, setVoiceLang] = useState("en-IN");
+  const [voiceProcessing, setVoiceProcessing] = useState(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [voicePreviewOpen, setVoicePreviewOpen] = useState(false);
+  const [voicePreview, setVoicePreview] = useState({
+    title: "",
+    subject: "",
+    topic: "",
+    groqModel: "",
+    tagNote: null as string | null,
+  });
+
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDesc, setEditDesc] = useState("");
   const [editSubject, setEditSubject] = useState("");
+  const [editTopic, setEditTopic] = useState("");
   const [editSaving, setEditSaving] = useState(false);
   const [editPhotoHint, setEditPhotoHint] = useState(false);
   const editFileInputRef = useRef<HTMLInputElement>(null);
@@ -212,6 +254,13 @@ export function DoubtTracker() {
     ];
   }, [doubts, syllabusSubjects]);
 
+  const voiceSubjectSelectOptions = useMemo(() => {
+    const set = new Set(syllabusSubjects);
+    const v = voicePreview.subject?.trim();
+    if (v) set.add(v);
+    return [...set].sort((a, b) => a.localeCompare(b));
+  }, [syllabusSubjects, voicePreview.subject]);
+
   const cardNumberById = useMemo(() => {
     const byStatusAll: Record<DoubtStatus, typeof doubts> = {
       current: [],
@@ -255,8 +304,127 @@ export function DoubtTracker() {
       setEditTitle(editing.title);
       setEditDesc(editing.description);
       setEditSubject(normalizeStoredDoubtSubject(editing.subject) ?? "");
+      setEditTopic(normalizeStoredDoubtTopic(editing.topic) ?? "");
     }
   }, [editing]);
+
+  useEffect(() => {
+    if (!editing) return;
+    const opts = linesForSubject(editSubject);
+    if (editTopic && opts.length > 0 && !opts.includes(editTopic)) {
+      setEditTopic("");
+    }
+  }, [editing, editSubject, editTopic, linesForSubject]);
+
+  const handleVoiceTranscript = useCallback(
+    async (transcript: string) => {
+      const parts = transcript.trim().split(/\s+/).filter(Boolean);
+      const deduped: string[] = [];
+      for (const p of parts) {
+        if (deduped[deduped.length - 1] === p) continue;
+        deduped.push(p);
+      }
+      const cleaned = deduped.join(" ");
+      if (!cleaned) {
+        setVoiceError("No speech captured. Try again.");
+        return;
+      }
+      if (!user?.id) {
+        setVoiceError("Sign in to record a voice doubt.");
+        return;
+      }
+      setVoiceProcessing(true);
+      setVoiceError(null);
+      try {
+        let prepTrim: Record<string, unknown> | undefined;
+        try {
+          const ctx = await buildContextSnapshot();
+          prepTrim = trimPrepBrainContextForDoubtTag(ctx);
+        } catch {
+          prepTrim = undefined;
+        }
+
+        const parseRes = await fetch("/api/doubt-voice-tag", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({
+            transcript: cleaned,
+            prepbrain_context_trim: prepTrim,
+          }),
+        });
+
+        const data = (await parseRes.json()) as {
+          ok?: boolean;
+          doubt_text?: string;
+          subject?: string | null;
+          topic?: string | null;
+          groq_model?: string;
+          tag_note?: string;
+          error?: string;
+        };
+
+        if (!parseRes.ok || !data.ok) {
+          setVoiceError(data.error ?? "Could not tag this doubt. Try again.");
+          return;
+        }
+
+        const title = (data.doubt_text ?? cleaned).slice(0, 600);
+        const apiSubject =
+          typeof data.subject === "string" ? data.subject.trim() : "";
+        const catalogForSubject = [
+          ...new Set([...syllabusSubjects, ...(apiSubject ? [apiSubject] : [])]),
+        ];
+        const subject = apiSubject
+          ? resolveSubjectAgainstCatalog(apiSubject, catalogForSubject)
+          : "";
+
+        const apiTopic =
+          typeof data.topic === "string" ? data.topic.trim() : "";
+        const topicLineSet = new Set(linesForSubject(subject));
+        const topic = apiTopic
+          ? resolveTopicLineAgainstCatalog(apiTopic, topicLineSet) ?? ""
+          : "";
+
+        setVoicePreview({
+          title,
+          subject,
+          topic,
+          groqModel: typeof data.groq_model === "string" ? data.groq_model : "",
+          tagNote:
+            typeof data.tag_note === "string" && data.tag_note.trim()
+              ? data.tag_note.trim()
+              : null,
+        });
+        setVoicePreviewOpen(true);
+      } catch {
+        setVoiceError("Network error. Try again.");
+      } finally {
+        setVoiceProcessing(false);
+      }
+    },
+    [user, buildContextSnapshot, syllabusSubjects, linesForSubject],
+  );
+
+  const {
+    clearError: clearVoiceRecError,
+    error: voiceRecError,
+    isListening: voiceListening,
+    isSupported: voiceSupported,
+    startListening: startVoiceListening,
+    stopListening: stopVoiceListening,
+  } = useDeviceSpeechRecognition({
+    lang: voiceLang,
+    maxSessionMs: 30_000,
+    silenceMs: 3_500,
+    onStart: () => {
+      setVoiceError(null);
+      clearVoiceRecError();
+    },
+    onTranscript: ({ transcript }) => {
+      void handleVoiceTranscript(transcript);
+    },
+  });
 
   const saveEdit = async () => {
     if (!editingId) return;
@@ -266,12 +434,16 @@ export function DoubtTracker() {
         title: editTitle,
         description: editDesc,
         subject: editSubject.trim() === "" ? null : editSubject.trim(),
+        topic: editTopic.trim() === "" ? null : editTopic.trim(),
       });
       setEditingId(null);
     } finally {
       setEditSaving(false);
     }
   };
+
+  const voiceBusy = voiceListening || voiceProcessing;
+  const voiceBanner = voiceRecError ?? voiceError;
 
   if (!hydrated) {
     return (
@@ -311,14 +483,91 @@ export function DoubtTracker() {
             lost if you clear browser data or cache.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setAddSheetOpen(true)}
-          className="kal-btn-accent min-h-[48px] w-full shrink-0 rounded-xl px-5 py-3 text-xs active:scale-[0.99] sm:min-h-[52px] sm:w-auto sm:min-w-[12.5rem] sm:px-6 sm:py-3.5 sm:text-sm"
-        >
-          <Plus className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden />
-          Add doubt
-        </button>
+        <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:min-w-[14rem]">
+          <div className="flex flex-wrap items-stretch gap-2 sm:justify-end">
+            <button
+              type="button"
+              onClick={() => setAddSheetOpen(true)}
+              className="kal-btn-accent flex min-h-[48px] min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-xs active:scale-[0.99] sm:min-h-[52px] sm:flex-initial sm:px-6 sm:py-3.5 sm:text-sm"
+            >
+              <Plus className="h-4 w-4 shrink-0 sm:h-5 sm:w-5" aria-hidden />
+              Add doubt
+            </button>
+            <button
+              type="button"
+              disabled={
+                voiceBusy ||
+                !voiceSupported ||
+                !user?.id ||
+                voicePreviewOpen
+              }
+              onClick={() => {
+                if (!user?.id) {
+                  setVoiceError("Sign in to record a voice doubt.");
+                  return;
+                }
+                if (!voiceSupported) return;
+                if (voiceListening) stopVoiceListening();
+                else void startVoiceListening();
+              }}
+              title={
+                !user?.id
+                  ? "Sign in to use voice"
+                  : !voiceSupported
+                    ? "Speech recognition not supported"
+                    : voiceListening
+                      ? "Stop recording"
+                      : "Record doubt (voice)"
+              }
+              className={clsx(
+                "flex min-h-[48px] min-w-[48px] items-center justify-center rounded-xl border-2 px-4 transition active:scale-[0.99] sm:min-h-[52px] sm:min-w-[52px] sm:px-5",
+                voiceListening
+                  ? "border-red-400/80 bg-red-500/15 text-red-700 dark:border-red-500/50 dark:bg-red-950/40 dark:text-red-200"
+                  : "border-kal-accent/40 bg-kal-accent-soft text-kal-accent-dark hover:border-kal-accent/60 dark:bg-kal-accent/12 dark:text-kal-accent",
+                (voiceBusy && !voiceListening) || !voiceSupported || !user?.id
+                  ? "opacity-45"
+                  : "",
+              )}
+              aria-pressed={voiceListening}
+              aria-label={
+                voiceListening ? "Stop recording doubt" : "Record doubt"
+              }
+            >
+              {voiceProcessing ? (
+                <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+              ) : (
+                <Mic className="h-5 w-5" strokeWidth={2.25} aria-hidden />
+              )}
+            </button>
+          </div>
+          <label className="block text-[10px] font-medium text-kal-muted sm:text-right">
+            <span className="sr-only">Speech language</span>
+            <select
+              value={voiceLang}
+              disabled={voiceListening || voiceProcessing}
+              onChange={(e) => setVoiceLang(e.target.value)}
+              className="mt-0.5 w-full min-h-[40px] rounded-lg border border-kal-border bg-kal-input-bg px-2 py-1.5 text-[11px] text-kal-text sm:ml-auto sm:w-auto"
+            >
+              {VOICE_LANGS.map((l) => (
+                <option key={l.value} value={l.value}>
+                  {l.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          {voiceBanner ? (
+            <p
+              role="alert"
+              className="text-center text-[11px] text-orange-700 dark:text-orange-300/95 sm:text-right"
+            >
+              {voiceBanner}
+            </p>
+          ) : voiceListening ? (
+            <p className="text-center text-[11px] text-kal-muted sm:text-right">
+              Listening… tap the mic again to stop (max 30s).
+            </p>
+          ) : null}
+        </div>
       </header>
 
       <div className="space-y-2">
@@ -440,6 +689,11 @@ export function DoubtTracker() {
                           {normalizeStoredDoubtSubject(d.subject) ? (
                             <span className="mt-1 inline-flex max-w-full truncate rounded-full border border-kal-border bg-kal-card-muted/90 px-2 py-0.5 text-[10px] font-medium text-kal-text-secondary sm:text-[11px] dark:bg-zinc-800/75 dark:text-zinc-300">
                               {normalizeStoredDoubtSubject(d.subject)}
+                            </span>
+                          ) : null}
+                          {normalizeStoredDoubtTopic(d.topic) ? (
+                            <span className="mt-1 block max-w-full truncate rounded-md border border-kal-border/80 bg-kal-page/80 px-2 py-0.5 text-[10px] text-kal-muted sm:text-[11px] dark:bg-zinc-900/40">
+                              {normalizeStoredDoubtTopic(d.topic)}
                             </span>
                           ) : null}
                           {d.description.trim() ? (
@@ -651,8 +905,19 @@ export function DoubtTracker() {
               id={`${baseId}-edit-subject`}
               className="mt-4"
               value={editSubject}
-              onChange={setEditSubject}
+              onChange={(next) => {
+                setEditSubject(next);
+                setEditTopic("");
+              }}
               options={syllabusSubjects}
+              disabled={editSaving}
+            />
+            <DoubtTopicSelect
+              id={`${baseId}-edit-topic`}
+              className="mt-4"
+              value={editTopic}
+              onChange={setEditTopic}
+              options={linesForSubject(editSubject)}
               disabled={editSaving}
             />
             <div className="mt-4">
@@ -720,6 +985,18 @@ export function DoubtTracker() {
           </div>
         </div>
       )}
+
+      <VoiceDoubtPreviewSheet
+        open={voicePreviewOpen}
+        onClose={() => setVoicePreviewOpen(false)}
+        groqModel={voicePreview.groqModel}
+        tagNote={voicePreview.tagNote}
+        initialTitle={voicePreview.title}
+        initialSubject={voicePreview.subject}
+        initialTopic={voicePreview.topic}
+        syllabusSubjects={voiceSubjectSelectOptions}
+        linesForSubject={linesForSubject}
+      />
 
       <AddDoubtSheet
         open={addSheetOpen}

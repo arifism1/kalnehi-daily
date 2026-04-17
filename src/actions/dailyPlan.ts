@@ -2,6 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 
+import { normalizeSyllabusMasterIdForDb } from "@/lib/dailyPlanSyllabusId";
+import {
+  assertSyllabusBelongsToUserExam,
+  SyllabusExamScopeError,
+} from "@/lib/syllabusMasterWriteGuards";
 import { formatSupabaseError } from "@/lib/supabase";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { slotFromStartEnd } from "@/lib/dailyPlanTime";
@@ -10,11 +15,15 @@ import type { Tables, TablesInsert, TablesUpdate } from "@/types/supabase";
 
 export type DailyTaskRow = Tables<"daily_tasks">;
 
-/** Embedded syllabus row returned by listDailyPlanTasksForDate (PostgREST embed). */
-export type DailyTaskSyllabusEmbed = Pick<
-  Tables<"syllabus_master">,
-  "id" | "subject" | "chapter" | "microtopic"
->;
+/** Syllabus fields embedded on daily task reads (explicit shape; avoids Pick/Row drift). */
+export type DailyTaskSyllabusEmbed = {
+  id: string;
+  subject: string;
+  chapter: string;
+  microtopic: string;
+  /** Present when joined from `syllabus_master`; used to strip cross-exam links on read. */
+  exam_name?: string | null;
+};
 
 export type DailyTaskView = DailyTaskRow & {
   plan_date: string;
@@ -73,79 +82,6 @@ export async function ensureDailyPlanId(
   }
 }
 
-export async function listDailyPlanTasksForDate(
-  planDate: string,
-  opts?: { source?: "typed" | "voice" | "handwritten" },
-): Promise<
-  | { ok: true; planId: string | null; tasks: DailyTaskView[] }
-  | { ok: false; error: string; planId: null; tasks: [] }
-> {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(planDate)) {
-    return { ok: false, error: "Invalid date.", planId: null, tasks: [] };
-  }
-  try {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      return { ok: false, error: USER_ERROR.session, planId: null, tasks: [] };
-    }
-
-    const { data: plan, error: planErr } = await supabase
-      .from("daily_plans")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("plan_date", planDate)
-      .maybeSingle();
-
-    if (planErr) throw planErr;
-    if (!plan?.id) {
-      return { ok: true, planId: null, tasks: [] };
-    }
-
-    let q = supabase
-      .from("daily_tasks")
-      .select(
-        "*, syllabus_master:syllabus_master_id ( id, subject, chapter, microtopic )",
-      )
-      .eq("daily_plan_id", plan.id)
-      .order("created_at", { ascending: true });
-
-    if (opts?.source) {
-      q = q.eq("source", opts.source);
-    }
-
-    const { data: rows, error } = await q;
-    if (error) throw error;
-
-    const tasks: DailyTaskView[] = (rows ?? []).map((r) => {
-      const row = r as DailyTaskRow & {
-        syllabus_master: DailyTaskSyllabusEmbed | DailyTaskSyllabusEmbed[] | null;
-      };
-      const emb = row.syllabus_master;
-      const syllabus_master = Array.isArray(emb)
-        ? emb[0] ?? null
-        : emb ?? null;
-      const { syllabus_master: _drop, ...rest } = row;
-      return {
-        ...(rest as DailyTaskRow),
-        syllabus_master,
-        plan_date: planDate,
-      };
-    });
-
-    return { ok: true, planId: plan.id, tasks };
-  } catch (e) {
-    return {
-      ok: false,
-      error: formatSupabaseError(e),
-      planId: null,
-      tasks: [],
-    };
-  }
-}
-
 export async function insertDailyTask(
   input: {
     plan_date: string;
@@ -178,7 +114,23 @@ export async function insertDailyTask(
     } = await supabase.auth.getUser();
     if (!user) return { ok: false, error: USER_ERROR.session };
 
-    const sid = input.syllabus_master_id?.trim();
+    const rawSid = input.syllabus_master_id?.trim() ?? "";
+    let syllabus_master_id: string | null = null;
+    if (rawSid) {
+      const normalized = normalizeSyllabusMasterIdForDb(rawSid);
+      if (!normalized) {
+        return { ok: false, error: "Invalid syllabus link." };
+      }
+      try {
+        await assertSyllabusBelongsToUserExam(supabase, user.id, [normalized]);
+      } catch (e) {
+        if (e instanceof SyllabusExamScopeError) {
+          return { ok: false, error: "Invalid syllabus link." };
+        }
+        throw e;
+      }
+      syllabus_master_id = normalized;
+    }
     const row: TablesInsert<"daily_tasks"> = {
       id: input.id,
       daily_plan_id: ensured.planId,
@@ -190,7 +142,7 @@ export async function insertDailyTask(
       status: input.status ?? "pending",
       source: input.source,
       source_raw_text: input.source_raw_text?.slice(0, 12000) ?? null,
-      syllabus_master_id: sid && /^[0-9a-f-]{36}$/i.test(sid) ? sid : null,
+      syllabus_master_id,
     };
 
     const { error } = await supabase.from("daily_tasks").insert(row);
@@ -226,12 +178,34 @@ export async function updateDailyTask(
     } = await supabase.auth.getUser();
     if (!user) return { ok: false, error: USER_ERROR.session };
 
+    const nextPatch: TablesUpdate<"daily_tasks"> = {
+      ...patch,
+      updated_at: new Date().toISOString(),
+    };
+    if ("syllabus_master_id" in patch) {
+      const sid = patch.syllabus_master_id;
+      if (sid === null || sid === "") {
+        nextPatch.syllabus_master_id = null;
+      } else {
+        const normalized = normalizeSyllabusMasterIdForDb(String(sid));
+        if (!normalized) {
+          return { ok: false, error: "Invalid syllabus link." };
+        }
+        try {
+          await assertSyllabusBelongsToUserExam(supabase, user.id, [normalized]);
+        } catch (e) {
+          if (e instanceof SyllabusExamScopeError) {
+            return { ok: false, error: "Invalid syllabus link." };
+          }
+          throw e;
+        }
+        nextPatch.syllabus_master_id = normalized;
+      }
+    }
+
     const { error } = await supabase
       .from("daily_tasks")
-      .update({
-        ...patch,
-        updated_at: new Date().toISOString(),
-      })
+      .update(nextPatch)
       .eq("id", id);
 
     if (error) return { ok: false, error: USER_ERROR.tryAgain };

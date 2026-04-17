@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { resolveSyllabusExam, syllabusCatalogExamName } from "@/lib/examProfile";
 import { computeWeightedCompletionPercent, isTaskCompleted } from "@/lib/progressEngine";
 import type { Database } from "@/types/supabase";
 import type { Microtopic, Task } from "@/store/useTaskStore";
@@ -58,6 +59,17 @@ export async function resolveMasterTodayMetrics(
     return { totalCount: 0, doneCount: 0, percent: 0, source: "none" };
   }
 
+  const { data: profile } = await admin
+    .from("user_profiles")
+    .select("target_exam, primary_exam")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  const examLabel = resolveSyllabusExam(profile);
+  const examKey = examLabel?.trim()
+    ? syllabusCatalogExamName(examLabel)
+    : null;
+
   const typedTasks = tasks as Task[];
   const microIds = [
     ...new Set(
@@ -70,10 +82,11 @@ export async function resolveMasterTodayMetrics(
   const chunkSize = 120;
   for (let i = 0; i < microIds.length; i += chunkSize) {
     const slice = microIds.slice(i, i + chunkSize);
-    const { data: microRows } = await admin
-      .from("syllabus_master")
-      .select("*")
-      .in("id", slice);
+    let q = admin.from("syllabus_master").select("*").in("id", slice);
+    if (examKey) {
+      q = q.eq("exam_name", examKey);
+    }
+    const { data: microRows } = await q;
     for (const m of microRows ?? []) {
       microMap[m.id] = m as Microtopic;
     }

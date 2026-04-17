@@ -1,3 +1,5 @@
+import { format, subDays } from "date-fns";
+
 import {
   isCuetExam,
   resolveSyllabusExam,
@@ -13,12 +15,14 @@ import {
   type SyllabusMarksOverrideRow,
 } from "@/lib/applySyllabusMarksOverrides";
 import { dedupeMergedSyllabusRowsByPlacement } from "@/lib/syllabusDedupe";
+import { fetchSyllabusMasterRowsForExam } from "@/lib/syllabusMasterQuery";
 import {
   mergeSyllabusWithUserCustomizations,
   type MergedSyllabusRow,
   type UserSyllabusCustomizationRow,
 } from "@/lib/userSyllabusMerge";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { TASKS_SERVER_SYNC_LOOKBACK_DAYS } from "@/lib/taskRetentionPolicy";
 import { getAllOutboxMutations, persistMicrotopics, persistTasks } from "@/lib/taskIdb";
 import type { Microtopic, Task } from "@/store/useTaskStore";
 import { useTaskStore } from "@/store/useTaskStore";
@@ -57,7 +61,7 @@ async function refreshTasksFromSupabaseImpl(userId: string): Promise<void> {
 
   const { data: profile, error: pProf } = await supabase
     .from("user_profiles")
-    .select("primary_exam, target_exam, cuet_domain_subjects")
+    .select("primary_exam, target_exam, cuet_domain_subjects, upsc_optional_subjects")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -69,16 +73,29 @@ async function refreshTasksFromSupabaseImpl(userId: string): Promise<void> {
     ? syllabusCatalogExamName(examLabel)
     : null;
 
+  const upscOptional = Array.isArray(profile?.upsc_optional_subjects)
+    ? (profile.upsc_optional_subjects[0]?.trim() || null)
+    : null;
+
   const cuetDomains =
     examLabel && isCuetExam(examLabel)
       ? parseCuetDomainSubjectsJson(profile?.cuet_domain_subjects)
       : [];
 
-  const [tasksRes, microRes, customRes, marksRes] = await Promise.all([
-    supabase.from("tasks").select("*").eq("user_id", userId),
+  const tasksSince = format(
+    subDays(new Date(), TASKS_SERVER_SYNC_LOOKBACK_DAYS),
+    "yyyy-MM-dd",
+  );
+
+  const [tasksRes, syllabusRows, customRes, marksRes] = await Promise.all([
+    supabase
+      .from("tasks")
+      .select("*")
+      .eq("user_id", userId)
+      .gte("assigned_date", tasksSince),
     examKey
-      ? supabase.from("syllabus_master").select("*").eq("exam_name", examKey)
-      : Promise.resolve({ data: [] as Record<string, unknown>[], error: null }),
+      ? fetchSyllabusMasterRowsForExam(supabase, examKey, upscOptional)
+      : Promise.resolve([] as SyllabusRow[]),
     examKey
       ? supabase
           .from("user_syllabus_customizations")
@@ -96,12 +113,10 @@ async function refreshTasksFromSupabaseImpl(userId: string): Promise<void> {
   ]);
 
   const { data: taskRows, error: tErr } = tasksRes;
-  const { data: microRows, error: mErr } = microRes;
   const { data: customsRows, error: cuErr } = customRes;
   const { data: marksRows, error: moErr } = marksRes;
 
   if (tErr) throw tErr;
-  if (mErr) throw mErr;
   if (cuErr) throw cuErr;
   if (moErr) throw moErr;
 
@@ -112,7 +127,7 @@ async function refreshTasksFromSupabaseImpl(userId: string): Promise<void> {
   let merged: MergedSyllabusRow[] = [];
   if (examKey) {
     merged = mergeSyllabusWithUserCustomizations(
-      (microRows ?? []) as SyllabusRow[],
+      syllabusRows,
       (customsRows ?? []) as UserSyllabusCustomizationRow[],
       examKey,
     );

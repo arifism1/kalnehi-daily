@@ -17,7 +17,7 @@ export type DailyPlanPreviewRow = {
   /** Optional snippet stored on commit (e.g. voice transcript chunk). */
   sourceRaw?: string;
   /**
-   * When true, row is skipped for "Add to Today's Plan". Omitted/false = include named rows.
+   * When true, row is skipped for the bulk add-to-plan action. Omitted/false = include named rows.
    */
   excludeFromCommit?: boolean;
   /** Optional link to `syllabus_master.id` before saving to `daily_tasks`. */
@@ -52,6 +52,8 @@ type Props = {
   processingLabel?: string;
   /** Tighter padding and spacing (e.g. compact mobile preview). */
   compact?: boolean;
+  /** Checkbox hint when excluding a row from the next save (date-aware from parent). */
+  excludeFromSaveHint?: string;
 };
 
 export function DailyPlanPreviewStaging({
@@ -67,6 +69,7 @@ export function DailyPlanPreviewStaging({
   processing = false,
   processingLabel = "Processing…",
   compact = false,
+  excludeFromSaveHint = "Exclude this row from the next save",
 }: Props) {
   const syllabusById = useTaskStore((s) => s.microtopics);
   const microtopicsList = useMemo(
@@ -187,8 +190,8 @@ export function DailyPlanPreviewStaging({
                     ? "mt-1.5 h-4 w-4 shrink-0 rounded border-kal-border bg-kal-input-bg text-kal-accent focus:ring-kal-accent disabled:opacity-50"
                     : "mt-2.5 h-5 w-5 shrink-0 rounded border-kal-border bg-kal-input-bg text-kal-accent focus:ring-kal-accent disabled:opacity-50"
                 }
-                title="Exclude this row from Add to Today's Plan"
-                aria-label="Exclude this row from Add to Today's Plan"
+                title={excludeFromSaveHint}
+                aria-label={excludeFromSaveHint}
               />
               <div className="min-w-0 flex-1">
                 <textarea

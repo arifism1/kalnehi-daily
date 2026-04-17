@@ -71,66 +71,26 @@ export async function fetchTaskSessionsForLog(
   { ok: true; rows: TaskSessionWithTaskMeta[] } | { ok: false; error: string }
 > {
   try {
-    const { supabase, userId } = await requireUser();
+    const { supabase } = await requireUser();
 
-    const { data: taskRows, error: tidErr } = await supabase
-      .from("tasks")
-      .select("id, name, microtopic_id, assigned_date, status")
-      .eq("user_id", userId);
-    if (tidErr) throw tidErr;
-    const tasks = taskRows ?? [];
-    const taskMap = new Map(tasks.map((t) => [t.id, t]));
-    const ids = tasks.map((t) => t.id);
-    if (ids.length === 0) {
-      return { ok: true, rows: [] };
-    }
-
-    const chunkSize = 90;
-    const sessions: {
-      id: string;
-      task_id: string;
-      start_time: string;
-      end_time: string | null;
-      duration_seconds: number | null;
-      created_at: string | null;
-    }[] = [];
-
-    for (let i = 0; i < ids.length; i += chunkSize) {
-      const chunk = ids.slice(i, i + chunkSize);
-      const { data: part, error: sErr } = await supabase
-        .from("task_sessions")
-        .select("*")
-        .in("task_id", chunk)
-        .gte("end_time", sinceIso)
-        .order("end_time", { ascending: false })
-        .limit(limit);
-      if (sErr) throw sErr;
-      for (const s of part ?? []) sessions.push(s);
-      if (sessions.length >= limit) break;
-    }
-
-    sessions.sort((a, b) => {
-      const ea = a.end_time ?? "";
-      const eb = b.end_time ?? "";
-      return eb.localeCompare(ea);
+    const { data, error } = await supabase.rpc("fetch_task_sessions_for_log", {
+      p_since: sinceIso,
+      p_limit: limit,
     });
-    const capped = sessions.slice(0, limit);
+    if (error) throw error;
 
-    const rows: TaskSessionWithTaskMeta[] = capped.map((s) => {
-      const t = taskMap.get(s.task_id);
-      return {
-        id: s.id,
-        task_id: s.task_id,
-        start_time: s.start_time,
-        end_time: s.end_time,
-        duration_seconds: s.duration_seconds,
-        created_at: s.created_at,
-        task_name: t?.name ?? null,
-        microtopic_id: t?.microtopic_id ?? null,
-        assigned_date: t?.assigned_date ?? null,
-        task_status: t?.status ?? null,
-      };
-    });
+    const rows: TaskSessionWithTaskMeta[] = (data ?? []).map((r) => ({
+      id: r.id,
+      task_id: r.task_id,
+      start_time: r.start_time,
+      end_time: r.end_time,
+      duration_seconds: r.duration_seconds,
+      created_at: r.created_at,
+      task_name: r.task_name,
+      microtopic_id: r.microtopic_id,
+      assigned_date: r.assigned_date,
+      task_status: r.task_status,
+    }));
 
     return { ok: true, rows };
   } catch (e) {
