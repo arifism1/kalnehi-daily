@@ -54,6 +54,10 @@ export function examDisplayLabel(stored: string | null | undefined): string {
   if (n === "ipmat indore") return "IPMAT Indore";
   if (n === "ipmat rohtak") return "IPMAT Rohtak";
   if (n === "jipmat") return "JIPMAT";
+  if (n === "ssc cgl") return "SSC CGL";
+  if (n === "ssc chsl") return "SSC CHSL";
+  if (n === "sbi po") return "SBI PO";
+  if (n === "ibps po") return "IBPS PO";
   if (n === "other") return "Other";
   return stored.trim();
 }
@@ -108,6 +112,10 @@ export function syllabusCatalogExamName(
   if (n === "ipmat indore") return "IPMAT Indore";
   if (n === "ipmat rohtak") return "IPMAT Rohtak";
   if (n === "jipmat") return "JIPMAT";
+  if (n === "ssc cgl") return "SSC CGL";
+  if (n === "ssc chsl") return "SSC CHSL";
+  if (n === "sbi po") return "SBI PO";
+  if (n === "ibps po") return "IBPS PO";
   /** Legacy profile label → syllabus `exam_name`. */
   if (n === "cbse boards" || n === "boards") return "CBSE Class 12";
 
@@ -239,6 +247,15 @@ export function examScoreMax(
   if (n === "ipmat indore") return 300;
   if (n === "ipmat rohtak") return 300;
   if (n === "jipmat") return 400;
+  // Banking & SSC caps — keep in sync with public.exams.max_score and EXAMS_CATALOG_FALLBACK (see migrations 20260418150000, 20260419120000).
+  // SSC CGL: Tier-II Paper-I compulsory total (450). Tier-I is qualifying for the standard merit scheme (ssc.nic.in).
+  if (n === "ssc cgl") return 450;
+  // SSC CHSL: Tier-II CBT scored sections total (405). Tier-I qualifying; skill/typing tests not included.
+  if (n === "ssc chsl") return 405;
+  // SBI PO: Phase-II Mains 200 (objective) + 50 (descriptive); interview excluded from this cap.
+  if (n === "sbi po") return 250;
+  // IBPS PO CWE Mains: 200 (objective) + 25 (English descriptive); interview excluded.
+  if (n === "ibps po") return 225;
   return 720;
 }
 
