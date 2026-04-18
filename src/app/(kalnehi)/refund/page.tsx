@@ -23,10 +23,10 @@ export default function RefundPage() {
         dissatisfaction, or any other reason.
       </p>
       <p>
-        <strong>3-Day Trial</strong>
+        <strong>2-Day Trial</strong>
       </p>
       <p>
-        You may cancel the 3-day trial plan before it ends to avoid being
+        You may cancel the 2-day trial plan before it ends to avoid being
         charged the full monthly fee. Cancellation must be done from your
         account settings. After the trial converts to a paid plan,{" "}
         <strong>no refund</strong> is possible.

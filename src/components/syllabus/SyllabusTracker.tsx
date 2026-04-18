@@ -520,7 +520,7 @@ export function SyllabusTracker() {
       {syllabusLimited && (
         <div className="rounded-xl border border-amber-200 bg-kal-warn-soft px-4 py-3 text-center backdrop-blur-sm dark:border-amber-800">
           <p className="text-sm text-amber-800 dark:text-amber-200">
-            Basic plan: subjects &amp; chapters only.{" "}
+            Limited view: subjects &amp; chapters only.{" "}
             <a href="/pricing" className="font-semibold underline">
               Upgrade to Pro
             </a>{" "}

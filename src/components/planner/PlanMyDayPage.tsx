@@ -155,7 +155,7 @@ export function PlanMyDayPage() {
           <p className="text-sm text-amber-800 dark:text-amber-200">
             Voice dictation requires{" "}
             <Link href="/pricing" className="font-semibold underline">
-              Pro or Pro Max
+              Pro
             </Link>
             .
           </p>

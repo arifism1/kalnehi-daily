@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Script from "next/script";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { CalendarClock, Check, Crown, Sparkles, Zap } from "lucide-react";
+import { CalendarClock, Check, Crown } from "lucide-react";
 
 import {
   activateRazorpaySubscription,
@@ -22,12 +22,7 @@ import {
 } from "@/lib/autopayMonths";
 import { formatWelcomeVoiceTimeLeft } from "@/lib/freeTrial";
 import { SITE_NAME } from "@/lib/seo-metadata";
-import {
-  TIER_ORDER,
-  TIERS,
-  type SubscriptionTier,
-  type TierConfig,
-} from "@/lib/subscriptionTiers";
+import { TIERS } from "@/lib/subscriptionTiers";
 import { HelpyJiChat } from "@/components/helpyji/HelpyJiChat";
 import { isHelpyJiEligibleForPricingPage } from "@/lib/helpyjiVisibility";
 import type { PaymentErrorProof } from "@/lib/paymentSupportEmail";
@@ -51,7 +46,7 @@ declare global {
   }
 }
 
-const AUTOPAY_PRESET_MONTHS = [1, 3, 6, 12] as const;
+const AUTOPAY_PRESET_MONTHS = [1, 2, 3, 6, 12] as const;
 
 function AutopayDurationPanel({
   value,
@@ -80,14 +75,16 @@ function AutopayDurationPanel({
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-kal-accent">
-                Before you pick a tier
+                Pro subscription
               </p>
               <h2 className="mt-0.5 text-base font-bold leading-tight tracking-tight text-kal-text sm:text-lg">
                 How long should AutoPay run?
               </h2>
               <p className="mt-1 text-xs leading-snug text-kal-text-secondary sm:mt-1.5">
                 <span className="font-semibold text-kal-text">Monthly</span> billing: set how many
-                post-trial monthly charges your UPI or card mandate may take. You can cancel anytime &mdash; even before all months are used &mdash; and keep access for what you&apos;ve already paid.
+                post-trial monthly charges your UPI or card mandate may take. You can cancel anytime
+                &mdash; even before all months are used &mdash; and keep access for what you&apos;ve
+                already paid.
               </p>
             </div>
           </div>
@@ -106,7 +103,7 @@ function AutopayDurationPanel({
                 Quick picks
               </p>
               <div
-                className="kal-glass-subtle grid grid-cols-4 gap-1 rounded-xl border border-white/50 p-1 dark:border-white/10"
+                className="kal-glass-subtle grid grid-cols-3 gap-1 rounded-xl border border-white/50 p-1 sm:grid-cols-6 dark:border-white/10"
                 role="group"
                 aria-labelledby="autopay-preset-legend"
               >
@@ -199,165 +196,19 @@ function AutopayDurationPanel({
         </div>
       </div>
       <p className="text-center text-[0.65rem] font-medium uppercase tracking-[0.12em] text-kal-text-secondary">
-        Next — choose your plan below
+        Next — subscribe to Pro below
       </p>
     </div>
   );
 }
 
-const TIER_ICONS: Record<SubscriptionTier, React.ReactNode> = {
-  basic: <Zap className="h-5 w-5" />,
-  pro: <Crown className="h-5 w-5" />,
-  pro_max: <Sparkles className="h-5 w-5" />,
-};
-
-/** Scannable, benefit-focused AI quota line(s) for the tier card (no “missing out” framing). */
-function tierAiQuotaCopy(config: TierConfig): string {
-  if (config.id === "basic") {
-    return `Your trial includes ${config.trialVoiceMinutesLimit} voice minutes — a quick way to try voice dictation.`;
-  }
-  if (config.id === "pro") {
-    return "40 voice minutes per month (includes 10 minutes during your 3-day trial)";
-  }
-  return "80 voice minutes per month (includes 20 minutes during your 3-day trial)";
-}
-
-function TierCard({
-  config,
-  highlighted,
-  busy,
-  hasPaidAccess,
-  hasHadTrial,
-  isCancelledWithAccess,
-  isCurrentTier,
-  onSelect,
-}: {
-  config: TierConfig;
-  highlighted: boolean;
-  busy: boolean;
-  hasPaidAccess: boolean;
-  hasHadTrial: boolean;
-  isCancelledWithAccess: boolean;
-  isCurrentTier: boolean;
-  onSelect: (tier: SubscriptionTier) => void;
-}) {
-  const lockedBySubscription = hasPaidAccess && !isCancelledWithAccess;
-  const disabled = busy;
-
-  let buttonLabel: string;
-  if (isCurrentTier && !isCancelledWithAccess) {
-    buttonLabel = "Current Plan";
-  } else if (isCancelledWithAccess) {
-    buttonLabel = hasHadTrial
-      ? `Resubscribe — ${config.monthlyPriceDisplay}/month`
-      : `Resubscribe — ${config.trialPriceDisplay} trial`;
-  } else if (hasPaidAccess) {
-    buttonLabel = "Activate Subscription";
-  } else if (busy) {
-    buttonLabel = "Opening checkout...";
-  } else if (hasHadTrial) {
-    buttonLabel = `Subscribe — ${config.monthlyPriceDisplay}/month`;
-  } else {
-    buttonLabel = `Start 3-day trial — ${config.trialPriceDisplay}`;
-  }
-
-  return (
-    <article
-      className={`kal-glass-panel relative flex h-full min-h-0 flex-col rounded-2xl border-2 p-5 pb-6 ${
-        highlighted ? "border-kal-accent/50 ring-2 ring-kal-accent/30" : "border-white/35 dark:border-white/15"
-      }`}
-    >
-      {highlighted && (
-        <span className="absolute -top-3 left-4 rounded-full bg-kal-accent px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-kal-accent-foreground">
-          Most Popular
-        </span>
-      )}
-
-      <div className="flex items-center gap-2">
-        <span className={highlighted ? "text-kal-accent" : "text-kal-text-secondary"}>
-          {TIER_ICONS[config.id]}
-        </span>
-        <h2 className="text-lg font-bold text-kal-text">{config.name}</h2>
-      </div>
-
-      <p className="mt-1 text-xs text-kal-text-secondary">{config.tagline}</p>
-
-      <div className="mt-4 rounded-xl border border-kal-accent/40 bg-kal-accent/10 px-3 py-3">
-        {hasHadTrial && !hasPaidAccess ? (
-          <>
-            <p className="text-lg font-bold leading-snug text-kal-text">
-              {config.monthlyPriceDisplay}/month
-            </p>
-            <p className="mt-1 text-xs font-medium leading-snug text-kal-text-secondary">
-              No trial — charged monthly from first payment.
-            </p>
-            <p className="kal-glass-subtle mt-2 rounded-lg border border-white/30 px-2 py-1.5 text-[0.65rem] font-medium leading-snug text-kal-text-secondary dark:border-white/10">
-              Uses the AutoPay length you set above.
-            </p>
-          </>
-        ) : (
-          <>
-            <p className="text-lg font-bold leading-snug text-kal-text">
-              {config.trialPriceDisplay} for 3 days
-            </p>
-            <p className="mt-1 text-sm font-semibold text-kal-text">
-              → then {config.monthlyPriceDisplay}/month
-            </p>
-            {!hasPaidAccess ? (
-              <p className="kal-glass-subtle mt-2 rounded-lg border border-white/30 px-2 py-1.5 text-[0.65rem] font-medium leading-snug text-kal-text-secondary dark:border-white/10">
-                Uses the AutoPay length you set above (still billed monthly).
-              </p>
-            ) : null}
-          </>
-        )}
-        <p className="mt-2 text-xs font-medium leading-relaxed text-kal-text-secondary">
-          {tierAiQuotaCopy(config)}
-        </p>
-      </div>
-
-      <div className="mt-4 flex min-h-0 flex-1 flex-col">
-        <ul className="space-y-2">
-          {config.benefits.map((b) => (
-            <li key={b} className="flex items-start gap-2 text-xs leading-snug text-kal-text-secondary sm:text-sm">
-              <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
-              <span>{b}</span>
-            </li>
-          ))}
-        </ul>
-
-        {config.id === "basic" ? (
-          <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs leading-snug text-amber-800 backdrop-blur-sm dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
-            Want AI voice dictation every month? Upgrade to Pro for just ₹21 for 3 days.
-          </p>
-        ) : null}
-      </div>
-
-      <button
-        type="button"
-        onClick={() => {
-          if (lockedBySubscription) return;
-          onSelect(config.id);
-        }}
-        disabled={disabled}
-        aria-disabled={lockedBySubscription || undefined}
-        className={`mt-5 min-h-[48px] w-full shrink-0 text-center leading-snug disabled:opacity-60 ${
-          highlighted || lockedBySubscription
-            ? "kal-btn-accent inline-flex items-center justify-center whitespace-normal px-5 py-3 text-sm"
-            : "kal-glass-subtle inline-flex items-center justify-center whitespace-normal rounded-xl border border-white/25 px-4 py-3 text-sm font-bold text-kal-text dark:border-white/12"
-        } ${lockedBySubscription ? "cursor-default" : "transition"}`}
-      >
-        {buttonLabel}
-      </button>
-    </article>
-  );
-}
+const pro = TIERS.pro;
 
 export function PricingPageClient() {
   const {
     hasPaidAccess,
     hasHadTrial,
     status: subscriptionStatus,
-    tier: currentTier,
     freeTrialActive,
     freeTrialVoiceSecondsRemaining,
     freeTrialEndsAtIso,
@@ -378,13 +229,13 @@ export function PricingPageClient() {
   const showCancel =
     subscriptionStatus === "trial" || subscriptionStatus === "active";
 
-  const startCheckout = useCallback(async (tier: SubscriptionTier) => {
+  const startCheckout = useCallback(async () => {
     setBusy(true);
     setCheckoutError(null);
     try {
       const created = hasHadTrial
-        ? await createRazorpayMonthlySubscription(tier, autopayMonths)
-        : await createRazorpayTrialSubscription(tier, autopayMonths);
+        ? await createRazorpayMonthlySubscription("pro", autopayMonths)
+        : await createRazorpayTrialSubscription("pro", autopayMonths);
       if (!created.ok) {
         setCheckoutError({
           text: created.error,
@@ -400,10 +251,9 @@ export function PricingPageClient() {
         return;
       }
 
-      const tierConfig = TIERS[tier];
       const description = hasHadTrial
-        ? `${tierConfig.name} (${tierConfig.monthlyPriceDisplay}/mo) · AutoPay up to ${autopayMonths} monthly charge${autopayMonths === 1 ? "" : "s"}`
-        : `${tierConfig.name} 3-day trial (${tierConfig.trialPriceDisplay}) · then ${tierConfig.monthlyPriceDisplay}/mo · AutoPay up to ${autopayMonths} monthly charge${autopayMonths === 1 ? "" : "s"}`;
+        ? `${pro.name} (${pro.monthlyPriceDisplay}/mo) · AutoPay up to ${autopayMonths} monthly charge${autopayMonths === 1 ? "" : "s"}`
+        : `${pro.name} 2-day trial (${pro.trialPriceDisplay}) · then ${pro.monthlyPriceDisplay}/mo · AutoPay up to ${autopayMonths} monthly charge${autopayMonths === 1 ? "" : "s"}`;
       const rzp = new window.Razorpay({
         key: created.keyId,
         name: SITE_NAME,
@@ -443,22 +293,25 @@ export function PricingPageClient() {
     if (freeTrialActive && !hasPaidAccess) {
       return (
         <div className="rounded-2xl border border-kal-accent/35 bg-gradient-to-br from-kal-accent/12 to-kal-card-muted px-5 py-4 shadow-sm dark:border-kal-accent/25">
-          <p className="text-sm font-semibold text-kal-text">
-            24-hour welcome trial is active
-          </p>
+          <p className="text-sm font-semibold text-kal-text">1-day free trial is active</p>
           <p className="mt-2 text-sm leading-relaxed text-kal-text-secondary">
             You have{" "}
             <span className="font-semibold text-kal-text">
               {formatWelcomeVoiceTimeLeft(freeTrialVoiceSecondsRemaining)}
             </span>{" "}
-            of welcome voice time in this window
+            of welcome voice time
             {freeTrialEndsAtIso ? (
               <>
                 {" "}
-                (ends {new Date(freeTrialEndsAtIso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })})
+                (ends{" "}
+                {new Date(freeTrialEndsAtIso).toLocaleString(undefined, {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                })}
+                )
               </>
             ) : null}
-            . When it ends, start a 3-day paid trial (₹21 or ₹49), then ₹299/month AutoPay — cancel anytime.
+            . Then start the 2-day paid trial (₹19), then ₹299/month AutoPay — cancel anytime.
           </p>
         </div>
       );
@@ -468,35 +321,24 @@ export function PricingPageClient() {
         <div className="rounded-2xl border border-amber-300 bg-amber-50 px-5 py-4 backdrop-blur-sm dark:border-amber-800 dark:bg-amber-950/30">
           <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
             Your subscription is cancelled — your access continues until it expires. You can
-            subscribe again below to start a new plan.
+            subscribe again below.
           </p>
         </div>
       );
     }
     if (hasPaidAccess) {
-      let trialHint = "";
-      if (subscriptionStatus === "trial") {
-        if (currentTier === "basic") {
-          trialHint =
-            " During your 3-day trial you have 2 voice minutes to try voice dictation. When you’re ready for monthly voice quotas, upgrade to Pro from My Plan.";
-        } else {
-          trialHint =
-            " During the 3-day trial you have the voice minute limits shown on each card. After the first successful charge you get the full monthly voice quota for your tier.";
-        }
-      }
+      const trialHint =
+        subscriptionStatus === "trial"
+          ? " During your 2-day paid trial you have 15 voice minutes and 500k PrepBrain tokens. After the first successful charge you get 60 voice minutes and 2M tokens per month."
+          : "";
       return (
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 backdrop-blur-sm dark:border-emerald-800 dark:bg-emerald-950/30">
           <p className="text-sm font-medium text-emerald-900 dark:text-emerald-100">
-            You already have access.
-            {trialHint}{" "}
-            To move to a higher tier, use{" "}
+            You already have Pro access.{trialHint}{" "}
             <Link href="/my-plan" className="font-bold underline underline-offset-2">
               My Plan
-            </Link>
-            : pay only the prorated amount now for the rest of this month —
-            upgrade applies immediately. Your remaining AutoPay months carry over (no new 12-month
-            mandate). From the next billing cycle you are charged the new monthly price. You can
-            cancel anytime.
+            </Link>{" "}
+            has billing details and extra credits.
           </p>
         </div>
       );
@@ -505,8 +347,7 @@ export function PricingPageClient() {
       return (
         <div className="rounded-2xl border border-kal-accent/30 bg-kal-accent-soft/50 px-5 py-4 dark:border-kal-accent/25 dark:bg-kal-accent/10">
           <p className="text-sm font-medium text-kal-accent-dark dark:text-kal-accent">
-            Your last payment could not be processed. Subscribe again to
-            continue using {SITE_NAME}.
+            Your last payment could not be processed. Subscribe again to continue using {SITE_NAME}.
           </p>
         </div>
       );
@@ -515,8 +356,8 @@ export function PricingPageClient() {
       return (
         <div className="rounded-2xl border border-amber-300 bg-amber-50 px-5 py-4 backdrop-blur-sm dark:border-amber-800 dark:bg-amber-950/30">
           <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-            Your subscription has been cancelled and access has ended.
-            Choose a plan to get back to your daily routine.
+            Your subscription has been cancelled and access has ended. Subscribe to Pro below to
+            continue.
           </p>
         </div>
       );
@@ -526,11 +367,32 @@ export function PricingPageClient() {
     subscriptionStatus,
     hasPaidAccess,
     isCancelledWithAccess,
-    currentTier,
     freeTrialActive,
     freeTrialVoiceSecondsRemaining,
     freeTrialEndsAtIso,
   ]);
+
+  const lockedBySubscription = hasPaidAccess && !isCancelledWithAccess;
+  const isActiveProSubscription =
+    hasPaidAccess &&
+    (subscriptionStatus === "trial" || subscriptionStatus === "active");
+
+  let buttonLabel: string;
+  if (isActiveProSubscription) {
+    buttonLabel = "Current plan";
+  } else if (isCancelledWithAccess) {
+    buttonLabel = hasHadTrial
+      ? `Resubscribe — ${pro.monthlyPriceDisplay}/month`
+      : `Resubscribe — ${pro.trialPriceDisplay} trial`;
+  } else if (hasPaidAccess) {
+    buttonLabel = "Manage in app";
+  } else if (busy) {
+    buttonLabel = "Opening checkout...";
+  } else if (hasHadTrial) {
+    buttonLabel = `Subscribe — ${pro.monthlyPriceDisplay}/month`;
+  } else {
+    buttonLabel = `Start 2-day trial — ${pro.trialPriceDisplay}`;
+  }
 
   return (
     <>
@@ -541,21 +403,21 @@ export function PricingPageClient() {
       <section className="mx-auto max-w-5xl space-y-8 pb-10">
         <header className="kal-glass-panel rounded-2xl px-6 py-8 text-center">
           <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-kal-accent">
-            Choose Your Plan
+            Kalnehi Pro
           </p>
           <h1 className="mt-3 text-3xl font-bold tracking-tight text-kal-text">
-            Pick the plan that fits your goals
+            One simple plan for full prep
           </h1>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-kal-text-secondary">
-            New accounts get a one-time <span className="font-semibold text-kal-text">24-hour welcome trial</span>{" "}
-            (3 minutes of voice time). After that, start a{" "}
-            <span className="font-semibold text-kal-text">3-day paid trial</span> (₹21–₹49), then monthly AutoPay — you
-            can cancel anytime.
+            <span className="font-semibold text-kal-text">Step 1 — 1-day free trial:</span> 5 voice
+            minutes + 300,000 PrepBrain AI tokens.{" "}
+            <span className="font-semibold text-kal-text">Step 2 — 2-day paid trial (₹19):</span> 15
+            voice minutes + 500,000 tokens (separate pool; does not carry to monthly).{" "}
+            <span className="font-semibold text-kal-text">Step 3 — ₹299/month:</span> 60 voice minutes
+            + 2M tokens per month, AutoPay for the duration you choose — cancel anytime.
           </p>
           <div className="kal-glass-panel mx-auto mt-6 max-w-xl rounded-2xl border-2 border-kal-accent/40 px-4 py-4 shadow-[0_16px_40px_-24px_rgba(255,122,0,0.25)] sm:px-5">
-            <p className="text-sm font-semibold text-kal-text">
-              New here? Take the 2-minute feature tour first.
-            </p>
+            <p className="text-sm font-semibold text-kal-text">New here? Take the feature tour first.</p>
             <div className="mt-3 flex flex-col gap-2 sm:flex-row">
               <Link
                 href="/what-can-kalnehi-do"
@@ -567,7 +429,7 @@ export function PricingPageClient() {
                 href="/best-study-practices"
                 className="kal-btn-ghost inline-flex min-h-[44px] flex-1 items-center justify-center rounded-xl px-4 py-2.5 text-center text-sm font-semibold transition"
               >
-                🔬 Why these practices work
+                Why these practices work
               </Link>
             </div>
           </div>
@@ -575,24 +437,103 @@ export function PricingPageClient() {
 
         {statusBanner}
 
-        {(!hasPaidAccess || isCancelledWithAccess) ? (
-          <AutopayDurationPanel value={autopayMonths} onChange={setAutopayMonths} disabled={busy} hasHadTrial={hasHadTrial} />
+        {!hasPaidAccess || isCancelledWithAccess ? (
+          <AutopayDurationPanel
+            value={autopayMonths}
+            onChange={setAutopayMonths}
+            disabled={busy}
+            hasHadTrial={hasHadTrial}
+          />
         ) : null}
 
-        <div className="grid grid-cols-1 items-stretch gap-5 md:grid-cols-3">
-          {TIER_ORDER.map((tierId) => (
-            <TierCard
-              key={tierId}
-              config={TIERS[tierId]}
-              highlighted={tierId === "pro"}
-              busy={busy}
-              hasPaidAccess={hasPaidAccess}
-              hasHadTrial={hasHadTrial}
-              isCancelledWithAccess={isCancelledWithAccess}
-              isCurrentTier={currentTier === tierId && hasPaidAccess}
-              onSelect={startCheckout}
-            />
-          ))}
+        <div className="mx-auto max-w-lg">
+          <article className="kal-glass-panel relative flex min-h-0 flex-col rounded-2xl border-2 border-kal-accent/50 p-5 pb-6 ring-2 ring-kal-accent/30">
+            <span className="absolute -top-3 left-4 rounded-full bg-kal-accent px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-kal-accent-foreground">
+              Pro
+            </span>
+
+            <div className="mt-2 flex items-center gap-2">
+              <span className="text-kal-accent">
+                <Crown className="h-5 w-5" />
+              </span>
+              <h2 className="text-lg font-bold text-kal-text">{pro.name}</h2>
+            </div>
+            <p className="mt-1 text-xs text-kal-text-secondary">{pro.tagline}</p>
+
+            <ol className="mt-4 space-y-2 rounded-xl border border-kal-accent/30 bg-kal-accent/5 px-3 py-3 text-left text-xs leading-relaxed text-kal-text-secondary">
+              <li>
+                <span className="font-semibold text-kal-text">1.</span> Free: 1 day · 5 min voice ·
+                300k AI tokens
+              </li>
+              <li>
+                <span className="font-semibold text-kal-text">2.</span> Paid trial: 2 days · ₹19 · 15
+                min voice · 500k tokens
+              </li>
+              <li>
+                <span className="font-semibold text-kal-text">3.</span> Then {pro.monthlyPriceDisplay}
+                /mo · 60 min voice · 2M tokens (resets monthly)
+              </li>
+            </ol>
+
+            <div className="mt-4 rounded-xl border border-kal-accent/40 bg-kal-accent/10 px-3 py-3">
+              {hasHadTrial && !hasPaidAccess ? (
+                <>
+                  <p className="text-lg font-bold leading-snug text-kal-text">
+                    {pro.monthlyPriceDisplay}/month
+                  </p>
+                  <p className="mt-1 text-xs font-medium leading-snug text-kal-text-secondary">
+                    No trial — charged monthly from first payment. Uses the AutoPay length you set
+                    above.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-lg font-bold leading-snug text-kal-text">
+                    {pro.trialPriceDisplay} for 2 days
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-kal-text">
+                    → then {pro.monthlyPriceDisplay}/month
+                  </p>
+                  {!hasPaidAccess ? (
+                    <p className="kal-glass-subtle mt-2 rounded-lg border border-white/30 px-2 py-1.5 text-[0.65rem] font-medium leading-snug text-kal-text-secondary dark:border-white/10">
+                      AutoPay length uses the slider above (billed monthly after trial).
+                    </p>
+                  ) : null}
+                </>
+              )}
+            </div>
+
+            <div className="mt-4 flex min-h-0 flex-1 flex-col">
+              <ul className="space-y-2">
+                {pro.benefits.map((b) => (
+                  <li
+                    key={b}
+                    className="flex items-start gap-2 text-xs leading-snug text-kal-text-secondary sm:text-sm"
+                  >
+                    <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                    <span>{b}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (lockedBySubscription) return;
+                void startCheckout();
+              }}
+              disabled={busy || lockedBySubscription}
+              aria-disabled={lockedBySubscription || undefined}
+              className={`mt-5 min-h-[48px] w-full shrink-0 text-center leading-snug disabled:opacity-60 ${
+                lockedBySubscription
+                  ? "kal-btn-accent inline-flex cursor-default items-center justify-center whitespace-normal px-5 py-3 text-sm opacity-80"
+                  : "kal-btn-accent inline-flex items-center justify-center whitespace-normal px-5 py-3 text-sm transition"
+              }`}
+            >
+              {buttonLabel}
+            </button>
+          </article>
         </div>
 
         <div
@@ -608,11 +549,11 @@ export function PricingPageClient() {
           />
         ) : null}
 
-        {showCancel && (
+        {showCancel ? (
           <div className="mx-auto max-w-sm">
             <CancelSubscriptionButton />
           </div>
-        )}
+        ) : null}
 
         {checkoutError ? (
           <div className="kal-glass-subtle rounded-xl border border-kal-accent/25 bg-kal-accent-soft px-4 py-3 text-center dark:border-kal-accent/20 dark:bg-kal-accent/[0.08]">

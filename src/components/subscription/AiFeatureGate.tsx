@@ -17,7 +17,6 @@ export function AiFeatureGate({ children }: Props) {
     loading,
     hasAiAccess,
     hasPaidAccess,
-    isBasicTrial,
     isWelcomeTrial,
     canDoVoiceSession,
     voiceMinuteStatus,
@@ -40,7 +39,7 @@ export function AiFeatureGate({ children }: Props) {
         <Lock className="h-8 w-8 text-kal-text-secondary" />
         <h3 className="text-lg font-bold text-kal-text">Voice Dictation is a Pro feature</h3>
         <p className="max-w-sm text-sm text-kal-text-secondary">
-          Upgrade to Pro or Pro Max to unlock AI voice planning and dictation.
+          Subscribe to Pro to unlock AI voice planning and dictation.
         </p>
         <Link href="/pricing" className="kal-btn-accent">
           View Plans
@@ -58,28 +57,11 @@ export function AiFeatureGate({ children }: Props) {
           <Mic className="h-8 w-8 text-kal-accent" />
           <h3 className="text-lg font-bold text-kal-text">Welcome trial limit reached</h3>
           <p className="max-w-sm text-sm text-kal-text-secondary">
-            You&apos;ve used all 3 minutes of welcome voice time in your 24-hour trial. Start a
-            3-day paid trial — {TIERS.pro.trialPriceDisplay} (Pro) or {TIERS.pro_max.trialPriceDisplay}{" "}
-            (Pro Max) — then {TIERS.pro.monthlyPriceDisplay}/month. Cancel anytime.
+            You&apos;ve used all welcome voice time in your 1-day trial. Start a 2-day paid trial for{" "}
+            {TIERS.pro.trialPriceDisplay}, then {TIERS.pro.monthlyPriceDisplay}/month. Cancel anytime.
           </p>
           <Link href="/pricing" className="kal-btn-accent">
-            Start 3-day paid trial
-          </Link>
-        </div>
-      );
-    }
-
-    if (isBasicTrial) {
-      return (
-        <div className="flex flex-col items-center gap-4 rounded-2xl border border-amber-200 bg-amber-50 p-8 text-center dark:border-amber-800 dark:bg-amber-950/30">
-          <Mic className="h-8 w-8 text-amber-600 dark:text-amber-400" />
-          <h3 className="text-lg font-bold text-kal-text">Trial gift used</h3>
-          <p className="max-w-sm text-sm text-kal-text-secondary">
-            You&apos;ve used your trial bonus (2 voice minutes). Upgrade to Pro to get 40 voice
-            minutes per month and Dictate My Day on an ongoing basis.
-          </p>
-          <Link href="/pricing" className="kal-btn-accent">
-            Upgrade to Pro
+            Start 2-day paid trial
           </Link>
         </div>
       );
@@ -90,19 +72,11 @@ export function AiFeatureGate({ children }: Props) {
         <Mic className="h-8 w-8 text-amber-600 dark:text-amber-400" />
         <h3 className="text-lg font-bold text-kal-text">Monthly limit reached</h3>
         <p className="max-w-sm text-sm text-kal-text-secondary">
-          {voiceMinuteStatus}. Buy extra credits or upgrade your plan for higher limits.
+          {voiceMinuteStatus}. Buy extra credits on My Plan for more voice minutes.
         </p>
-        <div className="flex gap-3">
-          <Link href="/pricing" className="kal-btn-accent">
-            Upgrade Plan
-          </Link>
-          <Link
-            href="/my-plan"
-            className="kal-glass-subtle inline-flex min-h-[44px] items-center justify-center rounded-xl px-5 py-2.5 text-sm font-bold text-kal-text"
-          >
-            Buy Credits
-          </Link>
-        </div>
+        <Link href="/my-plan" className="kal-btn-accent">
+          Open My Plan
+        </Link>
       </div>
     );
   }

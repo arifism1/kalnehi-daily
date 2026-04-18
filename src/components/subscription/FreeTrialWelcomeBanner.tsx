@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { useFreeTrialLiveEndsIn } from "@/hooks/useFreeTrialLiveEndsIn";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
+import { FREE_TRIAL_VOICE_CAP_MINUTES } from "@/lib/freeTrial";
 import { useAuthStore } from "@/store/useAuthStore";
 
 const STORAGE_PREFIX = "kalnehi-free-trial-banner-dismissed";
@@ -55,7 +56,7 @@ export function FreeTrialWelcomeBanner() {
             Welcome
           </p>
           <p className="mt-0.5 text-sm font-bold leading-snug text-kal-text sm:text-base">
-            Your 24-hour free trial has started!
+            Your 1-day free trial has started!
           </p>
           {endsIn ? (
             <p className="mt-1 text-xs font-semibold tabular-nums text-kal-accent sm:text-sm">
@@ -63,8 +64,8 @@ export function FreeTrialWelcomeBanner() {
             </p>
           ) : null}
           <p className="mt-1 text-xs leading-relaxed text-kal-text-secondary sm:text-sm">
-            3 minutes of voice time — use it anytime before the clock above hits zero. Limits
-            don&apos;t roll over daily.
+            {FREE_TRIAL_VOICE_CAP_MINUTES} minutes of voice time — use it anytime before the clock
+            above hits zero. Limits don&apos;t roll over.
           </p>
         </div>
         <button

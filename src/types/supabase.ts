@@ -883,11 +883,18 @@ export type Database = {
         Row: {
           ai_tokens_month: string | null
           ai_tokens_used: number
+          welcome_ai_tokens_used: number
+          paid_trial_ai_tokens_used: number
+          subscription_cancelled_at: string | null
           attempts: Json | null
           bonus_photo_scans: number
           bonus_photo_scans_ledger: Json
           bonus_voice_minutes: number
           bonus_voice_minutes_ledger: Json
+          bonus_ai_tokens: number
+          bonus_ai_tokens_ledger: Json
+          bonus_ai_tokens_ledger_at_cancel: Json | null
+          bonus_voice_minutes_ledger_at_cancel: Json | null
           class_studying: string | null
           cuet_domain_subjects: Json
           full_name: string | null
@@ -926,11 +933,18 @@ export type Database = {
         Insert: {
           ai_tokens_month?: string | null
           ai_tokens_used?: number
+          welcome_ai_tokens_used?: number
+          paid_trial_ai_tokens_used?: number
+          subscription_cancelled_at?: string | null
           attempts?: Json | null
           bonus_photo_scans?: number
           bonus_photo_scans_ledger?: Json
           bonus_voice_minutes?: number
           bonus_voice_minutes_ledger?: Json
+          bonus_ai_tokens?: number
+          bonus_ai_tokens_ledger?: Json
+          bonus_ai_tokens_ledger_at_cancel?: Json | null
+          bonus_voice_minutes_ledger_at_cancel?: Json | null
           class_studying?: string | null
           cuet_domain_subjects?: Json
           full_name?: string | null
@@ -969,11 +983,18 @@ export type Database = {
         Update: {
           ai_tokens_month?: string | null
           ai_tokens_used?: number
+          welcome_ai_tokens_used?: number
+          paid_trial_ai_tokens_used?: number
+          subscription_cancelled_at?: string | null
           attempts?: Json | null
           bonus_photo_scans?: number
           bonus_photo_scans_ledger?: Json
           bonus_voice_minutes?: number
           bonus_voice_minutes_ledger?: Json
+          bonus_ai_tokens?: number
+          bonus_ai_tokens_ledger?: Json
+          bonus_ai_tokens_ledger_at_cancel?: Json | null
+          bonus_voice_minutes_ledger_at_cancel?: Json | null
           class_studying?: string | null
           cuet_domain_subjects?: Json
           full_name?: string | null

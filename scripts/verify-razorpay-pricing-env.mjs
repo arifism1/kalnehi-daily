@@ -7,7 +7,7 @@
  *   NODE_ENV=production node scripts/verify-razorpay-pricing-env.mjs   # stricter Pro (no dev fallback)
  *
  * Requires: RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET
- * Optional: RAZORPAY_PLAN_ID_BASIC, RAZORPAY_PLAN_ID_PRO, RAZORPAY_PLAN_ID_PRO_MAX
+ * Optional: RAZORPAY_PLAN_ID_PRO (single Pro monthly plan)
  */
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -18,20 +18,16 @@ import Razorpay from "razorpay";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
 
-/** Must match src/lib/subscriptionTiers.ts TIERS[*].monthlyPricePaise */
+/** Must match src/lib/subscriptionTiers.ts TIERS.pro.monthlyPricePaise */
 const TIER_EXPECTED_PAISE = {
-  basic: 9900,
   pro: 29900,
-  pro_max: 49900,
 };
 
 const RAZORPAY_PLAN_ID_FORMAT_RE = /^plan_[A-Za-z0-9]+$/;
 const RAZORPAY_PLAN_ID_PRO_FALLBACK = "plan_SbOStQOx52JVpG";
 
 const ENV_NAMES = {
-  basic: "RAZORPAY_PLAN_ID_BASIC",
   pro: "RAZORPAY_PLAN_ID_PRO",
-  pro_max: "RAZORPAY_PLAN_ID_PRO_MAX",
 };
 
 function loadEnvFiles() {
@@ -127,7 +123,7 @@ function matchesForPaise(expectedPaise) {
 }
 
 let exitCode = 0;
-const tiers = ["basic", "pro", "pro_max"];
+const tiers = ["pro"];
 
 console.log("Razorpay pricing env check");
 console.log(`NODE_ENV=${process.env.NODE_ENV ?? "(unset)"}`);

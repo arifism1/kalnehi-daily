@@ -12,6 +12,12 @@ import {
   truncatePrepBrainContextForApi,
   type PrepBrainContext,
 } from "@/lib/prepBrainContext";
+import {
+  consumeFromBonusLedger,
+  parseBonusLedger,
+  totalActiveBonus,
+} from "@/lib/bonusCreditsLedger";
+import { isFreeTrialWindowActive } from "@/lib/freeTrial";
 import { parseSubscriptionTier, type SubscriptionTier } from "@/lib/subscriptionTiers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { resolveHelpyjiGroqModels } from "@/lib/groqHelpyjiModel";
@@ -19,8 +25,11 @@ import { callChatCompletion, type AiChatMessage } from "@/lib/aiChatClient";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 import {
   effectivePrepbrainTokensUsed,
+  getAiTokenBudgetForPhase,
+  MONTHLY_AI_TOKEN_CAP,
   prepbrainCalendarMonthKey,
   prepbrainLimitReachedMessage,
+  resolveAiUsagePhase,
   type PrepBrainTokenRow,
 } from "@/lib/prepbrainTokens";
 
@@ -104,20 +113,12 @@ function buildCommerceBlock(input: {
   status: string | null;
 }): string {
   const { surface, paid, tier, status } = input;
-  const upsell =
-    paid && tier === "basic"
-      ? ["pro", "pro_max"]
-      : paid && tier === "pro"
-        ? ["pro_max"]
-        : paid && tier === "pro_max"
-          ? []
-          : ["basic", "pro", "pro_max"];
   return JSON.stringify({
     surface,
     has_active_paid_entitlement: paid,
     subscription_status: status,
     subscription_tier: tier,
-    upgrade_targets_hint: upsell,
+    upgrade_targets_hint: ["pro"],
   });
 }
 
@@ -129,7 +130,7 @@ function clipForDb(s: string): string {
 /**
  * POST /api/helpyji/chat
  * Body: { messages, surface, session_id, context?: PrepBrainContext }
- * Auth required. Pro / Pro Max users are not eligible.
+ * Auth required. Active Pro subscribers are not eligible on the upgrade surface (use PrepBrain in-app).
  */
 export async function POST(request: Request) {
   const admin = getSupabaseServiceRoleClient();
@@ -208,7 +209,9 @@ export async function POST(request: Request) {
 
   const { data: profile, error: profileErr } = await admin
     .from("user_profiles")
-    .select("subscription_status, subscription_end_date, subscription_tier, ai_tokens_used, ai_tokens_month")
+    .select(
+      "subscription_status, subscription_end_date, subscription_tier, ai_tokens_used, ai_tokens_month, welcome_ai_tokens_used, paid_trial_ai_tokens_used, bonus_ai_tokens_ledger, trial_started_at",
+    )
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -220,38 +223,79 @@ export async function POST(request: Request) {
     );
   }
 
-  // Shared 2M monthly token budget check (PrepBrain + HelpyJi combined).
-  if (profile) {
-    const monthKey = prepbrainCalendarMonthKey();
-    const tokenRow: PrepBrainTokenRow = {
-      ai_tokens_used: profile.ai_tokens_used,
-      ai_tokens_month: profile.ai_tokens_month,
-    };
-    if (effectivePrepbrainTokensUsed(tokenRow, monthKey) >= 2_000_000) {
-      return NextResponse.json(
-        { ok: false, error: prepbrainLimitReachedMessage() },
-        { status: 403 },
-      );
-    }
-  }
-
   const paid = profile
     ? isCurrentlyPaid(
         profile.subscription_status ?? null,
         profile.subscription_end_date ?? null,
       )
     : false;
+  const trialStarted =
+    profile && typeof profile.trial_started_at === "string"
+      ? profile.trial_started_at
+      : null;
+  const welcomeTrialActive =
+    Boolean(trialStarted) && !paid && isFreeTrialWindowActive(trialStarted);
+
+  const phase = profile
+    ? resolveAiUsagePhase({
+        hasPaidSubscriptionAccess: paid,
+        subscriptionStatus: profile.subscription_status ?? null,
+        welcomeTrialActive,
+      })
+    : "none";
+
+  const monthKey = prepbrainCalendarMonthKey();
+  const nowHelpy = new Date();
+  const tokenRow: PrepBrainTokenRow = profile
+    ? {
+        ai_tokens_used: profile.ai_tokens_used,
+        ai_tokens_month: profile.ai_tokens_month,
+        welcome_ai_tokens_used: profile.welcome_ai_tokens_used,
+        paid_trial_ai_tokens_used: profile.paid_trial_ai_tokens_used,
+      }
+    : {
+        ai_tokens_used: null,
+        ai_tokens_month: null,
+      };
+
+  if (profile && phase === "welcome") {
+    const { used, limit } = getAiTokenBudgetForPhase("welcome", tokenRow, monthKey);
+    if (used >= limit) {
+      return NextResponse.json(
+        { ok: false, error: prepbrainLimitReachedMessage("welcome") },
+        { status: 403 },
+      );
+    }
+  } else if (profile && phase === "paid_trial") {
+    const { used, limit } = getAiTokenBudgetForPhase("paid_trial", tokenRow, monthKey);
+    if (used >= limit) {
+      return NextResponse.json(
+        { ok: false, error: prepbrainLimitReachedMessage("paid_trial") },
+        { status: 403 },
+      );
+    }
+  } else if (profile && phase === "monthly") {
+    const baseUsed = effectivePrepbrainTokensUsed(tokenRow, monthKey);
+    const bonusRem = totalActiveBonus(
+      parseBonusLedger(profile.bonus_ai_tokens_ledger),
+      nowHelpy,
+    );
+    if (baseUsed >= MONTHLY_AI_TOKEN_CAP && bonusRem <= 0) {
+      return NextResponse.json(
+        { ok: false, error: prepbrainLimitReachedMessage("monthly") },
+        { status: 403 },
+      );
+    }
+  }
+
   const tier = parseSubscriptionTier(profile?.subscription_tier ?? undefined);
 
-  if (
-    surface !== "pricing" &&
-    (tier === "pro" || tier === "pro_max")
-  ) {
+  if (surface !== "pricing" && tier === "pro" && paid) {
     return NextResponse.json(
       {
         ok: false,
         error:
-          "HelpyJi on this page is for Basic and trial upgrades. Pro and Pro Max subscribers can use PrepBrain inside the app.",
+          "HelpyJi on this page helps visitors compare plans. Active Pro subscribers can use PrepBrain inside the app.",
       },
       { status: 403 },
     );
@@ -425,20 +469,60 @@ ${contextBlock}`;
     console.error("[helpyji/chat] usage write failed", usageWriteErr);
   }
 
-  // Persist shared token usage increment for this user.
-  if (profile && groqTotalTokens > 0) {
-    const monthKey = prepbrainCalendarMonthKey();
-    const tokenRow: PrepBrainTokenRow = {
-      ai_tokens_used: profile.ai_tokens_used,
-      ai_tokens_month: profile.ai_tokens_month,
-    };
-    const prevUsed = effectivePrepbrainTokensUsed(tokenRow, monthKey);
-    const { error: tokenErr } = await admin
-      .from("user_profiles")
-      .update({ ai_tokens_used: prevUsed + groqTotalTokens, ai_tokens_month: monthKey })
-      .eq("user_id", user.id);
-    if (tokenErr) {
-      console.error("[helpyji/chat] token persist failed", tokenErr);
+  // Persist shared token usage increment (same pools as PrepBrain).
+  if (profile && groqTotalTokens > 0 && phase !== "none") {
+    const delta = Math.max(0, Math.floor(groqTotalTokens));
+    const mk = prepbrainCalendarMonthKey();
+    const now = new Date();
+    if (phase === "welcome") {
+      const wu =
+        typeof profile.welcome_ai_tokens_used === "number" ? profile.welcome_ai_tokens_used : 0;
+      await admin
+        .from("user_profiles")
+        .update({
+          welcome_ai_tokens_used: wu + delta,
+          updated_at: now.toISOString(),
+        })
+        .eq("user_id", user.id);
+    } else if (phase === "paid_trial") {
+      const pu =
+        typeof profile.paid_trial_ai_tokens_used === "number"
+          ? profile.paid_trial_ai_tokens_used
+          : 0;
+      await admin
+        .from("user_profiles")
+        .update({
+          paid_trial_ai_tokens_used: pu + delta,
+          updated_at: now.toISOString(),
+        })
+        .eq("user_id", user.id);
+    } else if (phase === "monthly") {
+      const tr: PrepBrainTokenRow = {
+        ai_tokens_used: profile.ai_tokens_used,
+        ai_tokens_month: profile.ai_tokens_month,
+      };
+      const baseUsed = effectivePrepbrainTokensUsed(tr, mk);
+      let remain = delta;
+      const roomBase = Math.max(0, MONTHLY_AI_TOKEN_CAP - baseUsed);
+      const toBase = Math.min(remain, roomBase);
+      const nextBase = baseUsed + toBase;
+      remain -= toBase;
+      let bonusLed = parseBonusLedger(profile.bonus_ai_tokens_ledger);
+      if (remain > 0) {
+        const { ledger } = consumeFromBonusLedger(bonusLed, remain, now);
+        bonusLed = ledger;
+      }
+      const { error: tokenErr } = await admin
+        .from("user_profiles")
+        .update({
+          ai_tokens_used: nextBase,
+          ai_tokens_month: mk,
+          bonus_ai_tokens_ledger: bonusLed,
+          bonus_ai_tokens: totalActiveBonus(bonusLed, now),
+          updated_at: now.toISOString(),
+        })
+        .eq("user_id", user.id);
+      if (tokenErr) console.error("[helpyji/chat] token persist failed", tokenErr);
     }
   }
 

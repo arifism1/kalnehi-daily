@@ -14,7 +14,7 @@ import { TIERS } from "@/lib/subscriptionTiers";
 export function SubscriptionPaywallInterstitial({
   freeTrialEnded = false,
 }: {
-  /** After the 24h welcome trial ended without a paid plan. */
+  /** After the 1-day welcome trial ended without a paid plan. */
   freeTrialEnded?: boolean;
 }) {
   const router = useRouter();
@@ -69,11 +69,9 @@ export function SubscriptionPaywallInterstitial({
         >
           {freeTrialEnded ? (
             <>
-              Your 24-hour welcome trial is over. Start a 3-day paid trial —{" "}
-              <span className="font-semibold text-kal-text">{TIERS.pro.trialPriceDisplay}</span> on
-              Pro or <span className="font-semibold text-kal-text">{TIERS.pro_max.trialPriceDisplay}</span>{" "}
-              on Pro Max — full access, then {TIERS.pro.monthlyPriceDisplay}/month on AutoPay. Cancel
-              anytime.
+              Your 1-day welcome trial is over. Start a 2-day paid trial for{" "}
+              <span className="font-semibold text-kal-text">{TIERS.pro.trialPriceDisplay}</span> — full
+              Pro access, then {TIERS.pro.monthlyPriceDisplay}/month on AutoPay. Cancel anytime.
             </>
           ) : (
             <>

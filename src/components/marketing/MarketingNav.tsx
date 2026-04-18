@@ -194,7 +194,7 @@ export function MarketingNav() {
               onClick={() => setOpen(false)}
               className="inline-flex min-h-[44px] w-full items-center justify-center rounded-xl bg-kal-accent px-4 text-sm font-bold text-kal-accent-foreground transition hover:brightness-105 active:scale-[0.99]"
             >
-              Start your 3-day trial
+              Start your free trial
             </Link>
           </div>
         </div>
