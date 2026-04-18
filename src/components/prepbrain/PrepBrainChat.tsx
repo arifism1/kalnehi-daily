@@ -81,6 +81,9 @@ export function PrepBrainChat() {
         "sm:h-auto sm:min-h-[min(70vh,560px)] sm:max-h-none",
       ].join(" ")}
     >
+      <p className="shrink-0 border-b border-kal-border/50 bg-kal-accent-soft/35 px-3 py-2 text-center text-[11px] leading-snug text-kal-text sm:px-5 sm:text-xs">
+        Add syllabus tracker information to the app for more personalised response
+      </p>
       <div className="flex shrink-0 items-start justify-between gap-2 border-b border-kal-border/60 bg-kal-card/80 px-3 py-3 backdrop-blur-sm sm:items-center sm:gap-3 sm:px-5">
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-kal-accent-soft text-kal-accent ring-1 ring-kal-accent/20 sm:h-11 sm:w-11">
@@ -269,12 +272,12 @@ export function PrepBrainChat() {
             )}
           </button>
         </div>
-        <p className="mt-1.5 text-[10px] leading-snug text-kal-text-secondary">
+        <p className="mt-1 text-[10px] leading-snug text-kal-text-secondary">
           PrepBrain intelligently pulls only the data it needs to answer you.
         </p>
         {/* Mobile: one-line control; full disclaimer inside expandable panel */}
-        <details className="mt-1.5 sm:hidden">
-          <summary className="flex min-h-[40px] cursor-pointer list-none items-center text-[10px] leading-none text-kal-text-secondary underline decoration-kal-border decoration-dotted underline-offset-2 [&::-webkit-details-marker]:hidden">
+        <details className="mt-0.5 sm:hidden">
+          <summary className="flex cursor-pointer list-none items-center py-1.5 text-[10px] leading-snug text-kal-text-secondary underline decoration-kal-border decoration-dotted underline-offset-2 [&::-webkit-details-marker]:hidden">
             {"AI disclaimer · Terms"}
           </summary>
           <div className="mt-1.5 max-h-[min(28vh,200px)] overflow-y-auto rounded-md border border-kal-border/60 bg-kal-card-muted/40 px-2 py-1.5 text-[9px] leading-snug text-kal-text-secondary">
@@ -288,8 +291,8 @@ export function PrepBrainChat() {
           </div>
         </details>
 
-        <div className="mt-2 hidden space-y-2 sm:block">
-          <p className="text-[11px] text-kal-text-secondary">
+        <div className="mt-1 hidden space-y-1 sm:block">
+          <p className="text-[11px] leading-snug text-kal-text-secondary">
             Shift+Enter for a new line. PrepBrain uses your latest Kalnehi data each send.
           </p>
           <p className="text-[10px] leading-snug text-kal-text-secondary/90">

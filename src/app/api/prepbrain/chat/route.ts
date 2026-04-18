@@ -169,12 +169,62 @@ function parseMessages(raw: unknown): IncomingMessage[] | null {
 }
 
 /**
+ * Onboarding / capability questions must reach the model (not Token Guardian).
+ */
+function isPrepBrainCapabilityQuestion(msg: string): boolean {
+  const t = msg.trim().toLowerCase();
+  if (!t) return false;
+  return (
+    /\bhow can (you|prepbrain|it) help\b/.test(t) ||
+    /\bwhat can (you|prepbrain|it) do\b/.test(t) ||
+    /\bwhat (are|is) you for\b/.test(t) ||
+    /\bwhat do you do\b/.test(t) ||
+    /\bwhat('?s| is) prepbrain\b/.test(t) ||
+    /\bhow does (this|prepbrain|kalnehi) work\b/.test(t) ||
+    /\bprepbrain\b.*\b(do|help|features?)\b/.test(t) ||
+    /\b(features?|capabilities)\b.*\b(prepbrain|you|kalnehi)\b/.test(t) ||
+    /\b(prepbrain|you)\b.*\b(features?|capabilities)\b/.test(t) ||
+    /\bwhat can kalnehi\b/.test(t) ||
+    /\bwhat does kalnehi\b/.test(t) ||
+    /\bwhat('?s| is) kalnehi\b/.test(t) ||
+    /\bwhat can kal\s*nehi\b/.test(t) ||
+    /\bwhat does kal\s*nehi\b/.test(t) ||
+    /\bwhat('?s| is) kal\s*nehi\b/.test(t) ||
+    /\b(tell me about|explain)\s+kalnehi\b/.test(t) ||
+    /\b(tell me about|explain)\s+kal\s*nehi\b/.test(t) ||
+    /\bkalnehi\b.*\b(features?|do|help|offer|include)\b/.test(t) ||
+    /\bkal\s*nehi\b.*\b(features?|do|help|offer|include)\b/.test(t)
+  );
+}
+
+/**
+ * Skepticism about needing PrepBrain / the app — must reach the model for a substantive reply.
+ */
+function isPrepBrainValueChallengeQuestion(msg: string): boolean {
+  const t = msg.trim().toLowerCase();
+  if (!t) return false;
+  return (
+    /\b(i|we)\s+(can|could)\b.*\bwithout\s+(you|prepbrain|kalnehi|this\s+app|the\s+app)\b/.test(t) ||
+    /\b(don'?t|do not)\s+need\s+(you|prepbrain|kalnehi|this|the app|an?\s+ai)\b/.test(t) ||
+    /\bno\s+need\s+for\s+(you|prepbrain|kalnehi|this|an?\s+ai)\b/.test(t) ||
+    /\bwhy\s+(should|do|would)\s+i\s+(use|need|bother\s+with)(\s+(you|prepbrain|kalnehi|this|the app))?\b/.test(
+      t,
+    ) ||
+    /\bwhat('?s| is)\s+the\s+point\b.*\b(you|prepbrain|kalnehi|this|ai|chat)\b/.test(t) ||
+    /\b(not\s+worth|waste\s+of\s+time|useless|unnecessary)\b.*\b(you|prepbrain|kalnehi|this\s+chat)\b/.test(t) ||
+    /\b(you|prepbrain)\s+(are|is)\s+(useless|unnecessary|pointless)\b/.test(t)
+  );
+}
+
+/**
  * Returns true for messages that are pure fluff with zero study value:
  * bare greetings, flattery, joke requests, or "who are you" openers.
  * Conservative — only blocks messages where the ENTIRE message is irrelevant,
  * so "hi, what should I study today?" correctly passes through.
  */
 function isSmallTalk(msg: string): boolean {
+  if (isPrepBrainCapabilityQuestion(msg) || isPrepBrainValueChallengeQuestion(msg)) return false;
+
   const t = msg.trim();
 
   // Purely a greeting with no study context
@@ -186,8 +236,8 @@ function isSmallTalk(msg: string): boolean {
   // Explicit joke / entertainment requests
   if (/\btell (me )?a joke\b|\bcrack a joke\b|\bsay something funny\b|\bmake me laugh\b/i.test(t)) return true;
 
-  // "Who/what are you" standalone queries
-  if (/^(who (are|made) you|what('?s| is) your name|are you (an?\s+)?ai|are you human|what can you do)[!?.,\s]*$/i.test(t)) return true;
+  // "Who/what are you" standalone queries (capability phrasing excluded above)
+  if (/^(who (are|made) you|what('?s| is) your name|are you (an?\s+)?ai|are you human)[!?.,\s]*$/i.test(t)) return true;
 
   return false;
 }
@@ -519,7 +569,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ok: true,
       message:
-        "Let's save your tokens for questions that actually help you crack your exam! 🎯 Ask me about your syllabus, weak chapters, daily plan, or study strategy.",
+        "Let's save your tokens for questions that actually help you crack your exam! Ask me about your syllabus, weak chapters, daily plan, or study strategy.",
       groq_model: "token-guardian",
       intent,
       tools_used: [],
