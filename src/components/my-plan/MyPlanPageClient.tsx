@@ -25,7 +25,7 @@ import {
   FREE_TRIAL_VOICE_CAP_SECONDS,
 } from "@/lib/freeTrial";
 import { SITE_NAME } from "@/lib/seo-metadata";
-import type { PrepBrainUsagePayload } from "@/lib/prepbrainTokens";
+import type { AiUsagePhase, PrepBrainUsagePayload } from "@/lib/prepbrainTokens";
 import { getTierConfig, TIERS } from "@/lib/subscriptionTiers";
 import { isHelpyJiEligibleForTier } from "@/lib/helpyjiVisibility";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -237,19 +237,42 @@ export function MyPlanPageClient() {
   useEffect(() => {
     if (!user?.id || loading) return;
     let cancelled = false;
+
+    function inferPaidPlanTokenPhase():
+      | "paid_trial"
+      | "monthly"
+      | undefined {
+      if (!hasPaidAccess) return undefined;
+      if (status === "trial") return "paid_trial";
+      if (status === "active" || status === "cancelled") return "monthly";
+      return undefined;
+    }
+
     void (async () => {
       try {
-        const res = await fetch("/api/prepbrain/usage");
+        const res = await fetch("/api/prepbrain/usage", {
+          credentials: "same-origin",
+          cache: "no-store",
+        });
         const data = (await res.json()) as {
           ok?: boolean;
           usage?: PrepBrainUsagePayload;
+          phase?: AiUsagePhase;
         };
         if (cancelled) return;
-        if (data.ok && data.usage) {
-          setPrepbrainUsage(data.usage);
-        } else {
+        if (!data.ok || !data.usage) {
           setPrepbrainUsage(null);
+          return;
         }
+        const inferred = inferPaidPlanTokenPhase();
+        const merged: AiUsagePhase =
+          data.usage.phase ??
+          data.phase ??
+          inferred ??
+          "none";
+        const phase: AiUsagePhase =
+          merged !== "none" ? merged : inferred ?? merged;
+        setPrepbrainUsage({ ...data.usage, phase });
       } catch {
         if (!cancelled) setPrepbrainUsage(null);
       }
@@ -607,13 +630,14 @@ export function MyPlanPageClient() {
                   limit={monthlyVoiceMinuteLimit}
                 />
                 {prepbrainUsage &&
-                (prepbrainUsage.phase === "paid_trial" || prepbrainUsage.phase === "monthly") ? (
+                (prepbrainUsage.phase === "paid_trial" ||
+                  prepbrainUsage.phase === "monthly") ? (
                   <TokenUsageBar
                     icon={<Brain className="h-4 w-4" />}
                     label={
                       prepbrainUsage.phase === "paid_trial"
-                        ? "PrepBrain AI tokens (paid trial)"
-                        : "PrepBrain AI tokens (monthly)"
+                        ? "PrepBrain tokens (paid trial)"
+                        : "PrepBrain tokens (this month)"
                     }
                     used={prepbrainUsage.used}
                     limit={prepbrainUsage.limit}

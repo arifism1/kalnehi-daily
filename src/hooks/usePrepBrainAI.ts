@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import {
   prepbrainLimitReachedMessage,
+  type AiUsagePhase,
   type PrepBrainUsagePayload,
 } from "@/lib/prepbrainTokens";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -32,12 +33,25 @@ export function usePrepBrainAI() {
     }
     let cancelled = false;
     setUsageLoading(true);
-    void fetch("/api/prepbrain/usage", { credentials: "same-origin" })
-      .then((res) => res.json() as Promise<{ ok?: boolean; usage?: PrepBrainUsagePayload }>)
+    void fetch("/api/prepbrain/usage", {
+      credentials: "same-origin",
+      cache: "no-store",
+    })
+      .then(
+        (res) =>
+          res.json() as Promise<{
+            ok?: boolean;
+            usage?: PrepBrainUsagePayload;
+            phase?: AiUsagePhase;
+          }>,
+      )
       .then((data) => {
         if (cancelled) return;
-        if (data.ok && data.usage) setUsage(data.usage);
-        else setUsage(null);
+        if (data.ok && data.usage) {
+          const phase: AiUsagePhase =
+            data.usage.phase ?? data.phase ?? "none";
+          setUsage({ ...data.usage, phase });
+        } else setUsage(null);
       })
       .catch(() => {
         if (!cancelled) setUsage(null);
@@ -77,7 +91,11 @@ export function usePrepBrainAI() {
           usage?: PrepBrainUsagePayload;
           groq_model?: string;
         };
-        if (data.usage) setUsage(data.usage);
+        if (data.usage) {
+          const phase: AiUsagePhase =
+            data.usage.phase ?? "none";
+          setUsage({ ...data.usage, phase });
+        }
         const reply = data.message;
         if (!res.ok || !data.ok || typeof reply !== "string" || !reply) {
           setMessages((prev) => prev.slice(0, -1));

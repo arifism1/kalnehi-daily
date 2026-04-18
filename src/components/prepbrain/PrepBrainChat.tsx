@@ -6,7 +6,10 @@ import { useEffect, useRef, useState } from "react";
 
 import { usePrepBrainAI } from "@/hooks/usePrepBrainAI";
 import { PREPBRAIN_UI_DISCLAIMER } from "@/lib/prepBrainPrompts";
-import { PREPBRAIN_USAGE_WARN_RATIO } from "@/lib/prepbrainTokens";
+import {
+  PREPBRAIN_USAGE_WARN_RATIO,
+  type AiUsagePhase,
+} from "@/lib/prepbrainTokens";
 
 const SUGGESTED = [
   "I need about 20 more marks — what should I focus on first?",
@@ -14,6 +17,19 @@ const SUGGESTED = [
   "I'm not meditating regularly. What should I do this week?",
   "Based on my data, am I executing my daily plan well enough?",
 ];
+
+function prepbrainUsagePeriodLabel(phase: AiUsagePhase): string {
+  switch (phase) {
+    case "welcome":
+      return "1-day welcome trial";
+    case "paid_trial":
+      return "2-day paid trial";
+    case "monthly":
+      return "Monthly plan";
+    default:
+      return "";
+  }
+}
 
 export function PrepBrainChat() {
   const {
@@ -38,6 +54,10 @@ export function PrepBrainChat() {
     !atTokenLimit &&
     usage.limit > 0 &&
     usage.used >= usage.limit * PREPBRAIN_USAGE_WARN_RATIO;
+  const usagePeriodLabel =
+    usage && usage.phase !== "none"
+      ? prepbrainUsagePeriodLabel(usage.phase)
+      : "";
   const [draft, setDraft] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -68,38 +88,52 @@ export function PrepBrainChat() {
           </span>
           <div className="min-w-0">
             <h2 className="text-base font-bold text-kal-text sm:text-lg">PrepBrain AI</h2>
-            {usage && !usageLoading ? (
-              <div className="mt-1 space-y-1">
-                <div className="flex items-center justify-between gap-2 text-[10px] sm:text-[11px]">
-                  <span className="truncate font-medium tabular-nums text-kal-text">
-                    Tokens used: {usage.used.toLocaleString("en-IN")} /{" "}
-                    {usage.limit.toLocaleString("en-IN")} this month
+            {usage && !usageLoading && usage.phase !== "none" ? (
+              <div className="mt-1.5 space-y-1.5">
+                <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 text-[10px] sm:text-[11px]">
+                  <span className="min-w-0 font-medium tabular-nums text-kal-text">
+                    <span className="text-kal-text-secondary">Used </span>
+                    {usage.used.toLocaleString("en-IN")}
+                    <span className="text-kal-text-secondary"> / </span>
+                    {usage.limit.toLocaleString("en-IN")}
+                    <span className="text-kal-text-secondary"> · Remaining </span>
+                    {Math.max(0, usage.limit - usage.used).toLocaleString("en-IN")}
                   </span>
-                  {usageNearLimit && (
-                    <span className="shrink-0 text-[10px] font-semibold leading-none text-amber-800 dark:text-amber-200/90">
-                      Approaching monthly limit
-                    </span>
-                  )}
+                  <span className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+                    {usagePeriodLabel ? (
+                      <span className="text-[10px] text-kal-text-secondary">
+                        {usagePeriodLabel}
+                      </span>
+                    ) : null}
+                    {usageNearLimit ? (
+                      <span className="text-[10px] font-semibold leading-none text-amber-800 dark:text-amber-200/90">
+                        Near limit
+                      </span>
+                    ) : null}
+                  </span>
                 </div>
                 <div
-                  className="h-1.5 w-full overflow-hidden rounded-full bg-kal-border/80"
+                  className="h-2 w-full overflow-hidden rounded-full bg-kal-border/80"
                   role="progressbar"
                   aria-valuenow={Math.round(usagePct)}
                   aria-valuemin={0}
                   aria-valuemax={100}
-                  aria-label="PrepBrain token usage this month"
+                  aria-label={`PrepBrain tokens: ${usage.used.toLocaleString("en-IN")} used of ${usage.limit.toLocaleString("en-IN")}`}
                 >
                   <div
                     className={`h-full rounded-full transition-[width] duration-300 ${
                       atTokenLimit
-                        ? "bg-kal-accent/90"
+                        ? "bg-[var(--kal-danger-text)]"
                         : usageNearLimit
-                          ? "bg-kal-warn-border/90"
-                          : "bg-kal-accent/90"
+                          ? "bg-amber-500"
+                          : "bg-kal-accent"
                     }`}
                     style={{ width: `${usagePct}%` }}
                   />
                 </div>
+                <p className="text-[9px] leading-snug text-kal-text-secondary sm:text-[10px]">
+                  More complex queries use more tokens. Use carefully.
+                </p>
                 {tokenLimitMessage ? (
                   <p className="text-[10px] leading-snug text-[var(--kal-danger-text)]">
                     {tokenLimitMessage}

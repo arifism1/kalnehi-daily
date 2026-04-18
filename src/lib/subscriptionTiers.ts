@@ -259,7 +259,7 @@ export const EXTRA_CREDIT_PACKS: ExtraCreditPack[] = [
   },
   {
     id: "ai_tokens_1m",
-    label: "+1M PrepBrain AI tokens",
+    label: "+10,00,000 (One Million) PrepBrain AI tokens",
     amount: 1_000_000,
     pricePaise: 9900,
     priceDisplay: "₹99",
