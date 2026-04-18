@@ -2,11 +2,15 @@
 
 import clsx from "clsx";
 import { Bell, Download, Loader2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 import { useNotificationsToast } from "@/components/settings/notificationsToastContext";
+import { SettingsSheetSwitch } from "@/components/settings/SettingsSheetSwitch";
 import { isFirebaseConfigured } from "@/lib/firebase/config";
-import { obtainFcmToken } from "@/lib/firebase/messagingClient";
+import {
+  obtainFcmToken,
+  revokeFcmToken,
+} from "@/lib/firebase/messagingClient";
 import { SITE_NAME } from "@/lib/seo-metadata";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
 
@@ -25,7 +29,18 @@ async function registerTokenOnServer(token: string): Promise<boolean> {
   return res.ok;
 }
 
+async function unregisterTokenOnServer(token: string): Promise<boolean> {
+  const q = new URLSearchParams({ token });
+  const res = await fetch(`/api/fcm/register?${q.toString()}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  return res.ok;
+}
+
 export function SmartNotificationSetupBanner() {
+  const baseId = useId();
+  const tokenRef = useRef<string | null>(null);
   const showToast = useNotificationsToast();
   const {
     installed,
@@ -36,29 +51,70 @@ export function SmartNotificationSetupBanner() {
   } = usePwaInstall();
 
   const [perm, setPerm] = useState<NotificationPermission>("default");
+  const [pushOn, setPushOn] = useState(false);
   const [busy, setBusy] = useState(false);
   const [installBusy, setInstallBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const configured = isFirebaseConfigured();
 
-  const syncPerm = useCallback(() => {
+  const unsupported =
+    typeof window !== "undefined" &&
+    (!("Notification" in window) || !("serviceWorker" in navigator));
+
+  const syncFromBrowser = useCallback(async () => {
     if (typeof window === "undefined" || !("Notification" in window)) {
       setPerm("denied");
+      setPushOn(false);
       return;
     }
     setPerm(Notification.permission);
-  }, []);
+
+    if (!configured) {
+      setPushOn(false);
+      return;
+    }
+    if (Notification.permission !== "granted") {
+      setPushOn(false);
+      return;
+    }
+
+    const want =
+      typeof localStorage !== "undefined" &&
+      localStorage.getItem(LS_ENABLED) === "1";
+
+    try {
+      const { token, hint } = await obtainFcmToken();
+      if (!token) {
+        if (hint) console.warn("[SmartNotificationSetupBanner FCM]", hint);
+        setPushOn(want);
+        return;
+      }
+      tokenRef.current = token;
+      if (!want) {
+        setPushOn(false);
+        return;
+      }
+      const ok = await registerTokenOnServer(token);
+      setPushOn(ok || want);
+    } catch (e) {
+      console.error(e);
+      setPushOn(want);
+    }
+  }, [configured]);
 
   useEffect(() => {
-    syncPerm();
+    void syncFromBrowser();
+  }, [syncFromBrowser]);
+
+  useEffect(() => {
     const onVis = () => {
-      if (document.visibilityState === "visible") syncPerm();
+      if (document.visibilityState === "visible") void syncFromBrowser();
     };
     document.addEventListener("visibilitychange", onVis);
     return () => document.removeEventListener("visibilitychange", onVis);
-  }, [syncPerm]);
+  }, [syncFromBrowser]);
 
-  const allowNotifications = useCallback(async () => {
+  const enablePush = useCallback(async () => {
     setMessage(null);
     if (!configured) {
       setMessage("Push is not configured on this deployment.");
@@ -82,7 +138,7 @@ export function SmartNotificationSetupBanner() {
           `Your browser will ask whether ${SITE_NAME} can send notifications — choose Allow to continue.`,
         );
         const p = await Notification.requestPermission();
-        syncPerm();
+        setPerm(p);
         if (p !== "granted") {
           setMessage(
             p === "denied"
@@ -111,20 +167,60 @@ export function SmartNotificationSetupBanner() {
         return;
       }
 
+      tokenRef.current = token;
       try {
         localStorage.setItem(LS_ENABLED, "1");
       } catch {
         /* ignore */
       }
-      showToast("Notifications allowed for this device.");
-      syncPerm();
+      setPushOn(true);
+      showToast("Push notifications are on for this device.");
     } catch (e) {
       console.error(e);
       setMessage("Something went wrong. Try again.");
     } finally {
       setBusy(false);
     }
-  }, [configured, showToast, syncPerm]);
+  }, [configured, showToast]);
+
+  const disablePush = useCallback(async () => {
+    setMessage(null);
+    setBusy(true);
+    try {
+      const tok = tokenRef.current;
+      await revokeFcmToken();
+      if (tok) {
+        await unregisterTokenOnServer(tok);
+      }
+      tokenRef.current = null;
+      try {
+        localStorage.removeItem(LS_ENABLED);
+      } catch {
+        /* ignore */
+      }
+      setPushOn(false);
+      showToast("Push notifications are off for this device.", "neutral");
+    } catch (e) {
+      console.error(e);
+      setMessage("Could not turn off push completely. Try clearing site data.");
+      try {
+        localStorage.removeItem(LS_ENABLED);
+      } catch {
+        /* ignore */
+      }
+      setPushOn(false);
+    } finally {
+      setBusy(false);
+    }
+  }, [showToast]);
+
+  const onPushToggle = useCallback(
+    (next: boolean) => {
+      if (next) void enablePush();
+      else void disablePush();
+    },
+    [disablePush, enablePush],
+  );
 
   const runInstall = useCallback(async () => {
     setMessage(null);
@@ -147,9 +243,8 @@ export function SmartNotificationSetupBanner() {
     }
   }, [promptInstall, needsIosInstallModal, showToast]);
 
-  const notificationsOk = perm === "granted";
   const pwaOk = installed;
-  const allOk = notificationsOk && pwaOk;
+  const allOk = pushOn && pwaOk;
 
   if (allOk) {
     return (
@@ -164,7 +259,7 @@ export function SmartNotificationSetupBanner() {
 
   return (
     <div
-      className="space-y-3 rounded-2xl border border-kal-border/80 bg-kal-card-muted/80 px-4 py-4 backdrop-blur-sm"
+      className="space-y-3 rounded-2xl border-2 border-kal-border-strong bg-kal-bg-elevated px-4 py-4 shadow-sm"
       role="region"
       aria-label="Notification setup"
     >
@@ -176,39 +271,45 @@ export function SmartNotificationSetupBanner() {
         </p>
       </div>
 
-      <ul className="list-inside list-disc space-y-1 text-xs text-kal-muted sm:text-sm">
-        <li>
-          <strong className="text-kal-text">Notifications:</strong>{" "}
-          {perm === "granted"
-            ? "Allowed"
-            : perm === "denied"
-              ? "Blocked — change in browser or system settings"
-              : "Not yet allowed"}
+      <ul className="list-none space-y-3 text-xs text-kal-muted sm:text-sm">
+        <li className="rounded-xl border border-kal-border/80 bg-white/40 px-3 py-3 dark:bg-zinc-900/30">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-kal-text">Push notifications</p>
+              <p className="mt-0.5 text-[11px] leading-snug text-kal-muted sm:text-xs">
+                {!configured
+                  ? "Push is not configured on this server."
+                  : unsupported
+                    ? "This browser does not support web push."
+                    : perm === "denied"
+                      ? "Blocked for this site — change in browser or system settings."
+                      : perm === "default"
+                        ? "Browser permission not granted yet — turn on to allow."
+                        : pushOn
+                          ? "On — this device can receive pushes from Kalnehi."
+                          : "Browser allows notifications — turn on to register this device."}
+              </p>
+            </div>
+            <SettingsSheetSwitch
+              id={`${baseId}-smart-push`}
+              checked={pushOn}
+              disabled={
+                busy ||
+                !configured ||
+                unsupported ||
+                perm === "denied"
+              }
+              onChange={onPushToggle}
+            />
+          </div>
         </li>
-        <li>
+        <li className="list-inside list-disc pl-1">
           <strong className="text-kal-text">Installed app:</strong>{" "}
           {installed ? "Yes" : "Not installed as PWA"}
         </li>
       </ul>
 
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-        {!notificationsOk ? (
-          <button
-            type="button"
-            disabled={busy || perm === "denied"}
-            onClick={() => void allowNotifications()}
-            className={clsx(
-              "inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition",
-              perm === "denied"
-                ? "cursor-not-allowed border border-kal-border bg-kal-card-muted text-kal-muted"
-                : "border border-kal-accent/40 bg-kal-accent text-white shadow-sm hover:opacity-95 disabled:opacity-60",
-            )}
-          >
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            Allow notifications
-          </button>
-        ) : null}
-
         {!pwaOk && showInstallButton && installEligibilityKnown ? (
           <button
             type="button"
@@ -227,7 +328,7 @@ export function SmartNotificationSetupBanner() {
       </div>
 
       {message ? (
-        <p className="text-xs text-kal-muted sm:text-sm" role="status">
+        <p className="text-xs text-kal-text-secondary sm:text-sm" role="status">
           {message}
         </p>
       ) : null}

@@ -27,19 +27,13 @@ import {
 import {
   FREE_TRIAL_PHOTO_CAP,
   FREE_TRIAL_VOICE_CAP_SECONDS,
-  isFreeTrialWindowActive,
   isPaidSubscriptionAccess,
 } from "@/lib/freeTrial";
 import {
+  coerceVoiceMinutesUsed,
   firstOfCurrentMonthDateString,
   needsMonthlyUsageReset,
 } from "@/lib/subscriptionUsage";
-import {
-  clampBilledVoiceSeconds,
-  coerceVoiceMinutesUsed,
-  minutesFromDurationSeconds,
-  normalizeDurationSecondsFromRequest,
-} from "@/lib/voiceSessionBilling";
 import {
   AUTOPAY_MONTHS_MIN,
   clampAutopayMonths,
@@ -693,56 +687,56 @@ export async function createRazorpayTrialSubscription(
   const userId = await getAuthedUserId();
   if (!userId) return { ok: false, error: "Please sign in to subscribe." };
 
+  const prefill = await loadRazorpayPrefillForUser(userId);
+
+  const config = getRazorpayConfig();
+  if (!config) {
+    return {
+      ok: false,
+      error: "Payment system is not configured yet.",
+      code: "payment_not_configured",
+      debugHint: "Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in the server environment (e.g. Vercel Production).",
+    };
+  }
+
+  const admin = getAdminClient();
+  if (!admin) {
+    return {
+      ok: false,
+      error: "Payment system is not configured yet.",
+      code: "payment_not_configured",
+      debugHint:
+        "Set SUPABASE_SERVICE_ROLE_KEY and NEXT_PUBLIC_SUPABASE_URL so billing can update profiles.",
+    };
+  }
+
+  const { data: existing } = await admin
+    .from("user_profiles")
+    .select("subscription_status, subscription_end_date, has_had_trial")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (existing?.has_had_trial) {
+    return {
+      ok: false,
+      error: "You already used your 2-day paid trial. Subscribe monthly (₹299/mo) to continue.",
+    };
+  }
+
+  if (existing) {
+    const st = existing.subscription_status;
+    const endDate = existing.subscription_end_date
+      ? new Date(existing.subscription_end_date)
+      : null;
+    const stillHasAccess = endDate && endDate.getTime() > Date.now();
+    if ((st === "trial" || st === "active") && stillHasAccess) {
+      return { ok: false, error: "You already have an active subscription." };
+    }
+  }
+
+  const tierConfig = TIERS[tier];
+
   try {
-    const prefill = await loadRazorpayPrefillForUser(userId);
-
-    const config = getRazorpayConfig();
-    if (!config) {
-      return {
-        ok: false,
-        error: "Payment system is not configured yet.",
-        code: "payment_not_configured",
-        debugHint: "Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in the server environment (e.g. Vercel Production).",
-      };
-    }
-
-    const admin = getAdminClient();
-    if (!admin) {
-      return {
-        ok: false,
-        error: "Payment system is not configured yet.",
-        code: "payment_not_configured",
-        debugHint:
-          "Set SUPABASE_SERVICE_ROLE_KEY and NEXT_PUBLIC_SUPABASE_URL so billing can update profiles.",
-      };
-    }
-
-    const { data: existing } = await admin
-      .from("user_profiles")
-      .select("subscription_status, subscription_end_date, has_had_trial")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (existing?.has_had_trial) {
-      return {
-        ok: false,
-        error: "You already used your 2-day paid trial. Subscribe monthly (₹299/mo) to continue.",
-      };
-    }
-
-    if (existing) {
-      const st = existing.subscription_status;
-      const endDate = existing.subscription_end_date
-        ? new Date(existing.subscription_end_date)
-        : null;
-      const stillHasAccess = endDate && endDate.getTime() > Date.now();
-      if ((st === "trial" || st === "active") && stillHasAccess) {
-        return { ok: false, error: "You already have an active subscription." };
-      }
-    }
-
-    const tierConfig = TIERS[tier];
-
     const razorpay = getRazorpayClient(config);
     const hadEnvPlanId = Boolean(resolveRazorpayPlanId(tier));
     const resolved = await resolveRazorpayPlanIdWithApiFallback(razorpay, tier);
@@ -829,9 +823,6 @@ export async function createRazorpayTrialSubscription(
       return { ok: false, error: safeErrorMessage(error) };
     }
   } catch (error) {
-    console.error("[subscription] createRazorpayTrialSubscription: outer", {
-      safeMessage: safeErrorMessage(error),
-    });
     return { ok: false, error: safeErrorMessage(error) };
   }
 }
@@ -1097,11 +1088,10 @@ type PaidProfileVoiceRow = {
   subscription_tier: string | null;
   subscription_status: string | null;
   subscription_end_date: string | null;
-  voice_minutes_used_this_month: number | string | null;
+  voice_minutes_used_this_month: number | null;
   bonus_voice_minutes_ledger: unknown;
   usage_reset_date: string | null;
   photo_scans_used_this_month: number | null;
-  updated_at: string | null;
 };
 
 async function applyPaidVoiceMinuteUsage(
@@ -1144,25 +1134,11 @@ async function applyPaidVoiceMinuteUsage(
     patch.usage_reset_date = firstOfCurrentMonthDateString();
   }
 
-  if (!resetNeeded && fromMonthly > 0 && data.updated_at) {
-    const { data: updatedRow, error: updateErr } = await admin
-      .from("user_profiles")
-      .update(patch)
-      .eq("user_id", userId)
-      .eq("updated_at", data.updated_at)
-      .select("id")
-      .maybeSingle();
-    if (updateErr) return { ok: false, error: "Unable to update usage." };
-    if (!updatedRow) {
-      return { ok: false, error: "Could not apply usage. Please try again." };
-    }
-  } else {
-    const { error: updateErr } = await admin
-      .from("user_profiles")
-      .update(patch)
-      .eq("user_id", userId);
-    if (updateErr) return { ok: false, error: "Unable to update usage." };
-  }
+  const { error: updateErr } = await admin
+    .from("user_profiles")
+    .update(patch)
+    .eq("user_id", userId);
+  if (updateErr) return { ok: false, error: "Unable to update usage." };
 
   return {
     ok: true,
@@ -1265,21 +1241,16 @@ export async function incrementPhotoScanUsage(): Promise<
   };
 }
 
-/**
- * Read-only: whether the current user can bill `billedDurationSeconds` (1–300, already clamped).
- * Use before expensive Groq calls (API) or after a successful structured parse, before DB writes.
- */
-export async function peekVoiceQuotaForBilledSeconds(
-  billedDurationSeconds: number,
-): Promise<{ ok: true } | { ok: false; error: string }> {
+export async function incrementVoiceMinuteUsage(
+  minutes: number = 1,
+): Promise<
+  { ok: true; used: number; limit: number } | { ok: false; error: string }
+> {
   const userId = await getAuthedUserId();
   if (!userId) return { ok: false, error: "Please sign in." };
 
   const admin = getAdminClient();
   if (!admin) return { ok: false, error: "Service unavailable." };
-
-  const seconds = clampBilledVoiceSeconds(billedDurationSeconds);
-  const minutes = minutesFromDurationSeconds(seconds);
 
   const { data, error } = await admin
     .from("user_profiles")
@@ -1294,93 +1265,17 @@ export async function peekVoiceQuotaForBilledSeconds(
   const now = new Date();
 
   if (
-    isPaidSubscriptionAccess(
-      data.subscription_status ?? undefined,
-      data.subscription_end_date ?? undefined,
-    )
-  ) {
-    const resetNeeded = needsMonthlyUsageReset(data.usage_reset_date);
-    const currentUsed = resetNeeded
-      ? 0
-      : coerceVoiceMinutesUsed(data.voice_minutes_used_this_month);
-    const ledger = parseBonusLedger(data.bonus_voice_minutes_ledger);
-    const rawTier = data.subscription_tier;
-    const tierResolved: SubscriptionTier = parseSubscriptionTier(rawTier) ?? "pro";
-    const isTrial = data.subscription_status === "trial";
-    const monthlyLimit = getVoiceMinutesLimit(tierResolved, isTrial);
-    const { taken: takenFromBonus } = consumeFromBonusLedger(ledger, minutes, now);
-    const fromMonthly = minutes - takenFromBonus;
-    if (fromMonthly > 0 && currentUsed + fromMonthly > monthlyLimit) {
-      return { ok: false, error: "Monthly voice minutes limit reached." };
-    }
-    return { ok: true };
-  }
-
-  if (!data.has_used_free_trial) {
-    return { ok: true };
-  }
-  if (!data.trial_started_at) {
-    return { ok: false, error: "Subscribe or start a trial to use this feature." };
-  }
-  if (!isFreeTrialWindowActive(data.trial_started_at, now)) {
-    return {
-      ok: false,
-      error:
-        "Your 1-day free trial has ended. Start the 2-day paid trial to keep going.",
-    };
-  }
-  const used = data.trial_voice_seconds_used ?? 0;
-  if (used + seconds > FREE_TRIAL_VOICE_CAP_SECONDS) {
-    return {
-      ok: false,
-      error:
-        "You've used all welcome voice time for this trial (5 minutes).",
-    };
-  }
-  return { ok: true };
-}
-
-/**
- * Bill a voice session after successful work. `billedDurationSeconds` should come from
- * `normalizeDurationSecondsFromRequest` (or `clampBilledVoiceSeconds` for legacy minute→sec).
- */
-export async function incrementVoiceUsageFromSession(
-  billedDurationSeconds: number,
-): Promise<
-  { ok: true; used: number; limit: number } | { ok: false; error: string }
-> {
-  const userId = await getAuthedUserId();
-  if (!userId) return { ok: false, error: "Please sign in." };
-
-  const admin = getAdminClient();
-  if (!admin) return { ok: false, error: "Service unavailable." };
-
-  const seconds = clampBilledVoiceSeconds(billedDurationSeconds);
-  const minutes = minutesFromDurationSeconds(seconds);
-
-  const { data, error } = await admin
-    .from("user_profiles")
-    .select(
-      "subscription_tier, subscription_status, subscription_end_date, voice_minutes_used_this_month, bonus_voice_minutes_ledger, usage_reset_date, photo_scans_used_this_month, trial_started_at, trial_voice_seconds_used, has_used_free_trial, updated_at",
-    )
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (error || !data) return { ok: false, error: "Unable to check usage." };
-
-  const now = new Date();
-
-  if (
     isPaidSubscriptionAccess(data.subscription_status ?? undefined, data.subscription_end_date ?? undefined)
   ) {
     return applyPaidVoiceMinuteUsage(admin, userId, data, now, minutes);
   }
 
+  const addSec = Math.round(Math.max(0, minutes) * 60);
   const { data: rpcRaw, error: rpcErr } = await admin.rpc(
     "consume_welcome_trial_voice_seconds",
     {
       p_user_id: userId,
-      p_add_seconds: seconds,
+      p_add_seconds: addSec,
     },
   );
   if (rpcErr) return { ok: false, error: "Unable to check usage." };
@@ -1398,7 +1293,7 @@ export async function incrementVoiceUsageFromSession(
     const { data: again, error: againErr } = await admin
       .from("user_profiles")
       .select(
-        "subscription_tier, subscription_status, subscription_end_date, voice_minutes_used_this_month, bonus_voice_minutes_ledger, usage_reset_date, photo_scans_used_this_month, updated_at",
+        "subscription_tier, subscription_status, subscription_end_date, voice_minutes_used_this_month, bonus_voice_minutes_ledger, usage_reset_date, photo_scans_used_this_month",
       )
       .eq("user_id", userId)
       .maybeSingle();
@@ -1418,17 +1313,6 @@ export async function incrementVoiceUsageFromSession(
         ? welcome.error
         : "Unable to update usage.",
   };
-}
-
-/** @deprecated Prefer `incrementVoiceUsageFromSession` with measured seconds. */
-export async function incrementVoiceMinuteUsage(
-  minutes: number = 1,
-): Promise<
-  { ok: true; used: number; limit: number } | { ok: false; error: string }
-> {
-  return incrementVoiceUsageFromSession(
-    normalizeDurationSecondsFromRequest(minutes * 60),
-  );
 }
 
 // ---------------------------------------------------------------------------
@@ -1757,48 +1641,48 @@ export async function createRazorpayMonthlySubscription(
   const userId = await getAuthedUserId();
   if (!userId) return { ok: false, error: "Please sign in to subscribe." };
 
+  const prefill = await loadRazorpayPrefillForUser(userId);
+
+  const config = getRazorpayConfig();
+  if (!config) {
+    return {
+      ok: false,
+      error: "Payment system is not configured yet.",
+      code: "payment_not_configured",
+      debugHint: "Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in the server environment.",
+    };
+  }
+
+  const admin = getAdminClient();
+  if (!admin) {
+    return {
+      ok: false,
+      error: "Payment system is not configured yet.",
+      code: "payment_not_configured",
+      debugHint: "Set SUPABASE_SERVICE_ROLE_KEY and NEXT_PUBLIC_SUPABASE_URL.",
+    };
+  }
+
+  const { data: existing } = await admin
+    .from("user_profiles")
+    .select("subscription_status, subscription_end_date")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (existing) {
+    const st = existing.subscription_status;
+    const endDate = existing.subscription_end_date
+      ? new Date(existing.subscription_end_date)
+      : null;
+    const stillHasAccess = endDate && endDate.getTime() > Date.now();
+    if ((st === "trial" || st === "active") && stillHasAccess) {
+      return { ok: false, error: "You already have an active subscription." };
+    }
+  }
+
+  const tierConfig = TIERS[tier];
+
   try {
-    const prefill = await loadRazorpayPrefillForUser(userId);
-
-    const config = getRazorpayConfig();
-    if (!config) {
-      return {
-        ok: false,
-        error: "Payment system is not configured yet.",
-        code: "payment_not_configured",
-        debugHint: "Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in the server environment.",
-      };
-    }
-
-    const admin = getAdminClient();
-    if (!admin) {
-      return {
-        ok: false,
-        error: "Payment system is not configured yet.",
-        code: "payment_not_configured",
-        debugHint: "Set SUPABASE_SERVICE_ROLE_KEY and NEXT_PUBLIC_SUPABASE_URL.",
-      };
-    }
-
-    const { data: existing } = await admin
-      .from("user_profiles")
-      .select("subscription_status, subscription_end_date")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (existing) {
-      const st = existing.subscription_status;
-      const endDate = existing.subscription_end_date
-        ? new Date(existing.subscription_end_date)
-        : null;
-      const stillHasAccess = endDate && endDate.getTime() > Date.now();
-      if ((st === "trial" || st === "active") && stillHasAccess) {
-        return { ok: false, error: "You already have an active subscription." };
-      }
-    }
-
-    const tierConfig = TIERS[tier];
-
     const razorpay = getRazorpayClient(config);
     const hadEnvPlanId = Boolean(resolveRazorpayPlanId(tier));
     const resolved = await resolveRazorpayPlanIdWithApiFallback(razorpay, tier);
@@ -1880,9 +1764,6 @@ export async function createRazorpayMonthlySubscription(
       return { ok: false, error: safeErrorMessage(error) };
     }
   } catch (error) {
-    console.error("[subscription] createRazorpayMonthlySubscription: outer", {
-      safeMessage: safeErrorMessage(error),
-    });
     return { ok: false, error: safeErrorMessage(error) };
   }
 }

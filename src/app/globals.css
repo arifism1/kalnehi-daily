@@ -16,6 +16,8 @@
   --kal-border: rgba(210, 192, 168, 0.45);
   --kal-border-strong: rgba(196, 174, 148, 0.65);
   --kal-input-bg: rgba(255, 253, 249, 0.95);
+  /** Opaque modal / sheet surface (avoids see-through panels when glass tokens are too faint). */
+  --kal-bg-elevated: #fffcf8;
 
   /* ── Text ─────────────────────────────────────────────────────────── */
   --kal-text: #1C1710;
@@ -71,6 +73,7 @@
   --kal-border: rgba(90, 72, 50, 0.55);
   --kal-border-strong: rgba(110, 88, 60, 0.70);
   --kal-input-bg: rgba(40, 32, 22, 0.95);
+  --kal-bg-elevated: #1e1812;
 
   --kal-text: #F5EFE6;
   --kal-text-secondary: #CFC0AB;
@@ -132,6 +135,7 @@
   --color-kal-accent-dark: var(--kal-accent-dark);
   --color-kal-accent-glow: var(--kal-accent-glow);
   --color-kal-input-bg: var(--kal-input-bg);
+  --color-kal-bg-elevated: var(--kal-bg-elevated);
   --color-kal-danger-soft: var(--kal-danger-soft);
   --color-kal-danger-border: var(--kal-danger-border);
   --color-kal-danger-text: var(--kal-danger-text);

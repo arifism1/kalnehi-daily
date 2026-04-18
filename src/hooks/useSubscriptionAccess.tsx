@@ -25,7 +25,10 @@ import {
   remainingPhotoScansTrial,
   remainingVoiceSecondsTrial,
 } from "@/lib/freeTrial";
-import { effectiveUsageForDisplay } from "@/lib/subscriptionUsage";
+import {
+  coerceVoiceMinutesUsed,
+  effectiveUsageForDisplay,
+} from "@/lib/subscriptionUsage";
 import { parseSubscriptionTier, type SubscriptionTier } from "@/lib/subscriptionTiers";
 import { coerceVoiceMinutesUsed } from "@/lib/voiceSessionBilling";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -74,7 +77,7 @@ export type SubscriptionData = {
   welcomeTrialEligibleUnstarted: boolean;
   freeTrialEndsAtIso: string | null;
   freeTrialPhotoRemaining: number;
-  /** Seconds of voice remaining in welcome trial (0–180). */
+  /** Seconds of voice remaining in welcome trial (0–300). */
   freeTrialVoiceSecondsRemaining: number;
   /** Welcome trial clock ended, still no paid plan. */
   welcomeTrialExpiredNoPay: boolean;

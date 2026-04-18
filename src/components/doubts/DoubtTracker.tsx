@@ -199,6 +199,7 @@ export function DoubtTracker() {
     topic: "",
     groqModel: "",
     tagNote: null as string | null,
+    voiceSecondsCharged: null as number | null,
   });
 
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -364,19 +365,14 @@ export function DoubtTracker() {
           groq_model?: string;
           tag_note?: string;
           error?: string;
+          voice_seconds_charged?: number;
         };
 
         if (!parseRes.ok || !data.ok) {
-          const fallback =
-            parseRes.status === 429
-              ? "Voice quota exceeded."
-              : parseRes.status === 422
-                ? "Could not tag this doubt. Try again."
-                : "Could not tag this doubt. Try again.";
           setVoiceError(
             surfaceOptionalString(
-              typeof data.error === "string" ? data.error : null,
-              fallback,
+              data.error,
+              "Could not tag this doubt. Try again.",
             ),
           );
           return;
@@ -399,12 +395,20 @@ export function DoubtTracker() {
           ? resolveTopicLineAgainstCatalog(apiTopic, topicLineSet) ?? ""
           : "";
 
+        const charged =
+          typeof data.voice_seconds_charged === "number"
+            ? data.voice_seconds_charged
+            : null;
         setVoicePreview({
           title,
           subject,
           topic,
           groqModel: typeof data.groq_model === "string" ? data.groq_model : "",
-          tagNote: null,
+          tagNote:
+            typeof data.tag_note === "string" && data.tag_note.trim()
+              ? data.tag_note.trim()
+              : null,
+          voiceSecondsCharged: charged,
         });
         setVoicePreviewOpen(true);
       } catch {
@@ -425,7 +429,6 @@ export function DoubtTracker() {
     stopListening: stopVoiceListening,
   } = useDeviceSpeechRecognition({
     lang: voiceLang,
-    fallbackLang: voiceLang !== "en-US" ? "en-US" : undefined,
     maxSessionMs: 30_000,
     silenceMs: 3_500,
     onStart: () => {
@@ -454,6 +457,7 @@ export function DoubtTracker() {
   };
 
   const voiceBusy = voiceListening || voiceProcessing;
+  const voiceBanner = voiceRecError ?? voiceError;
 
   if (!hydrated) {
     return (
@@ -565,25 +569,14 @@ export function DoubtTracker() {
               ))}
             </select>
           </label>
-          {voiceRecError ? (
-            <p
-              role="alert"
-              className="text-center text-[11px] text-amber-800 dark:text-amber-200/95 sm:text-right"
-            >
-              <span className="font-semibold">Speech: </span>
-              {voiceRecError}
-            </p>
-          ) : null}
-          {voiceError ? (
+          {voiceBanner ? (
             <p
               role="alert"
               className="text-center text-[11px] text-orange-700 dark:text-orange-300/95 sm:text-right"
             >
-              <span className="font-semibold">Server: </span>
-              {voiceError}
+              {voiceBanner}
             </p>
-          ) : null}
-          {!voiceRecError && !voiceError && voiceListening ? (
+          ) : voiceListening ? (
             <p className="text-center text-[11px] text-kal-muted sm:text-right">
               Listening… tap the mic again to stop (max 30s).
             </p>
@@ -1012,6 +1005,7 @@ export function DoubtTracker() {
         onClose={() => setVoicePreviewOpen(false)}
         groqModel={voicePreview.groqModel}
         tagNote={voicePreview.tagNote}
+        voiceSecondsCharged={voicePreview.voiceSecondsCharged}
         initialTitle={voicePreview.title}
         initialSubject={voicePreview.subject}
         initialTopic={voicePreview.topic}

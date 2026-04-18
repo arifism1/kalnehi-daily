@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 
-import {
-  incrementVoiceUsageFromSession,
-  peekVoiceQuotaForBilledSeconds,
-} from "@/actions/subscription";
+import { incrementVoiceMinuteUsage } from "@/actions/subscription";
+import { clampVoiceBillingDurationSeconds } from "@/lib/voiceDurationBilling";
 import {
   allValidTopicLinesFromRows,
   buildDoubtVoiceTagSubjectList,
@@ -11,7 +9,6 @@ import {
   fetchDoubtVoiceTagSyllabusRows,
 } from "@/lib/doubtVoiceTagSyllabus";
 import { runDoubtVoiceTagGroq } from "@/lib/runDoubtVoiceTag";
-import { normalizeDurationSecondsFromRequest } from "@/lib/voiceSessionBilling";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -61,6 +58,17 @@ export async function POST(req: Request) {
     );
   }
 
+  const voiceSecondsCharged = clampVoiceBillingDurationSeconds(body.durationSeconds);
+
+  const usage = await incrementVoiceMinuteUsage(voiceSecondsCharged / 60);
+  if (!usage.ok) {
+    const unauthorized = usage.error === "Please sign in.";
+    return NextResponse.json(
+      { ok: false, error: usage.error },
+      { status: unauthorized ? 401 : 429 },
+    );
+  }
+
   let rows: Awaited<
     ReturnType<typeof fetchDoubtVoiceTagSyllabusRows>
   >["rows"] = [];
@@ -74,17 +82,8 @@ export async function POST(req: Request) {
       subject: null as string | null,
       topic: null as string | null,
       groq_model: "",
+      voice_seconds_charged: voiceSecondsCharged,
     });
-  }
-
-  const billedSeconds = normalizeDurationSecondsFromRequest(body.durationSeconds);
-  const peek = await peekVoiceQuotaForBilledSeconds(billedSeconds);
-  if (!peek.ok) {
-    const unauthorized = peek.error === "Please sign in.";
-    return NextResponse.json(
-      { ok: false, error: peek.error },
-      { status: unauthorized ? 401 : 429 },
-    );
   }
 
   const allowedSubjects = buildDoubtVoiceTagSubjectList(rows);
@@ -114,25 +113,15 @@ export async function POST(req: Request) {
   );
 
   if (!groq.ok) {
-    return NextResponse.json(
-      {
-        ok: false,
-        error:
-          typeof groq.error === "string" && groq.error.trim()
-            ? groq.error
-            : "Could not tag this doubt. Try again.",
-      },
-      { status: 422 },
-    );
-  }
-
-  const usage = await incrementVoiceUsageFromSession(billedSeconds);
-  if (!usage.ok) {
-    const unauthorized = usage.error === "Please sign in.";
-    return NextResponse.json(
-      { ok: false, error: usage.error },
-      { status: unauthorized ? 401 : 429 },
-    );
+    return NextResponse.json({
+      ok: true,
+      doubt_text: raw,
+      subject: null,
+      topic: null,
+      groq_model: "",
+      tag_note: groq.error,
+      voice_seconds_charged: voiceSecondsCharged,
+    });
   }
 
   return NextResponse.json({
@@ -141,5 +130,6 @@ export async function POST(req: Request) {
     subject: groq.data.subject,
     topic: groq.data.topic,
     groq_model: groq.data.groq_model,
+    voice_seconds_charged: voiceSecondsCharged,
   });
 }

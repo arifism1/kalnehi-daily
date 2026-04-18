@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-/** Back-compat: smart / voice notifications live on the notification hub. */
-export default function RemindersRedirect() {
+/** Legacy/alternate URL: Smart Notifications hub lives at `/notification`. */
+export default function RemindersRedirectPage() {
   redirect("/notification");
 }

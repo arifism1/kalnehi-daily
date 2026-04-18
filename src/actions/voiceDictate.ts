@@ -2,11 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 
-import { deleteDailyTask, insertDailyTask } from "@/actions/dailyPlan";
-import {
-  incrementVoiceUsageFromSession,
-  peekVoiceQuotaForBilledSeconds,
-} from "@/actions/subscription";
+import { insertDailyTask } from "@/actions/dailyPlan";
+import { incrementVoiceMinuteUsage } from "@/actions/subscription";
 import { slotFromStartEnd } from "@/lib/dailyPlanTime";
 import {
   fetchVoiceTasksFromGroq,
@@ -27,24 +24,13 @@ import {
   inferCategoryFromTaskName,
 } from "@/lib/voiceTimelineInfer";
 import { runVoiceParseDraft } from "@/lib/runVoiceParseDraft";
-import {
-  normalizeDurationSecondsFromRequest,
-} from "@/lib/voiceSessionBilling";
+import { voiceBillingMinutesFromOptionalDurationSeconds } from "@/lib/voiceDurationBilling";
 import type {
   VoiceDictateFailure,
   VoiceDictateInput,
   VoiceDictateSuccess,
   VoiceDictateSuccessParsed,
 } from "@/lib/voiceDictateTypes";
-
-async function deleteInsertedTaskIds(entryIds: string[]): Promise<void> {
-  for (const id of entryIds) {
-    const del = await deleteDailyTask(id);
-    if (!del.ok) {
-      console.error("[voiceDictate] deleteInsertedTaskIds failed for", id, del.error);
-    }
-  }
-}
 
 /** Structural copy of VoiceDraftTask — avoid that symbol in `"use server"` signatures (Turbopack can emit it at runtime). */
 type VoiceDraftRow = {
@@ -84,7 +70,7 @@ export async function runVoiceDictationPipeline(
   transcript: string,
   logDate: string,
   occurredAtIso: string,
-  durationSecondsRaw?: unknown,
+  durationSeconds?: number | null,
 ): Promise<VoiceDictateSuccess | VoiceDictateFailure> {
   const raw = transcript.trim().slice(0, 12_000);
   if (!raw) {
@@ -102,10 +88,10 @@ export async function runVoiceDictationPipeline(
     return { ok: true, mode: "fallback", transcript: raw };
   }
 
-  const billed = normalizeDurationSecondsFromRequest(durationSecondsRaw);
-  const peek = await peekVoiceQuotaForBilledSeconds(billed);
-  if (!peek.ok) {
-    return { ok: false, error: peek.error };
+  const voiceMinutes = voiceBillingMinutesFromOptionalDurationSeconds(durationSeconds);
+  const usageCheck = await incrementVoiceMinuteUsage(voiceMinutes);
+  if (!usageCheck.ok) {
+    return { ok: false, error: usageCheck.error };
   }
 
   const entryIds: string[] = [];
@@ -133,16 +119,9 @@ export async function runVoiceDictationPipeline(
       source_raw_text: raw,
     });
     if (!ins.ok) {
-      await deleteInsertedTaskIds(entryIds);
       return { ok: false, error: ins.error };
     }
     entryIds.push(id);
-  }
-
-  const usageCheck = await incrementVoiceUsageFromSession(billed);
-  if (!usageCheck.ok) {
-    await deleteInsertedTaskIds(entryIds);
-    return { ok: false, error: usageCheck.error };
   }
 
   revalidatePath("/dictate-day");
@@ -165,6 +144,14 @@ export async function saveRawVoiceNote(
   const raw = (input.transcript ?? "").trim().slice(0, 12_000);
   if (!raw) {
     return { ok: false, error: "Nothing to save." };
+  }
+
+  const voiceMinutes = voiceBillingMinutesFromOptionalDurationSeconds(
+    input.durationSeconds,
+  );
+  const usageCheck = await incrementVoiceMinuteUsage(voiceMinutes);
+  if (!usageCheck.ok) {
+    return { ok: false, error: usageCheck.error };
   }
 
   const occurredAt = input.occurred_at ?? new Date().toISOString();
@@ -193,17 +180,6 @@ export async function saveRawVoiceNote(
   });
   if (!ins.ok) {
     return { ok: false, error: ins.error };
-  }
-
-  const usageCheck = await incrementVoiceUsageFromSession(
-    normalizeDurationSecondsFromRequest(input.duration_seconds),
-  );
-  if (!usageCheck.ok) {
-    const del = await deleteDailyTask(id);
-    if (!del.ok) {
-      return { ok: false, error: "Could not complete save. Please try again." };
-    }
-    return { ok: false, error: usageCheck.error };
   }
 
   revalidatePath("/dictate-day");
@@ -237,7 +213,7 @@ export async function parseVoiceNoteWithGroq(
     input.transcript ?? "",
     logDate,
     occurredAt,
-    input.duration_seconds,
+    input.durationSeconds,
   );
 }
 
@@ -247,6 +223,14 @@ export async function parseVoiceNoteWithGroq(
 export async function parseVoiceTranscriptToDraft(
   input: VoiceDictateInput,
 ): Promise<{ ok: true; tasks: VoiceDraftRow[] } | VoiceDictateFailure> {
+  const voiceMinutes = voiceBillingMinutesFromOptionalDurationSeconds(
+    input.durationSeconds,
+  );
+  const usageCheck = await incrementVoiceMinuteUsage(voiceMinutes);
+  if (!usageCheck.ok) {
+    return { ok: false, error: usageCheck.error };
+  }
+
   const logDate = input.log_date?.trim() ?? "";
   if (!/^\d{4}-\d{2}-\d{2}$/.test(logDate)) {
     return { ok: false, error: "Invalid date." };
@@ -258,21 +242,7 @@ export async function parseVoiceTranscriptToDraft(
   const raw = (input.transcript ?? "").trim().slice(0, 12_000);
   if (!raw) return { ok: false, error: "Nothing was captured to parse." };
 
-  const billed = normalizeDurationSecondsFromRequest(input.duration_seconds);
-  const prePeek = await peekVoiceQuotaForBilledSeconds(billed);
-  if (!prePeek.ok) {
-    return { ok: false, error: prePeek.error };
-  }
-
-  const draft = await runVoiceParseDraft(raw, logDate, occurredAt);
-  if (!draft.ok) return draft;
-
-  const usageCheck = await incrementVoiceUsageFromSession(billed);
-  if (!usageCheck.ok) {
-    return { ok: false, error: usageCheck.error };
-  }
-
-  return draft;
+  return runVoiceParseDraft(raw, logDate, occurredAt);
 }
 
 /**

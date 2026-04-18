@@ -5,10 +5,10 @@ import { useMemo } from "react";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import {
   FREE_TRIAL_VOICE_CAP_SECONDS,
+  formatPaidVoiceQuotaStatus,
   formatWelcomeVoiceTimeLeft,
 } from "@/lib/freeTrial";
 import { canUseAi, getTierConfig, getVoiceMinutesLimit } from "@/lib/subscriptionTiers";
-import { formatPaidVoiceTimeRemaining } from "@/lib/voiceSessionBilling";
 
 /**
  * AI gate for voice dictation quotas and welcome-trial voice time.
@@ -32,7 +32,7 @@ type AiGateResult = {
   voiceMinutesLimit: number;
   voiceMinutesUsed: number;
 
-  /** Welcome trial only: seconds of voice left (0–180). Zero when not on welcome path. */
+  /** Welcome trial only: seconds of voice left (0–300). Zero when not on welcome path. */
   welcomeVoiceSecondsRemaining: number;
 
   bonusVoiceMinutesRemaining: number;
@@ -105,13 +105,13 @@ export function useAiGate(): AiGateResult {
   const hasAiAccess = paidAi || inWelcomeTrialFlow;
 
   const canDoVoiceSession = paidAi
-    ? voiceMinutesRemaining > 1e-9
+    ? voiceMinutesRemaining > 0
     : inWelcomeTrialFlow && freeTrialVoiceSecondsRemaining > 0;
 
   const voiceMinuteStatus = paidAi
-    ? `${formatPaidVoiceTimeRemaining(voiceMinutesRemaining)} · ${Math.round(voiceMinutesLimit)}m cap`
+    ? formatPaidVoiceQuotaStatus(voiceMinutesRemaining, voiceMinutesLimit)
     : inWelcomeTrialFlow
-      ? `${formatWelcomeVoiceTimeLeft(freeTrialVoiceSecondsRemaining)} · 1-day trial`
+      ? `${formatWelcomeVoiceTimeLeft(freeTrialVoiceSecondsRemaining)} • 1-day trial`
       : "Upgrade to Pro for voice dictation";
 
   return {

@@ -1,5 +1,3 @@
-import { addDays } from "date-fns";
-import { fromZonedTime, toDate, toZonedTime } from "date-fns-tz";
 import Groq from "groq-sdk";
 import type { ChatCompletionMessageParam } from "groq-sdk/resources/chat/completions";
 
@@ -11,108 +9,16 @@ const MAX_SUBJECT = 200;
 const MAX_CHAPTER = 200;
 const PAST_SKEW_MS = 120_000;
 const MAX_FUTURE_MS = 366 * 24 * 60 * 60 * 1000;
-const ROLL_DAYS = 7;
 
 const TAGS = new Set(["Revision", "Study", "Break", "Admin", "Other"]);
 const REPEATS = new Set(["once", "daily", "weekly"]);
 
-/** RFC 3339 says offset or Z. Without them, the server (UTC) must not guess—use the user's IANA zone. */
-function hasExplicitIsoOffset(s: string): boolean {
-  const t = s.trim();
-  if (!t) return false;
-  if (/Z$/i.test(t)) return true;
-  if (/T.*[+-]\d{2}:\d{2}$/.test(t)) return true;
-  if (/T.*[+-]\d{4}$/.test(t)) return true;
-  return false;
-}
-
-/**
- * Parse a model time string to an absolute instant. Naive datetimes are in `ianaTimeZone`.
- * Strings with Z/offset are handled by the standard parser.
- */
-function parseNotifyAtInstant(
-  timeRaw: string,
-  ianaTimeZone: string,
-): Date | null {
-  const t = timeRaw.trim();
-  if (!t) return null;
-
-  if (hasExplicitIsoOffset(t)) {
-    const d = new Date(t);
-    return Number.isNaN(d.getTime()) ? null : d;
-  }
-
-  const d = toDate(t, { timeZone: ianaTimeZone });
-  return Number.isNaN(d.getTime()) ? null : d;
-}
-
-/**
- * If the time is a little before "now" (e.g. model said "today 4pm" but it's 4:02 and skew),
- * or a full day+ behind, add whole days in the user's zone until the instant is in the future.
- * If that fails, use one hour after `nowMs`.
- */
-function ensureReasonableFutureInstant(
-  at: Date,
-  nowMs: number,
-  ianaTimeZone: string,
-): Date {
-  const minMs = nowMs - PAST_SKEW_MS;
-  if (at.getTime() >= minMs && at.getTime() <= nowMs + MAX_FUTURE_MS) {
-    return at;
-  }
-
-  let d = at;
-  for (let n = 0; n < ROLL_DAYS; n++) {
-    if (d.getTime() >= minMs && d.getTime() <= nowMs + MAX_FUTURE_MS) {
-      return d;
-    }
-    if (d.getTime() < minMs) {
-      const z = toZonedTime(d, ianaTimeZone);
-      d = fromZonedTime(addDays(z, 1), ianaTimeZone);
-    } else {
-      break;
-    }
-  }
-  if (d.getTime() >= minMs && d.getTime() <= nowMs + MAX_FUTURE_MS) {
-    return d;
-  }
-  return new Date(nowMs + 60 * 60 * 1000);
-}
-
-/**
- * First balanced `{ ... }` with string/escape awareness (handles `}` inside strings).
- */
-function extractBalancedJsonObject(text: string): string | null {
+function extractOutermostJsonObject(text: string): string | null {
   const objStart = text.indexOf("{");
   if (objStart === -1) return null;
-  let depth = 0;
-  let inStr = false;
-  let esc = false;
-  for (let i = objStart; i < text.length; i++) {
-    const c = text[i];
-    if (inStr) {
-      if (esc) {
-        esc = false;
-        continue;
-      }
-      if (c === "\\") {
-        esc = true;
-        continue;
-      }
-      if (c === '"') inStr = false;
-      continue;
-    }
-    if (c === '"') {
-      inStr = true;
-      continue;
-    }
-    if (c === "{") depth++;
-    else if (c === "}") {
-      depth--;
-      if (depth === 0) return text.slice(objStart, i + 1);
-    }
-  }
-  return null;
+  const end = text.lastIndexOf("}");
+  if (end <= objStart) return null;
+  return text.slice(objStart, end + 1);
 }
 
 function tryJsonParse(s: string): unknown | null {
@@ -180,36 +86,6 @@ function normalizeRepeat(raw: unknown): "once" | "daily" | "weekly" {
   return "once";
 }
 
-function pickTimeRaw(o: Record<string, unknown>): string {
-  const keys: string[] = [
-    "notify_at",
-    "remind_at",
-    "remindAt",
-    "time",
-    "when",
-    "datetime",
-    "date_time",
-    "scheduled_at",
-    "schedule_at",
-    "fire_at",
-    "at",
-  ];
-  for (const k of keys) {
-    const v = o[k];
-    if (typeof v === "string" && v.trim()) return v.trim();
-  }
-  return "";
-}
-
-function pickTitle(o: Record<string, unknown>): string {
-  if (typeof o.title === "string" && o.title.trim()) return o.title.trim();
-  for (const k of ["task", "label", "name", "notification_title", "reminder", "message"]) {
-    const v = o[k];
-    if (typeof v === "string" && v.trim()) return v.trim();
-  }
-  return "";
-}
-
 export type VoiceNotificationParseInput = {
   transcript: string;
   ianaTimeZone: string;
@@ -226,62 +102,82 @@ export type VoiceNotificationParseSuccess = {
   groq_model: string;
 };
 
+/** Maps to HTTP status in the parse route: validation → 422, config/upstream → 503. */
+export type VoiceNotificationParseFailureReason =
+  | "validation"
+  | "config"
+  | "upstream";
+
+const UNCLEAR_TRANSCRIPT =
+  "We couldn't understand that clearly. Say what to do and when — for example: \"Remind me to revise Physics tomorrow at 6 pm\".";
+
+function userFacingModelLoopFailure(lastErr: unknown): string {
+  const msg = lastErr instanceof Error ? lastErr.message : String(lastErr);
+  if (/^(parse_shape|missing_title|missing_time|bad_time)$/i.test(msg)) {
+    return UNCLEAR_TRANSCRIPT;
+  }
+  return UNCLEAR_TRANSCRIPT;
+}
+
+export type VoiceNotificationParseResult =
+  | { ok: true; data: VoiceNotificationParseSuccess }
+  | {
+      ok: false;
+      error: string;
+      reason: VoiceNotificationParseFailureReason;
+    };
+
 export async function runVoiceNotificationParse(
   input: VoiceNotificationParseInput,
-): Promise<
-  { ok: true; data: VoiceNotificationParseSuccess } | { ok: false; error: string }
-> {
+): Promise<VoiceNotificationParseResult> {
   const apiKey = process.env.GROQ_API_KEY?.trim();
   if (!apiKey) {
-    return { ok: false, error: "Voice notifications are not configured on the server." };
+    return {
+      ok: false,
+      error: "Voice notifications are not configured on the server.",
+      reason: "config",
+    };
   }
 
   const raw = input.transcript.trim().slice(0, MAX_TRANSCRIPT);
   if (!raw) {
-    return { ok: false, error: "Nothing was captured to parse." };
+    return {
+      ok: false,
+      error: "Nothing was captured to parse.",
+      reason: "validation",
+    };
   }
 
   const tz = input.ianaTimeZone.trim().slice(0, 120) || "UTC";
-  const nowRef =
-    (input.nowIso?.trim() || new Date().toISOString()).slice(0, 50);
-  const nowMsRaw = new Date(input.nowIso?.trim() || Date.now()).getTime();
-  const nowMs = Number.isNaN(nowMsRaw) ? Date.now() : nowMsRaw;
+  const nowAnchor = (input.nowIso?.trim() || new Date().toISOString()).slice(0, 40);
 
-  const system = `You are a JSON-only API (no markdown, no code fences, no commentary). Output exactly ONE JSON object and nothing else.
+  const system = `You convert a student's spoken notification request into structured JSON.
+Return ONLY one JSON object (no markdown, no prose). Shape:
+{"title":string,"notify_at":string,"subject":string|null,"chapter":string|null,"tag":string,"repeat":string}
 
-The student is scheduling a short reminder. Use this exact shape and key names:
-{"title":"...","notify_at":"...","subject":null or string,"chapter":null or string,"tag":"...","repeat":"..."}
+Rules:
+- title: short label (what they should do), max ${MAX_TITLE} chars. No quotes inside.
+- notify_at: single RFC3339/ISO-8601 instant when the notification should fire (include offset like +05:30 or Z). Absolute time the user asked for.
+- subject: optional study subject (e.g. "Physics") or null.
+- chapter: optional chapter label or null.
+- tag: one of exactly: Revision, Study, Break, Admin, Other. Default Study if unclear.
+- repeat: one of exactly: once, daily, weekly. Default once if not recurring.
 
-FIELDS
-- title: what to do, max ${MAX_TITLE} characters. No double quotes in the value.
-- notify_at: a single time for the push. It MUST be ISO-8601 and MUST include a timezone: end with Z or a numeric offset like +05:30. The local clock time (hour/minute) must match what a wall clock would show in timezone: ${tz}.
-- subject, chapter: optional, or null.
-- tag: exactly one of: Revision, Study, Break, Admin, Other. Default "Study" if not clear.
-- repeat: only "once", "daily", or "weekly" (lowercase). Default "once" unless they say every day or every week.
+Time context:
+- User IANA timezone: ${tz}
+- Reference "now" instant (ISO): ${nowAnchor}
 
-TIME RULES
-- Reference "now" for the student is: ${nowRef}. Interpret "today", "tomorrow", "in 1 hour", and local times in ${tz}. Choose the next reasonable future moment at or after that reference.
-- Example valid notify_at: "2026-12-20T16:00:00+05:30" (not a time without an offset or timezone).
-
-If you cannot find a time in their words, return a good title and set notify_at to about 1 hour after the reference, with the correct offset for ${tz}.`;
-
-  const user = `The student's IANA time zone: ${tz}
-Current instant (for "now/today" math): ${nowRef}
-
-Transcript to parse:
-"""
-${raw}
-"""
-
-Remember: respond with a single JSON object only.`;
+Interpret relative times in the user's timezone. Pick the next reasonable future occurrence after the reference instant.
+If you cannot determine a time, use notify_at as an empty string (caller will reject).`;
 
   const messages: ChatCompletionMessageParam[] = [
     { role: "system", content: system },
-    { role: "user", content: user },
+    { role: "user", content: `Spoken text:\n"""${raw}"""` },
   ];
 
   const groq = new Groq({ apiKey });
   let lastErr: unknown;
+  let groqModelUsed = "";
 
   for (const model of getGroqModelCandidates("parsing")) {
     try {
@@ -289,8 +185,9 @@ Remember: respond with a single JSON object only.`;
         model,
         messages,
         temperature: 0.1,
-        max_tokens: 512,
+        max_tokens: 384,
       });
+      groqModelUsed = model;
       const content = messageContentToString(
         completion.choices[0]?.message?.content,
       )
@@ -300,7 +197,7 @@ Remember: respond with a single JSON object only.`;
 
       let parsed: unknown = tryJsonParse(content);
       if (parsed == null && content) {
-        const extracted = extractBalancedJsonObject(content);
+        const extracted = extractOutermostJsonObject(content);
         if (extracted) parsed = tryJsonParse(extracted);
       }
 
@@ -310,32 +207,49 @@ Remember: respond with a single JSON object only.`;
       }
 
       const o = parsed as Record<string, unknown>;
-      let title = pickTitle(o);
+      let title = typeof o.title === "string" ? o.title.trim() : "";
+      if (!title && typeof o.notification_title === "string") {
+        title = o.notification_title.trim();
+      }
       if (title.length > MAX_TITLE) title = title.slice(0, MAX_TITLE);
       if (!title) {
         lastErr = new Error("missing_title");
         continue;
       }
 
-      let timeRaw = pickTimeRaw(o);
+      const timeRaw =
+        typeof o.notify_at === "string"
+          ? o.notify_at.trim()
+          : typeof o.remind_at === "string"
+            ? o.remind_at.trim()
+            : typeof o.remindAt === "string"
+              ? o.remindAt.trim()
+              : "";
       if (!timeRaw) {
-        timeRaw = new Date(nowMs + 60 * 60 * 1000).toISOString();
+        lastErr = new Error("missing_time");
+        continue;
       }
 
-      let at = parseNotifyAtInstant(timeRaw, tz);
-      if (!at) {
+      const at = new Date(timeRaw);
+      if (Number.isNaN(at.getTime())) {
         lastErr = new Error("bad_time");
         continue;
       }
 
-      if (at.getTime() > nowMs + MAX_FUTURE_MS) {
-        return { ok: false, error: "Notification time is too far in the future." };
+      const nowMs = Date.now();
+      if (at.getTime() < nowMs - PAST_SKEW_MS) {
+        return {
+          ok: false,
+          error: "That time is already in the past. Try again with a future time.",
+          reason: "validation",
+        };
       }
-
-      at = ensureReasonableFutureInstant(at, nowMs, tz);
-
       if (at.getTime() > nowMs + MAX_FUTURE_MS) {
-        return { ok: false, error: "Notification time is too far in the future." };
+        return {
+          ok: false,
+          error: "Notification time is too far in the future.",
+          reason: "validation",
+        };
       }
 
       let subject: string | null =
@@ -361,42 +275,34 @@ Remember: respond with a single JSON object only.`;
           chapter,
           tag,
           repeat_type,
-          groq_model: model,
+          groq_model: groqModelUsed,
         },
       };
     } catch (e) {
       lastErr = e;
       if (isTransientGroqError(e)) {
+        console.error("[runVoiceNotificationParse] transient Groq error:", e);
         return {
           ok: false,
-          error:
-            e instanceof Error
-              ? e.message
-              : "Notification parsing is busy. Try again shortly.",
+          error: "Notification parsing is busy. Try again in a moment.",
+          reason: "upstream",
         };
       }
       if (!isWrongModelError(e)) {
+        console.error("[runVoiceNotificationParse] Groq error:", e);
         return {
           ok: false,
-          error:
-            e instanceof Error
-              ? e.message
-              : "Could not parse this notification right now.",
+          error: "Could not parse this notification right now. Try again.",
+          reason: "upstream",
         };
       }
     }
   }
 
-  const m =
-    lastErr instanceof Error
-      ? lastErr.message
-      : "Could not parse this notification right now.";
-  if (m === "parse_shape" || m === "missing_title" || m === "bad_time" || m === "missing_time") {
-    return {
-      ok: false,
-      error:
-        "We could not read a clear time and title from that. Try saying a title and a time, for example: “remind me to revise Physics tomorrow at 5 p.m.”",
-    };
-  }
-  return { ok: false, error: m };
+  console.error("[runVoiceNotificationParse] model chain exhausted:", lastErr);
+  return {
+    ok: false,
+    error: userFacingModelLoopFailure(lastErr),
+    reason: "validation",
+  };
 }
