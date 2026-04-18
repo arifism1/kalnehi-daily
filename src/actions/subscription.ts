@@ -30,6 +30,7 @@ import {
   isPaidSubscriptionAccess,
 } from "@/lib/freeTrial";
 import {
+  coerceVoiceMinutesUsed,
   firstOfCurrentMonthDateString,
   needsMonthlyUsageReset,
 } from "@/lib/subscriptionUsage";
@@ -1101,7 +1102,9 @@ async function applyPaidVoiceMinuteUsage(
   minutes: number,
 ): Promise<{ ok: true; used: number; limit: number } | { ok: false; error: string }> {
   const resetNeeded = needsMonthlyUsageReset(data.usage_reset_date);
-  const currentUsed = resetNeeded ? 0 : (data.voice_minutes_used_this_month ?? 0);
+  const currentUsed = resetNeeded
+    ? 0
+    : coerceVoiceMinutesUsed(data.voice_minutes_used_this_month);
   const ledger = parseBonusLedger(data.bonus_voice_minutes_ledger);
 
   const rawTier = data.subscription_tier;
@@ -1131,25 +1134,11 @@ async function applyPaidVoiceMinuteUsage(
     patch.usage_reset_date = firstOfCurrentMonthDateString();
   }
 
-  if (!resetNeeded && fromMonthly > 0) {
-    const { data: updatedRow, error: updateErr } = await admin
-      .from("user_profiles")
-      .update(patch)
-      .eq("user_id", userId)
-      .eq("voice_minutes_used_this_month", currentUsed)
-      .select("id")
-      .maybeSingle();
-    if (updateErr) return { ok: false, error: "Unable to update usage." };
-    if (!updatedRow) {
-      return { ok: false, error: "Could not apply usage. Please try again." };
-    }
-  } else {
-    const { error: updateErr } = await admin
-      .from("user_profiles")
-      .update(patch)
-      .eq("user_id", userId);
-    if (updateErr) return { ok: false, error: "Unable to update usage." };
-  }
+  const { error: updateErr } = await admin
+    .from("user_profiles")
+    .update(patch)
+    .eq("user_id", userId);
+  if (updateErr) return { ok: false, error: "Unable to update usage." };
 
   return {
     ok: true,

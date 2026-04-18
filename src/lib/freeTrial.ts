@@ -34,6 +34,36 @@ export function remainingVoiceSecondsTrial(usedSeconds: number): number {
   return Math.max(0, FREE_TRIAL_VOICE_CAP_SECONDS - Math.max(0, usedSeconds));
 }
 
+/**
+ * Compact Xm Ys (or Xh Ym Zs) from fractional minutes — for paid voice remaining / monthly cap.
+ */
+export function formatVoiceMinutesFractionalCompact(minutesFractional: number): string {
+  const secTotal = Math.max(0, Math.round(minutesFractional * 60));
+  if (secTotal <= 0) return "0s";
+  const h = Math.floor(secTotal / 3600);
+  const m = Math.floor((secTotal % 3600) / 60);
+  const s = secTotal % 60;
+  if (h > 0) {
+    if (m > 0 && s > 0) return `${h}h ${m}m ${s}s`;
+    if (m > 0) return `${h}h ${m}m`;
+    if (s > 0) return `${h}h ${s}s`;
+    return `${h}h`;
+  }
+  if (m > 0 && s > 0) return `${m}m ${s}s`;
+  if (m > 0) return `${m}m`;
+  return `${s}s`;
+}
+
+/** Paid plan: human-readable remaining vs total voice allowance. */
+export function formatPaidVoiceQuotaStatus(
+  remainingMinutesFractional: number,
+  limitMinutesFractional: number,
+): string {
+  const rem = formatVoiceMinutesFractionalCompact(remainingMinutesFractional);
+  const lim = formatVoiceMinutesFractionalCompact(limitMinutesFractional);
+  return `${rem} left · ${lim} cap`;
+}
+
 /** e.g. "2 min 45 sec left" */
 export function formatWelcomeVoiceTimeLeft(secondsRemaining: number): string {
   const sec = Math.max(0, Math.floor(secondsRemaining));

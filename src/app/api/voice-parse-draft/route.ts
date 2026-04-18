@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { incrementVoiceMinuteUsage } from "@/actions/subscription";
 import { runVoiceParseDraft } from "@/lib/runVoiceParseDraft";
+import { clampVoiceBillingDurationSeconds } from "@/lib/voiceDurationBilling";
 
 export async function POST(req: Request) {
   let body: unknown;
@@ -35,7 +36,9 @@ export async function POST(req: Request) {
     );
   }
 
-  const usage = await incrementVoiceMinuteUsage(1);
+  const voiceSecondsCharged = clampVoiceBillingDurationSeconds(o.durationSeconds);
+
+  const usage = await incrementVoiceMinuteUsage(voiceSecondsCharged / 60);
   if (!usage.ok) {
     const unauthorized = usage.error === "Please sign in.";
     return NextResponse.json(
@@ -45,5 +48,5 @@ export async function POST(req: Request) {
   }
 
   const result = await runVoiceParseDraft(raw, logDate, occurredAt);
-  return NextResponse.json(result);
+  return NextResponse.json({ ...result, voice_seconds_charged: voiceSecondsCharged });
 }

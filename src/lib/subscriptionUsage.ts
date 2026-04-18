@@ -60,3 +60,15 @@ export function effectiveUsageForDisplay(
   }
   return { photoScansUsed, voiceMinutesUsed };
 }
+
+/** Postgres NUMERIC may arrive as string from the client; normalize for fractional voice minutes. */
+export function coerceVoiceMinutesUsed(value: unknown): number {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return Math.max(0, value);
+  }
+  if (typeof value === "string" && value.trim()) {
+    const n = parseFloat(value);
+    if (Number.isFinite(n)) return Math.max(0, n);
+  }
+  return 0;
+}

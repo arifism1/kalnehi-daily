@@ -118,14 +118,18 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
   ]);
   const [planListKey, setPlanListKey] = useState(0);
   const [savePhase, setSavePhase] = useState<"idle" | "save">("idle");
+  const [voiceQuotaNote, setVoiceQuotaNote] = useState<string | null>(null);
 
   const previewRowsRef = useRef(previewRows);
   previewRowsRef.current = previewRows;
+  /** Last on-device speech session length (for quota when saving raw note). */
+  const lastVoiceDurationSecondsRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     setPreviewRows([emptyPreviewRow()]);
     setFallbackPanel(null);
     setError(null);
+    setVoiceQuotaNote(null);
   }, [logDate]);
 
   useEffect(() => {
@@ -137,14 +141,16 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
   usePlannerDateMidnightRollover(today, setLogDate);
 
   const sendTranscript = useCallback(
-    async (transcript: string, occurredAt: string) => {
+    async (transcript: string, occurredAt: string, durationSeconds: number) => {
       const cleaned = normalizeSpeechTranscript(transcript);
       if (!cleaned) {
         setError("No speech captured. Try again.");
         return;
       }
+      lastVoiceDurationSecondsRef.current = durationSeconds;
       setIsProcessing(true);
       setError(null);
+      setVoiceQuotaNote(null);
       try {
         const parseRes = await fetch("/api/voice-parse-draft", {
           method: "POST",
@@ -153,10 +159,11 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
             transcript: cleaned,
             log_date: logDate,
             occurred_at: occurredAt,
+            durationSeconds,
           }),
         });
         const res = (await parseRes.json()) as
-          | { ok: true; tasks: VoiceDraftTask[] }
+          | { ok: true; tasks: VoiceDraftTask[]; voice_seconds_charged?: number }
           | { ok: false; error: string; openRawFallback?: boolean };
 
         if (!res.ok) {
@@ -167,6 +174,11 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
             setError(surfaceErrorForUi(res.error));
           }
           return;
+        }
+        if (typeof res.voice_seconds_charged === "number") {
+          setVoiceQuotaNote(
+            `Used ${res.voice_seconds_charged}s of your voice time for this parse.`,
+          );
         }
         setFallbackPanel(null);
         const chunk = cleaned;
@@ -203,8 +215,8 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
       setError(null);
       setFallbackPanel(null);
     },
-    onTranscript: ({ transcript, occurredAt }) => {
-      void sendTranscript(transcript, occurredAt);
+    onTranscript: ({ transcript, occurredAt, durationSeconds }) => {
+      void sendTranscript(transcript, occurredAt, durationSeconds);
     },
   });
 
@@ -226,6 +238,7 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
         transcript: fallbackPanel.text.trim(),
         log_date: logDate,
         occurred_at: new Date().toISOString(),
+        durationSeconds: lastVoiceDurationSecondsRef.current,
       });
       if (!res.ok) {
         setError(surfaceErrorForUi(res.error));
@@ -482,6 +495,11 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
           <span className="font-semibold text-kal-text-secondary">{addPlanLabel}</span> — the
           live list below shows the same date ({logDate}) and stays in sync with Self Type.
         </p>
+        {voiceQuotaNote ? (
+          <p className="mt-2 rounded-lg border border-kal-accent/25 bg-kal-accent/5 px-3 py-2 text-xs text-kal-text-secondary">
+            {voiceQuotaNote}
+          </p>
+        ) : null}
         <DailyPlanPreviewStaging
           sectionId="dictate-staging"
           title=""

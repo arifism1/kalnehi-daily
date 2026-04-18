@@ -25,7 +25,10 @@ import {
   remainingPhotoScansTrial,
   remainingVoiceSecondsTrial,
 } from "@/lib/freeTrial";
-import { effectiveUsageForDisplay } from "@/lib/subscriptionUsage";
+import {
+  coerceVoiceMinutesUsed,
+  effectiveUsageForDisplay,
+} from "@/lib/subscriptionUsage";
 import { parseSubscriptionTier, type SubscriptionTier } from "@/lib/subscriptionTiers";
 import { useAuthStore } from "@/store/useAuthStore";
 import {
@@ -73,7 +76,7 @@ export type SubscriptionData = {
   welcomeTrialEligibleUnstarted: boolean;
   freeTrialEndsAtIso: string | null;
   freeTrialPhotoRemaining: number;
-  /** Seconds of voice remaining in welcome trial (0–180). */
+  /** Seconds of voice remaining in welcome trial (0–300). */
   freeTrialVoiceSecondsRemaining: number;
   /** Welcome trial clock ended, still no paid plan. */
   welcomeTrialExpiredNoPay: boolean;
@@ -271,7 +274,7 @@ function useSubscriptionAccessState(): SubscriptionData {
         const eff = effectiveUsageForDisplay(
           data?.usage_reset_date ?? null,
           data?.photo_scans_used_this_month ?? 0,
-          data?.voice_minutes_used_this_month ?? 0,
+          coerceVoiceMinutesUsed(data?.voice_minutes_used_this_month),
         );
         const now = new Date();
         const photoLed = parseBonusLedger(data?.bonus_photo_scans_ledger);

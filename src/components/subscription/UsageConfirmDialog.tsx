@@ -1,6 +1,7 @@
 "use client";
 
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { formatVoiceMinutesFractionalCompact } from "@/lib/freeTrial";
 
 type Props = {
   open: boolean;
@@ -21,7 +22,7 @@ export function UsageConfirmDialog({
     <ConfirmDialog
       open={open}
       title="Start voice session?"
-      description={`You have ${remaining} of ${limit} voice minutes remaining this month.`}
+      description={`You have ${formatVoiceMinutesFractionalCompact(remaining)} left of ${formatVoiceMinutesFractionalCompact(limit)} voice time this month.`}
       confirmLabel="Continue"
       cancelLabel="Cancel"
       danger={false}

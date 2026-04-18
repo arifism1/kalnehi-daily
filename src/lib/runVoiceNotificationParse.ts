@@ -102,19 +102,50 @@ export type VoiceNotificationParseSuccess = {
   groq_model: string;
 };
 
+/** Maps to HTTP status in the parse route: validation → 422, config/upstream → 503. */
+export type VoiceNotificationParseFailureReason =
+  | "validation"
+  | "config"
+  | "upstream";
+
+const UNCLEAR_TRANSCRIPT =
+  "We couldn't understand that clearly. Say what to do and when — for example: \"Remind me to revise Physics tomorrow at 6 pm\".";
+
+function userFacingModelLoopFailure(lastErr: unknown): string {
+  const msg = lastErr instanceof Error ? lastErr.message : String(lastErr);
+  if (/^(parse_shape|missing_title|missing_time|bad_time)$/i.test(msg)) {
+    return UNCLEAR_TRANSCRIPT;
+  }
+  return UNCLEAR_TRANSCRIPT;
+}
+
+export type VoiceNotificationParseResult =
+  | { ok: true; data: VoiceNotificationParseSuccess }
+  | {
+      ok: false;
+      error: string;
+      reason: VoiceNotificationParseFailureReason;
+    };
+
 export async function runVoiceNotificationParse(
   input: VoiceNotificationParseInput,
-): Promise<
-  { ok: true; data: VoiceNotificationParseSuccess } | { ok: false; error: string }
-> {
+): Promise<VoiceNotificationParseResult> {
   const apiKey = process.env.GROQ_API_KEY?.trim();
   if (!apiKey) {
-    return { ok: false, error: "Voice notifications are not configured on the server." };
+    return {
+      ok: false,
+      error: "Voice notifications are not configured on the server.",
+      reason: "config",
+    };
   }
 
   const raw = input.transcript.trim().slice(0, MAX_TRANSCRIPT);
   if (!raw) {
-    return { ok: false, error: "Nothing was captured to parse." };
+    return {
+      ok: false,
+      error: "Nothing was captured to parse.",
+      reason: "validation",
+    };
   }
 
   const tz = input.ianaTimeZone.trim().slice(0, 120) || "UTC";
@@ -210,10 +241,15 @@ If you cannot determine a time, use notify_at as an empty string (caller will re
         return {
           ok: false,
           error: "That time is already in the past. Try again with a future time.",
+          reason: "validation",
         };
       }
       if (at.getTime() > nowMs + MAX_FUTURE_MS) {
-        return { ok: false, error: "Notification time is too far in the future." };
+        return {
+          ok: false,
+          error: "Notification time is too far in the future.",
+          reason: "validation",
+        };
       }
 
       let subject: string | null =
@@ -245,27 +281,28 @@ If you cannot determine a time, use notify_at as an empty string (caller will re
     } catch (e) {
       lastErr = e;
       if (isTransientGroqError(e)) {
+        console.error("[runVoiceNotificationParse] transient Groq error:", e);
         return {
           ok: false,
-          error:
-            e instanceof Error ? e.message : "Notification parsing is busy. Try again shortly.",
+          error: "Notification parsing is busy. Try again in a moment.",
+          reason: "upstream",
         };
       }
       if (!isWrongModelError(e)) {
+        console.error("[runVoiceNotificationParse] Groq error:", e);
         return {
           ok: false,
-          error:
-            e instanceof Error ? e.message : "Could not parse this notification right now.",
+          error: "Could not parse this notification right now. Try again.",
+          reason: "upstream",
         };
       }
     }
   }
 
+  console.error("[runVoiceNotificationParse] model chain exhausted:", lastErr);
   return {
     ok: false,
-    error:
-      lastErr instanceof Error
-        ? lastErr.message
-        : "Could not parse this notification right now.",
+    error: userFacingModelLoopFailure(lastErr),
+    reason: "validation",
   };
 }

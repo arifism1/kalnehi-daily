@@ -31,6 +31,8 @@ export type VoiceDoubtPreviewSheetProps = {
   groqModel: string;
   /** Optional server note when tagging fell back. */
   tagNote?: string | null;
+  /** Seconds billed toward voice quota for this capture. */
+  voiceSecondsCharged?: number | null;
   initialTitle: string;
   initialSubject: string;
   initialTopic: string;
@@ -43,6 +45,7 @@ export function VoiceDoubtPreviewSheet({
   onClose,
   groqModel,
   tagNote,
+  voiceSecondsCharged,
   initialTitle,
   initialSubject,
   initialTopic,
@@ -192,6 +195,11 @@ export function VoiceDoubtPreviewSheet({
             {tagNote ? (
               <p className="mt-1 text-[11px] text-amber-700 dark:text-amber-300/95">
                 {tagNote}
+              </p>
+            ) : null}
+            {typeof voiceSecondsCharged === "number" ? (
+              <p className="mt-1 text-[11px] text-kal-text-secondary">
+                Used {voiceSecondsCharged}s of your voice time for this capture.
               </p>
             ) : null}
           </div>
