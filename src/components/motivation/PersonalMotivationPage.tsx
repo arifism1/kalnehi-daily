@@ -11,13 +11,10 @@ import {
   LayoutGrid,
   Loader2,
   Mic,
-  Pause,
   Pin,
-  Play,
   Search,
   Sparkles,
   Square,
-  Volume2,
 } from "lucide-react";
 import {
   useCallback,
@@ -69,19 +66,6 @@ function letterStreakDays(
     d = format(addDays(parseISO(d), -1), "yyyy-MM-dd");
   }
   return n;
-}
-
-function blobToBase64(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onloadend = () => {
-      const s = String(r.result ?? "");
-      const i = s.indexOf(",");
-      resolve(i >= 0 ? s.slice(i + 1) : s);
-    };
-    r.onerror = () => reject(new Error("read failed"));
-    r.readAsDataURL(blob);
-  });
 }
 
 function upsertLetterInList(
@@ -221,23 +205,34 @@ export function PersonalMotivationPage() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
   const recordMimeRef = useRef<string>("audio/webm");
-  const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const [voiceTranscript, setVoiceTranscript] = useState("");
   const [voiceTags, setVoiceTags] = useState<string[]>([]);
   const [voiceSaving, setVoiceSaving] = useState(false);
-  const audioUrlRef = useRef<string | null>(null);
-  const [playing, setPlaying] = useState(false);
-  const audioElRef = useRef<HTMLAudioElement | null>(null);
 
-  useEffect(() => {
-    return () => {
-      if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
-    };
+  const transcribeRecordedBlob = useCallback(async (blob: Blob) => {
+    setTranscribing(true);
+    setNotice(null);
+    try {
+      const fd = new FormData();
+      fd.set(
+        "audio",
+        new File([blob], "affirmation.webm", {
+          type: blob.type || "audio/webm",
+        }),
+      );
+      const res = await transcribeMotivationAudio(fd);
+      if (res.ok) {
+        setVoiceTranscript(res.text);
+      } else {
+        setNotice(surfaceErrorForUi(res.error));
+      }
+    } finally {
+      setTranscribing(false);
+    }
   }, []);
 
   const startRecording = useCallback(async () => {
     setNotice(null);
-    setRecordedBlob(null);
     setVoiceTranscript("");
     chunksRef.current = [];
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -264,35 +259,12 @@ export function PersonalMotivationPage() {
       const blob = new Blob(chunksRef.current, {
         type: recordMimeRef.current || "audio/webm",
       });
-      setRecordedBlob(blob);
-      if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
-      const url = URL.createObjectURL(blob);
-      audioUrlRef.current = url;
+      void transcribeRecordedBlob(blob);
     };
     mr.stop();
     mediaRecorderRef.current = null;
     setRecording(false);
-  }, []);
-
-  const runTranscribe = useCallback(async () => {
-    if (!recordedBlob) return;
-    setTranscribing(true);
-    setNotice(null);
-    try {
-      const fd = new FormData();
-      fd.set(
-        "audio",
-        new File([recordedBlob], "affirmation.webm", {
-          type: recordedBlob.type || "audio/webm",
-        }),
-      );
-      const res = await transcribeMotivationAudio(fd);
-      if (res.ok) setVoiceTranscript(res.text);
-      else setNotice(surfaceErrorForUi(res.error));
-    } finally {
-      setTranscribing(false);
-    }
-  }, [recordedBlob]);
+  }, [transcribeRecordedBlob]);
 
   const toggleVoiceTag = useCallback((t: string) => {
     setVoiceTags((prev) =>
@@ -308,21 +280,13 @@ export function PersonalMotivationPage() {
     setVoiceSaving(true);
     const id = crypto.randomUUID();
     const recordedAt = new Date().toISOString();
-    let audioBase64: string | null = null;
-    if (recordedBlob && recordedBlob.size < 1_200_000) {
-      try {
-        audioBase64 = await blobToBase64(recordedBlob);
-      } catch {
-        audioBase64 = null;
-      }
-    }
     const row: MotivationVoiceRow = {
       id,
       user_id: userId,
       transcript: voiceTranscript.trim().slice(0, 20_000),
       tags: voiceTags,
-      audio_mime: recordedBlob?.type ?? "audio/webm",
-      audio_base64: audioBase64,
+      audio_mime: null,
+      audio_base64: null,
       recorded_at: recordedAt,
       created_at: recordedAt,
       updated_at: recordedAt,
@@ -346,8 +310,8 @@ export function PersonalMotivationPage() {
       id,
       transcript: row.transcript,
       tags: row.tags,
-      audioBase64,
-      audioMime: row.audio_mime,
+      audioBase64: null,
+      audioMime: null,
       recordedAt,
     });
     if (!res.ok) {
@@ -356,45 +320,19 @@ export function PersonalMotivationPage() {
         id,
         transcript: row.transcript,
         tags: row.tags,
-        audioBase64,
-        audioMime: row.audio_mime,
+        audioBase64: null,
+        audioMime: null,
         recordedAt,
       });
       setNotice("Saved locally — will sync when online.");
     } else {
       setNotice("Voice affirmation saved.");
-      setRecordedBlob(null);
       setVoiceTranscript("");
       setVoiceTags([]);
       void refreshFromRemote();
     }
     setVoiceSaving(false);
-  }, [
-    userId,
-    voiceTranscript,
-    voiceTags,
-    recordedBlob,
-    bundle,
-    refreshFromRemote,
-  ]);
-
-  const togglePlay = useCallback(() => {
-    const url = audioUrlRef.current;
-    if (!url) return;
-    let el = audioElRef.current;
-    if (!el) {
-      el = new Audio(url);
-      audioElRef.current = el;
-      el.onended = () => setPlaying(false);
-    }
-    if (playing) {
-      el.pause();
-      setPlaying(false);
-    } else {
-      void el.play();
-      setPlaying(true);
-    }
-  }, [playing]);
+  }, [userId, voiceTranscript, voiceTags, bundle, refreshFromRemote]);
 
   /** Vision */
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
@@ -582,11 +520,21 @@ export function PersonalMotivationPage() {
       subtitle: string;
       sort: string;
       monthKey: string;
+      dateLabel: string;
     }> = [];
     for (const l of bundle?.letters ?? []) {
       if (!l.body.trim()) continue;
       const subtitle = l.body.slice(0, 160);
-      if (q && !subtitle.toLowerCase().includes(q) && !l.letter_date.includes(q))
+      const dateLabel = format(
+        parseISO(l.letter_date.slice(0, 10)),
+        "MMM d, yyyy",
+      );
+      if (
+        q &&
+        !subtitle.toLowerCase().includes(q) &&
+        !l.letter_date.toLowerCase().includes(q) &&
+        !dateLabel.toLowerCase().includes(q)
+      )
         continue;
       items.push({
         id: l.id,
@@ -595,14 +543,19 @@ export function PersonalMotivationPage() {
         subtitle,
         sort: l.updated_at,
         monthKey: format(parseISO(l.letter_date.slice(0, 10)), "MMMM yyyy"),
+        dateLabel,
       });
     }
     for (const v of bundle?.voices ?? []) {
       const subtitle = v.transcript.slice(0, 160);
+      const voiceDay = v.recorded_at.slice(0, 10);
+      const dateLabel = format(parseISO(voiceDay), "MMM d, yyyy");
       if (
         q &&
         !subtitle.toLowerCase().includes(q) &&
-        !v.tags.some((t) => t.toLowerCase().includes(q))
+        !v.tags.some((t) => t.toLowerCase().includes(q)) &&
+        !voiceDay.toLowerCase().includes(q) &&
+        !dateLabel.toLowerCase().includes(q)
       )
         continue;
       items.push({
@@ -611,19 +564,32 @@ export function PersonalMotivationPage() {
         title: `Voice · ${v.tags.join(", ") || "Affirmation"}`,
         subtitle,
         sort: v.recorded_at,
-        monthKey: format(parseISO(v.recorded_at.slice(0, 10)), "MMMM yyyy"),
+        monthKey: format(parseISO(voiceDay), "MMMM yyyy"),
+        dateLabel,
       });
     }
     for (const p of bundle?.photos ?? []) {
-      if (q && !(p.caption ?? "").toLowerCase().includes(q) && !p.photo_date.includes(q))
+      const photoDay = p.photo_date.slice(0, 10);
+      const dateLabel = format(parseISO(photoDay), "MMM d, yyyy");
+      const extra = [p.caption?.trim(), p.is_wallpaper ? "Wallpaper" : null]
+        .filter(Boolean)
+        .join(" · ");
+      const subtitle = extra || "Vision photo";
+      if (
+        q &&
+        !subtitle.toLowerCase().includes(q) &&
+        !p.photo_date.toLowerCase().includes(q) &&
+        !dateLabel.toLowerCase().includes(q)
+      )
         continue;
       items.push({
         id: p.id,
         kind: "photo",
         title: "Vision photo",
-        subtitle: p.photo_date + (p.is_wallpaper ? " · Wallpaper" : ""),
+        subtitle,
         sort: p.created_at,
-        monthKey: format(parseISO(p.photo_date.slice(0, 10)), "MMMM yyyy"),
+        monthKey: format(parseISO(photoDay), "MMMM yyyy"),
+        dateLabel,
       });
     }
     items.sort((a, b) => (a.sort < b.sort ? 1 : -1));
@@ -794,12 +760,17 @@ export function PersonalMotivationPage() {
       {tab === "voice" ? (
         <section className="space-y-6 kal-glass-card rounded-2xl px-5 py-6 sm:px-8 sm:py-8">
           <h2 className="text-sm font-bold text-kal-text">Voice Affirmations</h2>
-          <div className="flex flex-wrap gap-2">
+          <p className="text-xs text-kal-text-secondary">
+            Tap Record, then Stop — your words are transcribed automatically. Only
+            the text is saved.
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
             {!recording ? (
               <button
                 type="button"
+                disabled={transcribing}
                 onClick={() => void startRecording()}
-                className="kal-btn-accent"
+                className="kal-btn-accent disabled:opacity-45"
               >
                 <Mic className="h-4 w-4" />
                 Record
@@ -814,55 +785,26 @@ export function PersonalMotivationPage() {
                 Stop
               </button>
             )}
-            <button
-              type="button"
-              disabled={!recordedBlob || transcribing}
-              onClick={() => void runTranscribe()}
-              className="inline-flex items-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-xs font-bold uppercase tracking-wide text-kal-text disabled:opacity-45"
-            >
-              {transcribing ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Volume2 className="h-4 w-4" />
-              )}
-              Transcribe
-            </button>
+            {transcribing ? (
+              <span className="inline-flex items-center gap-2 text-xs font-medium text-kal-muted">
+                <Loader2 className="h-4 w-4 animate-spin text-kal-accent" />
+                Transcribing…
+              </span>
+            ) : null}
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-2">
-            <div className="rounded-2xl border border-kal-border bg-kal-page p-4">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-kal-muted">
-                Original voice
-              </p>
-              {recordedBlob ? (
-                <button
-                  type="button"
-                  onClick={togglePlay}
-                  className="mt-3 inline-flex items-center gap-2 rounded-xl border border-kal-accent/30 px-4 py-2 text-sm font-semibold text-kal-accent"
-                >
-                  {playing ? (
-                    <Pause className="h-4 w-4" />
-                  ) : (
-                    <Play className="h-4 w-4" />
-                  )}
-                  {playing ? "Pause" : "Play"}
-                </button>
-              ) : (
-                <p className="mt-3 text-sm text-kal-muted">Record to hear playback</p>
-              )}
-            </div>
-            <div className="rounded-2xl border border-kal-border bg-kal-page p-4">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-kal-muted">
-                Transcript
-              </p>
-              <textarea
-                value={voiceTranscript}
-                onChange={(e) => setVoiceTranscript(e.target.value)}
-                rows={6}
-                placeholder="Transcription appears here — edit if needed."
-                className="mt-3 w-full resize-y rounded-xl border border-kal-border bg-kal-card px-3 py-2 text-sm text-kal-text focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/15"
-              />
-            </div>
+          <div className="rounded-2xl border border-kal-border bg-kal-page p-4">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-kal-muted">
+              Transcript
+            </p>
+            <textarea
+              value={voiceTranscript}
+              onChange={(e) => setVoiceTranscript(e.target.value)}
+              rows={8}
+              placeholder="Transcription appears after you stop recording — edit if needed."
+              disabled={transcribing}
+              className="mt-3 w-full resize-y rounded-xl border border-kal-border bg-kal-card px-3 py-2 text-sm text-kal-text placeholder:text-kal-muted/80 focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/15 disabled:opacity-60"
+            />
           </div>
 
           <div>
@@ -892,7 +834,7 @@ export function PersonalMotivationPage() {
 
           <button
             type="button"
-            disabled={voiceSaving || !voiceTranscript.trim()}
+            disabled={voiceSaving || transcribing || !voiceTranscript.trim()}
             onClick={() => void saveVoice()}
             className="kal-btn-accent w-full min-h-[48px]"
           >
@@ -1030,6 +972,9 @@ export function PersonalMotivationPage() {
                             ? "Voice"
                             : "Photo"}{" "}
                         · {item.title}
+                      </p>
+                      <p className="mt-0.5 text-[10px] font-medium tabular-nums text-kal-muted">
+                        {item.dateLabel}
                       </p>
                       <p className="mt-1 line-clamp-3 text-sm text-kal-text-secondary">
                         {item.subtitle}
