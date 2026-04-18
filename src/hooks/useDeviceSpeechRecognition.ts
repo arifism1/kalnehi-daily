@@ -9,7 +9,17 @@ type UseDeviceSpeechRecognitionOptions = {
   silenceMs?: number | null;
   maxSessionMs?: number | null;
   onStart?: () => void;
-  onTranscript: (payload: { transcript: string; occurredAt: string }) => void;
+  onTranscript: (payload: {
+    transcript: string;
+    occurredAt: string;
+    /** Wall-clock seconds from speech engine start until finalize (for quota billing). */
+    durationSeconds: number;
+  }) => void;
+  /** Called once per listen session right before `recognition.start()` (after language pack resolution). */
+  onSpeechEngineInfo?: (info: { processLocally: boolean; lang: string }) => void;
+  /** When true, enables interim results and calls `onPreviewTranscript` with finals + partial text (UI only). */
+  interimPreview?: boolean;
+  onPreviewTranscript?: (text: string) => void;
 };
 
 function getSpeechRecognitionCtor(): (typeof window)["webkitSpeechRecognition"] | null {
@@ -121,15 +131,28 @@ export function useDeviceSpeechRecognition({
   maxSessionMs = 60_000,
   onStart,
   onTranscript,
+  onSpeechEngineInfo,
+  interimPreview = false,
+  onPreviewTranscript,
 }: UseDeviceSpeechRecognitionOptions) {
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const speechStartedAtMsRef = useRef<number | null>(null);
   const finalTranscriptRef = useRef("");
   const silenceTimerRef = useRef<number | null>(null);
   const sessionTimerRef = useRef<number | null>(null);
   const suppressSubmitRef = useRef(false);
   const ignoreAbortErrorRef = useRef(false);
+  const onSpeechEngineInfoRef = useRef(onSpeechEngineInfo);
+  const onPreviewTranscriptRef = useRef(onPreviewTranscript);
+  const interimPreviewRef = useRef(interimPreview);
   const [status, setStatus] = useState<SpeechStatus>("idle");
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    onSpeechEngineInfoRef.current = onSpeechEngineInfo;
+    onPreviewTranscriptRef.current = onPreviewTranscript;
+    interimPreviewRef.current = interimPreview;
+  }, [onSpeechEngineInfo, onPreviewTranscript, interimPreview]);
 
   const isSupported = useMemo(() => Boolean(getSpeechRecognitionCtor()), []);
 
@@ -197,15 +220,27 @@ export function useDeviceSpeechRecognition({
     suppressSubmitRef.current = false;
     ignoreAbortErrorRef.current = false;
 
-    if (suppressSubmit) return;
+    if (suppressSubmit) {
+      speechStartedAtMsRef.current = null;
+      onPreviewTranscriptRef.current?.("");
+      return;
+    }
     if (!transcript) {
+      speechStartedAtMsRef.current = null;
+      onPreviewTranscriptRef.current?.("");
       setError("No speech captured. Try again.");
       return;
     }
 
+    onPreviewTranscriptRef.current?.("");
+    const startedMs = speechStartedAtMsRef.current;
+    speechStartedAtMsRef.current = null;
+    const durationSeconds =
+      startedMs != null ? Math.max(0, (Date.now() - startedMs) / 1000) : 0;
     onTranscript({
       transcript,
       occurredAt: new Date().toISOString(),
+      durationSeconds,
     });
   }, [clearTimers, onTranscript]);
 
@@ -257,13 +292,15 @@ export function useDeviceSpeechRecognition({
     }
 
     finalTranscriptRef.current = "";
+    speechStartedAtMsRef.current = null;
     suppressSubmitRef.current = false;
     ignoreAbortErrorRef.current = false;
+    onPreviewTranscriptRef.current?.("");
 
     const recognition = new Ctor();
     recognitionRef.current = recognition;
     recognition.continuous = true;
-    recognition.interimResults = false;
+    recognition.interimResults = interimPreviewRef.current;
     recognition.lang = lang;
     recognition.maxAlternatives = 1;
     if (prepared.shouldProcessLocally && "processLocally" in recognition) {
@@ -271,6 +308,7 @@ export function useDeviceSpeechRecognition({
     }
 
     recognition.onstart = () => {
+      speechStartedAtMsRef.current = Date.now();
       setStatus("listening");
       onStart?.();
       if (silenceMs != null && silenceMs > 0) scheduleSilenceStop();
@@ -290,6 +328,7 @@ export function useDeviceSpeechRecognition({
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       let heardSpeech = false;
+      let interimPiece = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
         const chunk = result[0]?.transcript?.trim();
@@ -299,7 +338,16 @@ export function useDeviceSpeechRecognition({
           finalTranscriptRef.current = finalTranscriptRef.current
             ? `${finalTranscriptRef.current} ${chunk}`
             : chunk;
+        } else if (interimPreviewRef.current) {
+          interimPiece += result[0]?.transcript ?? "";
         }
+      }
+      if (interimPreviewRef.current) {
+        const combined = [finalTranscriptRef.current, interimPiece.trim()]
+          .filter(Boolean)
+          .join(" ")
+          .trim();
+        onPreviewTranscriptRef.current?.(combined);
       }
       if (heardSpeech && silenceMs != null && silenceMs > 0) scheduleSilenceStop();
     };
@@ -315,13 +363,14 @@ export function useDeviceSpeechRecognition({
       } else if (event.error === "network") {
         setError(
           prepared.shouldProcessLocally
-            ? "Speech recognition could not start on this device right now. Wait a moment and try again."
-            : "This browser's speech service is unavailable right now. Try Chrome, switch the speech language, or use the Kalnehi Android app.",
+            ? "On-device speech hit a glitch. Wait a moment, then try again."
+            : "Speech is using an online service and the connection failed. Check Wi‑Fi or VPN, try English (US) in the language menu, or add the notification by typing.",
         );
       } else {
         setError(`Speech recognition error: ${event.error}`);
       }
       suppressSubmitRef.current = true;
+      onPreviewTranscriptRef.current?.("");
       clearTimers();
       setStatus("idle");
     };
@@ -331,6 +380,10 @@ export function useDeviceSpeechRecognition({
     };
 
     try {
+      onSpeechEngineInfoRef.current?.({
+        processLocally: prepared.shouldProcessLocally,
+        lang,
+      });
       recognition.start();
       if (maxSessionMs != null && maxSessionMs > 0) {
         sessionTimerRef.current = window.setTimeout(() => {

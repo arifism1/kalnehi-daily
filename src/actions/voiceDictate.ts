@@ -24,6 +24,7 @@ import {
   inferCategoryFromTaskName,
 } from "@/lib/voiceTimelineInfer";
 import { runVoiceParseDraft } from "@/lib/runVoiceParseDraft";
+import { voiceBillingMinutesFromOptionalDurationSeconds } from "@/lib/voiceDurationBilling";
 import type {
   VoiceDictateFailure,
   VoiceDictateInput,
@@ -69,6 +70,7 @@ export async function runVoiceDictationPipeline(
   transcript: string,
   logDate: string,
   occurredAtIso: string,
+  durationSeconds?: number | null,
 ): Promise<VoiceDictateSuccess | VoiceDictateFailure> {
   const raw = transcript.trim().slice(0, 12_000);
   if (!raw) {
@@ -86,7 +88,8 @@ export async function runVoiceDictationPipeline(
     return { ok: true, mode: "fallback", transcript: raw };
   }
 
-  const usageCheck = await incrementVoiceMinuteUsage(1);
+  const voiceMinutes = voiceBillingMinutesFromOptionalDurationSeconds(durationSeconds);
+  const usageCheck = await incrementVoiceMinuteUsage(voiceMinutes);
   if (!usageCheck.ok) {
     return { ok: false, error: usageCheck.error };
   }
@@ -143,7 +146,10 @@ export async function saveRawVoiceNote(
     return { ok: false, error: "Nothing to save." };
   }
 
-  const usageCheck = await incrementVoiceMinuteUsage(1);
+  const voiceMinutes = voiceBillingMinutesFromOptionalDurationSeconds(
+    input.durationSeconds,
+  );
+  const usageCheck = await incrementVoiceMinuteUsage(voiceMinutes);
   if (!usageCheck.ok) {
     return { ok: false, error: usageCheck.error };
   }
@@ -203,7 +209,12 @@ export async function parseVoiceNoteWithGroq(
     typeof input.occurred_at === "string" && input.occurred_at.trim()
       ? input.occurred_at.trim()
       : new Date().toISOString();
-  return runVoiceDictationPipeline(input.transcript ?? "", logDate, occurredAt);
+  return runVoiceDictationPipeline(
+    input.transcript ?? "",
+    logDate,
+    occurredAt,
+    input.durationSeconds,
+  );
 }
 
 /**
@@ -212,7 +223,10 @@ export async function parseVoiceNoteWithGroq(
 export async function parseVoiceTranscriptToDraft(
   input: VoiceDictateInput,
 ): Promise<{ ok: true; tasks: VoiceDraftRow[] } | VoiceDictateFailure> {
-  const usageCheck = await incrementVoiceMinuteUsage(1);
+  const voiceMinutes = voiceBillingMinutesFromOptionalDurationSeconds(
+    input.durationSeconds,
+  );
+  const usageCheck = await incrementVoiceMinuteUsage(voiceMinutes);
   if (!usageCheck.ok) {
     return { ok: false, error: usageCheck.error };
   }

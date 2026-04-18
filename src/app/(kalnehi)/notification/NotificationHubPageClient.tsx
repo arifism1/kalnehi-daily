@@ -49,6 +49,9 @@ export function NotificationHubPageClient({
 
   const [title, setTitle] = useState("");
   const [notifyLocal, setNotifyLocal] = useState("");
+  /** Draft picks until user taps Select (native datetime-local cannot show a Select inside its popup). */
+  const [whenDateDraft, setWhenDateDraft] = useState("");
+  const [whenTimeDraft, setWhenTimeDraft] = useState("");
   const [tag, setTag] = useState<string>("Study");
   const [repeatType, setRepeatType] = useState<"once" | "daily" | "weekly">("once");
   const [subject, setSubject] = useState("");
@@ -89,10 +92,28 @@ export function NotificationHubPageClient({
   const resetForm = () => {
     setTitle("");
     setNotifyLocal("");
+    setWhenDateDraft("");
+    setWhenTimeDraft("");
     setTag("Study");
     setRepeatType("once");
     setSubject("");
     setChapter("");
+    setFormError(null);
+  };
+
+  const applyWhenSelection = () => {
+    if (!whenDateDraft?.trim() || !whenTimeDraft?.trim()) {
+      setFormError("Choose a date and a time, then tap Select.");
+      return;
+    }
+    const timePart = whenTimeDraft.trim().slice(0, 5);
+    const combined = `${whenDateDraft.trim()}T${timePart}`;
+    const next = new Date(combined);
+    if (Number.isNaN(next.getTime())) {
+      setFormError("Invalid date or time.");
+      return;
+    }
+    setNotifyLocal(combined);
     setFormError(null);
   };
 
@@ -109,7 +130,7 @@ export function NotificationHubPageClient({
       return;
     }
     if (!notifyLocal) {
-      setFormError("Pick a date and time.");
+      setFormError("Choose date and time, then tap Select.");
       return;
     }
     const next = new Date(notifyLocal);
@@ -167,7 +188,7 @@ export function NotificationHubPageClient({
     <div className="mx-auto w-full max-w-2xl space-y-6">
       <header className="space-y-1">
         <h1 className="text-2xl font-bold text-kal-text">Smart notifications</h1>
-        <p className="text-sm text-kal-muted">
+        <p className="text-sm leading-relaxed text-kal-text-secondary">
           Schedule push notifications by voice (uses Dictate minutes: {voiceMinuteStatus}) or typing
           (unlimited).
         </p>
@@ -179,6 +200,14 @@ export function NotificationHubPageClient({
       </header>
 
       <SmartNotificationSetupBanner />
+
+      <p className="text-sm leading-relaxed text-kal-text-secondary">
+        <span className="font-medium text-kal-text">For voice:</span> say what you need to do and when
+        to notify you—for example, “Remind me to revise Physics tomorrow at 6 pm” or “Every weekday at
+        8 am, nudge me to start studying.” You can use{" "}
+        <span className="font-medium text-kal-text">Voice capture</span> or{" "}
+        <span className="font-medium text-kal-text">Add notification</span> → Voice.
+      </p>
 
       <div className="flex flex-wrap items-center gap-2">
         <button
@@ -297,17 +326,61 @@ export function NotificationHubPageClient({
                           onChange={(e) => setTitle(e.target.value)}
                         />
                       </label>
-                      <label className="flex flex-col gap-1.5">
-                        <span className="text-xs font-medium text-kal-text-secondary">
-                          When
-                        </span>
-                        <input
-                          type="datetime-local"
-                          className="min-h-[44px] w-full rounded-lg border border-kal-border bg-[var(--kal-input-bg)] px-3 py-2 text-kal-text shadow-sm dark:bg-zinc-900/80"
-                          value={notifyLocal}
-                          onChange={(e) => setNotifyLocal(e.target.value)}
-                        />
-                      </label>
+
+                      <div className="rounded-lg border border-kal-border bg-[var(--kal-input-bg)] px-3 py-3 shadow-sm dark:bg-zinc-900/50">
+                        <p className="text-xs font-medium text-kal-text-secondary">When</p>
+                        <p className="mt-0.5 text-[11px] leading-snug text-kal-muted">
+                          Pick a date and time, then tap{" "}
+                          <span className="font-semibold text-kal-text-secondary">Select</span> to
+                          use it for this notification.
+                        </p>
+                        <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                          <label className="flex flex-col gap-1">
+                            <span className="text-[11px] font-medium text-kal-text-secondary">
+                              Date
+                            </span>
+                            <input
+                              type="date"
+                              className="min-h-[40px] w-full rounded-lg border border-kal-border bg-[var(--kal-input-bg)] px-3 py-2 text-kal-text dark:bg-zinc-900/80"
+                              value={whenDateDraft}
+                              onChange={(e) => setWhenDateDraft(e.target.value)}
+                            />
+                          </label>
+                          <label className="flex flex-col gap-1">
+                            <span className="text-[11px] font-medium text-kal-text-secondary">
+                              Time
+                            </span>
+                            <input
+                              type="time"
+                              step={60}
+                              className="min-h-[40px] w-full rounded-lg border border-kal-border bg-[var(--kal-input-bg)] px-3 py-2 text-kal-text dark:bg-zinc-900/80"
+                              value={whenTimeDraft}
+                              onChange={(e) => setWhenTimeDraft(e.target.value)}
+                            />
+                          </label>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={applyWhenSelection}
+                          className="mt-2 flex min-h-[40px] w-full items-center justify-center rounded-lg border border-kal-accent/40 bg-kal-accent-soft px-3 text-sm font-semibold text-kal-accent-dark transition hover:bg-kal-accent/15"
+                        >
+                          Select
+                        </button>
+                        {notifyLocal ? (
+                          <p className="mt-2 text-xs text-kal-text-secondary" role="status">
+                            Using:{" "}
+                            <span className="font-medium text-kal-text">
+                              {(() => {
+                                const d = new Date(notifyLocal);
+                                return Number.isNaN(d.getTime())
+                                  ? notifyLocal
+                                  : format(d, "MMM d, yyyy · h:mm a");
+                              })()}
+                            </span>
+                          </p>
+                        ) : null}
+                      </div>
+
                       <label className="flex flex-col gap-1.5">
                         <span className="text-xs font-medium text-kal-text-secondary">
                           Tag
@@ -381,7 +454,7 @@ export function NotificationHubPageClient({
       <section className="space-y-3">
         <h2 className="text-base font-semibold text-kal-text">Upcoming</h2>
         {upcoming.length === 0 ? (
-          <p className="text-sm text-kal-muted">No active scheduled notifications.</p>
+          <p className="text-sm text-kal-text-secondary">No active scheduled notifications.</p>
         ) : (
           <ul className="space-y-2">
             {upcoming.map((r) => (
@@ -417,7 +490,9 @@ export function NotificationHubPageClient({
       <section className="space-y-3">
         <h2 className="text-base font-semibold text-kal-text">Past</h2>
         {past.length === 0 ? (
-          <p className="text-sm text-kal-muted">No completed or inactive notifications yet.</p>
+          <p className="text-sm text-kal-text-secondary">
+            No completed or inactive notifications yet.
+          </p>
         ) : (
           <ul className="space-y-2 opacity-90">
             {past.map((r) => (

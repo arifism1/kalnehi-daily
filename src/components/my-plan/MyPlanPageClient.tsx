@@ -21,6 +21,7 @@ import { useAiGate } from "@/hooks/useAiGate";
 import { useFreeTrialLiveEndsIn } from "@/hooks/useFreeTrialLiveEndsIn";
 import { clampAutopayMonths, DEFAULT_AUTOPAY_MONTHS } from "@/lib/autopayMonths";
 import {
+  formatVoiceMinutesFractionalCompact,
   formatWelcomeVoiceTimeLeft,
   FREE_TRIAL_VOICE_CAP_SECONDS,
 } from "@/lib/freeTrial";
@@ -103,14 +104,20 @@ function UsageBar({
   label,
   used,
   limit,
+  formatAsVoiceTime,
 }: {
   icon: React.ReactNode;
   label: string;
   used: number;
   limit: number;
+  /** When true, show used/limit as Xm Ys (fractional minute values from the server). */
+  formatAsVoiceTime?: boolean;
 }) {
   const pct = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 0;
   const atLimit = limit > 0 && used >= limit;
+  const summary = formatAsVoiceTime
+    ? `${formatVoiceMinutesFractionalCompact(used)} / ${formatVoiceMinutesFractionalCompact(limit)}`
+    : `${used} / ${limit}`;
 
   return (
     <div className="space-y-1.5 px-4 py-3">
@@ -122,7 +129,7 @@ function UsageBar({
         <span
           className={`text-sm font-medium ${atLimit ? "text-[var(--kal-danger-text)]" : "text-kal-text"}`}
         >
-          {used} / {limit}
+          {summary}
         </span>
       </div>
       <div className="h-1.5 rounded-full bg-kal-card-muted">
@@ -631,9 +638,10 @@ export function MyPlanPageClient() {
 
                 <UsageBar
                   icon={<Mic className="h-4 w-4" />}
-                  label="Voice minutes"
+                  label="Voice time (plan allowance)"
                   used={voiceMinutesUsed}
                   limit={monthlyVoiceMinuteLimit}
+                  formatAsVoiceTime
                 />
                 {prepbrainUsage &&
                 (prepbrainUsage.phase === "paid_trial" ||
@@ -657,8 +665,9 @@ export function MyPlanPageClient() {
                     </p>
                     {bonusVoiceMinutesRemaining > 0 ? (
                       <p className="text-xs text-kal-text-secondary">
-                        <span className="font-medium text-kal-text">Voice minutes: </span>
-                        {bonusVoiceMinutesRemaining} remaining
+                        <span className="font-medium text-kal-text">Voice time (bonus): </span>
+                        {formatVoiceMinutesFractionalCompact(bonusVoiceMinutesRemaining)}{" "}
+                        remaining
                         {bonusVoiceMinutesNextExpiry ? (
                           <> · expires {formatDate(bonusVoiceMinutesNextExpiry)}</>
                         ) : null}
@@ -681,7 +690,7 @@ export function MyPlanPageClient() {
                 <div className="border-t border-kal-border px-4 py-2">
                   <p className="text-[0.65rem] leading-relaxed text-kal-text-secondary">
                     Bonus voice credits are used before your plan allowance. Combined voice capacity
-                    this month: {voiceMinutesLimit} minutes.
+                    this month: {formatVoiceMinutesFractionalCompact(voiceMinutesLimit)}.
                   </p>
                 </div>
                 <div className="flex items-center justify-between border-t border-kal-border px-4 py-2">

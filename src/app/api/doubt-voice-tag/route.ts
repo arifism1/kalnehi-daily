@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { incrementVoiceMinuteUsage } from "@/actions/subscription";
+import { clampVoiceBillingDurationSeconds } from "@/lib/voiceDurationBilling";
 import {
   allValidTopicLinesFromRows,
   buildDoubtVoiceTagSubjectList,
@@ -57,7 +58,9 @@ export async function POST(req: Request) {
     );
   }
 
-  const usage = await incrementVoiceMinuteUsage(1);
+  const voiceSecondsCharged = clampVoiceBillingDurationSeconds(body.durationSeconds);
+
+  const usage = await incrementVoiceMinuteUsage(voiceSecondsCharged / 60);
   if (!usage.ok) {
     const unauthorized = usage.error === "Please sign in.";
     return NextResponse.json(
@@ -79,6 +82,7 @@ export async function POST(req: Request) {
       subject: null as string | null,
       topic: null as string | null,
       groq_model: "",
+      voice_seconds_charged: voiceSecondsCharged,
     });
   }
 
@@ -116,6 +120,7 @@ export async function POST(req: Request) {
       topic: null,
       groq_model: "",
       tag_note: groq.error,
+      voice_seconds_charged: voiceSecondsCharged,
     });
   }
 
@@ -125,5 +130,6 @@ export async function POST(req: Request) {
     subject: groq.data.subject,
     topic: groq.data.topic,
     groq_model: groq.data.groq_model,
+    voice_seconds_charged: voiceSecondsCharged,
   });
 }

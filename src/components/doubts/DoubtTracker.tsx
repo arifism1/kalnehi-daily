@@ -199,6 +199,7 @@ export function DoubtTracker() {
     topic: "",
     groqModel: "",
     tagNote: null as string | null,
+    voiceSecondsCharged: null as number | null,
   });
 
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -318,7 +319,7 @@ export function DoubtTracker() {
   }, [editing, editSubject, editTopic, linesForSubject]);
 
   const handleVoiceTranscript = useCallback(
-    async (transcript: string) => {
+    async (transcript: string, durationSeconds: number) => {
       const parts = transcript.trim().split(/\s+/).filter(Boolean);
       const deduped: string[] = [];
       for (const p of parts) {
@@ -352,6 +353,7 @@ export function DoubtTracker() {
           body: JSON.stringify({
             transcript: cleaned,
             prepbrain_context_trim: prepTrim,
+            durationSeconds,
           }),
         });
 
@@ -363,6 +365,7 @@ export function DoubtTracker() {
           groq_model?: string;
           tag_note?: string;
           error?: string;
+          voice_seconds_charged?: number;
         };
 
         if (!parseRes.ok || !data.ok) {
@@ -392,6 +395,10 @@ export function DoubtTracker() {
           ? resolveTopicLineAgainstCatalog(apiTopic, topicLineSet) ?? ""
           : "";
 
+        const charged =
+          typeof data.voice_seconds_charged === "number"
+            ? data.voice_seconds_charged
+            : null;
         setVoicePreview({
           title,
           subject,
@@ -401,6 +408,7 @@ export function DoubtTracker() {
             typeof data.tag_note === "string" && data.tag_note.trim()
               ? data.tag_note.trim()
               : null,
+          voiceSecondsCharged: charged,
         });
         setVoicePreviewOpen(true);
       } catch {
@@ -427,8 +435,8 @@ export function DoubtTracker() {
       setVoiceError(null);
       clearVoiceRecError();
     },
-    onTranscript: ({ transcript }) => {
-      void handleVoiceTranscript(transcript);
+    onTranscript: ({ transcript, durationSeconds }) => {
+      void handleVoiceTranscript(transcript, durationSeconds);
     },
   });
 
@@ -997,6 +1005,7 @@ export function DoubtTracker() {
         onClose={() => setVoicePreviewOpen(false)}
         groqModel={voicePreview.groqModel}
         tagNote={voicePreview.tagNote}
+        voiceSecondsCharged={voicePreview.voiceSecondsCharged}
         initialTitle={voicePreview.title}
         initialSubject={voicePreview.subject}
         initialTopic={voicePreview.topic}

@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 
 import { incrementVoiceMinuteUsage } from "@/actions/subscription";
-import { runVoiceNotificationParse } from "@/lib/runVoiceNotificationParse";
+import { clampVoiceBillingDurationSeconds } from "@/lib/voiceDurationBilling";
+import {
+  runVoiceNotificationParse,
+  type VoiceNotificationParseFailureReason,
+} from "@/lib/runVoiceNotificationParse";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -11,6 +15,11 @@ export const dynamic = "force-dynamic";
 
 function isRecord(x: unknown): x is Record<string, unknown> {
   return x !== null && typeof x === "object" && !Array.isArray(x);
+}
+
+function httpStatusForParseFailure(reason: VoiceNotificationParseFailureReason): number {
+  if (reason === "config" || reason === "upstream") return 503;
+  return 422;
 }
 
 export async function POST(req: Request) {
@@ -53,15 +62,6 @@ export async function POST(req: Request) {
       );
     }
 
-    const usage = await incrementVoiceMinuteUsage(1);
-    if (!usage.ok) {
-      const unauthorized = usage.error === "Please sign in.";
-      return NextResponse.json(
-        { ok: false, error: usage.error },
-        { status: unauthorized ? 401 : 429 },
-      );
-    }
-
     const ianaTimeZone =
       typeof body.ianaTimeZone === "string" && body.ianaTimeZone.trim()
         ? body.ianaTimeZone.trim().slice(0, 120)
@@ -71,6 +71,12 @@ export async function POST(req: Request) {
         ? body.nowIso.trim()
         : new Date().toISOString();
 
+    const voiceSecondsCharged = clampVoiceBillingDurationSeconds(body.durationSeconds);
+
+    /**
+     * Charge voice quota only after Groq successfully returns structured data,
+     * so failed parses do not consume minutes.
+     */
     const result = await runVoiceNotificationParse({
       transcript: raw,
       ianaTimeZone,
@@ -78,7 +84,20 @@ export async function POST(req: Request) {
     });
 
     if (!result.ok) {
-      return NextResponse.json({ ok: false, error: result.error });
+      const status = httpStatusForParseFailure(result.reason);
+      if (status >= 500) {
+        console.error("[voice-time/parse] parse failed:", result.error);
+      }
+      return NextResponse.json({ ok: false, error: result.error }, { status });
+    }
+
+    const usage = await incrementVoiceMinuteUsage(voiceSecondsCharged / 60);
+    if (!usage.ok) {
+      const unauthorized = usage.error === "Please sign in.";
+      return NextResponse.json(
+        { ok: false, error: usage.error },
+        { status: unauthorized ? 401 : 429 },
+      );
     }
 
     const d = result.data;
@@ -91,9 +110,10 @@ export async function POST(req: Request) {
       tag: d.tag,
       repeat_type: d.repeat_type,
       groq_model: d.groq_model,
+      voice_seconds_charged: voiceSecondsCharged,
     });
   } catch (e) {
-    console.error("[voice-notification/parse]", e);
+    console.error("[voice-time/parse]", e);
     return NextResponse.json(
       {
         ok: false,

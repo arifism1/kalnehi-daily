@@ -259,7 +259,7 @@ export function SmartNotificationSetupBanner() {
 
   return (
     <div
-      className="space-y-3 rounded-2xl border border-kal-border/80 bg-kal-card-muted/80 px-4 py-4 backdrop-blur-sm"
+      className="space-y-3 rounded-2xl border-2 border-kal-border-strong bg-kal-bg-elevated px-4 py-4 shadow-sm"
       role="region"
       aria-label="Notification setup"
     >
@@ -328,7 +328,7 @@ export function SmartNotificationSetupBanner() {
       </div>
 
       {message ? (
-        <p className="text-xs text-kal-muted sm:text-sm" role="status">
+        <p className="text-xs text-kal-text-secondary sm:text-sm" role="status">
           {message}
         </p>
       ) : null}

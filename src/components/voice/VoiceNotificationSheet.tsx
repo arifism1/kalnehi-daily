@@ -14,6 +14,23 @@ import { useVoiceNotificationStore } from "@/store/useVoiceNotificationStore";
 
 type Phase = "idle" | "parsing" | "preview" | "saving";
 
+const SPEECH_LANG_OPTIONS: { value: string; label: string }[] = [
+  { value: "en-US", label: "English (US) — recommended for reliable speech" },
+  { value: "en-IN", label: "English (India)" },
+  { value: "en-GB", label: "English (UK)" },
+  { value: "hi-IN", label: "Hindi (India)" },
+];
+
+function defaultSpeechLang(): string {
+  if (typeof navigator === "undefined") return "en-US";
+  const raw = navigator.language?.split(",")[0]?.trim();
+  if (!raw) return "en-US";
+  const match = SPEECH_LANG_OPTIONS.some((o) => o.value === raw);
+  if (match) return raw;
+  if (raw.toLowerCase().startsWith("en")) return "en-US";
+  return raw;
+}
+
 function formatNotifyPreview(iso: string): string {
   try {
     const d = parseISO(iso);
@@ -35,16 +52,21 @@ function isoToDatetimeLocalValue(iso: string): string {
 }
 
 /** API returns trusted, user-facing strings — do not run through surfaceErrorForUi (it hides them). */
-function voiceParseErrorMessage(
-  raw: unknown,
-  status: number,
-): string {
+function voiceParseErrorMessage(raw: unknown, status: number): string {
   if (typeof raw === "string" && raw.trim()) {
     const t = raw.trim();
     return t.length > 320 ? `${t.slice(0, 317)}…` : t;
   }
   if (status === 401) return "Please sign in again.";
-  if (status === 429) return "Voice minute limit reached. Add this notification by typing (unlimited).";
+  if (status === 429) {
+    return "Voice minute limit reached. Add this notification by typing (unlimited).";
+  }
+  if (status === 422) {
+    return "Could not turn that into a notification. Try rephrasing with a clear time.";
+  }
+  if (status === 503) {
+    return "Notification parsing is temporarily unavailable. Try again shortly or use typing.";
+  }
   if (status >= 500) return "The server had a problem. Try again in a moment.";
   return "Could not parse notification. Try again or use typing.";
 }
@@ -60,9 +82,11 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
     refetch: refetchAiGate,
   } = useAiGate();
 
-  const [lang] = useState("en-IN");
+  const [speechLang, setSpeechLang] = useState(defaultSpeechLang);
   const [phase, setPhase] = useState<Phase>("idle");
-  const [error, setError] = useState<string | null>(null);
+  const [parseError, setParseError] = useState<string | null>(null);
+  const [liveTranscript, setLiveTranscript] = useState("");
+  const [speechRunsLocally, setSpeechRunsLocally] = useState<boolean | null>(null);
   const [title, setTitle] = useState("");
   const [notifyAtIso, setNotifyAtIso] = useState("");
   const [notifyLocal, setNotifyLocal] = useState("");
@@ -72,6 +96,7 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
   const [repeatType, setRepeatType] = useState<"once" | "daily" | "weekly">("once");
   const [groqModel, setGroqModel] = useState<string | null>(null);
   const [userTz, setUserTz] = useState("UTC");
+  const [voiceQuotaNote, setVoiceQuotaNote] = useState<string | null>(null);
 
   const resetDraft = useCallback(() => {
     setTitle("");
@@ -82,7 +107,10 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
     setTag("Study");
     setRepeatType("once");
     setGroqModel(null);
-    setError(null);
+    setParseError(null);
+    setLiveTranscript("");
+    setSpeechRunsLocally(null);
+    setVoiceQuotaNote(null);
     setPhase("idle");
   }, []);
 
@@ -98,99 +126,116 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
     }
   }, [open, resetDraft]);
 
-  const parseTranscript = useCallback(async (transcript: string) => {
-    const cleaned = transcript.trim();
-    if (!cleaned) {
-      setError("No speech captured. Try again.");
-      setPhase("idle");
-      return;
-    }
-    if (!canDoVoiceSession) {
-      setError("You have no voice minutes left. Add this notification with typing instead.");
-      setPhase("idle");
-      return;
-    }
-    setPhase("parsing");
-    setError(null);
-    try {
-      const tz =
-        typeof Intl !== "undefined"
-          ? Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"
-          : "UTC";
-      const res = await fetch("/api/voice-notification/parse", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          transcript: cleaned,
-          ianaTimeZone: tz,
-          nowIso: new Date().toISOString(),
-        }),
-      });
-
-      const rawText = await res.text();
-      let data: {
-        ok?: boolean;
-        error?: string;
-        title?: string;
-        notify_at?: string;
-        subject?: string | null;
-        chapter?: string | null;
-        tag?: string;
-        repeat_type?: string;
-        groq_model?: string;
-      } = {};
-
-      if (rawText.trim()) {
-        try {
-          data = JSON.parse(rawText) as typeof data;
-        } catch {
-          setError(
-            res.ok
-              ? "Invalid response from server. Try again."
-              : `Request failed (${res.status}). Try again or use typing.`,
-          );
-          setPhase("idle");
-          return;
-        }
-      }
-
-      if (!res.ok || !data.ok) {
-        setError(voiceParseErrorMessage(data.error, res.status));
+  const parseTranscript = useCallback(
+    async (transcript: string, durationSeconds: number) => {
+      const cleaned = transcript.trim();
+      if (!cleaned) {
+        setParseError("No speech captured. Try again.");
         setPhase("idle");
         return;
       }
-      if (typeof data.title === "string" && typeof data.notify_at === "string") {
-        setTitle(data.title);
-        setNotifyAtIso(data.notify_at);
-        setNotifyLocal(isoToDatetimeLocalValue(data.notify_at));
-        setSubject(typeof data.subject === "string" ? data.subject : null);
-        setChapter(typeof data.chapter === "string" ? data.chapter : null);
-        if (
-          typeof data.tag === "string" &&
-          (SCHEDULED_NOTIFICATION_TAGS as readonly string[]).includes(data.tag)
-        ) {
-          setTag(data.tag);
+      if (!canDoVoiceSession) {
+        setParseError(
+          "You have no voice minutes left. Add this notification with typing instead.",
+        );
+        setPhase("idle");
+        return;
+      }
+      setPhase("parsing");
+      setParseError(null);
+      setVoiceQuotaNote(null);
+      try {
+        const tz =
+          typeof Intl !== "undefined"
+            ? Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"
+            : "UTC";
+        const res = await fetch("/api/voice-time/parse", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            transcript: cleaned,
+            ianaTimeZone: tz,
+            nowIso: new Date().toISOString(),
+            durationSeconds,
+          }),
+        });
+
+        const rawText = await res.text();
+        let data: {
+          ok?: boolean;
+          error?: string;
+          title?: string;
+          notify_at?: string;
+          subject?: string | null;
+          chapter?: string | null;
+          tag?: string;
+          repeat_type?: string;
+          groq_model?: string;
+          voice_seconds_charged?: number;
+        } = {};
+
+        if (rawText.trim()) {
+          try {
+            data = JSON.parse(rawText) as typeof data;
+          } catch {
+            setParseError(
+              res.ok
+                ? "Invalid response from server. Try again."
+                : `Request failed (${res.status}). Try again or use typing.`,
+            );
+            setPhase("idle");
+            return;
+          }
         }
-        if (data.repeat_type === "daily" || data.repeat_type === "weekly") {
-          setRepeatType(data.repeat_type);
+
+        if (!res.ok || !data.ok) {
+          setParseError(voiceParseErrorMessage(data.error, res.status));
+          setPhase("idle");
+          return;
+        }
+        if (typeof data.title === "string" && typeof data.notify_at === "string") {
+          setTitle(data.title);
+          setNotifyAtIso(data.notify_at);
+          setNotifyLocal(isoToDatetimeLocalValue(data.notify_at));
+          setSubject(typeof data.subject === "string" ? data.subject : null);
+          setChapter(typeof data.chapter === "string" ? data.chapter : null);
+          if (
+            typeof data.tag === "string" &&
+            (SCHEDULED_NOTIFICATION_TAGS as readonly string[]).includes(data.tag)
+          ) {
+            setTag(data.tag);
+          }
+          if (data.repeat_type === "daily" || data.repeat_type === "weekly") {
+            setRepeatType(data.repeat_type);
+          } else {
+            setRepeatType("once");
+          }
+          setGroqModel(typeof data.groq_model === "string" ? data.groq_model : null);
+          if (typeof data.voice_seconds_charged === "number") {
+            setVoiceQuotaNote(
+              `Used ${data.voice_seconds_charged}s of your voice time for this parse.`,
+            );
+          }
+          void refetchAiGate();
+          setPhase("preview");
         } else {
-          setRepeatType("once");
+          setParseError("Unexpected response from server.");
+          setPhase("idle");
         }
-        setGroqModel(typeof data.groq_model === "string" ? data.groq_model : null);
-        void refetchAiGate();
-        setPhase("preview");
-      } else {
-        setError("Unexpected response from server.");
+      } catch (err) {
+        console.error("[VoiceNotificationSheet] parseTranscript error:", err);
+        const isNetworkBlock = err instanceof TypeError;
+        setParseError(
+          isNetworkBlock
+            ? "A browser extension (ad blocker) may be blocking this request. Try disabling it for this site, then retry. Or add the notification by typing (unlimited)."
+            : "Could not reach the server. Check your connection, then try again or add the notification by typing.",
+        );
         setPhase("idle");
       }
-    } catch {
-      setError(
-        "Could not reach the server. Check your connection, then try again or add the notification by typing.",
-      );
-      setPhase("idle");
-    }
-  }, [canDoVoiceSession, refetchAiGate]);
+    },
+    [canDoVoiceSession, refetchAiGate],
+  );
 
   const {
     clearError: clearRecognitionError,
@@ -200,18 +245,28 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
     startListening,
     stopListening,
   } = useDeviceSpeechRecognition({
-    lang,
+    lang: speechLang,
     maxSessionMs: null,
     silenceMs: null,
-    onStart: () => {
-      setError(null);
+    interimPreview: true,
+    onPreviewTranscript: setLiveTranscript,
+    onSpeechEngineInfo: ({ processLocally }) => {
+      setSpeechRunsLocally(processLocally);
     },
-    onTranscript: ({ transcript }) => {
-      void parseTranscript(transcript);
+    onStart: () => {
+      setParseError(null);
+    },
+    onTranscript: ({ transcript, durationSeconds }) => {
+      void parseTranscript(transcript, durationSeconds);
     },
   });
 
-  const activeError = recognitionError ?? error;
+  const steps = [
+    "Allow the microphone when your browser asks.",
+    "Pick a speech language below (English US is the most reliable in Chrome).",
+    "Tap the mic, say what to do and when, then tap again to finish.",
+    "Review the preview and confirm — we save it and send a push at that time.",
+  ];
 
   const handleConfirm = useCallback(async () => {
     const t = title.trim();
@@ -220,7 +275,7 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
       : notifyAtIso;
     if (!t || !nextIso) return;
     setPhase("saving");
-    setError(null);
+    setParseError(null);
     try {
       const res = await createScheduledNotification({
         title: t,
@@ -232,7 +287,7 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
         repeat_type: repeatType,
       });
       if (!res.ok) {
-        setError(res.error);
+        setParseError(res.error);
         setPhase("preview");
         return;
       }
@@ -241,7 +296,7 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
       closeSheet();
       resetDraft();
     } catch {
-      setError("Could not save notification.");
+      setParseError("Could not save notification.");
       setPhase("preview");
     }
   }, [
@@ -256,6 +311,7 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
     closeSheet,
     resetDraft,
     onSaved,
+    router,
   ]);
 
   if (!open) return null;
@@ -291,7 +347,8 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
             </p>
             <h2 className="text-lg font-semibold text-kal-text">Speak naturally</h2>
             <p className="mt-1 text-xs text-kal-muted">
-              Voice uses your Dictate My Day minutes ({voiceMinuteStatus}).
+              Voice uses your Dictate My Day minutes ({voiceMinuteStatus}). Typed notifications on
+              the hub are unlimited.
             </p>
           </div>
           <button
@@ -307,10 +364,37 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
           </button>
         </div>
 
+        {phase !== "preview" && phase !== "saving" ? (
+          <ol className="mb-3 list-decimal space-y-1.5 pl-4 text-xs leading-relaxed text-kal-muted">
+            {steps.map((s) => (
+              <li key={s}>{s}</li>
+            ))}
+          </ol>
+        ) : null}
+
+        <label className="mb-3 block text-xs text-kal-muted">
+          <span className="mb-1 block font-medium text-kal-text">Speech language</span>
+          <select
+            className="mt-0.5 w-full rounded-lg border border-kal-border bg-white/80 px-3 py-2 text-sm text-kal-text dark:bg-zinc-900/60"
+            value={speechLang}
+            onChange={(e) => setSpeechLang(e.target.value)}
+            disabled={phase === "parsing" || phase === "saving" || isListening}
+          >
+            {SPEECH_LANG_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+            {!SPEECH_LANG_OPTIONS.some((o) => o.value === speechLang) ? (
+              <option value={speechLang}>Device: {speechLang}</option>
+            ) : null}
+          </select>
+        </label>
+
         {!isSupported ? (
           <p className="text-sm text-kal-muted">
-            This browser does not support on-device speech recognition. Try Chrome or the Kalnehi
-            Android app.
+            This browser does not support speech recognition. Try Chrome or the Kalnehi Android
+            app.
           </p>
         ) : null}
 
@@ -320,14 +404,47 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
           </p>
         ) : null}
 
-        {activeError ? (
-          <p className="mb-3 rounded-xl border border-red-200/80 bg-red-50/90 px-3 py-2 text-sm text-red-900 dark:border-red-900/40 dark:bg-red-950/40 dark:text-red-100">
-            {activeError}
+        {isListening && speechRunsLocally === false ? (
+          <p className="mb-3 rounded-xl border border-amber-200/80 bg-amber-50/90 px-3 py-2 text-xs text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/35 dark:text-amber-100">
+            This session is using online speech recognition (browser-dependent). A stable connection
+            helps avoid errors — or switch to English (US) for on-device speech when available.
           </p>
+        ) : null}
+
+        {isListening && liveTranscript ? (
+          <p className="mb-3 rounded-xl border border-kal-border/80 bg-white/60 px-3 py-2 text-sm text-kal-text dark:bg-white/5">
+            <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-kal-muted">
+              Hearing
+            </span>
+            <span className="mt-1 block leading-snug">{liveTranscript}</span>
+          </p>
+        ) : null}
+
+        {recognitionError ? (
+          <div className="mb-3 rounded-xl border border-red-200/80 bg-red-50/90 px-3 py-2 text-sm text-red-900 dark:border-red-900/40 dark:bg-red-950/40 dark:text-red-100">
+            <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-red-800/90 dark:text-red-200/90">
+              Microphone / speech
+            </p>
+            <p className="mt-1">{recognitionError}</p>
+          </div>
+        ) : null}
+
+        {parseError ? (
+          <div className="mb-3 rounded-xl border border-red-200/80 bg-red-50/90 px-3 py-2 text-sm text-red-900 dark:border-red-900/40 dark:bg-red-950/40 dark:text-red-100">
+            <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-red-800/90 dark:text-red-200/90">
+              Understanding your notification
+            </p>
+            <p className="mt-1">{parseError}</p>
+          </div>
         ) : null}
 
         {phase === "preview" || phase === "saving" ? (
           <div className="space-y-3">
+            {voiceQuotaNote ? (
+              <p className="rounded-xl border border-kal-accent/25 bg-kal-accent/5 px-3 py-2 text-xs text-kal-text-secondary">
+                {voiceQuotaNote}
+              </p>
+            ) : null}
             <div className="space-y-2 text-sm">
               <label className="block text-kal-muted">
                 Title
@@ -408,7 +525,7 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
                 disabled={phase === "saving" || voiceBlocked}
                 onClick={() => {
                   clearRecognitionError();
-                  setError(null);
+                  setParseError(null);
                   resetDraft();
                   void startListening();
                 }}
@@ -445,7 +562,7 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
                   return;
                 }
                 clearRecognitionError();
-                setError(null);
+                setParseError(null);
                 void startListening();
               }}
               className={clsx(
@@ -465,7 +582,7 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
                 <Mic className="h-9 w-9" strokeWidth={2} />
               )}
             </button>
-            <p className="text-center text-sm text-kal-muted">
+            <p className="max-w-sm text-center text-sm text-kal-muted">
               {isListening
                 ? "Listening… tap the mic again when you are done."
                 : phase === "parsing"
