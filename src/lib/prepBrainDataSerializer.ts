@@ -41,8 +41,8 @@ function getYieldBadge(r: MarksIntelligenceRow, examAverage: number): string {
   const avg = validMarks.reduce((a, b) => a + b, 0) / validMarks.length;
 
   if (examAverage > 0) {
-    if (avg >= examAverage * 1.5) return "[HIGH PRIORITY]";
-    if (avg >= examAverage * 0.8) return "[MED PRIORITY]";
+    if (avg >= examAverage * 1.5) return "(High Priority)";
+    if (avg >= examAverage * 0.8) return "(Medium Priority)";
   }
   return "";
 }

@@ -225,7 +225,26 @@ function detectPrepBrainIntent(lastUserMessage: string): PrepBrainIntent {
   ) {
     return "syllabus_progress";
   }
-  if (t.includes("habit") || t.includes("streak") || t.includes("meditation")) {
+  if (
+    t.includes("habit") ||
+    t.includes("streak") ||
+    t.includes("meditation") ||
+    t.includes("stress") ||
+    t.includes("burnout") ||
+    t.includes("sleep") ||
+    t.includes("anxiety") ||
+    t.includes("overwhelm") ||
+    t.includes("tired") ||
+    t.includes("brain yoga") ||
+    t.includes("wellness") ||
+    t.includes("calm") ||
+    t.includes("breathe") ||
+    t.includes("breathing") ||
+    t.includes("rest") ||
+    t.includes("mental health") ||
+    t.includes("exhausted") ||
+    t.includes("drained")
+  ) {
     return "habits_or_meditation";
   }
   if (
