@@ -294,6 +294,9 @@ export function PricingPageClient() {
       });
       rzp.open();
     } catch (error) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("[pricing] startCheckout failed", error);
+      }
       setCheckoutError({
         text: toUserFacingMessage(error),
       });

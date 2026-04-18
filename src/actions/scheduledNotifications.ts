@@ -8,27 +8,17 @@ import {
   type ScheduledNotificationTag,
 } from "@/lib/scheduledNotifications/tags";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  SCHEDULED_NOTIFICATION_TAGS,
+  type CreateScheduledNotificationInput,
+  type ScheduledNotificationRow,
+  type ScheduledNotificationTag,
+  type UpdateScheduledNotificationInput,
+} from "@/lib/scheduledNotifications/tagsAndTypes";
 import { USER_ERROR } from "@/lib/userFacingErrors";
 import type { TablesInsert, TablesUpdate } from "@/types/supabase";
 
 const REPEAT_TYPES = new Set(["once", "daily", "weekly"]);
-
-export type ScheduledNotificationRow = {
-  id: string;
-  user_id: string;
-  title: string;
-  body: string;
-  tag: string;
-  subject: string | null;
-  chapter: string | null;
-  next_fire_at: string;
-  user_timezone: string;
-  repeat_type: string;
-  is_active: boolean;
-  last_fired_at: string | null;
-  created_at: string;
-  updated_at: string;
-};
 
 function normalizeTag(tag: string): ScheduledNotificationTag {
   const t = tag.trim();
@@ -63,17 +53,6 @@ export async function listScheduledNotifications(): Promise<
     return { ok: false, error: formatSupabaseError(e) };
   }
 }
-
-export type CreateScheduledNotificationInput = {
-  title: string;
-  body?: string;
-  tag: string;
-  subject?: string | null;
-  chapter?: string | null;
-  next_fire_at: string;
-  user_timezone: string;
-  repeat_type: string;
-};
 
 export async function createScheduledNotification(
   input: CreateScheduledNotificationInput,
@@ -157,18 +136,6 @@ export async function deleteScheduledNotification(
     return { ok: false, error: formatSupabaseError(e) };
   }
 }
-
-export type UpdateScheduledNotificationInput = {
-  title?: string;
-  body?: string;
-  tag?: string;
-  subject?: string | null;
-  chapter?: string | null;
-  next_fire_at?: string;
-  user_timezone?: string;
-  repeat_type?: string;
-  is_active?: boolean;
-};
 
 export async function updateScheduledNotification(
   id: string,

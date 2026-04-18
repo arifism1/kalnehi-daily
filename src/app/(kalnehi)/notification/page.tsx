@@ -1,5 +1,5 @@
 import { NotificationsToastProvider } from "@/components/settings/notificationsToastContext";
-import type { ScheduledNotificationRow } from "@/actions/scheduledNotifications";
+import type { ScheduledNotificationRow } from "@/lib/scheduledNotifications/tagsAndTypes";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 import { NotificationHubPageClient } from "./NotificationHubPageClient";
