@@ -3,8 +3,7 @@
 import { ArrowLeft, CalendarDays, Lock, Mic, PenLine } from "lucide-react";
 import Link from "next/link";
 
-import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
-import { isFeatureBlocked } from "@/lib/subscriptionTiers";
+import { useAiGate } from "@/hooks/useAiGate";
 
 const plannerCardShell =
   "kal-glass-card group relative flex min-h-0 flex-row items-center gap-3 rounded-xl border-2 border-white/35 px-3 py-2.5 text-left sm:gap-3.5 sm:rounded-[1rem] sm:py-3 sm:pl-3.5 sm:pr-4 dark:border-white/15";
@@ -55,7 +54,7 @@ function PlannerCard({
       >
         <span className="absolute right-2 top-2 flex items-center gap-0.5 rounded-full border border-white/30 bg-white/70 px-1.5 py-0.5 text-[9px] font-semibold text-kal-text-secondary shadow-sm backdrop-blur-sm dark:border-white/12 dark:bg-zinc-900/70">
           <Lock className="h-2.5 w-2.5" />
-          Pro
+          Unlock
         </span>
         {body}
       </div>
@@ -73,8 +72,8 @@ function PlannerCard({
 }
 
 export function PlanMyDayPage() {
-  const { tier } = useSubscriptionAccess();
-  const dictateLocked = isFeatureBlocked(tier, "dictate_day");
+  const { hasAiAccess } = useAiGate();
+  const dictateLocked = !hasAiAccess;
 
   return (
     <div className="relative mx-auto max-w-3xl pb-16 pt-2 [contain:layout_style_paint] sm:pt-4">
@@ -102,7 +101,7 @@ export function PlanMyDayPage() {
         <h1 className="kal-feature-title mt-2">Plan My Day</h1>
         <p className="kal-feature-lead mx-auto mt-3 max-w-xl sm:mx-0">
           {dictateLocked
-            ? "Type your plan below. Upgrade to Pro to unlock voice dictation."
+            ? "Type your plan below. Start a trial or subscribe to use voice dictation when you have voice minutes."
             : "One shared plan per day — use voice or typing. Open the daily planner anytime to see everything together."}
         </p>
       </header>
@@ -153,11 +152,11 @@ export function PlanMyDayPage() {
       {dictateLocked && (
         <div className="relative mt-8 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-center dark:border-amber-800 dark:bg-amber-950/30">
           <p className="text-sm text-amber-800 dark:text-amber-200">
-            Voice dictation requires{" "}
+            Voice dictation is included with your{" "}
             <Link href="/pricing" className="font-semibold underline">
-              Pro
+              welcome trial or paid plan
             </Link>
-            .
+            — you get voice minutes with each.
           </p>
         </div>
       )}

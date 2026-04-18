@@ -16,7 +16,7 @@ import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 export function SettingsPageClient() {
   const purposeMode = useSettingsStore((s) => s.purposeModeEnabled);
   const setPurposeMode = useSettingsStore((s) => s.setPurposeModeEnabled);
-  const { hasPaidAccess } = useSubscriptionAccess();
+  const { onboardingDone } = useSubscriptionAccess();
 
   return (
     <div className="space-y-6">
@@ -46,7 +46,7 @@ export function SettingsPageClient() {
         </p>
       </div>
 
-      {hasPaidAccess && <CustomizeFeaturesSection />}
+      {onboardingDone ? <CustomizeFeaturesSection /> : null}
 
       <section aria-labelledby="toggles-heading">
         <h2 id="toggles-heading" className="sr-only">

@@ -76,9 +76,9 @@ export function PrepBrainChat() {
     <div
       className={[
         "kal-glass-panel flex flex-col overflow-hidden rounded-2xl",
-        /* Mobile: bounded height so messages scroll inside; avoids tiny scroll with keyboard quirks */
-        "h-[min(calc(100dvh-11.5rem),680px)]",
-        "sm:h-auto sm:min-h-[min(70vh,560px)] sm:max-h-none",
+        /* Mobile: taller message stack; header/footer stay shrink-0 */
+        "h-[min(calc(100dvh-8rem),780px)]",
+        "sm:h-auto sm:min-h-[min(78vh,640px)] sm:max-h-none",
       ].join(" ")}
     >
       <p className="shrink-0 border-b border-kal-border/50 bg-kal-accent-soft/35 px-3 py-2 text-center text-[11px] leading-snug text-kal-text sm:px-5 sm:text-xs">
@@ -159,7 +159,7 @@ export function PrepBrainChat() {
         )}
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3 [-webkit-overflow-scrolling:touch] sm:px-5 sm:py-4">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3 [-webkit-overflow-scrolling:touch] sm:px-5 sm:py-4">
         {messages.length === 0 && !isSending && (
           <div className="mx-auto max-w-lg space-y-5 text-center sm:space-y-6">
             <p className="text-sm leading-relaxed text-kal-muted">
@@ -204,7 +204,7 @@ export function PrepBrainChat() {
                 className={
                   m.role === "user"
                     ? "max-w-[min(100%,20rem)] rounded-2xl rounded-br-md border border-kal-accent/30 bg-kal-accent-soft/85 px-3.5 py-2.5 text-sm font-medium text-kal-text shadow-sm backdrop-blur-sm sm:max-w-[min(100%,28rem)]"
-                    : "w-full max-w-full rounded-2xl rounded-bl-md border border-kal-border/50 bg-kal-card/90 px-3.5 py-2.5 text-sm leading-relaxed text-kal-text shadow-sm backdrop-blur-md sm:w-auto sm:max-w-[min(100%,34rem)]"
+                    : "w-full max-w-full rounded-2xl rounded-bl-md border border-kal-border/50 bg-kal-card/90 px-3.5 py-3 text-[15px] leading-[1.55] text-kal-text shadow-sm backdrop-blur-md sm:w-auto sm:max-w-[min(100%,36rem)] sm:px-4 sm:py-3.5 sm:text-base"
                 }
               >
                 <p className="break-words whitespace-pre-wrap">{m.content}</p>
@@ -213,7 +213,7 @@ export function PrepBrainChat() {
           ))}
           {isSending && (
             <div className="flex justify-start">
-              <div className="flex items-center gap-2 rounded-2xl rounded-bl-md border border-kal-border/50 bg-kal-card/85 px-3.5 py-2.5 text-sm text-kal-text-secondary backdrop-blur-md">
+              <div className="flex items-center gap-2 rounded-2xl rounded-bl-md border border-kal-border/50 bg-kal-card/85 px-3.5 py-3 text-[15px] leading-snug text-kal-text-secondary backdrop-blur-md sm:text-base">
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
                 PrepBrain AI is going through your current prep status and forming a contextual response…
               </div>

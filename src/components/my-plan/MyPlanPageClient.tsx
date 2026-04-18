@@ -201,6 +201,8 @@ export function MyPlanPageClient() {
     trialVoiceSecondsUsed,
     welcomeTrialExpiredNoPay,
     refetch,
+    refetchVersion,
+    usage: subscriptionUsage,
   } = useSubscriptionAccess();
   const {
     hasAiAccess,
@@ -286,8 +288,7 @@ export function MyPlanPageClient() {
     status,
     hasPaidAccess,
     onWelcomeTrial,
-    voiceMinutesUsed,
-    trialVoiceSecondsUsed,
+    refetchVersion,
   ]);
 
   const startResubscribe = useCallback(async () => {
@@ -317,6 +318,10 @@ export function MyPlanPageClient() {
         amount: created.amountPaise,
         currency: "INR",
         theme: { color: "#FF7A00" },
+        prefill: created.prefill,
+        ...(created.prefill.contact
+          ? { readonly: { email: true, contact: true } }
+          : { readonly: { email: true } }),
         handler: async (response: RazorpayCheckoutResponse) => {
           const updated = hasHadTrial
             ? await activateRazorpayMonthlySubscription({ ...response })
@@ -591,11 +596,11 @@ export function MyPlanPageClient() {
             {rows.map((row) => (
               <div
                 key={row.label}
-                className="flex min-h-[48px] items-center justify-between border-b border-kal-border px-4 py-3 last:border-b-0"
+                className="flex min-h-[48px] flex-col gap-1 border-b border-kal-border px-4 py-3 last:border-b-0 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
               >
-                <span className="text-sm text-kal-text-secondary">{row.label}</span>
+                <span className="shrink-0 text-sm text-kal-text-secondary">{row.label}</span>
                 <span
-                  className={`text-sm font-medium ${row.className ?? "text-kal-text"}`}
+                  className={`text-sm font-medium break-words text-right sm:max-w-[58%] ${row.className ?? "text-kal-text"}`}
                 >
                   {row.value}
                 </span>
@@ -643,10 +648,11 @@ export function MyPlanPageClient() {
                     limit={prepbrainUsage.limit}
                   />
                 ) : null}
-                {bonusVoiceMinutesRemaining > 0 && (
+                {(bonusVoiceMinutesRemaining > 0 ||
+                  subscriptionUsage.bonusAiTokens > 0) && (
                   <div className="space-y-2 border-t border-kal-border px-4 py-3">
                     <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
-                      Bonus credits
+                      Additional credits available
                     </p>
                     {bonusVoiceMinutesRemaining > 0 ? (
                       <p className="text-xs text-kal-text-secondary">
@@ -657,6 +663,18 @@ export function MyPlanPageClient() {
                         ) : null}
                       </p>
                     ) : null}
+                    {subscriptionUsage.bonusAiTokens > 0 ? (
+                      <p className="text-xs text-kal-text-secondary">
+                        <span className="font-medium text-kal-text">PrepBrain AI tokens: </span>
+                        {subscriptionUsage.bonusAiTokens.toLocaleString("en-IN")} remaining
+                        {subscriptionUsage.bonusAiTokensNextExpiry ? (
+                          <> · expires {formatDate(subscriptionUsage.bonusAiTokensNextExpiry)}</>
+                        ) : null}
+                      </p>
+                    ) : null}
+                    <p className="text-[0.65rem] leading-relaxed text-kal-text-secondary">
+                      Purchased add-ons are used before your included allowance and expire if unused.
+                    </p>
                   </div>
                 )}
                 <div className="border-t border-kal-border px-4 py-2">

@@ -27,9 +27,8 @@ import { getSupabaseBrowserClient } from "@/lib/supabase";
 import {
   isUpscCseMainsExam,
 } from "@/lib/upscMainsOptionalSubjects";
-import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
-
 import { useOnboardingStore } from "@/store/useOnboardingStore";
+import { useEnabledFeaturesStore } from "@/store/useEnabledFeaturesStore";
 
 const STEPS = 4;
 const ONBOARDING_VISIBLE_FEATURE_IDS = ALL_FEATURE_IDS.filter((id) => id !== "daily-log");
@@ -45,7 +44,6 @@ const CLASS_OPTIONS = [
 
 export function OnboardingWizard() {
   const setLocalCompleted = useOnboardingStore((s) => s.setOnboardingCompleted);
-  const { hasPaidAccess } = useSubscriptionAccess();
 
   const [step, setStep] = useState(1);
   const [fullName, setFullName] = useState("");
@@ -154,14 +152,7 @@ export function OnboardingWizard() {
       });
       if (!res.ok) throw new Error(res.error);
       setLocalCompleted(true);
-
-      // For paid users, show feature selection (step 4).
-      // For basic/free users, go directly to home.
-      if (hasPaidAccess) {
-        setStep(4);
-      } else {
-        window.location.assign("/");
-      }
+      setStep(4);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
@@ -175,7 +166,6 @@ export function OnboardingWizard() {
     examDate,
     upscOptionalSubject,
     setLocalCompleted,
-    hasPaidAccess,
   ]);
 
   const finishWithFeatures = useCallback(async (featureIds: string[]) => {
@@ -188,7 +178,10 @@ export function OnboardingWizard() {
         sanitizedFeatureIds.length === ONBOARDING_VISIBLE_FEATURE_IDS.length
           ? null
           : sanitizedFeatureIds;
-      await saveEnabledFeatures(toSave);
+      const res = await saveEnabledFeatures(toSave);
+      if (res.ok) {
+        useEnabledFeaturesStore.getState().setEnabledFeatures(toSave);
+      }
     } catch {
       // Non-critical — feature selection failure shouldn't block navigation.
     } finally {
@@ -201,9 +194,8 @@ export function OnboardingWizard() {
     window.location.assign("/");
   }, []);
 
-  // Shown only for paid users inside the step 4 block; visually masked step count
-  const displayStep = step === 4 ? 4 : step;
-  const totalStepsDisplay = hasPaidAccess ? 4 : 3;
+  const displayStep = step;
+  const totalStepsDisplay = STEPS;
 
   return (
     <div className="kal-page-bg mx-auto flex min-h-[min(100dvh,720px)] max-w-lg flex-col px-4 py-8">
@@ -217,7 +209,7 @@ export function OnboardingWizard() {
             style={{ width: `${(displayStep / totalStepsDisplay) * 100}%` }}
           />
         </div>
-        {step > 1 && step < 4 && (
+        {step > 1 && (
           <button
             type="button"
             onClick={() => {
@@ -233,9 +225,13 @@ export function OnboardingWizard() {
         )}
       </div>
 
-      {step < 4 && (
+      {step < 4 ? (
         <p className="mb-6 text-center text-[11px] leading-relaxed text-kal-text-secondary">
           Quick setup takes {totalStepsDisplay} steps. This helps us personalise your daily plan.
+        </p>
+      ) : (
+        <p className="mb-6 text-center text-[11px] leading-relaxed text-kal-text-secondary">
+          Last step — choose what you want on your home navigation.
         </p>
       )}
 
@@ -402,7 +398,7 @@ export function OnboardingWizard() {
               </p>
             </div>
           </div>
-          <div>
+          <div className="min-w-0 max-w-full overflow-hidden">
             <label className="text-xs font-semibold text-kal-text-secondary">
               Expected exam date
             </label>
@@ -410,7 +406,7 @@ export function OnboardingWizard() {
               type="date"
               value={examDate}
               onChange={(e) => setExamDate(e.target.value)}
-              className="mt-2 min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-kal-text transition-colors duration-200 [color-scheme:light] focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20 dark:[color-scheme:dark]"
+              className="mt-2 box-border min-h-[48px] w-full min-w-0 max-w-full rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-kal-text transition-colors duration-200 [color-scheme:light] focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20 dark:[color-scheme:dark]"
             />
           </div>
           {error && (
@@ -424,7 +420,7 @@ export function OnboardingWizard() {
             onClick={() => void submitProfile()}
             className="kal-btn-accent mt-auto flex min-h-[52px] items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-semibold disabled:opacity-50"
           >
-            {busy ? "Saving…" : "Finish setup"}
+            {busy ? "Saving…" : "Continue"}
             <ArrowRight className="h-4 w-4" />
           </button>
         </section>
