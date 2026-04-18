@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 
-import { incrementVoiceMinuteUsage } from "@/actions/subscription";
+import {
+  incrementVoiceUsageFromSession,
+  peekVoiceQuotaForBilledSeconds,
+} from "@/actions/subscription";
 import { runVoiceNotificationParse } from "@/lib/runVoiceNotificationParse";
+import {
+  normalizeDurationSecondsFromRequest,
+} from "@/lib/voiceSessionBilling";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -11,6 +17,27 @@ function isRecord(x: unknown): x is Record<string, unknown> {
 }
 
 export async function POST(req: Request) {
+  try {
+    return await postVoiceNotificationParse(req);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "unknown_error";
+    if (process.env.NODE_ENV === "development") {
+      console.error("[voice-notification/parse] unhandled", e);
+    } else {
+      console.error("[voice-notification/parse] unhandled", msg);
+    }
+    return NextResponse.json(
+      {
+        ok: false,
+        error:
+          "We hit an unexpected error while parsing. Please try again in a moment.",
+      },
+      { status: 500 },
+    );
+  }
+}
+
+async function postVoiceNotificationParse(req: Request) {
   let body: unknown;
   try {
     body = await req.json();
@@ -49,11 +76,14 @@ export async function POST(req: Request) {
     );
   }
 
-  const usage = await incrementVoiceMinuteUsage(1);
-  if (!usage.ok) {
-    const unauthorized = usage.error === "Please sign in.";
+  const billedSeconds = normalizeDurationSecondsFromRequest(
+    body.durationSeconds,
+  );
+  const peek = await peekVoiceQuotaForBilledSeconds(billedSeconds);
+  if (!peek.ok) {
+    const unauthorized = peek.error === "Please sign in.";
     return NextResponse.json(
-      { ok: false, error: usage.error },
+      { ok: false, error: peek.error },
       { status: unauthorized ? 401 : 429 },
     );
   }
@@ -74,7 +104,19 @@ export async function POST(req: Request) {
   });
 
   if (!result.ok) {
-    return NextResponse.json({ ok: false, error: result.error });
+    return NextResponse.json(
+      { ok: false, error: result.error },
+      { status: 422 },
+    );
+  }
+
+  const usage = await incrementVoiceUsageFromSession(billedSeconds);
+  if (!usage.ok) {
+    const unauthorized = usage.error === "Please sign in.";
+    return NextResponse.json(
+      { ok: false, error: usage.error },
+      { status: unauthorized ? 401 : 429 },
+    );
   }
 
   const d = result.data;

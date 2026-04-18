@@ -6,10 +6,8 @@ import { Loader2, Mic, MicOff, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
-import {
-  createScheduledNotification,
-  SCHEDULED_NOTIFICATION_TAGS,
-} from "@/actions/scheduledNotifications";
+import { createScheduledNotification } from "@/actions/scheduledNotifications";
+import { SCHEDULED_NOTIFICATION_TAGS } from "@/lib/scheduledNotifications/tagsAndTypes";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
 import { useAiGate } from "@/hooks/useAiGate";
 import { surfaceOptionalString } from "@/lib/userFacingErrors";
@@ -86,7 +84,7 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
     }
   }, [open, resetDraft]);
 
-  const parseTranscript = useCallback(async (transcript: string) => {
+  const parseTranscript = useCallback(async (transcript: string, durationSeconds: number) => {
     const cleaned = transcript.trim();
     if (!cleaned) {
       setError("No speech captured. Try again.");
@@ -100,6 +98,9 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
     }
     setPhase("parsing");
     setError(null);
+    const parseSeconds = 90_000;
+    const controller = new AbortController();
+    const abortTimer = window.setTimeout(() => controller.abort(), parseSeconds);
     try {
       const tz =
         typeof Intl !== "undefined"
@@ -109,13 +110,16 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
+        signal: controller.signal,
         body: JSON.stringify({
           transcript: cleaned,
           ianaTimeZone: tz,
           nowIso: new Date().toISOString(),
+          durationSeconds,
         }),
       });
-      const data = (await res.json()) as {
+      const rawText = await res.text();
+      let data: {
         ok?: boolean;
         error?: string;
         title?: string;
@@ -126,11 +130,40 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
         repeat_type?: string;
         groq_model?: string;
       };
+      try {
+        data = rawText
+          ? (JSON.parse(rawText) as typeof data)
+          : {};
+      } catch {
+        if (res.status === 404) {
+          setError(
+            "The voice service endpoint was not found. Refresh the app and try again.",
+          );
+        } else if (res.status === 502 || res.status === 503 || res.status === 504) {
+          setError("The service is busy right now. Please try again in a moment.");
+        } else {
+          setError(
+            "The server response could not be read. Check your connection, refresh, and try again.",
+          );
+        }
+        setPhase("idle");
+        return;
+      }
       if (!res.ok || !data.ok) {
+        const fallback =
+          res.status === 401
+            ? "Please sign in to use voice notifications."
+            : res.status === 429
+              ? "Voice quota was exceeded for this request."
+              : res.status === 500 || res.status === 502
+                ? "The server had a problem. Try again shortly."
+                : res.status === 422
+                  ? "Could not turn that into a clear date and time. Say a specific time, like “tomorrow at 5 p.m.”"
+                  : "Could not parse that into a notification.";
         setError(
           surfaceOptionalString(
             typeof data.error === "string" ? data.error : null,
-            "Could not parse notification.",
+            fallback,
           ),
         );
         setPhase("idle");
@@ -160,9 +193,23 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
         setError("Unexpected response from server.");
         setPhase("idle");
       }
-    } catch {
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") {
+        setError("Parsing is taking too long. Check your connection and try again.");
+        setPhase("idle");
+        return;
+      }
+      if (e instanceof TypeError) {
+        setError(
+          "We could not reach the server. Check your connection, then try again.",
+        );
+        setPhase("idle");
+        return;
+      }
       setError("Network error. Check connection and try again.");
       setPhase("idle");
+    } finally {
+      window.clearTimeout(abortTimer);
     }
   }, [canDoVoiceSession, refetchAiGate]);
 
@@ -175,17 +222,16 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
     stopListening,
   } = useDeviceSpeechRecognition({
     lang,
+    fallbackLang: lang !== "en-US" ? "en-US" : undefined,
     maxSessionMs: null,
     silenceMs: null,
     onStart: () => {
       setError(null);
     },
-    onTranscript: ({ transcript }) => {
-      void parseTranscript(transcript);
+    onTranscript: ({ transcript, durationSeconds }) => {
+      void parseTranscript(transcript, durationSeconds);
     },
   });
-
-  const activeError = recognitionError ?? error;
 
   const handleConfirm = useCallback(async () => {
     const t = title.trim();
@@ -264,9 +310,18 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
               Voice notification
             </p>
             <h2 className="text-lg font-semibold text-kal-text">Speak naturally</h2>
-            <p className="mt-1 text-xs text-kal-muted">
-              Voice uses your Dictate My Day minutes ({voiceMinuteStatus}).
-            </p>
+            <div className="mt-2 rounded-lg border border-kal-border/80 bg-kal-card-muted/50 px-2.5 py-1.5">
+              <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-kal-muted">
+                Voice quota
+              </p>
+              <p className="text-xs font-medium text-kal-text">{voiceMinuteStatus}</p>
+            </div>
+            <ol className="mt-2 list-decimal space-y-0.5 pl-4 text-xs text-kal-muted">
+              <li>Allow the microphone when prompted</li>
+              <li>Tap the mic and speak your reminder</li>
+              <li>Tap again to stop recording</li>
+              <li>Review the preview, then confirm</li>
+            </ol>
           </div>
           <button
             type="button"
@@ -294,9 +349,16 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
           </p>
         ) : null}
 
-        {activeError ? (
+        {recognitionError ? (
+          <p className="mb-2 rounded-xl border border-amber-200/80 bg-amber-50/90 px-3 py-2 text-sm text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-100">
+            <span className="font-semibold">Speech: </span>
+            {recognitionError}
+          </p>
+        ) : null}
+        {error ? (
           <p className="mb-3 rounded-xl border border-red-200/80 bg-red-50/90 px-3 py-2 text-sm text-red-900 dark:border-red-900/40 dark:bg-red-950/40 dark:text-red-100">
-            {activeError}
+            <span className="font-semibold">Server: </span>
+            {error}
           </p>
         ) : null}
 

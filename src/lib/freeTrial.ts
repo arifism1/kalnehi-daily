@@ -34,15 +34,13 @@ export function remainingVoiceSecondsTrial(usedSeconds: number): number {
   return Math.max(0, FREE_TRIAL_VOICE_CAP_SECONDS - Math.max(0, usedSeconds));
 }
 
-/** e.g. "2 min 45 sec left" */
+/** e.g. "4m 52s remaining" (welcome trial voice quota). */
 export function formatWelcomeVoiceTimeLeft(secondsRemaining: number): string {
   const sec = Math.max(0, Math.floor(secondsRemaining));
-  if (sec <= 0) return "0 sec left";
+  if (sec <= 0) return "0s remaining";
   const m = Math.floor(sec / 60);
   const s = sec % 60;
-  if (m > 0 && s > 0) return `${m} min ${s} sec left`;
-  if (m > 0) return `${m} min left`;
-  return `${s} sec left`;
+  return `${m}m ${s}s remaining`;
 }
 
 /** e.g. "Ends in 18h 42m" — for live ticking UI */

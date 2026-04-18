@@ -318,7 +318,7 @@ export function DoubtTracker() {
   }, [editing, editSubject, editTopic, linesForSubject]);
 
   const handleVoiceTranscript = useCallback(
-    async (transcript: string) => {
+    async (transcript: string, durationSeconds: number) => {
       const parts = transcript.trim().split(/\s+/).filter(Boolean);
       const deduped: string[] = [];
       for (const p of parts) {
@@ -352,6 +352,7 @@ export function DoubtTracker() {
           body: JSON.stringify({
             transcript: cleaned,
             prepbrain_context_trim: prepTrim,
+            durationSeconds,
           }),
         });
 
@@ -366,10 +367,16 @@ export function DoubtTracker() {
         };
 
         if (!parseRes.ok || !data.ok) {
+          const fallback =
+            parseRes.status === 429
+              ? "Voice quota exceeded."
+              : parseRes.status === 422
+                ? "Could not tag this doubt. Try again."
+                : "Could not tag this doubt. Try again.";
           setVoiceError(
             surfaceOptionalString(
-              data.error,
-              "Could not tag this doubt. Try again.",
+              typeof data.error === "string" ? data.error : null,
+              fallback,
             ),
           );
           return;
@@ -397,10 +404,7 @@ export function DoubtTracker() {
           subject,
           topic,
           groqModel: typeof data.groq_model === "string" ? data.groq_model : "",
-          tagNote:
-            typeof data.tag_note === "string" && data.tag_note.trim()
-              ? data.tag_note.trim()
-              : null,
+          tagNote: null,
         });
         setVoicePreviewOpen(true);
       } catch {
@@ -421,14 +425,15 @@ export function DoubtTracker() {
     stopListening: stopVoiceListening,
   } = useDeviceSpeechRecognition({
     lang: voiceLang,
+    fallbackLang: voiceLang !== "en-US" ? "en-US" : undefined,
     maxSessionMs: 30_000,
     silenceMs: 3_500,
     onStart: () => {
       setVoiceError(null);
       clearVoiceRecError();
     },
-    onTranscript: ({ transcript }) => {
-      void handleVoiceTranscript(transcript);
+    onTranscript: ({ transcript, durationSeconds }) => {
+      void handleVoiceTranscript(transcript, durationSeconds);
     },
   });
 
@@ -449,7 +454,6 @@ export function DoubtTracker() {
   };
 
   const voiceBusy = voiceListening || voiceProcessing;
-  const voiceBanner = voiceRecError ?? voiceError;
 
   if (!hydrated) {
     return (
@@ -561,14 +565,25 @@ export function DoubtTracker() {
               ))}
             </select>
           </label>
-          {voiceBanner ? (
+          {voiceRecError ? (
+            <p
+              role="alert"
+              className="text-center text-[11px] text-amber-800 dark:text-amber-200/95 sm:text-right"
+            >
+              <span className="font-semibold">Speech: </span>
+              {voiceRecError}
+            </p>
+          ) : null}
+          {voiceError ? (
             <p
               role="alert"
               className="text-center text-[11px] text-orange-700 dark:text-orange-300/95 sm:text-right"
             >
-              {voiceBanner}
+              <span className="font-semibold">Server: </span>
+              {voiceError}
             </p>
-          ) : voiceListening ? (
+          ) : null}
+          {!voiceRecError && !voiceError && voiceListening ? (
             <p className="text-center text-[11px] text-kal-muted sm:text-right">
               Listening… tap the mic again to stop (max 30s).
             </p>

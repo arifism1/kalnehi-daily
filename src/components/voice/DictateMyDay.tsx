@@ -137,7 +137,7 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
   usePlannerDateMidnightRollover(today, setLogDate);
 
   const sendTranscript = useCallback(
-    async (transcript: string, occurredAt: string) => {
+    async (transcript: string, occurredAt: string, durationSeconds: number) => {
       const cleaned = normalizeSpeechTranscript(transcript);
       if (!cleaned) {
         setError("No speech captured. Try again.");
@@ -153,6 +153,7 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
             transcript: cleaned,
             log_date: logDate,
             occurred_at: occurredAt,
+            durationSeconds,
           }),
         });
         const res = (await parseRes.json()) as
@@ -160,6 +161,18 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
           | { ok: false; error: string; openRawFallback?: boolean };
 
         if (!res.ok) {
+          if (parseRes.status === 401) {
+            setError("Please sign in to use voice dictation.");
+            return;
+          }
+          if (parseRes.status === 429) {
+            setError(
+              surfaceErrorForUi(
+                typeof res.error === "string" ? res.error : "Voice quota exceeded.",
+              ),
+            );
+            return;
+          }
           if (res.openRawFallback) {
             setFallbackPanel({ text: cleaned, editMode: false });
             setError(null);
@@ -197,14 +210,15 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
     stopListening,
   } = useDeviceSpeechRecognition({
     lang,
+    fallbackLang: lang !== "en-US" ? "en-US" : undefined,
     maxSessionMs: null,
     silenceMs: null,
     onStart: () => {
       setError(null);
       setFallbackPanel(null);
     },
-    onTranscript: ({ transcript, occurredAt }) => {
-      void sendTranscript(transcript, occurredAt);
+    onTranscript: ({ transcript, occurredAt, durationSeconds }) => {
+      void sendTranscript(transcript, occurredAt, durationSeconds);
     },
   });
 
@@ -628,24 +642,38 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
         </section>
       ) : null}
 
-      {activeError && (
+      {recognitionError ? (
         <div
           role="alert"
-          className="rounded-[1rem] border border-[var(--kal-danger-border)] bg-[var(--kal-danger-soft)] px-4 py-3 text-sm text-[var(--kal-danger-text)]"
+          className="rounded-[1rem] border border-amber-200/90 bg-amber-50/95 px-4 py-3 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/35 dark:text-amber-100"
         >
-          {activeError}
+          <span className="font-semibold">Speech: </span>
+          {recognitionError}
           <button
             type="button"
             className="ml-3 text-xs font-semibold underline"
-            onClick={() => {
-              setError(null);
-              clearRecognitionError();
-            }}
+            onClick={() => clearRecognitionError()}
           >
             Dismiss
           </button>
         </div>
-      )}
+      ) : null}
+      {error ? (
+        <div
+          role="alert"
+          className="rounded-[1rem] border border-[var(--kal-danger-border)] bg-[var(--kal-danger-soft)] px-4 py-3 text-sm text-[var(--kal-danger-text)]"
+        >
+          <span className="font-semibold">Server: </span>
+          {error}
+          <button
+            type="button"
+            className="ml-3 text-xs font-semibold underline"
+            onClick={() => setError(null)}
+          >
+            Dismiss
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

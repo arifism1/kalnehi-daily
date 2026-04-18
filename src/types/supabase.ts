@@ -979,7 +979,7 @@ export type Database = {
           updated_at: string | null
           usage_reset_date: string | null
           user_id: string | null
-          voice_minutes_used_this_month: number
+          voice_minutes_used_this_month: number | string
         }
         Insert: {
           ai_tokens_month?: string | null
@@ -1029,7 +1029,7 @@ export type Database = {
           updated_at?: string | null
           usage_reset_date?: string | null
           user_id?: string | null
-          voice_minutes_used_this_month?: number
+          voice_minutes_used_this_month?: number | string
         }
         Update: {
           ai_tokens_month?: string | null
@@ -1079,7 +1079,7 @@ export type Database = {
           updated_at?: string | null
           usage_reset_date?: string | null
           user_id?: string | null
-          voice_minutes_used_this_month?: number
+          voice_minutes_used_this_month?: number | string
         }
         Relationships: []
       }

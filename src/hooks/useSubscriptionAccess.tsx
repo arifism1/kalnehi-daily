@@ -27,6 +27,7 @@ import {
 } from "@/lib/freeTrial";
 import { effectiveUsageForDisplay } from "@/lib/subscriptionUsage";
 import { parseSubscriptionTier, type SubscriptionTier } from "@/lib/subscriptionTiers";
+import { coerceVoiceMinutesUsed } from "@/lib/voiceSessionBilling";
 import { useAuthStore } from "@/store/useAuthStore";
 import {
   normalizeEnabledFeaturesRow,
@@ -271,7 +272,7 @@ function useSubscriptionAccessState(): SubscriptionData {
         const eff = effectiveUsageForDisplay(
           data?.usage_reset_date ?? null,
           data?.photo_scans_used_this_month ?? 0,
-          data?.voice_minutes_used_this_month ?? 0,
+          coerceVoiceMinutesUsed(data?.voice_minutes_used_this_month),
         );
         const now = new Date();
         const photoLed = parseBonusLedger(data?.bonus_photo_scans_ledger);

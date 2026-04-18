@@ -4,6 +4,8 @@ export type VoiceDictateInput = {
   transcript: string;
   log_date: string;
   occurred_at?: string;
+  /** Measured session length in seconds (client); server normalizes/clamps. */
+  duration_seconds?: number;
 };
 
 /** Groq parsed one or more tasks; rows were inserted. */

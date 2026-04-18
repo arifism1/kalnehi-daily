@@ -20,6 +20,9 @@ type ParseResponse =
   | { ok: true; tasks: VoiceDraftTask[] }
   | { ok: false; error: string; openRawFallback?: boolean };
 
+/** Typed NLP is not a live mic session; charge a minimal billable second count vs default 60s. */
+const TYPED_NLP_BILLING_SECONDS = 1;
+
 type Props = {
   planDate: string;
   onAdded?: () => void;
@@ -105,11 +108,24 @@ export function DailyPlanTypedQuickAdd({ planDate, onAdded }: Props) {
           transcript: raw,
           log_date: planDate,
           occurred_at: new Date().toISOString(),
+          durationSeconds: TYPED_NLP_BILLING_SECONDS,
         }),
       });
       const res = (await parseRes.json()) as ParseResponse;
 
       if (!res.ok) {
+        if (parseRes.status === 401) {
+          setError("Please sign in to add tasks.");
+          return;
+        }
+        if (parseRes.status === 429) {
+          const msg =
+            "error" in res && typeof res.error === "string"
+              ? res.error
+              : "Voice quota exceeded.";
+          setError(surfaceErrorForUi(msg));
+          return;
+        }
         if (res.openRawFallback) {
           setParseHint(
             "Could not auto-parse times — showing your text below; edit the row, then add.",
