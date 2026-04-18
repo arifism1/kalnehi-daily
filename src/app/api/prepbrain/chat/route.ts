@@ -1,7 +1,6 @@
-import Groq from "groq-sdk";
-import type { ChatCompletionMessageParam } from "groq-sdk/resources/chat/completions";
 import { NextResponse } from "next/server";
 
+import { serializePrepBrainToolData } from "@/lib/prepBrainDataSerializer";
 import { buildPrepBrainSystemPrompt } from "@/lib/prepBrainPrompts";
 import {
   fetchSyllabusSubjectCompletion,
@@ -25,13 +24,13 @@ import { parseSubscriptionTier } from "@/lib/subscriptionTiers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 import { resolvePrepbrainGroqModels } from "@/lib/groqPrepbrainModel";
+import { callChatCompletion, type AiChatMessage } from "@/lib/aiChatClient";
 import { USER_ERROR } from "@/lib/userFacingErrors";
 import {
   buildPrepbrainUsagePayload,
   effectivePrepbrainTokensUsed,
   prepbrainCalendarMonthKey,
   prepbrainLimitReachedMessage,
-  prepbrainMonthlyTokenLimit,
   type PrepBrainTokenRow,
 } from "@/lib/prepbrainTokens";
 
@@ -66,12 +65,9 @@ function toolCacheSet(userId: string, tool: string, result: unknown): void {
 const MAX_BODY_BYTES = 512_000;
 const MAX_CHAT_MESSAGES = 4;
 const MAX_MESSAGE_CHARS = 2_500;
-const MAX_COMPLETION_TOKENS_CONCISE = 220;
-const MAX_COMPLETION_TOKENS_DEEP = 700;
+const MAX_COMPLETION_TOKENS = 700;
 /** Short cooldown between chat completions (backed by `prepbrain_chat_cooldown` for multi-instance). */
 const MIN_MS_BETWEEN_REQUESTS = 1_200;
-const CONCISE_MODE_INSTRUCTION =
-  "You are a concise and practical exam prep coach. Give direct, actionable advice. Keep replies under 120-150 words unless the user asks for detailed explanation or strategy.";
 
 type ChatRole = "user" | "assistant";
 
@@ -80,7 +76,6 @@ type IncomingMessage = {
   content: string;
 };
 
-type PrepBrainResponseMode = "concise" | "deep";
 type PrepBrainIntent =
   | "today_plan"
   | "syllabus_progress"
@@ -89,6 +84,7 @@ type PrepBrainIntent =
   | "habits_or_meditation"
   | "study_camera"
   | "target_score"
+  | "small_talk"
   | "general";
 
 function isCurrentlyPaid(
@@ -164,24 +160,33 @@ function parseMessages(raw: unknown): IncomingMessage[] | null {
   return out.slice(-MAX_CHAT_MESSAGES);
 }
 
-function detectPrepBrainMode(lastUserMessage: string): PrepBrainResponseMode {
-  const t = lastUserMessage.toLowerCase();
-  const deepSignals = [
-    "explain in detail",
-    "detailed",
-    "detailed plan",
-    "full strategy",
-    "deep analysis",
-    "step by step",
-    "break it down",
-    "comprehensive",
-    "thorough",
-    "long answer",
-  ];
-  return deepSignals.some((signal) => t.includes(signal)) ? "deep" : "concise";
+/**
+ * Returns true for messages that are pure fluff with zero study value:
+ * bare greetings, flattery, joke requests, or "who are you" openers.
+ * Conservative — only blocks messages where the ENTIRE message is irrelevant,
+ * so "hi, what should I study today?" correctly passes through.
+ */
+function isSmallTalk(msg: string): boolean {
+  const t = msg.trim();
+
+  // Purely a greeting with no study context
+  if (/^(hi+|hello+|hey+|yo+|sup|hiya|howdy|greetings|good\s+(morning|afternoon|evening|night)|namaste)[!?.,\s]*$/i.test(t)) return true;
+
+  // Flattery / ego-stroking
+  if (/(you('re| are)\s+(so\s+)?(smart|amazing|great|awesome|brilliant|the best|genius|intelligent|perfect|cool)|smartest ai|best ai|you rock|i love you|love you prepbrain)/i.test(t)) return true;
+
+  // Explicit joke / entertainment requests
+  if (/\btell (me )?a joke\b|\bcrack a joke\b|\bsay something funny\b|\bmake me laugh\b/i.test(t)) return true;
+
+  // "Who/what are you" standalone queries
+  if (/^(who (are|made) you|what('?s| is) your name|are you (an?\s+)?ai|are you human|what can you do)[!?.,\s]*$/i.test(t)) return true;
+
+  return false;
 }
 
 function detectPrepBrainIntent(lastUserMessage: string): PrepBrainIntent {
+  if (isSmallTalk(lastUserMessage)) return "small_talk";
+
   const t = lastUserMessage.toLowerCase();
   if (
     t.includes("today") ||
@@ -359,7 +364,7 @@ export async function POST(request: Request) {
   const { data: profile, error: profileErr } = await admin
     .from("user_profiles")
     .select(
-      "subscription_status, subscription_end_date, subscription_tier, prepbrain_tokens_used, prepbrain_tokens_month, primary_exam, target_exam, cuet_domain_subjects, upsc_optional_subjects",
+      "subscription_status, subscription_end_date, subscription_tier, ai_tokens_used, ai_tokens_month, primary_exam, target_exam, cuet_domain_subjects, upsc_optional_subjects",
     )
     .eq("user_id", user.id)
     .maybeSingle();
@@ -393,17 +398,16 @@ export async function POST(request: Request) {
 
   const monthKey = prepbrainCalendarMonthKey();
   const tokenRow: PrepBrainTokenRow = {
-    prepbrain_tokens_used: profile.prepbrain_tokens_used,
-    prepbrain_tokens_month: profile.prepbrain_tokens_month,
+    ai_tokens_used: profile.ai_tokens_used,
+    ai_tokens_month: profile.ai_tokens_month,
   };
   const effectiveUsed = effectivePrepbrainTokensUsed(tokenRow, monthKey);
-  const tokenLimit = prepbrainMonthlyTokenLimit(tier);
-  if (effectiveUsed >= tokenLimit) {
+  if (effectiveUsed >= 2_000_000) {
     const usagePayload = buildPrepbrainUsagePayload(tier, tokenRow, monthKey);
     return NextResponse.json(
       {
         ok: false,
-        error: prepbrainLimitReachedMessage(usagePayload.tier),
+        error: prepbrainLimitReachedMessage(),
         usage: usagePayload,
       },
       { status: 403 },
@@ -422,24 +426,26 @@ export async function POST(request: Request) {
     );
   }
 
-  const apiKey = process.env.GROQ_API_KEY?.trim();
-  if (!apiKey) {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: "AI is temporarily unavailable. Please try again later.",
-      },
-      { status: 503 },
-    );
+  const intent = detectPrepBrainIntent(last.content);
+
+  // Token Guardian — return instantly for small talk without spending any model tokens.
+  if (intent === "small_talk") {
+    await touchPrepbrainCooldown(admin, user.id);
+    return NextResponse.json({
+      ok: true,
+      message:
+        "Let's save your tokens for questions that actually help you crack your exam! 🎯 Ask me about your syllabus, weak chapters, daily plan, or study strategy.",
+      groq_model: "token-guardian",
+      intent,
+      tools_used: [],
+      cache_sources: {},
+      usage: buildPrepbrainUsagePayload(tier, tokenRow, monthKey),
+    });
   }
 
-  const intent = detectPrepBrainIntent(last.content);
   const selectedTools = selectToolsForIntent(intent);
 
-  // Mode detection moved before tool execution so marksLimit can be derived.
-  const responseMode = detectPrepBrainMode(last.content);
-  // Concise mode: 6 rows (~100 tokens); deep mode: 10 rows.
-  const marksLimit = responseMode === "deep" ? 10 : 6;
+  const marksLimit = 10;
 
   // Prefetched profile — passed to tool queries to eliminate redundant DB calls.
   // We cast because Supabase types may lag the actual column select.
@@ -507,68 +513,49 @@ export async function POST(request: Request) {
       }
     }),
   );
-  const toolData = Object.fromEntries(toolResultsRaw);
-  const toolDataJson = JSON.stringify(toolData);
+  const toolData = Object.fromEntries(toolResultsRaw) as Record<string, unknown>;
+  const toolDataMarkdown = serializePrepBrainToolData(toolData);
 
-  const toolDataChars = toolDataJson.length;
+  const toolDataChars = toolDataMarkdown.length;
   const toolDataEstTokens = Math.ceil(toolDataChars / 4);
 
-  const modeInstruction =
-    responseMode === "concise"
-      ? CONCISE_MODE_INSTRUCTION
-      : "Deep mode: user explicitly requested detail. You may provide a fuller strategy, but stay practical, structured, and focused on actions.";
   // Intent-aware system prompt: omits ~100-token marks module for non-marks intents.
   const systemPrompt = buildPrepBrainSystemPrompt(intent);
-  const systemContent = `${systemPrompt}\n\n--- RESPONSE MODE ---\n${modeInstruction}\n\n--- TOOL-DERIVED USER DATA (JSON; use only what is relevant) ---\n${toolDataJson}\n--- END TOOL DATA ---`;
+  const systemContent = `${systemPrompt}\n\n--- USER PREP DATA ---\n${toolDataMarkdown}\n--- END USER PREP DATA ---`;
 
-  const groqMessages: ChatCompletionMessageParam[] = [
+  const aiMessages: AiChatMessage[] = [
     { role: "system", content: systemContent },
-    ...messages.map((m) =>
-      m.role === "user"
-        ? ({ role: "user", content: m.content } as const)
-        : ({ role: "assistant", content: m.content } as const),
-    ),
+    ...messages.map((m) => ({ role: m.role, content: m.content } as AiChatMessage)),
   ];
 
   const models = resolvePrepbrainGroqModels({ request, user });
 
   let assistantText = "";
   let groqModelUsed = "";
-  let lastErr: unknown;
   let groqTotalTokens = 0;
   let groqPromptTokens = 0;
   let groqCompletionTokens = 0;
-  const groq = new Groq({ apiKey });
-  for (const model of models) {
-    try {
-      const completion = await groq.chat.completions.create({
-        model,
-        temperature: 0.65,
-        max_tokens:
-          responseMode === "deep"
-            ? MAX_COMPLETION_TOKENS_DEEP
-            : MAX_COMPLETION_TOKENS_CONCISE,
-        messages: groqMessages,
-      });
-      const raw = completion.choices[0]?.message?.content;
-      assistantText = typeof raw === "string" ? raw.trim() : "";
-      const u = completion.usage;
-      groqPromptTokens = u?.prompt_tokens ?? 0;
-      groqCompletionTokens = u?.completion_tokens ?? 0;
-      groqTotalTokens =
-        u?.total_tokens ??
-        (u?.prompt_tokens ?? 0) + (u?.completion_tokens ?? 0);
-      if (assistantText) {
-        groqModelUsed = model;
-        break;
-      }
-    } catch (e) {
-      lastErr = e;
-    }
+
+  try {
+    const result = await callChatCompletion(models, aiMessages, {
+      temperature: 0.65,
+      max_tokens: MAX_COMPLETION_TOKENS,
+    });
+    assistantText = result.text;
+    groqModelUsed = result.modelUsed;
+    groqTotalTokens = result.totalTokens;
+    groqPromptTokens = result.promptTokens;
+    groqCompletionTokens = result.completionTokens;
+  } catch (e) {
+    console.error("[prepbrain/chat] AI error", e);
+    return NextResponse.json(
+      { ok: false, error: "Could not get a response. Try again." },
+      { status: 502 },
+    );
   }
 
   if (!assistantText) {
-    console.error("[prepbrain/chat] Groq error", lastErr);
+    console.error("[prepbrain/chat] AI returned empty content");
     return NextResponse.json(
       { ok: false, error: "Could not get a response. Try again." },
       { status: 502 },
@@ -578,9 +565,8 @@ export async function POST(request: Request) {
   await touchPrepbrainCooldown(admin, user.id);
 
   console.log(
-    "[prepbrain/chat] model=%s mode=%s intent=%s tools=%s cache=%s redis=%s prompt_tokens=%d completion_tokens=%d total_tokens=%d tool_chars=%d tool_est_tokens=%d marks_limit=%d",
+    "[prepbrain/chat] model=%s intent=%s tools=%s cache=%s redis=%s prompt_tokens=%d completion_tokens=%d total_tokens=%d tool_chars=%d tool_est_tokens=%d",
     groqModelUsed,
-    responseMode,
     intent,
     selectedTools.join(","),
     selectedTools.map((t) => toolCacheSources[t] ?? "?").join(","),
@@ -590,7 +576,6 @@ export async function POST(request: Request) {
     groqTotalTokens,
     toolDataChars,
     toolDataEstTokens,
-    marksLimit,
   );
 
   const delta = Math.max(0, Math.floor(groqTotalTokens));
@@ -598,8 +583,8 @@ export async function POST(request: Request) {
   const { error: tokenPersistErr } = await admin
     .from("user_profiles")
     .update({
-      prepbrain_tokens_used: nextUsed,
-      prepbrain_tokens_month: monthKey,
+      ai_tokens_used: nextUsed,
+      ai_tokens_month: monthKey,
     })
     .eq("user_id", user.id);
 
@@ -610,8 +595,8 @@ export async function POST(request: Request) {
   const usageAfter = buildPrepbrainUsagePayload(
     tier,
     {
-      prepbrain_tokens_used: nextUsed,
-      prepbrain_tokens_month: monthKey,
+      ai_tokens_used: nextUsed,
+      ai_tokens_month: monthKey,
     },
     monthKey,
   );
@@ -621,14 +606,12 @@ export async function POST(request: Request) {
     message: assistantText,
     usage: usageAfter,
     groq_model: groqModelUsed,
-    mode: responseMode,
     intent,
     tools_used: selectedTools,
     cache_sources: toolCacheSources,
     prompt_size: {
       tool_chars: toolDataChars,
       tool_est_tokens: toolDataEstTokens,
-      marks_limit: marksLimit,
     },
   });
 }

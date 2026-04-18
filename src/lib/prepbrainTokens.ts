@@ -1,14 +1,18 @@
-/** Monthly PrepBrain AI token caps (Groq total_tokens per user per calendar month). */
-export const PREPBRAIN_TOKEN_LIMIT_PRO = 40_000;
-export const PREPBRAIN_TOKEN_LIMIT_PRO_MAX = 80_000;
+/**
+ * Shared AI token budget for PrepBrain and HelpyJi.
+ * 2 million tokens per user per calendar month, shared across both features.
+ */
 
 /** ~80% of limit — UI warning threshold. */
 export const PREPBRAIN_USAGE_WARN_RATIO = 0.8;
 
+/** Shared monthly token cap — same for all paid tiers (Pro and Pro Max). */
+export const PREPBRAIN_TOKEN_LIMIT_PRO = 2_000_000;
+export const PREPBRAIN_TOKEN_LIMIT_PRO_MAX = 2_000_000;
+
 export const PREPBRAIN_LIMIT_MESSAGE_PRO =
-  "You've reached your monthly PrepBrain AI limit. Upgrade to Pro Max or wait until next month.";
-export const PREPBRAIN_LIMIT_MESSAGE_PRO_MAX =
-  "You've reached your monthly PrepBrain AI limit. Your allowance resets at the start of next month.";
+  "You have reached your monthly AI limit of 2 million tokens (shared between PrepBrain and HelpyJi). It will reset on the 1st of next month.";
+export const PREPBRAIN_LIMIT_MESSAGE_PRO_MAX = PREPBRAIN_LIMIT_MESSAGE_PRO;
 
 const MONTH_KEY_TZ = "Asia/Kolkata";
 
@@ -28,28 +32,33 @@ export function prepbrainCalendarMonthKey(now: Date = new Date()): string {
   return `${y}-${m}`;
 }
 
+/** Returns 2M for all paid tiers. */
 export function prepbrainMonthlyTokenLimit(
-  tier: string | null | undefined,
+  _tier?: string | null,
 ): number {
-  if (tier === "pro_max") return PREPBRAIN_TOKEN_LIMIT_PRO_MAX;
-  return PREPBRAIN_TOKEN_LIMIT_PRO;
+  return 2_000_000;
 }
 
+/**
+ * Shared token row — backed by the `ai_tokens_used` / `ai_tokens_month`
+ * columns in `user_profiles`. Both PrepBrain and HelpyJi read/write these.
+ */
 export type PrepBrainTokenRow = {
-  prepbrain_tokens_used: number | null;
-  prepbrain_tokens_month: string | null;
+  ai_tokens_used: number | null;
+  ai_tokens_month: string | null;
 };
 
 /**
- * Effective tokens used for the current month (lazy month rollover without requiring cron).
+ * Effective tokens used for the current month (lazy month rollover without
+ * requiring the cron to have run yet at month start).
  */
 export function effectivePrepbrainTokensUsed(
   row: PrepBrainTokenRow,
   monthKey: string = prepbrainCalendarMonthKey(),
 ): number {
-  const storedMonth = row.prepbrain_tokens_month?.trim() ?? "";
+  const storedMonth = row.ai_tokens_month?.trim() ?? "";
   if (storedMonth !== monthKey) return 0;
-  const n = row.prepbrain_tokens_used ?? 0;
+  const n = row.ai_tokens_used ?? 0;
   return Number.isFinite(n) && n >= 0 ? Math.floor(n) : 0;
 }
 
@@ -68,10 +77,8 @@ function normalizePrepbrainTier(
   return raw === "pro_max" ? "pro_max" : "pro";
 }
 
-export function prepbrainLimitReachedMessage(tier: PrepBrainUsageTier): string {
-  return tier === "pro_max"
-    ? PREPBRAIN_LIMIT_MESSAGE_PRO_MAX
-    : PREPBRAIN_LIMIT_MESSAGE_PRO;
+export function prepbrainLimitReachedMessage(_tier?: PrepBrainUsageTier): string {
+  return PREPBRAIN_LIMIT_MESSAGE_PRO;
 }
 
 export function buildPrepbrainUsagePayload(
@@ -82,7 +89,7 @@ export function buildPrepbrainUsagePayload(
   const t = normalizePrepbrainTier(tier);
   return {
     used: effectivePrepbrainTokensUsed(row, monthKey),
-    limit: prepbrainMonthlyTokenLimit(tier),
+    limit: 2_000_000,
     monthKey,
     tier: t,
   };
