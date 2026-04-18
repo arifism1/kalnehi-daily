@@ -2,15 +2,18 @@
 
 import clsx from "clsx";
 import { Check } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { DASHBOARD_FEATURES } from "@/lib/dashboardFeatures";
 
 type FeatureSelectorProps = {
   selected: string[];
   onChange: (ids: string[]) => void;
+  /** Rendered on the right of the select/deselect toolbar (e.g. Save). */
+  toolbarEnd?: ReactNode;
 };
 
-export function FeatureSelector({ selected, onChange }: FeatureSelectorProps) {
+export function FeatureSelector({ selected, onChange, toolbarEnd }: FeatureSelectorProps) {
   // Safety net: keep retired/internal features hidden even if stale data still references them.
   const visibleFeatures = DASHBOARD_FEATURES.filter((feature) => feature.id !== "daily-log");
   const visibleFeatureIds = new Set(visibleFeatures.map((feature) => feature.id));
@@ -36,18 +39,21 @@ export function FeatureSelector({ selected, onChange }: FeatureSelectorProps) {
   return (
     <div className="flex flex-col gap-4">
       {/* Select all / Deselect all */}
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-kal-text-secondary">
+      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-2">
+        <p className="min-w-0 text-xs text-kal-text-secondary">
           <span className="font-semibold text-kal-accent">{visibleSelectedCount}</span> of{" "}
           {visibleFeatures.length} selected
         </p>
-        <button
-          type="button"
-          onClick={toggleAll}
-          className="rounded-lg px-3 py-1.5 text-xs font-semibold text-kal-accent transition-colors hover:bg-kal-accent/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40"
-        >
-          {allSelected ? "Deselect All" : "Select All"}
-        </button>
+        <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+          <button
+            type="button"
+            onClick={toggleAll}
+            className="rounded-lg px-3 py-1.5 text-xs font-semibold text-kal-accent transition-colors hover:bg-kal-accent/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40"
+          >
+            {allSelected ? "Deselect All" : "Select All"}
+          </button>
+          {toolbarEnd}
+        </div>
       </div>
 
       {/* Feature cards grid */}

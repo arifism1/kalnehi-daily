@@ -20,11 +20,6 @@ import {
   redisToolGet,
   redisToolSet,
 } from "@/lib/prepbrainRedisCache";
-import {
-  consumeFromBonusLedger,
-  parseBonusLedger,
-  totalActiveBonus,
-} from "@/lib/bonusCreditsLedger";
 import { isFreeTrialWindowActive } from "@/lib/freeTrial";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
@@ -32,10 +27,11 @@ import { resolvePrepbrainGroqModels } from "@/lib/groqPrepbrainModel";
 import { callChatCompletion, type AiChatMessage } from "@/lib/aiChatClient";
 import { USER_ERROR } from "@/lib/userFacingErrors";
 import {
-  buildPrepbrainUsagePayload,
-  effectivePrepbrainTokensUsed,
-  getAiTokenBudgetForPhase,
-  MONTHLY_AI_TOKEN_CAP,
+  buildPrepbrainUsageDisplayPayload,
+  computePrepbrainTokenPersist,
+  hasPrepbrainTokenHeadroom,
+} from "@/lib/prepbrainTokenAccounting";
+import {
   prepbrainCalendarMonthKey,
   prepbrainLimitReachedMessage,
   resolveAiUsagePhase,
@@ -507,46 +503,29 @@ export async function POST(request: Request) {
     paid_trial_ai_tokens_used: paidTrialUsed,
   };
 
-  if (phase === "welcome") {
-    const { used, limit } = getAiTokenBudgetForPhase("welcome", tokenRow, monthKey);
-    if (used >= limit) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: prepbrainLimitReachedMessage("welcome"),
-          usage: buildPrepbrainUsagePayload("welcome", tokenRow, monthKey),
-        },
-        { status: 403 },
-      );
-    }
-  } else if (phase === "paid_trial") {
-    const { used, limit } = getAiTokenBudgetForPhase("paid_trial", tokenRow, monthKey);
-    if (used >= limit) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: prepbrainLimitReachedMessage("paid_trial"),
-          usage: buildPrepbrainUsagePayload("paid_trial", tokenRow, monthKey),
-        },
-        { status: 403 },
-      );
-    }
-  } else {
-    const baseUsed = effectivePrepbrainTokensUsed(tokenRow, monthKey);
-    const bonusRem = totalActiveBonus(
-      parseBonusLedger(profile.bonus_ai_tokens_ledger),
+  if (
+    !hasPrepbrainTokenHeadroom(
+      phase,
+      tokenRow,
+      monthKey,
+      profile.bonus_ai_tokens_ledger,
       now,
+    )
+  ) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: prepbrainLimitReachedMessage(phase),
+        usage: buildPrepbrainUsageDisplayPayload(
+          phase,
+          tokenRow,
+          monthKey,
+          profile.bonus_ai_tokens_ledger,
+          now,
+        ),
+      },
+      { status: 403 },
     );
-    if (baseUsed >= MONTHLY_AI_TOKEN_CAP && bonusRem <= 0) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: prepbrainLimitReachedMessage("monthly"),
-          usage: buildPrepbrainUsagePayload("monthly", tokenRow, monthKey),
-        },
-        { status: 403 },
-      );
-    }
   }
 
   const remainMs = await prepbrainCooldownRemainMs(admin, user.id);
@@ -574,7 +553,13 @@ export async function POST(request: Request) {
       intent,
       tools_used: [],
       cache_sources: {},
-      usage: buildPrepbrainUsagePayload(phase, tokenRow, monthKey),
+      usage: buildPrepbrainUsageDisplayPayload(
+        phase,
+        tokenRow,
+        monthKey,
+        profile.bonus_ai_tokens_ledger,
+        now,
+      ),
     });
   }
 
@@ -714,59 +699,33 @@ export async function POST(request: Request) {
   );
 
   const delta = Math.max(0, Math.floor(groqTotalTokens));
-
-  if (phase === "welcome") {
-    const wu = welcomeUsed;
-    const nextW = wu + delta;
+  const persistNow = new Date();
+  const persist = computePrepbrainTokenPersist(
+    phase,
+    tokenRow,
+    monthKey,
+    profile.bonus_ai_tokens_ledger,
+    delta,
+    persistNow,
+  );
+  if (Object.keys(persist.patch).length > 0) {
     const { error: tokenPersistErr } = await admin
       .from("user_profiles")
-      .update({
-        welcome_ai_tokens_used: nextW,
-        updated_at: new Date().toISOString(),
-      })
+      .update(persist.patch)
       .eq("user_id", user.id);
     if (tokenPersistErr) console.error("[prepbrain/chat] token persist failed", tokenPersistErr);
-    tokenRow.welcome_ai_tokens_used = nextW;
-  } else if (phase === "paid_trial") {
-    const pu = paidTrialUsed;
-    const nextP = pu + delta;
-    const { error: tokenPersistErr } = await admin
-      .from("user_profiles")
-      .update({
-        paid_trial_ai_tokens_used: nextP,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("user_id", user.id);
-    if (tokenPersistErr) console.error("[prepbrain/chat] token persist failed", tokenPersistErr);
-    tokenRow.paid_trial_ai_tokens_used = nextP;
-  } else {
-    const baseUsed = effectivePrepbrainTokensUsed(tokenRow, monthKey);
-    let remain = delta;
-    const roomBase = Math.max(0, MONTHLY_AI_TOKEN_CAP - baseUsed);
-    const toBase = Math.min(remain, roomBase);
-    const nextBase = baseUsed + toBase;
-    remain -= toBase;
-    let bonusLed = parseBonusLedger(profile.bonus_ai_tokens_ledger);
-    if (remain > 0) {
-      const { ledger } = consumeFromBonusLedger(bonusLed, remain, now);
-      bonusLed = ledger;
-    }
-    const { error: tokenPersistErr } = await admin
-      .from("user_profiles")
-      .update({
-        ai_tokens_used: nextBase,
-        ai_tokens_month: monthKey,
-        bonus_ai_tokens_ledger: bonusLed,
-        bonus_ai_tokens: totalActiveBonus(bonusLed, now),
-        updated_at: new Date().toISOString(),
-      })
-      .eq("user_id", user.id);
-    if (tokenPersistErr) console.error("[prepbrain/chat] token persist failed", tokenPersistErr);
-    tokenRow.ai_tokens_used = nextBase;
-    tokenRow.ai_tokens_month = monthKey;
   }
-
-  const usageAfter = buildPrepbrainUsagePayload(phase, tokenRow, monthKey);
+  const ledgerAfter =
+    "bonus_ai_tokens_ledger" in persist.patch
+      ? persist.patch.bonus_ai_tokens_ledger
+      : profile.bonus_ai_tokens_ledger;
+  const usageAfter = buildPrepbrainUsageDisplayPayload(
+    phase,
+    persist.tokenRow,
+    monthKey,
+    ledgerAfter,
+    persistNow,
+  );
 
   return NextResponse.json({
     ok: true,

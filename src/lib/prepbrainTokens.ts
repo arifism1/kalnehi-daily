@@ -82,6 +82,10 @@ export type PrepBrainUsagePayload = {
   monthKey: string;
   tier: PrepBrainUsageTier;
   phase: AiUsagePhase;
+  /** Base allowance for this phase (excludes bonus pools). */
+  phaseCap?: number;
+  /** Active bonus tokens from one-time purchases (30-day pools). */
+  bonusRemaining?: number;
 };
 
 export function prepbrainLimitReachedMessage(phase: AiUsagePhase): string {

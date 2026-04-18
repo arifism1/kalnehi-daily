@@ -37,12 +37,12 @@ export function AiFeatureGate({ children }: Props) {
     return (
       <div className="kal-glass-panel flex flex-col items-center gap-4 rounded-2xl p-8 text-center">
         <Lock className="h-8 w-8 text-kal-text-secondary" />
-        <h3 className="text-lg font-bold text-kal-text">Voice Dictation is a Pro feature</h3>
+        <h3 className="text-lg font-bold text-kal-text">Voice dictation needs an active trial or plan</h3>
         <p className="max-w-sm text-sm text-kal-text-secondary">
-          Subscribe to Pro to unlock AI voice planning and dictation.
+          Start the welcome trial or a paid plan to get voice minutes for AI planning and dictation.
         </p>
         <Link href="/pricing" className="kal-btn-accent">
-          View Plans
+          View plans
         </Link>
       </div>
     );

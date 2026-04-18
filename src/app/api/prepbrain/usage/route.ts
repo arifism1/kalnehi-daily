@@ -1,17 +1,12 @@
 import { NextResponse } from "next/server";
 
+import { isFreeTrialWindowActive } from "@/lib/freeTrial";
+import { buildPrepbrainUsageDisplayPayload } from "@/lib/prepbrainTokenAccounting";
 import {
-  isFreeTrialWindowActive,
-} from "@/lib/freeTrial";
-import {
-  buildPrepbrainUsagePayload,
-  effectivePrepbrainTokensUsed,
-  MONTHLY_AI_TOKEN_CAP,
   prepbrainCalendarMonthKey,
   resolveAiUsagePhase,
   type PrepBrainTokenRow,
 } from "@/lib/prepbrainTokens";
-import { parseBonusLedger, totalActiveBonus } from "@/lib/bonusCreditsLedger";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 import { USER_ERROR } from "@/lib/userFacingErrors";
@@ -107,6 +102,7 @@ export async function GET() {
   }
 
   const calMonth = prepbrainCalendarMonthKey();
+  const now = new Date();
   const tokenRow: PrepBrainTokenRow = {
     ai_tokens_used: profile.ai_tokens_used,
     ai_tokens_month: profile.ai_tokens_month,
@@ -120,24 +116,16 @@ export async function GET() {
         : 0,
   };
 
-  const usage = buildPrepbrainUsagePayload(phase, tokenRow, calMonth);
-  const now = new Date();
-  let monthlyDisplay = usage;
-  if (phase === "monthly") {
-    const baseUsed = effectivePrepbrainTokensUsed(tokenRow, calMonth);
-    const bonusRem = totalActiveBonus(
-      parseBonusLedger(profile.bonus_ai_tokens_ledger),
-      now,
-    );
-    monthlyDisplay = {
-      ...usage,
-      limit: MONTHLY_AI_TOKEN_CAP + bonusRem,
-      used: baseUsed,
-    };
-  }
+  const usage = buildPrepbrainUsageDisplayPayload(
+    phase,
+    tokenRow,
+    calMonth,
+    profile.bonus_ai_tokens_ledger,
+    now,
+  );
 
   return NextResponse.json(
-    { ok: true, usage: monthlyDisplay, phase },
+    { ok: true, usage, phase },
     {
       headers: {
         "Cache-Control": "private, max-age=30, stale-while-revalidate=60",

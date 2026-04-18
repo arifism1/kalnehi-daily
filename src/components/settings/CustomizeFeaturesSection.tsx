@@ -7,30 +7,22 @@ import { ChevronDown, LayoutDashboard, Save } from "lucide-react";
 import { saveEnabledFeatures } from "@/actions/profile";
 import { FeatureSelector } from "@/components/features/FeatureSelector";
 import { ALL_FEATURE_IDS } from "@/lib/dashboardFeatures";
-import { useAuthStore } from "@/store/useAuthStore";
 import { useEnabledFeaturesStore } from "@/store/useEnabledFeaturesStore";
 
 export function CustomizeFeaturesSection() {
-  const user = useAuthStore((s) => s.user);
   const storedFeatures = useEnabledFeaturesStore((s) => s.enabledFeatures);
-  const storeLoading = useEnabledFeaturesStore((s) => s.loading);
+  const hydratedFromProfile = useEnabledFeaturesStore((s) => s.hydratedFromProfile);
   const setEnabledFeatures = useEnabledFeaturesStore((s) => s.setEnabledFeatures);
-  const fetchStore = useEnabledFeaturesStore((s) => s.fetch);
-
-  // Fetch on mount in case we landed here without going through HomeClient.
-  useEffect(() => {
-    if (user?.id) void fetchStore(user.id);
-  }, [user?.id, fetchStore]);
 
   const [open, setOpen] = useState(false);
 
-  // Sync local selection whenever the store resolves (handles async load).
+  // Sync local selection once profile data has populated the store (avoids treating
+  // initial null as "all features" before AppShell's subscription fetch finishes).
   const [selected, setSelected] = useState<string[]>(ALL_FEATURE_IDS);
   useEffect(() => {
-    if (!storeLoading) {
-      setSelected(storedFeatures ?? ALL_FEATURE_IDS);
-    }
-  }, [storedFeatures, storeLoading]);
+    if (!hydratedFromProfile) return;
+    setSelected(storedFeatures ?? ALL_FEATURE_IDS);
+  }, [storedFeatures, hydratedFromProfile]);
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -108,36 +100,38 @@ export function CustomizeFeaturesSection() {
                 You can edit your selected features anytime here.
               </p>
 
-              <FeatureSelector selected={selected} onChange={setSelected} />
+              {saveError && (
+                <p className="mb-3 text-sm font-medium text-kal-danger-text">
+                  {saveError}
+                </p>
+              )}
+              {saved && (
+                <p className="mb-3 text-sm font-medium text-green-700 dark:text-green-400">
+                  Features saved successfully.
+                </p>
+              )}
 
-              {/* Save row */}
-              <div className="mt-5 flex flex-col gap-2">
-                {saveError && (
-                  <p className="text-sm font-medium text-kal-danger-text">
-                    {saveError}
-                  </p>
-                )}
-                {saved && (
-                  <p className="text-sm font-medium text-green-700 dark:text-green-400">
-                    Features saved successfully.
-                  </p>
-                )}
-                <button
-                  type="button"
-                  onClick={handleSave}
-                  disabled={isPending || selected.length === 0}
-                  className="kal-btn-accent inline-flex min-h-[48px] items-center justify-center gap-2 px-6 py-2.5 text-sm transition-opacity duration-200 disabled:opacity-50"
-                >
-                  {isPending ? (
-                    "Saving…"
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4" aria-hidden />
-                      Save My Features
-                    </>
-                  )}
-                </button>
-              </div>
+              <FeatureSelector
+                selected={selected}
+                onChange={setSelected}
+                toolbarEnd={
+                  <button
+                    type="button"
+                    onClick={handleSave}
+                    disabled={isPending || selected.length === 0}
+                    className="kal-btn-accent inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-lg px-4 py-2 text-xs font-semibold transition-opacity duration-200 disabled:opacity-50 sm:min-h-[44px] sm:px-5 sm:text-sm"
+                  >
+                    {isPending ? (
+                      "Saving…"
+                    ) : (
+                      <>
+                        <Save className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden />
+                        Save
+                      </>
+                    )}
+                  </button>
+                }
+              />
             </div>
           </div>
         </div>

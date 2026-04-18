@@ -18,6 +18,10 @@ import {
 import { effectiveUsageForDisplay } from "@/lib/subscriptionUsage";
 import { parseSubscriptionTier, type SubscriptionTier } from "@/lib/subscriptionTiers";
 import { useAuthStore } from "@/store/useAuthStore";
+import {
+  normalizeEnabledFeaturesRow,
+  useEnabledFeaturesStore,
+} from "@/store/useEnabledFeaturesStore";
 
 export type SubscriptionStatus = "trial" | "active" | "expired" | "cancelled" | null;
 
@@ -28,6 +32,9 @@ type UsageData = {
   bonusVoiceMinutes: number;
   bonusPhotoScansNextExpiry: string | null;
   bonusVoiceMinutesNextExpiry: string | null;
+  /** One-time PrepBrain token packs (30-day pools), used before monthly cap. */
+  bonusAiTokens: number;
+  bonusAiTokensNextExpiry: string | null;
   usageResetDate: string | null;
 };
 
@@ -61,6 +68,8 @@ type SubscriptionData = {
   /** Welcome trial clock ended, still no paid plan. */
   welcomeTrialExpiredNoPay: boolean;
   refetch: () => void;
+  /** Increments when `refetch()` runs — use to reload dependent data (e.g. PrepBrain usage). */
+  refetchVersion: number;
 };
 
 const EMPTY_USAGE: UsageData = {
@@ -70,6 +79,8 @@ const EMPTY_USAGE: UsageData = {
   bonusVoiceMinutes: 0,
   bonusPhotoScansNextExpiry: null,
   bonusVoiceMinutesNextExpiry: null,
+  bonusAiTokens: 0,
+  bonusAiTokensNextExpiry: null,
   usageResetDate: null,
 };
 
@@ -138,6 +149,7 @@ export function useSubscriptionAccess(): SubscriptionData {
   useEffect(() => {
     let cancelled = false;
     if (!user?.id) {
+      useEnabledFeaturesStore.getState().resetEnabledFeaturesHydration();
       setOnboardingDone(false);
       setStatus(null);
       setHasPaidAccess(false);
@@ -164,13 +176,14 @@ export function useSubscriptionAccess(): SubscriptionData {
         const { data, error } = await supabase
           .from("user_profiles")
           .select(
-            "mandatory_onboarding_completed_at, subscription_status, subscription_plan, subscription_start_date, subscription_end_date, subscription_tier, subscription_autopay_months_total, has_had_trial, photo_scans_used_this_month, voice_minutes_used_this_month, bonus_photo_scans, bonus_voice_minutes, bonus_photo_scans_ledger, bonus_voice_minutes_ledger, usage_reset_date, trial_started_at, trial_photo_scans_used, trial_voice_seconds_used, has_used_free_trial",
+            "mandatory_onboarding_completed_at, subscription_status, subscription_plan, subscription_start_date, subscription_end_date, subscription_tier, subscription_autopay_months_total, has_had_trial, photo_scans_used_this_month, voice_minutes_used_this_month, bonus_photo_scans, bonus_voice_minutes, bonus_photo_scans_ledger, bonus_voice_minutes_ledger, bonus_ai_tokens, bonus_ai_tokens_ledger, usage_reset_date, trial_started_at, trial_photo_scans_used, trial_voice_seconds_used, has_used_free_trial, enabled_features",
           )
           .eq("user_id", user.id)
           .maybeSingle();
 
         if (cancelled) return;
         if (error) {
+          useEnabledFeaturesStore.getState().resetEnabledFeaturesHydration();
           setFetchError(true);
           setOnboardingDone(false);
           setStatus(null);
@@ -184,6 +197,10 @@ export function useSubscriptionAccess(): SubscriptionData {
           setHasUsedFreeTrial(false);
           return;
         }
+
+        useEnabledFeaturesStore.getState().setEnabledFeatures(
+          normalizeEnabledFeaturesRow(data?.enabled_features),
+        );
 
         setOnboardingDone(!!data?.mandatory_onboarding_completed_at);
 
@@ -226,6 +243,7 @@ export function useSubscriptionAccess(): SubscriptionData {
         const now = new Date();
         const photoLed = parseBonusLedger(data?.bonus_photo_scans_ledger);
         const voiceLed = parseBonusLedger(data?.bonus_voice_minutes_ledger);
+        const aiTokLed = parseBonusLedger(data?.bonus_ai_tokens_ledger);
         setUsage({
           photoScansUsed: eff.photoScansUsed,
           voiceMinutesUsed: eff.voiceMinutesUsed,
@@ -233,10 +251,16 @@ export function useSubscriptionAccess(): SubscriptionData {
           bonusVoiceMinutes: totalActiveBonus(voiceLed, now),
           bonusPhotoScansNextExpiry: nextBonusExpiryIso(photoLed, now),
           bonusVoiceMinutesNextExpiry: nextBonusExpiryIso(voiceLed, now),
+          bonusAiTokens:
+            typeof data?.bonus_ai_tokens === "number" && Number.isFinite(data.bonus_ai_tokens)
+              ? Math.max(0, Math.floor(data.bonus_ai_tokens))
+              : totalActiveBonus(aiTokLed, now),
+          bonusAiTokensNextExpiry: nextBonusExpiryIso(aiTokLed, now),
           usageResetDate: data?.usage_reset_date ?? null,
         });
       } catch {
         if (!cancelled) {
+          useEnabledFeaturesStore.getState().resetEnabledFeaturesHydration();
           setFetchError(true);
           setOnboardingDone(false);
           setStatus(null);
@@ -283,5 +307,6 @@ export function useSubscriptionAccess(): SubscriptionData {
     freeTrialVoiceSecondsRemaining,
     welcomeTrialExpiredNoPay,
     refetch,
+    refetchVersion: fetchKey,
   };
 }

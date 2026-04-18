@@ -262,6 +262,10 @@ export function PricingPageClient() {
         amount: created.amountPaise,
         currency: "INR",
         theme: { color: "#FF7A00" },
+        prefill: created.prefill,
+        ...(created.prefill.contact
+          ? { readonly: { email: true, contact: true } }
+          : { readonly: { email: true } }),
         handler: async (response: RazorpayCheckoutResponse) => {
           const updated = hasHadTrial
             ? await activateRazorpayMonthlySubscription({ ...response })

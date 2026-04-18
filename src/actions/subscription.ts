@@ -54,6 +54,7 @@ type CreateSubscriptionResult =
       keyId: string;
       subscriptionId: string;
       amountPaise: number;
+      prefill: RazorpayCheckoutPrefill;
     }
   | {
       ok: false;
@@ -410,6 +411,46 @@ async function getAuthedUserId() {
   return user.id;
 }
 
+/** Razorpay checkout.js contact prefill (reduces manual email/phone entry). */
+export type RazorpayCheckoutPrefill = {
+  email: string;
+  contact?: string;
+};
+
+function buildRazorpayPrefill(
+  userId: string,
+  authEmail: string | null | undefined,
+  phoneRaw: string | null | undefined,
+): RazorpayCheckoutPrefill {
+  const email =
+    authEmail?.trim() ||
+    `kalnehi+${userId.replace(/-/g, "").slice(0, 12)}@checkout.kalnehi.app`;
+  const digits = phoneRaw?.replace(/\D/g, "") ?? "";
+  let contact: string | undefined;
+  if (digits.length >= 10) {
+    contact = digits.slice(-10);
+  }
+  return contact ? { email, contact } : { email };
+}
+
+async function loadRazorpayPrefillForUser(userId: string): Promise<RazorpayCheckoutPrefill> {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const admin = getAdminClient();
+  let phone: string | null = null;
+  if (admin) {
+    const { data } = await admin
+      .from("user_profiles")
+      .select("phone_number")
+      .eq("user_id", userId)
+      .maybeSingle();
+    phone = data?.phone_number?.trim() ?? null;
+  }
+  return buildRazorpayPrefill(userId, user?.email, phone);
+}
+
 function getRazorpayConfig() {
   const keyId = process.env.RAZORPAY_KEY_ID?.trim();
   const keySecret = process.env.RAZORPAY_KEY_SECRET?.trim();
@@ -643,6 +684,8 @@ export async function createRazorpayTrialSubscription(
   const userId = await getAuthedUserId();
   if (!userId) return { ok: false, error: "Please sign in to subscribe." };
 
+  const prefill = await loadRazorpayPrefillForUser(userId);
+
   const config = getRazorpayConfig();
   if (!config) {
     return {
@@ -746,6 +789,7 @@ export async function createRazorpayTrialSubscription(
         keyId: config.keyId,
         subscriptionId: created.id,
         amountPaise: tierConfig.trialPricePaise,
+        prefill,
       };
     } catch (error) {
       if (hadEnvPlanId && isLikelyInvalidRazorpayPlanIdError(error)) {
@@ -764,6 +808,7 @@ export async function createRazorpayTrialSubscription(
               keyId: config.keyId,
               subscriptionId: created.id,
               amountPaise: tierConfig.trialPricePaise,
+              prefill,
             };
           } catch (retryErr) {
             logRazorpaySubscriptionCreateFailure("createRazorpayTrialSubscription (retry)", { tier }, retryErr);
@@ -1367,7 +1412,13 @@ async function addBonusCredits(
 // ---------------------------------------------------------------------------
 
 type CreateExtraCreditsOrderResult =
-  | { ok: true; keyId: string; orderId: string; amountPaise: number }
+  | {
+      ok: true;
+      keyId: string;
+      orderId: string;
+      amountPaise: number;
+      prefill: RazorpayCheckoutPrefill;
+    }
   | { ok: false; error: string };
 
 export async function createExtraCreditsOrder(
@@ -1387,7 +1438,7 @@ export async function createExtraCreditsOrder(
 
   const { data: profile } = await admin
     .from("user_profiles")
-    .select("subscription_status, subscription_end_date")
+    .select("subscription_status, subscription_end_date, phone_number")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -1401,6 +1452,16 @@ export async function createExtraCreditsOrder(
   if (!paid) {
     return { ok: false, error: "Subscribe to a plan before buying extra credits." };
   }
+
+  const supabaseAuth = await createSupabaseServerClient();
+  const {
+    data: { user: authUser },
+  } = await supabaseAuth.auth.getUser();
+  const prefill = buildRazorpayPrefill(
+    userId,
+    authUser?.email,
+    profile?.phone_number ?? null,
+  );
 
   try {
     const razorpay = getRazorpayClient(config);
@@ -1422,6 +1483,7 @@ export async function createExtraCreditsOrder(
       keyId: config.keyId,
       orderId: order.id,
       amountPaise: pack.pricePaise,
+      prefill,
     };
   } catch (error) {
     return { ok: false, error: safeErrorMessage(error) };
@@ -1588,6 +1650,8 @@ export async function createRazorpayMonthlySubscription(
   const userId = await getAuthedUserId();
   if (!userId) return { ok: false, error: "Please sign in to subscribe." };
 
+  const prefill = await loadRazorpayPrefillForUser(userId);
+
   const config = getRazorpayConfig();
   if (!config) {
     return {
@@ -1678,6 +1742,7 @@ export async function createRazorpayMonthlySubscription(
         keyId: config.keyId,
         subscriptionId: created.id,
         amountPaise: tierConfig.monthlyPricePaise,
+        prefill,
       };
     } catch (error) {
       if (hadEnvPlanId && isLikelyInvalidRazorpayPlanIdError(error)) {
@@ -1696,6 +1761,7 @@ export async function createRazorpayMonthlySubscription(
               keyId: config.keyId,
               subscriptionId: created.id,
               amountPaise: tierConfig.monthlyPricePaise,
+              prefill,
             };
           } catch (retryErr) {
             logRazorpaySubscriptionCreateFailure("createRazorpayMonthlySubscription (retry)", { tier }, retryErr);

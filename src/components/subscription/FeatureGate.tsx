@@ -16,7 +16,8 @@ type Props = {
 };
 
 export function FeatureGate({ feature, children }: Props) {
-  const { loading, tier } = useSubscriptionAccess();
+  const { loading, tier, hasPaidAccess, freeTrialActive } = useSubscriptionAccess();
+  const trialUnlocksNav = hasPaidAccess || freeTrialActive;
 
   if (loading) {
     return (
@@ -26,7 +27,7 @@ export function FeatureGate({ feature, children }: Props) {
     );
   }
 
-  if (isFeatureBlocked(tier, feature)) {
+  if (!trialUnlocksNav && isFeatureBlocked(tier, feature)) {
     const label = FEATURE_LABELS[feature];
     return (
       <div className="kal-glass-panel mx-auto flex max-w-md flex-col items-center gap-5 rounded-2xl p-10 text-center">
