@@ -6,8 +6,12 @@ import { getGroqModelCandidates } from "@/lib/groqClient";
 const MAX_TRANSCRIPT = 2_000;
 const MAX_TITLE = 200;
 const MAX_SUBJECT = 200;
+const MAX_CHAPTER = 200;
 const PAST_SKEW_MS = 120_000;
 const MAX_FUTURE_MS = 366 * 24 * 60 * 60 * 1000;
+
+const TAGS = new Set(["Revision", "Study", "Break", "Admin", "Other"]);
+const REPEATS = new Set(["once", "daily", "weekly"]);
 
 function extractOutermostJsonObject(text: string): string | null {
   const objStart = text.indexOf("{");
@@ -66,30 +70,46 @@ function isWrongModelError(err: unknown): boolean {
   );
 }
 
-export type VoiceReminderParseInput = {
+function normalizeTag(raw: unknown): string {
+  if (typeof raw !== "string") return "Study";
+  const t = raw.trim();
+  if (TAGS.has(t)) return t;
+  return "Study";
+}
+
+function normalizeRepeat(raw: unknown): "once" | "daily" | "weekly" {
+  if (typeof raw !== "string") return "once";
+  const r = raw.trim().toLowerCase();
+  if (r === "daily" || r === "weekly" || r === "once") return r;
+  if (r === "every day" || r === "everyday") return "daily";
+  if (r === "every week") return "weekly";
+  return "once";
+}
+
+export type VoiceNotificationParseInput = {
   transcript: string;
-  /** IANA zone from `Intl.DateTimeFormat().resolvedOptions().timeZone` */
   ianaTimeZone: string;
-  /** Client clock ISO (helps resolve "tomorrow" / "tonight") */
   nowIso?: string;
 };
 
-export type VoiceReminderParseSuccess = {
+export type VoiceNotificationParseSuccess = {
   title: string;
-  remind_at: string;
+  notify_at: string;
   subject: string | null;
+  chapter: string | null;
+  tag: string;
+  repeat_type: "once" | "daily" | "weekly";
   groq_model: string;
 };
 
-export async function runVoiceReminderParse(
-  input: VoiceReminderParseInput,
+export async function runVoiceNotificationParse(
+  input: VoiceNotificationParseInput,
 ): Promise<
-  | { ok: true; data: VoiceReminderParseSuccess }
-  | { ok: false; error: string }
+  { ok: true; data: VoiceNotificationParseSuccess } | { ok: false; error: string }
 > {
   const apiKey = process.env.GROQ_API_KEY?.trim();
   if (!apiKey) {
-    return { ok: false, error: "Voice reminders are not configured on the server." };
+    return { ok: false, error: "Voice notifications are not configured on the server." };
   }
 
   const raw = input.transcript.trim().slice(0, MAX_TRANSCRIPT);
@@ -100,21 +120,24 @@ export async function runVoiceReminderParse(
   const tz = input.ianaTimeZone.trim().slice(0, 120) || "UTC";
   const nowAnchor = (input.nowIso?.trim() || new Date().toISOString()).slice(0, 40);
 
-  const system = `You convert a student's spoken reminder into structured JSON.
+  const system = `You convert a student's spoken notification request into structured JSON.
 Return ONLY one JSON object (no markdown, no prose). Shape:
-{"title":string,"remind_at":string,"subject":string|null}
+{"title":string,"notify_at":string,"subject":string|null,"chapter":string|null,"tag":string,"repeat":string}
 
 Rules:
-- title: short task label (what to do), max ${MAX_TITLE} chars. No quotes inside.
-- remind_at: single RFC3339/ISO-8601 instant when the reminder should fire (include offset like +05:30 or use Z). Must be absolute time the user asked for.
-- subject: optional short study subject label (e.g. "Physics", "Aldehydes") or null.
+- title: short label (what they should do), max ${MAX_TITLE} chars. No quotes inside.
+- notify_at: single RFC3339/ISO-8601 instant when the notification should fire (include offset like +05:30 or Z). Absolute time the user asked for.
+- subject: optional study subject (e.g. "Physics") or null.
+- chapter: optional chapter label or null.
+- tag: one of exactly: Revision, Study, Break, Admin, Other. Default Study if unclear.
+- repeat: one of exactly: once, daily, weekly. Default once if not recurring.
 
-Time context (authoritative for "today", "tomorrow", "in 25 minutes", "7 PM", "tomorrow morning 9 AM"):
+Time context:
 - User IANA timezone: ${tz}
 - Reference "now" instant (ISO): ${nowAnchor}
 
-Interpret all relative times in the user's timezone. If the utterance is ambiguous, pick the next reasonable future occurrence after the reference instant.
-If you cannot determine a time, use remind_at as an empty string (caller will reject).`;
+Interpret relative times in the user's timezone. Pick the next reasonable future occurrence after the reference instant.
+If you cannot determine a time, use notify_at as an empty string (caller will reject).`;
 
   const messages: ChatCompletionMessageParam[] = [
     { role: "system", content: system },
@@ -153,10 +176,9 @@ If you cannot determine a time, use remind_at as an empty string (caller will re
       }
 
       const o = parsed as Record<string, unknown>;
-      let title =
-        typeof o.title === "string" ? o.title.trim() : "";
-      if (!title && typeof o.reminder_title === "string") {
-        title = o.reminder_title.trim();
+      let title = typeof o.title === "string" ? o.title.trim() : "";
+      if (!title && typeof o.notification_title === "string") {
+        title = o.notification_title.trim();
       }
       if (title.length > MAX_TITLE) title = title.slice(0, MAX_TITLE);
       if (!title) {
@@ -164,18 +186,20 @@ If you cannot determine a time, use remind_at as an empty string (caller will re
         continue;
       }
 
-      const remindRaw =
-        typeof o.remind_at === "string"
-          ? o.remind_at.trim()
-          : typeof o.remindAt === "string"
-            ? o.remindAt.trim()
-            : "";
-      if (!remindRaw) {
+      const timeRaw =
+        typeof o.notify_at === "string"
+          ? o.notify_at.trim()
+          : typeof o.remind_at === "string"
+            ? o.remind_at.trim()
+            : typeof o.remindAt === "string"
+              ? o.remindAt.trim()
+              : "";
+      if (!timeRaw) {
         lastErr = new Error("missing_time");
         continue;
       }
 
-      const at = new Date(remindRaw);
+      const at = new Date(timeRaw);
       if (Number.isNaN(at.getTime())) {
         lastErr = new Error("bad_time");
         continue;
@@ -183,10 +207,13 @@ If you cannot determine a time, use remind_at as an empty string (caller will re
 
       const nowMs = Date.now();
       if (at.getTime() < nowMs - PAST_SKEW_MS) {
-        return { ok: false, error: "That time is already in the past. Try again with a future time." };
+        return {
+          ok: false,
+          error: "That time is already in the past. Try again with a future time.",
+        };
       }
       if (at.getTime() > nowMs + MAX_FUTURE_MS) {
-        return { ok: false, error: "Reminder time is too far in the future." };
+        return { ok: false, error: "Notification time is too far in the future." };
       }
 
       let subject: string | null =
@@ -194,12 +221,24 @@ If you cannot determine a time, use remind_at as an empty string (caller will re
           ? o.subject.trim().slice(0, MAX_SUBJECT)
           : null;
 
+      let chapter: string | null =
+        typeof o.chapter === "string" && o.chapter.trim()
+          ? o.chapter.trim().slice(0, MAX_CHAPTER)
+          : null;
+
+      const tag = normalizeTag(o.tag);
+      let repeat_type = normalizeRepeat(o.repeat ?? o.repeat_type);
+      if (!REPEATS.has(repeat_type)) repeat_type = "once";
+
       return {
         ok: true,
         data: {
           title,
-          remind_at: at.toISOString(),
+          notify_at: at.toISOString(),
           subject,
+          chapter,
+          tag,
+          repeat_type,
           groq_model: groqModelUsed,
         },
       };
@@ -209,14 +248,14 @@ If you cannot determine a time, use remind_at as an empty string (caller will re
         return {
           ok: false,
           error:
-            e instanceof Error ? e.message : "Reminder parsing is busy. Try again shortly.",
+            e instanceof Error ? e.message : "Notification parsing is busy. Try again shortly.",
         };
       }
       if (!isWrongModelError(e)) {
         return {
           ok: false,
           error:
-            e instanceof Error ? e.message : "Could not parse this reminder right now.",
+            e instanceof Error ? e.message : "Could not parse this notification right now.",
         };
       }
     }
@@ -227,6 +266,6 @@ If you cannot determine a time, use remind_at as an empty string (caller will re
     error:
       lastErr instanceof Error
         ? lastErr.message
-        : "Could not parse this reminder right now.",
+        : "Could not parse this notification right now.",
   };
 }

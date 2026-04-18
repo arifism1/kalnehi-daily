@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   BarChart3,
+  BellRing,
   Bookmark,
   BookOpen,
   Brain,
@@ -98,6 +99,12 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
         shortLabel: "Dictate",
         Icon: Mic,
         featureId: "dictate-my-day",
+      },
+      {
+        href: "/notification",
+        label: "Smart notifications",
+        shortLabel: "Notify",
+        Icon: BellRing,
       },
       {
         href: "/prepbrain",
@@ -229,6 +236,7 @@ const QUICK_NAV_HREF_ORDER: readonly string[] = [
   "/daily-plan",
   "/saved-plans",
   "/dictate-day",
+  "/notification",
   "/prepbrain",
   "/plan-my-day",
   "/syllabus",

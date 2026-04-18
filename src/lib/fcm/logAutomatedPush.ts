@@ -2,6 +2,7 @@ export type AutomatedPushChannel =
   | "system_push_morning"
   | "system_push_evening"
   | "custom_reminder"
+  | "scheduled_notification"
   | "danger_zone";
 
 /**

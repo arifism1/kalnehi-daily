@@ -44,6 +44,10 @@ const SITES = [
     scope: "Cron bearer only; reads user_custom_notifications for scheduled sends.",
   },
   {
+    file: "src/app/api/cron/scheduled-notifications/route.ts",
+    scope: "Cron bearer only; reads user_scheduled_notifications for scheduled sends.",
+  },
+  {
     file: "src/app/api/user/system-push/route.ts",
     scope: "After getUser(); .eq(user_id, user.id).",
   },

@@ -15,6 +15,7 @@ import {
 } from "react";
 
 import { PwaInstallPromptDeferred } from "@/components/PwaInstallPromptDeferred";
+import { VoiceNotificationSheet } from "@/components/voice/VoiceNotificationSheet";
 import { FreeTrialWelcomeBanner } from "@/components/subscription/FreeTrialWelcomeBanner";
 import { QuickNavBar } from "@/components/QuickNavBar";
 import { QuietSavedToast } from "@/components/QuietSavedToast";
@@ -191,6 +192,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
       </QuietSavedToastBoundary>
       <TimerVisibilityBridge />
       <PwaInstallPromptDeferred />
+      <VoiceNotificationSheet />
     </div>
   );
 }

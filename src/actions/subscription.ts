@@ -6,6 +6,8 @@ import Razorpay from "razorpay";
 import { createClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/types/supabase";
+
+type UserProfileUpdate = Database["public"]["Tables"]["user_profiles"]["Update"];
 import {
   addBonusPool,
   consumeFromBonusLedger,
@@ -1003,7 +1005,7 @@ async function applyPaidPhotoScanUsage(
   const { ledger: afterBonus, taken } = consumeFromBonusLedger(ledger, 1, now);
   if (taken === 1) {
     const bonusSum = totalActiveBonus(afterBonus, now);
-    const patch: Record<string, unknown> = {
+    const patch: UserProfileUpdate = {
       bonus_photo_scans_ledger: afterBonus,
       bonus_photo_scans: bonusSum,
       updated_at: now.toISOString(),
@@ -1026,7 +1028,7 @@ async function applyPaidPhotoScanUsage(
   }
 
   const bonusSum = totalActiveBonus(ledger, now);
-  const patch: Record<string, unknown> = {
+  const patch: UserProfileUpdate = {
     photo_scans_used_this_month: currentUsed + 1,
     updated_at: now.toISOString(),
   };
@@ -1118,7 +1120,7 @@ async function applyPaidVoiceMinuteUsage(
   }
 
   const bonusSum = totalActiveBonus(ledgerAfterBonus, now);
-  const patch: Record<string, unknown> = {
+  const patch: UserProfileUpdate = {
     bonus_voice_minutes_ledger: ledgerAfterBonus,
     bonus_voice_minutes: bonusSum,
     voice_minutes_used_this_month: currentUsed + fromMonthly,
@@ -1364,7 +1366,7 @@ async function addBonusCredits(
   const expiresAt = new Date(now);
   expiresAt.setUTCDate(expiresAt.getUTCDate() + 30);
 
-  const patch: Record<string, unknown> = {
+  const patch: UserProfileUpdate = {
     updated_at: now.toISOString(),
   };
 
