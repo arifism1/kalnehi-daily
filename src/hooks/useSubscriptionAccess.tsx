@@ -30,7 +30,6 @@ import {
   effectiveUsageForDisplay,
 } from "@/lib/subscriptionUsage";
 import { parseSubscriptionTier, type SubscriptionTier } from "@/lib/subscriptionTiers";
-import { coerceVoiceMinutesUsed } from "@/lib/voiceSessionBilling";
 import { useAuthStore } from "@/store/useAuthStore";
 import {
   normalizeEnabledFeaturesRow,

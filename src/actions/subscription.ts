@@ -1088,7 +1088,8 @@ type PaidProfileVoiceRow = {
   subscription_tier: string | null;
   subscription_status: string | null;
   subscription_end_date: string | null;
-  voice_minutes_used_this_month: number | null;
+  /** PostgREST may return `numeric` as string. */
+  voice_minutes_used_this_month: number | string | null;
   bonus_voice_minutes_ledger: unknown;
   usage_reset_date: string | null;
   photo_scans_used_this_month: number | null;

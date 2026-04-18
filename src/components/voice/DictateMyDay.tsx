@@ -221,7 +221,6 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
     stopListening,
   } = useDeviceSpeechRecognition({
     lang,
-    fallbackLang: lang !== "en-US" ? "en-US" : undefined,
     maxSessionMs: null,
     silenceMs: null,
     onStart: () => {

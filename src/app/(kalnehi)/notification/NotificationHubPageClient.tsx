@@ -12,9 +12,9 @@ import {
   createScheduledNotification,
   deleteScheduledNotification,
   listScheduledNotifications,
-  type ScheduledNotificationRow,
 } from "@/actions/scheduledNotifications";
 import { SCHEDULED_NOTIFICATION_TAGS } from "@/lib/scheduledNotifications/tags";
+import type { ScheduledNotificationRow } from "@/lib/scheduledNotifications/tagsAndTypes";
 import { SmartNotificationSetupBanner } from "@/components/smart-notification/SmartNotificationSetupBanner";
 import { useAiGate } from "@/hooks/useAiGate";
 import { surfaceOptionalString } from "@/lib/userFacingErrors";

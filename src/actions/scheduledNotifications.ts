@@ -3,10 +3,6 @@
 import { revalidatePath } from "next/cache";
 
 import { formatSupabaseError } from "@/lib/supabase";
-import {
-  SCHEDULED_NOTIFICATION_TAGS,
-  type ScheduledNotificationTag,
-} from "@/lib/scheduledNotifications/tags";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   SCHEDULED_NOTIFICATION_TAGS,
