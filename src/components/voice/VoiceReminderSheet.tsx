@@ -6,7 +6,8 @@ import { Loader2, Mic, MicOff, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
-import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { formatSupabaseError, getSupabaseBrowserClient } from "@/lib/supabase";
+import { surfaceOptionalString } from "@/lib/userFacingErrors";
 import { useVoiceReminderStore } from "@/store/useVoiceReminderStore";
 
 type Phase = "idle" | "parsing" | "preview" | "saving";
@@ -81,7 +82,12 @@ export function VoiceReminderSheet() {
         groq_model?: string;
       };
       if (!res.ok || !data.ok) {
-        setError(typeof data.error === "string" ? data.error : "Could not parse reminder.");
+        setError(
+          surfaceOptionalString(
+            typeof data.error === "string" ? data.error : null,
+            "Could not parse reminder.",
+          ),
+        );
         setPhase("idle");
         return;
       }
@@ -143,7 +149,7 @@ export function VoiceReminderSheet() {
         status: "pending",
       });
       if (insErr) {
-        setError(insErr.message || "Could not save reminder.");
+        setError(formatSupabaseError(insErr));
         setPhase("preview");
         return;
       }

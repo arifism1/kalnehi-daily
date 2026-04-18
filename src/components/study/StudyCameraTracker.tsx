@@ -14,6 +14,7 @@ import {
   type StudyStatusUi,
 } from "@/lib/studyDetection";
 import { useSettingsStore, type StudyCameraFacing } from "@/store/useSettingsStore";
+import { USER_ERROR } from "@/lib/userFacingErrors";
 
 /**
  * Face + Pose + Hand run 100% in-browser via MediaPipe Tasks Vision (WASM).
@@ -326,8 +327,8 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
         poseLmRef.current = pose;
         handLmRef.current = hand;
         setModelsReady(true);
-      } catch (e) {
-        setLoadError(e instanceof Error ? e.message : "Could not load models.");
+      } catch {
+        setLoadError(USER_ERROR.loadFailed);
       }
     })();
     return () => {

@@ -1,6 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+/** Import as `@/hooks/useSubscriptionAccess`. If the bundler reports module-not-found after moving/renaming this file, run `rm -rf .next` and restart the dev server. */
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import {
@@ -38,7 +48,7 @@ type UsageData = {
   usageResetDate: string | null;
 };
 
-type SubscriptionData = {
+export type SubscriptionData = {
   loading: boolean;
   fetchError: boolean;
   onboardingDone: boolean;
@@ -92,8 +102,31 @@ function isCurrentlyPaid(status: SubscriptionStatus, endDate: string | null): bo
   return end.getTime() > Date.now();
 }
 
+const SubscriptionAccessContext = createContext<SubscriptionData | null>(null);
+
+/**
+ * One shared profile/subscription fetch for the signed-in user (avoids duplicate
+ * `user_profiles` queries from every `useSubscriptionAccess` consumer).
+ */
+export function SubscriptionAccessProvider({ children }: { children: ReactNode }) {
+  const value = useSubscriptionAccessState();
+  return (
+    <SubscriptionAccessContext.Provider value={value}>
+      {children}
+    </SubscriptionAccessContext.Provider>
+  );
+}
+
 /** Loads subscription/onboarding for the signed-in user; anonymous callers get defaults. Route/public-page gating is in `AppShell` + `public-paths`. */
 export function useSubscriptionAccess(): SubscriptionData {
+  const ctx = useContext(SubscriptionAccessContext);
+  if (!ctx) {
+    throw new Error("useSubscriptionAccess must be used within SubscriptionAccessProvider");
+  }
+  return ctx;
+}
+
+function useSubscriptionAccessState(): SubscriptionData {
   const user = useAuthStore((s) => s.user);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(false);

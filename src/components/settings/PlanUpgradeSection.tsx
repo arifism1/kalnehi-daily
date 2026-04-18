@@ -16,6 +16,7 @@ import type { PaymentErrorProof } from "@/lib/paymentSupportEmail";
 import { SITE_NAME } from "@/lib/seo-metadata";
 import { TIERS } from "@/lib/subscriptionTiers";
 import { useAuthStore } from "@/store/useAuthStore";
+import { surfaceErrorForUi } from "@/lib/userFacingErrors";
 
 type RazorpayCheckoutResponse = {
   razorpay_payment_id: string;
@@ -52,7 +53,7 @@ export function PlanUpgradeSection() {
       setLoadError(null);
       const res = await getPlanUpgradeQuotes();
       if (!res.ok) {
-        setLoadError(res.error);
+        setLoadError(surfaceErrorForUi(res.error));
         setQuotes([]);
         return;
       }
@@ -73,7 +74,10 @@ export function PlanUpgradeSection() {
       startTransition(async () => {
         const created = await createPlanUpgradeOrder(q.targetTier);
         if (!created.ok) {
-          setPayError({ text: created.error, debugHint: created.debugHint });
+          setPayError({
+            text: surfaceErrorForUi(created.error),
+            debugHint: created.debugHint,
+          });
           setBusyId(null);
           return;
         }
@@ -105,7 +109,7 @@ export function PlanUpgradeSection() {
             setBusyId(null);
             if (!v.ok) {
               setPayError({
-                text: v.error,
+                text: surfaceErrorForUi(v.error),
                 proof: {
                   paymentId: response.razorpay_payment_id,
                   subscriptionId: response.razorpay_subscription_id,

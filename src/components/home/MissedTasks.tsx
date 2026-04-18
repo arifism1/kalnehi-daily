@@ -11,7 +11,7 @@ import { findMissedIncompleteTasks } from "@/lib/progressEngine";
 import { resolveMicrotopicForTask } from "@/lib/resolveMicrotopicForTask";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useTaskStore, type Task } from "@/store/useTaskStore";
-import { USER_ERROR } from "@/lib/userFacingErrors";
+import { surfaceOptionalString, USER_ERROR } from "@/lib/userFacingErrors";
 
 import { AddEditTaskSheet } from "@/components/planner/AddEditTaskSheet";
 import { TaskCard } from "@/components/task/TaskCard";
@@ -64,7 +64,10 @@ export function MissedTasks() {
         { assigned_date: next },
         userId,
       );
-      if (!res.ok) setActionNotice(res.error || USER_ERROR.tryAgain);
+      if (!res.ok)
+        setActionNotice(
+          surfaceOptionalString(res.error, USER_ERROR.tryAgain),
+        );
     },
     [userId],
   );
@@ -77,7 +80,10 @@ export function MissedTasks() {
         { assigned_date: today },
         userId,
       );
-      if (!res.ok) setActionNotice(res.error || USER_ERROR.tryAgain);
+      if (!res.ok)
+        setActionNotice(
+          surfaceOptionalString(res.error, USER_ERROR.tryAgain),
+        );
     },
     [userId, today],
   );

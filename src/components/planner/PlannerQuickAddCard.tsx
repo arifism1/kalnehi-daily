@@ -9,6 +9,7 @@ import {
   twelveHourFromDate,
 } from "@/lib/taskTime";
 import { useTaskStore, type Task } from "@/store/useTaskStore";
+import { surfaceErrorForUi } from "@/lib/userFacingErrors";
 
 const HOURS = Array.from({ length: 12 }, (_, i) => i + 1);
 const MINUTES = Array.from({ length: 60 }, (_, i) => i);
@@ -90,7 +91,7 @@ export function PlannerQuickAddCard({
       try {
         const r = await quickCreateEmptyTask(userId, assignedDate);
         if (!r.ok) {
-          onErrorRef.current(r.error);
+          onErrorRef.current(surfaceErrorForUi(r.error));
           return null;
         }
         setTaskId(r.id);
@@ -128,7 +129,7 @@ export function PlannerQuickAddCard({
       { name, start_time, end_time: null },
       userId,
     );
-    if (!res.ok) onErrorRef.current(res.error);
+    if (!res.ok) onErrorRef.current(surfaceErrorForUi(res.error));
   }, [userId]);
 
   const schedulePatch = useCallback(() => {

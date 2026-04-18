@@ -75,8 +75,8 @@ export function SubscriptionPaywallInterstitial({
             </>
           ) : (
             <>
-              Kalnehi Daily is a paid app — there is no free tier. Your subscription
-              is not active right now. Choose a plan to keep using the app.
+              A subscription is required to use Kalnehi Daily. Your plan is not
+              active right now. Choose a plan to continue.
             </>
           )}
         </p>

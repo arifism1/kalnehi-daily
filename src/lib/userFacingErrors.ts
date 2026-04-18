@@ -140,6 +140,32 @@ export function toUserFacingMessage(err: unknown): string {
   return USER_ERROR.tryAgain;
 }
 
+/**
+ * Use for any unknown value destined for the UI (`res.error`, `data.error`, `catch (e)`).
+ * Wraps strings so PostgREST/vendor text is filtered; passes through `Error` and message-like objects.
+ */
+export function surfaceErrorForUi(raw: unknown): string {
+  if (raw instanceof Error) {
+    return toUserFacingMessage(raw);
+  }
+  if (typeof raw === "string") {
+    return toUserFacingMessage(new Error(raw));
+  }
+  if (raw != null && typeof raw === "object") {
+    return toUserFacingMessage(raw);
+  }
+  return USER_ERROR.tryAgain;
+}
+
+/** When the source may be empty, show `fallback` instead of generic try-again. */
+export function surfaceOptionalString(
+  s: string | null | undefined,
+  fallback: string,
+): string {
+  if (s == null || !String(s).trim()) return fallback;
+  return surfaceErrorForUi(s);
+}
+
 /** IndexedDB / local-only storage failures (Doubt Tracker, etc.). */
 export function toUserFacingLocalError(err: unknown): string {
   const raw = extractMessage(err);

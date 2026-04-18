@@ -3,6 +3,7 @@
 import Groq from "groq-sdk";
 
 import { incrementPhotoScanUsage } from "@/actions/subscription";
+import { formatSupabaseError } from "@/lib/supabase";
 import { getGroqModelCandidates } from "@/lib/groqClient";
 import { ocrHandwrittenPhoto } from "@/lib/mistralOcr";
 import { PASTE_HANDWRITTEN_PLAN_PROMPT } from "@/lib/voicePrompts";
@@ -183,7 +184,11 @@ export async function parseHandwrittenPlannerPhoto(input: {
 }): Promise<ParseResult> {
   const usageCheck = await incrementPhotoScanUsage();
   if (!usageCheck.ok) {
-    return { ok: false, error: usageCheck.error, tasks: [] };
+    return {
+      ok: false,
+      error: formatSupabaseError(new Error(usageCheck.error)),
+      tasks: [],
+    };
   }
 
   const logDate = input.logDate.trim();
@@ -210,7 +215,11 @@ export async function parseHandwrittenPlannerPhoto(input: {
 
   const ocr = await ocrHandwrittenPhoto(b64, mime);
   if (!ocr.ok) {
-    return { ok: false, error: ocr.error, tasks: [] };
+    return {
+      ok: false,
+      error: formatSupabaseError(new Error(ocr.error)),
+      tasks: [],
+    };
   }
 
   const ocrText = ocr.markdown.trim().slice(0, 30_000);

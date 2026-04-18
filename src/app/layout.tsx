@@ -5,12 +5,12 @@ import { Geist_Mono, Inter } from "next/font/google";
 
 import { AppShell } from "@/components/AppShell";
 import { AuthProvider } from "@/components/AuthProvider";
+import { SubscriptionAccessProvider } from "@/hooks/useSubscriptionAccess";
 import { FcmForegroundListener } from "@/components/FcmForegroundListener";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { OrganicEntryCapture } from "@/components/OrganicEntryCapture";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
-import { SyncProvider } from "@/components/SyncProvider";
 import { ThemeSync } from "@/components/ThemeSync";
 import { defaultSiteMetadata, SITE_NAME } from "@/lib/seo-metadata";
 
@@ -130,13 +130,10 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  if (typeof process !== "undefined" && process.env.NODE_ENV === "development") {
-    console.log("[kalnehi] RootLayout render (server)");
-  }
-
   return (
     <html
       lang="en-IN"
+      data-scroll-behavior="smooth"
       className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full min-h-dvh flex-col bg-kal-page font-sans text-kal-text">
@@ -146,13 +143,13 @@ export default function RootLayout({
         <ThemeSync />
         <ServiceWorkerRegister />
         <AuthProvider>
-          <FcmForegroundListener />
-          <SyncProvider>
+          <SubscriptionAccessProvider>
+            <FcmForegroundListener />
             <AppShell>{children}</AppShell>
-          </SyncProvider>
+          </SubscriptionAccessProvider>
         </AuthProvider>
         <Analytics />
-        <SpeedInsights />
+        <SpeedInsights sampleRate={0.5} />
       </body>
     </html>
   );

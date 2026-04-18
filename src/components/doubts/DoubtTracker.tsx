@@ -35,6 +35,7 @@ import {
 } from "@/lib/doubtSubjects";
 import { resolveTopicLineAgainstCatalog } from "@/lib/doubtVoiceTagSyllabus";
 import { trimPrepBrainContextForDoubtTag } from "@/lib/prepBrainContextTrimForDoubt";
+import { surfaceOptionalString } from "@/lib/userFacingErrors";
 import { isLikelyImageFile } from "@/lib/purposeStorage";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useDoubtStore } from "@/store/useDoubtStore";
@@ -365,7 +366,12 @@ export function DoubtTracker() {
         };
 
         if (!parseRes.ok || !data.ok) {
-          setVoiceError(data.error ?? "Could not tag this doubt. Try again.");
+          setVoiceError(
+            surfaceOptionalString(
+              data.error,
+              "Could not tag this doubt. Try again.",
+            ),
+          );
           return;
         }
 

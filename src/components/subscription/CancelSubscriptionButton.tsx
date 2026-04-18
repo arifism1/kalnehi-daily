@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import { useState, useTransition } from "react";
 
 import { cancelSubscription } from "@/actions/subscription";
+import { surfaceErrorForUi } from "@/lib/userFacingErrors";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 
 type CancelSubscriptionButtonProps = {
@@ -46,7 +47,7 @@ export function CancelSubscriptionButton({ className }: CancelSubscriptionButton
             setMessage(null);
             const res = await cancelSubscription();
             if (!res.ok) {
-              setMessage(res.error);
+              setMessage(surfaceErrorForUi(res.error));
               return;
             }
             setCancelled(true);

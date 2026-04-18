@@ -12,34 +12,6 @@ export type UpsertProfileResult =
   | { ok: true }
   | { ok: false; error: string };
 
-function toDetailedSupabaseError(err: unknown): string {
-  if (err && typeof err === "object") {
-    const e = err as {
-      message?: unknown;
-      code?: unknown;
-      details?: unknown;
-      hint?: unknown;
-    };
-    const msg =
-      typeof e.message === "string" && e.message.trim().length > 0
-        ? e.message
-        : "Unknown profile save error";
-    const code = typeof e.code === "string" ? e.code : null;
-    const details =
-      typeof e.details === "string" && e.details.trim().length > 0
-        ? e.details
-        : null;
-    const hint =
-      typeof e.hint === "string" && e.hint.trim().length > 0 ? e.hint : null;
-    const parts = [msg];
-    if (code) parts.push(`code=${code}`);
-    if (details) parts.push(`details=${details}`);
-    if (hint) parts.push(`hint=${hint}`);
-    return parts.join(" | ");
-  }
-  return formatSupabaseError(err);
-}
-
 export async function upsertUserProfile(fields: {
   full_name: string | null;
   target_exam_date: string | null;
@@ -55,7 +27,6 @@ export async function upsertUserProfile(fields: {
   /** UPSC CSE Mains optional subject base name; null for non-mains exams. */
   upsc_optional_subject?: string | null;
 }): Promise<UpsertProfileResult> {
-  console.log("[profile.upsert] incoming payload", fields);
   try {
     const supabase = await createSupabaseServerClient();
     const {
@@ -131,12 +102,6 @@ export async function upsertUserProfile(fields: {
           })()
         : null;
 
-    console.log("[profile.upsert] normalized payload", {
-      patchBase,
-      examHistoryPatch,
-      userId: user.id,
-    });
-
     const { data: existingRows, error: selErr } = await supabase
       .from("user_profiles")
       .select("id")
@@ -184,9 +149,8 @@ export async function upsertUserProfile(fields: {
     revalidatePath("/profile");
     return { ok: true };
   } catch (e) {
-    const detailed = toDetailedSupabaseError(e);
-    console.error("[profile.upsert] failed", { error: detailed, raw: e });
-    return { ok: false, error: detailed };
+    console.error("[profile.upsert] failed", e);
+    return { ok: false, error: formatSupabaseError(e) };
   }
 }
 
@@ -212,9 +176,8 @@ export async function saveEnabledFeatures(
     revalidatePath("/");
     return { ok: true };
   } catch (e) {
-    const detailed = toDetailedSupabaseError(e);
-    console.error("[profile.saveEnabledFeatures] failed", { error: detailed, raw: e });
-    return { ok: false, error: detailed };
+    console.error("[profile.saveEnabledFeatures] failed", e);
+    return { ok: false, error: formatSupabaseError(e) };
   }
 }
 
@@ -289,8 +252,7 @@ export async function completeOnboarding(fields: {
     revalidatePath("/");
     return { ok: true };
   } catch (e) {
-    const detailed = toDetailedSupabaseError(e);
-    console.error("[profile.completeOnboarding] failed", { error: detailed, raw: e });
-    return { ok: false, error: detailed };
+    console.error("[profile.completeOnboarding] failed", e);
+    return { ok: false, error: formatSupabaseError(e) };
   }
 }

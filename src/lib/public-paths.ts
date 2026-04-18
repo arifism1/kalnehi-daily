@@ -7,6 +7,8 @@ export const PUBLIC_MARKETING_PATHS = new Set<string>([
   "/guides",
   "/jee-study-planner",
   "/neet-study-planner",
+  "/neet-pg-study-planner",
+  "/cuet-ug-study-planner",
   "/upsc-study-planner",
   "/boards-study-planner",
   "/brain-yoga",

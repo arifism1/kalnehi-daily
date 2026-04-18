@@ -8,6 +8,7 @@ import { saveEnabledFeatures } from "@/actions/profile";
 import { FeatureSelector } from "@/components/features/FeatureSelector";
 import { ALL_FEATURE_IDS } from "@/lib/dashboardFeatures";
 import { useEnabledFeaturesStore } from "@/store/useEnabledFeaturesStore";
+import { surfaceOptionalString } from "@/lib/userFacingErrors";
 
 export function CustomizeFeaturesSection() {
   const storedFeatures = useEnabledFeaturesStore((s) => s.enabledFeatures);
@@ -40,7 +41,12 @@ export function CustomizeFeaturesSection() {
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
       } else {
-        setSaveError(res.error ?? "Something went wrong. Please try again.");
+        setSaveError(
+          surfaceOptionalString(
+            res.error,
+            "Something went wrong. Please try again.",
+          ),
+        );
       }
     });
   }

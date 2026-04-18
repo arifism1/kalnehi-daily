@@ -7,6 +7,7 @@ import {
   type AiUsagePhase,
   type PrepBrainUsagePayload,
 } from "@/lib/prepbrainTokens";
+import { surfaceOptionalString } from "@/lib/userFacingErrors";
 import { useAuthStore } from "@/store/useAuthStore";
 
 export type PrepBrainChatMessage = {
@@ -107,7 +108,12 @@ export function usePrepBrainAI() {
           if (tokenBlocked) {
             setError(null);
           } else {
-            setError(data.error ?? "Could not reach PrepBrain. Try again.");
+            setError(
+              surfaceOptionalString(
+                data.error,
+                "Could not reach PrepBrain. Try again.",
+              ),
+            );
           }
           return;
         }

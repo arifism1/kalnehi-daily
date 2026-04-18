@@ -77,11 +77,11 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
     title: "Core Daily Flow",
     quickNavGroupLabel: "Core",
     items: [
-      { href: "/", label: "Dashboard (Home)", shortLabel: "Home", Icon: Home },
+      { href: "/", label: "Home", shortLabel: "Home", Icon: Home },
       { href: "/plan-my-day", label: "Plan My Day", Icon: Sparkles, featureId: "plan-my-day" },
       {
         href: "/daily-plan",
-        label: "Daily Planner",
+        label: "Daily Plan",
         shortLabel: "Daily plan",
         Icon: Calendar,
         featureId: "daily-planner",

@@ -23,6 +23,7 @@ import { useTaskStore, type Task } from "@/store/useTaskStore";
 
 import { TASK_STATUS } from "@/components/task/TaskCard";
 import { TaskPlanner } from "@/components/planner/TaskPlanner";
+import { surfaceErrorForUi } from "@/lib/userFacingErrors";
 
 const AUTOSAVE_MS = 350;
 
@@ -298,7 +299,7 @@ export function AddEditTaskSheet({
     };
 
     const res = await applyOptimisticTaskUpdate(tid, patch, uid);
-    if (!res.ok) setError(res.error);
+    if (!res.ok) setError(surfaceErrorForUi(res.error));
   }, [userId, task?.id, ensureDraftTaskId]);
 
   const scheduleFlush = useCallback(() => {

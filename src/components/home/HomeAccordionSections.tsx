@@ -26,18 +26,7 @@ import clsx from "clsx";
 import dynamic from "next/dynamic";
 import { useState, type ReactNode } from "react";
 
-import { PendingTasksClient } from "@/components/engine/PendingTasksClient";
-import { TimerEngineClient } from "@/components/engine/TimerEngineClient";
-import { DoubtTracker } from "@/components/doubts/DoubtTracker";
 import { MissedTasks } from "@/components/home/MissedTasks";
-import { MeditationPage } from "@/components/meditation/MeditationPage";
-import { MyTargetClient } from "@/components/myTarget/MyTargetClient";
-import { PlanMyDayPage } from "@/components/planner/PlanMyDayPage";
-import { UnifiedDailyPlanList } from "@/components/planner/UnifiedDailyPlanList";
-import { PrepBrainChat } from "@/components/prepbrain/PrepBrainChat";
-import { SyllabusTracker } from "@/components/syllabus/SyllabusTracker";
-import { TargetScoreBlueprintClient } from "@/components/targetScoreBlueprint/TargetScoreBlueprintClient";
-import { DictateMyDay } from "@/components/voice/DictateMyDay";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useEnabledFeaturesStore } from "@/store/useEnabledFeaturesStore";
 
@@ -73,6 +62,69 @@ const MotivationRouteLazy = dynamic(
   { ssr: false },
 );
 
+const DoubtTrackerLazy = dynamic(
+  () =>
+    import("@/components/doubts/DoubtTracker").then((m) => ({ default: m.DoubtTracker })),
+  { ssr: false },
+);
+const PrepBrainChatLazy = dynamic(
+  () =>
+    import("@/components/prepbrain/PrepBrainChat").then((m) => ({ default: m.PrepBrainChat })),
+  { ssr: false },
+);
+const SyllabusTrackerLazy = dynamic(
+  () =>
+    import("@/components/syllabus/SyllabusTracker").then((m) => ({ default: m.SyllabusTracker })),
+  { ssr: false },
+);
+const UnifiedDailyPlanListLazy = dynamic(
+  () =>
+    import("@/components/planner/UnifiedDailyPlanList").then((m) => ({
+      default: m.UnifiedDailyPlanList,
+    })),
+  { ssr: false },
+);
+const DictateMyDayLazy = dynamic(
+  () => import("@/components/voice/DictateMyDay").then((m) => ({ default: m.DictateMyDay })),
+  { ssr: false },
+);
+const TargetScoreBlueprintClientLazy = dynamic(
+  () =>
+    import("@/components/targetScoreBlueprint/TargetScoreBlueprintClient").then((m) => ({
+      default: m.TargetScoreBlueprintClient,
+    })),
+  { ssr: false },
+);
+const PendingTasksClientLazy = dynamic(
+  () =>
+    import("@/components/engine/PendingTasksClient").then((m) => ({
+      default: m.PendingTasksClient,
+    })),
+  { ssr: false },
+);
+const MeditationPageLazy = dynamic(
+  () =>
+    import("@/components/meditation/MeditationPage").then((m) => ({ default: m.MeditationPage })),
+  { ssr: false },
+);
+const MyTargetClientLazy = dynamic(
+  () =>
+    import("@/components/myTarget/MyTargetClient").then((m) => ({ default: m.MyTargetClient })),
+  { ssr: false },
+);
+const PlanMyDayPageLazy = dynamic(
+  () =>
+    import("@/components/planner/PlanMyDayPage").then((m) => ({ default: m.PlanMyDayPage })),
+  { ssr: false },
+);
+const TimerEngineClientLazy = dynamic(
+  () =>
+    import("@/components/engine/TimerEngineClient").then((m) => ({
+      default: m.TimerEngineClient,
+    })),
+  { ssr: false },
+);
+
 export function HomeAccordionSections() {
   const today = useCalendarDate();
   const [openSectionId, setOpenSectionId] = useState<string | null>(null);
@@ -90,28 +142,28 @@ export function HomeAccordionSections() {
       id: "doubt-tracker",
       title: "Doubt Tracker",
       icon: HelpCircle,
-      content: <DoubtTracker />,
+      content: <DoubtTrackerLazy />,
     },
     {
       id: "prepbrain-ai",
       title: "PrepBrain AI",
       icon: Brain,
-      content: <PrepBrainChat />,
+      content: <PrepBrainChatLazy />,
     },
     {
       id: "syllabus-mastery-tracker",
       title: "Syllabus Mastery Tracker",
       icon: BookOpen,
-      content: <SyllabusTracker />,
+      content: <SyllabusTrackerLazy />,
     },
     {
       id: "daily-planner",
-      title: "Daily Planner",
+      title: "Daily Plan",
       icon: ListTodo,
       content: (
-        <UnifiedDailyPlanList
+        <UnifiedDailyPlanListLazy
           planDate={today}
-          title="Today's Daily Planner"
+          title="Today's Daily Plan"
           className="kal-glass-subtle rounded-2xl border-kal-border/60 p-4"
         />
       ),
@@ -120,37 +172,37 @@ export function HomeAccordionSections() {
       id: "dictate-my-day",
       title: "Dictate My Day",
       icon: Mic,
-      content: <DictateMyDay />,
+      content: <DictateMyDayLazy />,
     },
     {
       id: "target-score-blueprint",
       title: "Target Score Blueprint",
       icon: Target,
-      content: <TargetScoreBlueprintClient />,
+      content: <TargetScoreBlueprintClientLazy />,
     },
     {
       id: "pending-tasks",
       title: "Pending Tasks",
       icon: Inbox,
-      content: <PendingTasksClient />,
+      content: <PendingTasksClientLazy />,
     },
     {
       id: "brain-yoga",
       title: "Brain Yoga / Meditation",
       icon: Flower2,
-      content: <MeditationPage />,
+      content: <MeditationPageLazy />,
     },
     {
       id: "my-target",
       title: "My Target",
       icon: Target,
-      content: <MyTargetClient />,
+      content: <MyTargetClientLazy />,
     },
     {
       id: "plan-my-day",
       title: "Plan My Day",
       icon: Sparkles,
-      content: <PlanMyDayPage />,
+      content: <PlanMyDayPageLazy />,
     },
     {
       id: "study-sessions",
@@ -162,7 +214,7 @@ export function HomeAccordionSections() {
       id: "timer",
       title: "Timer",
       icon: Clock,
-      content: <TimerEngineClient />,
+      content: <TimerEngineClientLazy />,
     },
     {
       id: "progress",

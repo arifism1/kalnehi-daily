@@ -39,12 +39,6 @@ export function JsonLd() {
       applicationCategory: "EducationalApplication",
       operatingSystem: "Web",
       browserRequirements: "Requires JavaScript. Requires HTML5.",
-      offers: {
-        "@type": "Offer",
-        price: "0",
-        priceCurrency: "INR",
-        availability: "https://schema.org/InStock",
-      },
       image: logo,
       description:
         `Install ${SITE_NAME} as a Progressive Web App on Android and desktop. Planner, syllabus tracking, study sessions, Smart Exam Prep workflows, and PrepBrain AI (on Pro).`,

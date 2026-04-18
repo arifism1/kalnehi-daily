@@ -16,7 +16,7 @@ export function normalizeEnabledFeaturesRow(raw: unknown): string[] | null {
 type EnabledFeaturesState = {
   /** null = not yet loaded OR user has no customisation (show all). */
   enabledFeatures: string[] | null;
-  /** True after `useSubscriptionAccess` (or `fetch`) applied a profile row for the signed-in user. */
+  /** True after `SubscriptionAccessProvider` / `useSubscriptionAccess` (or `fetch`) applied a profile row for the signed-in user. */
   hydratedFromProfile: boolean;
   loading: boolean;
   /** Replace the in-memory selection (call after saving to DB). */

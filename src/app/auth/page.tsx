@@ -15,12 +15,20 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { useCallback, useEffect, useState } from "react";
 
-import { AuthAppNavPreviewMenu } from "@/components/auth/AuthAppNavPreviewMenu";
+const AuthAppNavPreviewMenu = dynamic(
+  () =>
+    import("@/components/auth/AuthAppNavPreviewMenu").then((m) => ({
+      default: m.AuthAppNavPreviewMenu,
+    })),
+  { ssr: false },
+);
 import { trackAuthSuccess } from "@/lib/analytics";
 import { SITE_NAME } from "@/lib/seo-metadata";
 import { formatSupabaseError, getSupabaseBrowserClient } from "@/lib/supabase";
+import { toUserFacingMessage } from "@/lib/userFacingErrors";
 import { useAuthStore } from "@/store/useAuthStore";
 
 type Mode = "login" | "signup";
@@ -102,7 +110,7 @@ export default function AuthPage() {
     const params = new URLSearchParams(window.location.search);
     const err = params.get("error");
     if (err) {
-      setError(decodeURIComponent(err));
+      setError(toUserFacingMessage(new Error(decodeURIComponent(err))));
       window.history.replaceState({}, "", "/auth");
     }
   }, []);

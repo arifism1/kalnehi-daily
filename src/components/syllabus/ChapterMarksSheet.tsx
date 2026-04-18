@@ -4,6 +4,7 @@ import { Loader2, SlidersHorizontal, X } from "lucide-react";
 import { useCallback, useEffect, useId, useState } from "react";
 
 import { upsertSyllabusMarksOverride } from "@/actions/syllabusMarks";
+import { surfaceErrorForUi } from "@/lib/userFacingErrors";
 import type { MergedSyllabusRow } from "@/lib/userSyllabusMerge";
 
 function parseMark(s: string): number | null {
@@ -74,7 +75,7 @@ export function ChapterMarksSheet({
       onSaved();
       onClose();
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Could not save weights.");
+      setErr(surfaceErrorForUi(e));
     } finally {
       setBusy(false);
     }

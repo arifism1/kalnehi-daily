@@ -9,6 +9,7 @@ import {
   listUserNotifications,
   type UserNotification,
 } from "@/actions/notifications";
+import { surfaceErrorForUi, toUserFacingMessage } from "@/lib/userFacingErrors";
 import { useAuthStore } from "@/store/useAuthStore";
 
 export default function NotificationsPage() {
@@ -33,21 +34,20 @@ export default function NotificationsPage() {
           // One quick retry helps when session/bootstrap races on initial page load.
           ensured = await ensureAutomatedNotifications();
         }
-        if (!ensured.ok && !cancelled) setError(ensured.error);
+        if (!ensured.ok && !cancelled) setError(surfaceErrorForUi(ensured.error));
 
         const res = await listUserNotifications();
         if (cancelled) return;
         if (!res.ok) {
-          setError(res.error);
+          setError(surfaceErrorForUi(res.error));
           setNotifications([]);
           return;
         }
         setNotifications(res.notifications);
       } catch (e) {
         if (cancelled) return;
-        const msg = e instanceof Error ? e.message : "Failed to fetch notifications";
         console.warn("[NotificationsPage] load failed", e);
-        setError(msg);
+        setError(toUserFacingMessage(e));
         setNotifications([]);
       } finally {
         if (!cancelled) setLoading(false);

@@ -7,6 +7,7 @@ import { useCallback, useEffect, useId, useState } from "react";
 import { SettingsSheetSwitch } from "@/components/settings/SettingsSheetSwitch";
 import { useNotificationsToast } from "@/components/settings/notificationsToastContext";
 import { useAuthStore } from "@/store/useAuthStore";
+import { surfaceOptionalString } from "@/lib/userFacingErrors";
 
 /**
  * Kalnehi-scheduled pushes (IST): morning kickstart, danger-zone alert, evening wind-down.
@@ -59,7 +60,9 @@ export function SystemNotificationsSettings({
         });
         const data = (await res.json()) as { enabled?: boolean; error?: string };
         if (!res.ok) {
-          setMessage(data.error ?? "Could not update.");
+          setMessage(
+            surfaceOptionalString(data.error, "Could not update."),
+          );
           return;
         }
         setEnabled(data.enabled !== false);

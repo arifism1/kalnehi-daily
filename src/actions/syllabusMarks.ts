@@ -86,6 +86,6 @@ export async function upsertSyllabusMarksOverride(
     revalidatePath("/progress");
     return { ok: true };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : USER_ERROR.tryAgain };
+    return { ok: false, error: formatSupabaseError(e) };
   }
 }

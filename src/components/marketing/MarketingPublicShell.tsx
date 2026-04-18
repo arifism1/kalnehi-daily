@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { PwaInstallPrompt } from "@/components/PwaInstallPrompt";
+import { PwaInstallPromptDeferred } from "@/components/PwaInstallPromptDeferred";
 import { SITE_NAME } from "@/lib/seo-metadata";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 
@@ -45,7 +45,7 @@ export function MarketingPublicShell({ children }: { children: React.ReactNode }
         </p>
         <p className="mt-2">© {new Date().getFullYear()} {SITE_NAME}</p>
       </footer>
-      <PwaInstallPrompt />
+      <PwaInstallPromptDeferred />
     </div>
   );
 }

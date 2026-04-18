@@ -1,8 +1,8 @@
-import { SavedPlansPageContent } from "@/components/planner/SavedPlansPageContent";
+import SavedPlansRouteLazy from "./SavedPlansRouteLazy";
 import { kalnehiPageMetadata } from "@/lib/seo-metadata";
 
 export const metadata = kalnehiPageMetadata("savedPlans");
 
 export default function SavedPlansPage() {
-  return <SavedPlansPageContent />;
+  return <SavedPlansRouteLazy />;
 }

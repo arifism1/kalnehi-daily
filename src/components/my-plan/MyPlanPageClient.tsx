@@ -29,6 +29,7 @@ import type { AiUsagePhase, PrepBrainUsagePayload } from "@/lib/prepbrainTokens"
 import { getTierConfig, TIERS } from "@/lib/subscriptionTiers";
 import { isHelpyJiEligibleForTier } from "@/lib/helpyjiVisibility";
 import { useAuthStore } from "@/store/useAuthStore";
+import { surfaceErrorForUi } from "@/lib/userFacingErrors";
 
 type RazorpayCheckoutResponse = {
   razorpay_payment_id: string;
@@ -299,7 +300,7 @@ export function MyPlanPageClient() {
         ? await createRazorpayMonthlySubscription("pro", autopayMonths)
         : await createRazorpayTrialSubscription("pro", autopayMonths);
       if (!created.ok) {
-        setResubError(created.error);
+        setResubError(surfaceErrorForUi(created.error));
         return;
       }
       if (typeof window === "undefined" || !window.Razorpay) {
@@ -327,7 +328,7 @@ export function MyPlanPageClient() {
             ? await activateRazorpayMonthlySubscription({ ...response })
             : await activateRazorpaySubscription({ ...response });
           if (!updated.ok) {
-            setResubError(updated.error);
+            setResubError(surfaceErrorForUi(updated.error));
             return;
           }
           window.location.assign("/");
@@ -335,7 +336,7 @@ export function MyPlanPageClient() {
       });
       rzp.open();
     } catch (e) {
-      setResubError(e instanceof Error ? e.message : "Checkout failed.");
+      setResubError(surfaceErrorForUi(e));
     } finally {
       setResubBusy(false);
     }
@@ -347,7 +348,7 @@ export function MyPlanPageClient() {
       setMessage(null);
       const res = await cancelSubscription();
       if (!res.ok) {
-        setMessage(res.error);
+        setMessage(surfaceErrorForUi(res.error));
         return;
       }
       refetch();

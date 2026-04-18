@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 
-import PendingRouteLazy from "./PendingRouteLazy";
-
 export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
-export default function PendingPage() {
-  return <PendingRouteLazy />;
+export default function AuthLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return children;
 }

@@ -14,9 +14,9 @@ export function GoogleAnalytics() {
     <>
       <Script
         src={`https://www.googletagmanager.com/gtag/js?id=${id}`}
-        strategy="afterInteractive"
+        strategy="lazyOnload"
       />
-      <Script id="kalnehi-ga4" strategy="afterInteractive">
+      <Script id="kalnehi-ga4" strategy="lazyOnload">
         {`
 window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}

@@ -10,8 +10,22 @@ import {
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 import { USER_ERROR } from "@/lib/userFacingErrors";
+import type { Tables } from "@/types/supabase";
 
 export const runtime = "nodejs";
+
+/** Columns needed for usage display only (avoid select("*") on user_profiles). */
+type UsageProfileRow = Pick<
+  Tables<"user_profiles">,
+  | "subscription_status"
+  | "subscription_end_date"
+  | "trial_started_at"
+  | "ai_tokens_used"
+  | "ai_tokens_month"
+  | "welcome_ai_tokens_used"
+  | "paid_trial_ai_tokens_used"
+  | "bonus_ai_tokens_ledger"
+>;
 
 function isCurrentlyPaid(
   status: string | null,
@@ -53,11 +67,15 @@ export async function GET() {
     );
   }
 
-  const { data: profile, error } = await admin
+  const { data: profileRaw, error } = await admin
     .from("user_profiles")
-    .select("*")
+    .select(
+      "subscription_status,subscription_end_date,trial_started_at,ai_tokens_used,ai_tokens_month,welcome_ai_tokens_used,paid_trial_ai_tokens_used,bonus_ai_tokens_ledger",
+    )
     .eq("user_id", user.id)
     .maybeSingle();
+
+  const profile = profileRaw as UsageProfileRow | null;
 
   if (error) {
     console.error(

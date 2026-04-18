@@ -17,21 +17,6 @@ export type UserNotification = {
   read: boolean;
 };
 
-function toDetailedSupabaseError(error: unknown): string {
-  if (!error || typeof error !== "object") return formatSupabaseError(error);
-  const e = error as {
-    message?: string;
-    code?: string;
-    details?: string;
-    hint?: string;
-  };
-  const parts = [e.message ?? formatSupabaseError(error)];
-  if (e.code) parts.push(`code=${e.code}`);
-  if (e.details) parts.push(`details=${e.details}`);
-  if (e.hint) parts.push(`hint=${e.hint}`);
-  return parts.join(" | ");
-}
-
 /** PostgREST: table not exposed or not created yet (run migration in Supabase). */
 function isUserNotificationsTableMissing(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
@@ -187,8 +172,8 @@ export async function ensureAutomatedNotifications(): Promise<
 
     return { ok: true };
   } catch (e) {
-    console.log("[ensureAutomatedNotifications] failed", e);
-    return { ok: false, error: toDetailedSupabaseError(e) };
+    console.error("[ensureAutomatedNotifications] failed", e);
+    return { ok: false, error: formatSupabaseError(e) };
   }
 }
 
@@ -231,7 +216,7 @@ export async function listUserNotifications(
       notifications: (data ?? []) as UserNotification[],
     };
   } catch (e) {
-    console.log("[listUserNotifications] failed", e);
-    return { ok: false, error: toDetailedSupabaseError(e) };
+    console.error("[listUserNotifications] failed", e);
+    return { ok: false, error: formatSupabaseError(e) };
   }
 }

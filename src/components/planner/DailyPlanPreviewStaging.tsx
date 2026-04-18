@@ -260,6 +260,16 @@ export function DailyPlanPreviewStaging({
                         <div className="flex flex-wrap items-center gap-2">
                           <button
                             type="button"
+                            disabled={disabled || !r.syllabus_master_id}
+                            onClick={() =>
+                              onUpdateRow(r.id, { syllabus_master_id: null })
+                            }
+                            className="text-[10px] font-medium text-kal-muted underline-offset-2 hover:text-kal-text hover:underline disabled:opacity-40"
+                          >
+                            Clear
+                          </button>
+                          <button
+                            type="button"
                             disabled={disabled || !r.name.trim()}
                             onClick={() => {
                               const id = suggestSyllabusIdFromTitle(
