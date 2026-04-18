@@ -388,16 +388,21 @@ export async function POST(request: Request) {
     );
   }
 
+  // Use select('*') so older DBs without newer columns (e.g. welcome_ai_tokens_used) still
+  // return a row; explicit column lists error when any named column is missing from the schema.
   const { data: profile, error: profileErr } = await admin
     .from("user_profiles")
-    .select(
-      "subscription_status, subscription_end_date, subscription_tier, ai_tokens_used, ai_tokens_month, welcome_ai_tokens_used, paid_trial_ai_tokens_used, bonus_ai_tokens_ledger, trial_started_at, primary_exam, target_exam, cuet_domain_subjects, upsc_optional_subjects",
-    )
+    .select("*")
     .eq("user_id", user.id)
     .maybeSingle();
 
   if (profileErr) {
-    console.error("[prepbrain/chat] profile read failed", profileErr);
+    console.error(
+      "[prepbrain/chat] profile read failed",
+      profileErr.code,
+      profileErr.message,
+      profileErr.details,
+    );
     return NextResponse.json(
       { ok: false, error: "Could not load your account. Please try again." },
       { status: 500 },
@@ -439,11 +444,17 @@ export async function POST(request: Request) {
 
   const monthKey = prepbrainCalendarMonthKey();
   const now = new Date();
+  const welcomeUsed =
+    typeof profile.welcome_ai_tokens_used === "number" ? profile.welcome_ai_tokens_used : 0;
+  const paidTrialUsed =
+    typeof profile.paid_trial_ai_tokens_used === "number"
+      ? profile.paid_trial_ai_tokens_used
+      : 0;
   const tokenRow: PrepBrainTokenRow = {
     ai_tokens_used: profile.ai_tokens_used,
     ai_tokens_month: profile.ai_tokens_month,
-    welcome_ai_tokens_used: profile.welcome_ai_tokens_used,
-    paid_trial_ai_tokens_used: profile.paid_trial_ai_tokens_used,
+    welcome_ai_tokens_used: welcomeUsed,
+    paid_trial_ai_tokens_used: paidTrialUsed,
   };
 
   if (phase === "welcome") {
@@ -655,7 +666,7 @@ export async function POST(request: Request) {
   const delta = Math.max(0, Math.floor(groqTotalTokens));
 
   if (phase === "welcome") {
-    const wu = typeof profile.welcome_ai_tokens_used === "number" ? profile.welcome_ai_tokens_used : 0;
+    const wu = welcomeUsed;
     const nextW = wu + delta;
     const { error: tokenPersistErr } = await admin
       .from("user_profiles")
@@ -667,10 +678,7 @@ export async function POST(request: Request) {
     if (tokenPersistErr) console.error("[prepbrain/chat] token persist failed", tokenPersistErr);
     tokenRow.welcome_ai_tokens_used = nextW;
   } else if (phase === "paid_trial") {
-    const pu =
-      typeof profile.paid_trial_ai_tokens_used === "number"
-        ? profile.paid_trial_ai_tokens_used
-        : 0;
+    const pu = paidTrialUsed;
     const nextP = pu + delta;
     const { error: tokenPersistErr } = await admin
       .from("user_profiles")

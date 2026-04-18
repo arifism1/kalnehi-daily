@@ -60,14 +60,17 @@ export async function GET() {
 
   const { data: profile, error } = await admin
     .from("user_profiles")
-    .select(
-      "subscription_status, subscription_end_date, ai_tokens_used, ai_tokens_month, welcome_ai_tokens_used, paid_trial_ai_tokens_used, bonus_ai_tokens_ledger, trial_started_at",
-    )
+    .select("*")
     .eq("user_id", user.id)
     .maybeSingle();
 
   if (error) {
-    console.error("[prepbrain/usage] profile read failed", error);
+    console.error(
+      "[prepbrain/usage] profile read failed",
+      error.code,
+      error.message,
+      error.details,
+    );
     return NextResponse.json(
       { ok: false, error: "Could not load usage." },
       { status: 500 },
@@ -107,8 +110,14 @@ export async function GET() {
   const tokenRow: PrepBrainTokenRow = {
     ai_tokens_used: profile.ai_tokens_used,
     ai_tokens_month: profile.ai_tokens_month,
-    welcome_ai_tokens_used: profile.welcome_ai_tokens_used,
-    paid_trial_ai_tokens_used: profile.paid_trial_ai_tokens_used,
+    welcome_ai_tokens_used:
+      typeof profile.welcome_ai_tokens_used === "number"
+        ? profile.welcome_ai_tokens_used
+        : 0,
+    paid_trial_ai_tokens_used:
+      typeof profile.paid_trial_ai_tokens_used === "number"
+        ? profile.paid_trial_ai_tokens_used
+        : 0,
   };
 
   const usage = buildPrepbrainUsagePayload(phase, tokenRow, calMonth);

@@ -209,14 +209,17 @@ export async function POST(request: Request) {
 
   const { data: profile, error: profileErr } = await admin
     .from("user_profiles")
-    .select(
-      "subscription_status, subscription_end_date, subscription_tier, ai_tokens_used, ai_tokens_month, welcome_ai_tokens_used, paid_trial_ai_tokens_used, bonus_ai_tokens_ledger, trial_started_at",
-    )
+    .select("*")
     .eq("user_id", user.id)
     .maybeSingle();
 
   if (profileErr) {
-    console.error("[helpyji/chat] profile read failed", profileErr);
+    console.error(
+      "[helpyji/chat] profile read failed",
+      profileErr.code,
+      profileErr.message,
+      profileErr.details,
+    );
     return NextResponse.json(
       { ok: false, error: "Could not load your account. Try again." },
       { status: 500 },
@@ -250,8 +253,14 @@ export async function POST(request: Request) {
     ? {
         ai_tokens_used: profile.ai_tokens_used,
         ai_tokens_month: profile.ai_tokens_month,
-        welcome_ai_tokens_used: profile.welcome_ai_tokens_used,
-        paid_trial_ai_tokens_used: profile.paid_trial_ai_tokens_used,
+        welcome_ai_tokens_used:
+          typeof profile.welcome_ai_tokens_used === "number"
+            ? profile.welcome_ai_tokens_used
+            : 0,
+        paid_trial_ai_tokens_used:
+          typeof profile.paid_trial_ai_tokens_used === "number"
+            ? profile.paid_trial_ai_tokens_used
+            : 0,
       }
     : {
         ai_tokens_used: null,
