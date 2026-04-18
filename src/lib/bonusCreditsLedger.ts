@@ -79,6 +79,19 @@ export function addBonusPool(
 /**
  * Consume units from bonus pools (FIFO by expiry). Returns updated ledger and how much was taken.
  */
+/** Refresh 30-day window for all non-expired pools (e.g. monthly subscription charge). */
+export function extendActiveBonusPoolsBy30Days(
+  entries: BonusLedgerEntry[],
+  now: Date,
+): BonusLedgerEntry[] {
+  const active = pruneExpiredBonusLedger(entries, now);
+  if (active.length === 0) return [];
+  const newExpiry = new Date(now);
+  newExpiry.setUTCDate(newExpiry.getUTCDate() + 30);
+  const iso = newExpiry.toISOString();
+  return active.map((e) => ({ ...e, expires_at: iso }));
+}
+
 export function consumeFromBonusLedger(
   entries: BonusLedgerEntry[],
   consume: number,

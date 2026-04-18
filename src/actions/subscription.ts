@@ -6,19 +6,20 @@ import Razorpay from "razorpay";
 import { createClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/types/supabase";
-import { computeTierUpgradeProrationPaise, formatUpgradeProrationLabel } from "@/lib/billingProration";
 import {
   addBonusPool,
   consumeFromBonusLedger,
+  extendActiveBonusPoolsBy30Days,
   parseBonusLedger,
+  pruneExpiredBonusLedger,
   totalActiveBonus,
 } from "@/lib/bonusCreditsLedger";
 import type { SubscriptionTier } from "@/lib/subscriptionTiers";
 import {
-  compareSubscriptionTiers,
   EXTRA_CREDITS_BY_ID,
   getPhotoScansLimit,
   getVoiceMinutesLimit,
+  parseSubscriptionTier,
   TIERS,
 } from "@/lib/subscriptionTiers";
 import {
@@ -82,7 +83,7 @@ export type VerifyPlanUpgradePaymentResult =
 /** Legacy default for Razorpay fetches / upgrades when counts are missing. */
 const AUTOPAY_FALLBACK_TOTAL_COUNT = 12;
 
-const TRIAL_DAYS = 3;
+const TRIAL_DAYS = 2;
 
 async function getRemainingBillingCyclesForSubscription(
   razorpay: InstanceType<typeof Razorpay>,
@@ -151,15 +152,8 @@ const RAZORPAY_PLAN_ID_FORMAT_RE = /^plan_[A-Za-z0-9]+$/;
 /** When `RAZORPAY_PLAN_ID_PRO` is unset, use this (legacy dev / deploys). */
 const RAZORPAY_PLAN_ID_PRO_FALLBACK = "plan_SbOStQOx52JVpG";
 
-function razorpayPlanEnvVarName(tier: SubscriptionTier): string {
-  switch (tier) {
-    case "basic":
-      return "RAZORPAY_PLAN_ID_BASIC";
-    case "pro":
-      return "RAZORPAY_PLAN_ID_PRO";
-    case "pro_max":
-      return "RAZORPAY_PLAN_ID_PRO_MAX";
-  }
+function razorpayPlanEnvVarName(_tier: SubscriptionTier): string {
+  return "RAZORPAY_PLAN_ID_PRO";
 }
 
 /**
@@ -227,21 +221,10 @@ function isMonthlyPlanPeriod(periodRaw: string): boolean {
   return period === "monthly" || period === "month";
 }
 
-function planNameHintsTier(tier: SubscriptionTier, name: string): boolean {
+function planNameHintsTier(_tier: SubscriptionTier, name: string): boolean {
   const n = name.toLowerCase();
-  switch (tier) {
-    case "pro_max":
-      return /\bpro\s*max\b|promax|pro_max/.test(n);
-    case "pro":
-      if (/\bpro\s*max\b|promax|pro_max/.test(n)) return false;
-      return /\bpro\b/.test(n);
-    case "basic":
-      if (/\bpro\s*max\b|promax/.test(n)) return false;
-      if (/\bpro\b/.test(n) && !/\bbasic\b/.test(n)) return false;
-      return true;
-    default:
-      return false;
-  }
+  if (/\bpro\s*max\b|promax|basic\b/.test(n)) return false;
+  return /\bpro\b|kalnehi/i.test(n);
 }
 
 function dedupeCandidatesById(candidates: PlanCandidate[]): PlanCandidate[] {
@@ -483,8 +466,15 @@ function calculateTrialEnd(start: Date): Date {
   return d;
 }
 
-function isValidTier(tier: unknown): tier is SubscriptionTier {
-  return tier === "basic" || tier === "pro" || tier === "pro_max";
+function isCheckoutTier(tier: unknown): tier is SubscriptionTier {
+  return tier === "pro";
+}
+
+/** Razorpay subscription notes may still say basic/pro_max — store as Pro. */
+function tierFromRazorpayNote(raw: string | undefined): SubscriptionTier {
+  const t = raw?.trim().toLowerCase();
+  if (t === "basic" || t === "pro_max" || t === "pro") return "pro";
+  return "pro";
 }
 
 const PAYMENT_KIND_EXTRA = "extra_credits" as const;
@@ -575,15 +565,76 @@ async function resetMonthlyAiUsageCounters(userId: string) {
     .eq("user_id", userId);
 }
 
+/** First monthly charge after paid trial — trial token pool does not carry over. */
+async function clearPaidTrialAiTokenCounter(userId: string) {
+  const admin = getAdminClient();
+  if (!admin) return;
+  await admin
+    .from("user_profiles")
+    .update({
+      paid_trial_ai_tokens_used: 0,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", userId);
+}
+
+const RESUBSCRIBE_GRACE_MS = 90 * 24 * 60 * 60 * 1000;
+
+/** Merge snapshot bonus pools if user resubscribes within 90 days of cancellation. */
+async function mergeResubscribeBonusesAfterMonthlyActivate(userId: string) {
+  const admin = getAdminClient();
+  if (!admin) return;
+  const { data: prior, error } = await admin
+    .from("user_profiles")
+    .select(
+      "subscription_cancelled_at, bonus_voice_minutes_ledger, bonus_ai_tokens_ledger, bonus_voice_minutes_ledger_at_cancel, bonus_ai_tokens_ledger_at_cancel",
+    )
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error || !prior) return;
+
+  const cancelledAt = prior.subscription_cancelled_at
+    ? new Date(prior.subscription_cancelled_at as string)
+    : null;
+  const withinGrace =
+    cancelledAt &&
+    !Number.isNaN(cancelledAt.getTime()) &&
+    Date.now() - cancelledAt.getTime() <= RESUBSCRIBE_GRACE_MS;
+
+  const now = new Date();
+  let vLed = parseBonusLedger(prior.bonus_voice_minutes_ledger);
+  let aLed = parseBonusLedger(prior.bonus_ai_tokens_ledger);
+  if (withinGrace) {
+    vLed = [...vLed, ...parseBonusLedger(prior.bonus_voice_minutes_ledger_at_cancel)];
+    aLed = [...aLed, ...parseBonusLedger(prior.bonus_ai_tokens_ledger_at_cancel)];
+  }
+  vLed = pruneExpiredBonusLedger(vLed, now);
+  aLed = pruneExpiredBonusLedger(aLed, now);
+
+  await admin
+    .from("user_profiles")
+    .update({
+      bonus_voice_minutes_ledger: vLed,
+      bonus_voice_minutes: totalActiveBonus(vLed, now),
+      bonus_ai_tokens_ledger: aLed,
+      bonus_ai_tokens: totalActiveBonus(aLed, now),
+      subscription_cancelled_at: null,
+      bonus_voice_minutes_ledger_at_cancel: null,
+      bonus_ai_tokens_ledger_at_cancel: null,
+      updated_at: now.toISOString(),
+    })
+    .eq("user_id", userId);
+}
+
 // ---------------------------------------------------------------------------
-// Create subscription (supports all 3 tiers)
+// Create subscription (Pro only)
 // ---------------------------------------------------------------------------
 
 export async function createRazorpayTrialSubscription(
   tier: SubscriptionTier = "pro",
   autopayMonths?: unknown,
 ): Promise<CreateSubscriptionResult> {
-  if (!isValidTier(tier)) {
+  if (!isCheckoutTier(tier)) {
     return { ok: false, error: "Invalid subscription tier." };
   }
 
@@ -615,9 +666,16 @@ export async function createRazorpayTrialSubscription(
 
   const { data: existing } = await admin
     .from("user_profiles")
-    .select("subscription_status, subscription_end_date")
+    .select("subscription_status, subscription_end_date, has_had_trial")
     .eq("user_id", userId)
     .maybeSingle();
+
+  if (existing?.has_had_trial) {
+    return {
+      ok: false,
+      error: "You already used your 2-day paid trial. Subscribe monthly (₹299/mo) to continue.",
+    };
+  }
 
   if (existing) {
     const st = existing.subscription_status;
@@ -658,7 +716,7 @@ export async function createRazorpayTrialSubscription(
       addons: [
         {
           item: {
-            name: `${tierConfig.name} 3-Day Trial`,
+            name: `${tierConfig.name} 2-Day Trial`,
             amount: tierConfig.trialPricePaise,
             currency: "INR",
           },
@@ -772,8 +830,7 @@ export async function activateRazorpaySubscription(params: {
     if (ownerUserId !== userId) {
       return { ok: false, error: "Subscription does not belong to this account." };
     }
-    const noteTier = sub.notes?.kalnehi_tier;
-    if (isValidTier(noteTier)) tier = noteTier;
+    tier = tierFromRazorpayNote(sub.notes?.kalnehi_tier);
     autopayMonthsTotal = autopayMonthsFromSubscriptionEntity(sub);
   } catch {
     return { ok: false, error: "Unable to verify subscription ownership." };
@@ -816,7 +873,9 @@ export async function cancelSubscription(): Promise<
 
   const { data: profile, error: profileErr } = await admin
     .from("user_profiles")
-    .select("subscription_status, subscription_end_date, razorpay_subscription_id")
+    .select(
+      "subscription_status, subscription_end_date, razorpay_subscription_id, bonus_voice_minutes_ledger, bonus_ai_tokens_ledger",
+    )
     .eq("user_id", userId)
     .maybeSingle();
   if (profileErr) return { ok: false, error: "Unable to read subscription." };
@@ -843,6 +902,9 @@ export async function cancelSubscription(): Promise<
     .from("user_profiles")
     .update({
       subscription_status: "cancelled",
+      subscription_cancelled_at: nowIso,
+      bonus_voice_minutes_ledger_at_cancel: profile?.bonus_voice_minutes_ledger ?? [],
+      bonus_ai_tokens_ledger_at_cancel: profile?.bonus_ai_tokens_ledger ?? [],
       updated_at: nowIso,
     })
     .eq("user_id", userId);
@@ -889,7 +951,7 @@ async function applyPaidPhotoScanUsage(
   const ledger = parseBonusLedger(data.bonus_photo_scans_ledger);
 
   const rawTier = data.subscription_tier;
-  const tierResolved: SubscriptionTier = isValidTier(rawTier) ? rawTier : "basic";
+  const tierResolved: SubscriptionTier = parseSubscriptionTier(rawTier) ?? "pro";
   const isTrial = data.subscription_status === "trial";
   const monthlyLimit = getPhotoScansLimit(tierResolved, isTrial);
 
@@ -996,7 +1058,7 @@ async function applyPaidVoiceMinuteUsage(
   const ledger = parseBonusLedger(data.bonus_voice_minutes_ledger);
 
   const rawTier = data.subscription_tier;
-  const tierResolved: SubscriptionTier = isValidTier(rawTier) ? rawTier : "basic";
+  const tierResolved: SubscriptionTier = parseSubscriptionTier(rawTier) ?? "pro";
   const isTrial = data.subscription_status === "trial";
   const monthlyLimit = getVoiceMinutesLimit(tierResolved, isTrial);
 
@@ -1222,14 +1284,24 @@ export async function incrementVoiceMinuteUsage(
 // ---------------------------------------------------------------------------
 
 async function addBonusCredits(
-  type: "photo_scans" | "voice_minutes",
+  type: "photo_scans" | "voice_minutes" | "ai_tokens",
   amount: number,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const userId = await getAuthedUserId();
   if (!userId) return { ok: false, error: "Please sign in." };
 
-  if (amount <= 0 || amount > 200) {
-    return { ok: false, error: "Invalid credit amount." };
+  if (type === "photo_scans") {
+    if (amount < 1 || amount > 500) {
+      return { ok: false, error: "Invalid credit amount." };
+    }
+  } else if (type === "voice_minutes") {
+    if (amount < 1 || amount > 500) {
+      return { ok: false, error: "Invalid credit amount." };
+    }
+  } else {
+    if (amount < 1 || amount > 10_000_000) {
+      return { ok: false, error: "Invalid credit amount." };
+    }
   }
 
   const admin = getAdminClient();
@@ -1237,7 +1309,7 @@ async function addBonusCredits(
 
   const { data, error } = await admin
     .from("user_profiles")
-    .select("bonus_photo_scans_ledger, bonus_voice_minutes_ledger")
+    .select("bonus_photo_scans_ledger, bonus_voice_minutes_ledger, bonus_ai_tokens_ledger")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -1260,7 +1332,7 @@ async function addBonusCredits(
     );
     patch.bonus_photo_scans_ledger = ledger;
     patch.bonus_photo_scans = totalActiveBonus(ledger, now);
-  } else {
+  } else if (type === "voice_minutes") {
     const ledger = addBonusPool(
       parseBonusLedger(data.bonus_voice_minutes_ledger),
       amount,
@@ -1269,6 +1341,15 @@ async function addBonusCredits(
     );
     patch.bonus_voice_minutes_ledger = ledger;
     patch.bonus_voice_minutes = totalActiveBonus(ledger, now);
+  } else {
+    const ledger = addBonusPool(
+      parseBonusLedger(data.bonus_ai_tokens_ledger),
+      amount,
+      expiresAt,
+      now,
+    );
+    patch.bonus_ai_tokens_ledger = ledger;
+    patch.bonus_ai_tokens = totalActiveBonus(ledger, now);
   }
 
   const { error: updateErr } = await admin
@@ -1456,52 +1537,7 @@ export async function getPlanUpgradeQuotes(): Promise<
 > {
   const userId = await getAuthedUserId();
   if (!userId) return { ok: false, error: "Please sign in." };
-
-  const admin = getAdminClient();
-  if (!admin) return { ok: false, error: "Unable to load upgrade options." };
-
-  const { data, error } = await admin
-    .from("user_profiles")
-    .select("subscription_tier, subscription_status, subscription_end_date")
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (error || !data) return { ok: false, error: "Unable to load profile." };
-
-  const st = data.subscription_status;
-  const endIso = data.subscription_end_date ?? null;
-  const endDate = endIso ? new Date(endIso) : null;
-  const stillHasAccess =
-    endDate && !Number.isNaN(endDate.getTime()) && endDate.getTime() > Date.now();
-  if (
-    !stillHasAccess ||
-    (st !== "trial" && st !== "active" && st !== "cancelled")
-  ) {
-    return { ok: true, quotes: [] };
-  }
-
-  const rawTier = data.subscription_tier;
-  const fromTier: SubscriptionTier = isValidTier(rawTier) ? rawTier : "pro";
-  const targets: SubscriptionTier[] =
-    fromTier === "basic" ? ["pro", "pro_max"] : fromTier === "pro" ? ["pro_max"] : [];
-
-  const quotes: PlanUpgradeQuote[] = [];
-  for (const targetTier of targets) {
-    const { remainingDays, amountPaise } = computeTierUpgradeProrationPaise(
-      fromTier,
-      targetTier,
-      endIso,
-    );
-    if (amountPaise <= 0) continue;
-    quotes.push({
-      targetTier,
-      amountPaise,
-      remainingDays,
-      line: formatUpgradeProrationLabel(amountPaise, remainingDays),
-    });
-  }
-
-  return { ok: true, quotes };
+  return { ok: true, quotes: [] };
 }
 
 type CreatePlanUpgradeOrderResult =
@@ -1514,401 +1550,25 @@ type CreatePlanUpgradeOrderResult =
     };
 
 export async function createPlanUpgradeOrder(
-  targetTier: SubscriptionTier,
+  _targetTier: SubscriptionTier,
 ): Promise<CreatePlanUpgradeOrderResult> {
-  if (!isValidTier(targetTier)) {
-    return { ok: false, error: "Invalid plan." };
-  }
-
   const userId = await getAuthedUserId();
   if (!userId) return { ok: false, error: "Please sign in." };
-
-  const config = getRazorpayConfig();
-  if (!config) {
-    return {
-      ok: false,
-      error: "Payment system is not configured yet.",
-      code: "payment_not_configured",
-      debugHint: "Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in the server environment (e.g. Vercel Production).",
-    };
-  }
-
-  const admin = getAdminClient();
-  if (!admin) {
-    return {
-      ok: false,
-      error: "Payment system is not configured yet.",
-      code: "payment_not_configured",
-      debugHint:
-        "Set SUPABASE_SERVICE_ROLE_KEY and NEXT_PUBLIC_SUPABASE_URL so billing can update profiles.",
-    };
-  }
-
-  const { data: profile, error: profileErr } = await admin
-    .from("user_profiles")
-    .select(
-      "subscription_tier, subscription_status, subscription_end_date, razorpay_subscription_id",
-    )
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (profileErr || !profile) return { ok: false, error: "Unable to read subscription." };
-
-  const st = profile.subscription_status;
-  const endIso = profile.subscription_end_date ?? null;
-  const endDate = endIso ? new Date(endIso) : null;
-  const stillHasAccess =
-    endDate && !Number.isNaN(endDate.getTime()) && endDate.getTime() > Date.now();
-  if (
-    !stillHasAccess ||
-    (st !== "trial" && st !== "active" && st !== "cancelled")
-  ) {
-    return { ok: false, error: "You need an active subscription to upgrade." };
-  }
-
-  const rawTier = profile.subscription_tier;
-  const fromTier: SubscriptionTier = isValidTier(rawTier) ? rawTier : "pro";
-  if (compareSubscriptionTiers(targetTier, fromTier) <= 0) {
-    return { ok: false, error: "Invalid upgrade path." };
-  }
-
-  const { amountPaise } = computeTierUpgradeProrationPaise(fromTier, targetTier, endIso);
-  if (amountPaise <= 0) {
-    return { ok: false, error: "Nothing to pay for this upgrade." };
-  }
-
-  try {
-    const razorpay = getRazorpayClient(config);
-    const hadEnvPlanId = Boolean(resolveRazorpayPlanId(targetTier));
-    const resolved = await resolveRazorpayPlanIdWithApiFallback(razorpay, targetTier);
-    if (!resolved.ok) {
-      console.error(
-        "[subscription] createPlanUpgradeOrder: could not resolve Razorpay plan id (env and plans list)",
-        {
-          targetTier,
-          envVar: resolved.envVar,
-          reason: resolved.reason,
-          userIdPrefix: userId.slice(0, 8),
-        },
-      );
-      const msg = planCheckoutFailureMessage(targetTier, resolved, "upgrade");
-      return {
-        ok: false,
-        error: msg.error,
-        code: msg.code,
-        debugHint: msg.debugHint,
-      };
-    }
-
-    const cycleEnd = endIso ? new Date(endIso) : new Date();
-    if (Number.isNaN(cycleEnd.getTime())) {
-      return { ok: false, error: "Invalid billing period end date." };
-    }
-    const cycleEndSec = Math.floor(cycleEnd.getTime() / 1000);
-    const nowSec = Math.floor(Date.now() / 1000);
-    const startAtSec = Math.max(cycleEndSec, nowSec + MIN_SUBSCRIPTION_START_LEAD_SEC);
-
-    const fromName = TIERS[fromTier].name;
-    const toName = TIERS[targetTier].name;
-
-    const oldSubId = profile.razorpay_subscription_id?.trim() ?? "";
-    let upgradeTotalCount = AUTOPAY_FALLBACK_TOTAL_COUNT;
-    if (oldSubId && RAZORPAY_ID_RE.test(oldSubId)) {
-      upgradeTotalCount = await getRemainingBillingCyclesForSubscription(razorpay, oldSubId);
-    } else {
-      console.error("[subscription] createPlanUpgradeOrder: missing razorpay_subscription_id, fallback total_count", {
-        userIdPrefix: userId.slice(0, 8),
-      });
-    }
-
-    const upgradeCreateBody = {
-      total_count: upgradeTotalCount,
-      customer_notify: 1,
-      start_at: startAtSec,
-      addons: [
-        {
-          item: {
-            name: `${fromName} → ${toName} (prorated upgrade)`,
-            amount: amountPaise,
-            currency: "INR",
-          },
-        },
-      ],
-      notes: {
-        kalnehi_user_id: userId,
-        kalnehi_plan: "monthly",
-        kalnehi_tier: targetTier,
-        kalnehi_kind: "plan_upgrade",
-        kalnehi_from_tier: fromTier,
-        kalnehi_to_tier: targetTier,
-        kalnehi_expected_addon_paise: String(amountPaise),
-        kalnehi_autopay_months: String(upgradeTotalCount),
-      },
-    };
-
-    const createUpgrade = (planId: string) =>
-      (razorpay.subscriptions.create as unknown as (
-        body: Record<string, unknown>,
-      ) => Promise<{ id: string }>)({
-        plan_id: planId,
-        ...upgradeCreateBody,
-      });
-
-    try {
-      const created = await createUpgrade(resolved.planId);
-      return {
-        ok: true,
-        keyId: config.keyId,
-        subscriptionId: created.id,
-        amountPaise,
-      };
-    } catch (error) {
-      if (hadEnvPlanId && isLikelyInvalidRazorpayPlanIdError(error)) {
-        const fallback = await resolveRazorpayPlanIdWithApiFallback(razorpay, targetTier, {
-          skipEnv: true,
-        });
-        if (fallback.ok && fallback.planId !== resolved.planId) {
-          try {
-            const created = await createUpgrade(fallback.planId);
-            console.warn("[subscription] createPlanUpgradeOrder: retried after invalid env plan id", {
-              targetTier,
-              fallbackPlanIdPrefix: fallback.planId.slice(0, 14),
-            });
-            return {
-              ok: true,
-              keyId: config.keyId,
-              subscriptionId: created.id,
-              amountPaise,
-            };
-          } catch (retryErr) {
-            logRazorpaySubscriptionCreateFailure(
-              "createPlanUpgradeOrder (retry)",
-              { targetTier, userIdPrefix: userId.slice(0, 8) },
-              retryErr,
-            );
-            return { ok: false, error: safeErrorMessage(retryErr) };
-          }
-        }
-      }
-      logRazorpaySubscriptionCreateFailure(
-        "createPlanUpgradeOrder",
-        { targetTier, userIdPrefix: userId.slice(0, 8) },
-        error,
-      );
-      return { ok: false, error: safeErrorMessage(error) };
-    }
-  } catch (error) {
-    return { ok: false, error: safeErrorMessage(error) };
-  }
+  return {
+    ok: false,
+    error: "Kalnehi is now a single Pro plan — tier upgrades are not available.",
+    code: "plan_not_found",
+  };
 }
 
-export async function verifyPlanUpgradePayment(params: {
+export async function verifyPlanUpgradePayment(_params: {
   razorpay_payment_id: string;
   razorpay_subscription_id: string;
   razorpay_signature: string;
 }): Promise<VerifyPlanUpgradePaymentResult> {
   const userId = await getAuthedUserId();
   if (!userId) return { ok: false, error: "Session expired. Please sign in again." };
-
-  const paymentId = params.razorpay_payment_id?.trim() ?? "";
-  const subscriptionId = params.razorpay_subscription_id?.trim() ?? "";
-  const signature = params.razorpay_signature?.trim() ?? "";
-
-  if (!RAZORPAY_ID_RE.test(paymentId)) {
-    return { ok: false, error: "Invalid payment reference." };
-  }
-  if (!RAZORPAY_ID_RE.test(subscriptionId)) {
-    return { ok: false, error: "Invalid subscription reference." };
-  }
-  if (!HEX_SIGNATURE_RE.test(signature)) {
-    return { ok: false, error: "Invalid payment signature format." };
-  }
-
-  const config = getRazorpayConfig();
-  if (!config) return { ok: false, error: "Payment system is not configured yet." };
-
-  const expectedSignature = crypto
-    .createHmac("sha256", config.keySecret)
-    .update(`${paymentId}|${subscriptionId}`)
-    .digest("hex");
-
-  if (!timingSafeEqual(expectedSignature, signature)) {
-    return { ok: false, error: "Payment verification failed." };
-  }
-
-  try {
-    const razorpay = getRazorpayClient(config);
-    const sub = (await razorpay.subscriptions.fetch(subscriptionId)) as {
-      id?: string;
-      notes?: Record<string, string>;
-      current_start?: number | null;
-      current_end?: number | null;
-      total_count?: unknown;
-    };
-
-    const ownerUserId = sub.notes?.kalnehi_user_id?.trim();
-    if (ownerUserId !== userId) {
-      return { ok: false, error: "Subscription does not belong to this account." };
-    }
-    if (sub.notes?.kalnehi_kind !== "plan_upgrade") {
-      return { ok: false, error: "Invalid subscription type." };
-    }
-    if (sub.notes?.kalnehi_plan !== "monthly") {
-      return { ok: false, error: "Invalid subscription plan." };
-    }
-
-    const rawTo = sub.notes?.kalnehi_to_tier?.trim();
-    if (!isValidTier(rawTo)) {
-      return { ok: false, error: "Invalid upgrade target." };
-    }
-    const targetTier = rawTo;
-
-    const rawFromNote = sub.notes?.kalnehi_from_tier?.trim();
-    const fromNoteTier: SubscriptionTier | null = isValidTier(rawFromNote) ? rawFromNote : null;
-
-    const expectedPaiseNote = sub.notes?.kalnehi_expected_addon_paise?.trim() ?? "";
-    const expectedAddonPaise = Number(expectedPaiseNote);
-    if (!Number.isFinite(expectedAddonPaise) || expectedAddonPaise <= 0) {
-      return { ok: false, error: "Invalid upgrade pricing metadata." };
-    }
-
-    const pay = (await razorpay.payments.fetch(paymentId)) as {
-      status?: string;
-      amount?: number;
-      subscription_id?: string | null;
-    };
-
-    if (pay.status !== "captured") {
-      return { ok: false, error: "Payment is not complete." };
-    }
-
-    const paySubId = pay.subscription_id?.trim() ?? "";
-    if (paySubId && paySubId !== subscriptionId) {
-      console.error("[subscription] verifyPlanUpgradePayment: payment subscription_id mismatch after HMAC", {
-        paymentId,
-        subscriptionId,
-        paySubId,
-      });
-      return { ok: false, error: "Payment does not match this subscription." };
-    }
-
-    const payAmt = Number(pay.amount);
-    if (payAmt !== expectedAddonPaise) {
-      return { ok: false, error: "Payment amount mismatch." };
-    }
-
-    const admin = getAdminClient();
-    if (!admin) return { ok: false, error: "Unable to complete upgrade." };
-
-    const { data: profile, error: profileErr } = await admin
-      .from("user_profiles")
-      .select(
-        "subscription_tier, subscription_end_date, razorpay_subscription_id, subscription_status",
-      )
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (profileErr || !profile) {
-      return { ok: false, error: "Unable to read subscription." };
-    }
-
-    const rawProfileTier = profile.subscription_tier;
-    const currentTier: SubscriptionTier = isValidTier(rawProfileTier) ? rawProfileTier : "pro";
-    if (fromNoteTier !== null && fromNoteTier !== currentTier) {
-      return {
-        ok: false,
-        error: "Your plan changed since checkout started. Refresh and try again.",
-      };
-    }
-    if (compareSubscriptionTiers(targetTier, currentTier) <= 0) {
-      return { ok: false, error: "You are already on this tier or higher." };
-    }
-
-    const endIso = profile.subscription_end_date ?? null;
-    const recomputed = computeTierUpgradeProrationPaise(currentTier, targetTier, endIso);
-    if (recomputed.amountPaise !== expectedAddonPaise) {
-      return {
-        ok: false,
-        error: "Pricing changed since checkout started. Refresh and try again.",
-      };
-    }
-
-    const claim = await claimRazorpayPaymentId(userId, paymentId, PAYMENT_KIND_UPGRADE);
-    if (claim === "duplicate") {
-      const { data: resumeProfile } = await admin
-        .from("user_profiles")
-        .select("razorpay_subscription_id, subscription_tier")
-        .eq("user_id", userId)
-        .maybeSingle();
-      const resumeSub = resumeProfile?.razorpay_subscription_id?.trim() ?? "";
-      const resumeTierRaw = resumeProfile?.subscription_tier;
-      if (
-        resumeSub === subscriptionId &&
-        isValidTier(resumeTierRaw) &&
-        resumeTierRaw === targetTier
-      ) {
-        return { ok: true };
-      }
-      return { ok: true };
-    }
-    if (claim === "error") {
-      return { ok: false, error: "Unable to confirm payment. Try again or contact support." };
-    }
-
-    const newSubId = subscriptionId;
-    const oldSubId = profile.razorpay_subscription_id?.trim() ?? "";
-
-    let subscriptionStartToStore = new Date().toISOString();
-    let subscriptionEndToStore = endIso ?? new Date().toISOString();
-    if (typeof sub.current_start === "number" && sub.current_start > 0) {
-      subscriptionStartToStore = new Date(sub.current_start * 1000).toISOString();
-    }
-    if (typeof sub.current_end === "number" && sub.current_end > 0) {
-      subscriptionEndToStore = new Date(sub.current_end * 1000).toISOString();
-    }
-
-    const autopayMonthsTotal = autopayMonthsFromSubscriptionEntity(sub);
-
-    const nowIso = new Date().toISOString();
-    const { error: updateErr } = await admin
-      .from("user_profiles")
-      .update({
-        subscription_tier: targetTier,
-        subscription_status: "active",
-        razorpay_subscription_id: newSubId,
-        subscription_plan: "monthly",
-        subscription_start_date: subscriptionStartToStore,
-        subscription_end_date: subscriptionEndToStore,
-        ...(autopayMonthsTotal !== null
-          ? { subscription_autopay_months_total: autopayMonthsTotal }
-          : {}),
-        updated_at: nowIso,
-      })
-      .eq("user_id", userId);
-
-    if (updateErr) {
-      await releaseRazorpayPaymentClaim(paymentId);
-      return { ok: false, error: "Upgrade payment succeeded but we could not update your profile." };
-    }
-
-    if (oldSubId && RAZORPAY_ID_RE.test(oldSubId) && oldSubId !== newSubId) {
-      try {
-        await razorpay.subscriptions.cancel(oldSubId, false);
-      } catch (e) {
-        return {
-          ok: true,
-          warning: `Your plan was upgraded, but the previous Razorpay subscription could not be cancelled automatically (${safeErrorMessage(e)}). Please contact support with old id ${oldSubId}.`,
-        };
-      }
-    }
-
-    return { ok: true };
-  } catch (e) {
-    console.error("[subscription] verifyPlanUpgradePayment: unexpected error", {
-      safeMessage: safeErrorMessage(e),
-    });
-    return { ok: false, error: "Unable to verify payment." };
-  }
+  return { ok: false, error: "Plan upgrades are no longer available." };
 }
 
 // ---------------------------------------------------------------------------
@@ -1919,7 +1579,7 @@ export async function createRazorpayMonthlySubscription(
   tier: SubscriptionTier = "pro",
   autopayMonths?: unknown,
 ): Promise<CreateSubscriptionResult> {
-  if (!isValidTier(tier)) {
+  if (!isCheckoutTier(tier)) {
     return { ok: false, error: "Invalid subscription tier." };
   }
 
@@ -2101,8 +1761,7 @@ export async function activateRazorpayMonthlySubscription(params: {
     if (sub.notes?.kalnehi_no_trial !== "true") {
       return { ok: false, error: "Invalid subscription type for this activation path." };
     }
-    const noteTier = sub.notes?.kalnehi_tier;
-    if (isValidTier(noteTier)) tier = noteTier;
+    tier = tierFromRazorpayNote(sub.notes?.kalnehi_tier);
     autopayMonthsTotal = autopayMonthsFromSubscriptionEntity(sub);
   } catch {
     return { ok: false, error: "Unable to verify subscription ownership." };
@@ -2120,10 +1779,12 @@ export async function activateRazorpayMonthlySubscription(params: {
     subscription_end_date: monthEnd.toISOString(),
     razorpay_subscription_id: subscriptionId,
     subscription_autopay_months_total: autopayMonthsTotal,
+    has_had_trial: true,
   });
   if (!updated.ok) return updated;
 
   await resetMonthlyAiUsageCounters(userId);
+  await mergeResubscribeBonusesAfterMonthlyActivate(userId);
 
   return { ok: true, subscriptionId };
 }

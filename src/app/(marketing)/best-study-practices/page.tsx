@@ -31,7 +31,7 @@ export default function BestStudyPracticesPage() {
           {
             question: "Is there a free trial to experience all these features?",
             answer:
-              "Yes. You can start a 3-day paid trial from the pricing page. The Basic tier also includes a small trial gift of voice minutes so you can experience voice dictation before committing.",
+              "Yes. New accounts get a 1-day welcome trial with limited voice and AI usage. You can then start a 2-day paid trial from the pricing page before continuing on monthly Pro.",
           },
           {
             question: "Which exams is Kalnehi Daily designed for?",

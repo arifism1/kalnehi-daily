@@ -1,7 +1,7 @@
 "use client";
 
 import Script from "next/script";
-import { Loader2, Mic, Plus } from "lucide-react";
+import { Brain, Loader2, Mic, Plus } from "lucide-react";
 import { useCallback, useEffect, useState, useTransition } from "react";
 
 import {
@@ -39,10 +39,11 @@ function CreditCard({
   onBuy: (pack: ExtraCreditPack) => void;
   disabled: boolean;
 }) {
+  const Icon = pack.type === "ai_tokens" ? Brain : Mic;
   return (
     <div className="kal-glass-subtle flex items-center justify-between rounded-xl px-4 py-3">
       <div className="flex items-center gap-3">
-        <Mic className="h-4 w-4 text-kal-accent" />
+        <Icon className="h-4 w-4 text-kal-accent" aria-hidden />
         <div>
           <p className="text-sm font-medium text-kal-text">{pack.label}</p>
           <p className="text-xs text-kal-text-secondary">{pack.priceDisplay}</p>

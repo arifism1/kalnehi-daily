@@ -3,8 +3,8 @@
 import Link from "next/link";
 import Script from "next/script";
 import { addMonths, differenceInCalendarDays, format } from "date-fns";
-import { ArrowLeft, Crown, Loader2, Mic, RefreshCw, Sparkles, Zap } from "lucide-react";
-import { useCallback, useRef, useState, useTransition } from "react";
+import { ArrowLeft, Brain, Crown, Loader2, Mic, RefreshCw } from "lucide-react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
 import {
   cancelSubscription,
@@ -16,7 +16,6 @@ import {
 import { HelpyJiChat } from "@/components/helpyji/HelpyJiChat";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ExtraCreditsSection } from "@/components/settings/ExtraCreditsSection";
-import { PlanUpgradeSection } from "@/components/settings/PlanUpgradeSection";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { useAiGate } from "@/hooks/useAiGate";
 import { useFreeTrialLiveEndsIn } from "@/hooks/useFreeTrialLiveEndsIn";
@@ -26,7 +25,8 @@ import {
   FREE_TRIAL_VOICE_CAP_SECONDS,
 } from "@/lib/freeTrial";
 import { SITE_NAME } from "@/lib/seo-metadata";
-import { getTierConfig, TIERS, type SubscriptionTier } from "@/lib/subscriptionTiers";
+import type { PrepBrainUsagePayload } from "@/lib/prepbrainTokens";
+import { getTierConfig, TIERS } from "@/lib/subscriptionTiers";
 import { isHelpyJiEligibleForTier } from "@/lib/helpyjiVisibility";
 import { useAuthStore } from "@/store/useAuthStore";
 
@@ -45,7 +45,7 @@ declare global {
   }
 }
 
-const RESUB_PRESET_MONTHS = [1, 3, 6, 12] as const;
+const RESUB_PRESET_MONTHS = [1, 2, 3, 6, 12] as const;
 
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
@@ -57,7 +57,7 @@ function formatDate(iso: string | null): string {
 function statusLabel(status: string | null): string {
   switch (status) {
     case "trial":
-      return "Trial (3-day)";
+      return "Trial (2-day)";
     case "active":
       return "Active";
     case "expired":
@@ -96,12 +96,6 @@ function trialDaysRemaining(endDate: string | null): number | null {
   const left = differenceInCalendarDays(end, new Date());
   return Math.max(0, left);
 }
-
-const TIER_ICONS: Record<SubscriptionTier, React.ReactNode> = {
-  basic: <Zap className="h-6 w-6" strokeWidth={2.25} />,
-  pro: <Crown className="h-6 w-6" strokeWidth={2.25} />,
-  pro_max: <Sparkles className="h-6 w-6" strokeWidth={2.25} />,
-};
 
 function UsageBar({
   icon,
@@ -146,6 +140,50 @@ function UsageBar({
   );
 }
 
+function TokenUsageBar({
+  icon,
+  label,
+  used,
+  limit,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  used: number;
+  limit: number;
+}) {
+  const pct = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 0;
+  const atLimit = limit > 0 && used >= limit;
+  const fmt = (n: number) => n.toLocaleString("en-IN");
+
+  return (
+    <div className="space-y-1.5 border-t border-kal-border px-4 py-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-sm text-kal-text-secondary">
+          {icon}
+          <span>{label}</span>
+        </div>
+        <span
+          className={`text-sm font-medium ${atLimit ? "text-[var(--kal-danger-text)]" : "text-kal-text"}`}
+        >
+          {fmt(used)} / {fmt(limit)}
+        </span>
+      </div>
+      <div className="h-1.5 rounded-full bg-kal-card-muted">
+        <div
+          className={`h-full rounded-full transition-all ${
+            atLimit
+              ? "bg-[var(--kal-danger-text)]"
+              : pct > 75
+                ? "bg-amber-500"
+                : "bg-emerald-500"
+          }`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function MyPlanPageClient() {
   const {
     loading,
@@ -166,13 +204,13 @@ export function MyPlanPageClient() {
   } = useSubscriptionAccess();
   const {
     hasAiAccess,
-    isBasicTrial,
     voiceMinutesUsed,
     voiceMinutesLimit,
     monthlyVoiceMinuteLimit,
     bonusVoiceMinutesRemaining,
     bonusVoiceMinutesNextExpiry,
   } = useAiGate();
+  const [prepbrainUsage, setPrepbrainUsage] = useState<PrepBrainUsagePayload | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -182,14 +220,10 @@ export function MyPlanPageClient() {
   const helpyjiUpgradeAnchorRef = useRef<HTMLDivElement>(null);
   const user = useAuthStore((s) => s.user);
 
-  const showHelpyJiMyPlan =
-    !!user &&
-    isHelpyJiEligibleForTier(tier) &&
-    (hasPaidAccess ? tier === "basic" : true);
+  const showHelpyJiMyPlan = !!user && isHelpyJiEligibleForTier(tier, hasPaidAccess);
 
   const tierConfig = getTierConfig(tier);
-  const resolvedTier: SubscriptionTier =
-    tier === "basic" || tier === "pro" || tier === "pro_max" ? tier : "pro";
+
   const canCancel = status === "trial" || status === "active";
   const isCancelled = status === "cancelled";
   const isCancelledWithAccess = isCancelled && hasPaidAccess;
@@ -200,13 +234,46 @@ export function MyPlanPageClient() {
 
   const welcomeEndsIn = useFreeTrialLiveEndsIn(freeTrialEndsAtIso, onWelcomeTrial);
 
+  useEffect(() => {
+    if (!user?.id || loading) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch("/api/prepbrain/usage");
+        const data = (await res.json()) as {
+          ok?: boolean;
+          usage?: PrepBrainUsagePayload;
+        };
+        if (cancelled) return;
+        if (data.ok && data.usage) {
+          setPrepbrainUsage(data.usage);
+        } else {
+          setPrepbrainUsage(null);
+        }
+      } catch {
+        if (!cancelled) setPrepbrainUsage(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    user?.id,
+    loading,
+    status,
+    hasPaidAccess,
+    onWelcomeTrial,
+    voiceMinutesUsed,
+    trialVoiceSecondsUsed,
+  ]);
+
   const startResubscribe = useCallback(async () => {
     setResubBusy(true);
     setResubError(null);
     try {
       const created = hasHadTrial
-        ? await createRazorpayMonthlySubscription(resolvedTier, autopayMonths)
-        : await createRazorpayTrialSubscription(resolvedTier, autopayMonths);
+        ? await createRazorpayMonthlySubscription("pro", autopayMonths)
+        : await createRazorpayTrialSubscription("pro", autopayMonths);
       if (!created.ok) {
         setResubError(created.error);
         return;
@@ -215,10 +282,10 @@ export function MyPlanPageClient() {
         setResubError("Unable to load payment window. Refresh and try again.");
         return;
       }
-      const tc = TIERS[resolvedTier];
+      const tc = TIERS.pro;
       const description = hasHadTrial
         ? `${tc.name} (${tc.monthlyPriceDisplay}/mo) · AutoPay up to ${autopayMonths} monthly charge${autopayMonths === 1 ? "" : "s"}`
-        : `${tc.name} 3-day trial (${tc.trialPriceDisplay}) · then ${tc.monthlyPriceDisplay}/mo · AutoPay up to ${autopayMonths} monthly charge${autopayMonths === 1 ? "" : "s"}`;
+        : `${tc.name} 2-day trial (${tc.trialPriceDisplay}) · then ${tc.monthlyPriceDisplay}/mo · AutoPay up to ${autopayMonths} monthly charge${autopayMonths === 1 ? "" : "s"}`;
       const rzp = new window.Razorpay({
         key: created.keyId,
         name: SITE_NAME,
@@ -244,7 +311,7 @@ export function MyPlanPageClient() {
     } finally {
       setResubBusy(false);
     }
-  }, [resolvedTier, autopayMonths, hasHadTrial]);
+  }, [autopayMonths, hasHadTrial]);
 
   function handleCancel() {
     setConfirmOpen(false);
@@ -376,7 +443,7 @@ export function MyPlanPageClient() {
             <div className="kal-glass-panel overflow-hidden rounded-2xl border border-kal-accent/35 bg-gradient-to-br from-kal-accent/10 to-kal-card-muted shadow-md dark:border-kal-accent/25">
               <div className="border-b border-kal-border px-5 py-3 sm:px-6">
                 <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
-                  24-hour welcome trial
+                  1-day welcome trial
                 </p>
                 <p className="mt-1 text-sm font-medium text-kal-text">
                   {formatWelcomeVoiceTimeLeft(freeTrialVoiceSecondsRemaining)} of welcome voice time
@@ -387,10 +454,9 @@ export function MyPlanPageClient() {
                   </p>
                 ) : null}
                 <p className="mt-1 text-xs text-kal-text-secondary">
-                  Limits do not roll over to the next day — use them within this window. After it
-                  ends, start a 3-day paid trial — {TIERS.pro.trialPriceDisplay} (Pro) or{" "}
-                  {TIERS.pro_max.trialPriceDisplay} (Pro Max) — then full voice dictation and typed
-                  planning on your tier.
+                  Voice and PrepBrain limits do not roll over — use them within this window. After it
+                  ends, start a 2-day paid trial for {TIERS.pro.trialPriceDisplay}, then{" "}
+                  {TIERS.pro.monthlyPriceDisplay}/month for full Pro access.
                 </p>
               </div>
               <UsageBar
@@ -399,6 +465,14 @@ export function MyPlanPageClient() {
                 used={trialVoiceSecondsUsed}
                 limit={FREE_TRIAL_VOICE_CAP_SECONDS}
               />
+              {prepbrainUsage?.phase === "welcome" ? (
+                <TokenUsageBar
+                  icon={<Brain className="h-4 w-4" />}
+                  label="PrepBrain AI tokens (welcome)"
+                  used={prepbrainUsage.used}
+                  limit={prepbrainUsage.limit}
+                />
+              ) : null}
             </div>
           ) : null}
 
@@ -406,15 +480,9 @@ export function MyPlanPageClient() {
             <div className="kal-glass-panel rounded-2xl border border-kal-accent/30 bg-kal-accent-soft/40 px-5 py-5 dark:bg-kal-accent/10">
               <h3 className="text-base font-bold text-kal-text">Free trial ended</h3>
               <p className="mt-2 text-sm text-kal-text-secondary">
-                Your 24-hour welcome access is over. Unlock a 3-day paid trial —{" "}
-                <span className="font-semibold text-kal-text">
-                  {TIERS.pro.trialPriceDisplay} on Pro
-                </span>
-                ,{" "}
-                <span className="font-semibold text-kal-text">
-                  {TIERS.pro_max.trialPriceDisplay} on Pro Max
-                </span>{" "}
-                — then {TIERS.pro.monthlyPriceDisplay}/month. Cancel anytime.
+                Your 1-day welcome access is over. Unlock a 2-day paid trial for{" "}
+                <span className="font-semibold text-kal-text">{TIERS.pro.trialPriceDisplay}</span> — then{" "}
+                {TIERS.pro.monthlyPriceDisplay}/month. Cancel anytime.
               </p>
               <button
                 type="button"
@@ -425,7 +493,7 @@ export function MyPlanPageClient() {
                 {resubBusy ? (
                   <Loader2 className="mx-auto h-5 w-5 animate-spin" />
                 ) : (
-                  "Start 3-day paid trial"
+                  "Start 2-day paid trial"
                 )}
               </button>
               {resubError ? (
@@ -440,7 +508,7 @@ export function MyPlanPageClient() {
           <div className="kal-glass-panel overflow-hidden rounded-2xl border border-kal-accent/30 shadow-lg dark:border-kal-accent/25">
             <div className="flex items-start gap-4 p-5 sm:p-6">
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-kal-accent/15 text-kal-accent">
-                {TIER_ICONS[resolvedTier]}
+                <Crown className="h-6 w-6" strokeWidth={2.25} />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
@@ -455,7 +523,7 @@ export function MyPlanPageClient() {
                 </h2>
                 <p className="mt-1 text-sm text-kal-text-secondary">
                   {onWelcomeTrial
-                    ? "You're on a one-time 24-hour preview with limited AI voice time. Subscribe anytime for full access."
+                    ? "You're on a one-time 1-day preview with limited voice and PrepBrain AI. Subscribe anytime for full access."
                     : noActivePlan
                       ? `Choose a plan to unlock ${SITE_NAME}.`
                       : tierConfig.tagline}
@@ -515,41 +583,22 @@ export function MyPlanPageClient() {
               <div className="border-t border-kal-border">
                 <div className="border-b border-kal-border px-4 py-3">
                   <h3 className="text-xs font-semibold uppercase tracking-widest text-kal-muted">
-                    AI usage {isBasicTrial ? "(included in trial)" : "(monthly)"}
+                    AI usage {status === "trial" ? "(paid trial)" : "(monthly)"}
                   </h3>
                 </div>
 
-                {/* Basic trial: included AI sample */}
-                {isBasicTrial && (
-                  <div className="border-b border-kal-border bg-kal-accent/5 px-4 py-3">
-                    <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
-                      Included with your trial
-                    </p>
-                    <p className="mt-1 text-xs leading-relaxed text-kal-text-secondary">
-                      Use up to{" "}
-                      <span className="font-medium text-kal-text">2 voice minutes</span> during your
-                      3-day trial to try voice dictation. After the trial, your Basic subscription
-                      continues with the core features listed on Pricing — upgrade to Pro anytime for
-                      monthly voice minutes.
-                    </p>
-                  </div>
-                )}
-
-                {/* Pro / Pro Max trial: scannable quota line */}
-                {status === "trial" && !isBasicTrial && tier === "pro" && (
+                {status === "trial" ? (
                   <p className="border-b border-kal-border px-4 py-2 text-xs leading-relaxed text-kal-text-secondary">
-                    <span className="font-medium text-kal-text">40 voice minutes per month</span>{" "}
-                    (includes 10 minutes during your 3-day trial; full monthly allowance after your
-                    first paid cycle).
+                    <span className="font-medium text-kal-text">
+                      {TIERS.pro.voiceMinutesPerMonth} voice minutes per month
+                    </span>{" "}
+                    after your first monthly charge — during this 2-day trial you have{" "}
+                    <span className="font-medium text-kal-text">
+                      {TIERS.pro.trialVoiceMinutesLimit} minutes
+                    </span>{" "}
+                    for voice dictation.
                   </p>
-                )}
-                {status === "trial" && !isBasicTrial && tier === "pro_max" && (
-                  <p className="border-b border-kal-border px-4 py-2 text-xs leading-relaxed text-kal-text-secondary">
-                    <span className="font-medium text-kal-text">80 voice minutes per month</span>{" "}
-                    (includes 20 minutes during your 3-day trial; full monthly allowance after your
-                    first paid cycle).
-                  </p>
-                )}
+                ) : null}
 
                 <UsageBar
                   icon={<Mic className="h-4 w-4" />}
@@ -557,6 +606,19 @@ export function MyPlanPageClient() {
                   used={voiceMinutesUsed}
                   limit={monthlyVoiceMinuteLimit}
                 />
+                {prepbrainUsage &&
+                (prepbrainUsage.phase === "paid_trial" || prepbrainUsage.phase === "monthly") ? (
+                  <TokenUsageBar
+                    icon={<Brain className="h-4 w-4" />}
+                    label={
+                      prepbrainUsage.phase === "paid_trial"
+                        ? "PrepBrain AI tokens (paid trial)"
+                        : "PrepBrain AI tokens (monthly)"
+                    }
+                    used={prepbrainUsage.used}
+                    limit={prepbrainUsage.limit}
+                  />
+                ) : null}
                 {bonusVoiceMinutesRemaining > 0 && (
                   <div className="space-y-2 border-t border-kal-border px-4 py-3">
                     <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
@@ -573,47 +635,17 @@ export function MyPlanPageClient() {
                     ) : null}
                   </div>
                 )}
-                {!isBasicTrial && (
-                  <>
-                    <div className="border-t border-kal-border px-4 py-2">
-                      <p className="text-[0.65rem] leading-relaxed text-kal-text-secondary">
-                        Bonus credits are used before your monthly allowance. Combined voice
-                        capacity this month: {voiceMinutesLimit} minutes.
-                      </p>
-                    </div>
-                    <div className="flex items-center justify-between border-t border-kal-border px-4 py-2">
-                      <span className="text-xs text-kal-text-secondary">
-                        Usage resets (calendar month)
-                      </span>
-                      <span className="text-xs font-medium text-kal-text">
-                        {nextResetDate()}
-                      </span>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-
-            {/* Basic after trial: benefit-forward upsell (no empty quotas) */}
-            {!hasAiAccess && hasPaidAccess && tier === "basic" && (
-              <div className="border-t border-kal-border">
-                <div className="border-b border-kal-border px-4 py-3">
-                  <h3 className="text-xs font-semibold uppercase tracking-widest text-kal-muted">
-                    AI Voice Dictation
-                  </h3>
-                </div>
-                <div className="px-4 py-3">
-                  <p className="text-xs leading-relaxed text-kal-text-secondary">
-                    Want AI voice dictation every month? Upgrade to Pro for{" "}
-                    <span className="font-medium text-kal-text">40 voice minutes per month</span> — start
-                    with a 3-day trial for just ₹21 on Pricing.
+                <div className="border-t border-kal-border px-4 py-2">
+                  <p className="text-[0.65rem] leading-relaxed text-kal-text-secondary">
+                    Bonus voice credits are used before your plan allowance. Combined voice capacity
+                    this month: {voiceMinutesLimit} minutes.
                   </p>
-                  <a
-                    href="/pricing"
-                    className="mt-3 inline-flex min-h-[40px] items-center justify-center rounded-xl bg-kal-accent px-4 py-2 text-sm font-semibold text-kal-accent-foreground"
-                  >
-                    View plans &amp; upgrade
-                  </a>
+                </div>
+                <div className="flex items-center justify-between border-t border-kal-border px-4 py-2">
+                  <span className="text-xs text-kal-text-secondary">
+                    Usage resets (calendar month)
+                  </span>
+                  <span className="text-xs font-medium text-kal-text">{nextResetDate()}</span>
                 </div>
               </div>
             )}
@@ -671,8 +703,8 @@ export function MyPlanPageClient() {
                         <RefreshCw className="h-4 w-4" />
                         Resubscribe to {tierConfig.name} —{" "}
                         {hasHadTrial
-                          ? `${TIERS[resolvedTier].monthlyPriceDisplay}/month`
-                          : `${TIERS[resolvedTier].trialPriceDisplay} trial`}
+                          ? `${TIERS.pro.monthlyPriceDisplay}/month`
+                          : `${TIERS.pro.trialPriceDisplay} trial`}
                       </>
                     )}
                   </button>
@@ -745,16 +777,9 @@ export function MyPlanPageClient() {
                 className="h-px w-full max-w-lg md:max-w-xl"
                 aria-hidden
               />
-              <HelpyJiChat
-                surface={
-                  hasPaidAccess && tier === "basic" ? "upgrade" : "pricing"
-                }
-                intersectionAnchorRef={helpyjiUpgradeAnchorRef}
-              />
+              <HelpyJiChat surface="pricing" intersectionAnchorRef={helpyjiUpgradeAnchorRef} />
             </>
           ) : null}
-
-          {hasPaidAccess ? <PlanUpgradeSection /> : null}
 
           {hasAiAccess && hasPaidAccess && <ExtraCreditsSection />}
         </>

@@ -18,7 +18,7 @@ type AiGateResult = {
   hasAiAccess: boolean;
   tierName: string;
 
-  /** True when the user is on a Basic plan within their 3-day trial window. */
+  /** Legacy: always false with single Pro plan. */
   isBasicTrial: boolean;
 
   /** True during the 24h welcome trial (no paid subscription). */
@@ -100,7 +100,7 @@ export function useAiGate(): AiGateResult {
     ? usage.voiceMinutesUsed
     : trialVoiceSecondsUsed / 60;
 
-  const isBasicTrial = tier === "basic" && isTrialPeriod;
+  const isBasicTrial = false;
   const hasAiAccess = paidAi || inWelcomeTrialFlow;
 
   const canDoVoiceSession = paidAi
@@ -110,7 +110,7 @@ export function useAiGate(): AiGateResult {
   const voiceMinuteStatus = paidAi
     ? `${voiceMinutesRemaining}/${voiceMinutesLimit} min`
     : inWelcomeTrialFlow
-      ? `${formatWelcomeVoiceTimeLeft(freeTrialVoiceSecondsRemaining)} • 24h trial`
+      ? `${formatWelcomeVoiceTimeLeft(freeTrialVoiceSecondsRemaining)} • 1-day trial`
       : "Upgrade to Pro for voice dictation";
 
   return {

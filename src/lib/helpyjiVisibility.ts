@@ -1,17 +1,17 @@
 import type { SubscriptionTier } from "@/lib/subscriptionTiers";
 
 /**
- * My Plan / `surface: "upgrade"` (and similar): hide HelpyJi for Pro and Pro Max so
- * the widget targets Basic → higher tiers and non-subscribers. Not used on `/pricing`.
+ * My Plan / `surface: "upgrade"`: show HelpyJi only when the user has no active paid access
+ * (subscribers use PrepBrain in-app). Not used on `/pricing`.
  */
 export function isHelpyJiEligibleForTier(
-  tier: SubscriptionTier | null | undefined,
+  _tier: SubscriptionTier | null | undefined,
+  hasPaidAccess: boolean,
 ): boolean {
-  if (tier === "pro" || tier === "pro_max") return false;
-  return true;
+  return !hasPaidAccess;
 }
 
-/** Pricing page: any signed-in user may use HelpyJi (compare tiers, Basic→Pro, Pro→Pro Max). */
+/** Pricing page: any signed-in user may use HelpyJi. */
 export function isHelpyJiEligibleForPricingPage(
   user: { id: string } | null | undefined,
 ): boolean {

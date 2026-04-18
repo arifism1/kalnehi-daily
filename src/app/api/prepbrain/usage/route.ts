@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
 
 import {
+  isFreeTrialWindowActive,
+} from "@/lib/freeTrial";
+import {
   buildPrepbrainUsagePayload,
+  effectivePrepbrainTokensUsed,
+  MONTHLY_AI_TOKEN_CAP,
+  prepbrainCalendarMonthKey,
+  resolveAiUsagePhase,
   type PrepBrainTokenRow,
 } from "@/lib/prepbrainTokens";
-import { parseSubscriptionTier } from "@/lib/subscriptionTiers";
+import { parseBonusLedger, totalActiveBonus } from "@/lib/bonusCreditsLedger";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 import { USER_ERROR } from "@/lib/userFacingErrors";
@@ -29,7 +36,7 @@ function isCurrentlyPaid(
 }
 
 /**
- * GET /api/prepbrain/usage — current month PrepBrain token usage (Pro / Pro Max).
+ * GET /api/prepbrain/usage — token usage for welcome trial, paid trial, or monthly Pro.
  */
 export async function GET() {
   const supabase = await createSupabaseServerClient();
@@ -54,7 +61,7 @@ export async function GET() {
   const { data: profile, error } = await admin
     .from("user_profiles")
     .select(
-      "subscription_status, subscription_end_date, subscription_tier, ai_tokens_used, ai_tokens_month",
+      "subscription_status, subscription_end_date, ai_tokens_used, ai_tokens_month, welcome_ai_tokens_used, paid_trial_ai_tokens_used, bonus_ai_tokens_ledger, trial_started_at",
     )
     .eq("user_id", user.id)
     .maybeSingle();
@@ -69,7 +76,7 @@ export async function GET() {
 
   if (!profile) {
     return NextResponse.json(
-      { ok: false, error: "PrepBrain usage is available on Pro or Pro Max." },
+      { ok: false, error: "No profile found." },
       { status: 403 },
     );
   }
@@ -78,28 +85,54 @@ export async function GET() {
     profile.subscription_status ?? null,
     profile.subscription_end_date ?? null,
   );
-  const tier = parseSubscriptionTier(profile.subscription_tier ?? undefined);
-  if (!paid || (tier !== "pro" && tier !== "pro_max")) {
+  const trialStarted =
+    typeof profile.trial_started_at === "string" ? profile.trial_started_at : null;
+  const welcomeTrialActive =
+    Boolean(trialStarted) && !paid && isFreeTrialWindowActive(trialStarted);
+
+  const phase = resolveAiUsagePhase({
+    hasPaidSubscriptionAccess: paid,
+    subscriptionStatus: profile.subscription_status ?? null,
+    welcomeTrialActive,
+  });
+
+  if (phase === "none") {
     return NextResponse.json(
-      { ok: false, error: "PrepBrain usage is available on Pro or Pro Max." },
+      { ok: false, error: "PrepBrain usage is available during your free trial or with Pro." },
       { status: 403 },
     );
   }
 
-  const row: PrepBrainTokenRow = {
+  const calMonth = prepbrainCalendarMonthKey();
+  const tokenRow: PrepBrainTokenRow = {
     ai_tokens_used: profile.ai_tokens_used,
     ai_tokens_month: profile.ai_tokens_month,
+    welcome_ai_tokens_used: profile.welcome_ai_tokens_used,
+    paid_trial_ai_tokens_used: profile.paid_trial_ai_tokens_used,
   };
 
+  const usage = buildPrepbrainUsagePayload(phase, tokenRow, calMonth);
+  const now = new Date();
+  let monthlyDisplay = usage;
+  if (phase === "monthly") {
+    const baseUsed = effectivePrepbrainTokensUsed(tokenRow, calMonth);
+    const bonusRem = totalActiveBonus(
+      parseBonusLedger(profile.bonus_ai_tokens_ledger),
+      now,
+    );
+    monthlyDisplay = {
+      ...usage,
+      limit: MONTHLY_AI_TOKEN_CAP + bonusRem,
+      used: baseUsed,
+    };
+  }
+
   return NextResponse.json(
-    { ok: true, usage: buildPrepbrainUsagePayload(tier, row) },
+    { ok: true, usage: monthlyDisplay, phase },
     {
       headers: {
-        // Browser caches usage for 30s; serves stale up to 60s while revalidating.
-        // Keeps the usage bar snappy without a DB hit on every page open.
         "Cache-Control": "private, max-age=30, stale-while-revalidate=60",
       },
     },
   );
 }
-

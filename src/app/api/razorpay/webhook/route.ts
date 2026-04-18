@@ -3,6 +3,11 @@ import crypto from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
+import {
+  extendActiveBonusPoolsBy30Days,
+  parseBonusLedger,
+  totalActiveBonus,
+} from "@/lib/bonusCreditsLedger";
 import { autopayMonthsFromNotes } from "@/lib/autopayMonths";
 import { RAZORPAY_PAYMENT_OR_SUB_ID_RE } from "@/lib/razorpayIds";
 import { firstOfCurrentMonthDateString } from "@/lib/subscriptionUsage";
@@ -114,7 +119,7 @@ function buildUpdateFromSubscription(payload: WebhookEnvelope): ProfileUpdate | 
   const start = currentStart ? new Date(currentStart * 1000) : now;
   const end = currentEnd ? new Date(currentEnd * 1000) : new Date(now);
   if (!currentEnd) {
-    if (plan === "trial") end.setDate(end.getDate() + 3);
+    if (plan === "trial") end.setDate(end.getDate() + 2);
     else end.setMonth(end.getMonth() + 1);
   }
 
@@ -242,6 +247,7 @@ export async function POST(request: Request) {
       effectivePatch.photo_scans_used_this_month = 0;
       effectivePatch.voice_minutes_used_this_month = 0;
       effectivePatch.usage_reset_date = firstOfCurrentMonthDateString();
+      effectivePatch.paid_trial_ai_tokens_used = 0;
     }
 
     let updated = false;
@@ -251,6 +257,37 @@ export async function POST(request: Request) {
     if (!updated && userIdFromNotes) {
       updated = await applyByUserId(supabase, userIdFromNotes, effectivePatch);
     }
+
+    const chargeUid = userIdFromNotes;
+    if (chargeUid && updated) {
+      const { data: bonusRow } = await supabase
+        .from("user_profiles")
+        .select("bonus_voice_minutes_ledger, bonus_ai_tokens_ledger")
+        .eq("user_id", chargeUid)
+        .maybeSingle();
+      if (bonusRow) {
+        const now = new Date();
+        const vLed = extendActiveBonusPoolsBy30Days(
+          parseBonusLedger(bonusRow.bonus_voice_minutes_ledger),
+          now,
+        );
+        const aLed = extendActiveBonusPoolsBy30Days(
+          parseBonusLedger(bonusRow.bonus_ai_tokens_ledger),
+          now,
+        );
+        await supabase
+          .from("user_profiles")
+          .update({
+            bonus_voice_minutes_ledger: vLed,
+            bonus_voice_minutes: totalActiveBonus(vLed, now),
+            bonus_ai_tokens_ledger: aLed,
+            bonus_ai_tokens: totalActiveBonus(aLed, now),
+            updated_at: now.toISOString(),
+          })
+          .eq("user_id", chargeUid);
+      }
+    }
+
     return okResponse({ updated });
   }
 

@@ -60,7 +60,7 @@ const PAGE_SEO: Record<
   },
   pricing: {
     path: "/pricing",
-    title: `Pricing — Pro & Pro Max | ${SITE_NAME}`,
+    title: `Pricing — Pro | ${SITE_NAME}`,
     description:
       `Simple plans for students who want PrepBrain AI, advanced tracking, and premium execution tools. See ${SITE_NAME} pricing for JEE, NEET, and Boards.`,
   },

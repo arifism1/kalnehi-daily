@@ -117,8 +117,8 @@ export function usePrepBrainAI() {
   const atTokenLimit =
     usage != null && usage.limit > 0 && usage.used >= usage.limit;
 
-  const tokenLimitMessage = atTokenLimit
-    ? prepbrainLimitReachedMessage(usage.tier)
+  const tokenLimitMessage = atTokenLimit && usage
+    ? prepbrainLimitReachedMessage(usage.phase)
     : null;
 
   return {

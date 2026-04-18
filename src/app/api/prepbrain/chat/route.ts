@@ -20,7 +20,12 @@ import {
   redisToolGet,
   redisToolSet,
 } from "@/lib/prepbrainRedisCache";
-import { parseSubscriptionTier } from "@/lib/subscriptionTiers";
+import {
+  consumeFromBonusLedger,
+  parseBonusLedger,
+  totalActiveBonus,
+} from "@/lib/bonusCreditsLedger";
+import { isFreeTrialWindowActive } from "@/lib/freeTrial";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 import { resolvePrepbrainGroqModels } from "@/lib/groqPrepbrainModel";
@@ -29,8 +34,11 @@ import { USER_ERROR } from "@/lib/userFacingErrors";
 import {
   buildPrepbrainUsagePayload,
   effectivePrepbrainTokensUsed,
+  getAiTokenBudgetForPhase,
+  MONTHLY_AI_TOKEN_CAP,
   prepbrainCalendarMonthKey,
   prepbrainLimitReachedMessage,
+  resolveAiUsagePhase,
   type PrepBrainTokenRow,
 } from "@/lib/prepbrainTokens";
 
@@ -383,7 +391,7 @@ export async function POST(request: Request) {
   const { data: profile, error: profileErr } = await admin
     .from("user_profiles")
     .select(
-      "subscription_status, subscription_end_date, subscription_tier, ai_tokens_used, ai_tokens_month, primary_exam, target_exam, cuet_domain_subjects, upsc_optional_subjects",
+      "subscription_status, subscription_end_date, subscription_tier, ai_tokens_used, ai_tokens_month, welcome_ai_tokens_used, paid_trial_ai_tokens_used, bonus_ai_tokens_ledger, trial_started_at, primary_exam, target_exam, cuet_domain_subjects, upsc_optional_subjects",
     )
     .eq("user_id", user.id)
     .maybeSingle();
@@ -398,7 +406,7 @@ export async function POST(request: Request) {
 
   if (!profile) {
     return NextResponse.json(
-      { ok: false, error: "PrepBrain AI requires an active Pro or Pro Max plan." },
+      { ok: false, error: "PrepBrain AI requires a Kalnehi account." },
       { status: 403 },
     );
   }
@@ -407,30 +415,77 @@ export async function POST(request: Request) {
     profile.subscription_status ?? null,
     profile.subscription_end_date ?? null,
   );
-  const tier = parseSubscriptionTier(profile.subscription_tier ?? undefined);
-  if (!paid || (tier !== "pro" && tier !== "pro_max")) {
+  const trialStarted =
+    typeof profile.trial_started_at === "string" ? profile.trial_started_at : null;
+  const welcomeTrialActive =
+    Boolean(trialStarted) && !paid && isFreeTrialWindowActive(trialStarted);
+
+  const phase = resolveAiUsagePhase({
+    hasPaidSubscriptionAccess: paid,
+    subscriptionStatus: profile.subscription_status ?? null,
+    welcomeTrialActive,
+  });
+
+  if (phase === "none") {
     return NextResponse.json(
-      { ok: false, error: "PrepBrain AI requires an active Pro or Pro Max plan." },
+      {
+        ok: false,
+        error:
+          "PrepBrain AI is available during your 1-day free trial and with an active Pro subscription.",
+      },
       { status: 403 },
     );
   }
 
   const monthKey = prepbrainCalendarMonthKey();
+  const now = new Date();
   const tokenRow: PrepBrainTokenRow = {
     ai_tokens_used: profile.ai_tokens_used,
     ai_tokens_month: profile.ai_tokens_month,
+    welcome_ai_tokens_used: profile.welcome_ai_tokens_used,
+    paid_trial_ai_tokens_used: profile.paid_trial_ai_tokens_used,
   };
-  const effectiveUsed = effectivePrepbrainTokensUsed(tokenRow, monthKey);
-  if (effectiveUsed >= 2_000_000) {
-    const usagePayload = buildPrepbrainUsagePayload(tier, tokenRow, monthKey);
-    return NextResponse.json(
-      {
-        ok: false,
-        error: prepbrainLimitReachedMessage(),
-        usage: usagePayload,
-      },
-      { status: 403 },
+
+  if (phase === "welcome") {
+    const { used, limit } = getAiTokenBudgetForPhase("welcome", tokenRow, monthKey);
+    if (used >= limit) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: prepbrainLimitReachedMessage("welcome"),
+          usage: buildPrepbrainUsagePayload("welcome", tokenRow, monthKey),
+        },
+        { status: 403 },
+      );
+    }
+  } else if (phase === "paid_trial") {
+    const { used, limit } = getAiTokenBudgetForPhase("paid_trial", tokenRow, monthKey);
+    if (used >= limit) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: prepbrainLimitReachedMessage("paid_trial"),
+          usage: buildPrepbrainUsagePayload("paid_trial", tokenRow, monthKey),
+        },
+        { status: 403 },
+      );
+    }
+  } else {
+    const baseUsed = effectivePrepbrainTokensUsed(tokenRow, monthKey);
+    const bonusRem = totalActiveBonus(
+      parseBonusLedger(profile.bonus_ai_tokens_ledger),
+      now,
     );
+    if (baseUsed >= MONTHLY_AI_TOKEN_CAP && bonusRem <= 0) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: prepbrainLimitReachedMessage("monthly"),
+          usage: buildPrepbrainUsagePayload("monthly", tokenRow, monthKey),
+        },
+        { status: 403 },
+      );
+    }
   }
 
   const remainMs = await prepbrainCooldownRemainMs(admin, user.id);
@@ -458,7 +513,7 @@ export async function POST(request: Request) {
       intent,
       tools_used: [],
       cache_sources: {},
-      usage: buildPrepbrainUsagePayload(tier, tokenRow, monthKey),
+      usage: buildPrepbrainUsagePayload(phase, tokenRow, monthKey),
     });
   }
 
@@ -598,27 +653,62 @@ export async function POST(request: Request) {
   );
 
   const delta = Math.max(0, Math.floor(groqTotalTokens));
-  const nextUsed = effectiveUsed + delta;
-  const { error: tokenPersistErr } = await admin
-    .from("user_profiles")
-    .update({
-      ai_tokens_used: nextUsed,
-      ai_tokens_month: monthKey,
-    })
-    .eq("user_id", user.id);
 
-  if (tokenPersistErr) {
-    console.error("[prepbrain/chat] token persist failed", tokenPersistErr);
+  if (phase === "welcome") {
+    const wu = typeof profile.welcome_ai_tokens_used === "number" ? profile.welcome_ai_tokens_used : 0;
+    const nextW = wu + delta;
+    const { error: tokenPersistErr } = await admin
+      .from("user_profiles")
+      .update({
+        welcome_ai_tokens_used: nextW,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", user.id);
+    if (tokenPersistErr) console.error("[prepbrain/chat] token persist failed", tokenPersistErr);
+    tokenRow.welcome_ai_tokens_used = nextW;
+  } else if (phase === "paid_trial") {
+    const pu =
+      typeof profile.paid_trial_ai_tokens_used === "number"
+        ? profile.paid_trial_ai_tokens_used
+        : 0;
+    const nextP = pu + delta;
+    const { error: tokenPersistErr } = await admin
+      .from("user_profiles")
+      .update({
+        paid_trial_ai_tokens_used: nextP,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", user.id);
+    if (tokenPersistErr) console.error("[prepbrain/chat] token persist failed", tokenPersistErr);
+    tokenRow.paid_trial_ai_tokens_used = nextP;
+  } else {
+    const baseUsed = effectivePrepbrainTokensUsed(tokenRow, monthKey);
+    let remain = delta;
+    const roomBase = Math.max(0, MONTHLY_AI_TOKEN_CAP - baseUsed);
+    const toBase = Math.min(remain, roomBase);
+    const nextBase = baseUsed + toBase;
+    remain -= toBase;
+    let bonusLed = parseBonusLedger(profile.bonus_ai_tokens_ledger);
+    if (remain > 0) {
+      const { ledger } = consumeFromBonusLedger(bonusLed, remain, now);
+      bonusLed = ledger;
+    }
+    const { error: tokenPersistErr } = await admin
+      .from("user_profiles")
+      .update({
+        ai_tokens_used: nextBase,
+        ai_tokens_month: monthKey,
+        bonus_ai_tokens_ledger: bonusLed,
+        bonus_ai_tokens: totalActiveBonus(bonusLed, now),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", user.id);
+    if (tokenPersistErr) console.error("[prepbrain/chat] token persist failed", tokenPersistErr);
+    tokenRow.ai_tokens_used = nextBase;
+    tokenRow.ai_tokens_month = monthKey;
   }
 
-  const usageAfter = buildPrepbrainUsagePayload(
-    tier,
-    {
-      ai_tokens_used: nextUsed,
-      ai_tokens_month: monthKey,
-    },
-    monthKey,
-  );
+  const usageAfter = buildPrepbrainUsagePayload(phase, tokenRow, monthKey);
 
   return NextResponse.json({
     ok: true,
