@@ -1,5 +1,3 @@
-import Groq from "groq-sdk";
-import type { ChatCompletionMessageParam } from "groq-sdk/resources/chat/completions";
 import { NextResponse } from "next/server";
 
 import { HELPYJI_SYSTEM_PROMPT, type HelpyJiSurface } from "@/lib/helpyjiPrompts";
@@ -17,14 +15,21 @@ import {
 import { parseSubscriptionTier, type SubscriptionTier } from "@/lib/subscriptionTiers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { resolveHelpyjiGroqModels } from "@/lib/groqHelpyjiModel";
+import { callChatCompletion, type AiChatMessage } from "@/lib/aiChatClient";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
+import {
+  effectivePrepbrainTokensUsed,
+  prepbrainCalendarMonthKey,
+  prepbrainLimitReachedMessage,
+  type PrepBrainTokenRow,
+} from "@/lib/prepbrainTokens";
 
 export const runtime = "nodejs";
 
 const MAX_BODY_BYTES = 120_000;
 const MAX_CHAT_MESSAGES = 16;
 const MAX_MESSAGE_CHARS = 4_000;
-const MAX_COMPLETION_TOKENS = 150;
+const MAX_COMPLETION_TOKENS = 700;
 const MAX_DB_CONTENT_CHARS = 32_000;
 
 type ChatRole = "user" | "assistant";
@@ -203,7 +208,7 @@ export async function POST(request: Request) {
 
   const { data: profile, error: profileErr } = await admin
     .from("user_profiles")
-    .select("subscription_status, subscription_end_date, subscription_tier")
+    .select("subscription_status, subscription_end_date, subscription_tier, ai_tokens_used, ai_tokens_month")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -213,6 +218,21 @@ export async function POST(request: Request) {
       { ok: false, error: "Could not load your account. Try again." },
       { status: 500 },
     );
+  }
+
+  // Shared 2M monthly token budget check (PrepBrain + HelpyJi combined).
+  if (profile) {
+    const monthKey = prepbrainCalendarMonthKey();
+    const tokenRow: PrepBrainTokenRow = {
+      ai_tokens_used: profile.ai_tokens_used,
+      ai_tokens_month: profile.ai_tokens_month,
+    };
+    if (effectivePrepbrainTokensUsed(tokenRow, monthKey) >= 2_000_000) {
+      return NextResponse.json(
+        { ok: false, error: prepbrainLimitReachedMessage() },
+        { status: 403 },
+      );
+    }
   }
 
   const paid = profile
@@ -342,57 +362,41 @@ ${contextBlock}`;
     );
   }
 
-  const apiKey = process.env.GROQ_API_KEY?.trim();
-  if (!apiKey) {
-    return NextResponse.json(
-      { ok: false, error: "HelpyJi is temporarily unavailable. Try again later." },
-      { status: 503 },
-    );
-  }
-
-  const groqMessages: ChatCompletionMessageParam[] = [
+  const aiMessages: AiChatMessage[] = [
     { role: "system", content: systemContent },
-    ...messages.map((m) =>
-      m.role === "user"
-        ? ({ role: "user", content: m.content } as const)
-        : ({ role: "assistant", content: m.content } as const),
-    ),
+    ...messages.map((m) => ({ role: m.role, content: m.content } as AiChatMessage)),
   ];
 
-  const models = resolveHelpyjiGroqModels(request);
-  const groq = new Groq({ apiKey });
+  const candidates = resolveHelpyjiGroqModels(request);
   let assistantText = "";
-  let groqModelUsed = "";
-  let lastErr: unknown;
+  let aiModelUsed = "";
+  let groqTotalTokens = 0;
 
-  for (const model of models) {
-    try {
-      const completion = await groq.chat.completions.create({
-        model,
-        temperature: 0.55,
-        max_tokens: MAX_COMPLETION_TOKENS,
-        messages: groqMessages,
-      });
-      const raw = completion.choices[0]?.message?.content;
-      assistantText = typeof raw === "string" ? raw.trim() : "";
-      if (assistantText) {
-        groqModelUsed = model;
-        break;
-      }
-    } catch (e) {
-      lastErr = e;
-    }
-  }
-
-  if (!assistantText) {
-    console.error("[helpyji/chat] Groq error", lastErr);
+  try {
+    const result = await callChatCompletion(candidates, aiMessages, {
+      temperature: 0.55,
+      max_tokens: MAX_COMPLETION_TOKENS,
+    });
+    assistantText = result.text;
+    aiModelUsed = result.modelUsed;
+    groqTotalTokens = result.totalTokens;
+  } catch (e) {
+    console.error("[helpyji/chat] AI error", e);
     return NextResponse.json(
       { ok: false, error: "Could not get a reply. Try again." },
       { status: 502 },
     );
   }
 
-  console.log("[helpyji/chat] groq_model=", groqModelUsed);
+  if (!assistantText) {
+    console.error("[helpyji/chat] AI returned empty content");
+    return NextResponse.json(
+      { ok: false, error: "Could not get a reply. Try again." },
+      { status: 502 },
+    );
+  }
+
+  console.log("[helpyji/chat] model=%s total_tokens=%d", aiModelUsed, groqTotalTokens);
 
   const { error: insertAssistantErr } = await admin.from("helpyji_conversations").insert({
     user_id: user.id,
@@ -421,12 +425,29 @@ ${contextBlock}`;
     console.error("[helpyji/chat] usage write failed", usageWriteErr);
   }
 
+  // Persist shared token usage increment for this user.
+  if (profile && groqTotalTokens > 0) {
+    const monthKey = prepbrainCalendarMonthKey();
+    const tokenRow: PrepBrainTokenRow = {
+      ai_tokens_used: profile.ai_tokens_used,
+      ai_tokens_month: profile.ai_tokens_month,
+    };
+    const prevUsed = effectivePrepbrainTokensUsed(tokenRow, monthKey);
+    const { error: tokenErr } = await admin
+      .from("user_profiles")
+      .update({ ai_tokens_used: prevUsed + groqTotalTokens, ai_tokens_month: monthKey })
+      .eq("user_id", user.id);
+    if (tokenErr) {
+      console.error("[helpyji/chat] token persist failed", tokenErr);
+    }
+  }
+
   const remaining = Math.max(0, dailyLimit - nextCount);
   return NextResponse.json({
     ok: true,
     message: assistantText,
     limit: dailyLimit,
     remaining,
-    groq_model: groqModelUsed,
+    groq_model: aiModelUsed,
   });
 }

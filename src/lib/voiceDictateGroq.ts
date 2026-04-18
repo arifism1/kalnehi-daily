@@ -1,7 +1,7 @@
 import Groq from "groq-sdk";
 import type { ChatCompletionMessageParam } from "groq-sdk/resources/chat/completions";
 
-import { getGroqModelCandidates } from "@/lib/groqClient";
+import { GROQ_DEFAULT_PARSING_ID } from "@/lib/groqClient";
 import {
   VOICE_DICTATE_REPAIR_SYSTEM_PROMPT,
   VOICE_DICTATE_SYSTEM_PROMPT,
@@ -174,7 +174,8 @@ async function groqChat(
 ): Promise<string> {
   const groq = new Groq({ apiKey });
   let lastErr: unknown;
-  for (const model of getGroqModelCandidates("parsing")) {
+  // Voice parsing is strictly locked to 8B — no 70B failover allowed.
+  for (const model of [GROQ_DEFAULT_PARSING_ID]) {
     try {
       const completion = await groq.chat.completions.create({
         model,

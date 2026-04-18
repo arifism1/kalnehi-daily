@@ -881,6 +881,8 @@ export type Database = {
       }
       user_profiles: {
         Row: {
+          ai_tokens_month: string | null
+          ai_tokens_used: number
           attempts: Json | null
           bonus_photo_scans: number
           bonus_photo_scans_ledger: Json
@@ -922,6 +924,8 @@ export type Database = {
           voice_minutes_used_this_month: number
         }
         Insert: {
+          ai_tokens_month?: string | null
+          ai_tokens_used?: number
           attempts?: Json | null
           bonus_photo_scans?: number
           bonus_photo_scans_ledger?: Json
@@ -963,6 +967,8 @@ export type Database = {
           voice_minutes_used_this_month?: number
         }
         Update: {
+          ai_tokens_month?: string | null
+          ai_tokens_used?: number
           attempts?: Json | null
           bonus_photo_scans?: number
           bonus_photo_scans_ledger?: Json

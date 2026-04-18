@@ -21,7 +21,8 @@ export type PrepbrainPrefetchedProfile = {
   upsc_optional_subjects?: unknown;
 };
 
-type MarksIntelligenceRow = {
+/** Raw rows from `prepbrain_marks_intelligence` RPC — used for Markdown serialization. */
+export type MarksIntelligenceRow = {
   subject: string;
   chapter: string;
   marks_2023: number;
@@ -156,7 +157,7 @@ export async function getTodayPlan(admin: AdminClient, userId: string) {
   const today = new Date().toISOString().slice(0, 10);
   const { data, error } = await admin
     .from("tasks")
-    .select("status, estimated_minutes, estimated_time_minutes, marks_weight")
+    .select("status, name, estimated_minutes, estimated_time_minutes, marks_weight")
     .eq("user_id", userId)
     .eq("assigned_date", today)
     .limit(300);
@@ -169,12 +170,23 @@ export async function getTodayPlan(admin: AdminClient, userId: string) {
     (sum, r) => sum + Math.max(0, r.estimated_minutes ?? r.estimated_time_minutes ?? 0),
     0,
   );
+  const task_items = rows.map((r) => {
+    const est = Math.max(0, r.estimated_minutes ?? r.estimated_time_minutes ?? 0);
+    const name = r.name?.trim() || "Task";
+    return {
+      status: r.status,
+      name,
+      marks_weight: r.marks_weight,
+      estimated_minutes: est,
+    };
+  });
   return {
     date: today,
     tasks_total: total,
     tasks_completed: completed,
     completion_percent,
     planned_minutes,
+    task_items,
   };
 }
 
@@ -334,20 +346,12 @@ export async function getMarksIntelligence(
   );
   if (error || !Array.isArray(data) || data.length === 0) return null;
 
-  const lines = (data as MarksIntelligenceRow[]).map((r) => {
-    const recent = r.marks_2025 || r.marks_2024 || r.marks_2023 || 0;
-    const yearLabel = r.marks_2025 > 0 ? "'25" : r.marks_2024 > 0 ? "'24" : "'23";
-    const prior: string[] = [];
-    if (r.marks_2023 > 0 && r.marks_2023 !== recent) prior.push(`${r.marks_2023}M'23`);
-    if (r.marks_2024 > 0 && r.marks_2024 !== recent) prior.push(`${r.marks_2024}M'24`);
-    const priorStr = prior.length ? ` (also ${prior.join(", ")})` : "";
-    return `${r.subject} \u203a ${r.chapter}: ${recent}M${yearLabel}${priorStr}, ${r.completion_pct}% done`;
-  });
+  const marks_rows = data as MarksIntelligenceRow[];
 
   return {
     exam: examLabel,
     note: "approx marks from past-year catalog; not official",
-    top_chapters_by_opportunity: lines,
+    marks_rows,
   };
 }
 
