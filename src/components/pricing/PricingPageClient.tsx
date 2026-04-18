@@ -329,7 +329,7 @@ export function PricingPageClient() {
     if (hasPaidAccess) {
       const trialHint =
         subscriptionStatus === "trial"
-          ? " During your 2-day paid trial you have 15 voice minutes and 500k PrepBrain tokens. After the first successful charge you get 60 voice minutes and 2M tokens per month."
+          ? " During your 2-day paid trial you have 15 voice minutes and 5,00,000 (5 lakh) PrepBrain tokens. After the first successful charge you get 60 voice minutes and 2,000,000 (2 million) tokens per month."
           : "";
       return (
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 backdrop-blur-sm dark:border-emerald-800 dark:bg-emerald-950/30">
@@ -411,10 +411,20 @@ export function PricingPageClient() {
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-kal-text-secondary">
             <span className="font-semibold text-kal-text">Step 1 — 1-day free trial:</span> 5 voice
             minutes + 300,000 PrepBrain AI tokens.{" "}
-            <span className="font-semibold text-kal-text">Step 2 — 2-day paid trial (₹19):</span> 15
-            voice minutes + 500,000 tokens (separate pool; does not carry to monthly).{" "}
-            <span className="font-semibold text-kal-text">Step 3 — ₹299/month:</span> 60 voice minutes
-            + 2M tokens per month, AutoPay for the duration you choose — cancel anytime.
+            <span className="font-semibold text-kal-text">
+              Step 2 — 2-day paid trial ({pro.trialPriceDisplay}):
+            </span>{" "}
+            15 voice minutes + 500,000 tokens.{" "}
+            <span className="font-semibold text-kal-text">
+              Step 3 — {pro.monthlyPriceDisplay}/month:
+            </span>{" "}
+            60 voice minutes
+            + 2,000,000 (2 million) tokens per month, AutoPay for the duration you choose — cancel
+            anytime.
+          </p>
+          <p className="mx-auto mt-2 max-w-2xl text-sm leading-relaxed text-kal-text-secondary">
+            After your free day, you can keep using Kalnehi with a 2-day paid trial for{" "}
+            {pro.trialPriceDisplay}. When that trial ends, subscribe to the monthly plan to continue.
           </p>
           <div className="kal-glass-panel mx-auto mt-6 max-w-xl rounded-2xl border-2 border-kal-accent/40 px-4 py-4 shadow-[0_16px_40px_-24px_rgba(255,122,0,0.25)] sm:px-5">
             <p className="text-sm font-semibold text-kal-text">New here? Take the feature tour first.</p>
@@ -463,15 +473,17 @@ export function PricingPageClient() {
             <ol className="mt-4 space-y-2 rounded-xl border border-kal-accent/30 bg-kal-accent/5 px-3 py-3 text-left text-xs leading-relaxed text-kal-text-secondary">
               <li>
                 <span className="font-semibold text-kal-text">1.</span> Free: 1 day · 5 min voice ·
-                300k AI tokens
+                3,00,000 (3 lakh) AI tokens
               </li>
               <li>
-                <span className="font-semibold text-kal-text">2.</span> Paid trial: 2 days · ₹19 · 15
-                min voice · 500k tokens
+                <span className="font-semibold text-kal-text">2.</span> Paid trial: 2 days ·{" "}
+                {pro.trialPriceDisplay} · 15 min voice · 5,00,000 (5 lakh) tokens — keeps access after
+                your free day.
               </li>
               <li>
                 <span className="font-semibold text-kal-text">3.</span> Then {pro.monthlyPriceDisplay}
-                /mo · 60 min voice · 2M tokens (resets monthly)
+                /mo · 60 min voice · 2,000,000 (2 million) tokens (resets monthly) — continue after the
+                paid trial.
               </li>
             </ol>
 
