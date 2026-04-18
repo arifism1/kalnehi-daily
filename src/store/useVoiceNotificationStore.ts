@@ -1,12 +1,12 @@
 import { create } from "zustand";
 
-type VoiceReminderState = {
+type VoiceNotificationState = {
   open: boolean;
   openSheet: () => void;
   closeSheet: () => void;
 };
 
-export const useVoiceReminderStore = create<VoiceReminderState>((set) => ({
+export const useVoiceNotificationStore = create<VoiceNotificationState>((set) => ({
   open: false,
   openSheet: () => set({ open: true }),
   closeSheet: () => set({ open: false }),

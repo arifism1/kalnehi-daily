@@ -684,6 +684,57 @@ export type Database = {
         }
         Relationships: []
       }
+      user_scheduled_notifications: {
+        Row: {
+          body: string
+          chapter: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          last_fired_at: string | null
+          next_fire_at: string
+          repeat_type: string
+          subject: string | null
+          tag: string
+          title: string
+          updated_at: string
+          user_id: string
+          user_timezone: string
+        }
+        Insert: {
+          body: string
+          chapter?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_fired_at?: string | null
+          next_fire_at: string
+          repeat_type: string
+          subject?: string | null
+          tag?: string
+          title: string
+          updated_at?: string
+          user_id: string
+          user_timezone?: string
+        }
+        Update: {
+          body?: string
+          chapter?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_fired_at?: string | null
+          next_fire_at?: string
+          repeat_type?: string
+          subject?: string | null
+          tag?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          user_timezone?: string
+        }
+        Relationships: []
+      }
       user_engine_notification_prefs: {
         Row: {
           prefs: Json

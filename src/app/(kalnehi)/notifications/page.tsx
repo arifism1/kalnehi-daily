@@ -82,6 +82,14 @@ export default function NotificationsPage() {
           Alerts
         </p>
         <h1 className="kal-feature-title mt-1">Notifications</h1>
+        <p className="mt-2 text-sm text-kal-muted">
+          <Link
+            href="/notification"
+            className="font-medium text-kal-accent-dark underline-offset-2 hover:underline"
+          >
+            Schedule smart push notifications
+          </Link>
+        </p>
       </header>
 
       {error ? (
