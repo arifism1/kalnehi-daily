@@ -4,16 +4,17 @@ import { format, parseISO } from "date-fns";
 import clsx from "clsx";
 import { BellPlus, Loader2, Trash2, X } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 
 
 import {
   createScheduledNotification,
   deleteScheduledNotification,
   listScheduledNotifications,
-  SCHEDULED_NOTIFICATION_TAGS,
   type ScheduledNotificationRow,
 } from "@/actions/scheduledNotifications";
+import { SCHEDULED_NOTIFICATION_TAGS } from "@/lib/scheduledNotifications/tags";
 import { SmartNotificationSetupBanner } from "@/components/smart-notification/SmartNotificationSetupBanner";
 import { useAiGate } from "@/hooks/useAiGate";
 import { surfaceOptionalString } from "@/lib/userFacingErrors";
@@ -52,6 +53,11 @@ export function NotificationHubPageClient({
   const [repeatType, setRepeatType] = useState<"once" | "daily" | "weekly">("once");
   const [subject, setSubject] = useState("");
   const [chapter, setChapter] = useState("");
+  const [portalReady, setPortalReady] = useState(false);
+
+  useEffect(() => {
+    setPortalReady(true);
+  }, []);
 
   const refresh = useCallback(async () => {
     if (!userId) return;
@@ -207,139 +213,170 @@ export function NotificationHubPageClient({
         </button>
       </div>
 
-      {addOpen ? (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-[var(--kal-overlay)] sm:items-center sm:p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Add notification"
-        >
-          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-2xl border border-kal-border bg-[var(--kal-bg-elevated)] p-4 shadow-xl sm:rounded-2xl sm:p-5">
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <h2 className="text-lg font-semibold text-kal-text">Add notification</h2>
+      {portalReady && addOpen
+        ? createPortal(
+            <div
+              className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center sm:p-4"
+              style={{ backgroundColor: "var(--kal-overlay)" }}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Add notification"
+            >
               <button
                 type="button"
+                aria-label="Close dialog"
+                className="absolute inset-0 cursor-default"
                 onClick={closeAdd}
-                className="flex h-10 w-10 items-center justify-center rounded-xl border border-kal-border"
-                aria-label="Close"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="mb-4 flex gap-1 rounded-xl border border-kal-border p-1">
-              <button
-                type="button"
-                onClick={() => setAddTab("text")}
+              />
+              <div
                 className={clsx(
-                  "flex-1 rounded-lg py-2 text-sm font-semibold transition",
-                  addTab === "text"
-                    ? "bg-kal-accent text-white"
-                    : "text-kal-muted hover:bg-kal-card-muted",
+                  "relative z-[101] flex max-h-[min(90vh,720px)] w-full max-w-md flex-col overflow-hidden rounded-t-2xl border border-kal-border-strong shadow-2xl sm:rounded-2xl",
+                  "bg-[rgba(255,252,248,0.98)] backdrop-blur-xl dark:border-white/12 dark:bg-[rgba(25,18,10,0.98)]",
                 )}
               >
-                Type
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setAddTab("voice");
-                  closeAdd();
-                  openVoiceSheet();
-                }}
-                className={clsx(
-                  "flex-1 rounded-lg py-2 text-sm font-semibold transition",
-                  addTab === "voice"
-                    ? "bg-kal-accent text-white"
-                    : "text-kal-muted hover:bg-kal-card-muted",
-                )}
-              >
-                Voice
-              </button>
-            </div>
+                <div className="flex shrink-0 items-center justify-between gap-2 border-b border-kal-border/80 px-4 py-3 sm:px-5 sm:py-4">
+                  <h2 className="text-lg font-semibold text-kal-text">Add notification</h2>
+                  <button
+                    type="button"
+                    onClick={closeAdd}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-kal-border bg-white/60 text-kal-text transition hover:bg-white dark:bg-white/5 dark:hover:bg-white/10"
+                    aria-label="Close"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
 
-            {addTab === "text" ? (
-              <div className="space-y-3 text-sm">
-                {formError ? (
-                  <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-red-900 dark:border-red-900/40 dark:bg-red-950/40 dark:text-red-100">
-                    {surfaceOptionalString(formError, "Something went wrong.")}
-                  </p>
-                ) : null}
-                <label className="block text-kal-muted">
-                  Title
-                  <input
-                    className="mt-1 w-full rounded-lg border border-kal-border bg-white/80 px-3 py-2 text-kal-text dark:bg-zinc-900/60"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                  />
-                </label>
-                <label className="block text-kal-muted">
-                  When
-                  <input
-                    type="datetime-local"
-                    className="mt-1 w-full rounded-lg border border-kal-border bg-white/80 px-3 py-2 text-kal-text dark:bg-zinc-900/60"
-                    value={notifyLocal}
-                    onChange={(e) => setNotifyLocal(e.target.value)}
-                  />
-                </label>
-                <label className="block text-kal-muted">
-                  Tag
-                  <select
-                    className="mt-1 w-full rounded-lg border border-kal-border bg-white/80 px-3 py-2 text-kal-text dark:bg-zinc-900/60"
-                    value={tag}
-                    onChange={(e) => setTag(e.target.value)}
-                  >
-                    {SCHEDULED_NOTIFICATION_TAGS.map((x) => (
-                      <option key={x} value={x}>
-                        {x}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="block text-kal-muted">
-                  Repeat
-                  <select
-                    className="mt-1 w-full rounded-lg border border-kal-border bg-white/80 px-3 py-2 text-kal-text dark:bg-zinc-900/60"
-                    value={repeatType}
-                    onChange={(e) =>
-                      setRepeatType(e.target.value as "once" | "daily" | "weekly")
-                    }
-                  >
-                    <option value="once">Once</option>
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                  </select>
-                </label>
-                <label className="block text-kal-muted">
-                  Subject (optional)
-                  <input
-                    className="mt-1 w-full rounded-lg border border-kal-border bg-white/80 px-3 py-2 text-kal-text dark:bg-zinc-900/60"
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                  />
-                </label>
-                <label className="block text-kal-muted">
-                  Chapter (optional)
-                  <input
-                    className="mt-1 w-full rounded-lg border border-kal-border bg-white/80 px-3 py-2 text-kal-text dark:bg-zinc-900/60"
-                    value={chapter}
-                    onChange={(e) => setChapter(e.target.value)}
-                  />
-                </label>
-                <button
-                  type="button"
-                  disabled={saving}
-                  onClick={() => void submitText()}
-                  className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-kal-accent py-3 text-sm font-bold text-white disabled:opacity-60"
-                >
-                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                  Save notification
-                </button>
+                <div className="shrink-0 px-4 pt-3 sm:px-5">
+                  <div className="flex gap-1 rounded-xl border border-kal-border bg-kal-card-muted/50 p-1 dark:bg-zinc-900/40">
+                    <button
+                      type="button"
+                      onClick={() => setAddTab("text")}
+                      className={clsx(
+                        "min-h-[40px] flex-1 rounded-lg px-2 py-2 text-sm font-semibold transition",
+                        addTab === "text"
+                          ? "bg-kal-accent text-white shadow-sm"
+                          : "text-kal-muted hover:bg-white/70 dark:hover:bg-zinc-800/80",
+                      )}
+                    >
+                      Type
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAddTab("voice");
+                        closeAdd();
+                        openVoiceSheet();
+                      }}
+                      className={clsx(
+                        "min-h-[40px] flex-1 rounded-lg px-2 py-2 text-sm font-semibold transition",
+                        addTab === "voice"
+                          ? "bg-kal-accent text-white shadow-sm"
+                          : "text-kal-muted hover:bg-white/70 dark:hover:bg-zinc-800/80",
+                      )}
+                    >
+                      Voice
+                    </button>
+                  </div>
+                </div>
+
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-5 sm:pb-5 sm:pt-4">
+                  {addTab === "text" ? (
+                    <div className="flex flex-col gap-4 text-sm">
+                      {formError ? (
+                        <p className="shrink-0 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-red-900 dark:border-red-900/40 dark:bg-red-950/40 dark:text-red-100">
+                          {surfaceOptionalString(formError, "Something went wrong.")}
+                        </p>
+                      ) : null}
+                      <label className="flex flex-col gap-1.5">
+                        <span className="text-xs font-medium text-kal-text-secondary">
+                          Title
+                        </span>
+                        <input
+                          className="min-h-[44px] w-full rounded-lg border border-kal-border bg-[var(--kal-input-bg)] px-3 py-2 text-kal-text shadow-sm dark:bg-zinc-900/80"
+                          value={title}
+                          onChange={(e) => setTitle(e.target.value)}
+                        />
+                      </label>
+                      <label className="flex flex-col gap-1.5">
+                        <span className="text-xs font-medium text-kal-text-secondary">
+                          When
+                        </span>
+                        <input
+                          type="datetime-local"
+                          className="min-h-[44px] w-full rounded-lg border border-kal-border bg-[var(--kal-input-bg)] px-3 py-2 text-kal-text shadow-sm dark:bg-zinc-900/80"
+                          value={notifyLocal}
+                          onChange={(e) => setNotifyLocal(e.target.value)}
+                        />
+                      </label>
+                      <label className="flex flex-col gap-1.5">
+                        <span className="text-xs font-medium text-kal-text-secondary">
+                          Tag
+                        </span>
+                        <select
+                          className="min-h-[44px] w-full rounded-lg border border-kal-border bg-[var(--kal-input-bg)] px-3 py-2 text-kal-text shadow-sm dark:bg-zinc-900/80"
+                          value={tag}
+                          onChange={(e) => setTag(e.target.value)}
+                        >
+                          {SCHEDULED_NOTIFICATION_TAGS.map((x) => (
+                            <option key={x} value={x}>
+                              {x}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="flex flex-col gap-1.5">
+                        <span className="text-xs font-medium text-kal-text-secondary">
+                          Repeat
+                        </span>
+                        <select
+                          className="min-h-[44px] w-full rounded-lg border border-kal-border bg-[var(--kal-input-bg)] px-3 py-2 text-kal-text shadow-sm dark:bg-zinc-900/80"
+                          value={repeatType}
+                          onChange={(e) =>
+                            setRepeatType(e.target.value as "once" | "daily" | "weekly")
+                          }
+                        >
+                          <option value="once">Once</option>
+                          <option value="daily">Daily</option>
+                          <option value="weekly">Weekly</option>
+                        </select>
+                      </label>
+                      <label className="flex flex-col gap-1.5">
+                        <span className="text-xs font-medium text-kal-text-secondary">
+                          Subject (optional)
+                        </span>
+                        <input
+                          className="min-h-[44px] w-full rounded-lg border border-kal-border bg-[var(--kal-input-bg)] px-3 py-2 text-kal-text shadow-sm dark:bg-zinc-900/80"
+                          value={subject}
+                          onChange={(e) => setSubject(e.target.value)}
+                        />
+                      </label>
+                      <label className="flex flex-col gap-1.5">
+                        <span className="text-xs font-medium text-kal-text-secondary">
+                          Chapter (optional)
+                        </span>
+                        <input
+                          className="min-h-[44px] w-full rounded-lg border border-kal-border bg-[var(--kal-input-bg)] px-3 py-2 text-kal-text shadow-sm dark:bg-zinc-900/80"
+                          value={chapter}
+                          onChange={(e) => setChapter(e.target.value)}
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        disabled={saving}
+                        onClick={() => void submitText()}
+                        className="mt-1 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-kal-accent py-3 text-sm font-bold text-white shadow-sm transition hover:bg-kal-accent-hover disabled:opacity-60"
+                      >
+                        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                        Save notification
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
               </div>
-            ) : null}
-          </div>
-        </div>
-      ) : null}
+            </div>,
+            document.body,
+          )
+        : null}
 
       <section className="space-y-3">
         <h2 className="text-base font-semibold text-kal-text">Upcoming</h2>

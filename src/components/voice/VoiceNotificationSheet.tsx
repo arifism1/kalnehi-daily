@@ -6,13 +6,10 @@ import { Loader2, Mic, MicOff, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
-import {
-  createScheduledNotification,
-  SCHEDULED_NOTIFICATION_TAGS,
-} from "@/actions/scheduledNotifications";
+import { createScheduledNotification } from "@/actions/scheduledNotifications";
+import { SCHEDULED_NOTIFICATION_TAGS } from "@/lib/scheduledNotifications/tags";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
 import { useAiGate } from "@/hooks/useAiGate";
-import { surfaceOptionalString } from "@/lib/userFacingErrors";
 import { useVoiceNotificationStore } from "@/store/useVoiceNotificationStore";
 
 type Phase = "idle" | "parsing" | "preview" | "saving";
@@ -35,6 +32,21 @@ function isoToDatetimeLocalValue(iso: string): string {
   } catch {
     return "";
   }
+}
+
+/** API returns trusted, user-facing strings — do not run through surfaceErrorForUi (it hides them). */
+function voiceParseErrorMessage(
+  raw: unknown,
+  status: number,
+): string {
+  if (typeof raw === "string" && raw.trim()) {
+    const t = raw.trim();
+    return t.length > 320 ? `${t.slice(0, 317)}…` : t;
+  }
+  if (status === 401) return "Please sign in again.";
+  if (status === 429) return "Voice minute limit reached. Add this notification by typing (unlimited).";
+  if (status >= 500) return "The server had a problem. Try again in a moment.";
+  return "Could not parse notification. Try again or use typing.";
 }
 
 export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
@@ -115,7 +127,9 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
           nowIso: new Date().toISOString(),
         }),
       });
-      const data = (await res.json()) as {
+
+      const rawText = await res.text();
+      let data: {
         ok?: boolean;
         error?: string;
         title?: string;
@@ -125,14 +139,24 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
         tag?: string;
         repeat_type?: string;
         groq_model?: string;
-      };
+      } = {};
+
+      if (rawText.trim()) {
+        try {
+          data = JSON.parse(rawText) as typeof data;
+        } catch {
+          setError(
+            res.ok
+              ? "Invalid response from server. Try again."
+              : `Request failed (${res.status}). Try again or use typing.`,
+          );
+          setPhase("idle");
+          return;
+        }
+      }
+
       if (!res.ok || !data.ok) {
-        setError(
-          surfaceOptionalString(
-            typeof data.error === "string" ? data.error : null,
-            "Could not parse notification.",
-          ),
-        );
+        setError(voiceParseErrorMessage(data.error, res.status));
         setPhase("idle");
         return;
       }
@@ -161,7 +185,9 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
         setPhase("idle");
       }
     } catch {
-      setError("Network error. Check connection and try again.");
+      setError(
+        "Could not reach the server. Check your connection, then try again or add the notification by typing.",
+      );
       setPhase("idle");
     }
   }, [canDoVoiceSession, refetchAiGate]);

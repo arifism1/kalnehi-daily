@@ -3,18 +3,13 @@
 import { revalidatePath } from "next/cache";
 
 import { formatSupabaseError } from "@/lib/supabase";
+import {
+  SCHEDULED_NOTIFICATION_TAGS,
+  type ScheduledNotificationTag,
+} from "@/lib/scheduledNotifications/tags";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { USER_ERROR } from "@/lib/userFacingErrors";
 import type { TablesInsert, TablesUpdate } from "@/types/supabase";
-
-export const SCHEDULED_NOTIFICATION_TAGS = [
-  "Revision",
-  "Study",
-  "Break",
-  "Admin",
-  "Other",
-] as const;
-export type ScheduledNotificationTag = (typeof SCHEDULED_NOTIFICATION_TAGS)[number];
 
 const REPEAT_TYPES = new Set(["once", "daily", "weekly"]);
 
