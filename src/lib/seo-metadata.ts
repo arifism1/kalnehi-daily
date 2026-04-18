@@ -10,7 +10,11 @@ export const SITE_BRAND = "Kalnehi Daily";
 
 export const SITE_TAGLINE = "Win Daily — Smart Exam Prep";
 
-export const OG_IMAGE_PATH = "/icon-512x512.png";
+/** Served by [`src/app/opengraph-image.tsx`](src/app/opengraph-image.tsx) (1200×630). */
+export const OG_IMAGE_PATH = "/opengraph-image";
+
+export const OG_IMAGE_WIDTH = 1200;
+export const OG_IMAGE_HEIGHT = 630;
 
 export type KalnehiPageSeoKey =
   | "home"
@@ -38,7 +42,7 @@ const PAGE_SEO: Record<
     path: "/",
     title: `${SITE_NAME} — Smart Exam Prep planner & study app`,
     description:
-      `Daily Plan with live task tracking, Syllabus Mastery Tracker, Brain Yoga focus resets, push Notifications, PrepBrain AI coaching (Basic paid trial includes a sample of voice minutes), habits, and progress analytics — ${SITE_NAME} is the complete execution planner for Smart Exam Prep. Install the PWA and study anywhere.`,
+      `${SITE_BRAND} helps you execute every day for JEE, NEET, and Boards: daily plan, syllabus tracker, push notifications, Brain Yoga, habits, PrepBrain AI, and progress insights. Install the PWA and study anywhere.`,
   },
   prepbrain: {
     path: "/prepbrain",
@@ -68,7 +72,7 @@ const PAGE_SEO: Record<
     path: "/about",
     title: `About | ${SITE_NAME}`,
     description:
-      `${SITE_NAME} helps Indian exam aspirants ship consistent study days — planner, syllabus, habits, and optional AI coaching in one installable web app.`,
+      `${SITE_NAME} helps Indian exam aspirants build consistent study days — planner, syllabus, habits, and optional AI coaching in one installable web app.`,
   },
   meditation: {
     path: "/meditation",
@@ -108,7 +112,7 @@ const PAGE_SEO: Record<
   },
   habits: {
     path: "/habits",
-    title: `Habits — streaks & routines for exam prep | ${SITE_NAME}`,
+    title: `Habit Maker — streaks & routines for exam prep | ${SITE_NAME}`,
     description:
       `Build non-negotiable study habits with streaks and reminders. ${SITE_NAME} reinforces the routines that compound into rank-level preparation.`,
   },
@@ -155,8 +159,8 @@ export function kalnehiPageMetadata(key: KalnehiPageSeoKey): Metadata {
       images: [
         {
           url: ogImage,
-          width: 512,
-          height: 512,
+          width: OG_IMAGE_WIDTH,
+          height: OG_IMAGE_HEIGHT,
           alt: `${SITE_NAME} — ${SITE_TAGLINE}`,
         },
       ],
@@ -215,8 +219,8 @@ export function defaultSiteMetadata(): Pick<
       images: [
         {
           url: ogImage,
-          width: 512,
-          height: 512,
+          width: OG_IMAGE_WIDTH,
+          height: OG_IMAGE_HEIGHT,
           alt: `${SITE_NAME} — ${SITE_TAGLINE}`,
         },
       ],

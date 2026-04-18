@@ -13,6 +13,7 @@ import {
 import { FCM_STALE_TOKEN_USER_MESSAGE } from "@/lib/fcm/messages";
 import { SITE_NAME } from "@/lib/seo-metadata";
 import { useAuthStore } from "@/store/useAuthStore";
+import { surfaceErrorForUi, surfaceOptionalString } from "@/lib/userFacingErrors";
 
 import { SettingsSheetSwitch } from "@/components/settings/SettingsSheetSwitch";
 import { useNotificationsToast } from "@/components/settings/notificationsToastContext";
@@ -353,7 +354,7 @@ export function PushNotificationsSettings({
           setMessage(STALE_TOKEN_MESSAGE);
           return;
         }
-        setMessage(data.error ?? "Test failed.");
+        setMessage(surfaceOptionalString(data.error, "Test failed."));
         return;
       }
       if (data.ok && (data.sent ?? 0) > 0) {
@@ -365,7 +366,10 @@ export function PushNotificationsSettings({
         setMessage(STALE_TOKEN_MESSAGE);
         return;
       }
-      setMessage(data.error ?? data.message ?? "Nothing sent.");
+      {
+        const raw = data.error ?? data.message;
+        setMessage(raw ? surfaceErrorForUi(raw) : "Nothing sent.");
+      }
     } catch {
       setMessage("Test request failed.");
     } finally {

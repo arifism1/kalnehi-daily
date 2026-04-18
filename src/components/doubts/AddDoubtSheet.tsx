@@ -13,6 +13,7 @@ import { DoubtSubjectSelect } from "@/components/doubts/DoubtSubjectSelect";
 import { LocalPhotoPrivacyNote } from "@/components/ui/LocalPhotoPrivacyNote";
 import { isLikelyImageFile } from "@/lib/purposeStorage";
 import { useDoubtStore } from "@/store/useDoubtStore";
+import { surfaceErrorForUi } from "@/lib/userFacingErrors";
 
 type PendingPhoto = { file: File; url: string };
 
@@ -121,9 +122,7 @@ export function AddDoubtSheet({
       reset();
       onClose();
     } catch (e) {
-      setError(
-        e instanceof Error ? e.message : "Could not save doubt. Try again.",
-      );
+      setError(surfaceErrorForUi(e));
     } finally {
       setSaving(false);
     }

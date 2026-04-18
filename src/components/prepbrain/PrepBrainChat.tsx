@@ -215,7 +215,7 @@ export function PrepBrainChat() {
             <div className="flex justify-start">
               <div className="flex items-center gap-2 rounded-2xl rounded-bl-md border border-kal-border/50 bg-kal-card/85 px-3.5 py-3 text-[15px] leading-snug text-kal-text-secondary backdrop-blur-md sm:text-base">
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-                PrepBrain AI is going through your current prep status and forming a contextual response…
+                PrepBrain is preparing a reply from your latest prep data…
               </div>
             </div>
           )}

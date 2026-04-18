@@ -11,6 +11,7 @@ import {
 } from "react";
 
 import { useAuthStore } from "@/store/useAuthStore";
+import { surfaceOptionalString } from "@/lib/userFacingErrors";
 
 type Scope = "all" | "single";
 
@@ -82,11 +83,11 @@ export function AdminSendPushNotification() {
           recipientUsers?: number;
         };
         if (!res.ok) {
-          setError(data.error ?? "Request failed.");
+          setError(surfaceOptionalString(data.error, "Request failed."));
           return;
         }
         if (data.ok === false) {
-          setError(data.error ?? "Push could not be sent.");
+          setError(surfaceOptionalString(data.error, "Push could not be sent."));
           return;
         }
         if (data.ok) {

@@ -23,6 +23,7 @@ import {
   type ExamCatalogRow,
 } from "@/lib/examsCatalog";
 import { ALL_FEATURE_IDS } from "@/lib/dashboardFeatures";
+import { toUserFacingMessage } from "@/lib/userFacingErrors";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import {
   isUpscCseMainsExam,
@@ -154,7 +155,7 @@ export function OnboardingWizard() {
       setLocalCompleted(true);
       setStep(4);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong.");
+      setError(toUserFacingMessage(e));
     } finally {
       setBusy(false);
     }

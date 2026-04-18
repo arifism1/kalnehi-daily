@@ -20,6 +20,7 @@ import {
 } from "@/lib/helpyjiPrompts";
 import { usePrepBrainContextSnapshot } from "@/hooks/usePrepBrainContextSnapshot";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { surfaceOptionalString } from "@/lib/userFacingErrors";
 import { useAuthStore } from "@/store/useAuthStore";
 
 const STORAGE_PREFIX = "helpyji_thread_v3";
@@ -242,7 +243,9 @@ export function HelpyJiChat({
       if (res.status === 429 && data.retryAfterSec != null) {
         setMessages((m) => m.slice(0, -1));
         setInput(text);
-        setError(data.error ?? "Please wait a moment.");
+        setError(
+          surfaceOptionalString(data.error, "Please wait a moment."),
+        );
         setClientCooldownUntil(Date.now() + data.retryAfterSec * 1000);
         return;
       }
@@ -251,7 +254,12 @@ export function HelpyJiChat({
       if (!res.ok || !data.ok || typeof reply !== "string" || !reply) {
         setMessages((m) => m.slice(0, -1));
         setInput(text);
-        setError(data.error ?? "Could not reach HelpyJi. Try again.");
+        setError(
+          surfaceOptionalString(
+            data.error,
+            "Could not reach HelpyJi. Try again.",
+          ),
+        );
         if (typeof data.remaining === "number") setRemaining(data.remaining);
         return;
       }

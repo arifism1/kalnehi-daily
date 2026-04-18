@@ -49,12 +49,28 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!userId) return;
-    void Promise.all([
-      refreshTasksFromSupabase(userId),
-      refreshExecutionLogFromServer(),
-      refreshStudySessionsFromServer(),
-      hydrateUserPlannerTextFromServer(userId),
-    ]).catch(() => {});
+    let cancelled = false;
+    void refreshTasksFromSupabase(userId).catch(() => {});
+    const runSecondary = () => {
+      if (cancelled) return;
+      void Promise.all([
+        refreshExecutionLogFromServer(),
+        refreshStudySessionsFromServer(),
+        hydrateUserPlannerTextFromServer(userId),
+      ]).catch(() => {});
+    };
+    if (typeof requestIdleCallback !== "undefined") {
+      const id = requestIdleCallback(runSecondary, { timeout: 3000 });
+      return () => {
+        cancelled = true;
+        cancelIdleCallback(id);
+      };
+    }
+    const t = window.setTimeout(runSecondary, 0);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
   }, [userId, examLabel]);
 
   useEffect(() => {

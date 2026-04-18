@@ -23,6 +23,7 @@ import { findOverlappingTaskPairs } from "@/lib/dailyPlanOverlap";
 import { slotFromStartEnd, timeDbToInput } from "@/lib/dailyPlanTime";
 import { suggestSyllabusIdFromTitle } from "@/lib/suggestDailyTaskSyllabus";
 import { formatIstSlotRange12h } from "@/lib/voiceIst";
+import { surfaceErrorForUi } from "@/lib/userFacingErrors";
 
 // ─── Source badge ────────────────────────────────────────────────────────────
 
@@ -136,7 +137,7 @@ function DailyTaskEditSheet({
     });
     setSaving(false);
     if (!res.ok) {
-      setError(res.error);
+      setError(surfaceErrorForUi(res.error));
       return;
     }
     onSaved({
@@ -486,7 +487,7 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
           putDailyPlanTasksCache(planDate, res.planId, res.tasks);
           if (!silent) setError(null);
         } else if (!silent && !cached) {
-          setError(res.error);
+          setError(surfaceErrorForUi(res.error));
         }
       } catch {
         if (!silent && !cached) setError("Could not load plan.");
@@ -528,7 +529,7 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
         setTasks((prev) =>
           prev.map((x) => (x.id === t.id ? { ...x, status: t.status } : x)),
         );
-        setError(res.error);
+        setError(surfaceErrorForUi(res.error));
       } else {
         dispatchDailyPlanSynced();
       }
@@ -551,7 +552,7 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
           ? prev
           : [...prev, t].sort((a, b) => (a.created_at < b.created_at ? -1 : 1));
       });
-      setError(res.error);
+      setError(surfaceErrorForUi(res.error));
       return;
     }
 

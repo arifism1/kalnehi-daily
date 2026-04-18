@@ -36,6 +36,7 @@ import { parsePrevScoreEntries } from "@/lib/prevScoreEntries";
 import { KALNEHI_PROFILE_UPDATED_EVENT } from "@/lib/profileEvents";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { formatSupabaseError } from "@/lib/supabase";
+import { surfaceErrorForUi } from "@/lib/userFacingErrors";
 import { useAuthStore } from "@/store/useAuthStore";
 
 const Section = memo(function Section({
@@ -269,7 +270,7 @@ export function ProfileForm() {
           examName && isUpscCseMainsExam(examName) ? (upscOptionalSubject || null) : null,
       });
       if (!res.ok) {
-        setError(res.error);
+        setError(surfaceErrorForUi(res.error));
         return;
       }
       setSaved(true);

@@ -9,6 +9,7 @@ import {
   editCustomSyllabusItem,
   type EditCustomSyllabusPayload,
 } from "@/actions/syllabus";
+import { surfaceErrorForUi } from "@/lib/userFacingErrors";
 
 export type SyllabusCustomizeSheetMode =
   | {
@@ -147,7 +148,7 @@ export function SyllabusCustomizeSheet({
       await onSaved();
       onClose();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      setError(surfaceErrorForUi(e));
     } finally {
       setBusy(false);
     }

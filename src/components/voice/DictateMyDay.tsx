@@ -24,6 +24,7 @@ import { slotFromStartEnd } from "@/lib/dailyPlanTime";
 import type { VoiceDraftTask } from "@/lib/voiceDraftFromGroq";
 import { plannerDurationFromTimeInputs } from "@/lib/voicePlannerSync";
 import { useAuthStore } from "@/store/useAuthStore";
+import { surfaceErrorForUi } from "@/lib/userFacingErrors";
 
 type Phase = "idle" | "listening" | "processing" | "error";
 
@@ -163,7 +164,7 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
             setFallbackPanel({ text: cleaned, editMode: false });
             setError(null);
           } else {
-            setError(res.error);
+            setError(surfaceErrorForUi(res.error));
           }
           return;
         }
@@ -227,7 +228,7 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
         occurred_at: new Date().toISOString(),
       });
       if (!res.ok) {
-        setError(res.error);
+        setError(surfaceErrorForUi(res.error));
         return;
       }
       setFallbackPanel(null);
@@ -319,7 +320,7 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
           syllabus_master_id: r.syllabus_master_id ?? null,
         });
         if (!res.ok) {
-          setError(res.error);
+          setError(surfaceErrorForUi(res.error));
           return;
         }
       }
@@ -328,7 +329,7 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
       setPreviewRows([emptyPreviewRow()]);
       scrollDictateLive();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Save failed.");
+      setError(surfaceErrorForUi(e));
     } finally {
       setSavePhase("idle");
     }

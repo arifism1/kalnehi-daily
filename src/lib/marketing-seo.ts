@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
 
 import { absoluteUrl } from "@/lib/site";
-import { OG_IMAGE_PATH, SITE_NAME, SITE_TAGLINE } from "@/lib/seo-metadata";
+import {
+  OG_IMAGE_HEIGHT,
+  OG_IMAGE_PATH,
+  OG_IMAGE_WIDTH,
+  SITE_NAME,
+  SITE_TAGLINE,
+} from "@/lib/seo-metadata";
 
 /** `title` is the full document title (include brand if you want it in the tab). */
 export function marketingPageMetadata(input: {
@@ -26,8 +32,8 @@ export function marketingPageMetadata(input: {
       images: [
         {
           url: ogImage,
-          width: 512,
-          height: 512,
+          width: OG_IMAGE_WIDTH,
+          height: OG_IMAGE_HEIGHT,
           alt: `${SITE_NAME} — ${SITE_TAGLINE}`,
         },
       ],

@@ -55,7 +55,7 @@ export const DASHBOARD_FEATURES: DashboardFeature[] = [
   },
   {
     id: "daily-planner",
-    title: "Daily Planner",
+    title: "Daily Plan",
     icon: ListTodo,
     description: "Plan and execute today's study tasks in one place.",
   },

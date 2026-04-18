@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { formatSupabaseError } from "@/lib/supabase";
+import { USER_ERROR } from "@/lib/userFacingErrors";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Tables, TablesUpdate } from "@/types/supabase";
 
@@ -22,7 +23,7 @@ export async function listVoiceTimelineForDate(
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
-      return { ok: false, error: "Unauthorized.", entries: [] };
+      return { ok: false, error: USER_ERROR.session, entries: [] };
     }
     const { data, error } = await supabase
       .from("voice_timeline_entries")
@@ -54,7 +55,7 @@ export async function updateVoiceTimelineEntry(
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return { ok: false, error: "Unauthorized." };
+    if (!user) return { ok: false, error: USER_ERROR.session };
     const { error } = await supabase
       .from("voice_timeline_entries")
       .update({
@@ -80,7 +81,7 @@ export async function deleteVoiceTimelineEntry(
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return { ok: false, error: "Unauthorized." };
+    if (!user) return { ok: false, error: USER_ERROR.session };
     const { error } = await supabase
       .from("voice_timeline_entries")
       .delete()

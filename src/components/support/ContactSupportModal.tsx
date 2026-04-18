@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { CONTACT_SUPPORT_SUBJECTS } from "@/lib/contactSupport";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { formatSupabaseError } from "@/lib/supabase";
+import { surfaceOptionalString } from "@/lib/userFacingErrors";
 import { useAuthStore } from "@/store/useAuthStore";
 
 export type ContactSupportModalProps = {
@@ -126,7 +127,12 @@ export function ContactSupportModal({
         error?: string;
       };
       if (!res.ok || !data.ok) {
-        setError(data.error ?? "Something went wrong. Please try again.");
+        setError(
+          surfaceOptionalString(
+            data.error,
+            "Something went wrong. Please try again.",
+          ),
+        );
         return;
       }
       onSent();

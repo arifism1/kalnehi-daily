@@ -1,10 +1,18 @@
 "use client";
 
 import { Brain } from "lucide-react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 
-import { PrepBrainChat } from "@/components/prepbrain/PrepBrainChat";
 import { useAiGate } from "@/hooks/useAiGate";
+
+const PrepBrainChat = dynamic(
+  () =>
+    import("@/components/prepbrain/PrepBrainChat").then((m) => ({
+      default: m.PrepBrainChat,
+    })),
+  { ssr: false },
+);
 
 export function PrepBrainPageClient() {
   const { loading, hasAiAccess } = useAiGate();
@@ -34,7 +42,7 @@ export function PrepBrainPageClient() {
           href="/pricing"
           className="kal-btn-accent min-h-[44px] rounded-xl text-sm"
         >
-          View Plans
+          View plans & pricing
         </Link>
       </div>
     );

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useAiGate } from "@/hooks/useAiGate";
 
 const plannerCardShell =
-  "kal-glass-card group relative flex min-h-0 flex-row items-center gap-3 rounded-xl border-2 border-white/35 px-3 py-2.5 text-left sm:gap-3.5 sm:rounded-[1rem] sm:py-3 sm:pl-3.5 sm:pr-4 dark:border-white/15";
+  "kal-glass-card group relative flex min-h-0 flex-row items-center gap-3 overflow-hidden rounded-2xl border-2 border-white/35 px-3 py-2.5 text-left sm:gap-3.5 sm:py-3 sm:pl-3.5 sm:pr-4 dark:border-white/15";
 
 function PlannerCard({
   href,
@@ -15,6 +15,7 @@ function PlannerCard({
   title,
   subtitle,
   locked,
+  className,
 }: {
   href: string;
   emoji: string;
@@ -22,6 +23,7 @@ function PlannerCard({
   title: string;
   subtitle: string;
   locked: boolean;
+  className?: string;
 }) {
   const body = (
     <>
@@ -47,10 +49,14 @@ function PlannerCard({
     </>
   );
 
+  const shell = className
+    ? `${plannerCardShell} ${className}`
+    : plannerCardShell;
+
   if (locked) {
     return (
       <div
-        className={`${plannerCardShell} pr-12 opacity-[0.65] saturate-[0.85] sm:pr-14`}
+        className={`${shell} pr-12 opacity-[0.65] saturate-[0.85] sm:pr-14`}
       >
         <span className="absolute right-2 top-2 flex items-center gap-0.5 rounded-full border border-white/30 bg-white/70 px-1.5 py-0.5 text-[9px] font-semibold text-kal-text-secondary shadow-sm backdrop-blur-sm dark:border-white/12 dark:bg-zinc-900/70">
           <Lock className="h-2.5 w-2.5" />
@@ -64,7 +70,7 @@ function PlannerCard({
   return (
     <Link
       href={href}
-      className={`${plannerCardShell} transition-[border-color,background-color,box-shadow,transform] duration-200 will-change-transform hover:border-kal-accent/40 hover:bg-kal-accent-soft/40 hover:shadow-md active:scale-[0.99] dark:hover:bg-zinc-900/80`}
+      className={`${shell} transition-[border-color,background-color,box-shadow,transform] duration-200 will-change-transform hover:border-kal-accent/40 hover:bg-kal-accent-soft/40 hover:shadow-md active:scale-[0.99] dark:hover:bg-zinc-900/80`}
     >
       {body}
     </Link>
@@ -146,6 +152,7 @@ export function PlanMyDayPage() {
           title="Self type"
           subtitle="Type & edit your day's plan"
           locked={false}
+          className="sm:col-span-2"
         />
       </div>
 

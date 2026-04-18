@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Script from "next/script";
+import dynamic from "next/dynamic";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { CalendarClock, Check, Crown } from "lucide-react";
 
@@ -22,8 +23,8 @@ import {
 } from "@/lib/autopayMonths";
 import { formatWelcomeVoiceTimeLeft } from "@/lib/freeTrial";
 import { SITE_NAME } from "@/lib/seo-metadata";
+import { toUserFacingMessage } from "@/lib/userFacingErrors";
 import { TIERS } from "@/lib/subscriptionTiers";
-import { HelpyJiChat } from "@/components/helpyji/HelpyJiChat";
 import { isHelpyJiEligibleForPricingPage } from "@/lib/helpyjiVisibility";
 import type { PaymentErrorProof } from "@/lib/paymentSupportEmail";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -45,6 +46,14 @@ declare global {
     Razorpay?: RazorpayConstructor;
   }
 }
+
+const HelpyJiChat = dynamic(
+  () =>
+    import("@/components/helpyji/HelpyJiChat").then((m) => ({
+      default: m.HelpyJiChat,
+    })),
+  { ssr: false },
+);
 
 const AUTOPAY_PRESET_MONTHS = [1, 2, 3, 6, 12] as const;
 
@@ -286,7 +295,7 @@ export function PricingPageClient() {
       rzp.open();
     } catch (error) {
       setCheckoutError({
-        text: error instanceof Error ? error.message : "Checkout failed.",
+        text: toUserFacingMessage(error),
       });
     } finally {
       setBusy(false);

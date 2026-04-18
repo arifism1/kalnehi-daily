@@ -14,6 +14,7 @@ import { addToPlanButtonLabel } from "@/lib/dailyPlanUiDate";
 import { slotFromStartEnd } from "@/lib/dailyPlanTime";
 import type { VoiceDraftTask } from "@/lib/voiceDraftFromGroq";
 import { minutesBetweenHHMM } from "@/lib/voiceIst";
+import { surfaceErrorForUi } from "@/lib/userFacingErrors";
 
 type ParseResponse =
   | { ok: true; tasks: VoiceDraftTask[] }
@@ -128,7 +129,7 @@ export function DailyPlanTypedQuickAdd({ planDate, onAdded }: Props) {
             return [...kept, fallbackRow, emptyPreviewRow()];
           });
         } else {
-          setError(res.error);
+          setError(surfaceErrorForUi(res.error));
         }
         return;
       }
@@ -221,7 +222,7 @@ export function DailyPlanTypedQuickAdd({ planDate, onAdded }: Props) {
           syllabus_master_id: r.syllabus_master_id ?? null,
         });
         if (!res.ok) {
-          setError(res.error);
+          setError(surfaceErrorForUi(res.error));
           return;
         }
       }
@@ -230,7 +231,7 @@ export function DailyPlanTypedQuickAdd({ planDate, onAdded }: Props) {
       window.dispatchEvent(new Event("kalnehi-daily-plan-synced"));
       onAdded?.();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Save failed.");
+      setError(surfaceErrorForUi(e));
     } finally {
       setCommitting(false);
     }

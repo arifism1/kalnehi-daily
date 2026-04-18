@@ -3,6 +3,7 @@
 import clsx from "clsx";
 import { Bell, Menu } from "lucide-react";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -13,14 +14,22 @@ import {
   useState,
 } from "react";
 
-import { MainNavigationMenu } from "@/components/MainNavigationMenu";
+import { PwaInstallPromptDeferred } from "@/components/PwaInstallPromptDeferred";
 import { FreeTrialWelcomeBanner } from "@/components/subscription/FreeTrialWelcomeBanner";
-import { PwaInstallPrompt } from "@/components/PwaInstallPrompt";
 import { QuickNavBar } from "@/components/QuickNavBar";
 import { QuietSavedToast } from "@/components/QuietSavedToast";
 import { SyncStatusBanner } from "@/components/SyncStatusBanner";
 import { UndoToast } from "@/components/ui/UndoToast";
 import { TimerVisibilityBridge } from "@/components/task/TimerVisibilityBridge";
+
+const MainNavigationMenu = dynamic(
+  () =>
+    import("@/components/MainNavigationMenu").then((m) => ({
+      default: m.MainNavigationMenu,
+    })),
+  { ssr: false },
+);
+
 class QuietSavedToastBoundary extends Component<
   { children: ReactNode },
   { hasError: boolean }
@@ -62,7 +71,9 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
   const minimalChrome = MINIMAL_CHROME_PATHS.has(pathname);
 
   useEffect(() => {
-    console.log("[KalnehiChrome] mounted", { path: pathname });
+    if (process.env.NODE_ENV === "development") {
+      console.log("[KalnehiChrome] mounted", { path: pathname });
+    }
   }, [pathname]);
 
   return (
@@ -171,13 +182,15 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
-      <MainNavigationMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
+      {menuOpen ? (
+        <MainNavigationMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
+      ) : null}
       <UndoToast />
       <QuietSavedToastBoundary>
         <QuietSavedToast />
       </QuietSavedToastBoundary>
       <TimerVisibilityBridge />
-      <PwaInstallPrompt />
+      <PwaInstallPromptDeferred />
     </div>
   );
 }

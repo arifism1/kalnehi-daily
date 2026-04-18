@@ -14,6 +14,7 @@ import { getIstCalendarDateString } from "@/lib/customReminders/istClock";
 import { SettingsSheetSwitch } from "@/components/settings/SettingsSheetSwitch";
 import { useNotificationsToast } from "@/components/settings/notificationsToastContext";
 import { useAuthStore } from "@/store/useAuthStore";
+import { surfaceOptionalString } from "@/lib/userFacingErrors";
 
 type RepeatType = "daily" | "once";
 
@@ -75,7 +76,9 @@ export function CustomRemindersSettings({
       if (res.ok) {
         setReminders(data.reminders ?? []);
       } else {
-        setMessage(data.error ?? "Could not load reminders.");
+        setMessage(
+          surfaceOptionalString(data.error, "Could not load reminders."),
+        );
       }
     } catch {
       setMessage("Could not load reminders.");
@@ -144,7 +147,7 @@ export function CustomRemindersSettings({
         });
         const data = (await res.json()) as { error?: string };
         if (!res.ok) {
-          setMessage(data.error ?? "Could not update.");
+          setMessage(surfaceOptionalString(data.error, "Could not update."));
           return;
         }
         setMessage("Reminder updated.");
@@ -164,7 +167,7 @@ export function CustomRemindersSettings({
         });
         const data = (await res.json()) as { error?: string };
         if (!res.ok) {
-          setMessage(data.error ?? "Could not save.");
+          setMessage(surfaceOptionalString(data.error, "Could not save."));
           return;
         }
         setMessage("Reminder saved.");
@@ -192,7 +195,7 @@ export function CustomRemindersSettings({
         });
         if (!res.ok) {
           const data = (await res.json()) as { error?: string };
-          setMessage(data.error ?? "Delete failed.");
+          setMessage(surfaceOptionalString(data.error, "Delete failed."));
           return;
         }
         if (editingId === id) {
@@ -223,7 +226,7 @@ export function CustomRemindersSettings({
         });
         if (!res.ok) {
           const data = (await res.json()) as { error?: string };
-          setMessage(data.error ?? "Could not update.");
+          setMessage(surfaceOptionalString(data.error, "Could not update."));
           return;
         }
         await load();

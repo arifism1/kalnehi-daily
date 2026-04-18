@@ -72,6 +72,9 @@ const APP_PRIORITY_FEATURES: SitemapPath[] = [
   { path: "/pricing", changeFrequency: "weekly", priority: 0.8 },
   { path: "/my-plan", changeFrequency: "weekly", priority: 0.78 },
   { path: "/settings", changeFrequency: "monthly", priority: 0.75 },
+  { path: "/target-score-blueprint", changeFrequency: "weekly", priority: 0.76 },
+  { path: "/my-target", changeFrequency: "weekly", priority: 0.72 },
+  { path: "/saved-plans", changeFrequency: "weekly", priority: 0.72 },
 ];
 
 const APP_PLANNER_AND_STUDY: SitemapPath[] = [

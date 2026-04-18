@@ -74,8 +74,8 @@ export const FEATURE_LABELS: Record<FeatureKey, { name: string; upgradeHint: str
   meditation_consistency: { name: "Meditation Consistency", upgradeHint: "Subscribe to Pro for meditation consistency tracking." },
   doubts: { name: "Doubt Tracker", upgradeHint: "Subscribe to Pro for doubt tracking." },
   ai_photo_scan: {
-    name: "AI Voice Dictation",
-    upgradeHint: "Subscribe to Pro for monthly voice dictation.",
+    name: "Handwriting photo scans",
+    upgradeHint: "Subscribe to Pro for monthly handwriting photo scans.",
   },
   ai_voice: { name: "AI Voice Dictation", upgradeHint: "Subscribe to Pro for AI voice dictation." },
   prepbrain_ai: {
@@ -235,7 +235,7 @@ export type ExtraCreditPack = {
 export const EXTRA_CREDIT_PACKS: ExtraCreditPack[] = [
   {
     id: "photo_scans_10",
-    label: "10 Extra Photo Scans",
+    label: "+10 Extra Photo Scans",
     amount: 10,
     pricePaise: 9900,
     priceDisplay: "₹99",
@@ -243,7 +243,7 @@ export const EXTRA_CREDIT_PACKS: ExtraCreditPack[] = [
   },
   {
     id: "photo_scans_30",
-    label: "30 Extra Photo Scans",
+    label: "+30 Extra Photo Scans",
     amount: 30,
     pricePaise: 24900,
     priceDisplay: "₹249",
@@ -259,7 +259,7 @@ export const EXTRA_CREDIT_PACKS: ExtraCreditPack[] = [
   },
   {
     id: "ai_tokens_1m",
-    label: "+10,00,000 (One Million) PrepBrain AI tokens",
+    label: "+10 lakh PrepBrain AI tokens",
     amount: 1_000_000,
     pricePaise: 9900,
     priceDisplay: "₹99",

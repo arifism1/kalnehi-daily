@@ -50,6 +50,7 @@ import {
 import { MOTIVATION_VOICE_TAGS } from "@/lib/motivationTypes";
 import { flushMotivationOutbox } from "@/lib/motivationSync";
 import { useAuthStore } from "@/store/useAuthStore";
+import { surfaceErrorForUi } from "@/lib/userFacingErrors";
 
 type TabId = "letter" | "voice" | "vision" | "timeline";
 
@@ -287,7 +288,7 @@ export function PersonalMotivationPage() {
       );
       const res = await transcribeMotivationAudio(fd);
       if (res.ok) setVoiceTranscript(res.text);
-      else setNotice(res.error);
+      else setNotice(surfaceErrorForUi(res.error));
     } finally {
       setTranscribing(false);
     }

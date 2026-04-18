@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 import { ensureFreeTrialStarted } from "@/actions/subscription";
 import { SubscriptionPaywallInterstitial } from "@/components/subscription/SubscriptionPaywallInterstitial";
@@ -51,11 +51,6 @@ function isAuthPath(p: string) {
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  /** Avoid SSR vs first client paint mismatches from auth/subscription state. */
-  const [clientShellReady, setClientShellReady] = useState(false);
-  useEffect(() => {
-    setClientShellReady(true);
-  }, []);
 
   const initialized = useAuthStore((s) => s.initialized);
   const session = useAuthStore((s) => s.session);
@@ -189,14 +184,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         break;
     }
   }, [gateTarget, router]);
-
-  if (!clientShellReady) {
-    return (
-      <main className="flex min-h-0 min-h-dvh flex-1 flex-col">
-        <LoadingScreen />
-      </main>
-    );
-  }
 
   if (gateTarget === "error") {
     return (

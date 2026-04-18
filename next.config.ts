@@ -1,10 +1,13 @@
 import type { NextConfig } from "next";
+import bundleAnalyzer from "@next/bundle-analyzer";
 
 /**
- * Report-only CSP: tune using browser console / reporting endpoint before enforcing.
+ * App CSP (enforced + report-only duplicate for tuning in devtools).
+ * Still allows inline/eval for third-party scripts (GA, Razorpay, MediaPipe); tighten with
+ * nonces/hashes in a follow-up when feasible.
  * Covers Supabase, Firebase, Vercel Analytics, GA4, Razorpay checkout, MediaPipe CDNs.
  */
-const CONTENT_SECURITY_POLICY_REPORT_ONLY = [
+const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
   [
     "script-src",
@@ -57,6 +60,25 @@ const CONTENT_SECURITY_POLICY_REPORT_ONLY = [
   "upgrade-insecure-requests",
 ].join("; ");
 
+const marketingPublicCacheHeader = {
+  key: "Cache-Control",
+  value: "public, s-maxage=60, stale-while-revalidate=86400",
+};
+
+const marketingCacheSources = [
+  "/guides",
+  "/guides/:path*",
+  "/what-can-kalnehi-do",
+  "/best-study-practices",
+  "/brain-yoga",
+  "/jee-study-planner",
+  "/neet-study-planner",
+  "/neet-pg-study-planner",
+  "/boards-study-planner",
+  "/cuet-ug-study-planner",
+  "/upsc-study-planner",
+];
+
 const nextConfig: NextConfig = {
   transpilePackages: ["@mediapipe/tasks-vision"],
 
@@ -78,7 +100,13 @@ const nextConfig: NextConfig = {
   },
 
   async headers() {
+    const marketingCacheHeaders = marketingCacheSources.map((source) => ({
+      source,
+      headers: [marketingPublicCacheHeader],
+    }));
+
     return [
+      ...marketingCacheHeaders,
       {
         source: "/sw.js",
         headers: [
@@ -108,8 +136,12 @@ const nextConfig: NextConfig = {
               "camera=(self), microphone=(self), geolocation=(), interest-cohort=()",
           },
           {
+            key: "Content-Security-Policy",
+            value: CONTENT_SECURITY_POLICY,
+          },
+          {
             key: "Content-Security-Policy-Report-Only",
-            value: CONTENT_SECURITY_POLICY_REPORT_ONLY,
+            value: CONTENT_SECURITY_POLICY,
           },
         ],
       },
@@ -117,4 +149,8 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+});
+
+export default withBundleAnalyzer(nextConfig);
