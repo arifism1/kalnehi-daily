@@ -42,6 +42,13 @@ export function SettingsPageClient() {
           >
             My Plan
           </Link>
+          . To connect Google and email sign-in on one account, use{" "}
+          <Link
+            href="/profile#login-methods"
+            className="font-semibold text-kal-accent underline underline-offset-2"
+          >
+            Profile → Login methods
+          </Link>
           .
         </p>
       </div>

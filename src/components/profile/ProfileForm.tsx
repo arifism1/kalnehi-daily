@@ -17,6 +17,7 @@ import {
 import { upsertUserProfile } from "@/actions/profile";
 import { CuetDomainSubjectPick } from "@/components/profile/CuetDomainSubjectPick";
 import { GroupedExamSelect } from "@/components/profile/GroupedExamSelect";
+import { LoginMethodsSection } from "@/components/profile/LoginMethodsSection";
 import { UpscOptionalSubjectPick } from "@/components/profile/UpscOptionalSubjectPick";
 import { InstallPWA } from "@/components/InstallPWA";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -620,6 +621,15 @@ export function ProfileForm() {
           Save profile
         </button>
       </form>
+
+      <div id="login-methods" className="scroll-mt-24">
+        <Section
+          title="Login methods"
+          footer="Link Google or add a password so you always have another way to sign in to the same account."
+        >
+          <LoginMethodsSection />
+        </Section>
+      </div>
 
       <Section title="Account" footer="Session and sign-in for this device.">
         <Row className="items-center gap-3">
