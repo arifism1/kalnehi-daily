@@ -60,15 +60,6 @@ export async function POST(req: Request) {
 
   const voiceSecondsCharged = clampVoiceBillingDurationSeconds(body.durationSeconds);
 
-  const usage = await incrementVoiceMinuteUsage(voiceSecondsCharged / 60);
-  if (!usage.ok) {
-    const unauthorized = usage.error === "Please sign in.";
-    return NextResponse.json(
-      { ok: false, error: usage.error },
-      { status: unauthorized ? 401 : 429 },
-    );
-  }
-
   let rows: Awaited<
     ReturnType<typeof fetchDoubtVoiceTagSyllabusRows>
   >["rows"] = [];
@@ -111,6 +102,15 @@ export async function POST(req: Request) {
     validSubjects,
     validTopicLines,
   );
+
+  const usage = await incrementVoiceMinuteUsage(voiceSecondsCharged / 60);
+  if (!usage.ok) {
+    const unauthorized = usage.error === "Please sign in.";
+    return NextResponse.json(
+      { ok: false, error: usage.error },
+      { status: unauthorized ? 401 : 429 },
+    );
+  }
 
   if (!groq.ok) {
     return NextResponse.json({

@@ -43,6 +43,7 @@ import { useUndoStore } from "@/store/useUndoStore";
 import { AddDoubtSheet } from "@/components/doubts/AddDoubtSheet";
 import { DoubtSubjectSelect } from "@/components/doubts/DoubtSubjectSelect";
 import { DoubtTopicSelect } from "@/components/doubts/DoubtTopicSelect";
+import { VoiceMinuteLimitLink } from "@/components/subscription/LimitExceededLinks";
 import { VoiceDoubtPreviewSheet } from "@/components/doubts/VoiceDoubtPreviewSheet";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { LocalPhotoPrivacyNote } from "@/components/ui/LocalPhotoPrivacyNote";
@@ -192,6 +193,7 @@ export function DoubtTracker() {
   const [voiceLang, setVoiceLang] = useState("en-IN");
   const [voiceProcessing, setVoiceProcessing] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [voiceDoubtQuotaHit, setVoiceDoubtQuotaHit] = useState(false);
   const [voicePreviewOpen, setVoicePreviewOpen] = useState(false);
   const [voicePreview, setVoicePreview] = useState({
     title: "",
@@ -337,6 +339,7 @@ export function DoubtTracker() {
       }
       setVoiceProcessing(true);
       setVoiceError(null);
+      setVoiceDoubtQuotaHit(false);
       try {
         let prepTrim: Record<string, unknown> | undefined;
         try {
@@ -369,6 +372,7 @@ export function DoubtTracker() {
         };
 
         if (!parseRes.ok || !data.ok) {
+          setVoiceDoubtQuotaHit(parseRes.status === 429);
           setVoiceError(
             surfaceOptionalString(
               data.error,
@@ -433,6 +437,7 @@ export function DoubtTracker() {
     silenceMs: 3_500,
     onStart: () => {
       setVoiceError(null);
+      setVoiceDoubtQuotaHit(false);
       clearVoiceRecError();
     },
     onTranscript: ({ transcript, durationSeconds }) => {
@@ -570,12 +575,19 @@ export function DoubtTracker() {
             </select>
           </label>
           {voiceBanner ? (
-            <p
-              role="alert"
-              className="text-center text-[11px] text-orange-700 dark:text-orange-300/95 sm:text-right"
-            >
-              {voiceBanner}
-            </p>
+            <div className="text-center sm:text-right">
+              <p
+                role="alert"
+                className="text-[11px] text-orange-700 dark:text-orange-300/95"
+              >
+                {voiceBanner}
+              </p>
+              {voiceDoubtQuotaHit && !voiceRecError ? (
+                <div className="mt-1.5 text-[10px] text-kal-text [&_a]:text-kal-accent">
+                  <VoiceMinuteLimitLink />
+                </div>
+              ) : null}
+            </div>
           ) : voiceListening ? (
             <p className="text-center text-[11px] text-kal-muted sm:text-right">
               Listening… tap the mic again to stop (max 30s).

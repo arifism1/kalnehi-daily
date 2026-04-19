@@ -12,6 +12,7 @@ import {
   type DailyPlanPreviewRow,
 } from "@/components/planner/DailyPlanPreviewStaging";
 import { UnifiedDailyPlanList } from "@/components/planner/UnifiedDailyPlanList";
+import { VoiceMinuteLimitLink } from "@/components/subscription/LimitExceededLinks";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { usePlannerDateMidnightRollover } from "@/hooks/usePlannerDateMidnightRollover";
 import {
@@ -108,6 +109,7 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
   );
   const [lang, setLang] = useState("en-IN");
   const [error, setError] = useState<string | null>(null);
+  const [voiceQuotaExceeded, setVoiceQuotaExceeded] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [fallbackPanel, setFallbackPanel] = useState<{
     text: string;
@@ -150,6 +152,7 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
       lastVoiceDurationSecondsRef.current = durationSeconds;
       setIsProcessing(true);
       setError(null);
+      setVoiceQuotaExceeded(false);
       setVoiceQuotaNote(null);
       try {
         const parseRes = await fetch("/api/voice-parse-draft", {
@@ -172,6 +175,7 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
             return;
           }
           if (parseRes.status === 429) {
+            setVoiceQuotaExceeded(true);
             setError(
               surfaceErrorForUi(
                 typeof res.error === "string" ? res.error : "Voice quota exceeded.",
@@ -681,10 +685,18 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
         >
           <span className="font-semibold">Server: </span>
           {error}
+          {voiceQuotaExceeded ? (
+            <div className="mt-2 text-[var(--kal-danger-text)] [&_a]:text-kal-accent">
+              <VoiceMinuteLimitLink />
+            </div>
+          ) : null}
           <button
             type="button"
             className="ml-3 text-xs font-semibold underline"
-            onClick={() => setError(null)}
+            onClick={() => {
+              setVoiceQuotaExceeded(false);
+              setError(null);
+            }}
           >
             Dismiss
           </button>

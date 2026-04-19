@@ -19,15 +19,12 @@ import { resolveHelpyjiGroqModels } from "@/lib/groqHelpyjiModel";
 import { callChatCompletion, type AiChatMessage } from "@/lib/aiChatClient";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 import {
-  computePrepbrainTokenPersist,
-  hasPrepbrainTokenHeadroom,
-} from "@/lib/prepbrainTokenAccounting";
-import {
-  prepbrainCalendarMonthKey,
-  prepbrainLimitReachedMessage,
-  resolveAiUsagePhase,
-  type PrepBrainTokenRow,
-} from "@/lib/prepbrainTokens";
+  prepbrainAiTokenCancelReservation,
+  prepbrainAiTokenFinalize,
+  prepbrainAiTokenReserve,
+  PREPBRAIN_AI_TOKEN_RESERVE_ESTIMATE,
+} from "@/lib/prepbrainAiTokenRpc";
+import { prepbrainLimitReachedMessage, resolveAiUsagePhase } from "@/lib/prepbrainTokens";
 
 export const runtime = "nodejs";
 
@@ -243,39 +240,13 @@ export async function POST(request: Request) {
       })
     : "none";
 
-  const monthKey = prepbrainCalendarMonthKey();
-  const nowHelpy = new Date();
-  const tokenRow: PrepBrainTokenRow = profile
-    ? {
-        ai_tokens_used: profile.ai_tokens_used,
-        ai_tokens_month: profile.ai_tokens_month,
-        welcome_ai_tokens_used:
-          typeof profile.welcome_ai_tokens_used === "number"
-            ? profile.welcome_ai_tokens_used
-            : 0,
-        paid_trial_ai_tokens_used:
-          typeof profile.paid_trial_ai_tokens_used === "number"
-            ? profile.paid_trial_ai_tokens_used
-            : 0,
-      }
-    : {
-        ai_tokens_used: null,
-        ai_tokens_month: null,
-      };
-
-  if (
-    profile &&
-    phase !== "none" &&
-    !hasPrepbrainTokenHeadroom(
-      phase,
-      tokenRow,
-      monthKey,
-      profile.bonus_ai_tokens_ledger,
-      nowHelpy,
-    )
-  ) {
+  if (!profile || phase === "none") {
     return NextResponse.json(
-      { ok: false, error: prepbrainLimitReachedMessage(phase) },
+      {
+        ok: false,
+        error:
+          "HelpyJi is available during your welcome trial or with an active Pro subscription.",
+      },
       { status: 403 },
     );
   }
@@ -382,6 +353,24 @@ ${commerceBlock}
 
 ${contextBlock}`;
 
+  const reserve = await prepbrainAiTokenReserve(admin, user.id);
+  if (!reserve.ok) {
+    const insufficient = reserve.code === "insufficient_ai_tokens";
+    return NextResponse.json(
+      {
+        ok: false,
+        error: insufficient
+          ? prepbrainLimitReachedMessage(phase)
+          : "Could not start HelpyJi. Try again.",
+        ...(insufficient
+          ? { ai_token_limit: true as const, usage_phase: phase }
+          : {}),
+      },
+      { status: 403 },
+    );
+  }
+  const reservationId = reserve.reservationId;
+
   const { error: insertUserErr } = await admin.from("helpyji_conversations").insert({
     user_id: user.id,
     session_id: sessionId,
@@ -391,6 +380,7 @@ ${contextBlock}`;
   });
 
   if (insertUserErr) {
+    await prepbrainAiTokenCancelReservation(admin, user.id, reservationId);
     console.error("[helpyji/chat] conversation user insert failed", insertUserErr);
     return NextResponse.json(
       { ok: false, error: "Could not log message. Try again." },
@@ -407,6 +397,8 @@ ${contextBlock}`;
   let assistantText = "";
   let aiModelUsed = "";
   let groqTotalTokens = 0;
+  let groqPromptTokens = 0;
+  let groqCompletionTokens = 0;
 
   try {
     const result = await callChatCompletion(candidates, aiMessages, {
@@ -416,7 +408,10 @@ ${contextBlock}`;
     assistantText = result.text;
     aiModelUsed = result.modelUsed;
     groqTotalTokens = result.totalTokens;
+    groqPromptTokens = result.promptTokens;
+    groqCompletionTokens = result.completionTokens;
   } catch (e) {
+    await prepbrainAiTokenCancelReservation(admin, user.id, reservationId);
     console.error("[helpyji/chat] AI error", e);
     return NextResponse.json(
       { ok: false, error: "Could not get a reply. Try again." },
@@ -425,11 +420,22 @@ ${contextBlock}`;
   }
 
   if (!assistantText) {
+    await prepbrainAiTokenCancelReservation(admin, user.id, reservationId);
     console.error("[helpyji/chat] AI returned empty content");
     return NextResponse.json(
       { ok: false, error: "Could not get a reply. Try again." },
       { status: 502 },
     );
+  }
+
+  const actualRaw = Math.max(0, Math.floor(groqTotalTokens));
+  const promptComp = groqPromptTokens + groqCompletionTokens;
+  const billed =
+    actualRaw > 0 ? actualRaw : promptComp > 0 ? promptComp : PREPBRAIN_AI_TOKEN_RESERVE_ESTIMATE;
+
+  const fin = await prepbrainAiTokenFinalize(admin, user.id, reservationId, billed);
+  if (!fin.ok) {
+    console.error("[helpyji/chat] token finalize failed");
   }
 
   console.log("[helpyji/chat] model=%s total_tokens=%d", aiModelUsed, groqTotalTokens);
@@ -459,28 +465,6 @@ ${contextBlock}`;
 
   if (usageWriteErr) {
     console.error("[helpyji/chat] usage write failed", usageWriteErr);
-  }
-
-  // Persist shared token usage increment (same pools as PrepBrain).
-  if (profile && groqTotalTokens > 0 && phase !== "none") {
-    const delta = Math.max(0, Math.floor(groqTotalTokens));
-    const mk = prepbrainCalendarMonthKey();
-    const now = new Date();
-    const persist = computePrepbrainTokenPersist(
-      phase,
-      tokenRow,
-      mk,
-      profile.bonus_ai_tokens_ledger,
-      delta,
-      now,
-    );
-    if (Object.keys(persist.patch).length > 0) {
-      const { error: tokenErr } = await admin
-        .from("user_profiles")
-        .update(persist.patch)
-        .eq("user_id", user.id);
-      if (tokenErr) console.error("[helpyji/chat] token persist failed", tokenErr);
-    }
   }
 
   const remaining = Math.max(0, dailyLimit - nextCount);
