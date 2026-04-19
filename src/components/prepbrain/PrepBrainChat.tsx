@@ -1,6 +1,20 @@
 "use client";
 
-import { Brain, Loader2, Send } from "lucide-react";
+import { format } from "date-fns";
+import {
+  BarChart3,
+  Brain,
+  ClipboardCheck,
+  Loader2,
+  Menu,
+  Send,
+  Sparkles,
+  SquarePen,
+  Target,
+  Trash2,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import clsx from "clsx";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -14,12 +28,49 @@ import {
   PREPBRAIN_USAGE_WARN_RATIO,
   type AiUsagePhase,
 } from "@/lib/prepbrainTokens";
+import { AiTokenLimitLinks } from "@/components/subscription/LimitExceededLinks";
 
-const SUGGESTED = [
-  "I need about 20 more marks — what should I focus on first?",
-  "Which chapters are my weakest right now, and how should I fix them?",
-  "I'm not meditating regularly. What should I do this week?",
-  "Based on my data, am I executing my daily plan well enough?",
+type SuggestionCardDef = {
+  label: string;
+  hint: string;
+  prompt: string;
+  icon: LucideIcon;
+  iconRing: string;
+};
+
+const SUGGESTION_CARDS: SuggestionCardDef[] = [
+  {
+    label: "Boost my marks",
+    hint: "Where to focus first",
+    prompt:
+      "I need about 20 more marks — what should I focus on first?",
+    icon: Target,
+    iconRing: "bg-kal-accent-soft text-kal-accent ring-kal-accent/25",
+  },
+  {
+    label: "Weakest chapters",
+    hint: "Fix gaps with a plan",
+    prompt:
+      "Which chapters are my weakest right now, and how should I fix them?",
+    icon: BarChart3,
+    iconRing: "bg-sky-500/10 text-sky-700 ring-sky-500/20 dark:text-sky-300",
+  },
+  {
+    label: "Habits & calm",
+    hint: "Meditation & consistency",
+    prompt:
+      "I'm not meditating regularly. What should I do this week?",
+    icon: Sparkles,
+    iconRing: "bg-violet-500/10 text-violet-700 ring-violet-500/20 dark:text-violet-300",
+  },
+  {
+    label: "Daily execution",
+    hint: "Are you on track?",
+    prompt:
+      "Based on my data, am I executing my daily plan well enough?",
+    icon: ClipboardCheck,
+    iconRing: "bg-emerald-500/10 text-emerald-800 ring-emerald-500/20 dark:text-emerald-300",
+  },
 ];
 
 function prepbrainUsagePeriodLabel(phase: AiUsagePhase): string {
@@ -187,7 +238,13 @@ export function PrepBrainChat() {
     error,
     setError,
     sendMessage,
-    clearChat,
+    newChat,
+    conversationId,
+    conversations,
+    conversationsLoading,
+    historyLoading,
+    openConversation,
+    deleteConversation,
     usage,
     usageLoading,
     atTokenLimit,
@@ -208,11 +265,32 @@ export function PrepBrainChat() {
       ? prepbrainUsagePeriodLabel(usage.phase)
       : "";
   const [draft, setDraft] = useState("");
+  const [historyOpen, setHistoryOpen] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isSending]);
+
+  useEffect(() => {
+    if (!historyOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setHistoryOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [historyOpen]);
+
+  const handleOpenConversation = async (id: string) => {
+    setHistoryOpen(false);
+    await openConversation(id);
+  };
+
+  const handleNewChatFromMenu = () => {
+    setError(null);
+    newChat();
+    setHistoryOpen(false);
+  };
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -224,116 +302,266 @@ export function PrepBrainChat() {
   return (
     <div
       className={[
-        "kal-glass-panel flex flex-col overflow-hidden rounded-2xl",
-        /* Mobile: taller message stack; header/footer stay shrink-0 */
-        "h-[min(calc(100dvh-8rem),780px)]",
-        "sm:h-auto sm:min-h-[min(78vh,640px)] sm:max-h-none",
+        "kal-glass-panel flex flex-col overflow-hidden rounded-3xl",
+        historyOpen && "max-sm:touch-none",
+        "h-[min(calc(100dvh-7rem),760px)]",
+        "sm:h-auto sm:min-h-[min(76vh,640px)] sm:max-h-none",
       ].join(" ")}
     >
-      <p className="shrink-0 min-w-0 overflow-x-auto border-b border-kal-border/50 bg-kal-accent-soft/35 px-3 py-1.5 text-center text-[10px] leading-tight text-kal-text [scrollbar-width:thin] sm:px-5 whitespace-nowrap">
-        Add syllabus tracker information to the app for more personalised response
+      {/* One line only — horizontal scroll on narrow viewports (same pattern as before) */}
+      <p className="shrink-0 min-w-0 overflow-x-auto border-b border-kal-border/45 bg-kal-accent-soft/40 px-3 py-1.5 text-center text-[10px] leading-none text-kal-text [scrollbar-width:thin] sm:px-5 whitespace-nowrap">
+        Add syllabus mastery, daily plan, meditation, and related trackers in the app for more personalised PrepBrain answers.
       </p>
-      <div className="flex shrink-0 items-start justify-between gap-2 border-b border-kal-border/60 bg-kal-card/80 px-3 py-3 backdrop-blur-sm sm:items-center sm:gap-3 sm:px-5">
-        <div className="flex min-w-0 flex-1 items-center gap-2.5">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-kal-accent-soft text-kal-accent ring-1 ring-kal-accent/20 sm:h-11 sm:w-11">
-            <Brain className="h-5 w-5" strokeWidth={2} aria-hidden />
-          </span>
-          <div className="min-w-0">
-            <h2 className="text-base font-bold text-kal-text sm:text-lg">PrepBrain AI</h2>
-            {usage && !usageLoading && usage.phase !== "none" ? (
-              <div className="mt-1.5 space-y-1.5">
-                <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 text-[10px] sm:text-[11px]">
-                  <span className="min-w-0 font-medium tabular-nums text-kal-text">
-                    <span className="text-kal-text-secondary">Used </span>
-                    {usage.used.toLocaleString("en-IN")}
-                    <span className="text-kal-text-secondary"> / </span>
-                    {usage.limit.toLocaleString("en-IN")}
-                    <span className="text-kal-text-secondary"> · Remaining </span>
-                    {Math.max(0, usage.limit - usage.used).toLocaleString("en-IN")}
-                  </span>
-                  <span className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
-                    {usagePeriodLabel ? (
-                      <span className="text-[10px] text-kal-text-secondary">
-                        {usagePeriodLabel}
-                      </span>
-                    ) : null}
-                    {usageNearLimit ? (
-                      <span className="text-[10px] font-semibold leading-none text-amber-800 dark:text-amber-200/90">
-                        Near limit
-                      </span>
-                    ) : null}
-                  </span>
-                </div>
-                <div
-                  className="h-2 w-full overflow-hidden rounded-full bg-kal-border/80"
-                  role="progressbar"
-                  aria-valuenow={Math.round(usagePct)}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-label={`PrepBrain tokens: ${usage.used.toLocaleString("en-IN")} used of ${usage.limit.toLocaleString("en-IN")}`}
-                >
-                  <div
-                    className={`h-full rounded-full transition-[width] duration-300 ${
-                      atTokenLimit
-                        ? "bg-[var(--kal-danger-text)]"
-                        : usageNearLimit
-                          ? "bg-amber-500"
-                          : "bg-kal-accent"
-                    }`}
-                    style={{ width: `${usagePct}%` }}
-                  />
-                </div>
-                <p className="text-[9px] leading-snug text-kal-text-secondary sm:text-[10px]">
-                  More complex queries use more tokens. Use carefully.
-                </p>
-                {tokenLimitMessage ? (
-                  <p className="text-[10px] leading-snug text-[var(--kal-danger-text)]">
-                    {tokenLimitMessage}
-                  </p>
-                ) : null}
-              </div>
-            ) : usageLoading ? (
-              <p className="mt-1.5 text-[11px] text-kal-text-secondary">Loading usage…</p>
-            ) : null}
+      {/* Minimal header — calm hierarchy; usage lives in sidebar */}
+      <header className="flex shrink-0 items-start gap-2.5 border-b border-kal-border/40 bg-gradient-to-b from-white/50 to-transparent px-3 py-2.5 backdrop-blur-md sm:gap-4 sm:px-6 sm:py-4">
+        <button
+          type="button"
+          onClick={() => setHistoryOpen(true)}
+          className="touch-manipulation mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/50 bg-white/55 text-kal-text shadow-sm ring-1 ring-black/[0.04] transition-colors hover:bg-white/80 hover:ring-kal-accent/20 active:scale-[0.98] dark:border-white/10 dark:bg-zinc-900/50 dark:hover:bg-zinc-900/70 sm:h-11 sm:w-11 sm:rounded-2xl"
+          aria-expanded={historyOpen}
+          aria-controls="prepbrain-history-drawer"
+          aria-label="Open menu, usage, and chat history"
+        >
+          <Menu className="h-5 w-5" strokeWidth={2} aria-hidden />
+        </button>
+        <div className="min-w-0 flex-1 pt-0.5">
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-kal-accent-soft text-kal-accent shadow-sm ring-1 ring-kal-accent/15 sm:h-9 sm:w-9 sm:rounded-xl">
+              <Brain className="h-4 w-4 sm:h-[18px] sm:w-[18px]" strokeWidth={2} aria-hidden />
+            </span>
+            <h2 className="text-base font-semibold tracking-tight text-kal-text sm:text-lg">
+              PrepBrain AI
+            </h2>
           </div>
+          <p className="mt-0.5 text-[11px] font-medium leading-tight text-kal-text-secondary/90 sm:mt-1.5 sm:text-[13px] sm:leading-snug">
+            Your personal exam strategist
+          </p>
         </div>
-        {messages.length > 0 && (
-          <button
-            type="button"
-            onClick={() => clearChat()}
-            className="touch-manipulation shrink-0 rounded-lg border border-kal-border/60 bg-kal-card/70 px-3 py-2 text-xs font-semibold leading-none text-kal-text-secondary backdrop-blur-sm transition-colors hover:border-kal-accent/30 hover:bg-kal-card hover:text-kal-text active:scale-[0.98] sm:min-h-0 sm:py-1.5"
-          >
-            Clear
-          </button>
-        )}
-      </div>
+      </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3 [-webkit-overflow-scrolling:touch] sm:px-5 sm:py-4">
+      {atTokenLimit && tokenLimitMessage ? (
+        <div className="shrink-0 border-b border-kal-warn-border bg-kal-warn-soft px-4 py-2.5 text-center text-xs leading-snug text-[var(--kal-danger-text)] sm:px-6">
+          <p>{tokenLimitMessage}</p>
+          {usage ? <AiTokenLimitLinks phase={usage.phase} /> : null}
+        </div>
+      ) : null}
+
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        {historyOpen ? (
+          <>
+            <button
+              type="button"
+              className="absolute inset-0 z-20 bg-black/45 backdrop-blur-[2px] transition-opacity"
+              aria-label="Close chat history"
+              onClick={() => setHistoryOpen(false)}
+            />
+            <div
+              id="prepbrain-history-drawer"
+              className="absolute inset-y-0 left-0 z-30 flex max-h-full w-[min(100%,20rem)] max-w-[90vw] flex-col border-r border-white/50 bg-[rgba(255,252,248,0.94)] shadow-[8px_0_40px_rgba(60,40,20,0.12)] backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/92 sm:w-80"
+              role="dialog"
+              aria-modal="true"
+              aria-label="PrepBrain menu"
+            >
+              <div className="flex shrink-0 items-center justify-between gap-2 border-b border-kal-border/40 px-4 py-3.5">
+                <span className="text-[15px] font-semibold tracking-tight text-kal-text">
+                  PrepBrain
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setHistoryOpen(false)}
+                  className="touch-manipulation flex h-10 w-10 items-center justify-center rounded-xl text-kal-text-secondary transition-colors hover:bg-white/60 hover:text-kal-text dark:hover:bg-white/10"
+                  aria-label="Close menu"
+                >
+                  <X className="h-5 w-5" aria-hidden />
+                </button>
+              </div>
+
+              <div className="shrink-0 px-4 pt-2">
+                <div className="kal-glass-card rounded-2xl p-3.5 shadow-sm">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-kal-text-secondary">
+                    PrepBrain usage
+                  </p>
+                  {usageLoading ? (
+                    <p className="mt-2 text-xs text-kal-text-secondary">Loading…</p>
+                  ) : usage && usage.limit > 0 ? (
+                    <>
+                      <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                        <span className="tabular-nums text-sm font-semibold text-kal-text">
+                          {usage.used.toLocaleString("en-IN")}
+                          <span className="font-normal text-kal-text-secondary">
+                            {" "}
+                            / {usage.limit.toLocaleString("en-IN")}
+                          </span>
+                          <span className="ml-1 text-xs font-normal text-kal-text-secondary">
+                            tokens
+                          </span>
+                        </span>
+                        {usagePeriodLabel ? (
+                          <span className="rounded-full border border-kal-border/50 bg-white/70 px-2 py-0.5 text-[10px] font-medium text-kal-text-secondary shadow-sm dark:bg-zinc-900/80">
+                            {usagePeriodLabel}
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="mt-2 text-xs text-kal-text-secondary">
+                        <span className="font-medium text-kal-text">Remaining</span>{" "}
+                        {Math.max(0, usage.limit - usage.used).toLocaleString("en-IN")}
+                      </p>
+                      <div
+                        className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-kal-border/50"
+                        role="progressbar"
+                        aria-valuenow={Math.round(usagePct)}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-label={`PrepBrain tokens used: ${usage.used} of ${usage.limit}`}
+                      >
+                        <div
+                          className={`h-full rounded-full transition-[width] duration-300 ${
+                            atTokenLimit
+                              ? "bg-[var(--kal-danger-text)]"
+                              : usageNearLimit
+                                ? "bg-amber-500"
+                                : "bg-kal-accent"
+                          }`}
+                          style={{ width: `${usagePct}%` }}
+                        />
+                      </div>
+                      {usageNearLimit && !atTokenLimit ? (
+                        <p className="mt-2 text-[10px] font-medium text-amber-800 dark:text-amber-200/90">
+                          Running low — shorter questions use fewer tokens.
+                        </p>
+                      ) : null}
+                      {tokenLimitMessage ? (
+                        <div className="mt-2 text-[10px] leading-snug text-[var(--kal-danger-text)]">
+                          <p>{tokenLimitMessage}</p>
+                          {usage ? (
+                            <div className="mt-1.5 text-kal-text [&_a]:text-kal-accent">
+                              <AiTokenLimitLinks phase={usage.phase} />
+                            </div>
+                          ) : null}
+                        </div>
+                      ) : null}
+                    </>
+                  ) : (
+                    <p className="mt-2 text-xs text-kal-text-secondary">
+                      Usage unavailable right now.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleNewChatFromMenu}
+                disabled={isSending}
+                className="kal-glass-subtle mx-4 mt-4 flex touch-manipulation items-center gap-2.5 rounded-2xl px-3.5 py-3 text-left text-sm font-semibold text-kal-text shadow-sm transition-colors hover:ring-1 hover:ring-kal-accent/25 disabled:opacity-50"
+              >
+                <SquarePen className="h-4 w-4 shrink-0 text-kal-accent" aria-hidden />
+                New chat
+              </button>
+              <div className="mt-5 min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6 [-webkit-overflow-scrolling:touch]">
+                <p className="mb-2 px-0.5 text-[10px] font-semibold uppercase tracking-wide text-kal-text-secondary">
+                  Recents
+                </p>
+                {conversationsLoading ? (
+                  <p className="py-2 text-[11px] text-kal-text-secondary">Loading chats…</p>
+                ) : conversations.length === 0 ? (
+                  <p className="rounded-lg border border-dashed border-kal-border/50 bg-kal-card-muted/30 px-2.5 py-3 text-[11px] leading-snug text-kal-text-secondary">
+                    No saved chats yet. Send a message to start a thread — it will show up here.
+                  </p>
+                ) : (
+                  <ul className="space-y-0.5">
+                    {conversations.map((c) => (
+                      <li key={c.id} className="group flex items-stretch gap-0.5">
+                        <button
+                          type="button"
+                          onClick={() => void handleOpenConversation(c.id)}
+                          disabled={isSending || historyLoading}
+                          className={clsx(
+                            "min-w-0 flex-1 touch-manipulation rounded-xl px-2.5 py-2 text-left transition-colors disabled:opacity-50",
+                            conversationId === c.id
+                              ? "bg-kal-accent-soft ring-1 ring-kal-accent/25"
+                              : "hover:bg-kal-card-muted/70",
+                          )}
+                        >
+                          <span className="line-clamp-2 text-[13px] font-medium leading-snug text-kal-text">
+                            {c.title?.trim() || "PrepBrain chat"}
+                          </span>
+                          <span className="mt-1 block text-[10px] text-kal-text-secondary">
+                            {format(new Date(c.updated_at), "d MMM yyyy, h:mm a")}
+                          </span>
+                        </button>
+                        <button
+                          type="button"
+                          aria-label="Delete this chat"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            void deleteConversation(c.id);
+                          }}
+                          disabled={isSending}
+                          className="touch-manipulation shrink-0 self-center rounded-lg p-2 text-kal-text-secondary opacity-70 transition-colors hover:bg-kal-card-muted hover:text-[var(--kal-danger-text)] disabled:opacity-40"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+          </>
+        ) : null}
+
+        <div className="relative min-h-0 flex-1 overflow-hidden">
+          {historyLoading ? (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-kal-card/60 backdrop-blur-[1px]">
+              <Loader2 className="h-8 w-8 animate-spin text-kal-accent" aria-hidden />
+              <span className="sr-only">Loading chat</span>
+            </div>
+          ) : null}
+          <div className="h-full min-h-0 overflow-y-auto overscroll-contain px-3 py-3 [-webkit-overflow-scrolling:touch] sm:px-8 sm:py-8">
         {messages.length === 0 && !isSending && (
-          <div className="mx-auto max-w-lg space-y-5 text-center sm:space-y-6">
-            <p className="text-sm leading-relaxed text-kal-muted">
-              Ask anything about your syllabus gaps, daily execution, habits, or calm
-              focus. PrepBrain reads your Kalnehi data each time you send a message.
+          <div className="mx-auto flex max-w-2xl flex-col items-center gap-4 text-center sm:gap-8">
+            <p className="max-w-md px-1 text-sm leading-snug text-kal-text-secondary/95 sm:text-[15px] sm:leading-relaxed">
+              What should we focus on today? PrepBrain reads your Kalnehi data each send.
             </p>
-            <div className="flex flex-col gap-2.5 text-left">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-kal-text-secondary">
+            <div className="w-full space-y-2 text-left sm:space-y-4">
+              <p className="text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-kal-text-secondary/80 sm:text-[11px] sm:tracking-[0.2em]">
                 Try asking
               </p>
-              <div className="flex flex-col gap-2">
-                {SUGGESTED.map((q) => (
-                  <button
-                    key={q}
-                    type="button"
-                    onClick={() => {
-                      setError(null);
-                      void sendMessage(q);
-                    }}
-                    disabled={isSending || atTokenLimit}
-                    className="touch-manipulation rounded-xl border border-kal-border/50 bg-kal-card/75 px-3 py-3 text-left text-sm leading-snug text-kal-text backdrop-blur-sm transition-colors hover:border-kal-accent/35 hover:bg-kal-accent-soft/50 active:bg-kal-accent-soft/60 disabled:opacity-50 sm:min-h-0 sm:py-2.5"
-                  >
-                    {q}
-                  </button>
-                ))}
+              {/* Mobile: horizontal strip — less vertical space */}
+              <div className="-mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 pt-0.5 [-webkit-overflow-scrolling:touch] [scrollbar-width:thin] sm:mx-0 sm:grid sm:snap-none sm:grid-cols-2 sm:gap-3 sm:overflow-visible sm:pb-0 sm:pt-0">
+                {SUGGESTION_CARDS.map((card) => {
+                  const Icon = card.icon;
+                  return (
+                    <button
+                      key={card.prompt}
+                      type="button"
+                      onClick={() => {
+                        setError(null);
+                        void sendMessage(card.prompt);
+                      }}
+                      disabled={isSending || atTokenLimit}
+                      className="kal-glass-card group touch-manipulation flex w-[min(42vw,10.5rem)] shrink-0 snap-start flex-col items-stretch gap-2 rounded-xl p-2.5 text-left shadow-sm transition-all hover:ring-1 hover:ring-kal-accent/25 active:scale-[0.99] disabled:opacity-50 sm:w-auto sm:snap-none sm:flex-row sm:items-start sm:gap-3 sm:rounded-2xl sm:p-3.5 sm:shadow-md sm:hover:-translate-y-0.5 sm:hover:shadow-lg"
+                    >
+                      <span
+                        className={clsx(
+                          "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset sm:h-10 sm:w-10 sm:rounded-2xl",
+                          card.iconRing,
+                        )}
+                      >
+                        <Icon className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2} aria-hidden />
+                      </span>
+                      <span className="min-w-0 sm:pt-0.5">
+                        <span className="block text-[13px] font-semibold leading-tight text-kal-text sm:text-[15px] sm:leading-snug">
+                          {card.label}
+                        </span>
+                        <span className="mt-0.5 block text-[10px] leading-tight text-kal-text-secondary sm:mt-1 sm:text-[13px] sm:leading-snug">
+                          {card.hint}
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -374,7 +602,8 @@ export function PrepBrainChat() {
           )}
           <div ref={bottomRef} />
         </div>
-      </div>
+          </div>
+        </div>
 
       {error && (
         <div className="shrink-0 border-t border-kal-warn-border bg-kal-warn-soft px-3 py-2.5 text-center text-sm leading-snug text-kal-warn-text backdrop-blur-sm sm:px-4">
@@ -391,46 +620,48 @@ export function PrepBrainChat() {
 
       <form
         onSubmit={onSubmit}
-        className="shrink-0 border-t border-kal-border/60 bg-kal-card/70 p-2.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-md sm:p-4 sm:pb-4"
+        className="shrink-0 border-t border-kal-border/35 bg-gradient-to-t from-white/60 to-white/30 p-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-xl dark:from-zinc-950/80 dark:to-zinc-950/40 sm:p-5"
       >
-        <div className="flex gap-2 sm:gap-2.5">
-          <textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                if (!isSending && !atTokenLimit && draft.trim()) {
-                  e.currentTarget.form?.requestSubmit();
+        <div className="mx-auto flex max-w-3xl w-full flex-row items-end gap-2 sm:gap-3">
+          <div className="kal-glass-card relative min-h-0 flex-1 rounded-2xl p-0.5 shadow-[0_8px_28px_rgba(80,50,20,0.06)] ring-1 ring-inset ring-white/60 dark:ring-white/10">
+            <textarea
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  if (!isSending && !atTokenLimit && draft.trim()) {
+                    e.currentTarget.form?.requestSubmit();
+                  }
                 }
-              }
-            }}
-            placeholder="Ask PrepBrain about your preparation…"
-            rows={2}
-            disabled={isSending || atTokenLimit}
-            enterKeyHint="send"
-            autoComplete="off"
-            className="min-h-[44px] min-w-0 flex-1 resize-y rounded-xl border border-kal-border/60 bg-kal-input-bg px-3 py-2.5 text-base leading-normal text-kal-text placeholder:text-kal-text-secondary/70 backdrop-blur-sm focus:border-kal-accent/50 focus:outline-none focus:ring-2 focus:ring-kal-accent/20 disabled:opacity-60 sm:min-h-[48px] sm:py-3 sm:text-sm"
-          />
+              }}
+              placeholder="Message PrepBrain…"
+              rows={1}
+              disabled={isSending || atTokenLimit}
+              enterKeyHint="send"
+              autoComplete="off"
+              className="max-h-[min(32vh,160px)] min-h-[48px] w-full resize-y overflow-y-auto rounded-[0.875rem] border-0 bg-transparent px-3.5 py-3 text-[15px] leading-snug text-kal-text placeholder:text-kal-text-secondary/50 focus:outline-none focus:ring-0 disabled:opacity-60 sm:min-h-[52px] sm:px-4 sm:py-3.5"
+            />
+          </div>
           <button
             type="submit"
             disabled={isSending || atTokenLimit || !draft.trim()}
-            className="touch-manipulation inline-flex h-12 w-12 shrink-0 items-center justify-center self-end rounded-xl bg-kal-accent text-kal-accent-foreground shadow-sm transition-opacity hover:opacity-95 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 sm:h-11 sm:w-11"
+            className="touch-manipulation inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-kal-accent text-kal-accent-foreground shadow-[0_6px_20px_rgba(255,122,0,0.32)] transition-transform hover:opacity-95 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 sm:h-[52px] sm:w-[52px] sm:rounded-2xl"
             aria-label="Send"
           >
             {isSending ? (
-              <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+              <Loader2 className="h-5 w-5 animate-spin sm:h-6 sm:w-6" aria-hidden />
             ) : (
-              <Send className="h-5 w-5" aria-hidden />
+              <Send className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden />
             )}
           </button>
         </div>
         {/* Mobile: one-line control; full disclaimer inside expandable panel */}
-        <details className="mt-0.5 sm:hidden">
-          <summary className="flex cursor-pointer list-none items-center py-1.5 text-[10px] leading-snug text-kal-text-secondary underline decoration-kal-border decoration-dotted underline-offset-2 [&::-webkit-details-marker]:hidden">
-            {"AI disclaimer · Terms"}
+        <details className="mx-auto mt-2 max-w-3xl sm:hidden">
+          <summary className="flex cursor-pointer list-none items-center justify-center py-0.5 text-[10px] leading-snug text-kal-text-secondary/80 underline decoration-kal-border/60 decoration-dotted underline-offset-2 [&::-webkit-details-marker]:hidden">
+            AI disclaimer · Terms
           </summary>
-          <div className="mt-1.5 max-h-[min(28vh,200px)] overflow-y-auto rounded-md border border-kal-border/60 bg-kal-card-muted/40 px-2 py-1.5 text-[9px] leading-snug text-kal-text-secondary">
+          <div className="mt-2 max-h-[min(28vh,200px)] overflow-y-auto rounded-xl border border-kal-border/50 bg-kal-card-muted/30 px-3 py-2 text-[10px] leading-snug text-kal-text-secondary">
             <p>{PREPBRAIN_UI_DISCLAIMER}</p>
             <Link
               href="/terms"
@@ -441,12 +672,10 @@ export function PrepBrainChat() {
           </div>
         </details>
 
-        <div className="mt-1 hidden space-y-1 sm:block">
-          <p className="text-[11px] leading-snug text-kal-text-secondary">
-            Shift+Enter for a new line. PrepBrain uses your latest Kalnehi data each send.
-          </p>
-          <p className="text-[10px] leading-snug text-kal-text-secondary/90">
-            {PREPBRAIN_UI_DISCLAIMER}{" "}
+        <div className="mx-auto mt-2 hidden max-w-3xl text-center sm:block">
+          <p className="text-[11px] leading-relaxed text-kal-text-secondary/85">
+            Shift+Enter for a new line.{" "}
+            <span className="text-kal-text-secondary/70">{PREPBRAIN_UI_DISCLAIMER}</span>{" "}
             <Link
               href="/terms"
               className="font-medium text-kal-accent underline-offset-2 hover:underline"
@@ -456,6 +685,7 @@ export function PrepBrainChat() {
           </p>
         </div>
       </form>
+      </div>
     </div>
   );
 }

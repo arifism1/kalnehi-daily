@@ -932,6 +932,7 @@ export type Database = {
       }
       user_profiles: {
         Row: {
+          ai_usage_row_version: number
           ai_tokens_month: string | null
           ai_tokens_used: number
           welcome_ai_tokens_used: number
@@ -982,6 +983,7 @@ export type Database = {
           voice_minutes_used_this_month: number | string
         }
         Insert: {
+          ai_usage_row_version?: number
           ai_tokens_month?: string | null
           ai_tokens_used?: number
           welcome_ai_tokens_used?: number
@@ -1032,6 +1034,7 @@ export type Database = {
           voice_minutes_used_this_month?: number | string
         }
         Update: {
+          ai_usage_row_version?: number
           ai_tokens_month?: string | null
           ai_tokens_used?: number
           welcome_ai_tokens_used?: number
@@ -1080,6 +1083,93 @@ export type Database = {
           usage_reset_date?: string | null
           user_id?: string | null
           voice_minutes_used_this_month?: number | string
+        }
+        Relationships: []
+      }
+      prepbrain_ai_token_reservations: {
+        Row: {
+          id: string
+          user_id: string
+          estimate: number
+          month_key: string
+          created_at: string
+          expires_at: string
+          finalized_at: string | null
+          cancelled_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          estimate: number
+          month_key: string
+          created_at?: string
+          expires_at: string
+          finalized_at?: string | null
+          cancelled_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          estimate?: number
+          month_key?: string
+          created_at?: string
+          expires_at?: string
+          finalized_at?: string | null
+          cancelled_at?: string | null
+        }
+        Relationships: []
+      }
+      prepbrain_conversations: {
+        Row: {
+          created_at: string
+          id: string
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      prepbrain_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          message_role: string
+          position: number
+          user_id: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          message_role: string
+          position: number
+          user_id: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          message_role?: string
+          position?: number
+          user_id?: string
         }
         Relationships: []
       }
@@ -1528,6 +1618,22 @@ export type Database = {
       }
       consume_welcome_trial_voice_seconds: {
         Args: { p_add_seconds: number; p_user_id: string }
+        Returns: Json
+      }
+      prepbrain_ai_token_reserve: {
+        Args: { p_estimate: number; p_month_key: string; p_user_id: string }
+        Returns: Json
+      }
+      prepbrain_ai_token_finalize: {
+        Args: { p_actual: number; p_reservation_id: string; p_user_id: string }
+        Returns: Json
+      }
+      prepbrain_ai_token_cancel_reservation: {
+        Args: { p_reservation_id: string; p_user_id: string }
+        Returns: Json
+      }
+      prepbrain_ai_token_sweep_expired: {
+        Args: Record<PropertyKey, never>
         Returns: Json
       }
       get_gated_predicted_score: {

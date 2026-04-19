@@ -28,15 +28,23 @@ import { callChatCompletion, type AiChatMessage } from "@/lib/aiChatClient";
 import { USER_ERROR } from "@/lib/userFacingErrors";
 import {
   buildPrepbrainUsageDisplayPayload,
-  computePrepbrainTokenPersist,
-  hasPrepbrainTokenHeadroom,
 } from "@/lib/prepbrainTokenAccounting";
+import {
+  PREPBRAIN_AI_TOKEN_RESERVE_ESTIMATE,
+  prepbrainAiTokenCancelReservation,
+  prepbrainAiTokenFinalize,
+  prepbrainAiTokenReserve,
+} from "@/lib/prepbrainAiTokenRpc";
 import {
   prepbrainCalendarMonthKey,
   prepbrainLimitReachedMessage,
   resolveAiUsagePhase,
   type PrepBrainTokenRow,
 } from "@/lib/prepbrainTokens";
+import {
+  persistPrepbrainTurn,
+  prepbrainAssertRoomBeforeTurn,
+} from "@/lib/prepbrainConversationPersistence";
 
 export const runtime = "nodejs";
 
@@ -67,11 +75,39 @@ function toolCacheSet(userId: string, tool: string, result: unknown): void {
 }
 
 const MAX_BODY_BYTES = 512_000;
+/** Sent to Groq only — keeps prompt cost bounded; full thread may be longer in UI/DB. */
 const MAX_CHAT_MESSAGES = 4;
+/** Max messages the client may send in one request (trimmed to the most recent). */
+const MAX_MESSAGES_IN_REQUEST = 200;
 const MAX_MESSAGE_CHARS = 2_500;
-const MAX_COMPLETION_TOKENS = 700;
 /** Short cooldown between chat completions (backed by `prepbrain_chat_cooldown` for multi-instance). */
 const MIN_MS_BETWEEN_REQUESTS = 1_200;
+
+/**
+ * Groq completion ceiling per reply. A flat low cap truncates mid-sentence (broken Markdown).
+ * Higher caps for strategy-heavy intents; tighter for narrow tool-focused intents.
+ * Pair with output-efficiency rules in prepBrainPrompts.ts so average completion stays lean.
+ */
+function maxCompletionTokensForIntent(
+  intent: Exclude<PrepBrainIntent, "small_talk">,
+): number {
+  switch (intent) {
+    case "general":
+    case "marks_score":
+    case "today_plan":
+    case "target_score":
+    case "weak_vs_strong":
+      return 1150;
+    case "syllabus_progress":
+    case "habits_or_meditation":
+    case "study_camera":
+      return 850;
+    default: {
+      const _exhaustive: never = intent;
+      return _exhaustive;
+    }
+  }
+}
 
 type ChatRole = "user" | "assistant";
 
@@ -147,7 +183,7 @@ async function touchPrepbrainCooldown(
   }
 }
 
-function parseMessages(raw: unknown): IncomingMessage[] | null {
+function parseMessagesFull(raw: unknown): IncomingMessage[] | null {
   if (!Array.isArray(raw)) return null;
   const out: IncomingMessage[] = [];
   for (const m of raw) {
@@ -161,7 +197,26 @@ function parseMessages(raw: unknown): IncomingMessage[] | null {
     out.push({ role, content: trimmed });
   }
   if (out.length === 0) return null;
-  return out.slice(-MAX_CHAT_MESSAGES);
+  return out.slice(-MAX_MESSAGES_IN_REQUEST);
+}
+
+function messagesForModel(full: IncomingMessage[]): IncomingMessage[] {
+  return full.slice(-MAX_CHAT_MESSAGES);
+}
+
+function parseConversationId(body: Record<string, unknown>): string | null {
+  const v = body.conversationId;
+  if (typeof v !== "string") return null;
+  const t = v.trim();
+  if (!t) return null;
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      t,
+    )
+  ) {
+    return null;
+  }
+  return t;
 }
 
 /**
@@ -373,7 +428,8 @@ async function runToolByName(
 
 /**
  * POST /api/prepbrain/chat
- * Body: { messages: { role, content }[] }.
+ * Body: { messages: { role, content }[], conversationId?: string }.
+ * Only the last few messages are sent to the model; the full array may be longer for UI history.
  */
 export async function POST(request: Request) {
   const supabase = await createSupabaseServerClient();
@@ -407,15 +463,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Invalid body." }, { status: 400 });
   }
 
-  const messages = parseMessages(body.messages);
-  if (!messages) {
+  const fullMessages = parseMessagesFull(body.messages);
+  if (!fullMessages) {
     return NextResponse.json(
       { ok: false, error: "messages[] required with non-empty user/assistant entries." },
       { status: 400 },
     );
   }
 
-  const last = messages[messages.length - 1];
+  const conversationIdIn = parseConversationId(body);
+
+  const last = fullMessages[fullMessages.length - 1];
   if (last.role !== "user") {
     return NextResponse.json(
       { ok: false, error: "Last message must be from the user." },
@@ -488,6 +546,18 @@ export async function POST(request: Request) {
     );
   }
 
+  const room = await prepbrainAssertRoomBeforeTurn(
+    admin,
+    user.id,
+    conversationIdIn,
+  );
+  if (!room.ok) {
+    return NextResponse.json(
+      { ok: false, error: room.error },
+      { status: room.status },
+    );
+  }
+
   const monthKey = prepbrainCalendarMonthKey();
   const now = new Date();
   const welcomeUsed =
@@ -502,31 +572,6 @@ export async function POST(request: Request) {
     welcome_ai_tokens_used: welcomeUsed,
     paid_trial_ai_tokens_used: paidTrialUsed,
   };
-
-  if (
-    !hasPrepbrainTokenHeadroom(
-      phase,
-      tokenRow,
-      monthKey,
-      profile.bonus_ai_tokens_ledger,
-      now,
-    )
-  ) {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: prepbrainLimitReachedMessage(phase),
-        usage: buildPrepbrainUsageDisplayPayload(
-          phase,
-          tokenRow,
-          monthKey,
-          profile.bonus_ai_tokens_ledger,
-          now,
-        ),
-      },
-      { status: 403 },
-    );
-  }
 
   const remainMs = await prepbrainCooldownRemainMs(admin, user.id);
   if (remainMs > 0) {
@@ -545,10 +590,30 @@ export async function POST(request: Request) {
   // Token Guardian — return instantly for small talk without spending any model tokens.
   if (intent === "small_talk") {
     await touchPrepbrainCooldown(admin, user.id);
+    const assistantSmallTalk =
+      "Let's save your tokens for questions that actually help you crack your exam! Ask me about your syllabus, weak chapters, daily plan, or study strategy.";
+    let conversationOut: string | null = conversationIdIn;
+    const persistSt = await persistPrepbrainTurn({
+      admin,
+      userId: user.id,
+      conversationId: conversationIdIn,
+      userContent: last.content,
+      assistantContent: assistantSmallTalk,
+    });
+    if (persistSt.ok) {
+      conversationOut = persistSt.conversationId;
+    } else if (!persistSt.ok && persistSt.status === 400) {
+      return NextResponse.json(
+        { ok: false, error: persistSt.error },
+        { status: 400 },
+      );
+    } else {
+      console.error("[prepbrain/chat] small_talk persist failed", persistSt);
+    }
     return NextResponse.json({
       ok: true,
-      message:
-        "Let's save your tokens for questions that actually help you crack your exam! Ask me about your syllabus, weak chapters, daily plan, or study strategy.",
+      message: assistantSmallTalk,
+      conversation_id: conversationOut,
       groq_model: "token-guardian",
       intent,
       tools_used: [],
@@ -643,12 +708,36 @@ export async function POST(request: Request) {
   const systemPrompt = buildPrepBrainSystemPrompt(intent);
   const systemContent = `${systemPrompt}\n\n--- USER PREP DATA ---\n${toolDataMarkdown}\n--- END USER PREP DATA ---`;
 
+  const modelMessages = messagesForModel(fullMessages);
+
   const aiMessages: AiChatMessage[] = [
     { role: "system", content: systemContent },
-    ...messages.map((m) => ({ role: m.role, content: m.content } as AiChatMessage)),
+    ...modelMessages.map((m) => ({ role: m.role, content: m.content } as AiChatMessage)),
   ];
 
   const models = resolvePrepbrainGroqModels({ request, user });
+
+  const reserve = await prepbrainAiTokenReserve(admin, user.id);
+  if (!reserve.ok) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error:
+          reserve.code === "insufficient_ai_tokens"
+            ? prepbrainLimitReachedMessage(phase)
+            : "PrepBrain AI is unavailable for your account.",
+        usage: buildPrepbrainUsageDisplayPayload(
+          phase,
+          tokenRow,
+          monthKey,
+          profile.bonus_ai_tokens_ledger,
+          now,
+        ),
+      },
+      { status: 403 },
+    );
+  }
+  const reservationId = reserve.reservationId;
 
   let assistantText = "";
   let groqModelUsed = "";
@@ -656,10 +745,12 @@ export async function POST(request: Request) {
   let groqPromptTokens = 0;
   let groqCompletionTokens = 0;
 
+  const maxCompletionTokens = maxCompletionTokensForIntent(intent);
+
   try {
     const result = await callChatCompletion(models, aiMessages, {
       temperature: 0.65,
-      max_tokens: MAX_COMPLETION_TOKENS,
+      max_tokens: maxCompletionTokens,
     });
     assistantText = result.text;
     groqModelUsed = result.modelUsed;
@@ -667,6 +758,7 @@ export async function POST(request: Request) {
     groqPromptTokens = result.promptTokens;
     groqCompletionTokens = result.completionTokens;
   } catch (e) {
+    await prepbrainAiTokenCancelReservation(admin, user.id, reservationId);
     console.error("[prepbrain/chat] AI error", e);
     return NextResponse.json(
       { ok: false, error: "Could not get a response. Try again." },
@@ -675,6 +767,7 @@ export async function POST(request: Request) {
   }
 
   if (!assistantText) {
+    await prepbrainAiTokenCancelReservation(admin, user.id, reservationId);
     console.error("[prepbrain/chat] AI returned empty content");
     return NextResponse.json(
       { ok: false, error: "Could not get a response. Try again." },
@@ -685,9 +778,10 @@ export async function POST(request: Request) {
   await touchPrepbrainCooldown(admin, user.id);
 
   console.log(
-    "[prepbrain/chat] model=%s intent=%s tools=%s cache=%s redis=%s prompt_tokens=%d completion_tokens=%d total_tokens=%d tool_chars=%d tool_est_tokens=%d",
+    "[prepbrain/chat] model=%s intent=%s max_completion_tokens=%d tools=%s cache=%s redis=%s prompt_tokens=%d completion_tokens=%d total_tokens=%d tool_chars=%d tool_est_tokens=%d",
     groqModelUsed,
     intent,
+    maxCompletionTokens,
     selectedTools.join(","),
     selectedTools.map((t) => toolCacheSources[t] ?? "?").join(","),
     isRedisConfigured() ? "yes" : "no",
@@ -698,38 +792,75 @@ export async function POST(request: Request) {
     toolDataEstTokens,
   );
 
-  const delta = Math.max(0, Math.floor(groqTotalTokens));
-  const persistNow = new Date();
-  const persist = computePrepbrainTokenPersist(
-    phase,
-    tokenRow,
-    monthKey,
-    profile.bonus_ai_tokens_ledger,
-    delta,
-    persistNow,
-  );
-  if (Object.keys(persist.patch).length > 0) {
-    const { error: tokenPersistErr } = await admin
-      .from("user_profiles")
-      .update(persist.patch)
-      .eq("user_id", user.id);
-    if (tokenPersistErr) console.error("[prepbrain/chat] token persist failed", tokenPersistErr);
+  const actualRaw = Math.max(0, Math.floor(groqTotalTokens));
+  const promptComp = groqPromptTokens + groqCompletionTokens;
+  const billed =
+    actualRaw > 0 ? actualRaw : promptComp > 0 ? promptComp : PREPBRAIN_AI_TOKEN_RESERVE_ESTIMATE;
+
+  const fin = await prepbrainAiTokenFinalize(admin, user.id, reservationId, billed);
+  if (!fin.ok) {
+    console.error("[prepbrain/chat] token finalize failed");
   }
-  const ledgerAfter =
-    "bonus_ai_tokens_ledger" in persist.patch
-      ? persist.patch.bonus_ai_tokens_ledger
-      : profile.bonus_ai_tokens_ledger;
-  const usageAfter = buildPrepbrainUsageDisplayPayload(
-    phase,
-    persist.tokenRow,
-    monthKey,
-    ledgerAfter,
-    persistNow,
-  );
+
+  const persistNow = new Date();
+  const { data: profileAfter } = await admin
+    .from("user_profiles")
+    .select(
+      "ai_tokens_used,ai_tokens_month,welcome_ai_tokens_used,paid_trial_ai_tokens_used,bonus_ai_tokens_ledger",
+    )
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const usageAfter = profileAfter
+    ? buildPrepbrainUsageDisplayPayload(
+        phase,
+        {
+          ai_tokens_used: profileAfter.ai_tokens_used,
+          ai_tokens_month: profileAfter.ai_tokens_month,
+          welcome_ai_tokens_used:
+            typeof profileAfter.welcome_ai_tokens_used === "number"
+              ? profileAfter.welcome_ai_tokens_used
+              : 0,
+          paid_trial_ai_tokens_used:
+            typeof profileAfter.paid_trial_ai_tokens_used === "number"
+              ? profileAfter.paid_trial_ai_tokens_used
+              : 0,
+        },
+        monthKey,
+        profileAfter.bonus_ai_tokens_ledger,
+        persistNow,
+      )
+    : buildPrepbrainUsageDisplayPayload(
+        phase,
+        tokenRow,
+        monthKey,
+        profile.bonus_ai_tokens_ledger,
+        persistNow,
+      );
+
+  let conversationOut: string | null = conversationIdIn;
+  const persistResult = await persistPrepbrainTurn({
+    admin,
+    userId: user.id,
+    conversationId: conversationIdIn,
+    userContent: last.content,
+    assistantContent: assistantText,
+  });
+  if (persistResult.ok) {
+    conversationOut = persistResult.conversationId;
+  } else if (!persistResult.ok && persistResult.status === 400) {
+    return NextResponse.json(
+      { ok: false, error: persistResult.error, usage: usageAfter },
+      { status: 400 },
+    );
+  } else {
+    console.error("[prepbrain/chat] persist failed", persistResult);
+  }
 
   return NextResponse.json({
     ok: true,
     message: assistantText,
+    conversation_id: conversationOut,
     usage: usageAfter,
     groq_model: groqModelUsed,
     intent,

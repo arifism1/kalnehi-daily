@@ -20,6 +20,10 @@
     {
       "path": "/api/cron/reset-ai-tokens",
       "schedule": "0 0 1 * *"
+    },
+    {
+      "path": "/api/cron/sweep-prepbrain-ai-token-reservations",
+      "schedule": "*/15 * * * *"
     }
   ]
 }

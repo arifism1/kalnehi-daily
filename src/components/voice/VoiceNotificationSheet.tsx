@@ -9,6 +9,7 @@ import { useCallback, useEffect, useState } from "react";
 import { createScheduledNotification } from "@/actions/scheduledNotifications";
 import { scheduledNotifyIsoToDatetimeLocalValue } from "@/lib/scheduledNotifications/isoToDatetimeLocal";
 import { SCHEDULED_NOTIFICATION_TAGS } from "@/lib/scheduledNotifications/tags";
+import { VoiceMinuteLimitLink } from "@/components/subscription/LimitExceededLinks";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
 import { useAiGate } from "@/hooks/useAiGate";
 import { useVoiceNotificationStore } from "@/store/useVoiceNotificationStore";
@@ -88,6 +89,8 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
   const [speechLang, setSpeechLang] = useState(defaultSpeechLang);
   const [phase, setPhase] = useState<Phase>("idle");
   const [parseError, setParseError] = useState<string | null>(null);
+  /** True after API returns 429 (voice minute quota) while parsing. */
+  const [parseVoiceQuotaHit, setParseVoiceQuotaHit] = useState(false);
   const [liveTranscript, setLiveTranscript] = useState("");
   const [speechRunsLocally, setSpeechRunsLocally] = useState<boolean | null>(null);
   const [title, setTitle] = useState("");
@@ -146,6 +149,7 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
       }
       setPhase("parsing");
       setParseError(null);
+      setParseVoiceQuotaHit(false);
       setVoiceQuotaNote(null);
       try {
         const tz =
@@ -193,10 +197,12 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
         }
 
         if (!res.ok || !data.ok) {
+          setParseVoiceQuotaHit(res.status === 429);
           setParseError(voiceParseErrorMessage(data.error, res.status));
           setPhase("idle");
           return;
         }
+        setParseVoiceQuotaHit(false);
         if (typeof data.title === "string" && typeof data.notify_at === "string") {
           const nextTitle = data.title.trim().slice(0, 200);
           let nextTag = "Study";
@@ -440,9 +446,15 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
         ) : null}
 
         {voiceBlocked && phase !== "preview" && phase !== "saving" ? (
-          <p className="mb-3 rounded-xl border border-amber-200/80 bg-amber-50/90 px-3 py-2 text-sm text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
-            No voice minutes left. Use the notification hub to add a typed notification (unlimited).
-          </p>
+          <div className="mb-3 rounded-xl border border-amber-200/80 bg-amber-50/90 px-3 py-2 text-sm text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
+            <p>
+              No voice minutes left. Use the notification hub to add a typed notification
+              (unlimited).
+            </p>
+            <div className="mt-1 text-amber-900/95 dark:text-amber-100/95 [&_a]:text-kal-accent">
+              <VoiceMinuteLimitLink />
+            </div>
+          </div>
         ) : null}
 
         {isListening && speechRunsLocally === false ? (
@@ -476,6 +488,11 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
               Understanding your notification
             </p>
             <p className="mt-1">{parseError}</p>
+            {parseVoiceQuotaHit ? (
+              <div className="mt-2 text-red-950/95 dark:text-red-50/95 [&_a]:text-kal-accent">
+                <VoiceMinuteLimitLink />
+              </div>
+            ) : null}
           </div>
         ) : null}
 

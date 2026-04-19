@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { incrementVoiceMinuteUsage } from "@/actions/subscription";
 import { runVoiceParseDraft } from "@/lib/runVoiceParseDraft";
 import { clampVoiceBillingDurationSeconds } from "@/lib/voiceDurationBilling";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function POST(req: Request) {
   let body: unknown;
@@ -36,7 +37,23 @@ export async function POST(req: Request) {
     );
   }
 
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json(
+      { ok: false, error: "Please sign in." },
+      { status: 401 },
+    );
+  }
+
   const voiceSecondsCharged = clampVoiceBillingDurationSeconds(o.durationSeconds);
+
+  const result = await runVoiceParseDraft(raw, logDate, occurredAt);
+  if (!result.ok) {
+    return NextResponse.json({ ...result, voice_seconds_charged: voiceSecondsCharged });
+  }
 
   const usage = await incrementVoiceMinuteUsage(voiceSecondsCharged / 60);
   if (!usage.ok) {
@@ -47,6 +64,5 @@ export async function POST(req: Request) {
     );
   }
 
-  const result = await runVoiceParseDraft(raw, logDate, occurredAt);
   return NextResponse.json({ ...result, voice_seconds_charged: voiceSecondsCharged });
 }

@@ -21,6 +21,8 @@ import {
 import { usePrepBrainContextSnapshot } from "@/hooks/usePrepBrainContextSnapshot";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { surfaceOptionalString } from "@/lib/userFacingErrors";
+import type { AiUsagePhase } from "@/lib/prepbrainTokens";
+import { AiTokenLimitLinks } from "@/components/subscription/LimitExceededLinks";
 import { useAuthStore } from "@/store/useAuthStore";
 
 const STORAGE_PREFIX = "helpyji_thread_v3";
@@ -73,6 +75,10 @@ export function HelpyJiChat({
   const [limit, setLimit] = useState<number | null>(null);
   const [clientCooldownUntil, setClientCooldownUntil] = useState(0);
   const [lastGroqModel, setLastGroqModel] = useState<string | null>(null);
+  /** Set when API returns 403 for shared PrepBrain/HelpyJi AI token exhaustion. */
+  const [aiTokenLimitPhase, setAiTokenLimitPhase] = useState<AiUsagePhase | null>(
+    null,
+  );
   const listRef = useRef<HTMLDivElement>(null);
   const showModelDebug = useAiModelDebugVisible();
 
@@ -194,6 +200,7 @@ export function HelpyJiChat({
     });
     setInput("");
     setError(null);
+    setAiTokenLimitPhase(null);
     setIsSending(true);
 
     try {
@@ -228,6 +235,8 @@ export function HelpyJiChat({
         limit?: number;
         retryAfterSec?: number;
         groq_model?: string;
+        ai_token_limit?: boolean;
+        usage_phase?: AiUsagePhase;
       };
 
       if (typeof data.limit === "number") setLimit(data.limit);
@@ -236,6 +245,7 @@ export function HelpyJiChat({
       if (res.status === 401) {
         setMessages((m) => m.slice(0, -1));
         setInput(text);
+        setAiTokenLimitPhase(null);
         setError("Sign in to use HelpyJi.");
         return;
       }
@@ -243,6 +253,7 @@ export function HelpyJiChat({
       if (res.status === 429 && data.retryAfterSec != null) {
         setMessages((m) => m.slice(0, -1));
         setInput(text);
+        setAiTokenLimitPhase(null);
         setError(
           surfaceOptionalString(data.error, "Please wait a moment."),
         );
@@ -254,6 +265,14 @@ export function HelpyJiChat({
       if (!res.ok || !data.ok || typeof reply !== "string" || !reply) {
         setMessages((m) => m.slice(0, -1));
         setInput(text);
+        const tokenPhase =
+          res.status === 403 &&
+          data.ai_token_limit === true &&
+          data.usage_phase &&
+          data.usage_phase !== "none"
+            ? data.usage_phase
+            : null;
+        setAiTokenLimitPhase(tokenPhase);
         setError(
           surfaceOptionalString(
             data.error,
@@ -268,6 +287,7 @@ export function HelpyJiChat({
         setLastGroqModel(data.groq_model);
         console.log(`[HelpyJi] Using model: ${data.groq_model}`);
       }
+      setAiTokenLimitPhase(null);
       setMessages((m) => [...m, { role: "assistant", content: reply }]);
       if (typeof data.remaining === "number") setRemaining(data.remaining);
 
@@ -275,6 +295,7 @@ export function HelpyJiChat({
     } catch {
       setMessages((m) => m.slice(0, -1));
       setInput(text);
+      setAiTokenLimitPhase(null);
       setError("Network error. Check your connection.");
     } finally {
       setIsSending(false);
@@ -365,9 +386,14 @@ export function HelpyJiChat({
               <p className="text-xs italic text-kal-text-secondary">HelpyJi is typing…</p>
             ) : null}
             {error ? (
-              <p className="text-xs font-medium text-[var(--kal-danger-text)]">
-                {error}
-              </p>
+              <div className="text-xs font-medium text-[var(--kal-danger-text)]">
+                <p>{error}</p>
+                {aiTokenLimitPhase ? (
+                  <div className="mt-2 font-normal text-kal-text [&_a]:text-kal-accent">
+                    <AiTokenLimitLinks phase={aiTokenLimitPhase} />
+                  </div>
+                ) : null}
+              </div>
             ) : null}
           </div>
 

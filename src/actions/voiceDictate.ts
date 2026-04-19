@@ -226,10 +226,6 @@ export async function parseVoiceTranscriptToDraft(
   const voiceMinutes = voiceBillingMinutesFromOptionalDurationSeconds(
     input.durationSeconds,
   );
-  const usageCheck = await incrementVoiceMinuteUsage(voiceMinutes);
-  if (!usageCheck.ok) {
-    return { ok: false, error: usageCheck.error };
-  }
 
   const logDate = input.log_date?.trim() ?? "";
   if (!/^\d{4}-\d{2}-\d{2}$/.test(logDate)) {
@@ -242,7 +238,17 @@ export async function parseVoiceTranscriptToDraft(
   const raw = (input.transcript ?? "").trim().slice(0, 12_000);
   if (!raw) return { ok: false, error: "Nothing was captured to parse." };
 
-  return runVoiceParseDraft(raw, logDate, occurredAt);
+  const draft = await runVoiceParseDraft(raw, logDate, occurredAt);
+  if (!draft.ok) {
+    return draft;
+  }
+
+  const usageCheck = await incrementVoiceMinuteUsage(voiceMinutes);
+  if (!usageCheck.ok) {
+    return { ok: false, error: usageCheck.error };
+  }
+
+  return draft;
 }
 
 /**
