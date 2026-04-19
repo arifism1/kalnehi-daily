@@ -1,8 +1,12 @@
 "use client";
 
 import { Brain, Loader2, Send } from "lucide-react";
+import clsx from "clsx";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import type { Components } from "react-markdown";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 import { usePrepBrainAI } from "@/hooks/usePrepBrainAI";
 import { PREPBRAIN_UI_DISCLAIMER } from "@/lib/prepBrainPrompts";
@@ -29,6 +33,151 @@ function prepbrainUsagePeriodLabel(phase: AiUsagePhase): string {
     default:
       return "";
   }
+}
+
+const prepbrainAssistantMarkdownComponents: Components = {
+  p: ({ children }) => (
+    <p className="mb-2.5 last:mb-0 break-words">{children}</p>
+  ),
+  strong: ({ children }) => (
+    <strong className="font-semibold text-kal-text">{children}</strong>
+  ),
+  em: ({ children }) => <em className="italic">{children}</em>,
+  ul: ({ children }) => (
+    <ul className="my-2 list-disc space-y-1 pl-5 [ul]:my-1 [ul]:list-[circle]">
+      {children}
+    </ul>
+  ),
+  ol: ({ children }) => (
+    <ol className="my-2 list-decimal space-y-1 pl-5 [ol]:my-1">{children}</ol>
+  ),
+  li: ({ children }) => <li className="break-words">{children}</li>,
+  h1: ({ children }) => (
+    <h3 className="mb-2 mt-3 text-base font-bold first:mt-0">{children}</h3>
+  ),
+  h2: ({ children }) => (
+    <h3 className="mb-2 mt-3 text-base font-bold first:mt-0">{children}</h3>
+  ),
+  h3: ({ children }) => (
+    <h3 className="mb-2 mt-3 text-[15px] font-bold first:mt-0">{children}</h3>
+  ),
+  a: ({ href, children, node, ...props }) => {
+    void node;
+    const external = href?.startsWith("http");
+    return (
+      <a
+        href={href}
+        {...props}
+        className="font-medium text-kal-accent underline-offset-2 hover:underline"
+        {...(external
+          ? { target: "_blank", rel: "noopener noreferrer" }
+          : {})}
+      >
+        {children}
+      </a>
+    );
+  },
+  code: ({ className, children, node, ...props }) => {
+    void node;
+    const inline = !className;
+    if (inline) {
+      return (
+        <code
+          {...props}
+          className="rounded bg-kal-border/35 px-1 py-0.5 font-mono text-[0.88em]"
+        >
+          {children}
+        </code>
+      );
+    }
+    return (
+      <code {...props} className={className}>
+        {children}
+      </code>
+    );
+  },
+  pre: ({ children }) => (
+    <pre className="my-2 overflow-x-auto rounded-lg border border-kal-border/60 bg-kal-card-muted/50 p-3 text-[13px] leading-relaxed [scrollbar-width:thin] sm:text-sm">
+      {children}
+    </pre>
+  ),
+  blockquote: ({ children }) => (
+    <blockquote className="my-2 border-l-2 border-kal-accent/40 pl-3 text-kal-text-secondary italic">
+      {children}
+    </blockquote>
+  ),
+  hr: () => <hr className="my-3 border-kal-border/60" />,
+  table: (props) => {
+    const { node, ...rest } = props;
+    void node;
+    return (
+      <div className="my-3 max-w-full overflow-x-auto rounded-lg [scrollbar-width:thin]">
+        <table
+          {...rest}
+          className="w-full min-w-[min(100%,280px)] border-collapse border border-kal-border/50 text-left text-[13px] sm:text-sm"
+        />
+      </div>
+    );
+  },
+  thead: (props) => {
+    const { node, className, ...rest } = props;
+    void node;
+    return (
+      <thead {...rest} className={clsx("bg-kal-accent-soft/45", className)} />
+    );
+  },
+  th: (props) => {
+    const { node, className, ...rest } = props;
+    void node;
+    return (
+      <th
+        {...rest}
+        className={clsx(
+          "border border-kal-border/50 px-2 py-1.5 font-semibold text-kal-text",
+          className,
+        )}
+      />
+    );
+  },
+  td: (props) => {
+    const { node, className, ...rest } = props;
+    void node;
+    return (
+      <td
+        {...rest}
+        className={clsx(
+          "border border-kal-border/50 px-2 py-1.5 align-top text-kal-text",
+          className,
+        )}
+      />
+    );
+  },
+  tr: (props) => {
+    const { node, ...rest } = props;
+    void node;
+    return <tr {...rest} />;
+  },
+  tbody: (props) => {
+    const { node, ...rest } = props;
+    void node;
+    return <tbody {...rest} />;
+  },
+  del: ({ children }) => (
+    <del className="text-kal-text-secondary line-through">{children}</del>
+  ),
+};
+
+function PrepBrainAssistantMarkdown({ content }: { content: string }) {
+  return (
+    <div className="min-w-0 break-words">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={prepbrainAssistantMarkdownComponents}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
+  );
 }
 
 export function PrepBrainChat() {
@@ -81,7 +230,7 @@ export function PrepBrainChat() {
         "sm:h-auto sm:min-h-[min(78vh,640px)] sm:max-h-none",
       ].join(" ")}
     >
-      <p className="shrink-0 border-b border-kal-border/50 bg-kal-accent-soft/35 px-3 py-2 text-center text-[11px] leading-snug text-kal-text sm:px-5 sm:text-xs">
+      <p className="shrink-0 min-w-0 overflow-x-auto border-b border-kal-border/50 bg-kal-accent-soft/35 px-3 py-1.5 text-center text-[10px] leading-tight text-kal-text [scrollbar-width:thin] sm:px-5 whitespace-nowrap">
         Add syllabus tracker information to the app for more personalised response
       </p>
       <div className="flex shrink-0 items-start justify-between gap-2 border-b border-kal-border/60 bg-kal-card/80 px-3 py-3 backdrop-blur-sm sm:items-center sm:gap-3 sm:px-5">
@@ -207,7 +356,11 @@ export function PrepBrainChat() {
                     : "w-full max-w-full rounded-2xl rounded-bl-md border border-kal-border/50 bg-kal-card/90 px-3.5 py-3 text-[15px] leading-[1.55] text-kal-text shadow-sm backdrop-blur-md sm:w-auto sm:max-w-[min(100%,36rem)] sm:px-4 sm:py-3.5 sm:text-base"
                 }
               >
-                <p className="break-words whitespace-pre-wrap">{m.content}</p>
+                {m.role === "user" ? (
+                  <p className="break-words whitespace-pre-wrap">{m.content}</p>
+                ) : (
+                  <PrepBrainAssistantMarkdown content={m.content} />
+                )}
               </div>
             </div>
           ))}
@@ -272,9 +425,6 @@ export function PrepBrainChat() {
             )}
           </button>
         </div>
-        <p className="mt-1 text-[10px] leading-snug text-kal-text-secondary">
-          PrepBrain intelligently pulls only the data it needs to answer you.
-        </p>
         {/* Mobile: one-line control; full disclaimer inside expandable panel */}
         <details className="mt-0.5 sm:hidden">
           <summary className="flex cursor-pointer list-none items-center py-1.5 text-[10px] leading-snug text-kal-text-secondary underline decoration-kal-border decoration-dotted underline-offset-2 [&::-webkit-details-marker]:hidden">
