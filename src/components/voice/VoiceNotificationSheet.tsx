@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { createScheduledNotification } from "@/actions/scheduledNotifications";
+import { scheduledNotifyIsoToDatetimeLocalValue } from "@/lib/scheduledNotifications/isoToDatetimeLocal";
 import { SCHEDULED_NOTIFICATION_TAGS } from "@/lib/scheduledNotifications/tags";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
 import { useAiGate } from "@/hooks/useAiGate";
@@ -38,16 +39,6 @@ function formatNotifyPreview(iso: string): string {
     return format(d, "MMM d, yyyy · h:mm a");
   } catch {
     return iso;
-  }
-}
-
-function isoToDatetimeLocalValue(iso: string): string {
-  try {
-    const d = parseISO(iso);
-    if (Number.isNaN(d.getTime())) return "";
-    return format(d, "yyyy-MM-dd'T'HH:mm");
-  } catch {
-    return "";
   }
 }
 
@@ -85,6 +76,8 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
   const router = useRouter();
   const open = useVoiceNotificationStore((s) => s.open);
   const closeSheet = useVoiceNotificationStore((s) => s.closeSheet);
+  const hubHandoff = useVoiceNotificationStore((s) => s.handoffToHubModal);
+  const commitHubPrefill = useVoiceNotificationStore((s) => s.commitHubPrefill);
   const {
     canDoVoiceSession,
     voiceMinuteStatus,
@@ -205,29 +198,60 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
           return;
         }
         if (typeof data.title === "string" && typeof data.notify_at === "string") {
-          setTitle(data.title);
-          setNotifyAtIso(data.notify_at);
-          setNotifyLocal(isoToDatetimeLocalValue(data.notify_at));
-          setSubject(typeof data.subject === "string" ? data.subject : null);
-          setChapter(typeof data.chapter === "string" ? data.chapter : null);
+          const nextTitle = data.title.trim().slice(0, 200);
+          let nextTag = "Study";
           if (
             typeof data.tag === "string" &&
             (SCHEDULED_NOTIFICATION_TAGS as readonly string[]).includes(data.tag)
           ) {
-            setTag(data.tag);
+            nextTag = data.tag;
           }
+          let nextRepeat: "once" | "daily" | "weekly" = "once";
           if (data.repeat_type === "daily" || data.repeat_type === "weekly") {
-            setRepeatType(data.repeat_type);
-          } else {
-            setRepeatType("once");
+            nextRepeat = data.repeat_type;
           }
+          const nextSubject =
+            typeof data.subject === "string" && data.subject.trim()
+              ? data.subject.trim().slice(0, 200)
+              : null;
+          const nextChapter =
+            typeof data.chapter === "string" && data.chapter.trim()
+              ? data.chapter.trim().slice(0, 200)
+              : null;
+
+          void refetchAiGate();
+
+          if (useVoiceNotificationStore.getState().handoffToHubModal) {
+            let quotaNote: string | null = null;
+            if (typeof data.voice_seconds_charged === "number") {
+              quotaNote = `Used ${data.voice_seconds_charged}s of your voice time for this parse.`;
+            }
+            commitHubPrefill({
+              title: nextTitle,
+              next_fire_at: data.notify_at,
+              tag: nextTag,
+              repeat_type: nextRepeat,
+              subject: nextSubject,
+              chapter: nextChapter,
+              user_timezone: tz,
+              voiceQuotaNote: quotaNote,
+            });
+            return;
+          }
+
+          setTitle(nextTitle);
+          setNotifyAtIso(data.notify_at);
+          setNotifyLocal(scheduledNotifyIsoToDatetimeLocalValue(data.notify_at));
+          setSubject(nextSubject);
+          setChapter(nextChapter);
+          setTag(nextTag);
+          setRepeatType(nextRepeat);
           setGroqModel(typeof data.groq_model === "string" ? data.groq_model : null);
           if (typeof data.voice_seconds_charged === "number") {
             setVoiceQuotaNote(
               `Used ${data.voice_seconds_charged}s of your voice time for this parse.`,
             );
           }
-          void refetchAiGate();
           setPhase("preview");
         } else {
           setParseError("Unexpected response from server.");
@@ -244,7 +268,7 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
         setPhase("idle");
       }
     },
-    [canDoVoiceSession, refetchAiGate],
+    [canDoVoiceSession, refetchAiGate, commitHubPrefill],
   );
 
   const {
@@ -271,12 +295,19 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
     },
   });
 
-  const steps = [
-    "Allow the microphone when your browser asks.",
-    "Pick a speech language below (English US is the most reliable in Chrome).",
-    "Tap the mic, say what to do and when, then tap again to finish.",
-    "Review the preview and confirm — we save it and send a push at that time.",
-  ];
+  const steps = hubHandoff
+    ? [
+        "Allow the microphone when your browser asks.",
+        "Pick a speech language below (English US is the most reliable in Chrome).",
+        "Tap the mic, say what to do and when, then tap again to finish.",
+        "We open the Add notification form with your details — review, edit if needed, then tap Save notification.",
+      ]
+    : [
+        "Allow the microphone when your browser asks.",
+        "Pick a speech language below (English US is the most reliable in Chrome).",
+        "Tap the mic, say what to do and when, then tap again to finish.",
+        "Review the preview and confirm — we save it and send a push at that time.",
+      ];
 
   const handleConfirm = useCallback(async () => {
     const t = title.trim();
