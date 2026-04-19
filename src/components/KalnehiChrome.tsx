@@ -2,7 +2,6 @@
 
 import clsx from "clsx";
 import { Bell, Menu } from "lucide-react";
-import Image from "next/image";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -14,8 +13,8 @@ import {
   useState,
 } from "react";
 
+import { KalnehiMark } from "@/components/KalnehiMark";
 import { PwaInstallPromptDeferred } from "@/components/PwaInstallPromptDeferred";
-import { VoiceNotificationSheet } from "@/components/voice/VoiceNotificationSheet";
 import { FreeTrialWelcomeBanner } from "@/components/subscription/FreeTrialWelcomeBanner";
 import { QuickNavBar } from "@/components/QuickNavBar";
 import { QuietSavedToast } from "@/components/QuietSavedToast";
@@ -88,12 +87,9 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
                 className="flex shrink-0 items-center rounded-xl py-1 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-kal-accent/40"
                 aria-label="Dashboard"
               >
-                <Image
-                  src="/icon-192x192.png"
-                  alt=""
-                  width={48}
-                  height={48}
-                  className="h-9 w-9 flex-shrink-0 object-contain ring-1 ring-white/30 sm:h-10 sm:w-10 dark:ring-white/15"
+                <KalnehiMark
+                  aria-hidden
+                  className="h-8 w-auto max-w-[min(100%,7.5rem)] object-contain object-left sm:h-9 sm:max-w-[8.5rem]"
                 />
               </Link>
               <button
@@ -128,12 +124,9 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
                 className="flex shrink-0 items-center rounded-xl py-1 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-kal-accent/40"
                 aria-label="Dashboard"
               >
-                <Image
-                  src="/icon-192x192.png"
-                  alt=""
-                  width={48}
-                  height={48}
-                  className="h-9 w-9 flex-shrink-0 object-contain ring-1 ring-white/30 sm:h-10 sm:w-10 dark:ring-white/15"
+                <KalnehiMark
+                  aria-hidden
+                  className="h-8 w-auto max-w-[min(100%,7.5rem)] object-contain object-left sm:h-9 sm:max-w-[8.5rem]"
                 />
               </Link>
               <div className="flex min-h-0 min-w-0 flex-1 items-center justify-center overflow-hidden">
@@ -192,7 +185,6 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
       </QuietSavedToastBoundary>
       <TimerVisibilityBridge />
       <PwaInstallPromptDeferred />
-      <VoiceNotificationSheet />
     </div>
   );
 }

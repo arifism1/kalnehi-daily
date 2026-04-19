@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 
+import { KalnehiMark } from "@/components/KalnehiMark";
 import { PwaInstallPromptDeferred } from "@/components/PwaInstallPromptDeferred";
 import { SITE_NAME } from "@/lib/seo-metadata";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
@@ -15,13 +15,9 @@ export function MarketingPublicShell({ children }: { children: React.ReactNode }
             title={SITE_NAME}
             className="flex min-w-0 items-center gap-2 rounded-xl py-1 font-semibold text-kal-text outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40"
           >
-            <Image
-              src="/icon-192x192.png"
-              alt=""
-              width={36}
-              height={36}
-              className="h-9 w-9 shrink-0 object-contain"
-              priority
+            <KalnehiMark
+              aria-hidden
+              className="h-8 w-auto max-w-[min(100%,7.5rem)] object-contain object-left sm:h-9 sm:max-w-[8.5rem]"
             />
             <span className="min-w-0 truncate text-left text-[11px] font-semibold leading-snug sm:max-w-[min(100%,22rem)] sm:whitespace-normal sm:text-balance sm:text-xs md:max-w-md md:text-sm lg:max-w-lg">
               {SITE_NAME}

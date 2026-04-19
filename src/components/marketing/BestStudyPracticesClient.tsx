@@ -210,7 +210,7 @@ const RESEARCH_SECTIONS: ResearchSection[] = [
   {
     id: "notifications",
     emoji: "🔔",
-    title: "Smart Notifications & Reminders",
+    title: "Push notifications & reminders",
     researchHook: "You meant to revise Electrostatics on Wednesday. Wednesday came and went.",
     researchDetail:
       "Ebbinghaus plotted this in 1885: without any reinforcement, you forget 70% of what you learned within 24 hours. That's not a character flaw — that's how the brain prioritises. The fix isn't trying harder to remember. It's a well-timed nudge that keeps the material and the habit active. BJ Fogg's Stanford research shows that the right prompt at the right moment is what converts intention into action.",
@@ -219,7 +219,7 @@ const RESEARCH_SECTIONS: ResearchSection[] = [
       "Fogg, B. J. (2009). A Behavior Model for Persuasive Design. Stanford Persuasive Technology Lab.",
     ],
     kalnehiConnection:
-      "Smart reminders fire when you actually need them — not at 6am for a 10pm habit, but at the moment you committed to.",
+      "Configure web push and automations in Settings so nudges line up with the times you committed to — not random alarms.",
     accent: "from-amber-400/20 via-white/40 to-orange-400/15",
     badgeColor: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
   },

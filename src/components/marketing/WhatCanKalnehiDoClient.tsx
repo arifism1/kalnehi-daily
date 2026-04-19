@@ -197,7 +197,7 @@ const FEATURES: FeatureCard[] = [
   {
     id: "notifications",
     emoji: "🔔",
-    title: "Notifications & Smart Reminders",
+    title: "Push notifications & study reminders",
     tagline: "You meant to revise Electrostatics on Wednesday. Wednesday came and went.",
     bullets: [
       "Set reminders that fire when you actually need them, not when an alarm goes off.",
