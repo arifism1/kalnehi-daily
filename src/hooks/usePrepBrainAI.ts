@@ -2,11 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import {
-  prepbrainLimitReachedMessage,
-  type AiUsagePhase,
-  type PrepBrainUsagePayload,
-} from "@/lib/prepbrainTokens";
+import { prepbrainLimitReachedMessageForUi } from "@/lib/prepbrainLimitUserFacing";
+import type { AiUsagePhase, PrepBrainUsagePayload } from "@/lib/prepbrainTokens";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { surfaceOptionalString } from "@/lib/userFacingErrors";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -237,7 +234,7 @@ export function usePrepBrainAI() {
     usage != null && usage.limit > 0 && usage.used >= usage.limit;
 
   const tokenLimitMessage = atTokenLimit && usage
-    ? prepbrainLimitReachedMessage(usage.phase)
+    ? prepbrainLimitReachedMessageForUi(usage.phase)
     : null;
 
   return {

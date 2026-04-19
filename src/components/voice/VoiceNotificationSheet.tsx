@@ -134,6 +134,8 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
 
   const parseTranscript = useCallback(
     async (transcript: string, durationSeconds: number) => {
+      // Capture before async — closeSheet() during parsing clears handoffToHubModal in the store.
+      const isHubHandoff = useVoiceNotificationStore.getState().handoffToHubModal;
       const cleaned = transcript.trim();
       if (!cleaned) {
         setParseError("No speech captured. Try again.");
@@ -227,7 +229,7 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
 
           void refetchAiGate();
 
-          if (useVoiceNotificationStore.getState().handoffToHubModal) {
+          if (isHubHandoff) {
             let quotaNote: string | null = null;
             if (typeof data.voice_seconds_charged === "number") {
               quotaNote = `Used ${data.voice_seconds_charged}s of your voice time for this parse.`;

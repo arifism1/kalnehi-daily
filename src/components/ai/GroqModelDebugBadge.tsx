@@ -6,7 +6,7 @@ type GroqModelDebugBadgeProps = {
   modelId: string | null;
   /** When false, nothing is rendered (e.g. not dev and no ?debug=true). */
   visible: boolean;
-  /** e.g. "PrepBrain" | "HelpyJi" for console logging context */
+  /** e.g. "PrepBrain" for console logging context */
   logPrefix?: string;
 };
 

@@ -1,8 +1,10 @@
 "use client";
 
 import clsx from "clsx";
+import { Palette } from "lucide-react";
 import { useId } from "react";
 
+import { SettingsExpandableSection } from "@/components/settings/SettingsExpandableSection";
 import {
   type AppearanceMode,
   useSettingsStore,
@@ -82,7 +84,13 @@ export function SettingsToggles() {
   );
 
   return (
-    <div className="kal-glass-panel divide-y divide-white/15 rounded-[1rem] px-1 dark:divide-white/10">
+    <SettingsExpandableSection
+      sectionId="preferences-theme-home"
+      title="Theme and Home"
+      description="Theme, exam countdown, projected marks, sound effects, and daily reminder nudges."
+      icon={Palette}
+    >
+      <div className="kal-glass-panel divide-y divide-white/15 rounded-[1rem] px-1 dark:divide-white/10">
       <div className="px-3 py-4">
         <span className="text-[15px] font-medium text-kal-text">Theme</span>
         <p className="mt-0.5 text-xs text-kal-text-secondary">
@@ -189,5 +197,6 @@ export function SettingsToggles() {
         />
       </div>
     </div>
+    </SettingsExpandableSection>
   );
 }

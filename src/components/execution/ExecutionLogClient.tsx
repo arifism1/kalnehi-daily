@@ -359,15 +359,15 @@ export function ExecutionLogClient() {
           >
             <h3 className="text-sm font-bold text-kal-text">Study sessions</h3>
             <p className="mt-1 text-xs leading-relaxed text-kal-muted">
-              Claimed or verified time from{" "}
+              Claimed or on-camera time from{" "}
               <a
                 href="/study-sessions"
                 className="font-medium text-violet-400 underline-offset-2 hover:underline"
               >
-                Study sessions
+                On-camera study sessions
               </a>
-              . Verified entries use on-device processing only; logs never include
-              video or images.
+              . On-camera entries use on-device processing only; logs never
+              include video or images.
             </p>
             <ul className="mt-4 space-y-2">
               <StudySessionsLog

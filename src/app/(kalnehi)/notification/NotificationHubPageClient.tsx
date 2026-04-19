@@ -67,15 +67,13 @@ export function NotificationHubPageClient({
 
   useEffect(() => {
     if (!pendingHubPrefill) return;
-    const p = useVoiceNotificationStore.getState().takeHubVoicePrefill();
-    if (!p) return;
     const { notifyLocal: nl, whenDateDraft: wd, whenTimeDraft: wt } =
-      scheduledNotifyIsoToDateAndTimeDrafts(p.next_fire_at);
-    setTitle(p.title);
-    setTag(p.tag);
-    setRepeatType(p.repeat_type);
-    setSubject(p.subject ?? "");
-    setChapter(p.chapter ?? "");
+      scheduledNotifyIsoToDateAndTimeDrafts(pendingHubPrefill.next_fire_at);
+    setTitle(pendingHubPrefill.title);
+    setTag(pendingHubPrefill.tag);
+    setRepeatType(pendingHubPrefill.repeat_type);
+    setSubject(pendingHubPrefill.subject ?? "");
+    setChapter(pendingHubPrefill.chapter ?? "");
     setNotifyLocal(nl);
     setWhenDateDraft(wd);
     setWhenTimeDraft(wt);
@@ -83,10 +81,11 @@ export function NotificationHubPageClient({
     setAddTab("text");
     setAddOpen(true);
     setVoicePrefillBanner(
-      p.voiceQuotaNote
-        ? `Filled from your voice — review and tap Save notification. ${p.voiceQuotaNote}`
+      pendingHubPrefill.voiceQuotaNote
+        ? `Filled from your voice — review and tap Save notification. ${pendingHubPrefill.voiceQuotaNote}`
         : "Filled from your voice — review and tap Save notification.",
     );
+    useVoiceNotificationStore.getState().takeHubVoicePrefill();
   }, [pendingHubPrefill]);
 
   const refresh = useCallback(async () => {

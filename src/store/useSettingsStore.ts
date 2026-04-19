@@ -42,12 +42,12 @@ export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
       appearance: "light",
-      purposeModeEnabled: false,
+      purposeModeEnabled: true,
       showCountdown: true,
       advancedMarksProjectionEnabled: true,
       soundEffects: true,
       dailyReminders: false,
-      studyCameraEnabled: false,
+      studyCameraEnabled: true,
       studyCameraFacing: "user",
       studyCameraAutoStart: true,
       studyCameraPrivacyAcknowledged: false,

@@ -35,9 +35,9 @@ import {
   prepbrainAiTokenFinalize,
   prepbrainAiTokenReserve,
 } from "@/lib/prepbrainAiTokenRpc";
+import { prepbrainLimitReachedMessageForUi } from "@/lib/prepbrainLimitUserFacing";
 import {
   prepbrainCalendarMonthKey,
-  prepbrainLimitReachedMessage,
   resolveAiUsagePhase,
   type PrepBrainTokenRow,
 } from "@/lib/prepbrainTokens";
@@ -724,7 +724,7 @@ export async function POST(request: Request) {
         ok: false,
         error:
           reserve.code === "insufficient_ai_tokens"
-            ? prepbrainLimitReachedMessage(phase)
+            ? prepbrainLimitReachedMessageForUi(phase)
             : "PrepBrain AI is unavailable for your account.",
         usage: buildPrepbrainUsageDisplayPayload(
           phase,

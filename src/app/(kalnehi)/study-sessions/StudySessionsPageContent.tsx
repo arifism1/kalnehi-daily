@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, Plus } from "lucide-react";
+import { Camera, Plus } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
@@ -39,25 +39,25 @@ export default function StudySessionsPageContent() {
     <div className="space-y-6">
       <header className="max-w-2xl">
         <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
-          Verified study log
+          On-camera study log
         </p>
         <h1 className="mt-1 flex items-center gap-2 text-xl font-bold tracking-tight text-kal-text sm:text-2xl">
-          <BookOpen className="h-7 w-7 text-kal-accent" aria-hidden />
-          Verified study sessions
+          <Camera className="h-7 w-7 text-kal-accent" aria-hidden />
+          On-camera study sessions
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-kal-muted sm:text-[15px]">
-          Every session is verified by your camera on-device — so your logged
-          time reflects real focus, not just a claimed number. Syncs across
-          your devices when you&apos;re signed in.
+          Your camera runs on-device checks while you study — so logged time
+          reflects real focus, not just a claimed number. Syncs across your
+          devices when you&apos;re signed in.
         </p>
         <div className="mt-4 rounded-2xl border border-kal-accent/25 bg-kal-accent-soft px-5 py-4">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-kal-accent">
             Privacy
           </p>
           <p className="mt-1.5 text-xs leading-relaxed text-kal-accent-dark">
-            On-device verification uses AI locally. Video is never streamed,
-            uploaded, or saved on our servers. Your log only stores subject,
-            duration, and times—never images or recordings.
+            On-camera, on-device verification uses AI locally. Video is never
+            streamed, uploaded, or saved on our servers. Your log only stores
+            subject, duration, and times—never images or recordings.
           </p>
         </div>
       </header>
@@ -69,7 +69,7 @@ export default function StudySessionsPageContent() {
         className="flex w-full min-h-[56px] items-center justify-center gap-2 rounded-2xl bg-kal-accent px-4 text-base font-bold text-kal-accent-foreground shadow-sm transition-transform hover:bg-kal-accent-hover active:scale-[0.99] disabled:opacity-50"
       >
         <Plus className="h-5 w-5" strokeWidth={2.5} />
-        Start verified session
+        Start on-camera session
       </button>
 
       {!userId ? (

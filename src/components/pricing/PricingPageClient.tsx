@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import Script from "next/script";
-import dynamic from "next/dynamic";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { CalendarClock, Check, Crown } from "lucide-react";
 
 import {
@@ -25,7 +24,6 @@ import { formatWelcomeVoiceTimeLeft } from "@/lib/freeTrial";
 import { SITE_NAME } from "@/lib/seo-metadata";
 import { toUserFacingMessage } from "@/lib/userFacingErrors";
 import { TIERS } from "@/lib/subscriptionTiers";
-import { isHelpyJiEligibleForPricingPage } from "@/lib/helpyjiVisibility";
 import type { PaymentErrorProof } from "@/lib/paymentSupportEmail";
 import { useAuthStore } from "@/store/useAuthStore";
 
@@ -46,14 +44,6 @@ declare global {
     Razorpay?: RazorpayConstructor;
   }
 }
-
-const HelpyJiChat = dynamic(
-  () =>
-    import("@/components/helpyji/HelpyJiChat").then((m) => ({
-      default: m.HelpyJiChat,
-    })),
-  { ssr: false },
-);
 
 const AUTOPAY_PRESET_MONTHS = [1, 2, 3, 6, 12] as const;
 
@@ -233,7 +223,6 @@ export function PricingPageClient() {
     proof?: PaymentErrorProof;
     debugHint?: string;
   } | null>(null);
-  const helpyjiAnchorRef = useRef<HTMLDivElement>(null);
 
   const showCancel =
     subscriptionStatus === "trial" || subscriptionStatus === "active";
@@ -563,19 +552,6 @@ export function PricingPageClient() {
             </button>
           </article>
         </div>
-
-        <div
-          ref={helpyjiAnchorRef}
-          className="h-px w-full max-w-5xl scroll-mt-4"
-          aria-hidden
-        />
-
-        {isHelpyJiEligibleForPricingPage(user) ? (
-          <HelpyJiChat
-            surface="pricing"
-            intersectionAnchorRef={helpyjiAnchorRef}
-          />
-        ) : null}
 
         {showCancel ? (
           <div className="mx-auto max-w-sm">
