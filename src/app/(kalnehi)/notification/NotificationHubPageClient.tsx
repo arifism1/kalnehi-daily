@@ -40,7 +40,6 @@ export function NotificationHubPageClient({
 }) {
   const openVoiceSheet = useVoiceNotificationStore((s) => s.openSheet);
   const pendingHubPrefill = useVoiceNotificationStore((s) => s.pendingHubPrefill);
-  const takeHubVoicePrefill = useVoiceNotificationStore((s) => s.takeHubVoicePrefill);
   const { voiceMinuteStatus } = useAiGate();
 
   const [rows, setRows] = useState<ScheduledNotificationRow[]>(initialRows);
@@ -67,7 +66,8 @@ export function NotificationHubPageClient({
   }, []);
 
   useEffect(() => {
-    const p = takeHubVoicePrefill();
+    if (!pendingHubPrefill) return;
+    const p = useVoiceNotificationStore.getState().takeHubVoicePrefill();
     if (!p) return;
     const { notifyLocal: nl, whenDateDraft: wd, whenTimeDraft: wt } =
       scheduledNotifyIsoToDateAndTimeDrafts(p.next_fire_at);
@@ -87,7 +87,7 @@ export function NotificationHubPageClient({
         ? `Filled from your voice — review and tap Save notification. ${p.voiceQuotaNote}`
         : "Filled from your voice — review and tap Save notification.",
     );
-  }, [pendingHubPrefill, takeHubVoicePrefill]);
+  }, [pendingHubPrefill]);
 
   const refresh = useCallback(async () => {
     if (!userId) return;
@@ -306,8 +306,8 @@ export function NotificationHubPageClient({
 
                 <div className="shrink-0 px-4 pt-3 sm:px-5">
                   <p className="mb-2 text-[11px] leading-snug text-kal-muted">
-                    Voice captures your words, then opens this form on the Type tab so you can edit
-                    and save.
+                    Voice captures your words, then returns here on the Type tab so you can preview,
+                    edit, and save — not in the voice sheet.
                   </p>
                   <div className="flex gap-1 rounded-xl border border-kal-border bg-kal-card-muted/50 p-1 dark:bg-zinc-900/40">
                     <button
