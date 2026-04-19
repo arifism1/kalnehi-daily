@@ -150,6 +150,15 @@ export async function runVoiceNotificationParse(
 
   const tz = input.ianaTimeZone.trim().slice(0, 120) || "UTC";
   const nowAnchor = (input.nowIso?.trim() || new Date().toISOString()).slice(0, 40);
+  /** Same clock the model used for relative times — avoids false past/future rejects on client/server skew. */
+  const validationNowMs = (() => {
+    const raw = input.nowIso?.trim();
+    if (raw) {
+      const d = new Date(raw);
+      if (!Number.isNaN(d.getTime())) return d.getTime();
+    }
+    return Date.now();
+  })();
 
   const system = `You convert a student's spoken notification request into structured JSON.
 Return ONLY one JSON object (no markdown, no prose). Shape:
@@ -236,15 +245,14 @@ If you cannot determine a time, use notify_at as an empty string (caller will re
         continue;
       }
 
-      const nowMs = Date.now();
-      if (at.getTime() < nowMs - PAST_SKEW_MS) {
+      if (at.getTime() < validationNowMs - PAST_SKEW_MS) {
         return {
           ok: false,
           error: "That time is already in the past. Try again with a future time.",
           reason: "validation",
         };
       }
-      if (at.getTime() > nowMs + MAX_FUTURE_MS) {
+      if (at.getTime() > validationNowMs + MAX_FUTURE_MS) {
         return {
           ok: false,
           error: "Notification time is too far in the future.",

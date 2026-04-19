@@ -26,6 +26,7 @@ const AuthAppNavPreviewMenu = dynamic(
   { ssr: false },
 );
 import { trackAuthSuccess } from "@/lib/analytics";
+import { buildAuthCallbackUrl } from "@/lib/authCallbackUrl";
 import { SITE_NAME } from "@/lib/seo-metadata";
 import { formatSupabaseError, getSupabaseBrowserClient } from "@/lib/supabase";
 import { toUserFacingMessage } from "@/lib/userFacingErrors";
@@ -33,17 +34,6 @@ import { useAuthStore } from "@/store/useAuthStore";
 
 type Mode = "login" | "signup";
 type AuthView = "form" | "forgot" | "forgot-sent";
-
-function authCallbackUrl(nextPath: string): string {
-  const origin =
-    typeof window !== "undefined"
-      ? window.location.origin
-      : (process.env.NEXT_PUBLIC_SITE_URL ?? "");
-  const normalizedOrigin = origin.replace(/\/+$/, "");
-  const next = encodeURIComponent(nextPath.startsWith("/") ? nextPath : `/${nextPath}`);
-  if (!normalizedOrigin) return `/auth/callback?next=${next}`;
-  return `${normalizedOrigin}/auth/callback?next=${next}`;
-}
 
 /** Small app mark: grid tile + overflow so the 192px asset cannot flex-grow past the frame. */
 function AuthPageMark({ priority }: { priority?: boolean }) {
@@ -216,7 +206,7 @@ export default function AuthPage() {
       const supabase = getSupabaseBrowserClient();
       const { error: oErr } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: authCallbackUrl("/") },
+        options: { redirectTo: buildAuthCallbackUrl("/") },
       });
       if (oErr) throw oErr;
     } catch (e) {

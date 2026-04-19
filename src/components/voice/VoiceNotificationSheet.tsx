@@ -51,6 +51,16 @@ function isoToDatetimeLocalValue(iso: string): string {
   }
 }
 
+/** Prefer datetime-local when set; otherwise parsed ISO from the server. */
+function resolveNotifyFireIso(notifyLocal: string, notifyAtIso: string): string {
+  const local = notifyLocal.trim();
+  if (local) {
+    const d = new Date(local);
+    if (!Number.isNaN(d.getTime())) return d.toISOString();
+  }
+  return notifyAtIso;
+}
+
 /** API returns trusted, user-facing strings — do not run through surfaceErrorForUi (it hides them). */
 function voiceParseErrorMessage(raw: unknown, status: number): string {
   if (typeof raw === "string" && raw.trim()) {
@@ -270,9 +280,7 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
 
   const handleConfirm = useCallback(async () => {
     const t = title.trim();
-    const nextIso = notifyLocal
-      ? new Date(notifyLocal).toISOString()
-      : notifyAtIso;
+    const nextIso = resolveNotifyFireIso(notifyLocal, notifyAtIso);
     if (!t || !nextIso) return;
     setPhase("saving");
     setParseError(null);
@@ -315,6 +323,8 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
   ]);
 
   if (!open) return null;
+
+  const effectiveNotifyIso = resolveNotifyFireIso(notifyLocal, notifyAtIso);
 
   const voiceBlocked = gateLoading ? false : !canDoVoiceSession;
 
@@ -461,11 +471,14 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
                   className="mt-1 w-full rounded-lg border border-kal-border bg-white/80 px-3 py-2 text-kal-text dark:bg-zinc-900/60"
                   value={notifyLocal}
                   onChange={(e) => {
-                    setNotifyLocal(e.target.value);
-                    if (e.target.value) {
-                      const d = new Date(e.target.value);
-                      if (!Number.isNaN(d.getTime())) setNotifyAtIso(d.toISOString());
+                    const v = e.target.value;
+                    setNotifyLocal(v);
+                    if (!v) {
+                      setNotifyAtIso("");
+                      return;
                     }
+                    const d = new Date(v);
+                    if (!Number.isNaN(d.getTime())) setNotifyAtIso(d.toISOString());
                   }}
                 />
               </label>
@@ -517,7 +530,7 @@ export function VoiceNotificationSheet({ onSaved }: { onSaved?: () => void }) {
             <p className="text-sm leading-relaxed text-kal-text">
               <span className="font-semibold text-kal-accent-dark">{title}</span>
               {" · "}
-              <span className="font-medium">{formatNotifyPreview(notifyAtIso)}</span>
+              <span className="font-medium">{formatNotifyPreview(effectiveNotifyIso)}</span>
             </p>
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               <button
