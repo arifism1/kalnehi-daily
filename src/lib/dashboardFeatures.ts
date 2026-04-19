@@ -2,6 +2,7 @@ import {
   BarChart3,
   BookOpen,
   Brain,
+  Camera,
   CheckCircle,
   Clock,
   Flower2,
@@ -12,7 +13,6 @@ import {
   MessageSquare,
   Mic,
   PenTool,
-  PlayCircle,
   Sparkles,
   Target,
   TrendingUp,
@@ -97,9 +97,10 @@ export const DASHBOARD_FEATURES: DashboardFeature[] = [
   },
   {
     id: "study-sessions",
-    title: "Study Sessions",
-    icon: PlayCircle,
-    description: "Start timed study sessions and track your focus hours.",
+    title: "On-camera sessions",
+    icon: Camera,
+    description:
+      "Log focus time with optional on-camera, on-device checks — nothing uploaded.",
   },
   {
     id: "timer",

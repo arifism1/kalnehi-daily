@@ -4,6 +4,7 @@ import {
   BarChart3,
   BookOpen,
   Brain,
+  Camera,
   CheckCircle,
   ChevronDown,
   Clock,
@@ -16,7 +17,6 @@ import {
   MessageSquare,
   Mic,
   PenTool,
-  PlayCircle,
   Sparkles,
   Target,
   TrendingUp,
@@ -206,8 +206,8 @@ export function HomeAccordionSections() {
     },
     {
       id: "study-sessions",
-      title: "Study Sessions",
-      icon: PlayCircle,
+      title: "On-camera sessions",
+      icon: Camera,
       content: <StudySessionsPageContent />,
     },
     {

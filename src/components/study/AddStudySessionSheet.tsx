@@ -169,8 +169,9 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
                       Verification not enabled
                     </p>
                     <p className="mt-1.5 text-xs leading-relaxed text-kal-muted">
-                      Turn on verified sessions in Settings to log with on-device
-                      checks. Video stays on your device only — never uploaded.
+                      Turn on on-camera study sessions in Settings to log with
+                      on-device checks. Video stays on your device only — never
+                      uploaded.
                     </p>
                     <Link
                       href="/settings"

@@ -52,9 +52,9 @@ const PAGE_SEO: Record<
   },
   studySessions: {
     path: "/study-sessions",
-    title: `Study sessions — timed blocks & deep work | ${SITE_NAME}`,
+    title: `On-camera study sessions — camera on-device | ${SITE_NAME}`,
     description:
-      `Run focused study sessions with ${SITE_NAME}. Track time on task, reduce distraction, and build a repeatable daily rhythm for JEE, NEET, and Boards.`,
+      `Log study time with optional on-camera verification: processing stays on your device — no video upload. Focus tracking for JEE, NEET, and Boards in ${SITE_NAME}.`,
   },
   planner: {
     path: "/planner",

@@ -7,6 +7,7 @@ import {
   Brain,
   Calendar,
   CalendarDays,
+  Camera,
   CheckCircle,
   Clock,
   Crown,
@@ -16,7 +17,6 @@ import {
   Home,
   Inbox,
   Mic,
-  PlayCircle,
   LifeBuoy,
   RotateCw,
   Settings,
@@ -138,9 +138,9 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
     items: [
       {
         href: "/study-sessions",
-        label: "Study Sessions",
-        shortLabel: "Study",
-        Icon: PlayCircle,
+        label: "On-camera sessions",
+        shortLabel: "Camera",
+        Icon: Camera,
         featureId: "study-sessions",
       },
       { href: "/timer", label: "Timer", Icon: Clock, featureId: "timer" },

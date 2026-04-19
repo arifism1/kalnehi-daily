@@ -43,7 +43,7 @@ export function StudySessionsLog({
               {s.is_camera_proven ? (
                 <span className="inline-flex max-w-full flex-col gap-1 sm:inline-flex sm:max-w-none sm:flex-row sm:items-start sm:gap-2">
                   <span className="w-fit shrink-0 rounded-md border border-kal-accent/25 bg-kal-accent/10 px-1.5 py-0.5 font-medium text-kal-accent">
-                    Verified
+                    On-camera
                   </span>
                   <span className="min-w-0 text-[10px] leading-snug text-kal-text-secondary sm:text-[11px] sm:leading-relaxed">
                     Processed locally on your device. Only duration &amp; times are

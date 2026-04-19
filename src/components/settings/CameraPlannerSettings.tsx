@@ -1,6 +1,7 @@
 "use client";
 
 import clsx from "clsx";
+import { Camera } from "lucide-react";
 import { useId, useState } from "react";
 
 import { SettingsExpandableSection } from "@/components/settings/SettingsExpandableSection";
@@ -95,15 +96,16 @@ export function CameraPlannerSettings() {
       />
       <SettingsExpandableSection
         sectionId="camera-planner"
-        title="Verified study sessions"
-        description="On-device verification runs locally only. No video is uploaded or streamed."
+        title="On-camera study sessions"
+        description="Uses your camera with on-device processing only. No video is uploaded or streamed."
+        icon={Camera}
       >
         <div className="kal-glass-panel divide-y divide-white/15 rounded-[1rem] px-1 dark:divide-white/10">
           <div className="px-3 py-3.5">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <span className="text-[15px] font-medium text-kal-text">
-                  Enable on-device verification
+                  Enable on-camera verification
                 </span>
                 <p className="mt-2 text-xs leading-relaxed text-kal-text-secondary">
                   Video is processed only on your phone or computer. No data is
@@ -126,7 +128,7 @@ export function CameraPlannerSettings() {
                     Default camera
                   </span>
                   <p className="mt-0.5 text-xs text-kal-text-secondary">
-                    For verified study sessions. Your choice is remembered.
+                    For on-camera study sessions. Your choice is remembered.
                   </p>
                 </div>
                 <select
@@ -135,7 +137,7 @@ export function CameraPlannerSettings() {
                     setStudyCameraFacing(e.target.value as StudyCameraFacing)
                   }
                   className="min-h-[44px] rounded-lg border border-kal-border bg-kal-card-muted px-3 py-2 text-sm text-kal-text"
-                  aria-label="Default camera for study sessions"
+                  aria-label="Default camera for on-camera study sessions"
                 >
                   <option value="user">Front (selfie)</option>
                   <option value="environment">Back</option>

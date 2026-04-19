@@ -4,7 +4,7 @@ import Link from "next/link";
 import Script from "next/script";
 import { addMonths, differenceInCalendarDays, format } from "date-fns";
 import { ArrowLeft, Brain, Crown, Loader2, Mic, RefreshCw } from "lucide-react";
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 
 import {
   cancelSubscription,
@@ -13,7 +13,6 @@ import {
   createRazorpayMonthlySubscription,
   activateRazorpayMonthlySubscription,
 } from "@/actions/subscription";
-import { HelpyJiChat } from "@/components/helpyji/HelpyJiChat";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ExtraCreditsSection } from "@/components/settings/ExtraCreditsSection";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
@@ -28,7 +27,6 @@ import {
 import { SITE_NAME } from "@/lib/seo-metadata";
 import type { AiUsagePhase, PrepBrainUsagePayload } from "@/lib/prepbrainTokens";
 import { getTierConfig, TIERS } from "@/lib/subscriptionTiers";
-import { isHelpyJiEligibleForTier } from "@/lib/helpyjiVisibility";
 import { useAuthStore } from "@/store/useAuthStore";
 import { surfaceErrorForUi } from "@/lib/userFacingErrors";
 
@@ -227,10 +225,7 @@ export function MyPlanPageClient() {
   const [autopayMonths, setAutopayMonths] = useState(DEFAULT_AUTOPAY_MONTHS);
   const [resubBusy, setResubBusy] = useState(false);
   const [resubError, setResubError] = useState<string | null>(null);
-  const helpyjiUpgradeAnchorRef = useRef<HTMLDivElement>(null);
   const user = useAuthStore((s) => s.user);
-
-  const showHelpyJiMyPlan = !!user && isHelpyJiEligibleForTier(tier, hasPaidAccess);
 
   const tierConfig = getTierConfig(tier);
 
@@ -821,17 +816,6 @@ export function MyPlanPageClient() {
               </div>
             )}
           </div>
-
-          {showHelpyJiMyPlan ? (
-            <>
-              <div
-                ref={helpyjiUpgradeAnchorRef}
-                className="h-px w-full max-w-lg md:max-w-xl"
-                aria-hidden
-              />
-              <HelpyJiChat surface="pricing" intersectionAnchorRef={helpyjiUpgradeAnchorRef} />
-            </>
-          ) : null}
 
           {hasAiAccess && hasPaidAccess && <ExtraCreditsSection />}
         </>
