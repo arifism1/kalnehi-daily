@@ -13,6 +13,7 @@ import {
   deleteScheduledNotification,
   listScheduledNotifications,
 } from "@/actions/scheduledNotifications";
+import { scheduledNotifyIsoToDateAndTimeDrafts } from "@/lib/scheduledNotifications/isoToDatetimeLocal";
 import { SCHEDULED_NOTIFICATION_TAGS } from "@/lib/scheduledNotifications/tags";
 import type { ScheduledNotificationRow } from "@/lib/scheduledNotifications/tagsAndTypes";
 import { SmartNotificationSetupBanner } from "@/components/smart-notification/SmartNotificationSetupBanner";
@@ -38,6 +39,8 @@ export function NotificationHubPageClient({
   userId: string | null;
 }) {
   const openVoiceSheet = useVoiceNotificationStore((s) => s.openSheet);
+  const pendingHubPrefill = useVoiceNotificationStore((s) => s.pendingHubPrefill);
+  const takeHubVoicePrefill = useVoiceNotificationStore((s) => s.takeHubVoicePrefill);
   const { voiceMinuteStatus } = useAiGate();
 
   const [rows, setRows] = useState<ScheduledNotificationRow[]>(initialRows);
@@ -57,10 +60,34 @@ export function NotificationHubPageClient({
   const [subject, setSubject] = useState("");
   const [chapter, setChapter] = useState("");
   const [portalReady, setPortalReady] = useState(false);
+  const [voicePrefillBanner, setVoicePrefillBanner] = useState<string | null>(null);
 
   useEffect(() => {
     setPortalReady(true);
   }, []);
+
+  useEffect(() => {
+    const p = takeHubVoicePrefill();
+    if (!p) return;
+    const { notifyLocal: nl, whenDateDraft: wd, whenTimeDraft: wt } =
+      scheduledNotifyIsoToDateAndTimeDrafts(p.next_fire_at);
+    setTitle(p.title);
+    setTag(p.tag);
+    setRepeatType(p.repeat_type);
+    setSubject(p.subject ?? "");
+    setChapter(p.chapter ?? "");
+    setNotifyLocal(nl);
+    setWhenDateDraft(wd);
+    setWhenTimeDraft(wt);
+    setFormError(null);
+    setAddTab("text");
+    setAddOpen(true);
+    setVoicePrefillBanner(
+      p.voiceQuotaNote
+        ? `Filled from your voice — review and tap Save notification. ${p.voiceQuotaNote}`
+        : "Filled from your voice — review and tap Save notification.",
+    );
+  }, [pendingHubPrefill, takeHubVoicePrefill]);
 
   const refresh = useCallback(async () => {
     if (!userId) return;
@@ -99,6 +126,7 @@ export function NotificationHubPageClient({
     setSubject("");
     setChapter("");
     setFormError(null);
+    setVoicePrefillBanner(null);
   };
 
   const applyWhenSelection = () => {
@@ -206,7 +234,8 @@ export function NotificationHubPageClient({
         to notify you—for example, “Remind me to revise Physics tomorrow at 6 pm” or “Every weekday at
         8 am, nudge me to start studying.” You can use{" "}
         <span className="font-medium text-kal-text">Voice capture</span> or{" "}
-        <span className="font-medium text-kal-text">Add notification</span> → Voice.
+        <span className="font-medium text-kal-text">Add notification</span> → Voice fills the form
+        after you speak; then tap Save notification.
       </p>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -226,7 +255,7 @@ export function NotificationHubPageClient({
           type="button"
           onClick={() => {
             closeAdd();
-            openVoiceSheet();
+            openVoiceSheet({ handoffToHubModal: true });
           }}
           className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-4 text-sm font-semibold text-kal-text transition hover:bg-white/80 dark:hover:bg-white/10"
         >
@@ -276,6 +305,10 @@ export function NotificationHubPageClient({
                 </div>
 
                 <div className="shrink-0 px-4 pt-3 sm:px-5">
+                  <p className="mb-2 text-[11px] leading-snug text-kal-muted">
+                    Voice captures your words, then opens this form on the Type tab so you can edit
+                    and save.
+                  </p>
                   <div className="flex gap-1 rounded-xl border border-kal-border bg-kal-card-muted/50 p-1 dark:bg-zinc-900/40">
                     <button
                       type="button"
@@ -294,7 +327,7 @@ export function NotificationHubPageClient({
                       onClick={() => {
                         setAddTab("voice");
                         closeAdd();
-                        openVoiceSheet();
+                        openVoiceSheet({ handoffToHubModal: true });
                       }}
                       className={clsx(
                         "min-h-[40px] flex-1 rounded-lg px-2 py-2 text-sm font-semibold transition",
@@ -311,6 +344,14 @@ export function NotificationHubPageClient({
                 <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-5 sm:pb-5 sm:pt-4">
                   {addTab === "text" ? (
                     <div className="flex flex-col gap-4 text-sm">
+                      {voicePrefillBanner ? (
+                        <p
+                          className="shrink-0 rounded-lg border border-kal-accent/30 bg-kal-accent/10 px-3 py-2 text-xs text-kal-text-secondary dark:border-kal-accent/25 dark:bg-kal-accent/15"
+                          role="status"
+                        >
+                          {voicePrefillBanner}
+                        </p>
+                      ) : null}
                       {formError ? (
                         <p className="shrink-0 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-red-900 dark:border-red-900/40 dark:bg-red-950/40 dark:text-red-100">
                           {surfaceOptionalString(formError, "Something went wrong.")}

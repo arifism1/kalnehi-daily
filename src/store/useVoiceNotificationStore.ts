@@ -1,13 +1,49 @@
 import { create } from "zustand";
 
-type VoiceNotificationState = {
-  open: boolean;
-  openSheet: () => void;
-  closeSheet: () => void;
+export type HubVoiceNotificationPrefill = {
+  title: string;
+  next_fire_at: string;
+  tag: string;
+  repeat_type: "once" | "daily" | "weekly";
+  subject: string | null;
+  chapter: string | null;
+  user_timezone: string;
+  voiceQuotaNote?: string | null;
 };
 
-export const useVoiceNotificationStore = create<VoiceNotificationState>((set) => ({
+type VoiceNotificationState = {
+  open: boolean;
+  handoffToHubModal: boolean;
+  pendingHubPrefill: HubVoiceNotificationPrefill | null;
+  openSheet: (opts?: { handoffToHubModal?: boolean }) => void;
+  closeSheet: () => void;
+  commitHubPrefill: (payload: HubVoiceNotificationPrefill) => void;
+  takeHubVoicePrefill: () => HubVoiceNotificationPrefill | null;
+};
+
+export const useVoiceNotificationStore = create<VoiceNotificationState>((set, get) => ({
   open: false,
-  openSheet: () => set({ open: true }),
-  closeSheet: () => set({ open: false }),
+  handoffToHubModal: false,
+  pendingHubPrefill: null,
+  openSheet: (opts) =>
+    set({
+      open: true,
+      handoffToHubModal: Boolean(opts?.handoffToHubModal),
+    }),
+  closeSheet: () =>
+    set({
+      open: false,
+      handoffToHubModal: false,
+    }),
+  commitHubPrefill: (payload) =>
+    set({
+      pendingHubPrefill: payload,
+      open: false,
+      handoffToHubModal: false,
+    }),
+  takeHubVoicePrefill: () => {
+    const p = get().pendingHubPrefill;
+    if (p) set({ pendingHubPrefill: null });
+    return p;
+  },
 }));

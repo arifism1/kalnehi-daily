@@ -41,12 +41,17 @@ export function LoginMethodsSection() {
       return;
     }
     const supabase = getSupabaseBrowserClient();
-    const { data, error } = await supabase.auth.getUserIdentities();
-    if (error) {
-      setIdentities(user.identities ?? []);
+    const { data: gu, error: guErr } = await supabase.auth.getUser();
+    if (!guErr && gu.user) {
+      setIdentities(gu.user.identities ?? []);
       return;
     }
-    setIdentities(data.identities);
+    const { data: idData, error: idErr } = await supabase.auth.getUserIdentities();
+    if (!idErr && idData?.identities) {
+      setIdentities(idData.identities);
+      return;
+    }
+    setIdentities(useAuthStore.getState().user?.identities ?? []);
   }, [user]);
 
   useEffect(() => {
@@ -76,16 +81,27 @@ export function LoginMethodsSection() {
       return;
     }
     setPasswordBusy(true);
+    const wasEmailLinkedBeforeSubmit = hasEmail;
     try {
       const supabase = getSupabaseBrowserClient();
-      const { error } = await supabase.auth.updateUser({ password: pw });
+      const { data: upd, error } = await supabase.auth.updateUser({ password: pw });
       if (error) throw error;
+      if (upd.user?.identities?.length) {
+        setIdentities(upd.user.identities);
+      }
       await supabase.auth.refreshSession();
-      await refreshIdentities();
+      const { data: fresh } = await supabase.auth.getUser();
+      if (fresh.user) {
+        setIdentities(fresh.user.identities ?? []);
+      } else {
+        await refreshIdentities();
+      }
       setNewPassword("");
       setConfirmPassword("");
       setPasswordSuccess(
-        hasEmail ? "Password updated." : "Password set — you can sign in with email next time.",
+        wasEmailLinkedBeforeSubmit
+          ? "Password updated."
+          : "Password set — you can sign in with email next time.",
       );
     } catch (e) {
       setPasswordError(formatSupabaseError(e));
