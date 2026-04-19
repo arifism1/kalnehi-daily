@@ -83,12 +83,15 @@ export default function NotificationsPage() {
         </p>
         <h1 className="kal-feature-title mt-1">Notifications</h1>
         <p className="mt-2 text-sm text-kal-muted">
+          Daily reminders, deadlines, and important updates appear here. Tune web
+          push and automations in{" "}
           <Link
-            href="/notification"
+            href="/settings"
             className="font-medium text-kal-accent-dark underline-offset-2 hover:underline"
           >
-            Schedule smart push notifications
+            Settings → Notifications
           </Link>
+          .
         </p>
       </header>
 
@@ -111,7 +114,7 @@ export default function NotificationsPage() {
             No notifications yet
           </p>
           <p className="mt-2 text-sm text-kal-muted">
-            Daily reminders, deadlines, and important updates will appear here.
+            You&apos;re all caught up for now.
           </p>
         </section>
       ) : (
