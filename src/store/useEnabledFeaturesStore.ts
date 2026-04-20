@@ -84,7 +84,9 @@ export const useEnabledFeaturesStore = create<EnabledFeaturesState>((set) => ({
             .select("enabled_features")
             .eq("user_id", userId)
             .maybeSingle();
-          data = retry.data;
+          data = retry.data
+            ? { ...retry.data, quick_nav_hrefs: null }
+            : null;
           error = retry.error;
         }
       }

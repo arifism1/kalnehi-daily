@@ -116,9 +116,9 @@ export const DASHBOARD_FEATURES: DashboardFeature[] = [
   },
   {
     id: "revision-engine",
-    title: "Revision Engine",
+    title: "Smart Revision Engine",
     icon: PenTool,
-    description: "Smart spaced-repetition to lock in what you have learned.",
+    description: "Syllabus-aware suggestions, active recall, and realistic spacing you can override.",
   },
   {
     id: "consistency-tracker",

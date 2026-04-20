@@ -1,5 +1,5 @@
-import RevisionRouteLazy from "./RevisionRouteLazy";
+import { redirect } from "next/navigation";
 
-export default function RevisionPage() {
-  return <RevisionRouteLazy />;
+export default function LegacyRevisionRedirect() {
+  redirect("/revision-engine");
 }

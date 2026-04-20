@@ -6,19 +6,19 @@ import { Suspense } from "react";
 import { FeatureGate } from "@/components/subscription/FeatureGate";
 import { RoutePageSkeleton } from "@/components/loading/RoutePageSkeleton";
 
-const RevisionEngineClient = dynamic(
+const SmartRevisionEngineClient = dynamic(
   () =>
-    import("@/components/engine/RevisionEngineClient").then((m) => ({
-      default: m.RevisionEngineClient,
+    import("@/components/revision/SmartRevisionEngineClient").then((m) => ({
+      default: m.SmartRevisionEngineClient,
     })),
   { ssr: false, loading: () => <RoutePageSkeleton /> },
 );
 
-export default function RevisionRouteLazy() {
+export default function SmartRevisionRouteLazy() {
   return (
     <Suspense fallback={<RoutePageSkeleton />}>
       <FeatureGate feature="revision">
-        <RevisionEngineClient />
+        <SmartRevisionEngineClient />
       </FeatureGate>
     </Suspense>
   );

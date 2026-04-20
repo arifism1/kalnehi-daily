@@ -816,6 +816,62 @@ export type Database = {
         }
         Relationships: []
       }
+      user_revision_logs: {
+        Row: {
+          confidence_stars: number | null
+          created_at: string
+          groq_feedback: Json | null
+          groq_model: string | null
+          id: string
+          next_review_effective_date: string | null
+          recall_transcript: string | null
+          session_kind: string
+          suggested_next_review_date: string | null
+          syllabus_master_id: string | null
+          topic_title: string
+          user_id: string
+          user_overrode_next_review: boolean
+        }
+        Insert: {
+          confidence_stars?: number | null
+          created_at?: string
+          groq_feedback?: Json | null
+          groq_model?: string | null
+          id?: string
+          next_review_effective_date?: string | null
+          recall_transcript?: string | null
+          session_kind: string
+          suggested_next_review_date?: string | null
+          syllabus_master_id?: string | null
+          topic_title: string
+          user_id: string
+          user_overrode_next_review?: boolean
+        }
+        Update: {
+          confidence_stars?: number | null
+          created_at?: string
+          groq_feedback?: Json | null
+          groq_model?: string | null
+          id?: string
+          next_review_effective_date?: string | null
+          recall_transcript?: string | null
+          session_kind?: string
+          suggested_next_review_date?: string | null
+          syllabus_master_id?: string | null
+          topic_title?: string
+          user_id?: string
+          user_overrode_next_review?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_revision_logs_syllabus_master_id_fkey"
+            columns: ["syllabus_master_id"]
+            isOneToOne: false
+            referencedRelation: "syllabus_master"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_revision_queue_items: {
         Row: {
           created_at: string
@@ -851,6 +907,50 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_revision_topic_state: {
+        Row: {
+          last_confidence_stars: number | null
+          last_recalled_at: string | null
+          last_suggested_interval_max: number | null
+          last_suggested_interval_min: number | null
+          next_review_effective_date: string | null
+          syllabus_master_id: string
+          topic_title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          last_confidence_stars?: number | null
+          last_recalled_at?: string | null
+          last_suggested_interval_max?: number | null
+          last_suggested_interval_min?: number | null
+          next_review_effective_date?: string | null
+          syllabus_master_id: string
+          topic_title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          last_confidence_stars?: number | null
+          last_recalled_at?: string | null
+          last_suggested_interval_max?: number | null
+          last_suggested_interval_min?: number | null
+          next_review_effective_date?: string | null
+          syllabus_master_id?: string
+          topic_title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_revision_topic_state_syllabus_master_id_fkey"
+            columns: ["syllabus_master_id"]
+            isOneToOne: false
+            referencedRelation: "syllabus_master"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_notifications: {
         Row: {

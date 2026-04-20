@@ -29,6 +29,17 @@ function isUserNotificationsTableMissing(error: unknown): boolean {
   );
 }
 
+function isUserRevisionTopicStateTableMissing(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const e = error as { code?: string; message?: string };
+  if (e.code === "PGRST205") return true;
+  const m = (e.message ?? "").toLowerCase();
+  return (
+    m.includes("user_revision_topic_state") &&
+    (m.includes("schema cache") || m.includes("could not find"))
+  );
+}
+
 function todayRangeUtc() {
   const now = new Date();
   const start = new Date(
@@ -168,6 +179,43 @@ export async function ensureAutomatedNotifications(): Promise<
         "Streak alert",
         `You're on a ${streak}-day completion streak. Protect it today.`,
       );
+    }
+
+    const { data: revRows, error: revErr } = await supabase
+      .from("user_revision_topic_state")
+      .select("next_review_effective_date")
+      .eq("user_id", user.id)
+      .not("next_review_effective_date", "is", null);
+
+    if (revErr) {
+      if (!isUserRevisionTopicStateTableMissing(revErr)) {
+        throw revErr;
+      }
+    } else {
+      let overdue = 0;
+      let dueToday = 0;
+      for (const row of revRows ?? []) {
+        const d = row.next_review_effective_date;
+        if (!d) continue;
+        if (d < today) overdue += 1;
+        else if (d === today) dueToday += 1;
+      }
+      const n = overdue + dueToday;
+      if (n > 0) {
+        const message =
+          overdue > 0 && dueToday > 0
+            ? `You have ${n} microtopic(s) to revise (${overdue} overdue, ${dueToday} due today). Open Study Tools → Smart Revision Engine.`
+            : overdue > 0
+              ? `You have ${overdue} overdue microtopic(s) ready to revise. Open Study Tools → Smart Revision Engine.`
+              : `You have ${dueToday} microtopic(s) scheduled for revision today. Open Smart Revision Engine when you are ready.`;
+        await insertIfMissingToday(
+          supabase,
+          user.id,
+          "reminder",
+          "Smart Revision — reviews due",
+          message,
+        );
+      }
     }
 
     return { ok: true };

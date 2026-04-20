@@ -45,8 +45,8 @@ const ProgressRouteLazy = dynamic(
   () => import("@/app/(kalnehi)/progress/ProgressRouteLazy"),
   { ssr: false },
 );
-const RevisionRouteLazy = dynamic(
-  () => import("@/app/(kalnehi)/revision/RevisionRouteLazy"),
+const SmartRevisionRouteLazy = dynamic(
+  () => import("@/app/(kalnehi)/revision-engine/SmartRevisionRouteLazy"),
   { ssr: false },
 );
 const ConsistencyTrackerRouteLazy = dynamic(
@@ -226,7 +226,7 @@ export function HomeAccordionSections() {
       id: "revision-engine",
       title: "Revision Engine",
       icon: PenTool,
-      content: <RevisionRouteLazy />,
+      content: <SmartRevisionRouteLazy />,
     },
     {
       id: "consistency-tracker",

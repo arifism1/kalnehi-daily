@@ -233,7 +233,9 @@ function useSubscriptionAccessState(): SubscriptionData {
             .select(USER_PROFILE_SUBSCRIPTION_SELECT_BASE)
             .eq("user_id", user.id)
             .maybeSingle();
-          data = retry.data;
+          data = retry.data
+            ? { ...retry.data, quick_nav_hrefs: null }
+            : null;
           error = retry.error;
         }
 
