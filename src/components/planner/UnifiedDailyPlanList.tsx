@@ -21,6 +21,7 @@ import { useUndoStore } from "@/store/useUndoStore";
 import { useTaskStore, type Microtopic } from "@/store/useTaskStore";
 import { findOverlappingTaskPairs } from "@/lib/dailyPlanOverlap";
 import { slotFromStartEnd, timeDbToInput } from "@/lib/dailyPlanTime";
+import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { suggestSyllabusIdFromTitle } from "@/lib/suggestDailyTaskSyllabus";
 import { formatIstSlotRange12h } from "@/lib/voiceIst";
 import { surfaceErrorForUi } from "@/lib/userFacingErrors";
@@ -450,9 +451,20 @@ type Props = {
   planDate: string;
   title?: string;
   className?: string;
+  /** When true, past plan dates (before local calendar "today") cannot toggle done/pending. */
+  disablePastStatusToggle?: boolean;
 };
 
-export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props) {
+export function UnifiedDailyPlanList({
+  planDate,
+  title,
+  className = "",
+  disablePastStatusToggle = false,
+}: Props) {
+  const today = useCalendarDate();
+  const statusToggleLocked = Boolean(
+    disablePastStatusToggle && planDate < today,
+  );
   const microtopicsById = useTaskStore((s) => s.microtopics);
   const [tasks, setTasks] = useState<DailyTaskView[]>([]);
   const [loading, setLoading] = useState(true);
@@ -518,6 +530,7 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
   const isCompletedStatus = (s: string) => isDoneStatus(s) || isSkippedStatus(s);
 
   const toggleDone = async (t: DailyTaskView) => {
+    if (statusToggleLocked) return;
     if (isSkippedStatus(t.status)) return;
     const next = isDoneStatus(t.status) ? "pending" : "done";
     setError(null);
@@ -683,6 +696,18 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
                 const syllabusCtaLabel =
                   sid && !resolvedSyllabus ? "Fix syllabus link" : "Link to syllabus";
 
+                const checkboxReadOnly = statusToggleLocked && !skipped;
+                const statusCheckboxLabel =
+                  checkboxReadOnly
+                    ? done
+                      ? "Done (read-only, past day on saved plans)"
+                      : "Not done (read-only, past day on saved plans)"
+                    : done
+                      ? "Mark as not done"
+                      : skipped
+                        ? "Skipped"
+                        : "Mark as done";
+
                 return (
                   <li
                     key={t.id}
@@ -701,9 +726,13 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
                       <button
                         type="button"
                         role="checkbox"
-                        disabled={busyId === t.id || isDeleting || skipped}
+                        disabled={busyId === t.id || isDeleting || skipped || statusToggleLocked}
                         onClick={() => void toggleDone(t)}
-                        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent disabled:opacity-40 ${
+                        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${
+                          checkboxReadOnly
+                            ? "disabled:cursor-not-allowed disabled:opacity-90 focus-visible:ring-kal-muted/25"
+                            : "disabled:opacity-40"
+                        } ${
                           done
                             ? "border-kal-accent bg-kal-accent text-white"
                             : skipped
@@ -711,7 +740,7 @@ export function UnifiedDailyPlanList({ planDate, title, className = "" }: Props)
                               : "border-kal-accent/45 bg-white text-transparent hover:border-kal-accent hover:bg-white dark:border-white/35 dark:bg-zinc-900/90 dark:hover:border-kal-accent/80 dark:hover:bg-zinc-900"
                         }`}
                         aria-checked={completed}
-                        aria-label={done ? "Mark as not done" : skipped ? "Skipped" : "Mark as done"}
+                        aria-label={statusCheckboxLabel}
                       >
                         {busyId === t.id ? (
                           <Loader2

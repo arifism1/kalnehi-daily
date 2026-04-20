@@ -140,17 +140,23 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
     ],
   },
   {
-    title: "Review & Analysis",
-    quickNavGroupLabel: "Review",
+    title: "Study Tools",
+    quickNavGroupLabel: "Study",
     items: [
-      { href: "/progress", label: "Progress", Icon: TrendingUp, featureId: "progress" },
       {
-        href: "/revision",
-        label: "Revision Engine",
+        href: "/revision-engine",
+        label: "Smart Revision Engine",
         shortLabel: "Revision",
         Icon: RotateCw,
         featureId: "revision-engine",
       },
+    ],
+  },
+  {
+    title: "Review & Analysis",
+    quickNavGroupLabel: "Review",
+    items: [
+      { href: "/progress", label: "Progress", Icon: TrendingUp, featureId: "progress" },
       {
         href: "/consistency-tracker",
         label: "Consistency Tracker",
@@ -239,7 +245,6 @@ const QUICK_NAV_HREF_ORDER: readonly string[] = [
   "/timer",
   "/study-sessions",
   "/progress",
-  "/revision",
   "/consistency-tracker",
   "/habits",
   "/motivation",
@@ -252,6 +257,7 @@ const QUICK_NAV_EXCLUDED_HREFS = new Set([
   "/settings",
   "/my-plan",
   "/policies",
+  "/revision-engine",
 ]);
 
 function quickNavOrderIndex(href: string): number {

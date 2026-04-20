@@ -256,7 +256,7 @@ export function SavedPlansPageContent() {
                 <button
                   type="button"
                   onClick={() => setExpandedPlanDate((prev) => (prev === plan.planDate ? null : plan.planDate))}
-                  className="kal-glass-panel w-full rounded-3xl px-5 py-5 text-left transition-colors hover:border-kal-accent/35 sm:px-6"
+                  className="kal-glass-panel w-full min-w-0 rounded-3xl px-5 py-5 text-left transition-colors hover:border-kal-accent/35 sm:px-6"
                   aria-expanded={expanded}
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
@@ -283,12 +283,12 @@ export function SavedPlansPageContent() {
                     </div>
                   </div>
 
-                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <div className="mt-4 flex min-w-0 w-full flex-wrap items-start gap-2">
                     {plan.previewTitles.length > 0 ? (
                       plan.previewTitles.map((title, idx) => (
                         <span
                           key={`${plan.id}-preview-${idx}`}
-                          className="rounded-full border border-kal-border bg-kal-card-muted/50 px-2.5 py-1 text-xs text-kal-muted"
+                          className="max-w-full min-w-0 break-words rounded-2xl border border-kal-border bg-kal-card-muted/50 px-2.5 py-1 text-left text-xs text-kal-muted"
                         >
                           {title}
                         </span>
@@ -312,6 +312,7 @@ export function SavedPlansPageContent() {
                     <UnifiedDailyPlanList
                       planDate={plan.planDate}
                       title={`Daily plan details — ${plan.formattedDate}`}
+                      disablePastStatusToggle
                     />
                   </div>
                 ) : null}

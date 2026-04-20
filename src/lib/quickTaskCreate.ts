@@ -181,3 +181,71 @@ export async function bulkAddSyllabusMicrotopicsToDailyPlan(
     return { ok: false, error: toUserFacingLocalError(e) };
   }
 }
+
+/**
+ * One pending task per selected syllabus row for `assignedDate`. Skips duplicates on that date.
+ */
+export async function addSelectedSyllabusRowsToDailyPlan(
+  userId: string,
+  assignedDate: string,
+  rows: SyllabusRow[],
+): Promise<
+  { ok: true; created: number; skipped: number } | { ok: false; error: string }
+> {
+  try {
+    const existing = new Set<string>();
+    for (const t of Object.values(useTaskStore.getState().tasks)) {
+      if (t.assigned_date !== assignedDate) continue;
+      if (t.microtopic_id && String(t.microtopic_id).length > 0) {
+        existing.add(String(t.microtopic_id));
+      }
+    }
+
+    let created = 0;
+    let skipped = 0;
+    for (const row of rows) {
+      const mid = String(row.id);
+      if (existing.has(mid)) {
+        skipped++;
+        continue;
+      }
+      const id = crypto.randomUUID();
+      const now = new Date().toISOString();
+      const label = (row.microtopic ?? "").trim() || row.chapter || "Syllabus";
+      const fullTask: Task = {
+        id,
+        user_id: userId,
+        assigned_date: assignedDate,
+        status: "pending",
+        name: label,
+        microtopic_id: mid,
+        created_at: now,
+        updated_at: now,
+        estimated_minutes: row.estimated_minutes ?? null,
+        estimated_time_minutes: null,
+        end_time: null,
+        start_time: null,
+        marks_value: null,
+        marks_weight: null,
+        time_spent_seconds: null,
+      };
+      const insertRow: Omit<TablesInsert<"tasks">, "user_id" | "id"> & {
+        id?: string;
+      } = {
+        assigned_date: assignedDate,
+        status: "pending",
+        name: label,
+        microtopic_id: mid,
+        id,
+        estimated_minutes: row.estimated_minutes ?? null,
+      };
+      const r = await applyOptimisticTaskCreate(insertRow, userId, fullTask);
+      if (!r.ok) return r;
+      existing.add(mid);
+      created++;
+    }
+    return { ok: true, created, skipped };
+  } catch (e) {
+    return { ok: false, error: toUserFacingLocalError(e) };
+  }
+}
