@@ -133,6 +133,7 @@ export type Database = {
           marks_2024: number | null
           marks_2025: number | null
           microtopic: string
+          relative_effort_score: number | null
           subject: string
         }
         Insert: {
@@ -145,6 +146,7 @@ export type Database = {
           marks_2024?: number | null
           marks_2025?: number | null
           microtopic: string
+          relative_effort_score?: number | null
           subject: string
         }
         Update: {
@@ -157,6 +159,7 @@ export type Database = {
           marks_2024?: number | null
           marks_2025?: number | null
           microtopic?: string
+          relative_effort_score?: number | null
           subject?: string
         }
         Relationships: []
@@ -973,6 +976,7 @@ export type Database = {
           target_exam: string | null
           target_exam_date: string | null
           enabled_features: string[] | null
+          quick_nav_hrefs: Json | null
           upsc_optional_subjects: string[] | null
           trial_photo_scans_used: number
           trial_started_at: string | null
@@ -1024,6 +1028,7 @@ export type Database = {
           target_exam?: string | null
           target_exam_date?: string | null
           enabled_features?: string[] | null
+          quick_nav_hrefs?: Json | null
           upsc_optional_subjects?: string[] | null
           trial_photo_scans_used?: number
           trial_started_at?: string | null
@@ -1075,6 +1080,7 @@ export type Database = {
           target_exam?: string | null
           target_exam_date?: string | null
           enabled_features?: string[] | null
+          quick_nav_hrefs?: Json | null
           upsc_optional_subjects?: string[] | null
           trial_photo_scans_used?: number
           trial_started_at?: string | null
@@ -1348,6 +1354,39 @@ export type Database = {
           range_low?: number
           target_clamped?: number
           total_marks_covered?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_target_recommendation_history: {
+        Row: {
+          achieved_marks: number
+          created_at: string
+          exam_name: string
+          id: string
+          meta: Json
+          recommended_items: Json
+          target_boost: number
+          user_id: string
+        }
+        Insert: {
+          achieved_marks: number
+          created_at?: string
+          exam_name: string
+          id?: string
+          meta?: Json
+          recommended_items?: Json
+          target_boost: number
+          user_id: string
+        }
+        Update: {
+          achieved_marks?: number
+          created_at?: string
+          exam_name?: string
+          id?: string
+          meta?: Json
+          recommended_items?: Json
+          target_boost?: number
           user_id?: string
         }
         Relationships: []

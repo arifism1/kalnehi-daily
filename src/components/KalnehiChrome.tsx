@@ -118,21 +118,23 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
         )}
         {!onboarding && !minimalChrome && (
           <header className="kal-glass-header sticky top-0 z-40">
-            <div className="mx-auto flex h-14 w-full max-w-7xl items-center gap-1.5 px-3 sm:h-[3.5rem] sm:gap-3 sm:px-6 xl:px-8">
-              <Link
-                href="/"
-                className="flex shrink-0 items-center rounded-xl py-1 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-kal-accent/40"
-                aria-label="Dashboard"
-              >
-                <KalnehiMark
-                  aria-hidden
-                  className="h-8 w-auto max-w-[min(100%,7.5rem)] object-contain object-left sm:h-9 sm:max-w-[8.5rem]"
-                />
-              </Link>
-              <div className="flex min-h-0 min-w-0 flex-1 items-center justify-center overflow-hidden">
+            <div className="mx-auto grid h-14 w-full max-w-7xl grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)] items-center gap-1.5 px-3 sm:h-[3.5rem] sm:gap-3 sm:px-6 xl:px-8">
+              <div className="min-w-0 justify-self-start self-center">
+                <Link
+                  href="/"
+                  className="flex shrink-0 items-center rounded-xl py-1 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-kal-accent/40"
+                  aria-label="Dashboard"
+                >
+                  <KalnehiMark
+                    aria-hidden
+                    className="h-8 w-auto max-w-[min(100%,7.5rem)] object-contain object-left sm:h-9 sm:max-w-[8.5rem]"
+                  />
+                </Link>
+              </div>
+              <div className="flex min-h-0 min-w-0 w-full items-center justify-center overflow-hidden">
                 <QuickNavBar />
               </div>
-              <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
+              <div className="flex min-w-0 shrink-0 items-center justify-self-end gap-0.5 self-center sm:gap-1">
                 <Link
                   href="/notifications"
                   className={clsx(
