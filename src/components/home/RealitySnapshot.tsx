@@ -131,7 +131,8 @@ export function RealitySnapshot({
             Reality snapshot
           </p>
           <p className="text-sm leading-relaxed text-kal-muted sm:text-[15px] sm:leading-[1.55]">
-            Where your syllabus stands and how hard you&apos;re executing today.
+            Syllabus coverage and your progress through today&apos;s plan, in one
+            place.
             {useCuet ? (
               <span className="mt-1 block text-[11px] text-kal-text-secondary">
                 CUET model:{" "}
@@ -146,9 +147,9 @@ export function RealitySnapshot({
               examLabel &&
               showAdvancedMarksProjection ? (
               <span className="mt-1 block text-[11px] text-kal-text-secondary">
-                Primary chapter weights:{" "}
+                Chapters weighted using the{" "}
                 <span className="font-medium text-kal-muted">
-                  marks_{primaryMarksYear}
+                  {primaryMarksYear} marking pattern
                 </span>{" "}
                 ({examFriendly || examLabel})
               </span>
@@ -311,8 +312,8 @@ export function RealitySnapshot({
                       {masteryDisplay}
                     </p>
                     <p className="mt-3 max-w-[15rem] text-xs leading-relaxed text-kal-muted sm:max-w-[17rem]">
-                      Full chapter credit when every microtopic in that chapter
-                      is complete.
+                      A chapter counts here only when every microtopic in it is
+                      complete.
                     </p>
                   </>
                 ) : (
@@ -324,17 +325,17 @@ export function RealitySnapshot({
               <div className="flex min-w-0 flex-col items-center gap-4 lg:gap-5">
                 <div className="space-y-1 text-center">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-kal-muted sm:text-[11px]">
-                    Primary marks ring
+                    Projected score
                   </p>
                   {showAdvancedMarksProjection ? (
                     <p className="text-xs text-kal-text-secondary">
-                      Weights:{" "}
+                      Based on{" "}
                       <span className="font-medium text-kal-muted">
-                        marks_{syllabusMultiYear.ringYear}
+                        {syllabusMultiYear.ringYear} chapter weights
                       </span>
                       <span className="text-kal-muted">
                         {" "}
-                        · full scale {syllabusMultiYear.ringOutOf}
+                        · out of {syllabusMultiYear.ringOutOf} marks
                       </span>
                     </p>
                   ) : (
@@ -367,7 +368,7 @@ export function RealitySnapshot({
                         {marksPct % 1 === 0
                           ? marksPct.toFixed(0)
                           : marksPct.toFixed(1)}
-                        % of scale
+                        % of total marks
                       </p>
                     </div>
                   ) : (
@@ -389,7 +390,8 @@ export function RealitySnapshot({
                   Multi-year breakdown
                 </p>
                 <p className="mb-3 hidden text-xs text-kal-text-secondary lg:mb-4 lg:block">
-                  Marks columns (720-scale projection per pattern year)
+                  Projected marks for each exam pattern (same {syllabusMultiYear.ringOutOf}{" "}
+                  total)
                 </p>
                 <div className="mx-auto w-full max-w-md flex-1 border-t border-kal-border pt-5 sm:pt-6 lg:mx-0 lg:max-w-none lg:border-t-0 lg:pt-0">
                     <ul
@@ -515,7 +517,7 @@ export function RealitySnapshot({
           )}
         >
           <p className="text-[9px] font-semibold uppercase tracking-[0.18em] opacity-75 sm:text-[10px] sm:tracking-[0.25em]">
-            Execution signal · {pill}
+            Today&apos;s momentum · {pill}
           </p>
           <p className="mt-1.5 text-xs font-medium leading-snug sm:mt-2 sm:text-sm sm:leading-relaxed">
             {headline}

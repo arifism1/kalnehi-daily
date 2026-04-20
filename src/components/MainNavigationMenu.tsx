@@ -7,8 +7,8 @@ import { usePathname } from "next/navigation";
 import { Fragment, useCallback, useEffect, useState } from "react";
 
 import { PwaIosInstallModal } from "@/components/PwaIosInstallModal";
-import { ContactSupportModal } from "@/components/support/ContactSupportModal";
 import { ContactSupportSuccessToast } from "@/components/support/ContactSupportSuccessToast";
+import { useContactSupport } from "@/components/support/ContactSupportProvider";
 import { filterNavByEnabledFeatures, MAIN_NAV_SECTIONS, navActive } from "@/config/mainNavigation";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
 import { SITE_NAME } from "@/lib/seo-metadata";
@@ -20,6 +20,7 @@ type MainNavigationMenuProps = {
 };
 
 export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
+  const { openContactSupport } = useContactSupport();
   const pathname = usePathname();
   const enabledFeatures = useEnabledFeaturesStore((s) => s.enabledFeatures);
   const navSections = filterNavByEnabledFeatures(MAIN_NAV_SECTIONS, enabledFeatures);
@@ -32,8 +33,6 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
     installEligibilityKnown,
   } = usePwaInstall();
   const [iosInstallOpen, setIosInstallOpen] = useState(false);
-  const [contactOpen, setContactOpen] = useState(false);
-  const [contactSuccess, setContactSuccess] = useState<string | null>(null);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const installHelpText =
     !installed && !canPromptInstall && !needsIosInstallModal && installEligibilityKnown
@@ -42,8 +41,8 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
 
   const openContactFromMenu = useCallback(() => {
     onClose();
-    setContactOpen(true);
-  }, [onClose]);
+    openContactSupport();
+  }, [onClose, openContactSupport]);
 
   const copyWithExecCommand = useCallback((value: string): boolean => {
     try {
@@ -114,7 +113,7 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
 
     window.prompt("Copy and share this app link:", appUrl);
     setShareFeedback("Opened copy prompt. Copy the link and share it.");
-  }, [copyWithExecCommand]);
+  }, [copyWithExecCommand, setShareFeedback]);
 
   useEffect(() => {
     if (!open) return;
@@ -135,12 +134,6 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open, iosInstallOpen, onClose]);
-
-  useEffect(() => {
-    if (!contactSuccess) return;
-    const t = window.setTimeout(() => setContactSuccess(null), 5_000);
-    return () => window.clearTimeout(t);
-  }, [contactSuccess]);
 
   useEffect(() => {
     if (!shareFeedback) return;
@@ -341,15 +334,6 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
     <PwaIosInstallModal
       open={iosInstallOpen}
       onClose={() => setIosInstallOpen(false)}
-    />
-    <ContactSupportModal
-      open={contactOpen}
-      onClose={() => setContactOpen(false)}
-      onSent={() => setContactSuccess("Message sent — we'll reply soon.")}
-    />
-    <ContactSupportSuccessToast
-      message={contactSuccess}
-      onDismiss={() => setContactSuccess(null)}
     />
     <ContactSupportSuccessToast
       message={shareFeedback}

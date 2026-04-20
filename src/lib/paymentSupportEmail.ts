@@ -1,15 +1,16 @@
 import { SITE_NAME } from "@/lib/seo-metadata";
 
-/** Support inbox for payment issues (screenshots / Razorpay IDs). */
-export const PAYMENT_SUPPORT_EMAIL = "curioversitylearning@gmail.com";
-
 export type PaymentErrorProof = {
   paymentId?: string;
   orderId?: string;
   subscriptionId?: string;
 };
 
-export function buildPaymentSupportMailto(opts: {
+/**
+ * Plain-text message for the contact form when the user had a payment/checkout issue.
+ * Keep in sync with support / billing triage on the Resend `CONTACT_SUPPORT_TO` side.
+ */
+export function buildPaymentSupportMessage(opts: {
   flow: string;
   error: string;
   userEmail?: string | null;
@@ -40,7 +41,5 @@ export function buildPaymentSupportMailto(opts: {
     "Please attach a screenshot of your Razorpay success page, receipt, or bank debit SMS.",
   ].filter((line) => line !== "");
 
-  const subject = encodeURIComponent(`${SITE_NAME} — payment help`);
-  const body = encodeURIComponent(lines.join("\n"));
-  return `mailto:${PAYMENT_SUPPORT_EMAIL}?subject=${subject}&body=${body}`;
+  return lines.join("\n");
 }
