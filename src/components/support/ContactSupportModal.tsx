@@ -2,24 +2,32 @@
 
 import clsx from "clsx";
 import { Loader2, X } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
-import { CONTACT_SUPPORT_SUBJECTS } from "@/lib/contactSupport";
+import {
+  CONTACT_SUPPORT_SUBJECTS,
+  type ContactSupportSubjectValue,
+} from "@/lib/contactSupport";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { formatSupabaseError } from "@/lib/supabase";
-import { surfaceOptionalString } from "@/lib/userFacingErrors";
 import { useAuthStore } from "@/store/useAuthStore";
 
 export type ContactSupportModalProps = {
   open: boolean;
   onClose: () => void;
   onSent: () => void;
+  /** If set, subject/message are applied once per open (e.g. billing from payment error). */
+  launchDraft?: {
+    subject?: ContactSupportSubjectValue;
+    message?: string;
+  } | null;
 };
 
 export function ContactSupportModal({
   open,
   onClose,
   onSent,
+  launchDraft = null,
 }: ContactSupportModalProps) {
   const user = useAuthStore((s) => s.user);
 
@@ -33,6 +41,19 @@ export function ContactSupportModal({
   const [websiteTrap, setWebsiteTrap] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const wasOpenRef = useRef(false);
+  useLayoutEffect(() => {
+    if (open && !wasOpenRef.current) {
+      if (launchDraft?.subject != null) {
+        setSubject(launchDraft.subject);
+      }
+      if (launchDraft?.message != null) {
+        setMessage(launchDraft.message);
+      }
+    }
+    wasOpenRef.current = open;
+  }, [open, launchDraft]);
 
   useEffect(() => {
     if (!open) return;
@@ -119,7 +140,8 @@ export function ContactSupportModal({
           email: email.trim(),
           subject,
           message: message.trim(),
-          website: websiteTrap,
+          // Low-signal name: avoids autofill on `website` tripping the honeypot in /api/contact-support
+          form_hp: websiteTrap,
         }),
       });
       const data = (await res.json().catch(() => ({}))) as {
@@ -127,12 +149,11 @@ export function ContactSupportModal({
         error?: string;
       };
       if (!res.ok || !data.ok) {
-        setError(
-          surfaceOptionalString(
-            data.error,
-            "Something went wrong. Please try again.",
-          ),
-        );
+        const fromApi =
+          typeof data.error === "string" && data.error.trim().length > 0
+            ? data.error.trim()
+            : "Something went wrong. Please try again.";
+        setError(fromApi);
         return;
       }
       onSent();
@@ -193,18 +214,20 @@ export function ContactSupportModal({
 
         <form
           className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-y-contain px-5 py-4"
+          autoComplete="off"
           onSubmit={(e) => {
             e.preventDefault();
             void submit();
           }}
         >
-          <div className="sr-only">
-            <label htmlFor="contact-website">Leave blank</label>
+          <div className="sr-only" aria-hidden>
+            <label htmlFor="contact-form-hp">Leave blank</label>
             <input
-              id="contact-website"
+              id="contact-form-hp"
               type="text"
+              name="b_address_1"
               tabIndex={-1}
-              autoComplete="off"
+              autoComplete="nope"
               value={websiteTrap}
               onChange={(e) => setWebsiteTrap(e.target.value)}
             />

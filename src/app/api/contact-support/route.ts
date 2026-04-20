@@ -79,8 +79,9 @@ export async function POST(req: Request) {
   }
 
   const o = body as Record<string, unknown>;
-  const websiteHoneypot = trimStr(o.website, 240);
-  if (websiteHoneypot.length > 0) {
+  // Prefer `form_hp` (client sends this); accept legacy `website` for older clients.
+  const formHpHoneypot = trimStr(o.form_hp, 240) || trimStr(o.website, 240);
+  if (formHpHoneypot.length > 0) {
     return NextResponse.json(
       { ok: false, error: "Could not send your message. Try again." },
       { status: 400 },

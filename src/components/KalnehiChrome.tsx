@@ -16,6 +16,7 @@ import {
 import { KalnehiMark } from "@/components/KalnehiMark";
 import { PwaInstallPromptDeferred } from "@/components/PwaInstallPromptDeferred";
 import { FreeTrialWelcomeBanner } from "@/components/subscription/FreeTrialWelcomeBanner";
+import { ContactSupportProvider } from "@/components/support/ContactSupportProvider";
 import { QuickNavBar } from "@/components/QuickNavBar";
 import { QuietSavedToast } from "@/components/QuietSavedToast";
 import { SyncStatusBanner } from "@/components/SyncStatusBanner";
@@ -77,6 +78,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
   }, [pathname]);
 
   return (
+    <ContactSupportProvider>
     <div className="flex min-h-full min-h-dvh flex-col bg-kal-page text-kal-text">
       <div className="flex min-w-0 flex-1 flex-col">
         {!onboarding && minimalChrome && (
@@ -188,5 +190,6 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
       <TimerVisibilityBridge />
       <PwaInstallPromptDeferred />
     </div>
+    </ContactSupportProvider>
   );
 }
