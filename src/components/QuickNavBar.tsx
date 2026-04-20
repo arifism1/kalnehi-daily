@@ -16,9 +16,10 @@ type EdgeHints = { left: boolean; right: boolean };
 export function QuickNavBar() {
   const pathname = usePathname();
   const enabledFeatures = useEnabledFeaturesStore((s) => s.enabledFeatures);
+  const quickNavHrefs = useEnabledFeaturesStore((s) => s.quickNavHrefs);
   const items = useMemo(
-    () => getMainNavItemsInQuickNavOrder(enabledFeatures),
-    [enabledFeatures],
+    () => getMainNavItemsInQuickNavOrder(enabledFeatures, quickNavHrefs),
+    [enabledFeatures, quickNavHrefs],
   );
   const scrollRef = useRef<HTMLDivElement>(null);
   const [edgeHints, setEdgeHints] = useState<EdgeHints>({ left: false, right: false });
@@ -57,6 +58,10 @@ export function QuickNavBar() {
       window.removeEventListener("resize", updateEdgeHints);
     };
   }, [updateEdgeHints]);
+
+  if (items.length === 0) {
+    return null;
+  }
 
   return (
     <nav className="mx-auto min-w-0 w-max max-w-full" aria-label="Quick navigation">

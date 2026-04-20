@@ -33,6 +33,7 @@ import { parseSubscriptionTier, type SubscriptionTier } from "@/lib/subscription
 import { useAuthStore } from "@/store/useAuthStore";
 import {
   normalizeEnabledFeaturesRow,
+  normalizeQuickNavHrefsRow,
   useEnabledFeaturesStore,
 } from "@/store/useEnabledFeaturesStore";
 
@@ -104,6 +105,17 @@ function isCurrentlyPaid(status: SubscriptionStatus, endDate: string | null): bo
   if (Number.isNaN(end.getTime())) return false;
   return end.getTime() > Date.now();
 }
+
+/** When `quick_nav_hrefs` migration is not applied yet, PostgREST errors on that column. */
+function isMissingQuickNavColumnError(e: { message?: string; details?: string; hint?: string } | null): boolean {
+  if (!e) return false;
+  const blob = [e.message, e.details, e.hint].filter(Boolean).join(" ");
+  if (!/quick_nav_hrefs/i.test(blob)) return false;
+  return /does not exist|Unknown column|column .* not found|schema cache/i.test(blob);
+}
+
+const USER_PROFILE_SUBSCRIPTION_SELECT_BASE =
+  "mandatory_onboarding_completed_at, subscription_status, subscription_plan, subscription_start_date, subscription_end_date, subscription_tier, subscription_autopay_months_total, has_had_trial, photo_scans_used_this_month, voice_minutes_used_this_month, bonus_photo_scans, bonus_voice_minutes, bonus_photo_scans_ledger, bonus_voice_minutes_ledger, bonus_ai_tokens, bonus_ai_tokens_ledger, usage_reset_date, trial_started_at, trial_photo_scans_used, trial_voice_seconds_used, has_used_free_trial, enabled_features";
 
 const SubscriptionAccessContext = createContext<SubscriptionData | null>(null);
 
@@ -209,13 +221,21 @@ function useSubscriptionAccessState(): SubscriptionData {
       setFetchError(false);
       try {
         const supabase = getSupabaseBrowserClient();
-        const { data, error } = await supabase
+        let { data, error } = await supabase
           .from("user_profiles")
-          .select(
-            "mandatory_onboarding_completed_at, subscription_status, subscription_plan, subscription_start_date, subscription_end_date, subscription_tier, subscription_autopay_months_total, has_had_trial, photo_scans_used_this_month, voice_minutes_used_this_month, bonus_photo_scans, bonus_voice_minutes, bonus_photo_scans_ledger, bonus_voice_minutes_ledger, bonus_ai_tokens, bonus_ai_tokens_ledger, usage_reset_date, trial_started_at, trial_photo_scans_used, trial_voice_seconds_used, has_used_free_trial, enabled_features",
-          )
+          .select(`${USER_PROFILE_SUBSCRIPTION_SELECT_BASE}, quick_nav_hrefs`)
           .eq("user_id", user.id)
           .maybeSingle();
+
+        if (error && isMissingQuickNavColumnError(error)) {
+          const retry = await supabase
+            .from("user_profiles")
+            .select(USER_PROFILE_SUBSCRIPTION_SELECT_BASE)
+            .eq("user_id", user.id)
+            .maybeSingle();
+          data = retry.data;
+          error = retry.error;
+        }
 
         if (cancelled) return;
         if (error) {
@@ -236,6 +256,13 @@ function useSubscriptionAccessState(): SubscriptionData {
 
         useEnabledFeaturesStore.getState().setEnabledFeatures(
           normalizeEnabledFeaturesRow(data?.enabled_features),
+        );
+        const rawQuick =
+          data && typeof data === "object" && "quick_nav_hrefs" in data
+            ? (data as { quick_nav_hrefs?: unknown }).quick_nav_hrefs
+            : null;
+        useEnabledFeaturesStore.getState().setQuickNavHrefs(
+          normalizeQuickNavHrefsRow(rawQuick),
         );
 
         setOnboardingDone(!!data?.mandatory_onboarding_completed_at);

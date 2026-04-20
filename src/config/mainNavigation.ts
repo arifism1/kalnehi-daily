@@ -259,8 +259,11 @@ function quickNavOrderIndex(href: string): number {
   return i === -1 ? 1000 : i;
 }
 
-/** Flat list of nav items for the scrolling quick bar, frequency-sorted. */
-export function getMainNavItemsInQuickNavOrder(
+/**
+ * All routes eligible for the top quick bar in default order, with feature filtering applied.
+ * (Does not apply per-user quick-nav customisation; used as the allowlist and settings checklist.)
+ */
+export function getDefaultQuickNavItemsInOrder(
   enabledFeatures: string[] | null = null,
 ): MainNavItem[] {
   const flat = MAIN_NAV_SECTIONS.flatMap((s) => s.items).filter(
@@ -272,4 +275,34 @@ export function getMainNavItemsInQuickNavOrder(
   return [...flat].sort(
     (a, b) => quickNavOrderIndex(a.href) - quickNavOrderIndex(b.href),
   );
+}
+
+/**
+ * flat list of nav items for the scrolling quick bar, frequency-sorted.
+ * @param quickNavHrefs `null` = all defaults. `[]` = none. Otherwise only listed hrefs, in that order
+ *  (stale or disabled-feature hrefs are dropped).
+ */
+export function getMainNavItemsInQuickNavOrder(
+  enabledFeatures: string[] | null = null,
+  quickNavHrefs: string[] | null = null,
+): MainNavItem[] {
+  const defaultList = getDefaultQuickNavItemsInOrder(enabledFeatures);
+  if (quickNavHrefs === null) {
+    return defaultList;
+  }
+  if (quickNavHrefs.length === 0) {
+    return [];
+  }
+  const byHref = new Map(defaultList.map((it) => [it.href, it] as const));
+  const out: MainNavItem[] = [];
+  const seen = new Set<string>();
+  for (const h of quickNavHrefs) {
+    if (seen.has(h) || typeof h !== "string") continue;
+    const item = byHref.get(h);
+    if (item) {
+      out.push(item);
+      seen.add(h);
+    }
+  }
+  return out;
 }
