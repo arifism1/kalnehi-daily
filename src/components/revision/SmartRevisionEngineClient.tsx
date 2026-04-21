@@ -1,12 +1,10 @@
 "use client";
 
 import { addSelectedSyllabusRowsToDailyPlan } from "@/lib/quickTaskCreate";
-import { appendRevisionLog, overrideNextReviewDate } from "@/actions/revision";
+import { overrideNextReviewDate } from "@/actions/revision";
 import { ensureAutomatedNotifications } from "@/actions/notifications";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
-import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
 import { usePrimaryExamLabel } from "@/hooks/usePrimaryExamLabel";
-import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { useSyllabusTracker } from "@/hooks/useSyllabusTracker";
 import { buildDangerZoneTopics } from "@/lib/revision/dangerZone";
 import {
@@ -19,9 +17,7 @@ import {
   buildPlannedRevisionSections,
   type PlannedItem,
 } from "@/lib/revision/plannedSchedule";
-import { suggestedNextReviewDate } from "@/lib/revision/spacing";
 import { shouldShowSyllabusComingSoon } from "@/lib/examProfile";
-import { isFeatureBlocked } from "@/lib/subscriptionTiers";
 import { normalizeSyllabusMasterId } from "@/lib/syllabusIds";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -29,7 +25,7 @@ import type { MergedSyllabusRow } from "@/lib/userSyllabusMerge";
 import { SyllabusComingSoon } from "@/components/syllabus/SyllabusComingSoon";
 import { EngineCard, EngineHero } from "@/components/engine/EngineHero";
 import { subDays, format, parseISO, addDays, startOfDay } from "date-fns";
-import { Bell, Calendar, Flame, Loader2, Mic, Sparkles, Star } from "lucide-react";
+import { Bell, Calendar, Flame, Loader2 } from "lucide-react";
 import Link from "next/link";
 import {
   useCallback,
@@ -39,7 +35,6 @@ import {
   useState,
 } from "react";
 import clsx from "clsx";
-import type { Json } from "@/types/supabase";
 
 type TopicStateRow = {
   syllabus_master_id: string;
@@ -54,10 +49,7 @@ function rowLabel(r: MergedSyllabusRow): string {
 }
 
 const TOPIC_MATCH_CAP = 40;
-const TOPIC_LISTBOX_ID = "active-recall-topic-listbox";
 const SCHEDULE_TOPIC_LISTBOX_ID = "schedule-revision-topic-listbox";
-/** Min length for a free-typed topic when not linked to syllabus. */
-const CUSTOM_TOPIC_MIN_LEN = 2;
 
 function formatTopicDisplay(r: MergedSyllabusRow): string {
   return `${rowLabel(r)} · ${(r.subject ?? "").trim() || "Subject"}`;
@@ -73,8 +65,6 @@ export function SmartRevisionEngineClient() {
     loading: syllabusLoading,
     error: syllabusError,
   } = useSyllabusTracker();
-  const { tier, hasPaidAccess, freeTrialActive, freeTrialVoiceSecondsRemaining } =
-    useSubscriptionAccess();
 
   const syllabusSoon = shouldShowSyllabusComingSoon({
     examLabel,
@@ -88,23 +78,6 @@ export function SmartRevisionEngineClient() {
   const [topicStates, setTopicStates] = useState<TopicStateRow[]>([]);
   const [logs, setLogs] = useState<LogRow[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
-  const [activeTopicId, setActiveTopicId] = useState<string | null>(null);
-  const [recallText, setRecallText] = useState("");
-  const [groqLoading, setGroqLoading] = useState(false);
-  const [groqFeedback, setGroqFeedback] = useState<{
-    text: string;
-    model: string;
-    quality?: number;
-  } | null>(null);
-  const [stars, setStars] = useState<number>(3);
-  const [overrideDate, setOverrideDate] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [sessionNotice, setSessionNotice] = useState<string | null>(null);
-  const [lastVoiceSeconds, setLastVoiceSeconds] = useState(0);
-  const [usedVoice, setUsedVoice] = useState(false);
-  const [topicQuery, setTopicQuery] = useState("");
-  const [topicPickerOpen, setTopicPickerOpen] = useState(false);
-  const topicSearchWrapRef = useRef<HTMLDivElement | null>(null);
   const [plannedNotice, setPlannedNotice] = useState<string | null>(null);
   const [plannedBusyId, setPlannedBusyId] = useState<string | null>(null);
   const [rescheduleDraft, setRescheduleDraft] = useState<Record<string, string>>(
@@ -116,20 +89,7 @@ export function SmartRevisionEngineClient() {
   const [scheduleDate, setScheduleDate] = useState(() =>
     format(addDays(startOfDay(new Date()), 1), "yyyy-MM-dd"),
   );
-  const topicInputRef = useRef<HTMLInputElement | null>(null);
   const scheduleSearchWrapRef = useRef<HTMLDivElement | null>(null);
-
-  const voiceUnlocked = useMemo(() => {
-    if (isFeatureBlocked(tier, "ai_voice")) return false;
-    if (hasPaidAccess) return true;
-    if (freeTrialActive && freeTrialVoiceSecondsRemaining > 0) return true;
-    return false;
-  }, [
-    tier,
-    hasPaidAccess,
-    freeTrialActive,
-    freeTrialVoiceSecondsRemaining,
-  ]);
 
   const rowById = useMemo(() => {
     const m = new Map<string, MergedSyllabusRow>();
@@ -138,21 +98,6 @@ export function SmartRevisionEngineClient() {
     }
     return m;
   }, [rows]);
-
-  const filteredTopicRows = useMemo(() => {
-    const q = topicQuery.trim().toLowerCase();
-    if (!q) return [];
-    const out: MergedSyllabusRow[] = [];
-    for (const r of rows) {
-      const hay = `${rowLabel(r)} ${(r.chapter ?? "").trim()} ${(r.subject ?? "").trim()}`
-        .toLowerCase();
-      if (hay.includes(q)) {
-        out.push(r);
-        if (out.length >= TOPIC_MATCH_CAP) break;
-      }
-    }
-    return out;
-  }, [rows, topicQuery]);
 
   const filteredScheduleRows = useMemo(() => {
     const q = scheduleQuery.trim().toLowerCase();
@@ -170,39 +115,13 @@ export function SmartRevisionEngineClient() {
   }, [rows, scheduleQuery]);
 
   useEffect(() => {
-    if (!activeTopicId) return;
-    const r = rowById.get(activeTopicId);
-    if (r) setTopicQuery(formatTopicDisplay(r));
-  }, [activeTopicId, rowById]);
-
-  useEffect(() => {
     const onDoc = (e: MouseEvent) => {
-      if (!topicSearchWrapRef.current?.contains(e.target as Node)) {
-        setTopicPickerOpen(false);
-      }
       if (!scheduleSearchWrapRef.current?.contains(e.target as Node)) {
         setSchedulePickerOpen(false);
       }
     };
     document.addEventListener("mousedown", onDoc, true);
     return () => document.removeEventListener("mousedown", onDoc, true);
-  }, []);
-
-  const pickTopic = useCallback(
-    (r: MergedSyllabusRow) => {
-      const id = normalizeSyllabusMasterId(String(r.id));
-      setActiveTopicId(id);
-      setTopicQuery(formatTopicDisplay(r));
-      setTopicPickerOpen(false);
-      setSessionNotice(null);
-    },
-    [],
-  );
-
-  const clearActiveTopic = useCallback(() => {
-    setActiveTopicId(null);
-    setTopicQuery("");
-    setTopicPickerOpen(false);
   }, []);
 
   const pickScheduleRow = useCallback((r: MergedSyllabusRow) => {
@@ -218,29 +137,18 @@ export function SmartRevisionEngineClient() {
     setSchedulePickerOpen(false);
   }, []);
 
-  /**
-   * Syllabus-linked row (picker) or free-text label (not in tracker).
-   */
-  const activeRecallContext = useMemo(():
-    | { type: "syllabus"; row: MergedSyllabusRow; id: string }
-    | { type: "custom"; title: string }
-    | null => {
-    if (activeTopicId) {
-      const row = rowById.get(activeTopicId);
-      if (row) {
-        return {
-          type: "syllabus",
-          row,
-          id: normalizeSyllabusMasterId(String(row.id)),
-        };
-      }
-    }
-    const raw = topicQuery.trim();
-    if (raw.length >= CUSTOM_TOPIC_MIN_LEN) {
-      return { type: "custom", title: raw.slice(0, 500) };
-    }
-    return null;
-  }, [activeTopicId, rowById, topicQuery]);
+  /** Prefill “Plan a revision for later” and scroll the planned section into view. */
+  const focusTopicInScheduleForm = useCallback(
+    (r: MergedSyllabusRow) => {
+      pickScheduleRow(r);
+      requestAnimationFrame(() => {
+        document
+          .getElementById("planned-revision")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    },
+    [pickScheduleRow],
+  );
 
   const topicStateById = useMemo((): Record<string, RevisionTopicStateLite> => {
     const o: Record<string, RevisionTopicStateLite> = {};
@@ -362,6 +270,7 @@ export function SmartRevisionEngineClient() {
     [rescheduleDraft, runOverridePlannedDate],
   );
 
+  /** Manual only: creates academic `tasks` when the student taps the button (not on mount). */
   const onAddPlannedToDailyPlan = useCallback(
     async (it: PlannedItem) => {
       if (!userId || !it.row) return;
@@ -429,201 +338,6 @@ export function SmartRevisionEngineClient() {
     clearScheduleForm,
   ]);
 
-  const onGetAiFeedback = async () => {
-    const ctx = activeRecallContext;
-    if (!ctx || !recallText.trim()) {
-      setSessionNotice(
-        "Set a topic (pick from list or type your own), then add your recall and request feedback.",
-      );
-      return;
-    }
-    setSessionNotice(null);
-    setGroqLoading(true);
-    setGroqFeedback(null);
-    try {
-      const payload =
-        ctx.type === "syllabus"
-          ? {
-              topicTitle: rowLabel(ctx.row),
-              subject: ctx.row.subject,
-              chapter: ctx.row.chapter,
-              transcript: recallText,
-              mode: "typed" as const,
-            }
-          : {
-              topicTitle: ctx.title,
-              subject: null,
-              chapter: null,
-              transcript: recallText,
-              mode: "typed" as const,
-            };
-      const res = await fetch("/api/revision-evaluate-recall", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = (await res.json()) as
-        | {
-            ok: true;
-            feedback: string;
-            quality_score: number;
-            groq_model: string;
-            groq_feedback: Json;
-          }
-        | { ok: false; error: string };
-      if (data && typeof data === "object" && "ok" in data && data.ok) {
-        setGroqFeedback({
-          text: data.feedback,
-          model: data.groq_model,
-          quality: data.quality_score,
-        });
-      } else {
-        setSessionNotice(
-          "ok" in data && !data.ok && "error" in data
-            ? String(data.error)
-            : "Could not get feedback.",
-        );
-      }
-    } finally {
-      setGroqLoading(false);
-    }
-  };
-
-  const { startListening, stopListening, isSupported, isListening } =
-    useDeviceSpeechRecognition({
-    lang: "en-IN",
-    onTranscript: (payload) => {
-      setRecallText((p) =>
-        (p ? `${p} ${payload.transcript}` : payload.transcript).trim(),
-      );
-      setLastVoiceSeconds(payload.durationSeconds);
-      setUsedVoice(true);
-    },
-  });
-
-  const onStartVoice = () => {
-    if (!voiceUnlocked) return;
-    if (!activeRecallContext) {
-      setSessionNotice(
-        "Choose a topic or type your own (not in the list is fine), then use voice.",
-      );
-      return;
-    }
-    setLastVoiceSeconds(0);
-    void startListening();
-  };
-
-  const onSaveSession = async () => {
-    const ctx = activeRecallContext;
-    if (!ctx) {
-      setSessionNotice(
-        `Pick a topic from the list or type your own (at least ${CUSTOM_TOPIC_MIN_LEN} characters).`,
-      );
-      return;
-    }
-    if (stars < 1 || stars > 5) {
-      setSessionNotice("Rate your confidence (1 to 5 stars).");
-      return;
-    }
-    const sLabel = ctx.type === "syllabus" ? rowLabel(ctx.row) : ctx.title;
-    const syllabusIdForLog =
-      ctx.type === "syllabus" ? ctx.id : null;
-    const { suggested } = suggestedNextReviewDate(today, stars);
-    const effective = overrideDate ?? suggested;
-    setSaving(true);
-    setSessionNotice(null);
-    const groqPayload: Json | null = groqFeedback
-      ? ({
-          model: groqFeedback.model,
-          text: groqFeedback.text,
-          quality_hint: groqFeedback.quality,
-        } as unknown as Json)
-      : null;
-    const res = await appendRevisionLog({
-      syllabusMasterId: syllabusIdForLog,
-      topicTitle: sLabel,
-      sessionKind: usedVoice
-        ? "active_recall_voice"
-        : recallText.trim()
-          ? "active_recall_typed"
-          : "confidence_only",
-      recallTranscript: recallText.trim() || null,
-      groqModel: groqFeedback?.model ?? null,
-      groqFeedback: groqPayload,
-      confidenceStars: stars,
-      suggestedNextReviewDate: suggested,
-      nextReviewEffectiveDate: effective,
-      userOverrodeNextReview: Boolean(overrideDate),
-    });
-    setSaving(false);
-    if (res.ok) {
-      setSessionNotice("Saved. Great work showing up for your future self.");
-      setRecallText("");
-      setGroqFeedback(null);
-      setOverrideDate(null);
-      setUsedVoice(false);
-      void refreshData();
-    } else {
-      setSessionNotice(res.error);
-    }
-  };
-
-  const onEvaluateVoice = async () => {
-    if (!voiceUnlocked) return;
-    const ctx = activeRecallContext;
-    if (!ctx || !recallText.trim()) {
-      setSessionNotice("Record your voice recall first, then we will evaluate.");
-      return;
-    }
-    setGroqLoading(true);
-    setGroqFeedback(null);
-    try {
-      const base =
-        ctx.type === "syllabus"
-          ? {
-              topicTitle: rowLabel(ctx.row),
-              subject: ctx.row.subject,
-              chapter: ctx.row.chapter,
-            }
-          : { topicTitle: ctx.title, subject: null, chapter: null };
-      const res = await fetch("/api/revision-evaluate-recall", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...base,
-          transcript: recallText,
-          mode: "voice",
-          durationSeconds: Math.min(
-            300,
-            lastVoiceSeconds > 0 ? lastVoiceSeconds : 60,
-          ),
-        }),
-      });
-      const data = (await res.json()) as
-        | { ok: true; feedback: string; quality_score: number; groq_model: string }
-        | { ok: false; error: string };
-      if (data && "ok" in data && data.ok) {
-        setUsedVoice(true);
-        setGroqFeedback({
-          text: data.feedback,
-          model: data.groq_model,
-          quality: data.quality_score,
-        });
-        if (typeof data.quality_score === "number") {
-          setStars(Math.min(5, Math.max(1, Math.round(data.quality_score))));
-        }
-      } else {
-        setSessionNotice(
-          "ok" in data && !data.ok && "error" in data
-            ? String((data as { error: string }).error)
-            : "Voice evaluation failed.",
-        );
-      }
-    } finally {
-      setGroqLoading(false);
-    }
-  };
-
   const heatmapGrid = useMemo(() => {
     const cells: { date: string; count: number }[] = [];
     for (let i = 0; i < 84; i++) {
@@ -633,11 +347,6 @@ export function SmartRevisionEngineClient() {
     }
     return cells;
   }, [last84Start, heatmapCounts]);
-
-  const nextSuggestedForStars = useMemo(() => {
-    if (!activeRecallContext) return null;
-    return suggestedNextReviewDate(today, stars);
-  }, [activeRecallContext, today, stars]);
 
   if (!userId) {
     return (
@@ -659,7 +368,7 @@ export function SmartRevisionEngineClient() {
       <EngineHero
         eyebrow="Spaced memory"
         title="Smart Revision Engine"
-        description="Optional active recall, a calendar you control, and dates you can always override. Built for real study rhythms — not guilt."
+        description="A calendar you control and dates you can always override — plus a clear view of what needs attention. Built for real study rhythms — not guilt."
       />
 
       {syllabusSoon && examLabel ? (
@@ -681,7 +390,7 @@ export function SmartRevisionEngineClient() {
             <strong className="font-medium text-kal-text">Long-haul retention</strong> for syllabi that do not fit in a single “revision day.”
           </li>
           <li>
-            <strong className="font-medium text-kal-text">You own the plan</strong> — the calendar and recall tools are in your control.
+            <strong className="font-medium text-kal-text">You own the plan</strong> — the calendar and scheduling tools are in your control.
           </li>
         </ul>
       </section>
@@ -707,7 +416,7 @@ export function SmartRevisionEngineClient() {
           </Link>
         </div>
         <p className="mt-2 text-sm text-kal-text-secondary">
-          Your next review dates from saved sessions, grouped by day. When a date is due,
+          Your next review dates from your schedule, grouped by day. When a date is due,
           a reminder is added to{" "}
           <Link href="/notifications" className="font-medium text-kal-accent underline">
             in-app Alerts
@@ -856,8 +565,8 @@ export function SmartRevisionEngineClient() {
         ) : plannedSections.length === 0 ? (
           <p className="mt-4 text-sm text-kal-muted">
             {rows.length > 0
-              ? "No scheduled review dates yet. Use the form above to set your first date, or save a recall session — it will show up here."
-              : "No scheduled review dates yet. After you save a recall session, your next review appears here. Set your target exam in Profile to load syllabus topics for scheduling."}
+              ? "No scheduled review dates yet. Use the form above to set your first date — it will show up here."
+              : "No scheduled review dates yet. Set your target exam in Profile to load syllabus topics for scheduling, then pick a review date above."}
           </p>
         ) : (
           <div className="mt-5 space-y-6">
@@ -876,7 +585,7 @@ export function SmartRevisionEngineClient() {
                           {it.row ? (
                             <button
                               type="button"
-                              onClick={() => pickTopic(it.row!)}
+                              onClick={() => focusTopicInScheduleForm(it.row!)}
                               className="min-w-0 flex-1 text-left text-sm text-kal-text transition hover:text-kal-accent"
                             >
                               {it.display}
@@ -961,7 +670,7 @@ export function SmartRevisionEngineClient() {
             <p className="mt-2 text-sm text-kal-muted">
               {streak.streak > 0
                 ? "Consistency counts more than perfect days."
-                : "Log a session today to start a streak that reflects reality."}
+                : "Schedule or complete a review today to start a streak that reflects reality."}
             </p>
           </div>
         </div>
@@ -1009,247 +718,16 @@ export function SmartRevisionEngineClient() {
                   type="button"
                   onClick={() => {
                     const r = rowById.get(d.id);
-                    if (r) pickTopic(r);
+                    if (r) focusTopicInScheduleForm(r);
                   }}
                   className="shrink-0 text-xs font-semibold text-kal-accent"
                 >
-                  Open
+                  Plan date
                 </button>
               </li>
             ))}
           </ul>
         )}
-      </EngineCard>
-
-      <EngineCard title="Active recall">
-        <p className="text-sm text-kal-text-secondary">
-          Optional but powerful. Summarize the topic in your own words, then rate confidence. Stars set the next review date — you can change the date anytime.
-        </p>
-        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-3">
-          <div
-            ref={topicSearchWrapRef}
-            className="relative min-w-0 flex-1 text-xs text-kal-muted"
-          >
-            <div className="flex flex-wrap items-end justify-between gap-2">
-              <span id="active-topic-label">Active topic</span>
-              {activeTopicId || topicQuery.trim().length > 0 ? (
-                <button
-                  type="button"
-                  onClick={clearActiveTopic}
-                  className="text-xs font-medium text-kal-accent underline"
-                >
-                  Clear topic
-                </button>
-              ) : null}
-            </div>
-            <p className="mt-1 text-xs text-kal-muted">
-              Search your syllabus below, or type any topic name — it does not have to be in the
-              tracker.
-            </p>
-            <input
-              ref={topicInputRef}
-              type="text"
-              role="combobox"
-              aria-autocomplete="list"
-              aria-expanded={topicPickerOpen}
-              aria-controls={TOPIC_LISTBOX_ID}
-              aria-labelledby="active-topic-label"
-              id="active-recall-topic-combobox"
-              name="activeRecallTopic"
-              autoComplete="off"
-              value={topicQuery}
-              onChange={(e) => {
-                const v = e.target.value;
-                setTopicQuery(v);
-                if (activeTopicId) {
-                  const r = rowById.get(activeTopicId);
-                  if (r && v !== formatTopicDisplay(r)) {
-                    setActiveTopicId(null);
-                  }
-                }
-                setTopicPickerOpen(v.trim().length > 0);
-              }}
-              onFocus={() => {
-                if (topicQuery.trim().length > 0) {
-                  setTopicPickerOpen(true);
-                }
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Escape") {
-                  e.preventDefault();
-                  setTopicPickerOpen(false);
-                }
-              }}
-              placeholder="Search syllabus or type your own topic…"
-              className="mt-1.5 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-sm text-kal-text placeholder:text-kal-muted outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/30"
-            />
-            {topicPickerOpen && topicQuery.trim().length > 0 ? (
-              <ul
-                id={TOPIC_LISTBOX_ID}
-                role="listbox"
-                className="absolute left-0 right-0 z-20 mt-1 max-h-48 overflow-y-auto rounded-xl border border-kal-border/80 bg-kal-card/95 p-1 shadow-lg backdrop-blur dark:border-white/10 dark:bg-kal-page/95"
-                aria-label="Matching syllabus topics"
-              >
-                {filteredTopicRows.length === 0 ? (
-                  <li className="px-3 py-2.5 text-sm text-kal-muted" role="presentation">
-                    No syllabus matches. You can still use the text in the field as a custom topic
-                    and save below.
-                  </li>
-                ) : (
-                  filteredTopicRows.map((r) => {
-                    const id = normalizeSyllabusMasterId(String(r.id));
-                    return (
-                      <li key={id} role="presentation" className="min-w-0">
-                        <button
-                          type="button"
-                          role="option"
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => pickTopic(r)}
-                          className="flex w-full min-h-[2.5rem] flex-col items-stretch gap-0.5 rounded-lg px-3 py-2 text-left text-sm hover:bg-kal-accent/10"
-                        >
-                          <span className="font-medium text-kal-text">
-                            {rowLabel(r)}
-                          </span>
-                          <span className="text-xs text-kal-muted">
-                            {(r.chapter ?? "").trim() && `${r.chapter} · `}
-                            {r.subject}
-                          </span>
-                        </button>
-                      </li>
-                    );
-                  })
-                )}
-              </ul>
-            ) : null}
-          </div>
-        </div>
-
-        <label className="mt-4 block text-xs text-kal-muted">
-          Your recall (type or use voice on desktop Chrome / Edge)
-          <textarea
-            value={recallText}
-            onChange={(e) => {
-              setRecallText(e.target.value);
-            }}
-            rows={4}
-            placeholder="Explain concepts, list formulas, or walk through one solid problem…"
-            className="mt-1.5 w-full rounded-2xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/30"
-          />
-        </label>
-
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => void onGetAiFeedback()}
-            disabled={groqLoading}
-            className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-kal-border px-4 text-sm font-medium hover:bg-kal-card-muted disabled:opacity-50"
-          >
-            {groqLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            Get AI feedback (typed)
-          </button>
-
-          {voiceUnlocked ? (
-            <>
-              {isListening ? (
-                <button
-                  type="button"
-                  onClick={() => stopListening()}
-                  className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-red-500/20 px-4 text-sm font-semibold text-red-200"
-                >
-                  Stop listening
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={onStartVoice}
-                  disabled={!isSupported}
-                  className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-kal-accent/15 px-4 text-sm font-semibold text-kal-accent"
-                >
-                  <Mic className="h-4 w-4" />
-                  Speak to revise
-                </button>
-              )}
-              {recallText && (
-                <button
-                  type="button"
-                  onClick={() => void onEvaluateVoice()}
-                  disabled={groqLoading}
-                  className="text-sm font-medium text-kal-accent underline"
-                >
-                  Evaluate voice recall
-                </button>
-              )}
-            </>
-          ) : (
-            <span className="text-xs text-kal-muted">
-              <Link href="/pricing" className="text-kal-accent underline">
-                Upgrade
-              </Link>{" "}
-              for voice + AI quality scoring (uses your study voice quota like Dictate my Day).
-            </span>
-          )}
-        </div>
-
-        {groqFeedback ? (
-          <p className="mt-3 rounded-2xl border border-kal-accent/25 bg-kal-accent/5 p-3 text-sm text-kal-text">
-            {groqFeedback.text}
-            {groqFeedback.model ? (
-              <span className="mt-1 block text-[10px] text-kal-muted">{groqFeedback.model}</span>
-            ) : null}
-          </p>
-        ) : null}
-
-        <div className="mt-4">
-          <p className="text-xs font-medium text-kal-muted">Confidence (affects next review date)</p>
-          <div className="mt-1 flex gap-1">
-            {[1, 2, 3, 4, 5].map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => setStars(n)}
-                className={clsx(
-                  "rounded-lg p-1.5",
-                  n <= stars ? "text-amber-400" : "text-kal-border",
-                )}
-                aria-label={`${n} star${n === 1 ? "" : "s"}`}
-              >
-                <Star className="h-6 w-6" fill="currentColor" />
-              </button>
-            ))}
-          </div>
-          {nextSuggestedForStars ? (
-            <p className="mt-2 text-xs text-kal-muted">
-              Suggested next review:{" "}
-              <span className="font-medium text-kal-text">
-                {nextSuggestedForStars.suggested}
-              </span>{" "}
-              (about {nextSuggestedForStars.minDays}–{nextSuggestedForStars.maxDays} days from
-              now)
-            </p>
-          ) : null}
-          <label className="mt-2 block text-xs text-kal-muted">
-            Optional: override next review date
-            <input
-              type="date"
-              className="mt-1.5 w-full max-w-xs rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2 text-sm"
-              value={overrideDate ?? ""}
-              onChange={(e) => setOverrideDate(e.target.value || null)}
-            />
-          </label>
-        </div>
-
-        {sessionNotice ? (
-          <p className="mt-2 text-sm text-kal-text-secondary">{sessionNotice}</p>
-        ) : null}
-
-        <button
-          type="button"
-          onClick={() => void onSaveSession()}
-          disabled={saving}
-          className="kal-btn-accent mt-4 w-full min-h-12 rounded-2xl text-sm font-semibold"
-        >
-          {saving ? "Saving…" : "Save session & schedule next review"}
-        </button>
       </EngineCard>
     </div>
   );

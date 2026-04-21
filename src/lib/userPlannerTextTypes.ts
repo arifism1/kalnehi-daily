@@ -2,9 +2,16 @@ import type { NotificationPrefs } from "@/lib/engine/notificationPrefs";
 import type {
   RevisionDifficulty,
   RevisionItem,
+  RevisionReminderSource,
+  RevisionReminderStatus,
 } from "@/lib/engine/revisionSchedule";
 
-export type { RevisionDifficulty, RevisionItem };
+export type {
+  RevisionDifficulty,
+  RevisionItem,
+  RevisionReminderSource,
+  RevisionReminderStatus,
+};
 
 /** Client-side revision row with monotonic merge field (ISO from DB or local). */
 export type RevisionQueueEntry = RevisionItem & { updatedAt: string };
@@ -42,6 +49,9 @@ export type UserPlannerTextOutboxOp =
       nextDue: string;
       lastReviewed: string | null;
       createdAt: string;
+      notes: string;
+      status: RevisionReminderStatus;
+      reminderSource: RevisionReminderSource;
     }
   | { kind: "revision_delete"; id: string }
   | {

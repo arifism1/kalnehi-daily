@@ -5,7 +5,21 @@ import type {
   RevisionQueueEntry,
   UserPlannerTextBundle,
 } from "@/lib/userPlannerTextTypes";
-import type { RevisionDifficulty } from "@/lib/engine/revisionSchedule";
+import type {
+  RevisionDifficulty,
+  RevisionReminderSource,
+  RevisionReminderStatus,
+} from "@/lib/engine/revisionSchedule";
+
+function parseReminderStatus(raw: string | null | undefined): RevisionReminderStatus {
+  if (raw === "done" || raw === "archived" || raw === "pending") return raw;
+  return "pending";
+}
+
+function parseReminderSource(raw: string | null | undefined): RevisionReminderSource {
+  if (raw === "suggested") return "suggested";
+  return "manual";
+}
 
 function isoTs(t: string): number {
   const n = Date.parse(t);
@@ -24,6 +38,9 @@ function revisionFromRow(
     lastReviewed: r.last_reviewed,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
+    notes: typeof r.notes === "string" ? r.notes : "",
+    status: parseReminderStatus(r.status),
+    reminderSource: parseReminderSource(r.reminder_source),
   };
 }
 

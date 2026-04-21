@@ -14,6 +14,7 @@ import {
   Heart,
   HelpCircle,
   Home,
+  AlarmClock,
   Inbox,
   Mic,
   LifeBuoy,
@@ -145,6 +146,13 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
         Icon: RotateCw,
         featureId: "revision-engine",
       },
+      {
+        href: "/revision-reminders",
+        label: "Revision Reminders",
+        shortLabel: "Reminders",
+        Icon: AlarmClock,
+        featureId: "revision-reminders",
+      },
     ],
   },
   {
@@ -250,6 +258,7 @@ const QUICK_NAV_EXCLUDED_HREFS = new Set([
   "/my-plan",
   "/policies",
   "/revision-engine",
+  "/revision-reminders",
 ]);
 
 function quickNavOrderIndex(href: string): number {

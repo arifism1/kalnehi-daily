@@ -94,6 +94,13 @@ export async function applyUserPlannerTextOutboxOp(
           last_reviewed: op.lastReviewed,
           created_at: op.createdAt,
           updated_at: now,
+          notes: (op.notes ?? "").trim().slice(0, 5000),
+          status:
+            op.status === "done" || op.status === "archived"
+              ? op.status
+              : "pending",
+          reminder_source:
+            op.reminderSource === "suggested" ? "suggested" : "manual",
         };
         const { error } = await supabase
           .from("user_revision_queue_items")

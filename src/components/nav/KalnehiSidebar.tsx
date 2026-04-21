@@ -2,6 +2,7 @@
 
 import clsx from "clsx";
 import {
+  AlarmClock,
   BarChart3,
   BookOpen,
   Brain,
@@ -11,6 +12,7 @@ import {
   Crown,
   Flower2,
   HelpCircle,
+  Home,
   Inbox,
   LineChart,
   MessageSquare,
@@ -80,6 +82,7 @@ const SIDEBAR_CATEGORIES: SidebarCategory[] = [
     dotColor: "#7F77DD",
     items: [
       { href: "/revision-engine", label: "Revision Engine", icon: PenTool },
+      { href: "/revision-reminders", label: "Revision Reminders", icon: AlarmClock },
       { href: "/doubts", label: "Doubt Tracker", icon: HelpCircle },
       { href: "/prepbrain", label: "PrepBrain AI", icon: Brain },
       { href: "/study-sessions", label: "On-camera Sessions", icon: Camera },
@@ -106,6 +109,36 @@ export function KalnehiSidebar() {
       className="hidden w-[220px] shrink-0 overflow-y-auto border-r border-kal-border/60 bg-[#FAF8F4] pt-4 pb-10 dark:bg-zinc-950/80 lg:flex lg:flex-col"
       style={{ borderColor: "var(--kal-border)" }}
     >
+      {/* Home — always first, standalone */}
+      <ul className="mb-2 mt-1">
+        <li>
+          <Link
+            href="/home"
+            aria-current={
+              pathname === "/home" || pathname.startsWith("/home/") ? "page" : undefined
+            }
+            className={clsx(
+              "flex h-9 items-center gap-2.5 px-4 text-[13px] transition-colors outline-none",
+              "focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-kal-accent/50",
+              pathname === "/home" || pathname.startsWith("/home/")
+                ? "bg-[#FFF3E4] font-medium text-[#BA7517] dark:bg-kal-accent/10 dark:text-kal-accent"
+                : "font-normal text-kal-text-secondary hover:bg-black/[0.04] dark:hover:bg-white/5",
+            )}
+          >
+            <Home
+              className={clsx(
+                "h-4 w-4 shrink-0",
+                pathname === "/home" || pathname.startsWith("/home/")
+                  ? "text-[#BA7517] dark:text-kal-accent"
+                  : "text-kal-muted",
+              )}
+              aria-hidden
+            />
+            <span className="min-w-0 truncate">Home</span>
+          </Link>
+        </li>
+      </ul>
+
       {SIDEBAR_CATEGORIES.map((cat) => (
         <div key={cat.title} className="mb-4">
           <div className="flex items-center gap-2 px-4 pb-1 pt-4">

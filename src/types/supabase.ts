@@ -880,6 +880,9 @@ export type Database = {
           last_reviewed: string | null
           microtopic_id: string | null
           next_due: string
+          notes: string
+          reminder_source: string
+          status: string
           title: string
           updated_at: string
           user_id: string
@@ -891,6 +894,9 @@ export type Database = {
           last_reviewed?: string | null
           microtopic_id?: string | null
           next_due: string
+          notes?: string
+          reminder_source?: string
+          status?: string
           title: string
           updated_at?: string
           user_id: string
@@ -902,6 +908,9 @@ export type Database = {
           last_reviewed?: string | null
           microtopic_id?: string | null
           next_due?: string
+          notes?: string
+          reminder_source?: string
+          status?: string
           title?: string
           updated_at?: string
           user_id?: string
