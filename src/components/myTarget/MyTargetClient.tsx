@@ -119,7 +119,7 @@ export function MyTargetClient() {
         <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
           Saved blueprints
         </p>
-        <h1 className="kal-feature-title text-2xl sm:text-3xl">My Target</h1>
+        <h1 className="kal-feature-title">My Target</h1>
         <p className="max-w-2xl text-sm text-kal-muted">
           Lists you saved from Target Score Blueprint, with the date each was added.
         </p>

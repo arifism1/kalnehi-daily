@@ -271,12 +271,12 @@ export function HomeDashboardBody({
       {/* Section B — Daily motivational line */}
       {!dailyPhraseLoading && dailyPhrase && (
         <p
-          className="text-center text-[14px] italic leading-snug text-kal-muted"
+          className="text-center font-serif text-[15px] font-normal italic leading-relaxed text-kal-muted"
           aria-label={`Today's line: ${dailyPhrase.phrase}`}
         >
           &ldquo;{dailyPhrase.phrase}&rdquo;
           {dailyPhrase.author && (
-            <span className="mt-0.5 block not-italic text-[12px]">
+            <span className="mt-0.5 block font-sans text-xs not-italic text-kal-muted">
               — {dailyPhrase.author}
             </span>
           )}

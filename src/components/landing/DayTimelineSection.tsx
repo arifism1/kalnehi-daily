@@ -109,10 +109,7 @@ export function DayTimelineSection() {
               <div key={time + feature} className="group relative flex gap-6 sm:gap-0">
                 {/* Time */}
                 <div className="hidden w-24 shrink-0 flex-col items-end justify-start pt-4 sm:flex">
-                  <span
-                    className="text-xs font-bold tabular-nums text-kal-muted"
-                    style={{ fontFamily: "var(--font-geist-mono, monospace)" }}
-                  >
+                  <span className="font-mono text-xs font-bold tabular-nums text-kal-muted">
                     {time}
                   </span>
                 </div>

@@ -34,7 +34,7 @@ function StatCell({
   return (
     <div className="flex flex-1 flex-col items-center gap-0.5 px-2 py-3 text-center">
       <span
-        className="text-lg font-medium tabular-nums text-[#BA7517] sm:text-xl"
+        className="font-serif text-[22px] font-normal tabular-nums text-[#BA7517]"
         aria-label={ariaLabel}
       >
         {value}
@@ -105,7 +105,7 @@ export function HomeHeroCard({
       <div className="relative">
         {/* Greeting */}
         <div className="mb-3">
-          <p className="text-[0.95rem] font-medium leading-snug text-kal-text sm:text-base">
+          <p className="font-serif text-[26px] font-normal leading-snug tracking-[-0.01em] text-kal-text">
             {greetingLead}, {firstName}
           </p>
           {(examDisplayName ?? daysToExam != null) && (

@@ -66,7 +66,7 @@ export function DailyPlanPageContent() {
           <Zap className="h-5 w-5 text-kal-accent" aria-hidden />
           <h1 className="kal-feature-title">
             {heroTitle}{" "}
-            <span className="text-sm font-semibold text-kal-muted sm:text-base">
+            <span className="font-sans text-sm font-semibold text-kal-muted sm:text-base">
               (live)
             </span>
           </h1>

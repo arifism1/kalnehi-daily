@@ -114,7 +114,7 @@ export function KalnehiSidebar() {
               style={{ backgroundColor: cat.dotColor }}
               aria-hidden
             />
-            <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-kal-muted">
+            <p className="text-[11px] font-medium uppercase tracking-[0.07em] text-kal-muted">
               {cat.title}
             </p>
           </div>
