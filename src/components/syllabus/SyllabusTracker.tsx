@@ -300,7 +300,7 @@ export function SyllabusTracker() {
     return (
       <div className="mx-auto max-w-lg rounded-2xl border border-kal-warn-border bg-kal-warn-soft px-6 py-8 text-center dark:border-amber-500/25 dark:bg-amber-950/20">
         <BookMarked className="mx-auto h-10 w-10 text-kal-warn-text dark:text-amber-400/90" aria-hidden />
-        <h2 className="mt-4 text-lg font-semibold text-kal-text">
+        <h2 className="kal-section-heading mt-4">
           Choose your CUET domain subjects
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-kal-muted">
@@ -356,10 +356,10 @@ export function SyllabusTracker() {
   return (
     <div className="space-y-6 pb-4">
       <header>
-        <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
+        <p className="kal-category-label text-kal-accent">
           {displayExam} syllabus
         </p>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight text-kal-text">
+        <h1 className="kal-feature-title mt-1">
           Syllabus Mastery Tracker
         </h1>
         <p className="mt-1 text-sm leading-relaxed text-kal-muted">
@@ -398,7 +398,7 @@ export function SyllabusTracker() {
       <section className="kal-glass-panel overflow-hidden rounded-2xl border-kal-accent/35 p-6 shadow-lg">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-kal-accent">
+            <p className="kal-category-label text-kal-accent">
               {cuetScoringRollup ? "Overall CUET progress" : "Syllabus mastery"}
             </p>
             {!cuetScoringRollup && !showMarksUi ? (
@@ -407,7 +407,7 @@ export function SyllabusTracker() {
               </p>
             ) : null}
             <p
-              className="mt-1 text-4xl font-bold tabular-nums text-kal-text"
+              className="mt-1 font-serif text-4xl font-normal tabular-nums tracking-tight text-[#BA7517]"
               aria-live="polite"
             >
               {syllabusHeaderPercent}%
@@ -645,7 +645,7 @@ export function SyllabusTracker() {
                                 />
                               </span>
                               <span className="min-w-0 pt-0.5">
-                                <span className="block text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-kal-accent">
+                                <span className="kal-category-label block text-kal-accent">
                                   Chapter
                                 </span>
                                 <span className="mt-1 flex min-w-0 items-baseline gap-2.5 sm:gap-3">

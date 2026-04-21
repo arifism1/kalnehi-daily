@@ -47,7 +47,7 @@ export default function BoardsStudyPlannerPage() {
           <p className="text-xs font-semibold uppercase tracking-wide text-kal-accent">
             Board exams
           </p>
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+          <h1 className="kal-feature-title">
             Board exam planner when school, homework, and entrance prep compete
           </h1>
           <p className="text-sm leading-relaxed text-kal-text-secondary sm:text-base">

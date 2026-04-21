@@ -241,7 +241,7 @@ export function OnboardingWizard() {
           <div className="flex items-center gap-2">
             <User className="h-6 w-6 text-kal-accent" />
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-kal-text">
+              <h1 className="kal-feature-title">
                 About you
               </h1>
               <p className="text-sm leading-relaxed text-kal-text-secondary">
@@ -321,7 +321,7 @@ export function OnboardingWizard() {
           <div className="flex items-center gap-2">
             <Target className="h-6 w-6 text-kal-accent" />
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-kal-text">
+              <h1 className="kal-feature-title">
                 Select target exam
               </h1>
               <p className="text-sm leading-relaxed text-kal-text-secondary">
@@ -391,7 +391,7 @@ export function OnboardingWizard() {
           <div className="flex items-center gap-2">
             <CalendarDays className="h-6 w-6 text-kal-accent" />
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-kal-text">
+              <h1 className="kal-feature-title">
                 Expected exam date
               </h1>
               <p className="text-sm leading-relaxed text-kal-text-secondary">
@@ -436,7 +436,7 @@ export function OnboardingWizard() {
                 aria-hidden
               />
               <div className="min-w-0">
-                <h1 className="text-xl font-bold tracking-tight text-kal-text">
+                <h1 className="kal-feature-title">
                   Choose your features
                 </h1>
                 <p className="mt-1 text-sm leading-relaxed text-kal-text-secondary">

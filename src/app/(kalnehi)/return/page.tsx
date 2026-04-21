@@ -7,7 +7,7 @@ import {
 export default function ReturnPolicyPage() {
   return (
     <article className="mx-auto max-w-2xl space-y-4 pb-8 text-[15px] leading-relaxed text-kal-text sm:text-base">
-      <h1 className="text-2xl font-bold tracking-tight text-kal-text sm:text-3xl">
+      <h1 className="kal-feature-title">
         Return Policy
       </h1>
       <p>

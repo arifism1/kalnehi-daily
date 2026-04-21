@@ -641,7 +641,7 @@ export function HabitMakerPage() {
           <p className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-kal-accent">
             Your streak starts here
           </p>
-          <h2 className="mt-2 text-xl font-bold tracking-tight text-kal-text sm:text-2xl">
+          <h2 className="kal-section-heading mt-2">
             Let&apos;s build some unbreakable habits 🔥
           </h2>
           <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-kal-muted">

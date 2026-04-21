@@ -124,7 +124,7 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
                   <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-muted">
                     Study session
                   </p>
-                  <h2 className="mt-0.5 text-lg font-semibold text-kal-text">
+                  <h2 className="kal-section-heading mt-0.5">
                     What are you studying?
                   </h2>
                 </div>

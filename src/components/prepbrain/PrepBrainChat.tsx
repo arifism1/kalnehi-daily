@@ -334,7 +334,7 @@ export function PrepBrainChat() {
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-kal-accent-soft text-kal-accent shadow-sm ring-1 ring-kal-accent/15 sm:h-9 sm:w-9 sm:rounded-xl">
               <Brain className="h-4 w-4 sm:h-[18px] sm:w-[18px]" strokeWidth={2} aria-hidden />
             </span>
-            <h2 className="text-base font-semibold tracking-tight text-kal-text sm:text-lg">
+            <h2 className="kal-section-heading">
               PrepBrain AI
             </h2>
           </div>

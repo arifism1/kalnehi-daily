@@ -47,7 +47,7 @@ export default function CuetUgStudyPlannerPage() {
           <p className="text-xs font-semibold uppercase tracking-wide text-kal-accent">
             CUET-UG · 2026 cycle
           </p>
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+          <h1 className="kal-feature-title">
             CUET UG study planner — one rhythm for domain + general test
           </h1>
           <p className="text-sm leading-relaxed text-kal-text-secondary sm:text-base">

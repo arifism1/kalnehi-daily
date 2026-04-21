@@ -55,14 +55,7 @@ export function SyllabusComingSoon({
           <p className="mt-6 text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-kal-accent">
             Coming soon
           </p>
-          <h1
-            className={clsx(
-              "mt-2 font-bold tracking-tight text-kal-text",
-              compact ? "text-lg sm:text-xl" : "text-2xl sm:text-[1.65rem]",
-            )}
-          >
-            {examLabel}
-          </h1>
+          <h1 className="kal-feature-title mt-2">{examLabel}</h1>
           <p
             className={clsx(
               "mt-4 max-w-md leading-relaxed text-kal-text-secondary",

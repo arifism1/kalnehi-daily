@@ -58,7 +58,7 @@ export function SelfTypeDayPage() {
       </div>
 
       <header className="mt-6 mb-6">
-        <p className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-kal-accent">
+        <p className="kal-category-label text-kal-accent">
           Planning · Typed
         </p>
         <h1 className="kal-feature-title mt-2">

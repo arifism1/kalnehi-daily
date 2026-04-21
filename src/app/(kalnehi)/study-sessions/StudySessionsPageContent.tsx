@@ -41,7 +41,7 @@ export default function StudySessionsPageContent() {
         <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
           On-camera study log
         </p>
-        <h1 className="mt-1 flex items-center gap-2 text-xl font-bold tracking-tight text-kal-text sm:text-2xl">
+        <h1 className="kal-feature-title mt-1 flex items-center gap-2">
           <Camera className="h-7 w-7 text-kal-accent" aria-hidden />
           On-camera study sessions
         </h1>

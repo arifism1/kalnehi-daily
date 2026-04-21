@@ -254,7 +254,7 @@ export function WhatCanKalnehiDoClient() {
           <p className="text-sm font-semibold uppercase tracking-[0.28em] text-kal-accent">
             Quick tour ✨
           </p>
-          <h1 className="text-balance text-3xl font-extrabold tracking-tight text-kal-text sm:text-4xl md:text-[2.35rem] md:leading-tight">
+          <h1 className="kal-hero-heading text-balance">
             What Can Kalnehi Do?
           </h1>
           <p className="mx-auto max-w-xl text-pretty text-base font-medium leading-relaxed text-kal-text-secondary sm:text-lg">
@@ -268,7 +268,7 @@ export function WhatCanKalnehiDoClient() {
 
       <section aria-labelledby="feature-explorer-heading" className="space-y-6">
         <div className="flex flex-col gap-1.5 sm:flex-row sm:items-end sm:justify-between">
-          <h2 id="feature-explorer-heading" className="text-xl font-bold text-kal-text sm:text-2xl">
+          <h2 id="feature-explorer-heading" className="kal-section-heading">
             Every feature
           </h2>
           <p className="text-xs font-medium text-kal-muted sm:text-sm">Tap any card to see what it does</p>

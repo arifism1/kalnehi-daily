@@ -545,7 +545,7 @@ export function MyPlanPageClient() {
                 <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
                   Current plan
                 </p>
-                <h2 className="mt-1.5 text-xl font-bold text-kal-text sm:text-2xl">
+                <h2 className="kal-section-heading mt-1.5">
                   {onWelcomeTrial
                     ? "Welcome trial (no charge)"
                     : noActivePlan

@@ -222,7 +222,7 @@ export default function AuthPage() {
         <AuthExploreLinks />
         <div className="text-center">
           <AuthPageMark />
-          <h1 className="mt-2 text-2xl font-bold text-kal-text">Check your email</h1>
+          <h1 className="kal-feature-title mt-2">Check your email</h1>
           <p className="mt-3 max-w-sm text-sm leading-relaxed text-kal-muted">
             Password reset link sent to your email. Check your inbox (and spam
             folder).
@@ -256,7 +256,7 @@ export default function AuthPage() {
         <AuthExploreLinks />
         <div className="text-center">
           <AuthPageMark />
-          <h1 className="mt-2 text-2xl font-bold text-kal-text">Forgot password</h1>
+          <h1 className="kal-feature-title mt-2">Forgot password</h1>
           <p className="mt-2 text-sm text-kal-muted">
             We&apos;ll email you a link to reset it.
           </p>
@@ -331,7 +331,7 @@ export default function AuthPage() {
       <AuthAppNavPreviewMenu />
       <div className="text-center">
         <AuthPageMark priority />
-        <h1 className="mt-2 max-w-md text-balance text-xl font-bold leading-snug text-kal-text sm:text-2xl">
+        <h1 className="kal-feature-title mt-2 max-w-md text-balance leading-snug">
           {SITE_NAME}
         </h1>
         <p className="mt-2 text-sm text-kal-muted">

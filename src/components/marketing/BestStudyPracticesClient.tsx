@@ -326,7 +326,7 @@ export function BestStudyPracticesClient() {
           <p className="text-sm font-semibold uppercase tracking-[0.15em] text-kal-accent">
             Study Science
           </p>
-          <h1 className="text-balance text-3xl font-extrabold tracking-tight text-kal-text sm:text-4xl md:text-[2.5rem] md:leading-tight">
+          <h1 className="kal-hero-heading text-balance">
             Best Study Practices
           </h1>
           <p className="mx-auto max-w-2xl text-pretty text-base font-medium leading-relaxed text-kal-text-secondary sm:text-lg">
@@ -364,7 +364,7 @@ export function BestStudyPracticesClient() {
       {/* Research sections */}
       <section aria-labelledby="research-heading" className="space-y-10">
         <div className="space-y-2 text-center">
-          <h2 id="research-heading" className="text-2xl font-bold tracking-tight text-kal-text sm:text-3xl">
+          <h2 id="research-heading" className="kal-section-heading">
             The Science Behind Every Feature
           </h2>
           <p className="text-sm text-kal-text-secondary sm:text-base">
@@ -462,7 +462,7 @@ export function BestStudyPracticesClient() {
             <p className="text-xs font-semibold uppercase tracking-[0.15em] text-kal-accent">
               From those who made it
             </p>
-            <h2 className="mt-2 text-xl font-bold text-kal-text sm:text-2xl">
+            <h2 className="kal-section-heading mt-2">
               What Toppers Do Differently
             </h2>
           </div>
@@ -527,7 +527,7 @@ export function BestStudyPracticesClient() {
             <p className="text-xs font-semibold uppercase tracking-[0.15em] text-kal-accent">
               Start today
             </p>
-            <h2 className="text-balance text-2xl font-extrabold tracking-tight text-kal-text sm:text-3xl">
+            <h2 className="kal-hero-heading text-balance">
               Build the habits that top rankers swear by.
             </h2>
             <p className="mx-auto max-w-lg text-pretty text-sm leading-relaxed text-kal-text-secondary sm:text-base">

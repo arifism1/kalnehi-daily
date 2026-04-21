@@ -60,7 +60,7 @@ export default function AuthResetPage() {
         <p className="text-[0.65rem] font-bold uppercase tracking-widest text-kal-accent-dark">
           Kalnehi
         </p>
-        <h1 className="mt-2 text-2xl font-bold text-kal-text">Set new password</h1>
+        <h1 className="kal-feature-title mt-2">Set new password</h1>
         <p className="mt-2 text-sm text-kal-muted">
           Choose a strong password for your account.
         </p>

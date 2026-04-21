@@ -101,7 +101,7 @@ export function PlanMyDayPage() {
       </Link>
 
       <header className="relative mb-6 text-center sm:mb-8 sm:text-left">
-        <p className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-kal-accent">
+        <p className="kal-category-label text-kal-accent">
           Planning
         </p>
         <h1 className="kal-feature-title mt-2">Plan My Day</h1>

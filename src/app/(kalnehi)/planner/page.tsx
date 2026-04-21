@@ -79,7 +79,7 @@ export default function PlannerLandingPage() {
         className="kal-glass-subtle rounded-2xl px-4 py-5 text-sm leading-relaxed text-kal-text-secondary"
         aria-labelledby="planner-seo-more"
       >
-        <h2 id="planner-seo-more" className="text-base font-semibold text-kal-text">
+        <h2 id="planner-seo-more" className="kal-section-heading">
           Why a single planner matters for competitive exams
         </h2>
         <p className="mt-3">

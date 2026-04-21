@@ -380,7 +380,7 @@ export function AddEditTaskSheet({
             <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-muted">
               Task planner
             </p>
-            <h2 className="mt-0.5 text-lg font-semibold text-kal-text">
+            <h2 className="kal-section-heading mt-0.5">
               {mode === "add" ? "New task" : "Edit task"}
             </h2>
             {userId ? (
