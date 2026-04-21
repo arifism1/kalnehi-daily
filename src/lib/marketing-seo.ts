@@ -14,17 +14,22 @@ export function marketingPageMetadata(input: {
   path: string;
   title: string;
   description: string;
+  /** When set, `<link rel="canonical">` points here (e.g. mirror pages under `/guides` SEO). */
+  canonicalPath?: string;
 }): Metadata {
   const url = absoluteUrl(input.path);
+  const canonical = input.canonicalPath
+    ? absoluteUrl(input.canonicalPath)
+    : url;
   const ogImage = absoluteUrl(OG_IMAGE_PATH);
 
   return {
     title: { absolute: input.title },
     description: input.description,
-    alternates: { canonical: url },
+    alternates: { canonical: canonical },
     openGraph: {
       type: "website",
-      url,
+      url: canonical,
       title: input.title,
       description: input.description,
       siteName: SITE_NAME,

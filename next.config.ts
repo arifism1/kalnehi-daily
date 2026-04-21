@@ -87,6 +87,9 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "5mb",
     },
+    // Enables the View Transitions API for route changes — gives iOS-style
+    // cross-fade between pages on Chrome Android (Safari skips gracefully).
+    viewTransition: true,
   },
 
   async rewrites() {

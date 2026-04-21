@@ -728,7 +728,7 @@ export function PersonalMotivationPage() {
             onChange={(e) => setLetterBody(e.target.value)}
             rows={14}
             placeholder="Dear future me…"
-            className="min-h-[280px] w-full resize-y rounded-2xl border border-kal-border bg-kal-page px-4 py-4 text-[15px] leading-relaxed text-kal-text placeholder:text-kal-muted/80 focus:border-kal-accent/50 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
+            className="min-h-[280px] w-full resize-y rounded-2xl border border-kal-border bg-kal-page px-4 py-4 text-base leading-relaxed text-kal-text placeholder:text-kal-muted/80 focus:border-kal-accent/50 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
           />
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <button

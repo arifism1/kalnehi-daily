@@ -246,7 +246,7 @@ export function ContactSupportModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={busy}
-              className="min-h-[44px] rounded-xl border border-white/20 bg-white/50 px-3 py-2 text-sm text-kal-text outline-none ring-kal-accent/30 placeholder:text-kal-muted focus:border-kal-accent/40 focus:ring-2 dark:border-white/10 dark:bg-zinc-900/60"
+              className="min-h-[44px] rounded-xl border border-white/20 bg-white/50 px-3 py-2 text-base sm:text-sm text-kal-text outline-none ring-kal-accent/30 placeholder:text-kal-muted focus:border-kal-accent/40 focus:ring-2 dark:border-white/10 dark:bg-zinc-900/60"
               placeholder="Your name"
               required
             />
@@ -267,7 +267,7 @@ export function ContactSupportModal({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={busy}
-              className="min-h-[44px] rounded-xl border border-white/20 bg-white/50 px-3 py-2 text-sm text-kal-text outline-none ring-kal-accent/30 placeholder:text-kal-muted focus:border-kal-accent/40 focus:ring-2 dark:border-white/10 dark:bg-zinc-900/60"
+              className="min-h-[44px] rounded-xl border border-white/20 bg-white/50 px-3 py-2 text-base sm:text-sm text-kal-text outline-none ring-kal-accent/30 placeholder:text-kal-muted focus:border-kal-accent/40 focus:ring-2 dark:border-white/10 dark:bg-zinc-900/60"
               placeholder="you@example.com"
               required
             />
@@ -285,7 +285,7 @@ export function ContactSupportModal({
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               disabled={busy}
-              className="min-h-[44px] appearance-none rounded-xl border border-white/20 bg-white/50 bg-[length:1rem] bg-[right_0.75rem_center] bg-no-repeat px-3 py-2 pr-9 text-sm text-kal-text outline-none ring-kal-accent/30 focus:border-kal-accent/40 focus:ring-2 dark:border-white/10 dark:bg-zinc-900/60"
+              className="min-h-[44px] appearance-none rounded-xl border border-white/20 bg-white/50 bg-[length:1rem] bg-[right_0.75rem_center] bg-no-repeat px-3 py-2 pr-9 text-base sm:text-sm text-kal-text outline-none ring-kal-accent/30 focus:border-kal-accent/40 focus:ring-2 dark:border-white/10 dark:bg-zinc-900/60"
               style={{
                 backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
               }}
@@ -312,7 +312,7 @@ export function ContactSupportModal({
               disabled={busy}
               rows={5}
               required
-              className="min-h-[120px] resize-y rounded-xl border border-white/20 bg-white/50 px-3 py-2.5 text-sm leading-relaxed text-kal-text outline-none ring-kal-accent/30 placeholder:text-kal-muted focus:border-kal-accent/40 focus:ring-2 dark:border-white/10 dark:bg-zinc-900/60"
+              className="min-h-[120px] resize-y rounded-xl border border-white/20 bg-white/50 px-3 py-2.5 text-base sm:text-sm leading-relaxed text-kal-text outline-none ring-kal-accent/30 placeholder:text-kal-muted focus:border-kal-accent/40 focus:ring-2 dark:border-white/10 dark:bg-zinc-900/60"
               placeholder="Describe what you need help with…"
             />
           </div>

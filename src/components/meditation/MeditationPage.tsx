@@ -568,7 +568,7 @@ export function MeditationPage() {
               onChange={(e) => setPendingNote(e.target.value)}
               placeholder="How did your mind and body feel after this flow?"
               rows={3}
-              className="mt-2 w-full rounded-xl border border-kal-border/60 bg-kal-input-bg px-3 py-2 text-sm backdrop-blur-sm"
+              className="mt-2 w-full rounded-xl border border-kal-border/60 bg-kal-input-bg px-3 py-2 text-base sm:text-sm backdrop-blur-sm"
             />
             <button
               type="button"

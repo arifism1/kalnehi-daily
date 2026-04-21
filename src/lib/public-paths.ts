@@ -4,6 +4,8 @@
  * [`isPaidAccessOverlayExemptPath`](src/lib/paid-access-exempt-paths.ts) for paid-access overlay rules.
  */
 export const PUBLIC_MARKETING_PATHS = new Set<string>([
+  "/",
+  "/kalnehi-daily",
   "/guides",
   "/jee-study-planner",
   "/neet-study-planner",

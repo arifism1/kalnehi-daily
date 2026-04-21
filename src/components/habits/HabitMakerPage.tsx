@@ -30,6 +30,7 @@ import {
 import { CircularProgressRing } from "@/components/ui/CircularProgressRing";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
+import { useHaptic } from "@/hooks/useHaptic";
 import {
   enqueueHabitOutbox,
   getHabitBundleCached,
@@ -250,6 +251,7 @@ function ConfettiCelebration({
 export function HabitMakerPage() {
   const { limited: habitsLimited } = useFeatureAccess("habits");
   const userId = useAuthStore((s) => s.user?.id);
+  const haptic = useHaptic();
   const today = useCalendarDate();
   const [bundle, setBundle] = useState<HabitBundle | null>(null);
   const [hydrating, setHydrating] = useState(true);
@@ -530,6 +532,7 @@ export function HabitMakerPage() {
       const willComplete = !checked;
       void persistLog(habitId, !checked, tl?.comment ?? null, tl);
       if (willComplete) {
+        haptic("success");
         setCelebrateByHabit((prev) => ({
           ...prev,
           [habitId]: (prev[habitId] ?? 0) + 1,
@@ -542,7 +545,7 @@ export function HabitMakerPage() {
         }, 650);
       }
     },
-    [persistLog],
+    [persistLog, haptic],
   );
 
   if (!userId) {
@@ -603,7 +606,7 @@ export function HabitMakerPage() {
               if (e.key === "Enter") void addHabitFromInput();
             }}
             placeholder="e.g. Study 4 hours, No phone after 10 PM…"
-            className="min-h-[48px] w-full flex-1 rounded-xl border border-kal-border bg-kal-page px-4 text-sm text-kal-text placeholder:text-kal-muted focus:border-kal-accent/45 focus:outline-none focus:ring-2 focus:ring-kal-accent/15"
+            className="min-h-[48px] w-full flex-1 rounded-xl border border-kal-border bg-kal-page px-4 text-base sm:text-sm text-kal-text placeholder:text-kal-muted focus:border-kal-accent/45 focus:outline-none focus:ring-2 focus:ring-kal-accent/15"
             maxLength={200}
           />
           <button
@@ -834,7 +837,7 @@ export function HabitMakerPage() {
                       }}
                       rows={2}
                       placeholder="How did it feel? Anything to remember?"
-                      className="mt-1.5 w-full resize-y rounded-xl border border-kal-border bg-kal-page px-3 py-2.5 text-sm text-kal-text placeholder:text-kal-muted focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/15"
+                      className="mt-1.5 w-full resize-y rounded-xl border border-kal-border bg-kal-page px-3 py-2.5 text-base sm:text-sm text-kal-text placeholder:text-kal-muted focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/15"
                     />
                   </div>
                 </li>

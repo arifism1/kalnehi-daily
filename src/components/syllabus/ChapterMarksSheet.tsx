@@ -173,7 +173,7 @@ export function ChapterMarksSheet({
                           [r.id]: { ...d, y25: e.target.value },
                         }))
                       }
-                      className="mt-1 w-full rounded-lg border border-kal-border bg-kal-input-bg px-2 py-2 text-sm text-kal-text tabular-nums placeholder:text-kal-muted"
+                      className="mt-1 w-full rounded-lg border border-kal-border bg-kal-input-bg px-2 py-2 text-base sm:text-sm text-kal-text tabular-nums placeholder:text-kal-muted"
                       placeholder="—"
                       autoComplete="off"
                     />
@@ -190,7 +190,7 @@ export function ChapterMarksSheet({
                           [r.id]: { ...d, y24: e.target.value },
                         }))
                       }
-                      className="mt-1 w-full rounded-lg border border-kal-border bg-kal-input-bg px-2 py-2 text-sm text-kal-text tabular-nums placeholder:text-kal-muted"
+                      className="mt-1 w-full rounded-lg border border-kal-border bg-kal-input-bg px-2 py-2 text-base sm:text-sm text-kal-text tabular-nums placeholder:text-kal-muted"
                       placeholder="—"
                       autoComplete="off"
                     />
@@ -207,7 +207,7 @@ export function ChapterMarksSheet({
                           [r.id]: { ...d, y23: e.target.value },
                         }))
                       }
-                      className="mt-1 w-full rounded-lg border border-kal-border bg-kal-input-bg px-2 py-2 text-sm text-kal-text tabular-nums placeholder:text-kal-muted"
+                      className="mt-1 w-full rounded-lg border border-kal-border bg-kal-input-bg px-2 py-2 text-base sm:text-sm text-kal-text tabular-nums placeholder:text-kal-muted"
                       placeholder="—"
                       autoComplete="off"
                     />

@@ -4,6 +4,7 @@ import {
   Brain,
   FileText,
   GraduationCap,
+  Home,
   Landmark,
   Layers,
   School,
@@ -24,66 +25,73 @@ export const metadata = marketingPageMetadata({
 
 const guides = [
   {
+    href: "/",
+    title: `${SITE_NAME} — full product overview`,
+    blurb:
+      "The public landing page: daily plan, syllabus & marks, revision engine, focus timer, PrepBrain AI, pricing, and FAQs — the same story Google indexes for the home URL.",
+    icon: Home,
+  },
+  {
     href: "/jee-study-planner",
     title: "JEE Main & Advanced — daily planner",
     blurb:
-      "PCM in one weekly map: syllabus-linked tasks, timed sessions, and habits that survive bad mocks.",
+      "Physics, Chemistry, and Maths in one weekly plan — timed sessions, daily tasks, and habits that hold up even after a rough mock.",
     icon: GraduationCap,
   },
   {
     href: "/neet-study-planner",
     title: "NEET UG — daily planner",
     blurb:
-      "PCB without losing the thread: theory, drills, mock review, and a checklist you can actually finish.",
+      "Keep Biology, Chemistry, and Physics on track together — theory, practice, mock reviews, and a daily checklist you can realistically finish.",
     icon: BookOpen,
   },
   {
     href: "/neet-pg-study-planner",
     title: "NEET PG / INI-CET — study planner",
     blurb:
-      "Internship-proof blocks: clinical MCQ revision when your day is already chopped up.",
+      "Study around your internship — focused clinical MCQ revision in short blocks that fit a packed, unpredictable day.",
     icon: Stethoscope,
   },
   {
     href: "/cuet-ug-study-planner",
     title: "CUET UG — study planner",
     blurb:
-      "Domain subjects + general test in one rhythm — so neither side quietly dies before the form.",
+      "Keep your domain subjects and the general test moving together — so neither falls behind before the exam date.",
     icon: Layers,
   },
   {
     href: "/upsc-study-planner",
     title: "UPSC CSE — daily planner",
     blurb:
-      "GS, optional, and current affairs in weekly execution — Prelims and Mains without fantasy timetables.",
+      "Balance GS, optional, and current affairs week by week — Prelims and Mains prep without timetables that only work on paper.",
     icon: Landmark,
   },
   {
     href: "/boards-study-planner",
     title: "Board exams — planner",
     blurb:
-      "School + competitive prep: routines, todos, and daily plans that fit real school weeks.",
+      "Manage school and competitive prep side by side — daily routines and realistic plans that fit an actual school week.",
     icon: School,
   },
   {
     href: "/guides/daily-exam-prep-system-any-exam",
     title: "Daily prep system (any exam)",
     blurb:
-      "One loop for JEE, NEET, CUET, UPSC, or anything else: weeks, days, timers, review — no new notebook required.",
+      "A simple study loop that works for JEE, NEET, CUET, UPSC, or any exam — weekly planning, daily tasks, timed sessions, and revision built in.",
     icon: ScrollText,
   },
   {
     href: "/brain-yoga",
     title: "Brain Yoga — short resets",
     blurb:
-      "Five-minute recovery between heavy blocks so the next session still has a pulse.",
+      "Five-minute breaks between heavy study blocks to reset your focus so the next session actually lands.",
     icon: Brain,
   },
   {
     href: "/guides/how-to-maintain-consistency-in-jee-preparation",
     title: "Consistency in JEE prep (deep dive)",
     blurb:
-      "Weekly rhythm, mistake review, sleep, and restarting after a bad day — written for JEE, useful elsewhere.",
+      "How to build a weekly rhythm, learn from mistakes, sleep well, and bounce back after a bad day — written for JEE, useful for any exam.",
     icon: FileText,
   },
 ] as const;

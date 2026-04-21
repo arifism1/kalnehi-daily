@@ -392,7 +392,7 @@ export function ProfileForm() {
               defaultValue={fullName}
               onBlur={(e) => setFullName(e.target.value)}
               placeholder="Your name"
-              className="min-w-0 flex-1 rounded-lg border-0 bg-transparent py-1 text-[15px] text-kal-text placeholder:text-kal-muted focus:outline-none focus:ring-0"
+              className="min-w-0 flex-1 rounded-lg border-0 bg-transparent py-1 text-base text-kal-text placeholder:text-kal-muted focus:outline-none focus:ring-0"
             />
           </Row>
         </Section>
@@ -425,7 +425,7 @@ export function ProfileForm() {
               type="date"
               value={examDate}
               onChange={(e) => setExamDate(e.target.value)}
-              className="min-w-0 flex-1 rounded-lg border-0 bg-transparent py-1 text-[15px] text-kal-text [color-scheme:light] focus:outline-none focus:ring-0 dark:[color-scheme:dark]"
+              className="min-w-0 flex-1 rounded-lg border-0 bg-transparent py-1 text-base text-kal-text [color-scheme:light] focus:outline-none focus:ring-0 dark:[color-scheme:dark]"
             />
           </Row>
           {deferredTargetExam && isCuetExam(deferredTargetExam) ? (
@@ -542,7 +542,7 @@ export function ProfileForm() {
                           }}
                           placeholder="e.g. 2025 — first attempt"
                           autoComplete="off"
-                          className="mt-1 w-full rounded-lg border border-kal-border bg-kal-card px-3 py-2 text-[15px] text-kal-text placeholder:text-kal-muted focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
+                          className="mt-1 w-full rounded-lg border border-kal-border bg-kal-card px-3 py-2 text-base text-kal-text placeholder:text-kal-muted focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
                         />
                       </div>
                       <div className="w-full shrink-0 sm:w-28">
@@ -567,7 +567,7 @@ export function ProfileForm() {
                             );
                           }}
                           placeholder="e.g. 412"
-                          className="mt-1 w-full rounded-lg border border-kal-border bg-kal-card px-3 py-2 text-[15px] text-kal-text placeholder:text-kal-muted focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
+                          className="mt-1 w-full rounded-lg border border-kal-border bg-kal-card px-3 py-2 text-base text-kal-text placeholder:text-kal-muted focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
                         />
                       </div>
                       <button

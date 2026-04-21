@@ -14,10 +14,38 @@ import { useAuthStore } from "@/store/useAuthStore";
 function LoadingScreen() {
   return (
     <div
-      className="flex min-h-full min-h-dvh flex-1 items-center justify-center bg-kal-page text-sm text-kal-muted"
+      className="flex min-h-full min-h-dvh flex-1 flex-col bg-kal-page"
       aria-busy="true"
+      aria-label="Loading"
     >
-      Loading…
+      {/* Header skeleton */}
+      <div className="kal-glass-header sticky top-0 z-40">
+        <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
+          <div className="h-7 w-28 animate-pulse rounded-lg bg-kal-border" />
+          <div className="flex items-center gap-2">
+            <div className="h-9 w-9 animate-pulse rounded-xl bg-kal-border" />
+            <div className="h-9 w-9 animate-pulse rounded-xl bg-kal-border" />
+          </div>
+        </div>
+      </div>
+      {/* Content skeleton */}
+      <div className="mx-auto w-full max-w-lg space-y-3 px-4 pt-6 md:max-w-5xl">
+        <div className="h-6 w-2/5 animate-pulse rounded-lg bg-kal-border" />
+        <div className="kal-card-surface space-y-3">
+          <div className="h-4 w-3/4 animate-pulse rounded bg-kal-border" />
+          <div className="h-4 w-1/2 animate-pulse rounded bg-kal-border" />
+          <div className="h-4 w-2/3 animate-pulse rounded bg-kal-border" />
+        </div>
+        <div className="kal-card-surface space-y-3">
+          <div className="h-4 w-4/5 animate-pulse rounded bg-kal-border" />
+          <div className="h-4 w-3/5 animate-pulse rounded bg-kal-border" />
+        </div>
+        <div className="kal-card-surface space-y-3">
+          <div className="h-4 w-2/3 animate-pulse rounded bg-kal-border" />
+          <div className="h-4 w-1/2 animate-pulse rounded bg-kal-border" />
+          <div className="h-4 w-3/4 animate-pulse rounded bg-kal-border" />
+        </div>
+      </div>
     </div>
   );
 }
@@ -177,7 +205,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         router.replace("/auth");
         break;
       case "home":
-        router.replace("/");
+        router.replace("/home");
         break;
       case "onboarding":
         router.replace("/onboarding");

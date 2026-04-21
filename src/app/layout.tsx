@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Geist_Mono, Inter } from "next/font/google";
+import { Fraunces, Geist_Mono, Inter } from "next/font/google";
 
 import { AppShell } from "@/components/AppShell";
 import { AuthProvider } from "@/components/AuthProvider";
@@ -25,6 +25,13 @@ const inter = Inter({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  display: "swap",
+  axes: ["SOFT", "WONK"],
 });
 
 /** Pixel-accurate launch images — must match each file in /public/splash. */
@@ -123,6 +130,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   themeColor: "#FF7A00",
   colorScheme: "light",
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -134,7 +142,7 @@ export default function RootLayout({
     <html
       lang="en-IN"
       data-scroll-behavior="smooth"
-      className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
     >
       <body className="flex min-h-full min-h-dvh flex-col bg-kal-page font-sans text-kal-text">
         <JsonLd />

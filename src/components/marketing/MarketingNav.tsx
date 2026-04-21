@@ -11,6 +11,8 @@ import { isStandalonePwa, usePwaInstall } from "@/hooks/usePwaInstall";
 import { SITE_NAME } from "@/lib/seo-metadata";
 
 const NAV_LINKS = [
+  { href: "/", label: "Home" },
+  { href: "/kalnehi-daily", label: "Overview" },
   { href: "/guides", label: "Guides" },
   { href: "/best-study-practices", label: "Best Study Practices" },
   { href: "/what-can-kalnehi-do", label: "What Can Kalnehi Do?" },
@@ -60,7 +62,13 @@ export function MarketingNav() {
       className="relative flex shrink-0 items-center gap-3 text-sm sm:gap-4"
       ref={menuRef}
     >
-      {/* Inline "Guides" link — visible on wider screens */}
+      {/* Inline "Home" + "Guides" — visible on wider screens */}
+      <Link
+        href="/"
+        className="hidden whitespace-nowrap rounded-lg px-2.5 py-1.5 text-kal-text-secondary hover:text-kal-text sm:inline-flex"
+      >
+        Home
+      </Link>
       <Link
         href="/guides"
         className="hidden whitespace-nowrap rounded-lg px-2.5 py-1.5 text-kal-text-secondary hover:text-kal-text sm:inline-flex"

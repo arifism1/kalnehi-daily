@@ -224,7 +224,7 @@ export function SyllabusCustomizeSheet({
               <input
                 value={chapterNew}
                 onChange={(e) => setChapterNew(e.target.value)}
-                className="mt-1.5 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-[15px] text-kal-text placeholder:text-kal-muted focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
+                className="mt-1.5 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-base text-kal-text placeholder:text-kal-muted focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
                 placeholder="Chapter name"
                 autoComplete="off"
               />
@@ -239,7 +239,7 @@ export function SyllabusCustomizeSheet({
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                   disabled={busy}
-                  className="mt-1.5 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-[15px] text-kal-text placeholder:text-kal-muted focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
+                  className="mt-1.5 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-base text-kal-text placeholder:text-kal-muted focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
                 />
               </label>
               <label className="block">
@@ -250,7 +250,7 @@ export function SyllabusCustomizeSheet({
                   value={chapter}
                   onChange={(e) => setChapter(e.target.value)}
                   disabled={busy}
-                  className="mt-1.5 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-[15px] text-kal-text placeholder:text-kal-muted focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
+                  className="mt-1.5 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-base text-kal-text placeholder:text-kal-muted focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
                 />
               </label>
               <label className="block">
@@ -261,7 +261,7 @@ export function SyllabusCustomizeSheet({
                   value={microtopic}
                   onChange={(e) => setMicrotopic(e.target.value)}
                   disabled={busy}
-                  className="mt-1.5 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-[15px] text-kal-text placeholder:text-kal-muted focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
+                  className="mt-1.5 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-base text-kal-text placeholder:text-kal-muted focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
                 />
               </label>
             </>

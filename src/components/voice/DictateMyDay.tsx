@@ -425,7 +425,7 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
             type="date"
             value={logDate}
             onChange={(e) => setLogDate(e.target.value)}
-            className="mt-1 block min-h-[44px] rounded-xl border border-kal-border bg-kal-input-bg px-3 text-sm text-kal-text"
+            className="mt-1 block min-h-[44px] rounded-xl border border-kal-border bg-kal-input-bg px-3 text-base sm:text-sm text-kal-text"
           />
         </label>
         <label className="block text-[11px] font-medium text-kal-muted">
@@ -433,7 +433,7 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
           <select
             value={lang}
             onChange={(e) => setLang(e.target.value)}
-            className="mt-1 block min-h-[44px] min-w-[12rem] rounded-xl border border-kal-border bg-kal-input-bg px-3 text-sm text-kal-text"
+            className="mt-1 block min-h-[44px] min-w-[12rem] rounded-xl border border-kal-border bg-kal-input-bg px-3 text-base sm:text-sm text-kal-text"
           >
             {LANGS.map((l) => (
               <option key={l.value} value={l.value}>

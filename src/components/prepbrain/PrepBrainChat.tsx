@@ -23,7 +23,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { usePrepBrainAI } from "@/hooks/usePrepBrainAI";
-import { PREPBRAIN_UI_DISCLAIMER } from "@/lib/prepBrainPrompts";
+import { PREPBRAIN_TOP_NOTICE, PREPBRAIN_UI_DISCLAIMER } from "@/lib/prepBrainPrompts";
 import {
   PREPBRAIN_USAGE_WARN_RATIO,
   type AiUsagePhase,
@@ -308,10 +308,15 @@ export function PrepBrainChat() {
         "sm:h-auto sm:min-h-[min(76vh,640px)] sm:max-h-none",
       ].join(" ")}
     >
-      {/* One line only — horizontal scroll on narrow viewports (same pattern as before) */}
-      <p className="shrink-0 min-w-0 overflow-x-auto border-b border-kal-border/45 bg-kal-accent-soft/40 px-3 py-1.5 text-center text-[10px] leading-none text-kal-text [scrollbar-width:thin] sm:px-5 whitespace-nowrap">
-        Add syllabus mastery, daily plan, meditation, and related trackers in the app for more personalised PrepBrain answers.
-      </p>
+      <div
+        className="shrink-0 border-b border-kal-border/45 bg-kal-accent-soft/35 px-2.5 py-1.5 text-center sm:px-4 sm:py-2"
+        role="region"
+        aria-label="How to use PrepBrain"
+      >
+        <p className="mx-auto max-w-2xl text-[10px] leading-snug text-kal-text sm:text-[11px] sm:leading-snug">
+          {PREPBRAIN_TOP_NOTICE}
+        </p>
+      </div>
       {/* Minimal header — calm hierarchy; usage lives in sidebar */}
       <header className="flex shrink-0 items-start gap-2.5 border-b border-kal-border/40 bg-gradient-to-b from-white/50 to-transparent px-3 py-2.5 backdrop-blur-md sm:gap-4 sm:px-6 sm:py-4">
         <button
@@ -640,7 +645,7 @@ export function PrepBrainChat() {
               disabled={isSending || atTokenLimit}
               enterKeyHint="send"
               autoComplete="off"
-              className="max-h-[min(32vh,160px)] min-h-[48px] w-full resize-y overflow-y-auto rounded-[0.875rem] border-0 bg-transparent px-3.5 py-3 text-[15px] leading-snug text-kal-text placeholder:text-kal-text-secondary/50 focus:outline-none focus:ring-0 disabled:opacity-60 sm:min-h-[52px] sm:px-4 sm:py-3.5"
+              className="max-h-[min(32vh,160px)] min-h-[48px] w-full resize-y overflow-y-auto rounded-[0.875rem] border-0 bg-transparent px-3.5 py-3 text-base leading-snug text-kal-text placeholder:text-kal-text-secondary/50 focus:outline-none focus:ring-0 disabled:opacity-60 sm:min-h-[52px] sm:px-4 sm:py-3.5"
             />
           </div>
           <button
