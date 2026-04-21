@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  AlarmClock,
   BarChart3,
   BookOpen,
   Brain,
@@ -47,6 +48,10 @@ const ProgressRouteLazy = dynamic(
 );
 const SmartRevisionRouteLazy = dynamic(
   () => import("@/app/(kalnehi)/revision-engine/SmartRevisionRouteLazy"),
+  { ssr: false },
+);
+const RevisionRemindersRouteLazy = dynamic(
+  () => import("@/app/(kalnehi)/revision-reminders/RevisionRemindersRouteLazy"),
   { ssr: false },
 );
 const ConsistencyTrackerRouteLazy = dynamic(
@@ -227,6 +232,12 @@ export function HomeAccordionSections() {
       title: "Revision Engine",
       icon: PenTool,
       content: <SmartRevisionRouteLazy />,
+    },
+    {
+      id: "revision-reminders",
+      title: "Revision Reminders",
+      icon: AlarmClock,
+      content: <RevisionRemindersRouteLazy />,
     },
     {
       id: "consistency-tracker",

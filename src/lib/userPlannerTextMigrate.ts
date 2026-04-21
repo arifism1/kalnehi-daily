@@ -6,7 +6,9 @@ import {
 } from "@/lib/engine/notificationPrefs";
 import {
   REVISION_LEGACY_STORAGE_KEY,
-  type RevisionItem,
+  type RevisionDifficulty,
+  type RevisionReminderSource,
+  type RevisionReminderStatus,
 } from "@/lib/engine/revisionSchedule";
 
 import {
@@ -39,12 +41,16 @@ type LegacyProductivity = {
   p3?: string;
 };
 
-function readLegacyRevisions(): RevisionItem[] {
+function isRevisionDifficulty(x: unknown): x is RevisionDifficulty {
+  return x === "easy" || x === "medium" || x === "hard";
+}
+
+function readLegacyRevisions(): unknown[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(REVISION_LEGACY_STORAGE_KEY);
     if (!raw) return [];
-    const parsed = JSON.parse(raw) as RevisionItem[];
+    const parsed = JSON.parse(raw) as unknown;
     return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
@@ -123,8 +129,64 @@ export async function maybeMigrateLegacyPlannerTextOnce(
 
   const revisionItems: RevisionQueueEntry[] =
     legRev.length > 0
-      ? legRev.map((r) => ({ ...r, updatedAt: nowIso }))
-      : [...bundle.revisionItems];
+      ? legRev.map((raw, i) => {
+          const r = raw as Record<string, unknown>;
+          const id =
+            typeof r.id === "string" && r.id.length > 0 ? r.id : `legacy-${i}`;
+          const title =
+            typeof r.title === "string" && r.title.trim().length > 0
+              ? r.title.trim()
+              : "Revision";
+          const difficulty: RevisionDifficulty = isRevisionDifficulty(
+            r.difficulty,
+          )
+            ? r.difficulty
+            : "medium";
+          const nextDue =
+            typeof r.nextDue === "string" && /^\d{4}-\d{2}-\d{2}$/.test(r.nextDue)
+              ? r.nextDue
+              : new Date().toISOString().slice(0, 10);
+          const lastReviewed =
+            typeof r.lastReviewed === "string" &&
+            /^\d{4}-\d{2}-\d{2}$/.test(r.lastReviewed)
+              ? r.lastReviewed
+              : null;
+          const createdAt =
+            typeof r.createdAt === "string" && r.createdAt.length > 0
+              ? r.createdAt
+              : nowIso;
+          const microtopicId =
+            typeof r.microtopicId === "string" && r.microtopicId.trim().length > 0
+              ? r.microtopicId.trim()
+              : undefined;
+          const notes =
+            typeof r.notes === "string" ? r.notes.slice(0, 5000) : "";
+          const status: RevisionReminderStatus =
+            r.status === "done" || r.status === "archived" ? r.status : "pending";
+          const reminderSource: RevisionReminderSource =
+            r.reminderSource === "suggested" ? "suggested" : "manual";
+          return {
+            id,
+            title,
+            microtopicId,
+            difficulty,
+            nextDue,
+            lastReviewed,
+            createdAt,
+            notes,
+            status,
+            reminderSource,
+            updatedAt: nowIso,
+          };
+        })
+      : bundle.revisionItems.map((r) => ({
+          ...r,
+          notes: typeof r.notes === "string" ? r.notes : "",
+          status:
+            r.status === "done" || r.status === "archived" ? r.status : "pending",
+          reminderSource:
+            r.reminderSource === "suggested" ? "suggested" : "manual",
+        }));
 
   let productivity = { ...bundle.productivity };
   let productivityUpdatedAt = bundle.productivityUpdatedAt;
@@ -189,6 +251,9 @@ export async function maybeMigrateLegacyPlannerTextOnce(
       nextDue: r.nextDue,
       lastReviewed: r.lastReviewed,
       createdAt: r.createdAt,
+      notes: r.notes,
+      status: r.status,
+      reminderSource: r.reminderSource,
     });
   }
 

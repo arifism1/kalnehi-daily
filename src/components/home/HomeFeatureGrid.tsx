@@ -2,6 +2,7 @@
 
 import clsx from "clsx";
 import {
+  AlarmClock,
   BarChart3,
   BookOpen,
   Brain,
@@ -185,6 +186,14 @@ const CATEGORIES: Category[] = [
         icon: PenTool,
         staticHint: "Review due topics",
         fallback: "All caught up",
+      },
+      {
+        id: "revision-reminders",
+        href: "/revision-reminders",
+        label: "Revision Reminders",
+        icon: AlarmClock,
+        staticHint: "Your own due list",
+        fallback: "Add reminders",
       },
       {
         id: "doubt-tracker",

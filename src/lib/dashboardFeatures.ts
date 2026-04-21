@@ -1,4 +1,5 @@
 import {
+  AlarmClock,
   BarChart3,
   BookOpen,
   Brain,
@@ -119,6 +120,12 @@ export const DASHBOARD_FEATURES: DashboardFeature[] = [
     title: "Smart Revision Engine",
     icon: PenTool,
     description: "Syllabus-aware suggestions, active recall, and realistic spacing you can override.",
+  },
+  {
+    id: "revision-reminders",
+    title: "Revision Reminders",
+    icon: AlarmClock,
+    description: "Your own revision list — custom topics or syllabus links, due dates, and priorities.",
   },
   {
     id: "consistency-tracker",
