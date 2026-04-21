@@ -8,6 +8,10 @@ export const SITE_NAME = "Kalnehi Daily - Exam Prep Tracker";
 /** Short brand for tight UI and conversational copy where the full name is heavy. */
 export const SITE_BRAND = "Kalnehi Daily";
 
+/** Official support inbox (legal pages, plain email contact). */
+export const SUPPORT_EMAIL = "curioversitylearning@gmail.com";
+export const SUPPORT_MAILTO_HREF = `mailto:${SUPPORT_EMAIL}`;
+
 export const SITE_TAGLINE = "Win Daily — Smart Exam Prep";
 
 /** Served by [`src/app/opengraph-image.tsx`](src/app/opengraph-image.tsx) (1200×630). */

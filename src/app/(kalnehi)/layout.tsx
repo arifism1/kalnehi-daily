@@ -1,5 +1,6 @@
 import { KalnehiChrome } from "@/components/KalnehiChrome";
 import { ProtectedLayout } from "@/components/ProtectedLayout";
+import { ContactSupportProvider } from "@/components/support/ContactSupportProvider";
 import { SyncProvider } from "@/components/SyncProvider";
 
 export default function KalnehiLayout({
@@ -10,7 +11,9 @@ export default function KalnehiLayout({
   return (
     <ProtectedLayout>
       <SyncProvider>
-        <KalnehiChrome>{children}</KalnehiChrome>
+        <ContactSupportProvider>
+          <KalnehiChrome>{children}</KalnehiChrome>
+        </ContactSupportProvider>
       </SyncProvider>
     </ProtectedLayout>
   );

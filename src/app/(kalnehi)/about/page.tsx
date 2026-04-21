@@ -1,4 +1,9 @@
-import { kalnehiPageMetadata, SITE_NAME } from "@/lib/seo-metadata";
+import {
+  kalnehiPageMetadata,
+  SITE_NAME,
+  SUPPORT_EMAIL,
+  SUPPORT_MAILTO_HREF,
+} from "@/lib/seo-metadata";
 
 export const metadata = kalnehiPageMetadata("about");
 
@@ -51,7 +56,13 @@ export default function AboutUsPage() {
         <br />
         Phone: 9101776379
         <br />
-        Email: curioversitylearning@gmail.com
+        Email:{" "}
+        <a
+          href={SUPPORT_MAILTO_HREF}
+          className="font-medium text-kal-accent underline underline-offset-2 hover:text-kal-accent/90"
+        >
+          {SUPPORT_EMAIL}
+        </a>
       </p>
     </article>
   );

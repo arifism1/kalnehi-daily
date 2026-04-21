@@ -1,4 +1,8 @@
-import { SITE_NAME } from "@/lib/seo-metadata";
+import {
+  SITE_NAME,
+  SUPPORT_EMAIL,
+  SUPPORT_MAILTO_HREF,
+} from "@/lib/seo-metadata";
 
 export default function PrivacyPolicyPage() {
   return (
@@ -69,7 +73,14 @@ export default function PrivacyPolicyPage() {
       </p>
       <p>
         You may request access, correction, or deletion of your data by
-        emailing curioversitylearning@gmail.com. We will try to respond, but we
+        emailing{" "}
+        <a
+          href={SUPPORT_MAILTO_HREF}
+          className="font-medium text-kal-accent underline underline-offset-2 hover:text-kal-accent/90"
+        >
+          {SUPPORT_EMAIL}
+        </a>
+        . We will try to respond, but we
         make no guarantees about response time or action taken.
       </p>
       <p>
@@ -106,7 +117,13 @@ export default function PrivacyPolicyPage() {
         <br />
         Phone: 9101776379
         <br />
-        Email: curioversitylearning@gmail.com
+        Email:{" "}
+        <a
+          href={SUPPORT_MAILTO_HREF}
+          className="font-medium text-kal-accent underline underline-offset-2 hover:text-kal-accent/90"
+        >
+          {SUPPORT_EMAIL}
+        </a>
       </p>
     </article>
   );
