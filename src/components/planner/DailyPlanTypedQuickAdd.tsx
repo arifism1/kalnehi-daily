@@ -275,7 +275,7 @@ export function DailyPlanTypedQuickAdd({ planDate, onAdded }: Props) {
             rows={3}
             placeholder="e.g. study bio from 6 am to 7 am"
             disabled={busy}
-            className="mt-1 w-full resize-y rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-sm text-kal-text placeholder:text-kal-muted focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20 disabled:opacity-50"
+            className="mt-1 w-full resize-y rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-base sm:text-sm text-kal-text placeholder:text-kal-muted focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20 disabled:opacity-50"
           />
         </label>
         <button

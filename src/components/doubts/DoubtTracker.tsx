@@ -915,7 +915,7 @@ export function DoubtTracker() {
               <input
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
-                className="mt-1.5 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-3 text-[15px] text-kal-text outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40"
+                className="mt-1.5 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-3 text-base text-kal-text outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40"
               />
             </label>
             <label className="mt-4 block text-xs font-medium text-kal-muted">
@@ -924,7 +924,7 @@ export function DoubtTracker() {
                 value={editDesc}
                 onChange={(e) => setEditDesc(e.target.value)}
                 rows={5}
-                className="mt-1.5 w-full resize-y rounded-xl border border-kal-border bg-kal-input-bg px-3 py-3 text-[15px] text-kal-text outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40"
+                className="mt-1.5 w-full resize-y rounded-xl border border-kal-border bg-kal-input-bg px-3 py-3 text-base text-kal-text outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40"
               />
             </label>
             <DoubtSubjectSelect

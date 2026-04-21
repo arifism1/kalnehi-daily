@@ -182,7 +182,7 @@ export function AddDoubtSheet({
               rows={3}
               placeholder="Type here — question, topic, or screenshot context…"
               autoComplete="off"
-              className="mt-2 w-full resize-y rounded-xl border border-kal-border bg-kal-input-bg px-3 py-3 text-[15px] leading-relaxed text-kal-text outline-none placeholder:text-kal-muted focus-visible:ring-2 focus-visible:ring-kal-accent/40"
+              className="mt-2 w-full resize-y rounded-xl border border-kal-border bg-kal-input-bg px-3 py-3 text-base leading-relaxed text-kal-text outline-none placeholder:text-kal-muted focus-visible:ring-2 focus-visible:ring-kal-accent/40"
             />
           </label>
 
@@ -193,7 +193,7 @@ export function AddDoubtSheet({
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
               placeholder="Steps you tried, page number, etc."
-              className="mt-2 w-full resize-y rounded-xl border border-kal-border bg-kal-input-bg px-3 py-3 text-[15px] leading-relaxed text-kal-text outline-none placeholder:text-kal-muted focus-visible:ring-2 focus-visible:ring-kal-accent/40"
+              className="mt-2 w-full resize-y rounded-xl border border-kal-border bg-kal-input-bg px-3 py-3 text-base leading-relaxed text-kal-text outline-none placeholder:text-kal-muted focus-visible:ring-2 focus-visible:ring-kal-accent/40"
             />
           </label>
 

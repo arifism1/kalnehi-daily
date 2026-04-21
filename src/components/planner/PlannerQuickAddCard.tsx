@@ -239,7 +239,7 @@ export function PlannerQuickAddCard({
           placeholder="Task name — start typing"
           autoComplete="off"
           disabled={creating}
-          className="min-h-[4.5rem] w-full min-w-0 resize-y overflow-hidden rounded-lg border border-kal-border bg-kal-input-bg px-3 py-3 text-[15px] font-medium leading-snug text-kal-text outline-none placeholder:text-kal-muted [overflow-wrap:anywhere] focus-visible:border-kal-accent/40 focus-visible:ring-2 focus-visible:ring-kal-accent/25 disabled:opacity-50 sm:min-h-[5.5rem] sm:rounded-xl sm:px-4 sm:py-3.5 sm:text-[17px]"
+          className="min-h-[4.5rem] w-full min-w-0 resize-y overflow-hidden rounded-lg border border-kal-border bg-kal-input-bg px-3 py-3 text-base font-medium leading-snug text-kal-text outline-none placeholder:text-kal-muted [overflow-wrap:anywhere] focus-visible:border-kal-accent/40 focus-visible:ring-2 focus-visible:ring-kal-accent/25 disabled:opacity-50 sm:min-h-[5.5rem] sm:rounded-xl sm:px-4 sm:py-3.5 sm:text-[17px]"
         />
       </label>
 
@@ -265,7 +265,7 @@ export function PlannerQuickAddCard({
                 schedulePatch();
               })();
             }}
-            className="min-h-[44px] min-w-[5.5rem] flex-1 rounded-xl border border-kal-border bg-kal-input-bg px-3 text-sm font-medium text-kal-text outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/30 disabled:opacity-50 sm:flex-none"
+            className="min-h-[44px] min-w-[5.5rem] flex-1 rounded-xl border border-kal-border bg-kal-input-bg px-3 text-base sm:text-sm font-medium text-kal-text outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/30 disabled:opacity-50 sm:flex-none"
           >
             <option value="">No time</option>
             {HOURS.map((h) => (
@@ -283,7 +283,7 @@ export function PlannerQuickAddCard({
               setMinute(e.target.value);
               schedulePatch();
             }}
-            className="min-h-[44px] min-w-[5.5rem] flex-1 rounded-xl border border-kal-border bg-kal-input-bg px-3 text-sm font-medium text-kal-text outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/30 disabled:cursor-not-allowed disabled:opacity-40 sm:flex-none"
+            className="min-h-[44px] min-w-[5.5rem] flex-1 rounded-xl border border-kal-border bg-kal-input-bg px-3 text-base sm:text-sm font-medium text-kal-text outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/30 disabled:cursor-not-allowed disabled:opacity-40 sm:flex-none"
           >
             {MINUTES.map((m) => (
               <option key={m} value={String(m)}>
@@ -299,7 +299,7 @@ export function PlannerQuickAddCard({
               setPeriod(e.target.value as "AM" | "PM");
               schedulePatch();
             }}
-            className="min-h-[44px] min-w-[5.5rem] flex-1 rounded-xl border border-kal-border bg-kal-input-bg px-3 text-sm font-medium text-kal-text outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/30 disabled:cursor-not-allowed disabled:opacity-40 sm:flex-none"
+            className="min-h-[44px] min-w-[5.5rem] flex-1 rounded-xl border border-kal-border bg-kal-input-bg px-3 text-base sm:text-sm font-medium text-kal-text outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/30 disabled:cursor-not-allowed disabled:opacity-40 sm:flex-none"
           >
             <option value="AM">AM</option>
             <option value="PM">PM</option>

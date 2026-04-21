@@ -259,7 +259,7 @@ export function OnboardingWizard() {
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Your name"
-              className="mt-2 min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-[15px] text-kal-text transition-colors duration-200 focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
+              className="mt-2 min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-base text-kal-text transition-colors duration-200 focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
             />
           </div>
 
@@ -275,7 +275,7 @@ export function OnboardingWizard() {
               value={phone}
               onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
               placeholder="10-digit mobile number"
-              className="mt-2 min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-[15px] text-kal-text transition-colors duration-200 focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
+              className="mt-2 min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-base text-kal-text transition-colors duration-200 focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
             />
           </div>
 
@@ -287,7 +287,7 @@ export function OnboardingWizard() {
             <select
               value={classStudying}
               onChange={(e) => setClassStudying(e.target.value)}
-              className="mt-2 min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-[15px] text-kal-text transition-colors duration-200 focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
+              className="mt-2 min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-base text-kal-text transition-colors duration-200 focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
             >
               <option value="">Select your class</option>
               {CLASS_OPTIONS.map((c) => (
@@ -339,7 +339,7 @@ export function OnboardingWizard() {
                 value={primaryExam}
                 onChange={setPrimaryExam}
                 options={examOptions}
-                className="min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-[15px] text-kal-text transition-colors duration-200 focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
+                className="min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-base text-kal-text transition-colors duration-200 focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
               />
             </div>
           </div>

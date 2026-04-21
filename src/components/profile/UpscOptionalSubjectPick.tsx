@@ -22,7 +22,7 @@ export function UpscOptionalSubjectPick({
         value={selected}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className="min-h-[48px] w-full appearance-none rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-[15px] text-kal-text transition-colors duration-200 focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20 disabled:pointer-events-none disabled:opacity-50"
+        className="min-h-[48px] w-full appearance-none rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-base text-kal-text transition-colors duration-200 focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20 disabled:pointer-events-none disabled:opacity-50"
       >
         <option value="">None / Not selected yet</option>
         {options.map((opt) => (

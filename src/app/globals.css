@@ -60,6 +60,11 @@
   --kal-success-border: #BBF7D0;
   --kal-success-text: #166534;
 
+  /* ── Landing page specific ────────────────────────────────────────── */
+  --kal-ink-navy: #0E1525;
+  --kal-forest: #1F3A2E;
+  --kal-brick: #8A2B1F;
+
   /* ── Aliases for generic naming ───────────────────────────────────── */
   --background: var(--kal-page);
   --foreground: var(--kal-text);
@@ -147,6 +152,10 @@
   --color-kal-success-text: var(--kal-success-text);
   --radius-kal-card: 1.25rem;
   --radius-kal-btn: 0.75rem;
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  --color-kal-ink-navy: var(--kal-ink-navy);
+  --color-kal-forest: var(--kal-forest);
+  --color-kal-brick: var(--kal-brick);
 }
 
 /* ── Base ─────────────────────────────────────────────────────────────── */
@@ -420,7 +429,7 @@ body {
     backdrop-filter: blur(8px);
     color: var(--kal-text);
     padding: 0.6875rem 1rem;
-    font-size: 0.9375rem;
+    font-size: 1rem;
     line-height: 1.5;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
     outline: none;
@@ -530,9 +539,45 @@ body {
     overflow-wrap: anywhere;
   }
 
+  /* Prevent iOS Safari from auto-zooming when a text field is focused.
+     Safari zooms any control whose computed font-size is below 16px.
+     This rule floors form controls at 1rem on touch devices so desktop
+     type scales are unaffected. */
+  @media (pointer: coarse) {
+    :where(
+      input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="hidden"]),
+      textarea,
+      select
+    ) {
+      font-size: max(1rem, 1em);
+    }
+  }
+
   /* Smooth scrolling */
   html {
     scroll-behavior: smooth;
+  }
+
+  /* ── Native-app touch feel ─────────────────────────────────────────── */
+
+  /* Remove grey/blue tap-highlight flash (the most visible web-app tell) */
+  html {
+    -webkit-tap-highlight-color: transparent;
+    /* Eliminate the 300 ms tap delay on Android Chrome */
+    touch-action: manipulation;
+    /* Prevent pull-to-refresh / overscroll glow triggering by accident */
+    overscroll-behavior-y: none;
+  }
+
+  /* Suppress the iOS long-press "Open in Safari" / "Copy Link" callout */
+  button, a {
+    -webkit-touch-callout: none;
+  }
+
+  /* Text in navigation and buttons shouldn't be selectable on tap-hold */
+  nav, button {
+    user-select: none;
+    -webkit-user-select: none;
   }
 
   /* Scrollbar styling — warm tones */
@@ -556,5 +601,47 @@ body {
     outline: 2px solid var(--kal-accent);
     outline-offset: 2px;
     border-radius: 4px;
+  }
+}
+
+/* ── View Transitions API — page cross-fade ───────────────────────────── */
+/* Browsers that don't support the API ignore these rules entirely. */
+@keyframes vt-fade-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.99); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+@keyframes vt-fade-out {
+  from { opacity: 1; transform: translateY(0)   scale(1); }
+  to   { opacity: 0; transform: translateY(-4px) scale(0.99); }
+}
+
+::view-transition-old(root) {
+  animation: vt-fade-out 120ms ease-out both;
+}
+::view-transition-new(root) {
+  animation: vt-fade-in 160ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}
+
+/* ── Landing page animations ──────────────────────────────────────────── */
+@keyframes scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-\[scroll_28s_linear_infinite\] {
+    animation: none;
   }
 }

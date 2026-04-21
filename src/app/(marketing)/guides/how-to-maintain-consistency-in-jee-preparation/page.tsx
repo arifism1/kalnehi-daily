@@ -31,12 +31,12 @@ export default function JeeConsistencyGuidePage() {
           {
             question: "How do I recover after a bad mock?",
             answer:
-              "Schedule error review before new content. One honest review block beats three chapters of passive reading.",
+              "Go through your wrong questions before you open anything new. One honest review session is worth more than three chapters of passive reading.",
           },
           {
             question: `Can ${SITE_NAME} help track consistency?`,
             answer:
-              "Yes — weekly planner, daily todos, study sessions, and habit streaks are designed for visible execution, not vague goals.",
+              "Yes — weekly planner, daily todos, study sessions, and habit streaks are all there so you can see exactly where you stand, not just feel like you're busy.",
           },
         ]}
       />
@@ -48,53 +48,57 @@ export default function JeeConsistencyGuidePage() {
           How to maintain consistency in JEE preparation
         </h1>
         <p className="text-base text-kal-text-secondary">
-          Consistency is not inspiration — it is a{" "}
-          <strong className="text-kal-text">system you can restart after a bad day</strong>. Here is a
-          practical loop that works with {`${SITE_NAME}'s`} planner and timers.
+          Consistency isn&apos;t about motivation — it&apos;s about having a{" "}
+          <strong className="text-kal-text">system you can restart after a bad day</strong>. Here&apos;s a
+          practical loop that pairs well with {`${SITE_NAME}'s`} planner and timers.
         </p>
 
         <section className="space-y-2">
           <h2 className="text-lg font-semibold text-kal-text">1. Plan in weeks, execute in days</h2>
           <p>
-            Pick three “must ship” outcomes per week — e.g., Mechanics mixed problems, Organic named
-            reactions, Inorganic revision deck. Break them into daily todos. If a day collapses, move
-            work, don’t delete the week.
+            Pick three things you want to get done by the end of the week — say, Mechanics mixed
+            problems, Organic named reactions, and an Inorganic revision pass. Break those down into
+            daily tasks. If a day goes off the rails, carry the work forward. Don&apos;t scrap the
+            whole week over it.
           </p>
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-lg font-semibold text-kal-text">2. Protect deep work with timers</h2>
+          <h2 className="text-lg font-semibold text-kal-text">2. Protect your deep work with timers</h2>
           <p>
-            Use 50–90 minute study sessions with a single task label. Close unrelated tabs before you
-            start — context switching is the hidden marks thief in JEE prep.
+            Work in 50–90 minute blocks with one task to focus on. Close unrelated tabs before you
+            start — bouncing between topics quietly costs you a lot of marks in JEE prep, more than
+            most people notice.
           </p>
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-lg font-semibold text-kal-text">3. Review mistakes before new theory</h2>
+          <h2 className="text-lg font-semibold text-kal-text">3. Review mistakes before moving on</h2>
           <p>
-            After every mock or problem set, schedule a short block for wrong questions only. No new
-            chapter until yesterday’s leaks are tagged.
+            After every mock or problem set, go back to your wrong answers first. Don&apos;t open a
+            new chapter until you&apos;ve actually understood what went wrong the last time.
           </p>
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-lg font-semibold text-kal-text">4. Sleep and recovery are part of the syllabus</h2>
+          <h2 className="text-lg font-semibold text-kal-text">4. Sleep and recovery are part of the plan</h2>
           <p>
-            Brain Yoga-style micro-breaks between blocks help, but they do not replace sleep. If your
-            plan needs all-nighters weekly, the plan is wrong — tighten scope, not hours.
+            Short breaks between study blocks help — but they don&apos;t replace sleep. If your
+            schedule only works with regular all-nighters, the plan needs adjusting. Cut scope, not
+            sleep.
           </p>
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-lg font-semibold text-kal-text">5. Use one execution app</h2>
+          <h2 className="text-lg font-semibold text-kal-text">5. Keep everything in one place</h2>
           <p>
-            Fragmented notes across five apps hide the truth.{" "}
+            Spreading notes and tasks across multiple apps makes it easy to lose sight of where you
+            actually stand.{" "}
             <Link href="/jee-study-planner" className="font-medium text-kal-accent-dark underline-offset-2 hover:underline">
               {`${SITE_NAME}'s`} JEE 2026 planner
             </Link>{" "}
-            keeps weekly intent, daily tasks, and habits in one installable PWA — fewer tabs, clearer
-            output.
+            keeps your weekly goals, daily tasks, and habits together in one installable app — so
+            you always know what to do next.
           </p>
         </section>
 

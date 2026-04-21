@@ -100,7 +100,7 @@ export function TaskPlanner({
             onChapterChange("");
             onMicrotopicIdChange("");
           }}
-          className="mt-1.5 w-full min-h-[48px] rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-sm text-kal-text transition-colors duration-200"
+          className="mt-1.5 w-full min-h-[48px] rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-base sm:text-sm text-kal-text transition-colors duration-200"
         >
           <option value="">— Select subject —</option>
           {subjects.map((s) => (
@@ -120,7 +120,7 @@ export function TaskPlanner({
             onChapterChange(e.target.value);
             onMicrotopicIdChange("");
           }}
-          className="mt-1.5 w-full min-h-[48px] rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-sm text-kal-text transition-colors duration-200"
+          className="mt-1.5 w-full min-h-[48px] rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-base sm:text-sm text-kal-text transition-colors duration-200"
         >
           <option value="">— Select chapter —</option>
           {chapters.map((c) => (
@@ -138,7 +138,7 @@ export function TaskPlanner({
           disabled={disabled || !chapter}
           onChange={(e) => onMicrotopicIdChange(e.target.value)}
           className={clsx(
-            "mt-1.5 w-full min-h-[48px] rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-sm text-kal-text transition-colors duration-200",
+            "mt-1.5 w-full min-h-[48px] rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-base sm:text-sm text-kal-text transition-colors duration-200",
             duplicateMicrotopic
               ? "border-amber-500/60"
               : "border-kal-border",

@@ -83,7 +83,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
           <header className="kal-glass-header sticky top-0 z-40">
             <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between gap-3 px-3 sm:h-[3.5rem] sm:gap-4 sm:px-6 xl:px-8">
               <Link
-                href="/"
+                href="/home"
                 className="flex shrink-0 items-center rounded-xl py-1 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-kal-accent/40"
                 aria-label="Dashboard"
               >
@@ -121,7 +121,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
             <div className="mx-auto grid h-14 w-full max-w-7xl grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)] items-center gap-1.5 px-3 sm:h-[3.5rem] sm:gap-3 sm:px-6 xl:px-8">
               <div className="min-w-0 justify-self-start self-center">
                 <Link
-                  href="/"
+                  href="/home"
                   className="flex shrink-0 items-center rounded-xl py-1 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-kal-accent/40"
                   aria-label="Dashboard"
                 >

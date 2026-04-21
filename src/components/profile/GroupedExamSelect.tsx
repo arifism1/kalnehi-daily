@@ -38,7 +38,7 @@ export function GroupedExamSelect({
         onChange={(e) => onChange(e.target.value)}
         className={
           className ??
-          "w-full appearance-none rounded-lg border border-kal-border bg-kal-card-muted py-2.5 pr-10 pl-3 text-[15px] text-kal-text focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
+          "w-full appearance-none rounded-lg border border-kal-border bg-kal-card-muted py-2.5 pr-10 pl-3 text-base text-kal-text focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
         }
       >
         {placeholder ? <option value="">Select…</option> : null}

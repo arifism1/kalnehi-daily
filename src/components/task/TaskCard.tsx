@@ -27,6 +27,7 @@ import {
   formatTaskTimeRange,
 } from "@/lib/taskTime";
 import { finalizeActiveTimerForTask } from "@/lib/timerSession";
+import { useHaptic } from "@/hooks/useHaptic";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useActiveTimerStore } from "@/store/useActiveTimerStore";
 import { useUndoStore } from "@/store/useUndoStore";
@@ -190,6 +191,7 @@ export function TaskCard({
   onNameCaptureCommit,
 }: TaskCardProps) {
   const userId = useAuthStore((s) => s.user?.id);
+  const haptic = useHaptic();
   const [busy, setBusy] = useState(false);
   const [nameDraft, setNameDraft] = useState(task.name ?? "");
   const nameInputRef = useRef<HTMLInputElement | null>(null);
@@ -306,6 +308,7 @@ export function TaskCard({
         secs = r.totalSeconds;
       }
       setJustCompleted(true);
+      haptic("medium");
       const before = { ...useTaskStore.getState().tasks[task.id]! };
       const res = await applyOptimisticTaskUpdate(
         task.id,

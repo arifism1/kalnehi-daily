@@ -26,17 +26,17 @@ export default function DailyExamPrepSystemGuidePage() {
           {
             question: "Does this system work for non-engineering exams?",
             answer:
-              "Yes. The loop is the same: weekly outcomes, daily todos, timed deep work, honest review, and visible streaks. You swap subjects and book lists — not the structure.",
+              "Yes. The loop is the same: weekly goals, daily tasks, timed focused work, honest review, and visible streaks. You swap the subjects and reading lists — not the structure.",
           },
           {
             question: "What is the smallest version of this system?",
             answer:
-              "Three parts: one weekly map with three must-ship outcomes, one daily checklist you can finish in real hours, and one review block before new content.",
+              "Three parts: a weekly map with three outcomes you actually want to hit, a daily checklist that fits your real hours, and a short review block before you start anything new.",
           },
           {
             question: `How does ${SITE_NAME} fit in?`,
             answer:
-              "It is the execution layer: planner, syllabus tracking, sessions, habits, and optional PrepBrain AI — installable as a PWA after you sign in.",
+              "It's the execution layer: planner, syllabus tracking, study sessions, habits, and optional PrepBrain AI coaching — installable as a PWA after you sign in.",
           },
         ]}
       />
@@ -51,8 +51,8 @@ export default function DailyExamPrepSystemGuidePage() {
           <p className="text-base">
             JEE, NEET UG, NEET PG, CUET, UPSC, state PSC, GATE, CA foundation — different syllabi,
             same failure mode:{" "}
-            <strong className="text-kal-text">big plans and weak follow-through</strong>. Here is
-            a simple loop you can steal without buying a new notebook every month.
+            <strong className="text-kal-text">ambitious plans and poor follow-through</strong>. Here&apos;s
+            a simple loop that doesn&apos;t require a fresh notebook every month.
           </p>
         </header>
 
@@ -61,39 +61,42 @@ export default function DailyExamPrepSystemGuidePage() {
             1. Plan in weeks, not in vibes
           </h2>
           <p>
-            Pick three outcomes that would make the week a win — e.g., one weak chapter closed, one
-            mock reviewed, one habit streak protected. If the week explodes, move work; do not erase
-            the week.
+            Pick three outcomes that would make the week feel worthwhile — one weak chapter addressed,
+            one mock reviewed, one habit streak kept alive. If the week goes sideways, carry the work
+            forward. Don&apos;t erase it.
           </p>
         </section>
 
         <section className="space-y-2" aria-labelledby="loop-day">
           <h2 id="loop-day" className="text-lg font-semibold text-kal-text">
-            2. Execute in days you can actually finish
+            2. Build daily lists you can actually finish
           </h2>
           <p>
-            Your daily list should fit the hours you truly have — not the hours you wish you had.
-            Finished beats impressive. A short honest list beats a long fantasy one.
+            Your daily list should fit the hours you genuinely have — not the hours you wish you had.
+            A short honest list beats a long optimistic one. Finishing matters more than looking
+            productive.
           </p>
         </section>
 
         <section className="space-y-2" aria-labelledby="loop-deep">
           <h2 id="loop-deep" className="text-lg font-semibold text-kal-text">
-            3. Protect deep work with a timer
+            3. Protect your deep work with a timer
           </h2>
           <p>
-            One 50–90 minute block with one label on it. Phone face-down. When the timer stops, you
-            stop pretending you “studied” while scrolling.
+            One 50–90 minute block, one thing to work on. Phone face-down. When the timer goes off,
+            you can be honest with yourself about whether you were actually studying or just in the
+            room.
           </p>
         </section>
 
         <section className="space-y-2" aria-labelledby="loop-review">
           <h2 id="loop-review" className="text-lg font-semibold text-kal-text">
-            4. Review before you stack new theory
+            4. Review before you pile on new material
           </h2>
           <p>
-            Wrong questions, skipped chapters, and half-understood notes are where rank leaks. A
-            small review block before new content pays more than another chapter of passive reading.
+            Wrong questions, skipped chapters, and half-understood notes are where your rank slips.
+            A short review block before new content is almost always a better use of time than
+            another chapter of passive reading.
           </p>
         </section>
 
