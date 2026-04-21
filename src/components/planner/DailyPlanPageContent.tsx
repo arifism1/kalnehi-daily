@@ -3,7 +3,7 @@
 import { addDays, format, parseISO } from "date-fns";
 import { ArrowLeft, CalendarDays, Mic, Type, Zap } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 
 import { UnifiedDailyPlanList } from "@/components/planner/UnifiedDailyPlanList";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
@@ -29,6 +29,11 @@ export function DailyPlanPageContent() {
     () => dailyPlanLiveHeading(logDate, today),
     [logDate, today],
   );
+
+  const [taskCount, setTaskCount] = useState<number | null>(null);
+  const handleTasksLoaded = useCallback((count: number) => {
+    setTaskCount(count);
+  }, []);
 
   if (!user) {
     return (
@@ -115,25 +120,50 @@ export function DailyPlanPageContent() {
         </label>
       </div>
 
-      <UnifiedDailyPlanList planDate={logDate} title={listTitle} />
+      <UnifiedDailyPlanList
+        planDate={logDate}
+        title={listTitle}
+        onTasksLoaded={handleTasksLoaded}
+      />
 
       {/* Add tasks via source pages */}
-      <div className="mt-6 flex flex-wrap justify-center gap-3">
-        <Link
-          href={`/dictate-day?planDate=${encodeURIComponent(logDate)}`}
-          className="inline-flex items-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-2.5 text-sm font-bold text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-text"
-        >
-          <Mic className="h-4 w-4 text-kal-accent" aria-hidden />
-          Dictate My Day
-        </Link>
-        <Link
-          href={`/self-type-day?planDate=${encodeURIComponent(logDate)}`}
-          className="inline-flex items-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-2.5 text-sm font-bold text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-text"
-        >
-          <Type className="h-4 w-4 text-kal-accent" aria-hidden />
-          Self Type
-        </Link>
-      </div>
+      {taskCount === 0 ? (
+        <div className="mt-6 flex flex-col gap-3">
+          <Link
+            href={`/dictate-day?planDate=${encodeURIComponent(logDate)}`}
+            className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white transition-colors"
+            style={{ backgroundColor: "#EF9F27" }}
+          >
+            <Mic className="h-4 w-4" aria-hidden />
+            Dictate My Day
+          </Link>
+          <Link
+            href={`/self-type-day?planDate=${encodeURIComponent(logDate)}`}
+            className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white transition-colors"
+            style={{ backgroundColor: "#EF9F27" }}
+          >
+            <Type className="h-4 w-4" aria-hidden />
+            Self Type
+          </Link>
+        </div>
+      ) : (
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <Link
+            href={`/dictate-day?planDate=${encodeURIComponent(logDate)}`}
+            className="inline-flex items-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-2.5 text-sm font-bold text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-text"
+          >
+            <Mic className="h-4 w-4 text-kal-accent" aria-hidden />
+            Dictate My Day
+          </Link>
+          <Link
+            href={`/self-type-day?planDate=${encodeURIComponent(logDate)}`}
+            className="inline-flex items-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-2.5 text-sm font-bold text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-text"
+          >
+            <Type className="h-4 w-4 text-kal-accent" aria-hidden />
+            Self Type
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

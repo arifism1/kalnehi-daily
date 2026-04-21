@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, CalendarDays, Lock, Mic, PenLine } from "lucide-react";
+import { ArrowLeft, CalendarDays, Lightbulb, Lock, Mic, PenLine } from "lucide-react";
 import Link from "next/link";
 
 import { useAiGate } from "@/hooks/useAiGate";
@@ -168,11 +168,12 @@ export function PlanMyDayPage() {
         </div>
       )}
 
-      <p className="relative mt-10 text-center text-sm leading-relaxed text-kal-muted sm:mt-12">
-        All inputs update the same plan for the date you pick. Use{" "}
-        <span className="font-medium text-kal-text-secondary">Home</span> for
-        syllabus-linked targets and timer; daily planner is for your schedule lines.
-      </p>
+      <div className="relative mt-6 flex items-start gap-3 rounded-lg px-[14px] py-3" style={{ backgroundColor: "#FFF3E4" }}>
+        <Lightbulb className="mt-0.5 h-4 w-4 shrink-0" style={{ color: "#BA7517" }} aria-hidden />
+        <p className="text-sm leading-relaxed text-kal-muted">
+          All three methods add to the same daily plan — pick whichever suits the moment.
+        </p>
+      </div>
     </div>
   );
 }

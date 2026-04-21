@@ -2,6 +2,7 @@
 
 import { addDays, format, parseISO } from "date-fns";
 import { Loader2, Mic, Volume2 } from "lucide-react";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { insertDailyTask } from "@/actions/dailyPlan";
@@ -13,6 +14,7 @@ import {
 } from "@/components/planner/DailyPlanPreviewStaging";
 import { UnifiedDailyPlanList } from "@/components/planner/UnifiedDailyPlanList";
 import { VoiceMinuteLimitLink } from "@/components/subscription/LimitExceededLinks";
+import { useAiGate } from "@/hooks/useAiGate";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { usePlannerDateMidnightRollover } from "@/hooks/usePlannerDateMidnightRollover";
 import {
@@ -22,6 +24,12 @@ import {
 } from "@/lib/dailyPlanUiDate";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
 import { slotFromStartEnd } from "@/lib/dailyPlanTime";
+import {
+  FREE_TRIAL_VOICE_CAP_SECONDS,
+  formatVoiceMinutesFractionalCompact,
+  formatWelcomeTrialEndsIn,
+  formatWelcomeVoiceTimeLeft,
+} from "@/lib/freeTrial";
 import type { VoiceDraftTask } from "@/lib/voiceDraftFromGroq";
 import { plannerDurationFromTimeInputs } from "@/lib/voicePlannerSync";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -94,6 +102,24 @@ type DictateMyDayProps = {
 export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
   const user = useAuthStore((s) => s.user);
   const today = useCalendarDate();
+
+  const {
+    hasAiAccess,
+    hasPaidAccess,
+    isWelcomeTrial,
+    canDoVoiceSession,
+    voiceMinutesRemaining,
+    voiceMinutesLimit,
+    welcomeVoiceSecondsRemaining,
+    freeTrialEndsAtIso,
+  } = useAiGate();
+
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    if (!isWelcomeTrial || !freeTrialEndsAtIso) return;
+    const id = window.setInterval(() => setNowMs(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [isWelcomeTrial, freeTrialEndsAtIso]);
   const [logDate, setLogDate] = useState(() =>
     urlInitialPlanDate && isValidPlanDateString(urlInitialPlanDate)
       ? urlInitialPlanDate
@@ -382,6 +408,60 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
         <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
           Pro · Voice
         </p>
+        {hasAiAccess && canDoVoiceSession && (() => {
+          const countdown =
+            isWelcomeTrial && freeTrialEndsAtIso
+              ? formatWelcomeTrialEndsIn(freeTrialEndsAtIso, nowMs)
+              : null;
+          const remText = isWelcomeTrial
+            ? formatWelcomeVoiceTimeLeft(welcomeVoiceSecondsRemaining)
+            : formatVoiceMinutesFractionalCompact(voiceMinutesRemaining);
+          const capText = isWelcomeTrial
+            ? formatVoiceMinutesFractionalCompact(FREE_TRIAL_VOICE_CAP_SECONDS / 60)
+            : formatVoiceMinutesFractionalCompact(voiceMinutesLimit);
+
+          return (
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <div
+                role="status"
+                aria-live="polite"
+                className="inline-flex items-center gap-1.5 rounded-full px-[10px] py-1"
+                style={{
+                  backgroundColor: "#FFF3E4",
+                  border: "0.5px solid #FAC775",
+                }}
+              >
+                <Mic className="h-3 w-3 shrink-0 text-kal-accent" aria-hidden />
+                <span className="text-[12px] font-medium text-kal-text">
+                  {remText}
+                </span>
+                <span className="text-[11px] text-kal-muted">
+                  / {capText} cap
+                </span>
+              </div>
+              {countdown ? (
+                <span className="text-[0.65rem] font-semibold tabular-nums text-kal-accent sm:text-xs">
+                  {countdown}
+                </span>
+              ) : null}
+              {voiceMinutesRemaining <= 3 && hasPaidAccess ? (
+                <Link
+                  href="/my-plan"
+                  className="text-xs font-semibold text-kal-accent hover:underline"
+                >
+                  Buy more
+                </Link>
+              ) : isWelcomeTrial ? (
+                <Link
+                  href="/pricing"
+                  className="text-xs font-semibold text-kal-accent hover:underline"
+                >
+                  Upgrade
+                </Link>
+              ) : null}
+            </div>
+          );
+        })()}
         <h1 className="kal-feature-title mt-1 flex flex-wrap items-center gap-2">
           <Volume2 className="h-7 w-7 shrink-0 text-kal-accent" aria-hidden />
           Dictate My Day
@@ -454,22 +534,26 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
               else void startListening();
             }}
             className={[
-              "relative flex h-24 w-24 shrink-0 items-center justify-center rounded-full border-[3px] transition-all sm:h-28 sm:w-28",
+              "relative flex h-24 w-24 shrink-0 items-center justify-center rounded-full transition-all sm:h-28 sm:w-28",
               phase === "listening"
-                ? "border-violet-400 bg-violet-500/30 shadow-[0_0_48px_rgba(139,92,246,0.45)] animate-pulse"
-                : "border-violet-500/40 bg-violet-500/15 hover:bg-violet-500/25",
+                ? "animate-pulse"
+                : "",
               phase === "processing" || !isSupported ? "opacity-50" : "",
             ].join(" ")}
+            style={
+              phase === "listening"
+                ? { border: "3px solid #EF9F27", backgroundColor: "#EF9F27" }
+                : { border: "1.5px solid #EF9F27", backgroundColor: "#FFF3E4" }
+            }
             aria-pressed={phase === "listening"}
             aria-label={phase === "listening" ? "Stop listening" : "Start listening"}
           >
             {phase === "processing" ? (
-              <Loader2 className="h-10 w-10 animate-spin text-violet-200" />
+              <Loader2 className="h-10 w-10 animate-spin" style={{ color: "#EF9F27" }} />
             ) : (
               <Mic
-                className={`h-10 w-10 ${
-                  phase === "listening" ? "text-violet-100" : "text-violet-200"
-                }`}
+                className="h-10 w-10"
+                style={{ color: phase === "listening" ? "#ffffff" : "#EF9F27" }}
               />
             )}
           </button>
@@ -553,7 +637,8 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
               !previewRows.some((r) => isPreviewRowIncluded(r))
             }
             onClick={() => void commitPreviewToPlan()}
-            className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-kal-accent px-6 text-base font-semibold text-white shadow-sm hover:bg-kal-accent-hover disabled:opacity-40"
+            className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl px-6 text-base font-semibold text-white shadow-sm disabled:opacity-40"
+            style={{ backgroundColor: "#EF9F27" }}
           >
             {busyCommit ? (
               <>

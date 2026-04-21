@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Link2, Loader2, Mic, Pencil, Trash2, Type, X } from "lucide-react";
+import { CalendarDays, Check, Link2, Loader2, Mic, Pencil, Trash2, Type, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -453,6 +453,8 @@ type Props = {
   className?: string;
   /** When true, past plan dates (before local calendar "today") cannot toggle done/pending. */
   disablePastStatusToggle?: boolean;
+  /** Called after tasks finish loading with the current task count (0 = empty). */
+  onTasksLoaded?: (count: number) => void;
 };
 
 export function UnifiedDailyPlanList({
@@ -460,6 +462,7 @@ export function UnifiedDailyPlanList({
   title,
   className = "",
   disablePastStatusToggle = false,
+  onTasksLoaded,
 }: Props) {
   const today = useCalendarDate();
   const statusToggleLocked = Boolean(
@@ -498,6 +501,7 @@ export function UnifiedDailyPlanList({
           setTasks(res.tasks);
           putDailyPlanTasksCache(planDate, res.planId, res.tasks);
           if (!silent) setError(null);
+          onTasksLoaded?.(res.tasks.length);
         } else if (!silent && !cached) {
           setError(surfaceErrorForUi(res.error));
         }
@@ -663,13 +667,10 @@ export function UnifiedDailyPlanList({
             {error}
           </p>
         ) : tasks.length === 0 ? (
-          <div className="kal-glass-subtle rounded-xl border border-dashed border-white/35 py-14 text-center dark:border-white/15">
+          <div className="kal-glass-subtle flex min-h-[140px] flex-col items-center justify-center rounded-xl border border-dashed border-white/35 py-8 text-center dark:border-white/15">
+            <CalendarDays className="mb-2 h-6 w-6" style={{ color: "#FAC775" }} aria-hidden />
             <p className="text-sm font-semibold text-kal-text">Nothing here yet</p>
-            <p className="mt-1 text-xs text-kal-muted">
-              Add tasks with{" "}
-              <span className="font-bold text-kal-text">Dictate My Day</span> or{" "}
-              <span className="font-bold text-kal-text">Self Type</span> for this date.
-            </p>
+            <p className="mt-1 text-xs text-kal-muted">Your plan is empty for this date.</p>
           </div>
         ) : (
           <>

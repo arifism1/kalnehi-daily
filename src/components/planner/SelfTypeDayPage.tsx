@@ -106,12 +106,19 @@ export function SelfTypeDayPage() {
         onAdded={() => bumpPlanList((n) => n + 1)}
       />
 
-      <div className="mt-6">
-        <UnifiedDailyPlanList
-          key={planListKey}
-          planDate={logDate}
-          title={livePlanTitle}
-        />
+      <hr className="mt-6 border-kal-border" />
+
+      <div className="mt-4">
+        <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.07em] text-kal-muted">
+          Today&apos;s plan (live)
+        </p>
+        <div className="rounded-xl p-4" style={{ backgroundColor: "#FAF8F4" }}>
+          <UnifiedDailyPlanList
+            key={planListKey}
+            planDate={logDate}
+            title={livePlanTitle}
+          />
+        </div>
       </div>
 
       <div className="mt-10 flex flex-wrap items-center justify-center gap-3 text-sm text-kal-muted">

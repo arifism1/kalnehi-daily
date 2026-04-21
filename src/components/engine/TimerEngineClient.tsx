@@ -271,25 +271,33 @@ export function TimerEngineClient() {
                   </button>
                 );
               })}
-              <label className="ml-0 flex items-center gap-2 rounded-full border border-dashed border-kal-border px-3 py-2">
+              <div className="ml-0 flex items-center gap-1.5 rounded-full border border-dashed border-kal-border px-3 py-2">
                 <span className="text-xs font-medium text-kal-text-secondary">
                   Custom
                 </span>
-                <input
-                  type="number"
-                  min={1}
-                  max={240}
-                  value={blockMinutes}
-                  onChange={(e) => {
-                    const m = Number(e.target.value);
-                    if (!Number.isFinite(m) || m <= 0) return;
-                    setCustomSec(m * 60);
-                  }}
-                  className="w-12 rounded-lg border border-kal-border bg-kal-input-bg px-2 py-1 text-center text-sm font-semibold tabular-nums text-kal-text focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
-                  aria-label="Custom block length in minutes"
-                />
+                <button
+                  type="button"
+                  onClick={() => setCustomSec(Math.max(5 * 60, customSec - 5 * 60))}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-kal-border bg-white text-base font-semibold transition-colors hover:border-kal-accent/40 hover:bg-kal-accent-soft dark:bg-zinc-900/80"
+                  style={{ color: "#BA7517" }}
+                  aria-label="Decrease duration by 5 minutes"
+                >
+                  −
+                </button>
+                <span className="min-w-[40px] text-center text-sm font-semibold tabular-nums text-kal-text">
+                  {blockMinutes}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setCustomSec(Math.min(120 * 60, customSec + 5 * 60))}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-kal-border bg-white text-base font-semibold transition-colors hover:border-kal-accent/40 hover:bg-kal-accent-soft dark:bg-zinc-900/80"
+                  style={{ color: "#BA7517" }}
+                  aria-label="Increase duration by 5 minutes"
+                >
+                  +
+                </button>
                 <span className="text-xs text-kal-text-secondary">min</span>
-              </label>
+              </div>
             </div>
           </div>
 
@@ -389,7 +397,8 @@ export function TimerEngineClient() {
             type="button"
             disabled={!taskInput.trim() || creatingTask}
             onClick={() => void handleStart()}
-            className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-kal-accent px-4 text-sm font-semibold text-kal-accent-foreground shadow-sm transition-transform duration-200 hover:bg-kal-accent-hover enabled:motion-safe:active:scale-[0.99] disabled:opacity-40 motion-reduce:enabled:active:scale-100 sm:w-auto"
+            className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold text-white shadow-sm transition-transform duration-200 enabled:motion-safe:active:scale-[0.99] disabled:opacity-40 motion-reduce:enabled:active:scale-100 sm:w-auto"
+            style={{ backgroundColor: "#EF9F27" }}
           >
             <Play className="h-4 w-4" />
             {creatingTask ? "Creating…" : "Start linked timer"}
