@@ -12,6 +12,17 @@ export type AuthRateLimitStepResult = {
   error?: string;
 };
 
+/**
+ * Extracts the client IP from request headers.
+ *
+ * Trusts `x-forwarded-for` / `x-real-ip` as set by the platform (Vercel).
+ * On Vercel these headers are injected by the infrastructure and attacker-supplied
+ * values are stripped, so spoofing is not possible in production. In self-hosted or
+ * local-dev environments this assumption does NOT hold — but the Postgres
+ * `auth_rate_limit_step` RPC is the authoritative gate regardless, using the IP only
+ * as a bucket key. Even a spoofed IP merely targets a different (or attacker-chosen)
+ * bucket; it cannot escalate privileges or bypass the actual auth check.
+ */
 export function getClientIpFromRequest(request: Request): string {
   const xf = request.headers.get("x-forwarded-for");
   if (xf) {

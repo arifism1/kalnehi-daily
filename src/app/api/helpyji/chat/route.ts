@@ -202,7 +202,7 @@ export async function POST(request: Request) {
 
   const { data: profile, error: profileErr } = await admin
     .from("user_profiles")
-    .select("*")
+    .select("subscription_status,subscription_end_date,trial_started_at,subscription_tier")
     .eq("user_id", user.id)
     .maybeSingle();
 

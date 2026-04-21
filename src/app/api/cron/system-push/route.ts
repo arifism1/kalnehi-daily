@@ -39,16 +39,10 @@ import {
   reserveSystemPushDedupe,
 } from "@/lib/systemPush/dedupe";
 import { getIstCalendarDateString } from "@/lib/systemPush/istCalendarDate";
+import { verifyCronSecret } from "@/lib/verifyCronSecret";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
-
-function verifyCron(req: NextRequest): boolean {
-  const secret = process.env.CRON_SECRET?.trim();
-  if (!secret) return false;
-  const auth = req.headers.get("authorization");
-  return auth === `Bearer ${secret}`;
-}
 
 type Phase = "morning" | "evening";
 
@@ -68,7 +62,7 @@ function fcmDataStrings(
  * Query: `phase=morning` (7:00 IST) or `phase=evening` (8:00 PM IST) — see vercel.json schedules.
  */
 export async function GET(req: NextRequest) {
-  if (!verifyCron(req)) {
+  if (!verifyCronSecret(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

@@ -20,18 +20,12 @@ import {
   parseScheduledTimeToMinutes,
 } from "@/lib/customReminders/istClock";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
+import { verifyCronSecret } from "@/lib/verifyCronSecret";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
 const FIRE_WINDOW_MINUTES = 12;
-
-function verifyCron(req: NextRequest): boolean {
-  const secret = process.env.CRON_SECRET?.trim();
-  if (!secret) return false;
-  const auth = req.headers.get("authorization");
-  return auth === `Bearer ${secret}`;
-}
 
 type ReminderRow = {
   id: string;
@@ -50,7 +44,7 @@ type ReminderRow = {
  * Sends active custom reminders whose IST wall time falls in the current window.
  */
 export async function GET(req: NextRequest) {
-  if (!verifyCron(req)) {
+  if (!verifyCronSecret(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
