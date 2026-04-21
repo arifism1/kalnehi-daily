@@ -17,6 +17,7 @@ import {
 import { useTaskStore } from "@/store/useTaskStore";
 
 import { EngineCard, EngineHero } from "./EngineHero";
+import { ConsistencyIllustration } from "@/components/illustrations/ConsistencyIllustration";
 
 const HEAT: Record<
   "green" | "yellow" | "red" | "grey",
@@ -57,11 +58,14 @@ export function CalendarEngineClient() {
 
   return (
     <div className="space-y-6">
-      <EngineHero
-        eyebrow="Consistency"
-        title="Consistency Tracker"
-        description="Full monthly view with execution heat: green above 80%, yellow 50–80%, red below 50%, grey when no targets that day."
-      />
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
+        <ConsistencyIllustration className="mx-auto w-full max-w-[180px] shrink-0 sm:mx-0" />
+        <EngineHero
+          eyebrow="Consistency"
+          title="Consistency Tracker"
+          description="Full monthly view with execution heat: green above 80%, yellow 50–80%, red below 50%, grey when no targets that day."
+        />
+      </div>
 
       <div className="flex items-center justify-between gap-3">
         <button

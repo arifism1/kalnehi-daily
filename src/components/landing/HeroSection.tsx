@@ -72,6 +72,28 @@ export function HeroSection() {
         {/* Right — dashboard mockup */}
         <div className="relative flex flex-1 items-center justify-center py-10 lg:py-0 lg:justify-end">
           <div className="relative w-full max-w-[480px]">
+            {/* Floating subject icons — decorative */}
+            <div className="absolute -left-10 top-16 z-10 hidden lg:block" aria-hidden>
+              <div className="flex h-11 w-11 items-center justify-center rounded-full border border-[rgba(255,122,0,0.25)] bg-white/90 text-lg shadow-md backdrop-blur-sm">
+                ⚛
+              </div>
+            </div>
+            <div className="absolute -left-6 top-36 z-10 hidden lg:block" aria-hidden>
+              <div className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(255,122,0,0.2)] bg-white/85 text-base shadow-sm backdrop-blur-sm opacity-80">
+                ∑
+              </div>
+            </div>
+            <div className="absolute -right-8 bottom-20 z-10 hidden lg:block" aria-hidden>
+              <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(90,158,111,0.3)] bg-white/90 text-base shadow-md backdrop-blur-sm">
+                🌿
+              </div>
+            </div>
+            <div className="absolute -left-12 bottom-16 z-10 hidden xl:block" aria-hidden>
+              <div className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(255,122,0,0.15)] bg-white/80 text-base shadow-sm backdrop-blur-sm opacity-60">
+                ⚗
+              </div>
+            </div>
+
             {/* Main dashboard card */}
             <div className="overflow-hidden rounded-2xl border border-[rgba(210,192,168,0.5)] bg-[rgba(255,252,248,0.95)] shadow-[0_24px_64px_-12px_rgba(14,21,37,0.18),0_4px_16px_rgba(100,75,40,0.08)]">
               <DashboardMockup />

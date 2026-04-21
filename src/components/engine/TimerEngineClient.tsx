@@ -25,6 +25,7 @@ import { useTaskStore } from "@/store/useTaskStore";
 import type { Task } from "@/store/useTaskStore";
 
 import { EngineCard, EngineHero } from "./EngineHero";
+import { TimerIllustration } from "@/components/illustrations/TimerIllustration";
 
 const PRESETS = [
   { label: "25 min", short: "Pomodoro", work: 25 * 60 },
@@ -242,6 +243,12 @@ export function TimerEngineClient() {
         title="Timer"
         description="Pick a block length, link a task, then start — elapsed time logs to your task. Presets set duration only; press Start when ready."
       />
+
+      {!isRunning && !activeId && (
+        <div className="flex justify-center py-2">
+          <TimerIllustration className="w-full max-w-[200px] opacity-80" />
+        </div>
+      )}
 
       <EngineCard title="Set up focus block">
         <div className="space-y-6">

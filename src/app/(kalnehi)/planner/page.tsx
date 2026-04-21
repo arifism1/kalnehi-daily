@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Calendar, CheckSquare, Clock, LineChart, ListTodo, Sparkles } from "lucide-react";
 
 import { kalnehiPageMetadata, SITE_NAME } from "@/lib/seo-metadata";
+import { PlannerBannerIllustration } from "@/components/illustrations/PlannerBannerIllustration";
 
 export const metadata = kalnehiPageMetadata("planner");
 
@@ -47,15 +48,20 @@ const cards = [
 export default function PlannerLandingPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-8">
-      <header className="space-y-2">
-        <h1 className="kal-hero-heading">
-          Study planner — built for JEE, NEET & Boards
-        </h1>
-        <p className="text-sm leading-relaxed text-kal-text-secondary sm:text-base">
-          {SITE_NAME} connects your target exam to a weekly rhythm: schedule deep work, manage
-          todos, lock routines, and track habits in one installable PWA. Pick a module below to plan
-          the layer you need today.
-        </p>
+      <header className="space-y-4">
+        <div className="kal-glass-subtle overflow-hidden rounded-2xl">
+          <PlannerBannerIllustration className="w-full" />
+        </div>
+        <div className="space-y-2">
+          <h1 className="kal-hero-heading">
+            Study planner — built for JEE, NEET & Boards
+          </h1>
+          <p className="text-sm leading-relaxed text-kal-text-secondary sm:text-base">
+            {SITE_NAME} connects your target exam to a weekly rhythm: schedule deep work, manage
+            todos, lock routines, and track habits in one installable PWA. Pick a module below to plan
+            the layer you need today.
+          </p>
+        </div>
       </header>
 
       <ul className="grid gap-3 sm:grid-cols-2">

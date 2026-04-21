@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { BookOpen } from "lucide-react";
 
 import { kalnehiPageMetadata } from "@/lib/seo-metadata";
+import { SyllabusEmptyIllustration } from "@/components/illustrations/SyllabusEmptyIllustration";
 
 import { SyllabusShell } from "./SyllabusShell";
 import { resolveSyllabusExam } from "@/lib/examProfile";
@@ -30,11 +30,9 @@ export default async function SyllabusPage() {
   }
 
   return (
-    <div className="kal-glass-panel mx-auto max-w-lg rounded-2xl px-8 py-12 text-center">
-      <div className="kal-glass-subtle mx-auto flex h-16 w-16 items-center justify-center rounded-2xl">
-        <BookOpen className="h-8 w-8 text-kal-muted" aria-hidden />
-      </div>
-      <h1 className="kal-feature-title mt-6">Choose your target exam</h1>
+    <div className="kal-glass-panel mx-auto max-w-lg rounded-2xl px-8 py-10 text-center">
+      <SyllabusEmptyIllustration className="mx-auto h-44 w-44" />
+      <h1 className="kal-feature-title mt-4">Choose your target exam</h1>
       <p className="mt-2 text-sm leading-relaxed text-kal-muted">
         Set <strong className="text-kal-text">Target exam</strong> in your profile
         so we load the matching syllabus (NEET UG, JEE Main, and more as we ship

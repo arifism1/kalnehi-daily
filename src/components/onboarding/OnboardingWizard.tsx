@@ -10,6 +10,8 @@ import {
   Target,
   User,
 } from "lucide-react";
+
+import { OnboardingStepIllustration } from "@/components/illustrations/OnboardingStepIllustration";
 import { useCallback, useEffect, useState } from "react";
 
 import { completeOnboarding, saveEnabledFeatures } from "@/actions/profile";
@@ -238,6 +240,7 @@ export function OnboardingWizard() {
 
       {step === 1 && (
         <section className="kal-glass-panel flex flex-1 flex-col gap-5 rounded-2xl p-5 sm:p-6">
+          <OnboardingStepIllustration step={1} className="mx-auto w-full max-w-[200px] opacity-90" />
           <div className="flex items-center gap-2">
             <User className="h-6 w-6 text-kal-accent" />
             <div>
@@ -318,6 +321,7 @@ export function OnboardingWizard() {
 
       {step === 2 && (
         <section className="kal-glass-panel flex flex-1 flex-col gap-6 rounded-2xl p-5 sm:p-6">
+          <OnboardingStepIllustration step={2} className="mx-auto w-full max-w-[200px] opacity-90" />
           <div className="flex items-center gap-2">
             <Target className="h-6 w-6 text-kal-accent" />
             <div>
@@ -388,6 +392,7 @@ export function OnboardingWizard() {
 
       {step === 3 && (
         <section className="kal-glass-panel flex flex-1 flex-col gap-6 rounded-2xl p-5 sm:p-6">
+          <OnboardingStepIllustration step={3} className="mx-auto w-full max-w-[200px] opacity-90" />
           <div className="flex items-center gap-2">
             <CalendarDays className="h-6 w-6 text-kal-accent" />
             <div>
@@ -429,6 +434,7 @@ export function OnboardingWizard() {
 
       {step === 4 && (
         <section className="kal-glass-panel flex min-h-0 flex-1 flex-col gap-4 rounded-2xl p-5 sm:p-6">
+          <OnboardingStepIllustration step={4} className="mx-auto w-full max-w-[200px] shrink-0 opacity-90" />
           <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
             <div className="flex min-w-0 flex-1 items-start gap-2 sm:pr-2">
               <LayoutDashboard
