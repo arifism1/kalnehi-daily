@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import type { Tables } from "@/types/supabase";
+
 import { serializePrepBrainToolData } from "@/lib/prepBrainDataSerializer";
 import { buildPrepBrainSystemPrompt } from "@/lib/prepBrainPrompts";
 import {
@@ -426,6 +428,22 @@ async function runToolByName(
   }
 }
 
+type ChatProfileRow = Pick<
+  Tables<"user_profiles">,
+  | "subscription_status"
+  | "subscription_end_date"
+  | "trial_started_at"
+  | "ai_tokens_used"
+  | "ai_tokens_month"
+  | "welcome_ai_tokens_used"
+  | "paid_trial_ai_tokens_used"
+  | "bonus_ai_tokens_ledger"
+  | "primary_exam"
+  | "target_exam"
+  | "cuet_domain_subjects"
+  | "upsc_optional_subjects"
+>;
+
 /**
  * POST /api/prepbrain/chat
  * Body: { messages: { role, content }[], conversationId?: string }.
@@ -492,15 +510,14 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data: profile, error: profileErr } = await admin
+  const { data: profileRaw, error: profileErr } = await admin
     .from("user_profiles")
     .select(
-      "subscription_status,subscription_end_date,trial_started_at," +
-      "ai_tokens_used,ai_tokens_month,welcome_ai_tokens_used,paid_trial_ai_tokens_used," +
-      "bonus_ai_tokens_ledger,primary_exam,target_exam,cuet_domain_subjects,upsc_optional_subjects",
+      "subscription_status,subscription_end_date,trial_started_at,ai_tokens_used,ai_tokens_month,welcome_ai_tokens_used,paid_trial_ai_tokens_used,bonus_ai_tokens_ledger,primary_exam,target_exam,cuet_domain_subjects,upsc_optional_subjects",
     )
     .eq("user_id", user.id)
     .maybeSingle();
+  const profile = profileRaw as ChatProfileRow | null;
 
   if (profileErr) {
     console.error(
