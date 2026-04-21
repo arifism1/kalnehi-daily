@@ -1,6 +1,7 @@
 "use client";
 
 import clsx from "clsx";
+import { CalendarDays } from "lucide-react";
 import { useId, useMemo } from "react";
 
 import { CircularProgressRing } from "@/components/ui/CircularProgressRing";
@@ -106,40 +107,34 @@ export function DailyExecutionPanel() {
       <div className="px-6 py-6 sm:px-8 sm:py-8">
         <div className="flex flex-col items-center gap-8 lg:flex-row lg:items-start lg:gap-10">
           <div className="flex flex-col items-center gap-4">
-            <CircularProgressRing
-              percent={ringPercent}
-              gradientId={gradientId}
-              size={168}
-              strokeWidth={10}
-              className="motion-safe:transition-transform motion-safe:duration-300"
-            >
-              <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-kal-muted">
-                Today
-              </span>
-              <p className="mt-1 text-2xl font-bold tabular-nums text-kal-text sm:text-3xl">
-                {todaySnap.plannedTasks === 0 ? (
-                  "—"
-                ) : (
-                  <>
+            {todaySnap.plannedTasks === 0 ? (
+              <div className="flex h-[100px] flex-col items-center justify-center gap-2 text-center">
+                <CalendarDays className="h-8 w-8 text-kal-muted" aria-hidden />
+                <p className="text-sm font-medium text-kal-text">No plan for today</p>
+                <p className="text-[13px] text-kal-muted">Add tasks in Plan to start tracking.</p>
+              </div>
+            ) : (
+              <>
+                <CircularProgressRing
+                  percent={ringPercent}
+                  gradientId={gradientId}
+                  size={168}
+                  strokeWidth={10}
+                  className="motion-safe:transition-transform motion-safe:duration-300"
+                >
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-kal-muted">
+                    Today
+                  </span>
+                  <p className="mt-1 text-2xl font-bold tabular-nums text-kal-text sm:text-3xl">
                     {headlinePercent % 1 === 0
                       ? headlinePercent.toFixed(0)
                       : headlinePercent.toFixed(1)}
                     <span className="align-super text-base font-semibold text-kal-accent">
                       %
                     </span>
-                  </>
-                )}
-              </p>
-            </CircularProgressRing>
-            <p className="max-w-[16rem] text-center text-sm leading-relaxed text-kal-text-secondary">
-              {todaySnap.plannedTasks === 0 ? (
-                <>
-                  Nothing on your plan for today — add targets in{" "}
-                  <span className="font-medium text-kal-text">Plan</span> to
-                  track execution here.
-                </>
-              ) : (
-                <>
+                  </p>
+                </CircularProgressRing>
+                <p className="max-w-[16rem] text-center text-sm leading-relaxed text-kal-text-secondary">
                   You completed{" "}
                   <span className="font-semibold tabular-nums text-kal-text">
                     {headlinePercent % 1 === 0
@@ -148,14 +143,14 @@ export function DailyExecutionPanel() {
                     %
                   </span>{" "}
                   of your planned work today (by weight).
-                </>
-              )}
-            </p>
+                </p>
+              </>
+            )}
           </div>
 
           <div className="min-w-0 flex-1 space-y-6">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-xl border border-kal-border/80 bg-kal-card-muted/30 px-4 py-3.5 dark:border-slate-700/80 dark:bg-slate-950/30">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-xl border border-kal-border/80 bg-kal-card-muted/30 px-3 py-3 dark:border-slate-700/80 dark:bg-slate-950/30">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-kal-muted">
                   Tasks
                 </p>
@@ -170,7 +165,7 @@ export function DailyExecutionPanel() {
                   completed vs planned today
                 </p>
               </div>
-              <div className="rounded-xl border border-kal-border/80 bg-kal-card-muted/30 px-4 py-3.5 dark:border-slate-700/80 dark:bg-slate-950/30">
+              <div className="rounded-xl border border-kal-border/80 bg-kal-card-muted/30 px-3 py-3 dark:border-slate-700/80 dark:bg-slate-950/30">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-kal-muted">
                   Time
                 </p>

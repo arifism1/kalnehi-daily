@@ -132,14 +132,16 @@ export function SyncStatusBanner() {
     return (
       <div
         role="status"
+        aria-live="polite"
         className={clsx(
-          "mb-4 flex items-center gap-2 rounded-[0.875rem] border border-kal-accent/30 bg-kal-accent-soft/85 px-3 py-2 text-[10px] leading-snug text-kal-text-secondary shadow-sm backdrop-blur-sm dark:bg-kal-accent-soft/40",
+          "fixed left-1/2 top-[56px] z-50 -translate-x-1/2 pointer-events-none",
+          "flex items-center gap-2 rounded-full border border-kal-accent/30 bg-kal-accent-soft/95 px-4 py-1.5 text-[11px] leading-snug text-kal-text-secondary shadow-md backdrop-blur-md dark:bg-kal-accent-soft/60",
         )}
       >
         <Loader2 className="h-3 w-3 shrink-0 animate-spin text-kal-accent" />
-        <p className="min-w-0 flex-1">
+        <span>
           Syncing {pendingCount} change{pendingCount > 1 ? "s" : ""}…
-        </p>
+        </span>
       </div>
     );
   }

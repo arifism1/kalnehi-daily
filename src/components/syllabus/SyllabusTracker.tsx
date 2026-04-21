@@ -204,6 +204,7 @@ export function SyllabusTracker() {
     chapter: string;
     rows: MergedSyllabusRow[];
   } | null>(null);
+  const [showAllYears, setShowAllYears] = useState(false);
 
   const openSheet = useCallback((mode: SyllabusCustomizeSheetMode) => {
     setSheetMode(mode);
@@ -444,28 +445,40 @@ export function SyllabusTracker() {
                 </ul>
               </div>
             ) : showMarksUi && neetYearProjections.length > 0 ? (
-              neetYearProjections.map((p) => (
-                <div key={p.year}>
-                  <p className="text-[11px] font-semibold text-kal-accent">
-                    {displayExam} {p.year}
-                  </p>
-                  <p className="mt-0.5 text-xl font-bold tabular-nums text-orange-600 dark:text-orange-300">
-                    {isUpscMainsUi
-                      ? rollup.totalMarksMastered.toFixed(0)
-                      : p.projectedOutOf720}
-                    <span className="text-base font-semibold text-kal-muted">
-                      {" "}
-                      /{" "}
+              <>
+                {(showAllYears ? neetYearProjections : neetYearProjections.slice(0, 1)).map((p) => (
+                  <div key={p.year}>
+                    <p className="text-[10px] font-semibold uppercase text-kal-muted">
+                      {displayExam} {p.year}
+                    </p>
+                    <p className="mt-0.5 text-xl font-bold tabular-nums" style={{ color: "#BA7517" }}>
                       {isUpscMainsUi
-                        ? UPSC_CSE_MAINS_UI_TOTAL_MARKS
-                        : maxScore}
-                    </span>
-                  </p>
-                  <p className="mt-0.5 text-[10px] leading-snug text-kal-muted">
-                    Based on {p.year} pattern
-                  </p>
-                </div>
-              ))
+                        ? rollup.totalMarksMastered.toFixed(0)
+                        : p.projectedOutOf720}
+                      <span className="text-base font-semibold text-kal-muted">
+                        {" "}
+                        /{" "}
+                        {isUpscMainsUi
+                          ? UPSC_CSE_MAINS_UI_TOTAL_MARKS
+                          : maxScore}
+                      </span>
+                    </p>
+                    <p className="mt-0.5 text-[10px] leading-snug text-kal-muted">
+                      Based on {p.year} pattern
+                    </p>
+                  </div>
+                ))}
+                {neetYearProjections.length > 1 && !showAllYears && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllYears(true)}
+                    className="mt-1 text-[11px] font-medium"
+                    style={{ color: "#BA7517" }}
+                  >
+                    See all years ↓
+                  </button>
+                )}
+              </>
             ) : showMarksUi ? (
               <div>
                 <p className="text-xs text-kal-muted">Marks secured</p>
@@ -690,7 +703,7 @@ export function SyllabusTracker() {
                             )}
                           </p>
 
-                          <div className="flex flex-wrap items-center gap-2 border-t border-kal-border/50 pt-3.5">
+                          <div className="flex flex-nowrap items-center gap-2 overflow-hidden border-t border-kal-border/50 pt-3.5">
                             {canCustomize && catalogExamKey ? (
                               <>
                                 <button
@@ -756,12 +769,7 @@ export function SyllabusTracker() {
                                 </button>
                               </>
                             ) : null}
-                            <div className="ml-auto flex items-center gap-2">
-                              <span className="text-xs font-medium text-kal-muted">
-                                {cr?.isChapterMastered
-                                  ? "Completed"
-                                  : "Mark complete"}
-                              </span>
+                            <div className="ml-auto flex w-40 shrink-0 items-center gap-2">
                               <ChapterToggle
                                 checked={cr?.isChapterMastered ?? false}
                                 onChange={(on) =>
@@ -771,6 +779,11 @@ export function SyllabusTracker() {
                                   )
                                 }
                               />
+                              <span className="min-w-0 truncate text-xs font-medium text-kal-muted" aria-label={cr?.isChapterMastered ? "Completed" : "Mark chapter as complete"}>
+                                {cr?.isChapterMastered
+                                  ? "Completed"
+                                  : "Mark complete"}
+                              </span>
                             </div>
                             {catalogExamKey ? (
                               <button
@@ -851,10 +864,12 @@ export function SyllabusTracker() {
                                     </div>
                                   </div>
                                   {canCustomize && catalogExamKey ? (
-                                    <div className="mt-2.5 flex items-center gap-2 pl-3.5 sm:pl-4">
+                                    <div className="mt-2.5 flex items-center gap-1.5 pl-3.5 sm:pl-4">
                                       <button
                                         type="button"
-                                        className="inline-flex h-8 items-center gap-1 rounded-lg border border-kal-border px-2 text-[11px] font-medium text-kal-text-secondary hover:bg-kal-card-muted"
+                                        title="Edit microtopic"
+                                        aria-label="Edit microtopic"
+                                        className="flex h-7 w-7 items-center justify-center rounded-lg border border-transparent text-kal-muted/80 transition-colors hover:border-kal-border hover:text-[#BA7517] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40"
                                         onClick={() => {
                                           if (mr.userSyllabus?.isUserAdded) {
                                             openSheet({
@@ -879,15 +894,13 @@ export function SyllabusTracker() {
                                           }
                                         }}
                                       >
-                                        <Pencil
-                                          className="h-3.5 w-3.5"
-                                          aria-hidden
-                                        />
-                                        Edit
+                                        <Pencil className="h-3.5 w-3.5" aria-hidden />
                                       </button>
                                       <button
                                         type="button"
-                                        className="inline-flex h-8 items-center gap-1 rounded-lg border border-orange-500/25 px-2 text-[11px] font-medium text-orange-400/95 hover:bg-orange-950/25"
+                                        title="Remove microtopic"
+                                        aria-label="Remove microtopic"
+                                        className="flex h-7 w-7 items-center justify-center rounded-lg border border-transparent text-kal-muted/80 transition-colors hover:border-red-200 hover:text-[#E24B4A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/40"
                                         onClick={() => {
                                           setConfirmState({
                                             title: mr.userSyllabus?.isUserAdded
@@ -930,11 +943,7 @@ export function SyllabusTracker() {
                                           });
                                         }}
                                       >
-                                        <Trash2
-                                          className="h-3.5 w-3.5"
-                                          aria-hidden
-                                        />
-                                        Remove
+                                        <Trash2 className="h-3.5 w-3.5" aria-hidden />
                                       </button>
                                     </div>
                                   ) : null}

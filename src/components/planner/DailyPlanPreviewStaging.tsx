@@ -210,39 +210,45 @@ export function DailyPlanPreviewStaging({
                 <div
                   className={
                     compact
-                      ? "mt-1 flex min-w-0 items-center gap-1.5"
-                      : "mt-1.5 flex min-w-0 items-center gap-2"
+                      ? "mt-1 flex min-w-0 items-end gap-1.5"
+                      : "mt-1.5 flex min-w-0 items-end gap-2"
                   }
                 >
-                  <input
-                    type="time"
-                    value={r.startInput}
-                    onChange={(e) =>
-                      onUpdateRow(r.id, { startInput: e.target.value })
-                    }
-                    disabled={disabled}
-                    className={
-                      compact
-                        ? "min-h-[30px] rounded border border-kal-border bg-kal-input-bg px-1.5 text-[11px] text-kal-text disabled:opacity-50"
-                        : "min-h-[32px] rounded border border-kal-border bg-kal-input-bg px-2 text-[11px] text-kal-text disabled:opacity-50"
-                    }
-                    aria-label="From time"
-                  />
-                  <input
-                    type="time"
-                    value={r.endInput}
-                    onChange={(e) =>
-                      onUpdateRow(r.id, { endInput: e.target.value })
-                    }
-                    disabled={disabled}
-                    className={
-                      compact
-                        ? "min-h-[30px] rounded border border-kal-border bg-kal-input-bg px-1.5 text-[11px] text-kal-text disabled:opacity-50"
-                        : "min-h-[32px] rounded border border-kal-border bg-kal-input-bg px-2 text-[11px] text-kal-text disabled:opacity-50"
-                    }
-                    aria-label="To time"
-                  />
-                  <span className="ml-auto text-xs font-medium text-kal-muted">
+                  <div className="flex flex-col">
+                    <span className="mb-0.5 block text-[11px] text-kal-muted">Start</span>
+                    <input
+                      type="time"
+                      value={r.startInput}
+                      onChange={(e) =>
+                        onUpdateRow(r.id, { startInput: e.target.value })
+                      }
+                      disabled={disabled}
+                      className={
+                        compact
+                          ? "min-h-[30px] rounded border border-kal-border bg-kal-input-bg px-1.5 text-[11px] text-kal-text disabled:opacity-50"
+                          : "min-h-[32px] rounded border border-kal-border bg-kal-input-bg px-2 text-[11px] text-kal-text disabled:opacity-50"
+                      }
+                      aria-label="From time"
+                    />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="mb-0.5 block text-[11px] text-kal-muted">End</span>
+                    <input
+                      type="time"
+                      value={r.endInput}
+                      onChange={(e) =>
+                        onUpdateRow(r.id, { endInput: e.target.value })
+                      }
+                      disabled={disabled}
+                      className={
+                        compact
+                          ? "min-h-[30px] rounded border border-kal-border bg-kal-input-bg px-1.5 text-[11px] text-kal-text disabled:opacity-50"
+                          : "min-h-[32px] rounded border border-kal-border bg-kal-input-bg px-2 text-[11px] text-kal-text disabled:opacity-50"
+                      }
+                      aria-label="To time"
+                    />
+                  </div>
+                  <span className="ml-auto text-[11px] font-medium text-kal-muted">
                     {r.duration ?? "—"}
                   </span>
                 </div>

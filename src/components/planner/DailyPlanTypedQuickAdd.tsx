@@ -332,7 +332,8 @@ export function DailyPlanTypedQuickAdd({ planDate, onAdded }: Props) {
             !previewRows.some((r) => isPreviewRowIncluded(r))
           }
           onClick={() => void commitPreviewToPlan()}
-          className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-kal-accent px-6 text-base font-semibold text-white shadow-sm hover:bg-kal-accent-hover disabled:opacity-40"
+          className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl px-6 text-base font-semibold text-white shadow-sm disabled:opacity-40"
+          style={{ backgroundColor: "#EF9F27" }}
         >
           {committing ? (
             <>
