@@ -1,4 +1,8 @@
-import { SITE_NAME } from "@/lib/seo-metadata";
+import {
+  SITE_NAME,
+  SUPPORT_EMAIL,
+  SUPPORT_MAILTO_HREF,
+} from "@/lib/seo-metadata";
 
 export default function RefundPage() {
   return (
@@ -52,7 +56,14 @@ export default function RefundPage() {
         <strong>Contact</strong>
       </p>
       <p>
-        For any questions, please email us at curioversitylearning@gmail.com.
+        For any questions, please email us at{" "}
+        <a
+          href={SUPPORT_MAILTO_HREF}
+          className="font-medium text-kal-accent underline underline-offset-2 hover:text-kal-accent/90"
+        >
+          {SUPPORT_EMAIL}
+        </a>
+        .
       </p>
       <p>
         Neven Academy Assam
