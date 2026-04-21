@@ -82,7 +82,7 @@ export function LandingNav() {
     <>
       <header
         className={clsx(
-          "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+          "fixed top-0 left-0 right-0 z-50 pt-[env(safe-area-inset-top)] transition-all duration-300",
           scrolled
             ? "border-b border-[rgba(210,192,168,0.35)] bg-[rgba(250,247,242,0.88)] shadow-[0_2px_8px_rgba(100,75,40,0.06)] backdrop-blur-xl"
             : "bg-transparent",

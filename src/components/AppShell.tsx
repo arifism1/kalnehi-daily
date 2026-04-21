@@ -19,7 +19,7 @@ function LoadingScreen() {
       aria-label="Loading"
     >
       {/* Header skeleton */}
-      <div className="kal-glass-header sticky top-0 z-40">
+      <div className="kal-glass-header sticky top-0 z-40 pt-[env(safe-area-inset-top)]">
         <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
           <div className="h-7 w-28 animate-pulse rounded-lg bg-kal-border" />
           <div className="flex items-center gap-2">
@@ -149,12 +149,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       return "auth";
     }
     if (profileLoading) {
-      if (
-        isAuthPath(pathname) ||
-        isLegalPath(pathname) ||
-        isPublicMarketingPath(pathname)
-      )
-        return "render";
+      if (isAuthPath(pathname) || isLegalPath(pathname)) return "render";
       return "wait";
     }
 
@@ -187,6 +182,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
 
     if (pathname === "/onboarding") return "home";
+
+    if (isPublicMarketingPath(pathname)) return "home";
 
     return "render";
   }, [
