@@ -22,7 +22,8 @@ export function KalnehiMark({ className, ...props }: KalnehiMarkProps) {
         y="22"
         fill="var(--kal-text)"
         style={{
-          fontFamily: "var(--font-inter), ui-sans-serif, system-ui, sans-serif",
+          fontFamily:
+            "var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif",
         }}
         fontSize="16"
         fontWeight="700"
@@ -34,7 +35,8 @@ export function KalnehiMark({ className, ...props }: KalnehiMarkProps) {
         y="32"
         fill="var(--kal-accent)"
         style={{
-          fontFamily: "var(--font-inter), ui-sans-serif, system-ui, sans-serif",
+          fontFamily:
+            "var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif",
         }}
         fontSize="6.5"
         fontWeight="700"

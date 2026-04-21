@@ -360,7 +360,7 @@ export function TargetScoreBlueprintClient() {
       </Link>
 
       <header className="space-y-3 text-center sm:text-left">
-        <h1 className="kal-feature-title text-2xl sm:text-3xl">
+        <h1 className="kal-feature-title">
           Target score blueprint
         </h1>
         <p className="text-sm leading-relaxed text-kal-muted">

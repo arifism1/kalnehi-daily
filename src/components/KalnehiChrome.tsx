@@ -137,16 +137,13 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
           {/* Logo */}
           <Link
             href="/home"
-            className="flex shrink-0 flex-col justify-center rounded-xl py-1 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-kal-accent/40"
+            className="flex shrink-0 items-center rounded-xl py-1 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-kal-accent/40"
             aria-label="Dashboard"
           >
             <KalnehiMark
               aria-hidden
               className="h-7 w-auto max-w-[min(100%,6.5rem)] object-contain object-left sm:h-8"
             />
-            <span className="hidden text-[9px] font-medium uppercase tracking-[0.07em] text-kal-muted sm:block">
-              Win daily
-            </span>
           </Link>
 
           {/* Right controls */}

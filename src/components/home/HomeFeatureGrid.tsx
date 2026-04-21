@@ -291,10 +291,10 @@ function FeatureCard({
       )}
     >
       <Icon className="h-5 w-5 shrink-0 text-kal-accent" aria-hidden />
-      <p className="mt-2 text-[13px] font-medium leading-snug text-kal-text">
+      <p className="mt-2 font-serif text-[15px] font-normal leading-[1.3] text-kal-text">
         {item.label}
       </p>
-      <p className="mt-0.5 text-[11px] leading-tight text-kal-muted line-clamp-2">
+      <p className="mt-0.5 text-[11px] font-normal leading-tight text-kal-muted line-clamp-2">
         {hint}
       </p>
     </Link>
@@ -363,7 +363,7 @@ export function HomeFeatureGrid({
               style={{ backgroundColor: cat.dotColor }}
               aria-hidden
             />
-            <h2 className="text-[12px] font-medium uppercase tracking-[0.07em] text-kal-muted">
+            <h2 className="text-[11px] font-medium uppercase tracking-[0.07em] text-kal-muted">
               {cat.title}
             </h2>
           </div>

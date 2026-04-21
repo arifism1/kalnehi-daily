@@ -276,7 +276,7 @@ function MarksEngineIllustration() {
                 style={{ width: `${(score / max) * 100}%`, backgroundColor: color, opacity: 0.8 }}
               />
             </div>
-            <span className="w-8 shrink-0 text-right font-serif text-[11px] font-bold" style={{ color }}>
+            <span className="w-8 shrink-0 text-right font-sans text-[11px] font-bold" style={{ color }}>
               {score}
             </span>
           </div>
@@ -390,7 +390,7 @@ function FocusTimerIllustration() {
                 style={{ width: `${(mins / maxMins) * 100}%`, backgroundColor: color, opacity: 0.75 }}
               />
             </div>
-            <span className="w-8 shrink-0 text-right font-serif text-[10px] font-bold" style={{ color }}>
+            <span className="w-8 shrink-0 text-right font-sans text-[10px] font-bold" style={{ color }}>
               {mins}m
             </span>
           </div>
