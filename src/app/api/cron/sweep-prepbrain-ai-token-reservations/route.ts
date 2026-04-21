@@ -7,22 +7,16 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
+import { verifyCronSecret } from "@/lib/verifyCronSecret";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
-
-function verifyCron(req: NextRequest): boolean {
-  const secret = process.env.CRON_SECRET?.trim();
-  if (!secret) return false;
-  const auth = req.headers.get("authorization");
-  return auth === `Bearer ${secret}`;
-}
 
 /**
  * GET /api/cron/sweep-prepbrain-ai-token-reservations
  */
 export async function GET(req: NextRequest) {
-  if (!verifyCron(req)) {
+  if (!verifyCronSecret(req)) {
     return NextResponse.json({ ok: false, error: "Unauthorized." }, { status: 401 });
   }
 

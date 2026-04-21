@@ -492,11 +492,13 @@ export async function POST(request: Request) {
     );
   }
 
-  // Use select('*') so older DBs without newer columns (e.g. welcome_ai_tokens_used) still
-  // return a row; explicit column lists error when any named column is missing from the schema.
   const { data: profile, error: profileErr } = await admin
     .from("user_profiles")
-    .select("*")
+    .select(
+      "subscription_status,subscription_end_date,trial_started_at," +
+      "ai_tokens_used,ai_tokens_month,welcome_ai_tokens_used,paid_trial_ai_tokens_used," +
+      "bonus_ai_tokens_ledger,primary_exam,target_exam,cuet_domain_subjects,upsc_optional_subjects",
+    )
     .eq("user_id", user.id)
     .maybeSingle();
 

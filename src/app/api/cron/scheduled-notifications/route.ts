@@ -12,6 +12,7 @@ import {
 import { sendFcmToUserTokens } from "@/lib/fcm/sendNotifications";
 import { getIstCalendarDateString } from "@/lib/customReminders/istClock";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
+import { verifyCronSecret } from "@/lib/verifyCronSecret";
 
 const LOG_PREFIX = "[cron/scheduled-notifications]";
 
@@ -20,13 +21,6 @@ const MAX_IDS_IN_SCAN_LOG = 40;
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
-
-function verifyCron(req: NextRequest): boolean {
-  const secret = process.env.CRON_SECRET?.trim();
-  if (!secret) return false;
-  const auth = req.headers.get("authorization");
-  return auth === `Bearer ${secret}`;
-}
 
 type ScheduledRow = {
   id: string;
@@ -46,7 +40,7 @@ type ScheduledRow = {
  * (system / custom / danger-zone); they always attempt FCM when due.
  */
 export async function GET(req: NextRequest) {
-  if (!verifyCron(req)) {
+  if (!verifyCronSecret(req)) {
     console.warn(
       `${LOG_PREFIX} unauthorized (missing CRON_SECRET env or Authorization Bearer mismatch)`,
     );

@@ -1,3 +1,4 @@
+import { Redis } from "@upstash/redis";
 import { Resend } from "resend";
 import { NextResponse } from "next/server";
 
@@ -11,6 +12,19 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 
 export const runtime = "nodejs";
 
+// Vercel KV (Upstash Redis) environment variables — set via Vercel Marketplace integration.
+// KV_REST_API_URL and KV_REST_API_TOKEN are the standard names provisioned by Vercel KV.
+if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
+  throw new Error(
+    "[contact-support] KV_REST_API_URL and KV_REST_API_TOKEN must be set",
+  );
+}
+
+const redis = new Redis({
+  url: process.env.KV_REST_API_URL,
+  token: process.env.KV_REST_API_TOKEN,
+});
+
 const MAX_BODY_BYTES = 24_000;
 const MIN_MESSAGE = 10;
 const MAX_MESSAGE = 8_000;
@@ -18,13 +32,14 @@ const MAX_NAME = 120;
 const MAX_EMAIL = 320;
 
 /**
- * Sliding-window throttle per key (best-effort; resets on cold start).
+ * Durable sliding-window throttle backed by Upstash Redis sorted sets.
+ * Survives cold starts and scales across concurrent instances.
  * Stricter for anonymous traffic; signed-in users get a higher cap.
  */
 const WINDOW_MS = 15 * 60 * 1000;
+const WINDOW_S = Math.ceil(WINDOW_MS / 1000);
 const MAX_IN_WINDOW_ANON = 4;
 const MAX_IN_WINDOW_AUTH = 12;
-const hits = new Map<string, number[]>();
 
 function clientIp(req: Request): string {
   const xf = req.headers.get("x-forwarded-for");
@@ -35,13 +50,21 @@ function clientIp(req: Request): string {
   return req.headers.get("x-real-ip")?.trim() || "unknown";
 }
 
-function allowRequest(key: string, maxInWindow: number): boolean {
+async function allowRequest(key: string, maxInWindow: number): Promise<boolean> {
   const now = Date.now();
-  const prev = hits.get(key) ?? [];
-  const recent = prev.filter((t) => now - t < WINDOW_MS);
-  recent.push(now);
-  hits.set(key, recent);
-  return recent.length <= maxInWindow;
+  const windowStart = now - WINDOW_MS;
+  const redisKey = `contact_rl:${key}`;
+  const member = now.toString();
+
+  const pipeline = redis.pipeline();
+  pipeline.zremrangebyscore(redisKey, "-inf", windowStart);
+  pipeline.zadd(redisKey, { score: now, member });
+  pipeline.zcount(redisKey, windowStart, "+inf");
+  pipeline.expire(redisKey, WINDOW_S);
+
+  const results = await pipeline.exec();
+  const count = results[2] as number;
+  return count <= maxInWindow;
 }
 
 const EMAIL_RE =
@@ -135,7 +158,7 @@ export async function POST(req: Request) {
 
   const throttleKey = `${clientIp(req)}:${sessionUserId ?? "anon"}`;
   const maxHits = sessionUserId ? MAX_IN_WINDOW_AUTH : MAX_IN_WINDOW_ANON;
-  if (!allowRequest(throttleKey, maxHits)) {
+  if (!(await allowRequest(throttleKey, maxHits))) {
     return NextResponse.json(
       { ok: false, error: "Too many requests. Please try again later." },
       { status: 429 },

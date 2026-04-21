@@ -134,16 +134,16 @@ export async function fetchDailyPlanTasksForClient(
   try {
     const supabase = getSupabaseBrowserClient();
     const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (!session?.user) {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
       return { ok: false, error: USER_ERROR.session, planId: null, tasks: [] };
     }
 
     const { data, error } = await supabase
       .from("daily_plans")
       .select(DAILY_PLANS_WITH_TASKS_SELECT)
-      .eq("user_id", session.user.id)
+      .eq("user_id", user.id)
       .eq("plan_date", planDate)
       .order("created_at", { ascending: true, foreignTable: "daily_tasks" })
       .maybeSingle();
@@ -158,7 +158,7 @@ export async function fetchDailyPlanTasksForClient(
     const rawTasks = plan.daily_tasks ?? [];
     const tasksDraft: DailyTaskView[] = rawTasks.map((r) => rowToView(r, planDate));
 
-    const examCtx = await getUserCatalogExamContext(supabase, session.user.id);
+    const examCtx = await getUserCatalogExamContext(supabase, user.id);
     const examKey = examCtx?.examKey ?? null;
 
     const needsMembershipCheck: string[] = [];
@@ -173,7 +173,7 @@ export async function fetchDailyPlanTasksForClient(
 
     const allowed = await resolveAllowedSyllabusMasterIdsForUser(
       supabase,
-      session.user.id,
+      user.id,
       needsMembershipCheck,
     );
 
@@ -196,6 +196,10 @@ export async function fetchDailyTaskSourceRawTextForUndo(
 ): Promise<string | null> {
   try {
     const supabase = getSupabaseBrowserClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return null;
     const { data, error } = await supabase
       .from("daily_tasks")
       .select("source_raw_text")
