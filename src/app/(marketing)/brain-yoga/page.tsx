@@ -48,7 +48,7 @@ export default function BrainYogaMarketingPage() {
           <p className="text-xs font-semibold uppercase tracking-wide text-kal-accent">
             Focus & recovery
           </p>
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+          <h1 className="kal-feature-title">
             Brain Yoga for Exam Warriors — reset between JEE, NEET & UPSC blocks
           </h1>
           <p className="text-sm leading-relaxed text-kal-text-secondary sm:text-base">
@@ -60,7 +60,7 @@ export default function BrainYogaMarketingPage() {
         </header>
 
         <section className="kal-glass-card space-y-4 rounded-2xl p-5">
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-kal-text">
+          <h2 className="kal-section-heading flex items-center gap-2">
             <Wind className="h-5 w-5 text-kal-accent" aria-hidden />
             What to practice (5–10 minutes total)
           </h2>

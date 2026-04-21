@@ -363,7 +363,7 @@ export function HomeFeatureGrid({
               style={{ backgroundColor: cat.dotColor }}
               aria-hidden
             />
-            <h2 className="text-[11px] font-medium uppercase tracking-[0.07em] text-kal-muted">
+            <h2 className="kal-category-label">
               {cat.title}
             </h2>
           </div>

@@ -305,7 +305,7 @@ export function TargetScoreBlueprintClient() {
           className="mx-auto h-10 w-10 text-kal-warn-text dark:text-amber-400/90"
           aria-hidden
         />
-        <h2 className="mt-4 text-lg font-semibold text-kal-text">
+        <h2 className="kal-section-heading mt-4">
           Choose your CUET domain subjects
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-kal-muted">
@@ -470,7 +470,7 @@ export function TargetScoreBlueprintClient() {
         >
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 space-y-2">
-              <h2 className="text-xl font-semibold tracking-tight text-kal-text sm:text-2xl">
+              <h2 className="kal-section-heading">
                 Gain Extra Marks
               </h2>
               <p className="text-sm leading-relaxed text-kal-muted">
@@ -643,7 +643,7 @@ export function TargetScoreBlueprintClient() {
             className="kal-glass-panel space-y-6 rounded-3xl border border-kal-border/80 bg-kal-card/40 p-6 shadow-sm backdrop-blur-md sm:p-8"
           >
             <div className="space-y-2">
-              <h2 className="text-xl font-semibold tracking-tight text-kal-text sm:text-2xl">
+              <h2 className="kal-section-heading">
                 Reach My Target Score
               </h2>
               <p className="text-sm leading-relaxed text-kal-muted">

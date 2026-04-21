@@ -44,7 +44,7 @@ export default function JeeConsistencyGuidePage() {
         <p className="text-xs font-semibold uppercase tracking-wide text-kal-accent">
           Blog-style guide · JEE 2026
         </p>
-        <h1 className="text-2xl font-bold tracking-tight text-kal-text sm:text-3xl">
+        <h1 className="kal-feature-title">
           How to maintain consistency in JEE preparation
         </h1>
         <p className="text-base text-kal-text-secondary">

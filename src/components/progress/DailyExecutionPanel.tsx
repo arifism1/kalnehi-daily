@@ -95,7 +95,7 @@ export function DailyExecutionPanel() {
         <p className="text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-kal-accent sm:text-[0.7rem]">
           Daily execution
         </p>
-        <h2 className="mt-1 text-lg font-bold tracking-tight text-kal-text sm:text-xl">
+        <h2 className="kal-section-heading mt-1">
           Today&apos;s momentum
         </h2>
         <p className="mt-1.5 text-sm leading-relaxed text-kal-text-secondary">

@@ -43,7 +43,7 @@ export function NeetSyllabusReadOnly({ rows }: { rows: SyllabusRow[] }) {
         <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent/90">
           NEET UG
         </p>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight text-white">
+        <h1 className="kal-feature-title mt-1 !text-white">
           Syllabus
         </h1>
         <p className="mt-1 text-sm text-zinc-500">

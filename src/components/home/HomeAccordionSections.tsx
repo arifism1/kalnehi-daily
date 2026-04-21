@@ -274,7 +274,7 @@ export function HomeAccordionSections() {
           <p className="text-[0.66rem] font-semibold uppercase tracking-[0.2em] text-kal-muted">
             Dashboard
           </p>
-          <h2 className="mt-1 text-xl font-semibold tracking-tight text-kal-text sm:text-2xl">
+          <h2 className="kal-section-heading mt-1">
             {showAll ? "All Features" : "My Features"}
           </h2>
           <p className="mt-1 text-sm text-kal-muted">

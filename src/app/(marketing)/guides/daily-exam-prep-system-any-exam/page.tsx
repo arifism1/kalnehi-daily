@@ -45,7 +45,7 @@ export default function DailyExamPrepSystemGuidePage() {
           <p className="text-xs font-semibold uppercase tracking-wide text-kal-accent">
             General guide · any competitive exam
           </p>
-          <h1 className="text-2xl font-bold tracking-tight text-kal-text sm:text-3xl">
+          <h1 className="kal-feature-title">
             A daily exam prep system that survives bad weeks
           </h1>
           <p className="text-base">
@@ -101,7 +101,7 @@ export default function DailyExamPrepSystemGuidePage() {
         </section>
 
         <section className="rounded-2xl border border-kal-border bg-kal-accent-soft/40 px-4 py-5">
-          <h2 className="text-lg font-semibold text-kal-text">Exam-specific guides on this site</h2>
+          <h2 className="kal-section-heading">Exam-specific guides on this site</h2>
           <ul className="mt-3 list-inside list-disc space-y-1">
             <li>
               <Link href="/jee-study-planner" className="font-medium text-kal-accent-dark hover:underline">

@@ -47,7 +47,7 @@ export default function JeeStudyPlannerPage() {
           <p className="text-xs font-semibold uppercase tracking-wide text-kal-accent">
             JEE Main & Advanced · 2026 cycle
           </p>
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+          <h1 className="kal-feature-title">
             Best daily planner for JEE 2026 — ship PCM output every single day
           </h1>
           <p className="text-sm leading-relaxed text-kal-text-secondary sm:text-base">

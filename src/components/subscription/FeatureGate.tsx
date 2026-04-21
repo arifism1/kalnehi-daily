@@ -34,7 +34,7 @@ export function FeatureGate({ feature, children }: Props) {
         <div className="kal-glass-subtle flex h-14 w-14 items-center justify-center rounded-full">
           <Lock className="h-6 w-6 text-kal-text-secondary" />
         </div>
-        <h2 className="text-xl font-bold text-kal-text">{label.name}</h2>
+        <h2 className="kal-section-heading">{label.name}</h2>
         <p className="text-sm leading-relaxed text-kal-text-secondary">
           {label.upgradeHint}
         </p>

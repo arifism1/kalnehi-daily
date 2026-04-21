@@ -44,7 +44,7 @@ export default function PoliciesHubPage() {
         <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
           Legal
         </p>
-        <h1 className="text-2xl font-bold tracking-tight text-kal-text sm:text-3xl">
+        <h1 className="kal-feature-title">
           Our Policies
         </h1>
         <p className="text-sm leading-relaxed text-kal-text-secondary sm:text-[15px]">

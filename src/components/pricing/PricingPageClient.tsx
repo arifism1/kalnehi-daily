@@ -76,7 +76,7 @@ function AutopayDurationPanel({
               <p className="text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-kal-accent">
                 Pro subscription
               </p>
-              <h2 className="mt-0.5 text-base font-bold leading-tight tracking-tight text-kal-text sm:text-lg">
+              <h2 className="kal-section-heading mt-0.5">
                 How long should AutoPay run?
               </h2>
               <p className="mt-1 text-xs leading-snug text-kal-text-secondary sm:mt-1.5">
@@ -410,7 +410,7 @@ export function PricingPageClient() {
           <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-kal-accent">
             Kalnehi Pro
           </p>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight text-kal-text">
+          <h1 className="kal-feature-title mt-3">
             One simple plan for full prep
           </h1>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-kal-text-secondary">
@@ -471,7 +471,7 @@ export function PricingPageClient() {
               <span className="text-kal-accent">
                 <Crown className="h-5 w-5" />
               </span>
-              <h2 className="text-lg font-bold text-kal-text">{pro.name}</h2>
+              <h2 className="kal-section-heading">{pro.name}</h2>
             </div>
             <p className="mt-1 text-xs text-kal-text-secondary">{pro.tagline}</p>
 

@@ -644,7 +644,7 @@ export function UnifiedDailyPlanList({
     <>
       <section className={`kal-glass-panel rounded-[1.25rem] p-4 sm:p-6 ${className}`}>
         {title ? (
-          <h2 className="mb-4 text-lg font-bold text-kal-text">{title}</h2>
+          <h2 className="kal-section-heading mb-4">{title}</h2>
         ) : null}
 
         {loading ? (

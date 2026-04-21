@@ -34,7 +34,7 @@ export default async function SyllabusPage() {
       <div className="kal-glass-subtle mx-auto flex h-16 w-16 items-center justify-center rounded-2xl">
         <BookOpen className="h-8 w-8 text-kal-muted" aria-hidden />
       </div>
-      <h1 className="mt-6 text-lg font-bold text-kal-text">Choose your target exam</h1>
+      <h1 className="kal-feature-title mt-6">Choose your target exam</h1>
       <p className="mt-2 text-sm leading-relaxed text-kal-muted">
         Set <strong className="text-kal-text">Target exam</strong> in your profile
         so we load the matching syllabus (NEET UG, JEE Main, and more as we ship

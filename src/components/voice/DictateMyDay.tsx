@@ -405,7 +405,7 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
   return (
     <div className="space-y-8">
       <header>
-        <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
+        <p className="kal-category-label text-kal-accent">
           Pro · Voice
         </p>
         {hasAiAccess && canDoVoiceSession && (() => {
