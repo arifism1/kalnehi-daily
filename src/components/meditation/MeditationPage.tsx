@@ -23,6 +23,7 @@ import {
   upsertMeditationSessionLocal,
   type MeditationOutboxOp,
 } from "@/lib/meditationLocal";
+import { MeditationIllustration } from "@/components/illustrations/MeditationIllustration";
 import {
   MEDITATION_SOUNDS,
   MEDITATION_TYPES,
@@ -442,15 +443,20 @@ export function MeditationPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-7 pb-12">
-      <header className="kal-glass-panel rounded-3xl p-7">
-        <p className="text-[0.68rem] uppercase tracking-[0.22em] text-kal-accent">Mind–body practice</p>
-        <h1 className="kal-feature-title mt-2">Brain Yoga</h1>
-        <p className="mt-2 text-base font-semibold leading-snug text-kal-text">
-          Train your mind like a yoga practice
-        </p>
-        <p className="mt-2 text-kal-muted">
-          Mental flexibility, breath awareness, and focus that stretches with you—inner calm for exam prep and beyond.
-        </p>
+      <header className="kal-glass-panel overflow-hidden rounded-3xl p-7">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
+          <MeditationIllustration className="mx-auto w-full max-w-[180px] shrink-0 sm:mx-0 sm:max-w-[200px]" />
+          <div className="min-w-0">
+            <p className="text-[0.68rem] uppercase tracking-[0.22em] text-kal-accent">Mind–body practice</p>
+            <h1 className="kal-feature-title mt-2">Brain Yoga</h1>
+            <p className="mt-2 text-base font-semibold leading-snug text-kal-text">
+              Train your mind like a yoga practice
+            </p>
+            <p className="mt-2 text-kal-muted">
+              Mental flexibility, breath awareness, and focus that stretches with you—inner calm for exam prep and beyond.
+            </p>
+          </div>
+        </div>
       </header>
 
       <section className="kal-glass-panel rounded-2xl p-6">

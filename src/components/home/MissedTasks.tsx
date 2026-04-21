@@ -1,8 +1,10 @@
 "use client";
 
 import { addDays, format, parseISO } from "date-fns";
-import { AlertTriangle, CalendarCheck, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, CalendarCheck } from "lucide-react";
 import Link from "next/link";
+
+import { MissedTasksEmptyIllustration } from "@/components/illustrations/MissedTasksEmptyIllustration";
 import { useCallback, useMemo, useState } from "react";
 
 import { applyOptimisticTaskUpdate } from "@/lib/taskMutations";
@@ -91,9 +93,9 @@ export function MissedTasks() {
 
   if (missed.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center px-6 py-10 text-center">
-        <CheckCircle2 className="h-10 w-10" style={{ color: "#639922" }} aria-hidden />
-        <h2 className="mt-4 text-base font-medium text-kal-text">
+      <div className="flex flex-col items-center justify-center px-6 py-6 text-center">
+        <MissedTasksEmptyIllustration className="h-36 w-36" />
+        <h2 className="mt-3 text-base font-medium text-kal-text">
           You&apos;re all caught up
         </h2>
         <p className="mt-1.5 text-[13px] text-kal-muted">

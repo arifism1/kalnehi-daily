@@ -1,8 +1,9 @@
 "use client";
 
-import { Bell } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+
+import { NotificationsEmptyIllustration } from "@/components/illustrations/NotificationsEmptyIllustration";
 
 import {
   ensureAutomatedNotifications,
@@ -107,14 +108,12 @@ export default function NotificationsPage() {
         </section>
       ) : notifications.length === 0 ? (
         <section className="kal-glass-panel rounded-[1.25rem] p-6 text-center sm:p-8">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-kal-accent-soft text-kal-accent">
-            <Bell className="h-6 w-6" aria-hidden />
-          </div>
+          <NotificationsEmptyIllustration className="mx-auto h-32 w-32" />
           <p className="mt-4 text-lg font-semibold text-kal-text">
-            No notifications yet
+            You&apos;re all caught up
           </p>
           <p className="mt-2 text-sm text-kal-muted">
-            You&apos;re all caught up for now.
+            No new notifications. Check back after your next study session.
           </p>
         </section>
       ) : (

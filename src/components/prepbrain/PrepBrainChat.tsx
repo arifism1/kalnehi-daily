@@ -29,6 +29,7 @@ import {
   type AiUsagePhase,
 } from "@/lib/prepbrainTokens";
 import { AiTokenLimitLinks } from "@/components/subscription/LimitExceededLinks";
+import { PrepBrainIllustration } from "@/components/illustrations/PrepBrainIllustration";
 
 type SuggestionCardDef = {
   label: string;
@@ -526,6 +527,7 @@ export function PrepBrainChat() {
           <div className="h-full min-h-0 overflow-y-auto overscroll-contain px-3 py-3 [-webkit-overflow-scrolling:touch] sm:px-8 sm:py-8">
         {messages.length === 0 && !isSending && (
           <div className="mx-auto flex max-w-2xl flex-col items-center gap-4 text-center sm:gap-8">
+            <PrepBrainIllustration className="w-full max-w-[160px] sm:max-w-[200px]" />
             <p className="max-w-md px-1 text-sm leading-snug text-kal-text-secondary/95 sm:text-[15px] sm:leading-relaxed">
               What should we focus on today? PrepBrain reads your Kalnehi data each send.
             </p>

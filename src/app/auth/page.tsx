@@ -18,6 +18,8 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useState } from "react";
 
+import { StudyDeskIllustration } from "@/components/illustrations/StudyDeskIllustration";
+
 const AuthAppNavPreviewMenu = dynamic(
   () =>
     import("@/components/auth/AuthAppNavPreviewMenu").then((m) => ({
@@ -329,14 +331,18 @@ export default function AuthPage() {
   return (
     <div className="kal-page-bg flex min-h-full flex-col items-center justify-center gap-8 px-6 py-16">
       <AuthAppNavPreviewMenu />
-      <div className="text-center">
-        <AuthPageMark priority />
-        <h1 className="kal-feature-title mt-2 max-w-md text-balance leading-snug">
-          {SITE_NAME}
-        </h1>
-        <p className="mt-2 text-sm text-kal-muted">
-          Welcome back — your plan and syllabus stay with you on every device.
-        </p>
+
+      <div className="flex w-full max-w-sm flex-col items-center gap-2 sm:max-w-md">
+        <StudyDeskIllustration className="w-full max-w-[280px] opacity-90 sm:max-w-[320px]" />
+        <div className="text-center">
+          <AuthPageMark priority />
+          <h1 className="kal-feature-title mt-2 max-w-md text-balance leading-snug">
+            {SITE_NAME}
+          </h1>
+          <p className="mt-2 text-sm text-kal-muted">
+            Welcome back — your plan and syllabus stay with you on every device.
+          </p>
+        </div>
       </div>
 
       <AuthExploreLinks />

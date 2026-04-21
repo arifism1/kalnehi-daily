@@ -13,6 +13,8 @@ import {
   Sparkles,
   Sunrise,
 } from "lucide-react";
+
+import { HabitIllustration } from "@/components/illustrations/HabitIllustration";
 import type { CSSProperties } from "react";
 import {
   useCallback,
@@ -577,14 +579,19 @@ export function HabitMakerPage() {
       />
 
       <header className="relative mb-10">
-        <p className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-kal-accent">
-          Discipline
-        </p>
-        <h1 className="kal-feature-title mt-2">Habit Maker</h1>
-        <p className="kal-feature-lead mt-3 max-w-xl">
-          Small wins, stacked daily — make consistency feel as good as the
-          results.
-        </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
+          <HabitIllustration className="w-full max-w-[220px] shrink-0 sm:max-w-[240px]" />
+          <div className="min-w-0">
+            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-kal-accent">
+              Discipline
+            </p>
+            <h1 className="kal-feature-title mt-2">Habit Maker</h1>
+            <p className="kal-feature-lead mt-3 max-w-xl">
+              Small wins, stacked daily — make consistency feel as good as the
+              results.
+            </p>
+          </div>
+        </div>
       </header>
 
       {notice ? (

@@ -48,6 +48,7 @@ import { VoiceDoubtPreviewSheet } from "@/components/doubts/VoiceDoubtPreviewShe
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { LocalPhotoPrivacyNote } from "@/components/ui/LocalPhotoPrivacyNote";
 import { TransientNotice } from "@/components/ui/TransientNotice";
+import { DoubtsEmptyIllustration } from "@/components/illustrations/DoubtsEmptyIllustration";
 
 type ColumnDef = {
   status: DoubtStatus;
@@ -673,9 +674,14 @@ export function DoubtTracker() {
             </h2>
             <div className="mt-2 flex min-h-[min(52dvh,22rem)] flex-1 flex-col gap-2 overflow-y-auto overscroll-contain pr-0.5 [-webkit-overflow-scrolling:touch] sm:mt-3 sm:min-h-[min(56dvh,24rem)] sm:gap-2.5 md:min-h-0 md:max-h-[calc(100dvh-15.5rem)] lg:max-h-[calc(100dvh-14rem)]">
               {byStatus[col.status].length === 0 ? (
-                <p className="kal-glass-subtle rounded-lg border border-dashed border-white/35 px-2.5 py-6 text-center text-[11px] leading-relaxed text-kal-muted sm:rounded-xl sm:px-3 sm:py-8 sm:text-[12px] dark:border-white/15">
-                  {col.empty}
-                </p>
+                <div className="kal-glass-subtle flex flex-col items-center rounded-lg border border-dashed border-white/35 px-2.5 py-4 text-center sm:rounded-xl sm:px-3 sm:py-6 dark:border-white/15">
+                  {col.status === "active" && doubts.length === 0 && (
+                    <DoubtsEmptyIllustration className="mb-2 h-28 w-28 opacity-80" />
+                  )}
+                  <p className="text-[11px] leading-relaxed text-kal-muted sm:text-[12px]">
+                    {col.empty}
+                  </p>
+                </div>
               ) : (
                 byStatus[col.status].map((d) => (
                   <article
