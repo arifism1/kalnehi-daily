@@ -16,11 +16,12 @@ import {
 import { KalnehiMark } from "@/components/KalnehiMark";
 import { PwaInstallPromptDeferred } from "@/components/PwaInstallPromptDeferred";
 import { FreeTrialWelcomeBanner } from "@/components/subscription/FreeTrialWelcomeBanner";
-import { QuickNavBar } from "@/components/QuickNavBar";
 import { QuietSavedToast } from "@/components/QuietSavedToast";
 import { SyncStatusBanner } from "@/components/SyncStatusBanner";
 import { UndoToast } from "@/components/ui/UndoToast";
 import { TimerVisibilityBridge } from "@/components/task/TimerVisibilityBridge";
+import { BottomTabBar } from "@/components/nav/BottomTabBar";
+import { KalnehiSidebar } from "@/components/nav/KalnehiSidebar";
 
 const MainNavigationMenu = dynamic(
   () =>
@@ -76,110 +77,130 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
     }
   }, [pathname]);
 
-  return (
-    <div className="flex min-h-full min-h-dvh flex-col bg-kal-page text-kal-text">
-      <div className="flex min-w-0 flex-1 flex-col">
-        {!onboarding && minimalChrome && (
-          <header className="kal-glass-header sticky top-0 z-40 pt-[env(safe-area-inset-top)]">
-            <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between gap-3 px-3 sm:h-[3.5rem] sm:gap-4 sm:px-6 xl:px-8">
-              <Link
-                href="/home"
-                className="flex shrink-0 items-center rounded-xl py-1 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-kal-accent/40"
-                aria-label="Dashboard"
-              >
-                <KalnehiMark
-                  aria-hidden
-                  className="h-8 w-auto max-w-[min(100%,7.5rem)] object-contain object-left sm:h-9 sm:max-w-[8.5rem]"
-                />
-              </Link>
-              <button
-                type="button"
-                onClick={() => setMenuOpen(true)}
-                className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-white/25 bg-white/40 text-kal-text-secondary backdrop-blur-md transition-colors hover:border-white/40 hover:bg-white/55 active:scale-[0.98] dark:border-white/12 dark:bg-zinc-900/50 dark:hover:bg-zinc-900/70"
-                aria-expanded={menuOpen}
-                aria-label="Open navigation menu"
-              >
-                <Menu className="h-6 w-6" strokeWidth={2} />
-              </button>
-            </div>
-          </header>
-        )}
-        {!onboarding && minimalChrome && (
-          <div
-            className="sticky top-[calc(3.5rem_+_env(safe-area-inset-top))] z-30 border-b backdrop-blur-xl"
-            style={{ borderColor: "var(--kal-border)", backgroundColor: "rgba(250,247,242,0.82)" }}
-          >
-            <div
-              className={clsx(
-                "mx-auto w-full px-4 sm:px-6 md:px-8 xl:px-10",
-                "max-w-lg md:max-w-5xl lg:max-w-6xl xl:max-w-7xl 2xl:max-w-[90rem]",
-              )}
-            >
-              <QuickNavBar />
-            </div>
-          </div>
-        )}
-        {!onboarding && !minimalChrome && (
-          <header className="kal-glass-header sticky top-0 z-40 pt-[env(safe-area-inset-top)]">
-            <div className="mx-auto grid h-14 w-full max-w-7xl grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)] items-center gap-1.5 px-3 sm:h-[3.5rem] sm:gap-3 sm:px-6 xl:px-8">
-              <div className="min-w-0 justify-self-start self-center">
-                <Link
-                  href="/home"
-                  className="flex shrink-0 items-center rounded-xl py-1 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-kal-accent/40"
-                  aria-label="Dashboard"
-                >
-                  <KalnehiMark
-                    aria-hidden
-                    className="h-8 w-auto max-w-[min(100%,7.5rem)] object-contain object-left sm:h-9 sm:max-w-[8.5rem]"
-                  />
-                </Link>
-              </div>
-              <div className="flex min-h-0 min-w-0 w-full items-center justify-center overflow-hidden">
-                <QuickNavBar />
-              </div>
-              <div className="flex min-w-0 shrink-0 items-center justify-self-end gap-0.5 self-center sm:gap-1">
-                <Link
-                  href="/notifications"
-                  className={clsx(
-                    "flex h-11 min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-2 text-kal-accent backdrop-blur-md transition-colors active:scale-[0.98] sm:min-w-0 sm:px-3",
-                    pathname === "/notifications"
-                      ? "border-kal-accent/35 bg-kal-accent-soft shadow-sm ring-1 ring-kal-accent/20"
-                      : "border-white/30 bg-white/45 hover:border-white/45 hover:bg-white/65 dark:border-white/12 dark:bg-zinc-900/50 dark:hover:border-white/18 dark:hover:bg-zinc-900/72",
-                  )}
-                  aria-label="Notifications"
-                >
-                  <Bell className="h-5 w-5 shrink-0" strokeWidth={2.25} aria-hidden />
-                  <span className="hidden text-[11px] font-semibold leading-tight sm:inline sm:text-xs">
-                    Alerts
-                  </span>
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => setMenuOpen(true)}
-                  className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-white/25 bg-white/40 text-kal-text-secondary backdrop-blur-md transition-colors hover:border-white/40 hover:bg-white/55 active:scale-[0.98] dark:border-white/12 dark:bg-zinc-900/50 dark:hover:bg-zinc-900/70"
-                  aria-expanded={menuOpen}
-                  aria-label="Open navigation menu"
-                >
-                  <Menu className="h-6 w-6" strokeWidth={2} />
-                </button>
-              </div>
-            </div>
-          </header>
-        )}
+  if (onboarding) {
+    return (
+      <div className="flex min-h-full min-h-dvh flex-col bg-kal-page text-kal-text">
+        <div className="flex min-w-0 flex-1 flex-col">{children}</div>
+      </div>
+    );
+  }
 
-        <div
-          className={clsx(
-            "mx-auto w-full flex-1 px-4 py-6 sm:px-6 sm:py-8",
-            "max-w-lg md:max-w-5xl lg:max-w-6xl xl:max-w-7xl 2xl:max-w-[90rem]",
-            "md:px-8 xl:px-10 xl:py-10 2xl:px-12",
-            "pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-[max(1.5rem,env(safe-area-inset-bottom))]",
-          )}
-        >
-          {!onboarding && !minimalChrome && <SyncStatusBanner />}
-          {!onboarding && !minimalChrome && <FreeTrialWelcomeBanner />}
+  if (minimalChrome) {
+    return (
+      <div className="flex min-h-full min-h-dvh flex-col bg-kal-page text-kal-text">
+        <header className="kal-glass-header sticky top-0 z-40 pt-[env(safe-area-inset-top)]">
+          <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between gap-3 px-3 sm:h-[3.5rem] sm:gap-4 sm:px-6 xl:px-8">
+            <Link
+              href="/home"
+              className="flex shrink-0 items-center rounded-xl py-1 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-kal-accent/40"
+              aria-label="Dashboard"
+            >
+              <KalnehiMark
+                aria-hidden
+                className="h-8 w-auto max-w-[min(100%,7.5rem)] object-contain object-left sm:h-9 sm:max-w-[8.5rem]"
+              />
+            </Link>
+            <button
+              type="button"
+              onClick={() => setMenuOpen(true)}
+              className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-white/25 bg-white/40 text-kal-text-secondary backdrop-blur-md transition-colors hover:border-white/40 hover:bg-white/55 active:scale-[0.98] dark:border-white/12 dark:bg-zinc-900/50 dark:hover:bg-zinc-900/70"
+              aria-expanded={menuOpen}
+              aria-label="Open navigation menu"
+            >
+              <Menu className="h-6 w-6" strokeWidth={2} />
+            </button>
+          </div>
+        </header>
+        <div className="mx-auto w-full flex-1 px-4 py-6 sm:px-6 sm:py-8 max-w-lg md:max-w-5xl lg:max-w-6xl xl:max-w-7xl 2xl:max-w-[90rem] md:px-8 xl:px-10 xl:py-10 2xl:px-12">
           {children}
         </div>
+        {menuOpen ? (
+          <MainNavigationMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
+        ) : null}
+        <UndoToast />
+        <QuietSavedToastBoundary>
+          <QuietSavedToast />
+        </QuietSavedToastBoundary>
+        <TimerVisibilityBridge />
+        <PwaInstallPromptDeferred />
       </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-full min-h-dvh flex-col bg-kal-page text-kal-text">
+      {/* ── Top bar ────────────────────────────────────────────────────── */}
+      <header className="kal-glass-header sticky top-0 z-40 pt-[env(safe-area-inset-top)]">
+        <div className="flex h-[52px] w-full items-center justify-between gap-2 px-3 sm:h-[52px] sm:px-5">
+          {/* Logo */}
+          <Link
+            href="/home"
+            className="flex shrink-0 flex-col justify-center rounded-xl py-1 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-kal-accent/40"
+            aria-label="Dashboard"
+          >
+            <KalnehiMark
+              aria-hidden
+              className="h-7 w-auto max-w-[min(100%,6.5rem)] object-contain object-left sm:h-8"
+            />
+            <span className="hidden text-[9px] font-medium uppercase tracking-[0.07em] text-kal-muted sm:block">
+              Win daily
+            </span>
+          </Link>
+
+          {/* Right controls */}
+          <div className="flex items-center gap-1">
+            <Link
+              href="/notifications"
+              className={clsx(
+                "flex h-8 w-8 min-h-[32px] min-w-[32px] items-center justify-center rounded-xl border backdrop-blur-md transition-colors active:scale-[0.98]",
+                pathname === "/notifications"
+                  ? "border-kal-accent/35 bg-kal-accent-soft text-kal-accent shadow-sm"
+                  : "border-white/30 bg-white/45 text-kal-accent hover:border-white/45 hover:bg-white/65 dark:border-white/12 dark:bg-zinc-900/50",
+              )}
+              aria-label="Notifications"
+            >
+              <Bell className="h-4.5 w-4.5 shrink-0" strokeWidth={2.25} aria-hidden />
+            </Link>
+
+            {/* Hamburger — always visible for settings/legal/support/saved-plans */}
+            <button
+              type="button"
+              onClick={() => setMenuOpen(true)}
+              className="flex h-8 w-8 min-h-[32px] min-w-[32px] items-center justify-center rounded-xl border border-white/25 bg-white/40 text-kal-text-secondary backdrop-blur-md transition-colors hover:border-white/40 hover:bg-white/55 active:scale-[0.98] dark:border-white/12 dark:bg-zinc-900/50"
+              aria-expanded={menuOpen}
+              aria-label="Open navigation menu"
+            >
+              <Menu className="h-5 w-5" strokeWidth={2} />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* ── Body: sidebar + content ─────────────────────────────────────── */}
+      <div className="flex min-w-0 flex-1">
+        {/* Desktop sidebar — hidden below lg (900px) */}
+        <KalnehiSidebar />
+
+        {/* Main content area */}
+        <div className="flex min-w-0 flex-1 flex-col">
+          <main
+            className={clsx(
+              "mx-auto w-full flex-1 px-4 py-6 sm:px-6 sm:py-8",
+              "max-w-[960px]",
+              "md:px-8 xl:py-10",
+              // Extra bottom padding on mobile for fixed tab bar
+              "pb-[calc(56px+max(1rem,env(safe-area-inset-bottom)))] lg:pb-10",
+            )}
+          >
+            <SyncStatusBanner />
+            <FreeTrialWelcomeBanner />
+            {children}
+          </main>
+        </div>
+      </div>
+
+      {/* ── Mobile bottom tab bar — hidden at lg+ ───────────────────────── */}
+      <BottomTabBar />
 
       {menuOpen ? (
         <MainNavigationMenu open={menuOpen} onClose={() => setMenuOpen(false)} />

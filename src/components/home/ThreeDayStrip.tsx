@@ -19,26 +19,55 @@ function formatMinutesShort(minutes: number): string {
   return `${h}h ${min}m`;
 }
 
-/** Tomorrow cell: task count plus optional estimated load from timed slots. */
-function formatTomorrowLoad(taskCount: number, totalMinutes: number): string {
+function formatTomorrowValue(taskCount: number, totalMinutes: number): string {
   const n = Math.max(0, Math.round(taskCount));
-  if (n <= 0) return "0 tasks";
+  if (n <= 0) return "No tasks yet";
   const mins = Math.max(0, Math.round(totalMinutes));
-  if (mins <= 0) return `${n} task${n === 1 ? "" : "s"}`;
+  if (mins <= 0) return `${n} task${n === 1 ? "" : "s"} planned`;
   return `${n} task${n === 1 ? "" : "s"} · ${formatMinutesShort(mins)}`;
 }
 
-function MiniBar({ percent }: { percent: number }) {
-  const p = Math.min(100, Math.max(0, percent));
+function ProgressBar({
+  percent,
+  today,
+}: {
+  percent: number | null;
+  today: boolean;
+}) {
+  const p = percent != null ? Math.min(100, Math.max(0, percent)) : 0;
   return (
-    <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-kal-border/80">
-      <div
-        className="h-full rounded-full bg-gradient-to-r from-kal-accent to-[var(--kal-accent-dark)] transition-[width] duration-500 ease-out"
-        style={{ width: `${p}%` }}
-      />
+    <div
+      className="h-1 w-full overflow-hidden rounded-full"
+      style={{ background: "rgba(210,192,168,0.35)" }}
+    >
+      {percent != null ? (
+        <div
+          className="h-full rounded-full transition-[width] duration-500 ease-out"
+          style={{
+            width: `${p}%`,
+            background: today ? "#EF9F27" : "#FAC775",
+          }}
+        />
+      ) : (
+        // Tomorrow — dashed line
+        <div
+          className="h-full w-full rounded-full opacity-50"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(90deg, rgba(210,192,168,0.6) 0, rgba(210,192,168,0.6) 4px, transparent 4px, transparent 8px)",
+          }}
+        />
+      )}
     </div>
   );
 }
+
+type RowData = {
+  label: string;
+  percent: number | null;
+  valueText: string;
+  isToday: boolean;
+};
 
 export function ThreeDayStrip({
   yesterdayPercent,
@@ -49,59 +78,70 @@ export function ThreeDayStrip({
   const y = Math.min(100, Math.max(0, Math.round(yesterdayPercent)));
   const t = Math.min(100, Math.max(0, Math.round(todayPercent)));
 
-  const cells = [
+  const rows: RowData[] = [
     {
       label: "Yesterday",
-      sub: "Captured",
-      main: `${y}%`,
-      bar: y,
-      small: false,
+      percent: y,
+      valueText: `${y}% captured`,
+      isToday: false,
     },
     {
       label: "Today",
-      sub: "Execute now",
-      main: `${t}%`,
-      bar: t,
-      small: false,
+      percent: t,
+      valueText: `${t}% done`,
+      isToday: true,
     },
     {
       label: "Tomorrow",
-      sub: "Planned load",
-      main: formatTomorrowLoad(tomorrowTaskCount, tomorrowMinutes),
-      bar: null as number | null,
-      small: true,
+      percent: null,
+      valueText: formatTomorrowValue(tomorrowTaskCount, tomorrowMinutes),
+      isToday: false,
     },
   ];
 
   return (
     <section
-      aria-label="Three day execution strip"
-      className="kal-glass-panel overflow-hidden rounded-2xl sm:rounded-2xl"
+      aria-label="Three day execution"
+      className="kal-glass-panel overflow-hidden rounded-[12px]"
     >
-      <p className="border-b border-kal-border px-5 py-4 text-[0.6rem] font-semibold uppercase tracking-[0.22em] text-kal-accent sm:px-6 sm:py-5 sm:text-[0.65rem] sm:tracking-[0.28em]">
-        3-day execution
-      </p>
-      <div className="grid grid-cols-3 divide-x divide-kal-border">
-        {cells.map((c) => (
-          <div key={c.label} className="px-3 py-5 text-center sm:px-5 sm:py-7">
-            <p className="text-[8px] font-semibold uppercase tracking-wide text-kal-muted sm:text-[9px] sm:tracking-wider">
-              {c.label}
-            </p>
-            <p className="mt-0.5 text-[9px] font-medium uppercase tracking-wide text-kal-text-secondary sm:mt-1 sm:text-[10px]">
-              {c.sub}
-            </p>
+      <div className="border-b border-kal-border/60 px-5 py-3">
+        <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-kal-accent">
+          3-day execution
+        </p>
+      </div>
+
+      <div className="divide-y divide-kal-border/40 px-5">
+        {rows.map((row) => (
+          <div
+            key={row.label}
+            className="flex items-center gap-4 py-3"
+          >
+            {/* Label */}
             <p
-              className={`mt-2 font-bold text-kal-text sm:mt-3 ${
-                c.small
-                  ? "text-[10px] leading-tight sm:text-xs md:text-sm"
-                  : "text-2xl tabular-nums sm:text-3xl md:text-4xl"
-              }`}
+              className="w-[68px] shrink-0 text-[12px]"
+              style={{
+                color: row.isToday ? "#BA7517" : "var(--kal-muted)",
+                fontWeight: row.isToday ? 500 : 400,
+              }}
             >
-              {c.main}
+              {row.label}
             </p>
-            {c.bar != null ? <MiniBar percent={c.bar} /> : (
-              <div className="mt-2 h-1.5 w-full rounded-full bg-kal-card-muted sm:mt-3" />
-            )}
+
+            {/* Bar */}
+            <div className="flex-1">
+              <ProgressBar percent={row.percent} today={row.isToday} />
+            </div>
+
+            {/* Value */}
+            <p
+              className="w-[96px] shrink-0 text-right text-[12px] tabular-nums"
+              style={{
+                color: row.isToday ? "#BA7517" : "var(--kal-muted)",
+                fontWeight: row.isToday ? 500 : 400,
+              }}
+            >
+              {row.valueText}
+            </p>
           </div>
         ))}
       </div>
