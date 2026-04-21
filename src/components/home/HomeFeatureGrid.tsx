@@ -29,6 +29,7 @@ import {
   filterTasksForDate,
   findMissedIncompleteTasks,
 } from "@/lib/progressEngine";
+import { useEnabledFeaturesStore } from "@/store/useEnabledFeaturesStore";
 import { useTaskStore } from "@/store/useTaskStore";
 
 type FeatureItem = {
@@ -243,6 +244,20 @@ const CATEGORIES: Category[] = [
   },
 ];
 
+/** Same rule as HomeAccordionSections: null = show all; else only listed ids. */
+function filterCategoriesByEnabledFeatures(
+  categories: Category[],
+  enabledFeatures: string[] | null,
+): Category[] {
+  if (enabledFeatures === null) return categories;
+  return categories
+    .map((cat) => ({
+      ...cat,
+      items: cat.items.filter((item) => enabledFeatures.includes(item.id)),
+    }))
+    .filter((cat) => cat.items.length > 0);
+}
+
 type HomeFeatureGridProps = {
   syllabusMasteryPercent?: number | null;
   marksMastered?: number;
@@ -295,6 +310,12 @@ export function HomeFeatureGrid({
 }: HomeFeatureGridProps) {
   const today = useCalendarDate();
   const tasksRecord = useTaskStore((s) => s.tasks);
+  const enabledFeatures = useEnabledFeaturesStore((s) => s.enabledFeatures);
+
+  const visibleCategories = useMemo(
+    () => filterCategoriesByEnabledFeatures(CATEGORIES, enabledFeatures),
+    [enabledFeatures],
+  );
 
   const liveData = useMemo((): LiveData => {
     const all = Object.values(tasksRecord);
@@ -317,9 +338,24 @@ export function HomeFeatureGrid({
     };
   }, [tasksRecord, today, syllabusMasteryPercent, marksMastered, marksTotal, todayPercent, todayTaskCount]);
 
+  if (visibleCategories.length === 0) {
+    return (
+      <p className="rounded-[10px] border border-dashed border-kal-border/70 px-4 py-6 text-center text-sm text-kal-muted">
+        No features are selected for your dashboard. Choose features in{" "}
+        <Link
+          href="/settings"
+          className="font-semibold text-kal-accent underline underline-offset-2"
+        >
+          Settings
+        </Link>
+        .
+      </p>
+    );
+  }
+
   return (
     <div className="space-y-5">
-      {CATEGORIES.map((cat) => (
+      {visibleCategories.map((cat) => (
         <div key={cat.title}>
           <div className="mb-2 flex items-center gap-2">
             <span

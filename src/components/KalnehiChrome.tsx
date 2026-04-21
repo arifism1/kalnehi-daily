@@ -79,8 +79,10 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
 
   if (onboarding) {
     return (
-      <div className="flex min-h-full min-h-dvh flex-col bg-kal-page text-kal-text">
-        <div className="flex min-w-0 flex-1 flex-col">{children}</div>
+      <div
+        className="flex min-h-full min-h-dvh flex-col bg-kal-page text-kal-text pt-[env(safe-area-inset-top)] pb-[max(1rem,env(safe-area-inset-bottom))] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]"
+      >
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
       </div>
     );
   }

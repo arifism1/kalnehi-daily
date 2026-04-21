@@ -16,10 +16,9 @@ type EdgeHints = { left: boolean; right: boolean };
 export function QuickNavBar() {
   const pathname = usePathname();
   const enabledFeatures = useEnabledFeaturesStore((s) => s.enabledFeatures);
-  const quickNavHrefs = useEnabledFeaturesStore((s) => s.quickNavHrefs);
   const items = useMemo(
-    () => getMainNavItemsInQuickNavOrder(enabledFeatures, quickNavHrefs),
-    [enabledFeatures, quickNavHrefs],
+    () => getMainNavItemsInQuickNavOrder(enabledFeatures, null),
+    [enabledFeatures],
   );
   const scrollRef = useRef<HTMLDivElement>(null);
   const [edgeHints, setEdgeHints] = useState<EdgeHints>({ left: false, right: false });

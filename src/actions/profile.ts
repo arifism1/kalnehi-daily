@@ -181,38 +181,6 @@ export async function saveEnabledFeatures(
   }
 }
 
-/**
- * Persist top quick-nav strip selection. `null` = app defaults (all eligible routes in default order).
- * `[]` = hide all quick-nav icons.
- */
-export async function saveQuickNavHrefs(
-  hrefs: string[] | null,
-): Promise<UpsertProfileResult> {
-  try {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-      error: authErr,
-    } = await supabase.auth.getUser();
-    if (authErr || !user) {
-      return { ok: false, error: USER_ERROR.session };
-    }
-
-    const { error } = await supabase
-      .from("user_profiles")
-      .update({ quick_nav_hrefs: hrefs })
-      .eq("user_id", user.id);
-
-    if (error) throw error;
-    revalidatePath("/");
-    revalidatePath("/settings");
-    return { ok: true };
-  } catch (e) {
-    console.error("[profile.saveQuickNavHrefs] failed", e);
-    return { ok: false, error: formatSupabaseError(e) };
-  }
-}
-
 export async function completeOnboarding(fields: {
   full_name: string;
   phone_number: string;

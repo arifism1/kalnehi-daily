@@ -67,15 +67,12 @@ export type MainNavItem = {
 
 export type MainNavSection = {
   title: string;
-  /** Short tag for inline grouping in quick nav (e.g. "Core"). */
-  quickNavGroupLabel?: string;
   items: MainNavItem[];
 };
 
 export const MAIN_NAV_SECTIONS: MainNavSection[] = [
   {
     title: "Core Daily Flow",
-    quickNavGroupLabel: "Core",
     items: [
       { href: "/", label: "Home", shortLabel: "Home", Icon: Home },
       { href: "/plan-my-day", label: "Plan My Day", Icon: Sparkles, featureId: "plan-my-day" },
@@ -127,7 +124,6 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
   },
   {
     title: "Execution",
-    quickNavGroupLabel: "Execution",
     items: [
       {
         href: "/study-sessions",
@@ -141,7 +137,6 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
   },
   {
     title: "Study Tools",
-    quickNavGroupLabel: "Study",
     items: [
       {
         href: "/revision-engine",
@@ -154,7 +149,6 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
   },
   {
     title: "Review & Analysis",
-    quickNavGroupLabel: "Review",
     items: [
       { href: "/progress", label: "Progress", Icon: TrendingUp, featureId: "progress" },
       {
@@ -168,7 +162,6 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
   },
   {
     title: "Growth Tools",
-    quickNavGroupLabel: "Growth",
     items: [
       { href: "/habits", label: "Habit Maker", shortLabel: "Habits", Icon: CheckCircle, featureId: "habit-maker" },
       {
@@ -183,7 +176,6 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
   },
   {
     title: "Account & Legal",
-    quickNavGroupLabel: "Account",
     items: [
       {
         href: "/policies",
