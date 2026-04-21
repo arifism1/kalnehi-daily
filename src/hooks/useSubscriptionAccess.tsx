@@ -33,7 +33,6 @@ import { parseSubscriptionTier, type SubscriptionTier } from "@/lib/subscription
 import { useAuthStore } from "@/store/useAuthStore";
 import {
   normalizeEnabledFeaturesRow,
-  normalizeQuickNavHrefsRow,
   useEnabledFeaturesStore,
 } from "@/store/useEnabledFeaturesStore";
 
@@ -104,14 +103,6 @@ function isCurrentlyPaid(status: SubscriptionStatus, endDate: string | null): bo
   const end = new Date(endDate);
   if (Number.isNaN(end.getTime())) return false;
   return end.getTime() > Date.now();
-}
-
-/** When `quick_nav_hrefs` migration is not applied yet, PostgREST errors on that column. */
-function isMissingQuickNavColumnError(e: { message?: string; details?: string; hint?: string } | null): boolean {
-  if (!e) return false;
-  const blob = [e.message, e.details, e.hint].filter(Boolean).join(" ");
-  if (!/quick_nav_hrefs/i.test(blob)) return false;
-  return /does not exist|Unknown column|column .* not found|schema cache/i.test(blob);
 }
 
 const USER_PROFILE_SUBSCRIPTION_SELECT_BASE =
@@ -221,23 +212,11 @@ function useSubscriptionAccessState(): SubscriptionData {
       setFetchError(false);
       try {
         const supabase = getSupabaseBrowserClient();
-        let { data, error } = await supabase
+        const { data, error } = await supabase
           .from("user_profiles")
-          .select(`${USER_PROFILE_SUBSCRIPTION_SELECT_BASE}, quick_nav_hrefs`)
+          .select(USER_PROFILE_SUBSCRIPTION_SELECT_BASE)
           .eq("user_id", user.id)
           .maybeSingle();
-
-        if (error && isMissingQuickNavColumnError(error)) {
-          const retry = await supabase
-            .from("user_profiles")
-            .select(USER_PROFILE_SUBSCRIPTION_SELECT_BASE)
-            .eq("user_id", user.id)
-            .maybeSingle();
-          data = retry.data
-            ? { ...retry.data, quick_nav_hrefs: null }
-            : null;
-          error = retry.error;
-        }
 
         if (cancelled) return;
         if (error) {
@@ -258,13 +237,6 @@ function useSubscriptionAccessState(): SubscriptionData {
 
         useEnabledFeaturesStore.getState().setEnabledFeatures(
           normalizeEnabledFeaturesRow(data?.enabled_features),
-        );
-        const rawQuick =
-          data && typeof data === "object" && "quick_nav_hrefs" in data
-            ? (data as { quick_nav_hrefs?: unknown }).quick_nav_hrefs
-            : null;
-        useEnabledFeaturesStore.getState().setQuickNavHrefs(
-          normalizeQuickNavHrefsRow(rawQuick),
         );
 
         setOnboardingDone(!!data?.mandatory_onboarding_completed_at);

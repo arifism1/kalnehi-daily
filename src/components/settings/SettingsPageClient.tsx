@@ -7,7 +7,6 @@ import clsx from "clsx";
 import { AdminSendPushNotification } from "@/components/settings/AdminSendPushNotification";
 import { CameraPlannerSettings } from "@/components/settings/CameraPlannerSettings";
 import { CustomizeFeaturesSection } from "@/components/settings/CustomizeFeaturesSection";
-import { CustomizeQuickNavSection } from "@/components/settings/CustomizeQuickNavSection";
 import { PurposeModePhotos } from "@/components/settings/PurposeModePhotos";
 import { NotificationsSettingsGroup } from "@/components/settings/NotificationsSettingsGroup";
 import { SettingsExpandableSection } from "@/components/settings/SettingsExpandableSection";
@@ -55,12 +54,7 @@ export function SettingsPageClient() {
         </p>
       </div>
 
-      {onboardingDone ? (
-        <>
-          <CustomizeFeaturesSection />
-          <CustomizeQuickNavSection />
-        </>
-      ) : null}
+      {onboardingDone ? <CustomizeFeaturesSection /> : null}
 
       <section aria-labelledby="toggles-heading">
         <h2 id="toggles-heading" className="sr-only">

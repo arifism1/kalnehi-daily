@@ -199,7 +199,7 @@ export function OnboardingWizard() {
   const totalStepsDisplay = STEPS;
 
   return (
-    <div className="kal-page-bg mx-auto flex min-h-[min(100dvh,720px)] max-w-lg flex-col px-4 py-8">
+    <div className="kal-page-bg mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col px-4 py-4 sm:py-6">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-kal-accent">
           Setup · {displayStep}/{totalStepsDisplay}
@@ -428,47 +428,51 @@ export function OnboardingWizard() {
       )}
 
       {step === 4 && (
-        <section className="kal-glass-panel flex flex-1 flex-col gap-5 rounded-2xl p-5 sm:p-6">
-          <div className="flex items-center gap-2">
-            <LayoutDashboard className="h-6 w-6 text-kal-accent" />
-            <div>
-              <h1 className="text-xl font-bold tracking-tight text-kal-text">
-                Choose your features
-              </h1>
-              <p className="text-sm leading-relaxed text-kal-text-secondary">
-                Select the tools you want to see every day. You can change this
-                anytime in Settings.
-              </p>
+        <section className="kal-glass-panel flex min-h-0 flex-1 flex-col gap-4 rounded-2xl p-5 sm:p-6">
+          <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+            <div className="flex min-w-0 flex-1 items-start gap-2 sm:pr-2">
+              <LayoutDashboard
+                className="mt-0.5 h-6 w-6 shrink-0 text-kal-accent"
+                aria-hidden
+              />
+              <div className="min-w-0">
+                <h1 className="text-xl font-bold tracking-tight text-kal-text">
+                  Choose your features
+                </h1>
+                <p className="mt-1 text-sm leading-relaxed text-kal-text-secondary">
+                  Select the tools you want to see every day. You can change this
+                  anytime in Settings.
+                </p>
+              </div>
             </div>
+            <button
+              type="button"
+              disabled={busy || selectedFeatures.length === 0}
+              onClick={() => void finishWithFeatures(selectedFeatures)}
+              className="kal-btn-accent inline-flex min-h-[48px] shrink-0 items-center justify-center gap-2 self-end rounded-2xl px-4 py-3 text-sm font-semibold disabled:opacity-50 sm:min-h-[52px] sm:self-start sm:px-5 sm:py-3.5"
+            >
+              {busy ? "Saving…" : "Start using Kalnehi"}
+              <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
+            </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto">
+          {error && (
+            <p className="shrink-0 text-sm font-medium text-kal-accent-dark dark:text-kal-accent">
+              {error}
+            </p>
+          )}
+
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
             <FeatureSelector
               selected={selectedFeatures}
               onChange={setSelectedFeatures}
             />
           </div>
 
-          {error && (
-            <p className="text-sm font-medium text-kal-accent-dark dark:text-kal-accent">
-              {error}
-            </p>
-          )}
-
-          <button
-            type="button"
-            disabled={busy || selectedFeatures.length === 0}
-            onClick={() => void finishWithFeatures(selectedFeatures)}
-            className="kal-btn-accent flex min-h-[52px] items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-semibold disabled:opacity-50"
-          >
-            {busy ? "Saving…" : "Start using Kalnehi"}
-            <ArrowRight className="h-4 w-4" />
-          </button>
-
           <button
             type="button"
             onClick={skipFeatureSelection}
-            className="text-center text-xs font-medium text-kal-text-secondary underline underline-offset-2 hover:text-kal-accent"
+            className="shrink-0 text-center text-xs font-medium text-kal-text-secondary underline underline-offset-2 hover:text-kal-accent"
           >
             Skip — show all features
           </button>
