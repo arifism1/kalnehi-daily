@@ -24,13 +24,26 @@ import {
 import { useAuthStore } from "@/store/useAuthStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useTaskStore } from "@/store/useTaskStore";
+import type { DailyMotivationalPhraseRow } from "@/lib/dailyMotivationalPhrase";
 
-import { HomeAccordionSections } from "./HomeAccordionSections";
-import { MotivationStrip } from "./MotivationStrip";
-import { RealitySnapshot } from "./RealitySnapshot";
+import { HomeFeatureGrid } from "./HomeFeatureGrid";
+import { HomeHeroCard } from "./HomeHeroCard";
+import { HomePriorityStrip } from "./HomePriorityStrip";
 import { ThreeDayStrip } from "./ThreeDayStrip";
 
-export function HomeDashboardBody() {
+export type HomeDashboardBodyProps = {
+  firstName: string;
+  greetingLead: string;
+  dailyPhrase: DailyMotivationalPhraseRow | null;
+  dailyPhraseLoading: boolean;
+};
+
+export function HomeDashboardBody({
+  firstName,
+  greetingLead,
+  dailyPhrase,
+  dailyPhraseLoading,
+}: HomeDashboardBodyProps) {
   const user = useAuthStore((s) => s.user);
 
   const {
@@ -213,6 +226,7 @@ export function HomeDashboardBody() {
     isUpscMainsUi,
   ]);
 
+  // Kept for downstream use — not rendered on home page but preserves hook call
   const syllabusMultiYear = useMemo(() => {
     if (!advancedMarksProjectionEnabled) return null;
     if (syllabusRows.length === 0 || neetYearProjections.length === 0) {
@@ -233,35 +247,61 @@ export function HomeDashboardBody() {
     isUpscMainsUi,
   ]);
 
+  // Suppress unused-variable lint: syllabusMultiYear and dailyBand are
+  // retained for their hook side-effects / future use.
+  void showSyllabusComingSoonBanner;
+  void syllabusMultiYear;
+  void dailyBand;
+  void effectiveTodayDone;
+
   return (
     <>
-      <MotivationStrip />
-
-      <RealitySnapshot
+      {/* Section A — Hero card */}
+      <HomeHeroCard
+        firstName={firstName}
+        greetingLead={greetingLead}
+        syllabusMasteryPercent={syllabusMasteryPercent}
         marksMastered={mastered}
         marksTotal={total}
-        syllabusMasteryPercent={syllabusMasteryPercent}
-        syllabusMultiYear={syllabusMultiYear}
         todayPercent={effectiveTodayPercent}
         todayTaskCount={effectiveTodayTotal}
-        todayDoneCount={effectiveTodayDone}
-        dailyBand={dailyBand}
-        showSyllabusComingSoonBanner={showSyllabusComingSoonBanner}
         examDisplayName={examDisplayName}
-        examLabel={examLabel}
-        primaryMarksYear={cuetScoringRollup ? null : primaryMarksYear}
-        cuetScoring={cuetScoringRollup}
-        showAdvancedMarksProjection={advancedMarksProjectionEnabled}
       />
 
+      {/* Section B — Daily motivational line */}
+      {!dailyPhraseLoading && dailyPhrase && (
+        <p
+          className="text-center text-[14px] italic leading-snug text-kal-muted"
+          aria-label={`Today's line: ${dailyPhrase.phrase}`}
+        >
+          &ldquo;{dailyPhrase.phrase}&rdquo;
+          {dailyPhrase.author && (
+            <span className="mt-0.5 block not-italic text-[12px]">
+              — {dailyPhrase.author}
+            </span>
+          )}
+        </p>
+      )}
+
+      {/* Section C — Priority strip */}
+      <HomePriorityStrip />
+
+      {/* Section D — All 18 features grid */}
+      <HomeFeatureGrid
+        syllabusMasteryPercent={syllabusMasteryPercent}
+        marksMastered={mastered}
+        marksTotal={total}
+        todayPercent={effectiveTodayPercent}
+        todayTaskCount={effectiveTodayTotal}
+      />
+
+      {/* Section E — 3-day execution */}
       <ThreeDayStrip
         yesterdayPercent={yesterdayStripPercent}
         todayPercent={todayStripPercent}
         tomorrowTaskCount={dailyExec.tomorrow.taskCount}
         tomorrowMinutes={dailyExec.tomorrow.totalMinutes}
       />
-
-      <HomeAccordionSections />
     </>
   );
 }
