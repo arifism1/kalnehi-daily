@@ -80,7 +80,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-full min-h-dvh flex-col bg-kal-page text-kal-text">
       <div className="flex min-w-0 flex-1 flex-col">
         {!onboarding && minimalChrome && (
-          <header className="kal-glass-header sticky top-0 z-40">
+          <header className="kal-glass-header sticky top-0 z-40 pt-[env(safe-area-inset-top)]">
             <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between gap-3 px-3 sm:h-[3.5rem] sm:gap-4 sm:px-6 xl:px-8">
               <Link
                 href="/home"
@@ -105,7 +105,10 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
           </header>
         )}
         {!onboarding && minimalChrome && (
-          <div className="sticky top-14 z-30 border-b backdrop-blur-xl sm:top-[3.5rem]" style={{ borderColor: "var(--kal-border)", backgroundColor: "rgba(250,247,242,0.82)" }}>
+          <div
+            className="sticky top-[calc(3.5rem_+_env(safe-area-inset-top))] z-30 border-b backdrop-blur-xl"
+            style={{ borderColor: "var(--kal-border)", backgroundColor: "rgba(250,247,242,0.82)" }}
+          >
             <div
               className={clsx(
                 "mx-auto w-full px-4 sm:px-6 md:px-8 xl:px-10",
@@ -117,7 +120,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
           </div>
         )}
         {!onboarding && !minimalChrome && (
-          <header className="kal-glass-header sticky top-0 z-40">
+          <header className="kal-glass-header sticky top-0 z-40 pt-[env(safe-area-inset-top)]">
             <div className="mx-auto grid h-14 w-full max-w-7xl grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)] items-center gap-1.5 px-3 sm:h-[3.5rem] sm:gap-3 sm:px-6 xl:px-8">
               <div className="min-w-0 justify-self-start self-center">
                 <Link

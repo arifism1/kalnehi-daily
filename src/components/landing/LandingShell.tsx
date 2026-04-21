@@ -5,7 +5,9 @@ export function LandingShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-col bg-[#F7F4EE] text-kal-text">
       <LandingNav />
-      <main className="flex flex-1 flex-col pt-16">{children}</main>
+      <main className="flex flex-1 flex-col pt-[calc(4rem_+_env(safe-area-inset-top))]">
+        {children}
+      </main>
       <LandingFooter />
     </div>
   );
