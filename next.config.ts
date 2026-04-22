@@ -99,6 +99,11 @@ const nextConfig: NextConfig = {
         destination: "/missed-tasks",
         permanent: true,
       },
+      {
+        source: "/my-plan",
+        destination: "/my-subscription",
+        permanent: true,
+      },
     ];
   },
 

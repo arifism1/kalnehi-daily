@@ -446,7 +446,7 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
               ) : null}
               {voiceMinutesRemaining <= 3 && hasPaidAccess ? (
                 <Link
-                  href="/my-plan"
+                  href="/my-subscription"
                   className="text-xs font-semibold text-kal-accent hover:underline"
                 >
                   Buy more

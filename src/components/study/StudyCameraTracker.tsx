@@ -247,8 +247,9 @@ function drawSkeleton(
 
 type SessionPhase = "idle" | "running" | "paused";
 
-const AI_PARTNER_FIRST_MS = 90_000;  // first feedback after 90s
-const AI_PARTNER_INTERVAL_MS = 3.5 * 60 * 1000; // then every 3.5 min
+const AI_PARTNER_EARLY_INTERVAL_MS = 30_000;          // 30s between checks for first 3 min
+const AI_PARTNER_LATE_INTERVAL_MS = 3.5 * 60 * 1000; // 3.5 min after the early phase
+const AI_PARTNER_EARLY_CHECKS = 6;                    // 6 × 30s = 3 minutes of early checks
 const PARTNER_FEEDBACK_VISIBLE_MS = 12_000;
 
 type Props = {
@@ -657,7 +658,7 @@ export function StudyCameraTracker({ subject, userId, aiPartnerMode = false, onD
     };
   }, [phase, studyCameraVisionVerify, studyCameraVerifyIntervalMin, modelsReady, videoReady]);
 
-  // AI Partner feedback loop: first at 90s, then every 3.5 min
+  // AI Partner feedback loop: every 30s for first 3 min, then every 3.5 min
   useEffect(() => {
     if (firstPartnerTimeoutRef.current) {
       clearTimeout(firstPartnerTimeoutRef.current);
@@ -676,7 +677,7 @@ export function StudyCameraTracker({ subject, userId, aiPartnerMode = false, onD
       if (!video || video.readyState < 2) return;
       partnerInFlightRef.current = true;
       try {
-        const b64 = captureFrameBase64FromVideo(video);
+        const b64 = captureFrameBase64FromVideo(video, 640);
         if (!b64) return;
         const res = await fetch("/api/study-partner/feedback", {
           method: "POST",
@@ -713,21 +714,27 @@ export function StudyCameraTracker({ subject, userId, aiPartnerMode = false, onD
       }
     };
 
-    firstPartnerTimeoutRef.current = setTimeout(() => {
-      void runFeedback();
-      partnerIntervalRef.current = setInterval(() => {
+    // Two-phase scheduler: 30s × 6 checks (first 3 min), then 3.5 min indefinitely
+    let earlyChecksLeft = AI_PARTNER_EARLY_CHECKS;
+
+    const scheduleNext = () => {
+      const delay = earlyChecksLeft > 0
+        ? AI_PARTNER_EARLY_INTERVAL_MS
+        : AI_PARTNER_LATE_INTERVAL_MS;
+      firstPartnerTimeoutRef.current = setTimeout(() => {
+        firstPartnerTimeoutRef.current = null;
+        if (earlyChecksLeft > 0) earlyChecksLeft--;
         void runFeedback();
-      }, AI_PARTNER_INTERVAL_MS);
-    }, AI_PARTNER_FIRST_MS);
+        scheduleNext();
+      }, delay);
+    };
+
+    scheduleNext();
 
     return () => {
       if (firstPartnerTimeoutRef.current) {
         clearTimeout(firstPartnerTimeoutRef.current);
         firstPartnerTimeoutRef.current = null;
-      }
-      if (partnerIntervalRef.current) {
-        clearInterval(partnerIntervalRef.current);
-        partnerIntervalRef.current = null;
       }
     };
   }, [aiPartnerMode, phase, modelsReady, videoReady]);
@@ -975,9 +982,13 @@ export function StudyCameraTracker({ subject, userId, aiPartnerMode = false, onD
                 onUserMedia={handleUserMedia}
                 className="h-full w-full object-cover"
               />
+              {/* Skeleton overlay — hidden in AI Partner mode for a cleaner look */}
               <canvas
                 ref={canvasRef}
-                className="pointer-events-none absolute inset-0 h-full w-full"
+                className={clsx(
+                  "pointer-events-none absolute inset-0 h-full w-full",
+                  aiPartnerMode && "hidden",
+                )}
                 aria-hidden
               />
               <button
@@ -1094,74 +1105,101 @@ export function StudyCameraTracker({ subject, userId, aiPartnerMode = false, onD
         </button>
       )}
 
-      {/* ── Status chip ── */}
-      <div
-        className={clsx(
-          "rounded-2xl border px-4 py-3 transition-colors duration-500",
-          statusLabel.tone === "green" &&
-            "border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/30",
-          statusLabel.tone === "yellow" &&
-            "border-amber-400/60 bg-amber-50 dark:bg-amber-950/30",
-          statusLabel.tone === "red" &&
-            "border-orange-400/60 bg-orange-50 dark:bg-orange-950/30",
-          statusLabel.tone === "neutral" && "border-kal-border bg-kal-card-muted",
-        )}
-      >
-        <p
-          className={clsx(
-            "text-sm font-bold",
-            statusLabel.tone === "green" && "text-emerald-800 dark:text-emerald-200",
-            statusLabel.tone === "yellow" && "text-amber-800 dark:text-amber-200",
-            statusLabel.tone === "red" && "text-orange-800 dark:text-orange-200",
-            statusLabel.tone === "neutral" && "text-kal-text",
-          )}
-        >
-          {statusLabel.text}
-        </p>
-        <p
-          className={clsx(
-            "mt-1 text-xs",
-            statusLabel.tone === "green" && "text-emerald-700 dark:text-emerald-300/80",
-            statusLabel.tone === "yellow" && "text-amber-700 dark:text-amber-300/80",
-            statusLabel.tone === "red" && "text-orange-700 dark:text-orange-300/80",
-            statusLabel.tone === "neutral" && "text-kal-muted",
-          )}
-        >
-          {statusLabel.sub}
-        </p>
-      </div>
-
-      {/* ── Confidence bar ── */}
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-kal-muted">
-            Study confidence
-          </span>
-          <span
-            className={clsx(
-              "text-[11px] font-bold tabular-nums transition-colors duration-300",
-              confTone === "green" && "text-emerald-600 dark:text-emerald-400",
-              confTone === "yellow" && "text-amber-600 dark:text-amber-400",
-              confTone === "red" && "text-orange-600 dark:text-orange-400",
-            )}
-          >
-            {smoothedConfidence}%
-          </span>
-        </div>
-        <div className="h-2.5 w-full overflow-hidden rounded-full bg-kal-card-muted dark:bg-zinc-800/70">
+      {/* ── Status chip — full detail in standard mode, minimal in AI Partner mode ── */}
+      {aiPartnerMode ? (
+        /* AI Partner: show only session phase, no confidence numbers */
+        phase !== "idle" ? (
           <div
             className={clsx(
-              "h-full rounded-full transition-all duration-300 ease-out",
-              confTone === "green" && "bg-emerald-500 dark:bg-emerald-400",
-              confTone === "yellow" && "bg-amber-500 dark:bg-amber-400",
-              confTone === "red" && "bg-orange-500",
+              "flex items-center justify-between rounded-2xl border px-4 py-3",
+              phase === "running"
+                ? "border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/30"
+                : "border-amber-400/60 bg-amber-50 dark:bg-amber-950/30",
             )}
-            style={{ width: `${smoothedConfidence}%` }}
-          />
+          >
+            <p
+              className={clsx(
+                "text-sm font-bold",
+                phase === "running"
+                  ? "text-emerald-800 dark:text-emerald-200"
+                  : "text-amber-800 dark:text-amber-200",
+              )}
+            >
+              {phase === "running" ? "Session running" : "Session paused"}
+            </p>
+          </div>
+        ) : null
+      ) : (
+        <div
+          className={clsx(
+            "rounded-2xl border px-4 py-3 transition-colors duration-500",
+            statusLabel.tone === "green" &&
+              "border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/30",
+            statusLabel.tone === "yellow" &&
+              "border-amber-400/60 bg-amber-50 dark:bg-amber-950/30",
+            statusLabel.tone === "red" &&
+              "border-orange-400/60 bg-orange-50 dark:bg-orange-950/30",
+            statusLabel.tone === "neutral" && "border-kal-border bg-kal-card-muted",
+          )}
+        >
+          <p
+            className={clsx(
+              "text-sm font-bold",
+              statusLabel.tone === "green" && "text-emerald-800 dark:text-emerald-200",
+              statusLabel.tone === "yellow" && "text-amber-800 dark:text-amber-200",
+              statusLabel.tone === "red" && "text-orange-800 dark:text-orange-200",
+              statusLabel.tone === "neutral" && "text-kal-text",
+            )}
+          >
+            {statusLabel.text}
+          </p>
+          <p
+            className={clsx(
+              "mt-1 text-xs",
+              statusLabel.tone === "green" && "text-emerald-700 dark:text-emerald-300/80",
+              statusLabel.tone === "yellow" && "text-amber-700 dark:text-amber-300/80",
+              statusLabel.tone === "red" && "text-orange-700 dark:text-orange-300/80",
+              statusLabel.tone === "neutral" && "text-kal-muted",
+            )}
+          >
+            {statusLabel.sub}
+          </p>
         </div>
-      </div>
+      )}
 
-      {/* ── Clock + sub-scores ── */}
+      {/* ── Confidence bar — standard mode only ── */}
+      {!aiPartnerMode && (
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-kal-muted">
+              Study confidence
+            </span>
+            <span
+              className={clsx(
+                "text-[11px] font-bold tabular-nums transition-colors duration-300",
+                confTone === "green" && "text-emerald-600 dark:text-emerald-400",
+                confTone === "yellow" && "text-amber-600 dark:text-amber-400",
+                confTone === "red" && "text-orange-600 dark:text-orange-400",
+              )}
+            >
+              {smoothedConfidence}%
+            </span>
+          </div>
+          <div className="h-2.5 w-full overflow-hidden rounded-full bg-kal-card-muted dark:bg-zinc-800/70">
+            <div
+              className={clsx(
+                "h-full rounded-full transition-all duration-300 ease-out",
+                confTone === "green" && "bg-emerald-500 dark:bg-emerald-400",
+                confTone === "yellow" && "bg-amber-500 dark:bg-amber-400",
+                confTone === "red" && "bg-orange-500",
+              )}
+              style={{ width: `${smoothedConfidence}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ── Clock (+ sub-scores in standard mode only) ── */}
       <div className="flex items-start gap-4">
         <div>
           <p
@@ -1176,37 +1214,39 @@ export function StudyCameraTracker({ subject, userId, aiPartnerMode = false, onD
             Studying time only
           </p>
         </div>
-        <div className="flex-1 grid grid-cols-2 gap-1.5 pt-1">
-          {(
-            [
-              { key: "head", label: "Head", value: subScores.head },
-              { key: "gaze", label: "Gaze", value: subScores.gaze },
-              { key: "body", label: "Body", value: subScores.body },
-              { key: "hands", label: "Hands", value: subScores.hands },
-            ] as const
-          ).map(({ key, label, value }) => (
-            <div
-              key={key}
-              className="rounded-xl border border-kal-border bg-kal-card-muted px-2 py-1.5 text-center"
-            >
-              <div className="text-[9px] font-medium uppercase tracking-wide text-kal-muted">
-                {label}
-              </div>
+        {!aiPartnerMode && (
+          <div className="flex-1 grid grid-cols-2 gap-1.5 pt-1">
+            {(
+              [
+                { key: "head", label: "Head", value: subScores.head },
+                { key: "gaze", label: "Gaze", value: subScores.gaze },
+                { key: "body", label: "Body", value: subScores.body },
+                { key: "hands", label: "Hands", value: subScores.hands },
+              ] as const
+            ).map(({ key, label, value }) => (
               <div
-                className={clsx(
-                  "mt-0.5 text-xs font-bold tabular-nums transition-colors duration-300",
-                  value >= 60
-                    ? "text-emerald-600 dark:text-emerald-400"
-                    : value >= 35
-                      ? "text-amber-600 dark:text-amber-400"
-                      : "text-kal-muted",
-                )}
+                key={key}
+                className="rounded-xl border border-kal-border bg-kal-card-muted px-2 py-1.5 text-center"
               >
-                {value}%
+                <div className="text-[9px] font-medium uppercase tracking-wide text-kal-muted">
+                  {label}
+                </div>
+                <div
+                  className={clsx(
+                    "mt-0.5 text-xs font-bold tabular-nums transition-colors duration-300",
+                    value >= 60
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : value >= 35
+                        ? "text-amber-600 dark:text-amber-400"
+                        : "text-kal-muted",
+                  )}
+                >
+                  {value}%
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ── AI spot-check: not studying (high confidence) ── */}

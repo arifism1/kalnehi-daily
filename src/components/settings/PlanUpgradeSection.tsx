@@ -136,7 +136,7 @@ export function PlanUpgradeSection() {
       <div className="kal-glass-subtle rounded-[1rem] px-4 py-3 text-xs text-kal-text-secondary">
         <p role="status">{loadError}</p>
         <PaymentErrorMailButton
-          flow="My Plan — load upgrade quotes"
+          flow="My Subscription — load upgrade quotes"
           error={loadError}
           userEmail={userEmail}
           className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-kal-border bg-kal-card px-3 py-1.5 text-xs font-semibold text-kal-accent underline-offset-2 hover:underline"
@@ -213,7 +213,7 @@ export function PlanUpgradeSection() {
               </p>
             ) : null}
             <PaymentErrorMailButton
-              flow="My Plan — upgrade checkout"
+              flow="My Subscription — upgrade checkout"
               error={payError.text}
               userEmail={userEmail}
               proof={payError.proof}

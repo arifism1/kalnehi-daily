@@ -1,11 +1,14 @@
 "use client";
 
 import clsx from "clsx";
-import { Camera, X } from "lucide-react";
-import { useId, useState } from "react";
+import { Bot, Camera, X } from "lucide-react";
+import { useEffect, useId, useState } from "react";
 
+import { getAiStudyPartnerBalance } from "@/actions/aiStudyPartner";
 import { SettingsExpandableSection } from "@/components/settings/SettingsExpandableSection";
+import { AiStudyPartnerPurchaseModal } from "@/components/study/AiStudyPartnerPurchaseModal";
 import { StudyCameraPrivacyModal } from "@/components/study/StudyCameraPrivacyModal";
+import { useAuthStore } from "@/store/useAuthStore";
 import {
   useSettingsStore,
   type StudyCameraFacing,
@@ -74,11 +77,23 @@ export function CameraPlannerSettings() {
     (s) => s.setStudyCameraVerifyIntervalMin,
   );
 
+  const userId = useAuthStore((s) => s.user?.id);
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [aiNoticeVisible, setAiNoticeVisible] = useState(() => {
     if (typeof window === "undefined") return true;
     return localStorage.getItem("kal_ai_study_notice_dismissed") !== "1";
   });
+  const [aiPartnerBalance, setAiPartnerBalance] = useState<number | null>(null);
+  const [partnerPurchaseOpen, setPartnerPurchaseOpen] = useState(false);
+
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    void getAiStudyPartnerBalance()
+      .then((bal) => { if (!cancelled) setAiPartnerBalance(bal); })
+      .catch(() => { if (!cancelled) setAiPartnerBalance(0); });
+    return () => { cancelled = true; };
+  }, [userId]);
 
   function dismissAiNotice() {
     setAiNoticeVisible(false);
@@ -111,8 +126,31 @@ export function CameraPlannerSettings() {
     setPrivacyOpen(false);
   }
 
+  const totalSec = aiPartnerBalance ?? 0;
+  const balH = Math.floor(totalSec / 3600);
+  const balM = Math.floor((totalSec % 3600) / 60);
+  const balS = totalSec % 60;
+  const balanceText =
+    aiPartnerBalance === null
+      ? "Loading…"
+      : totalSec === 0
+        ? "No time remaining"
+        : balH > 0
+          ? `${balH}h ${balM}m${balS > 0 ? ` ${balS}s` : ""} remaining`
+          : balM > 0
+            ? `${balM}m ${balS}s remaining`
+            : `${balS}s remaining`;
+
   return (
     <>
+      <AiStudyPartnerPurchaseModal
+        open={partnerPurchaseOpen}
+        onClose={() => setPartnerPurchaseOpen(false)}
+        onPurchased={() => {
+          setPartnerPurchaseOpen(false);
+          void getAiStudyPartnerBalance().then(setAiPartnerBalance).catch(() => null);
+        }}
+      />
       <StudyCameraPrivacyModal
         open={privacyOpen}
         variant="settings"
@@ -275,6 +313,42 @@ export function CameraPlannerSettings() {
                 ) : null}
               </div>
             </>
+          ) : null}
+
+          {/* AI Study Partner balance */}
+          {userId ? (
+            <div className="px-3 py-3.5">
+              <div className="flex items-start justify-between gap-3 rounded-2xl border border-kal-border bg-kal-card-muted px-4 py-3">
+                <div className="flex items-start gap-3">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-kal-accent/10">
+                    <Bot className="h-4 w-4 text-kal-accent" aria-hidden />
+                  </span>
+                  <div>
+                    <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
+                      AI Study Partner
+                    </p>
+                    <p className={clsx(
+                      "mt-0.5 text-sm font-semibold",
+                      totalSec === 0 && aiPartnerBalance !== null
+                        ? "text-amber-600 dark:text-amber-400"
+                        : "text-kal-text",
+                    )}>
+                      {balanceText}
+                    </p>
+                    <p className="mt-0.5 text-[11px] text-kal-muted">
+                      Non-expiring · used only in sessions
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPartnerPurchaseOpen(true)}
+                  className="shrink-0 inline-flex min-h-[36px] items-center justify-center rounded-xl bg-kal-accent px-3 py-1.5 text-xs font-semibold text-kal-accent-foreground hover:bg-kal-accent-hover"
+                >
+                  {totalSec === 0 && aiPartnerBalance !== null ? "Buy 30 hrs" : "Buy More"}
+                </button>
+              </div>
+            </div>
           ) : null}
         </div>
       </SettingsExpandableSection>

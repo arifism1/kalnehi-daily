@@ -267,7 +267,7 @@ export const EXTRA_CREDIT_PACKS: ExtraCreditPack[] = [
   },
 ];
 
-/** Extra credit packs shown in My Plan (voice + AI tokens). */
+/** Extra credit packs shown in My Subscription (voice + AI tokens). */
 export const EXTRA_CREDIT_PACKS_UI: ExtraCreditPack[] = EXTRA_CREDIT_PACKS.filter(
   (p) => p.type === "voice_minutes" || p.type === "ai_tokens",
 );

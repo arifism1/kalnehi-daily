@@ -13,7 +13,7 @@ const MyPlanPageClient = dynamic(
   { ssr: false, loading: () => <RoutePageSkeleton /> },
 );
 
-export default function MyPlanRouteLazy() {
+export default function MySubscriptionRouteLazy() {
   return (
     <Suspense fallback={<RoutePageSkeleton />}>
       <MyPlanPageClient />

@@ -340,8 +340,8 @@ export function PricingPageClient() {
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 backdrop-blur-sm dark:border-emerald-800 dark:bg-emerald-950/30">
           <p className="text-sm font-medium text-emerald-900 dark:text-emerald-100">
             You already have Pro access.{trialHint}{" "}
-            <Link href="/my-plan" className="font-bold underline underline-offset-2">
-              My Plan
+            <Link href="/my-subscription" className="font-bold underline underline-offset-2">
+              My Subscription
             </Link>{" "}
             has billing details and extra credits.
           </p>

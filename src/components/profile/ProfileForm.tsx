@@ -655,10 +655,10 @@ export function ProfileForm() {
         </Row>
         <div className="border-t border-kal-border px-4 py-3">
           <Link
-            href="/my-plan"
+            href="/my-subscription"
             className="kal-glass-subtle mb-3 flex w-full min-h-[48px] items-center justify-center rounded-xl py-3 text-[15px] font-semibold text-kal-text transition-colors hover:opacity-95 active:opacity-90"
           >
-            My Plan &amp; billing
+            My Subscription &amp; billing
           </Link>
           <button
             type="button"

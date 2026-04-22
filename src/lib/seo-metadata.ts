@@ -36,7 +36,8 @@ export type KalnehiPageSeoKey =
   | "habits"
   | "timer"
   | "motivation"
-  | "progress";
+  | "progress"
+  | "mySubscription";
 
 const PAGE_SEO: Record<
   KalnehiPageSeoKey,
@@ -137,6 +138,12 @@ const PAGE_SEO: Record<
     title: `Progress — marks, syllabus & reality check | ${SITE_NAME}`,
     description:
       `See weighted completion, marks projections, and how your daily work maps to your exam goal. ${SITE_NAME} turns effort into visible progress for JEE, NEET, and Boards.`,
+  },
+  mySubscription: {
+    path: "/my-subscription",
+    title: `My Subscription — billing & plan details | ${SITE_NAME}`,
+    description:
+      `View and manage your ${SITE_NAME} subscription: plan status, billing dates, extra AI and voice credits, and upgrade or cancellation options.`,
   },
 };
 

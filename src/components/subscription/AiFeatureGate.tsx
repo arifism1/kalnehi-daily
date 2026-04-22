@@ -61,10 +61,10 @@ export function AiFeatureGate({ children }: Props) {
         <Mic className="h-8 w-8 text-amber-600 dark:text-amber-400" />
         <h3 className="text-lg font-bold text-kal-text">Monthly limit reached</h3>
         <p className="max-w-sm text-sm text-kal-text-secondary">
-          {voiceMinuteStatus}. Buy extra credits on My Plan for more voice minutes.
+          {voiceMinuteStatus}. Buy extra credits on My Subscription for more voice minutes.
         </p>
-        <Link href="/my-plan" className="kal-btn-accent">
-          Open My Plan
+        <Link href="/my-subscription" className="kal-btn-accent">
+          Open My Subscription
         </Link>
       </div>
     );

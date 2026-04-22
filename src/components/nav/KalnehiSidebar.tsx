@@ -49,7 +49,7 @@ type AccountItem = {
 const ACCOUNT_ITEMS: AccountItem[] = [
   { href: "/profile", label: "Profile", icon: User },
   { href: "/settings", label: "Settings", icon: Settings },
-  { href: "/my-plan", label: "My Plan", icon: Crown },
+  { href: "/my-subscription", label: "My Subscription", icon: Crown },
 ];
 
 const SIDEBAR_CATEGORIES: SidebarCategory[] = [
