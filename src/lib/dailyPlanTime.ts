@@ -1,5 +1,16 @@
 import { minutesBetweenHHMM, normalizeVoiceHHMM } from "@/lib/voiceIst";
 
+/** Planned duration in minutes from `daily_tasks.time_start` / `time_end` (DB time strings). */
+export function plannedMinutesFromSlot(
+  time_start: string | null | undefined,
+  time_end: string | null | undefined,
+): number | null {
+  const s = time_start ? timeDbToInput(time_start) : "";
+  const e = time_end ? timeDbToInput(time_end) : "";
+  if (!s || !e) return null;
+  return minutesBetweenHHMM(s, e);
+}
+
 /** "HH:MM" from Postgres `time` string like "09:30:00". */
 export function timeDbToInput(t: string | null | undefined): string {
   if (!t) return "";

@@ -465,6 +465,7 @@ export type Database = {
       }
       daily_tasks: {
         Row: {
+          actual_worked_minutes: number
           created_at: string
           daily_plan_id: string
           id: string
@@ -480,6 +481,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          actual_worked_minutes?: number
           created_at?: string
           daily_plan_id: string
           id: string
@@ -495,6 +497,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          actual_worked_minutes?: number
           created_at?: string
           daily_plan_id?: string
           id?: string

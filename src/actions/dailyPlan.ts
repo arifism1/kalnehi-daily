@@ -35,6 +35,7 @@ const REVAL_PATHS = [
   "/dictate-day",
   "/self-type-day",
   "/plan-my-day",
+  "/saved-plans",
   "/",
 ] as const;
 
@@ -95,6 +96,8 @@ export async function insertDailyTask(
     source: "typed" | "voice" | "handwritten";
     source_raw_text?: string | null;
     syllabus_master_id?: string | null;
+    /** Restored on undo; defaults to 0 for new tasks. */
+    actual_worked_minutes?: number;
   },
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const planDate = input.plan_date?.trim() ?? "";
@@ -143,6 +146,7 @@ export async function insertDailyTask(
       source: input.source,
       source_raw_text: input.source_raw_text?.slice(0, 12000) ?? null,
       syllabus_master_id,
+      actual_worked_minutes: input.actual_worked_minutes ?? 0,
     };
 
     const { error } = await supabase.from("daily_tasks").insert(row);
@@ -211,6 +215,58 @@ export async function updateDailyTask(
     if (error) return { ok: false, error: USER_ERROR.tryAgain };
     revalidateDailyPlanPaths();
     return { ok: true };
+  } catch (e) {
+    return { ok: false, error: formatSupabaseError(e) };
+  }
+}
+
+/**
+ * Adds time from a Daily Plan timer stop (or multiple sessions) to `actual_worked_minutes`.
+ * Idempotent from client side: call with the delta for each stopped session.
+ */
+export async function updateDailyTaskWorkedTime(
+  id: string,
+  additionalMinutes: number,
+): Promise<
+  { ok: true; totalMinutes: number } | { ok: false; error: string }
+> {
+  const add = Math.max(0, Math.round(Number(additionalMinutes)));
+  if (!id) return { ok: false, error: "Invalid task." };
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return { ok: false, error: USER_ERROR.session };
+
+    const { data: cur, error: selErr } = await supabase
+      .from("daily_tasks")
+      .select("actual_worked_minutes")
+      .eq("id", id)
+      .single();
+
+    if (selErr || cur == null) {
+      return { ok: false, error: USER_ERROR.tryAgain };
+    }
+
+    const prev = cur.actual_worked_minutes ?? 0;
+    if (add === 0) {
+      return { ok: true, totalMinutes: prev };
+    }
+
+    const total = prev + add;
+    const { error } = await supabase
+      .from("daily_tasks")
+      .update({
+        actual_worked_minutes: total,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id);
+
+    if (error) return { ok: false, error: USER_ERROR.tryAgain };
+    revalidateDailyPlanPaths();
+    return { ok: true, totalMinutes: total };
   } catch (e) {
     return { ok: false, error: formatSupabaseError(e) };
   }
