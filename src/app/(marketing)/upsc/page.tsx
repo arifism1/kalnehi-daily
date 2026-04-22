@@ -4,7 +4,9 @@ import { CTABanner } from "@/components/marketing/CTABanner";
 import { ExamHero } from "@/components/marketing/ExamHero";
 import { FeatureBlock } from "@/components/marketing/FeatureBlock";
 import { FAQBlock } from "@/components/marketing/FAQBlock";
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
+import { ogImageExam } from "@/lib/og-image";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
 import { SITE_NAME } from "@/lib/seo-metadata";
 
@@ -12,6 +14,7 @@ export const metadata = marketingPageMetadata({
   path: "/upsc",
   title: `Daily Planner for UPSC CSE Preparation | ${SITE_NAME}`,
   description: `UPSC needs years of consistent preparation across GS, Essay and Optional. Kalnehi gives working professionals and full-time aspirants a daily planning system that survives the long haul.`,
+  ogImage: ogImageExam("UPSC CSE Preparation"),
 });
 
 const SYLLABUS = [
@@ -86,6 +89,11 @@ export default function UpscPage() {
           description: `UPSC needs years of consistent preparation across GS, Essay and Optional. Kalnehi gives aspirants a daily planning system that survives the long haul.`,
         }}
       />
+
+      <Breadcrumbs items={[
+          { name: "Home", path: "/" },
+          { name: "UPSC Preparation Daily Planner", path: "/upsc" },
+        ]} className="mb-2" />
 
       <article className="space-y-12">
         <ExamHero

@@ -12,6 +12,7 @@ import {
   Stethoscope,
 } from "lucide-react";
 
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
 import { SITE_NAME } from "@/lib/seo-metadata";
@@ -122,6 +123,11 @@ export default function GuidesHubPage() {
           },
         ]}
       />
+
+      <Breadcrumbs items={[
+          { name: "Home", path: "/" },
+          { name: "Guides", path: "/guides" },
+        ]} className="mb-2" />
       <article>
         <header className="kal-glass-panel mb-8 rounded-2xl px-6 py-8 space-y-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-kal-accent">

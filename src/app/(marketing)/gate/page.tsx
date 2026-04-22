@@ -4,7 +4,9 @@ import { CTABanner } from "@/components/marketing/CTABanner";
 import { ExamHero } from "@/components/marketing/ExamHero";
 import { FeatureBlock } from "@/components/marketing/FeatureBlock";
 import { FAQBlock } from "@/components/marketing/FAQBlock";
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
+import { ogImageExam } from "@/lib/og-image";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
 import { SITE_NAME } from "@/lib/seo-metadata";
 
@@ -12,6 +14,7 @@ export const metadata = marketingPageMetadata({
   path: "/gate",
   title: `Daily Planner for GATE Preparation | ${SITE_NAME}`,
   description: `GATE covers 10+ technical subjects across 6 months. Kalnehi tracks your subject-wise progress, helps you plan revision before the exam, and lets PrepBrain AI identify your biggest score gaps.`,
+  ogImage: ogImageExam("GATE Preparation"),
 });
 
 const GATE_CSE_SUBJECTS = [
@@ -69,6 +72,11 @@ export default function GatePage() {
           description: `GATE covers 10+ technical subjects. Kalnehi tracks your subject-wise progress and helps PrepBrain AI identify your biggest score gaps.`,
         }}
       />
+
+      <Breadcrumbs items={[
+          { name: "Home", path: "/" },
+          { name: "GATE Preparation Daily Planner", path: "/gate" },
+        ]} className="mb-2" />
 
       <article className="space-y-12">
         <ExamHero

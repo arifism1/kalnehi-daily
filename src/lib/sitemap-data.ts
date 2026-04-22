@@ -1,0 +1,261 @@
+import { getAllPosts } from "@/content/blog";
+import { getSyllabusSlugs } from "@/content/syllabus";
+import { absoluteProductionUrl } from "@/lib/site";
+
+export const revalidateSitemapSeconds = 86400;
+
+const TOP_FIVE_EXAMS = new Set(["/jee", "/neet", "/upsc", "/cat", "/gate"]);
+
+/** All marketing exam and exam-adjacent landing paths (sitemap-exams). */
+export const EXAM_SITEMAP_PATHS: string[] = [
+  "/jee",
+  "/jee-main",
+  "/jee-advanced",
+  "/neet",
+  "/neet-pg",
+  "/upsc",
+  "/upsc-prelims",
+  "/upsc-mains",
+  "/cat",
+  "/gate",
+  "/ca-foundation",
+  "/ca-intermediate",
+  "/ca-final",
+  "/clat",
+  "/nda",
+  "/ssc-cgl",
+  "/ssc-chsl",
+  "/ibps-po",
+  "/sbi-po",
+  "/gre",
+  "/sat",
+  "/cuet",
+  "/cbse-class-12",
+  "/ipmat",
+  "/jee-study-planner",
+  "/neet-study-planner",
+  "/neet-pg-study-planner",
+  "/upsc-study-planner",
+  "/cuet-ug-study-planner",
+  "/boards-study-planner",
+  "/brain-yoga",
+];
+
+type ChangeFreq = "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
+
+export type SitemapEntry = { path: string; priority: number; changeFrequency: ChangeFreq; lastMod?: Date };
+
+const weekly: ChangeFreq = "weekly";
+const monthly: ChangeFreq = "monthly";
+const yearly: ChangeFreq = "yearly";
+
+/**
+ * All non-exam, non-blog-post public URLs for sitemap-pages.xml
+ * (excludes /blog/* posts and /blog category/tag thin pages; includes /blog index).
+ */
+const PAGES_SITEMAP: SitemapEntry[] = [
+  { path: "/", priority: 1, changeFrequency: weekly },
+  { path: "/pricing", priority: 0.9, changeFrequency: weekly },
+  { path: "/what-can-kalnehi-do", priority: 0.95, changeFrequency: weekly },
+  { path: "/best-study-practices", priority: 0.95, changeFrequency: monthly },
+  { path: "/guides", priority: 0.95, changeFrequency: weekly },
+  { path: "/guides/how-to-maintain-consistency-in-jee-preparation", priority: 0.9, changeFrequency: monthly },
+  { path: "/guides/daily-exam-prep-system-any-exam", priority: 0.9, changeFrequency: monthly },
+  { path: "/features", priority: 0.9, changeFrequency: weekly },
+  { path: "/features/prepbrain-ai", priority: 0.8, changeFrequency: weekly },
+  { path: "/features/voice-control", priority: 0.8, changeFrequency: weekly },
+  { path: "/features/syllabus-tracker", priority: 0.8, changeFrequency: weekly },
+  { path: "/features/spaced-revision", priority: 0.8, changeFrequency: weekly },
+  { path: "/features/marks-engine", priority: 0.8, changeFrequency: weekly },
+  { path: "/features/study-timer", priority: 0.8, changeFrequency: weekly },
+  { path: "/features/consistency-tracker", priority: 0.8, changeFrequency: weekly },
+  { path: "/features/doubt-tracker", priority: 0.8, changeFrequency: weekly },
+  { path: "/features/daily-planner", priority: 0.8, changeFrequency: weekly },
+  { path: "/features/on-camera-study", priority: 0.8, changeFrequency: weekly },
+  { path: "/features/habit-maker", priority: 0.8, changeFrequency: weekly },
+  { path: "/features/daily-log", priority: 0.8, changeFrequency: weekly },
+  { path: "/search", priority: 0.5, changeFrequency: weekly },
+  { path: "/vs/notion", priority: 0.7, changeFrequency: monthly },
+  { path: "/vs/google-calendar", priority: 0.7, changeFrequency: monthly },
+  { path: "/vs/physical-timetable", priority: 0.7, changeFrequency: monthly },
+  { path: "/vs/excel-study-planner", priority: 0.7, changeFrequency: monthly },
+  { path: "/vs/todoist", priority: 0.7, changeFrequency: monthly },
+  { path: "/for/jee-droppers", priority: 0.7, changeFrequency: monthly },
+  { path: "/for/neet-droppers", priority: 0.7, changeFrequency: monthly },
+  { path: "/for/class-11-students", priority: 0.7, changeFrequency: monthly },
+  { path: "/for/class-12-students", priority: 0.7, changeFrequency: monthly },
+  { path: "/for/upsc-working-professionals", priority: 0.7, changeFrequency: monthly },
+  { path: "/for/ca-students", priority: 0.7, changeFrequency: monthly },
+  { path: "/for/engineering-students-gate", priority: 0.7, changeFrequency: monthly },
+  { path: "/tools", priority: 0.8, changeFrequency: monthly },
+  { path: "/tools/study-hours-calculator", priority: 0.8, changeFrequency: monthly },
+  { path: "/tools/exam-countdown", priority: 0.8, changeFrequency: monthly },
+  { path: "/tools/revision-scheduler", priority: 0.8, changeFrequency: monthly },
+  { path: "/about", priority: 0.6, changeFrequency: monthly },
+  { path: "/contact", priority: 0.6, changeFrequency: monthly },
+  { path: "/changelog", priority: 0.6, changeFrequency: weekly },
+  { path: "/privacy", priority: 0.5, changeFrequency: monthly },
+  { path: "/terms", priority: 0.5, changeFrequency: monthly },
+  { path: "/refund", priority: 0.4, changeFrequency: yearly },
+  { path: "/return", priority: 0.4, changeFrequency: yearly },
+  { path: "/shipping", priority: 0.4, changeFrequency: yearly },
+  { path: "/policies", priority: 0.5, changeFrequency: yearly },
+  { path: "/kalnehi-daily", priority: 0.6, changeFrequency: monthly },
+  ...getSyllabusSlugs().map(
+    (slug): SitemapEntry => ({
+      path: `/syllabus/${slug}`,
+      priority: 0.7,
+      changeFrequency: monthly,
+    }),
+  ),
+  { path: "/daily-plan", priority: 0.7, changeFrequency: weekly },
+  { path: "/planner", priority: 0.7, changeFrequency: weekly },
+  { path: "/planner/schedule", priority: 0.65, changeFrequency: weekly },
+  { path: "/planner/todos", priority: 0.65, changeFrequency: weekly },
+  { path: "/planner/weekly", priority: 0.65, changeFrequency: weekly },
+  { path: "/planner/routine", priority: 0.65, changeFrequency: weekly },
+  { path: "/planner/habits", priority: 0.65, changeFrequency: weekly },
+  { path: "/planner/productivity", priority: 0.65, changeFrequency: weekly },
+  { path: "/plan-my-day", priority: 0.65, changeFrequency: weekly },
+  { path: "/plan", priority: 0.65, changeFrequency: weekly },
+  { path: "/syllabus", priority: 0.7, changeFrequency: weekly },
+  { path: "/meditation", priority: 0.65, changeFrequency: weekly },
+  { path: "/meditation/consistency", priority: 0.6, changeFrequency: weekly },
+  { path: "/my-subscription", priority: 0.6, changeFrequency: weekly },
+  { path: "/settings", priority: 0.5, changeFrequency: monthly },
+  { path: "/target-score-blueprint", priority: 0.65, changeFrequency: weekly },
+  { path: "/my-target", priority: 0.6, changeFrequency: weekly },
+  { path: "/saved-plans", priority: 0.6, changeFrequency: weekly },
+  { path: "/study-sessions", priority: 0.65, changeFrequency: weekly },
+  { path: "/prepbrain", priority: 0.65, changeFrequency: weekly },
+  { path: "/marks-engine", priority: 0.6, changeFrequency: weekly },
+  { path: "/daily-engine", priority: 0.6, changeFrequency: weekly },
+  { path: "/revision-engine", priority: 0.6, changeFrequency: weekly },
+  { path: "/revision-reminders", priority: 0.6, changeFrequency: weekly },
+  { path: "/progress", priority: 0.6, changeFrequency: weekly },
+  { path: "/heatmap", priority: 0.55, changeFrequency: weekly },
+  { path: "/calendar", priority: 0.55, changeFrequency: weekly },
+  { path: "/consistency-tracker", priority: 0.55, changeFrequency: weekly },
+  { path: "/habits", priority: 0.55, changeFrequency: weekly },
+  { path: "/timer", priority: 0.55, changeFrequency: weekly },
+  { path: "/motivation", priority: 0.5, changeFrequency: weekly },
+  { path: "/notifications", priority: 0.45, changeFrequency: monthly },
+  { path: "/feedback", priority: 0.45, changeFrequency: monthly },
+  { path: "/doubts", priority: 0.55, changeFrequency: weekly },
+  { path: "/profile", priority: 0.45, changeFrequency: monthly },
+  { path: "/onboarding", priority: 0.45, changeFrequency: monthly },
+  { path: "/dictate-day", priority: 0.45, changeFrequency: monthly },
+  { path: "/self-type", priority: 0.45, changeFrequency: monthly },
+  { path: "/self-type-day", priority: 0.45, changeFrequency: monthly },
+];
+
+export function getPagesSitemapEntries(): SitemapEntry[] {
+  return PAGES_SITEMAP;
+}
+
+export function getExamSitemapEntries(): SitemapEntry[] {
+  const now = new Date();
+  return EXAM_SITEMAP_PATHS.map((path) => ({
+    path,
+    priority: TOP_FIVE_EXAMS.has(path) ? 0.9 : 0.8,
+    changeFrequency: weekly,
+    lastMod: now,
+  }));
+}
+
+function blogPriority(published: Date): number {
+  const now = Date.now();
+  const d = (now - published.getTime()) / 86400000;
+  if (d <= 30) return 0.7;
+  if (d <= 90) return 0.6;
+  return 0.5;
+}
+
+export function getBlogSitemapEntries(): SitemapEntry[] {
+  const posts = getAllPosts();
+  const blogIndex: SitemapEntry = {
+    path: "/blog",
+    priority: 0.7,
+    changeFrequency: "weekly",
+  };
+  const postEntries: SitemapEntry[] = posts.map((p) => {
+    const published = new Date(p.publishedAt);
+    const mod = p.modifiedAt ? new Date(p.modifiedAt) : published;
+    return {
+      path: `/blog/${p.slug}`,
+      priority: blogPriority(published),
+      changeFrequency: monthly,
+      lastMod: mod,
+    };
+  });
+  return [blogIndex, ...postEntries];
+}
+
+function escapeXml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
+export function buildUrlsetXml(
+  entries: SitemapEntry[],
+  defaultLastMod: Date,
+): string {
+  const body = entries
+    .map((e) => {
+      const loc = absoluteProductionUrl(e.path);
+      const last = (e.lastMod ?? defaultLastMod).toISOString();
+      return `  <url>
+    <loc>${escapeXml(loc)}</loc>
+    <lastmod>${last}</lastmod>
+    <changefreq>${e.changeFrequency}</changefreq>
+    <priority>${e.priority}</priority>
+  </url>`;
+    })
+    .join("\n");
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${body}
+</urlset>`;
+}
+
+export function buildSitemapIndexXml(): string {
+  const l1 = absoluteProductionUrl("/sitemap-pages.xml");
+  const l2 = absoluteProductionUrl("/sitemap-blog.xml");
+  const l3 = absoluteProductionUrl("/sitemap-exams.xml");
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>${escapeXml(l1)}</loc>
+  </sitemap>
+  <sitemap>
+    <loc>${escapeXml(l2)}</loc>
+  </sitemap>
+  <sitemap>
+    <loc>${escapeXml(l3)}</loc>
+  </sitemap>
+</sitemapindex>`;
+}
+
+export function sitemapIndexResponse(): Response {
+  return new Response(buildSitemapIndexXml(), {
+    headers: {
+      "Content-Type": "application/xml; charset=utf-8",
+      "Cache-Control": `public, s-maxage=${revalidateSitemapSeconds}, stale-while-revalidate=86400`,
+    },
+  });
+}
+
+export function urlsetResponse(entries: SitemapEntry[]): Response {
+  const defaultLastMod = new Date();
+  return new Response(buildUrlsetXml(entries, defaultLastMod), {
+    headers: {
+      "Content-Type": "application/xml; charset=utf-8",
+      "Cache-Control": `public, s-maxage=${revalidateSitemapSeconds}, stale-while-revalidate=86400`,
+    },
+  });
+}

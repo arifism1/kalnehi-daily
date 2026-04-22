@@ -59,12 +59,18 @@ export default function robots(): MetadataRoute.Robots {
           "/best-study-practices",
           "/privacy",
           "/terms",
+          "/search",
         ],
         disallow: [
+          "/search?",
           "/api/",
+          "/api",
           "/auth/",
+          "/auth",
           "/dashboard/",
+          "/dashboard",
           "/app/",
+          "/app",
           "/settings",
           "/daily-plan",
           "/planner",
@@ -91,6 +97,10 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: absoluteUrl("/sitemap.xml"),
+    sitemap: [
+      absoluteUrl("/sitemap.xml"),
+      absoluteUrl("/sitemap-blog.xml"),
+      absoluteUrl("/sitemap-exams.xml"),
+    ],
   };
 }

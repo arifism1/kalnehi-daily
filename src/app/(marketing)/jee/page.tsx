@@ -1,10 +1,11 @@
-import Link from "next/link";
-
 import { CTABanner } from "@/components/marketing/CTABanner";
+import { RelatedContent } from "@/components/marketing/RelatedContent";
 import { ExamHero } from "@/components/marketing/ExamHero";
 import { FeatureBlock } from "@/components/marketing/FeatureBlock";
 import { FAQBlock } from "@/components/marketing/FAQBlock";
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
+import { ogImageExam } from "@/lib/og-image";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
 import { SITE_NAME } from "@/lib/seo-metadata";
 
@@ -12,6 +13,7 @@ export const metadata = marketingPageMetadata({
   path: "/jee",
   title: `Daily Planner for JEE Preparation | ${SITE_NAME}`,
   description: `Track every PCM topic, plan your day with voice, and let PrepBrain AI show exactly where your next 3 study hours should go. Built for JEE Main & Advanced aspirants. Start free.`,
+  ogImage: ogImageExam("JEE Preparation"),
 });
 
 const SYLLABUS = [
@@ -87,6 +89,14 @@ export default function JeePage() {
           name: `Daily Planner for JEE Preparation | ${SITE_NAME}`,
           description: `Track every PCM topic, plan your day with voice, and let PrepBrain AI show exactly where your next 3 study hours should go. Built for JEE Main & Advanced aspirants.`,
         }}
+      />
+
+      <Breadcrumbs
+        items={[
+          { name: "Home", path: "/" },
+          { name: "JEE Preparation Daily Planner", path: "/jee" },
+        ]}
+        className="mb-2"
       />
 
       <article className="space-y-12">
@@ -197,29 +207,7 @@ export default function JeePage() {
           </div>
         </section>
 
-        {/* Internal links */}
-        <section className="space-y-2" aria-labelledby="jee-related">
-          <h2 id="jee-related" className="text-base font-semibold text-kal-text">
-            Read next
-          </h2>
-          <ul className="space-y-1.5 text-sm">
-            <li>
-              <Link href="/blog/how-to-make-daily-study-timetable-jee" className="font-medium text-kal-accent-dark hover:underline">
-                How to Make a Daily Study Timetable for JEE That You'll Actually Follow
-              </Link>
-            </li>
-            <li>
-              <Link href="/blog/how-toppers-track-syllabus" className="font-medium text-kal-accent-dark hover:underline">
-                How JEE and NEET Toppers Track Their Syllabus
-              </Link>
-            </li>
-            <li>
-              <Link href="/blog/jee-dropper-study-plan" className="font-medium text-kal-accent-dark hover:underline">
-                The Complete Study Plan for JEE Droppers
-              </Link>
-            </li>
-          </ul>
-        </section>
+        <RelatedContent pathname="/jee" />
 
         <FAQBlock items={FAQS} />
 

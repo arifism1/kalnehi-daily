@@ -1,10 +1,11 @@
-import Link from "next/link";
-
 import { CTABanner } from "@/components/marketing/CTABanner";
+import { RelatedContent } from "@/components/marketing/RelatedContent";
 import { ExamHero } from "@/components/marketing/ExamHero";
 import { FeatureBlock } from "@/components/marketing/FeatureBlock";
 import { FAQBlock } from "@/components/marketing/FAQBlock";
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
+import { ogImageExam } from "@/lib/og-image";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
 import { SITE_NAME } from "@/lib/seo-metadata";
 
@@ -12,6 +13,7 @@ export const metadata = marketingPageMetadata({
   path: "/neet",
   title: `Daily Planner for NEET Preparation | ${SITE_NAME}`,
   description: `Track Biology, Physics and Chemistry at the chapter level. PrepBrain AI identifies which NEET topics have the highest weightage vs your current completion. Start free for 3 days.`,
+  ogImage: ogImageExam("NEET Preparation"),
 });
 
 const SYLLABUS = [
@@ -91,6 +93,11 @@ export default function NeetPage() {
           description: `Track Biology, Physics and Chemistry at the chapter level. PrepBrain AI identifies which NEET topics have the highest weightage vs your current completion.`,
         }}
       />
+
+      <Breadcrumbs items={[
+          { name: "Home", path: "/" },
+          { name: "NEET Preparation Daily Planner", path: "/neet" },
+        ]} className="mb-2" />
 
       <article className="space-y-12">
         <ExamHero
@@ -197,26 +204,7 @@ export default function NeetPage() {
           </div>
         </section>
 
-        <section className="space-y-2" aria-labelledby="neet-related">
-          <h2 id="neet-related" className="text-base font-semibold text-kal-text">Read next</h2>
-          <ul className="space-y-1.5 text-sm">
-            <li>
-              <Link href="/blog/how-many-hours-neet-aspirant-study" className="font-medium text-kal-accent-dark hover:underline">
-                How Many Hours Should a NEET Aspirant Study Daily
-              </Link>
-            </li>
-            <li>
-              <Link href="/blog/neet-syllabus-tracker-strategy" className="font-medium text-kal-accent-dark hover:underline">
-                How to Use a Syllabus Tracker to Add 60+ Marks to Your NEET Score
-              </Link>
-            </li>
-            <li>
-              <Link href="/for/neet-droppers" className="font-medium text-kal-accent-dark hover:underline">
-                Kalnehi for NEET Droppers — A Different System This Year
-              </Link>
-            </li>
-          </ul>
-        </section>
+        <RelatedContent pathname="/neet" />
 
         <FAQBlock items={FAQS} />
 

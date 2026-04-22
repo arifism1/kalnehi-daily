@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { BlogCard } from "@/components/marketing/BlogCard";
 import { CTABanner } from "@/components/marketing/CTABanner";
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
 import { SITE_NAME } from "@/lib/seo-metadata";
@@ -25,6 +26,7 @@ export async function generateMetadata({ params }: Props) {
     path: `/blog/category/${category}`,
     title: `${label} Articles | ${SITE_NAME}`,
     description: `Articles, guides and study strategies for ${label} preparation — from Kalnehi.`,
+    noindex: true,
   });
 }
 
@@ -44,6 +46,12 @@ export default async function CategoryPage({ params }: Props) {
           { name: label, path: `/blog/category/${category}` },
         ]}
       />
+
+      <Breadcrumbs items={[
+          { name: "Home", path: "/" },
+          { name: "Blog", path: "/blog" },
+          { name: label, path: `/blog/category/${category}` },
+        ]} className="mb-2" />
 
       <div className="space-y-8">
         <header className="space-y-3">

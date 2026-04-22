@@ -80,7 +80,9 @@ const appleStartupImages = [
 ] as const;
 
 const baseMeta = defaultSiteMetadata();
-const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim();
+const googleSiteVerification =
+  process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim() ??
+  process.env.GOOGLE_SITE_VERIFICATION?.trim();
 
 export const metadata: Metadata = {
   ...baseMeta,
