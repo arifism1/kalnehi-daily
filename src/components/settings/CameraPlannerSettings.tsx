@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { Camera } from "lucide-react";
+import { Camera, X } from "lucide-react";
 import { useId, useState } from "react";
 
 import { SettingsExpandableSection } from "@/components/settings/SettingsExpandableSection";
@@ -75,6 +75,19 @@ export function CameraPlannerSettings() {
   );
 
   const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [aiNoticeVisible, setAiNoticeVisible] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem("kal_ai_study_notice_dismissed") !== "1";
+  });
+
+  function dismissAiNotice() {
+    setAiNoticeVisible(false);
+    try {
+      localStorage.setItem("kal_ai_study_notice_dismissed", "1");
+    } catch {
+      /* ignore */
+    }
+  }
 
   function onStudyCameraSwitchRequest(next: boolean) {
     if (next) {
@@ -179,6 +192,38 @@ export function CameraPlannerSettings() {
                   <option value="lenient">Lenient</option>
                 </select>
               </div>
+              {aiNoticeVisible ? (
+                <div className="mx-3 my-2 flex items-start gap-3 rounded-xl border border-kal-border bg-kal-card-muted px-3.5 py-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-semibold uppercase tracking-widest text-kal-text-secondary">
+                      AI Study Verification
+                    </p>
+                    <p className="mt-1.5 text-xs leading-relaxed text-kal-muted">
+                      To ensure accurate focus tracking, we analyze a single webcam frame every
+                      3.5 minutes using AI. This helps verify that you are actively studying
+                      (reading, writing, or focused on study material).
+                    </p>
+                    <p className="mt-1.5 text-xs font-medium text-kal-text-secondary">
+                      No images are stored or retained at any time.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={dismissAiNotice}
+                      className="mt-2.5 rounded-lg border border-kal-border bg-kal-card px-3 py-1.5 text-xs font-semibold text-kal-text-secondary hover:bg-kal-card-muted"
+                    >
+                      Got it
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={dismissAiNotice}
+                    aria-label="Dismiss notice"
+                    className="mt-0.5 shrink-0 rounded-md p-1 text-kal-muted hover:bg-kal-card hover:text-kal-text"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ) : null}
               <div className="px-3 py-3.5">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">

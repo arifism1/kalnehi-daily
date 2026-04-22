@@ -1,9 +1,11 @@
 "use client";
 
-import { X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
+import { getAiStudyPartnerBalance } from "@/actions/aiStudyPartner";
+import { AiStudyPartnerPurchaseModal } from "@/components/study/AiStudyPartnerPurchaseModal";
 import { StudyCameraPrivacyModal } from "@/components/study/StudyCameraPrivacyModal";
 import { StudyCameraTracker } from "@/components/study/StudyCameraTracker";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -29,28 +31,49 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
   const [step, setStep] = useState<Step>("subject");
   const [subject, setSubject] = useState("");
   const [privacyGateOpen, setPrivacyGateOpen] = useState(false);
+  const [purchaseModalOpen, setPurchaseModalOpen] = useState(false);
+  const [isCheckingBalance, setIsCheckingBalance] = useState(false);
 
   useEffect(() => {
     if (!open) {
       setStep("subject");
       setSubject("");
       setPrivacyGateOpen(false);
+      setPurchaseModalOpen(false);
+      setIsCheckingBalance(false);
     }
   }, [open]);
 
-  const enterCamera = useCallback(() => {
+  /** Fetch balance, then route: camera if credits > 0, purchase modal otherwise. */
+  const doStart = useCallback(async () => {
+    setIsCheckingBalance(true);
+    try {
+      const bal = await getAiStudyPartnerBalance();
+      if (bal > 0) {
+        setStep("camera");
+      } else {
+        setPurchaseModalOpen(true);
+      }
+    } catch {
+      setPurchaseModalOpen(true);
+    } finally {
+      setIsCheckingBalance(false);
+    }
+  }, []);
+
+  const advanceToCamera = useCallback(() => {
     if (!studyCameraPrivacyAcknowledged) {
       setPrivacyGateOpen(true);
       return;
     }
-    setStep("camera");
-  }, [studyCameraPrivacyAcknowledged]);
+    void doStart();
+  }, [studyCameraPrivacyAcknowledged, doStart]);
 
   const onPrivacyGateContinue = useCallback(() => {
     setStudyCameraPrivacyAcknowledged(true);
     setPrivacyGateOpen(false);
-    setStep("camera");
-  }, [setStudyCameraPrivacyAcknowledged]);
+    void doStart();
+  }, [setStudyCameraPrivacyAcknowledged, doStart]);
 
   const subjectOk = subject.trim().length > 0;
 
@@ -78,7 +101,17 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
         open={privacyGateOpen}
         variant="session"
         onContinue={onPrivacyGateContinue}
-        onDismiss={() => setPrivacyGateOpen(false)}
+        onDismiss={() => {
+          setPrivacyGateOpen(false);
+        }}
+      />
+      <AiStudyPartnerPurchaseModal
+        open={purchaseModalOpen}
+        onClose={() => setPurchaseModalOpen(false)}
+        onPurchased={() => {
+          setPurchaseModalOpen(false);
+          setStep("camera");
+        }}
       />
       <div className="fixed inset-0 z-[80] flex items-end justify-center sm:items-center">
         {step !== "camera" ? (
@@ -114,6 +147,7 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
               <StudyCameraTracker
                 subject={subject}
                 userId={userId}
+                aiPartnerMode={true}
                 onDone={onClose}
               />
             </div>
@@ -149,7 +183,7 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
                     placeholder="e.g. Organic Chemistry, Chapter 5"
                     className="mt-2 min-h-[52px] w-full rounded-2xl border border-kal-border bg-kal-input-bg px-4 text-base text-kal-text placeholder:text-kal-muted"
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" && subjectOk) enterCamera();
+                      if (e.key === "Enter" && subjectOk) advanceToCamera();
                     }}
                   />
                 </label>
@@ -157,11 +191,18 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
                 {studyCameraEnabled ? (
                   <button
                     type="button"
-                    disabled={!subjectOk}
-                    onClick={enterCamera}
-                    className="flex w-full min-h-[52px] items-center justify-center rounded-2xl bg-kal-accent text-base font-semibold text-kal-accent-foreground hover:bg-kal-accent-hover disabled:opacity-40"
+                    disabled={!subjectOk || isCheckingBalance}
+                    onClick={advanceToCamera}
+                    className="flex w-full min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-kal-accent text-base font-semibold text-kal-accent-foreground hover:bg-kal-accent-hover disabled:opacity-40"
                   >
-                    Continue to verification
+                    {isCheckingBalance ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Checking balance…
+                      </>
+                    ) : (
+                      "Continue to verification"
+                    )}
                   </button>
                 ) : (
                   <div className="rounded-2xl border border-dashed border-kal-border bg-kal-card-muted px-4 py-5 text-center">

@@ -226,7 +226,7 @@ export type ExtraCreditPack = {
   amount: number;
   pricePaise: number;
   priceDisplay: string;
-  type: "photo_scans" | "voice_minutes" | "ai_tokens";
+  type: "photo_scans" | "voice_minutes" | "ai_tokens" | "ai_study_partner";
 };
 
 /**
@@ -272,5 +272,16 @@ export const EXTRA_CREDIT_PACKS_UI: ExtraCreditPack[] = EXTRA_CREDIT_PACKS.filte
   (p) => p.type === "voice_minutes" || p.type === "ai_tokens",
 );
 
+export const AI_STUDY_PARTNER_PACK: ExtraCreditPack = {
+  id: "ai_study_partner_30h",
+  label: "Popular Pack — AI Study Partner (30 hours)",
+  amount: 108_000, // 30 * 3600 seconds
+  pricePaise: 79900, // ₹799
+  priceDisplay: "₹799",
+  type: "ai_study_partner",
+};
+
 export const EXTRA_CREDITS_BY_ID: Record<string, ExtraCreditPack> =
-  Object.fromEntries(EXTRA_CREDIT_PACKS.map((p) => [p.id, p]));
+  Object.fromEntries(
+    [...EXTRA_CREDIT_PACKS, AI_STUDY_PARTNER_PACK].map((p) => [p.id, p]),
+  );

@@ -43,21 +43,15 @@ export default function StudySessionsPageContent() {
         </p>
         <h1 className="kal-feature-title mt-1 flex items-center gap-2">
           <Camera className="h-7 w-7 text-kal-accent" aria-hidden />
-          On-camera study sessions
+          On-Camera Study Sessions
         </h1>
-        <p className="mt-2 text-sm leading-relaxed text-kal-muted sm:text-[15px]">
-          Your camera runs on-device checks while you study — so logged time
-          reflects real focus, not just a claimed number. Syncs across your
-          devices when you&apos;re signed in.
-        </p>
         <div className="mt-4 rounded-2xl border border-kal-accent/25 bg-kal-accent-soft px-5 py-4">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-kal-accent">
             Privacy
           </p>
           <p className="mt-1.5 text-xs leading-relaxed text-kal-accent-dark">
             On-camera, on-device verification uses AI locally. Video is never
-            streamed, uploaded, or saved on our servers. Your log only stores
-            subject, duration, and times—never images or recordings.
+            streamed, uploaded, or saved on our servers.
           </p>
         </div>
       </header>

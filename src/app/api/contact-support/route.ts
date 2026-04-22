@@ -12,18 +12,16 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 
 export const runtime = "nodejs";
 
-// Vercel KV (Upstash Redis) environment variables — set via Vercel Marketplace integration.
-// KV_REST_API_URL and KV_REST_API_TOKEN are the standard names provisioned by Vercel KV.
-if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
-  throw new Error(
-    "[contact-support] KV_REST_API_URL and KV_REST_API_TOKEN must be set",
-  );
+function getRedis(): Redis {
+  const url = process.env.KV_REST_API_URL?.trim();
+  const token = process.env.KV_REST_API_TOKEN?.trim();
+  if (!url || !token) {
+    throw new Error(
+      "[contact-support] KV_REST_API_URL and KV_REST_API_TOKEN must be set",
+    );
+  }
+  return new Redis({ url, token });
 }
-
-const redis = new Redis({
-  url: process.env.KV_REST_API_URL,
-  token: process.env.KV_REST_API_TOKEN,
-});
 
 const MAX_BODY_BYTES = 24_000;
 const MIN_MESSAGE = 10;
@@ -56,7 +54,7 @@ async function allowRequest(key: string, maxInWindow: number): Promise<boolean> 
   const redisKey = `contact_rl:${key}`;
   const member = now.toString();
 
-  const pipeline = redis.pipeline();
+  const pipeline = getRedis().pipeline();
   pipeline.zremrangebyscore(redisKey, "-inf", windowStart);
   pipeline.zadd(redisKey, { score: now, member });
   pipeline.zcount(redisKey, windowStart, "+inf");
