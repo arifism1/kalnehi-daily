@@ -18,6 +18,7 @@ import {
   deleteDailyTask,
   insertDailyTask,
   updateDailyTask,
+  updateDailyTaskWorkedTime,
   type DailyTaskView,
 } from "@/actions/dailyPlan";
 import {
@@ -32,10 +33,15 @@ import { ScheduleRevisionReminderDialog } from "@/components/revision/ScheduleRe
 import type { ScheduleRevisionInitialSnapshot } from "@/components/revision/ScheduleRevisionReminderDialog";
 import { RevisionScheduledToast } from "@/components/revision/RevisionScheduledToast";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useDailyTaskTimerStore } from "@/store/useDailyTaskTimerStore";
 import { useUndoStore } from "@/store/useUndoStore";
 import { useTaskStore, type Microtopic } from "@/store/useTaskStore";
 import { findOverlappingTaskPairs } from "@/lib/dailyPlanOverlap";
 import { slotFromStartEnd, timeDbToInput } from "@/lib/dailyPlanTime";
+import {
+  DailyTaskTimerControls,
+  dailyPlanDaySummary,
+} from "@/components/planner/DailyTaskTimerControls";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { suggestSyllabusIdFromTitle } from "@/lib/suggestDailyTaskSyllabus";
 import { formatIstSlotRange12h } from "@/lib/voiceIst";
@@ -582,11 +588,53 @@ export function UnifiedDailyPlanList({
 
   const isDoneStatus = (s: string) => s === "done";
   const isSkippedStatus = (s: string) => s === "skipped";
-  const isCompletedStatus = (s: string) => isDoneStatus(s) || isSkippedStatus(s);
+
+  const flushDailyTaskTimer = useCallback(async (targetId: string) => {
+    const st = useDailyTaskTimerStore.getState();
+    if (st.taskId !== targetId) return;
+    const atStart = st.workMinutesAtSessionStart;
+    const sec = st.getElapsed();
+    st.stop();
+    const add = Math.max(0, Math.round(sec / 60) - atStart);
+    if (add === 0) return;
+    setBusyId(targetId);
+    try {
+      const res = await updateDailyTaskWorkedTime(targetId, add);
+      if (!res.ok) {
+        setError(surfaceErrorForUi(res.error));
+        return;
+      }
+      setTasks((prev) =>
+        prev.map((x) =>
+          x.id === targetId
+            ? { ...x, actual_worked_minutes: res.totalMinutes }
+            : x,
+        ),
+      );
+      const cache = peekDailyPlanTasksCache(planDate);
+      if (cache) {
+        putDailyPlanTasksCache(
+          planDate,
+          cache.planId,
+          cache.tasks.map((x) =>
+            x.id === targetId
+              ? { ...x, actual_worked_minutes: res.totalMinutes }
+              : x,
+          ),
+        );
+      }
+      dispatchDailyPlanSynced();
+    } finally {
+      setBusyId(null);
+    }
+  }, [planDate]);
 
   const toggleDone = async (t: DailyTaskView) => {
     if (statusToggleLocked) return;
     if (isSkippedStatus(t.status)) return;
+    if (useDailyTaskTimerStore.getState().taskId === t.id) {
+      await flushDailyTaskTimer(t.id);
+    }
     const next = isDoneStatus(t.status) ? "pending" : "done";
     setError(null);
     setBusyId(t.id);
@@ -607,6 +655,9 @@ export function UnifiedDailyPlanList({
   };
 
   const deleteTaskNow = async (t: DailyTaskView) => {
+    if (useDailyTaskTimerStore.getState().taskId === t.id) {
+      await flushDailyTaskTimer(t.id);
+    }
     setDeletingId(t.id);
     setTasks((prev) => prev.filter((x) => x.id !== t.id));
     const sourceRaw = await fetchDailyTaskSourceRawTextForUndo(t.id);
@@ -647,6 +698,7 @@ export function UnifiedDailyPlanList({
           source_raw_text: snapshot.source_raw_text,
           priority: snapshot.priority,
           syllabus_master_id: snapshot.syllabus_master_id ?? null,
+          actual_worked_minutes: snapshot.actual_worked_minutes ?? 0,
         });
         if (!ins.ok) {
           setError(ins.error);
@@ -689,7 +741,10 @@ export function UnifiedDailyPlanList({
     dispatchDailyPlanSynced();
   };
 
-  const doneCount = tasks.filter((t) => isCompletedStatus(t.status)).length;
+  const daySummaryLine = useMemo(
+    () => dailyPlanDaySummary(tasks).line,
+    [tasks],
+  );
 
   return (
     <>
@@ -726,7 +781,7 @@ export function UnifiedDailyPlanList({
         ) : (
           <>
             <p className="mb-4 text-xs font-semibold text-kal-muted">
-              {doneCount} / {tasks.length} done
+              {daySummaryLine}
             </p>
 
             <ul className="space-y-2.5">
@@ -883,6 +938,36 @@ export function UnifiedDailyPlanList({
                             Schedule revision
                           </button>
                         ) : null}
+                        <DailyTaskTimerControls
+                          task={{ ...t, actual_worked_minutes: t.actual_worked_minutes ?? 0 }}
+                          planDate={planDate}
+                          today={today}
+                          onBeforeStartOther={flushDailyTaskTimer}
+                          onWorkedSaved={(id, m) => {
+                            setTasks((prev) =>
+                              prev.map((x) =>
+                                x.id === id ? { ...x, actual_worked_minutes: m } : x,
+                              ),
+                            );
+                            const cache = peekDailyPlanTasksCache(planDate);
+                            if (cache) {
+                              putDailyPlanTasksCache(
+                                planDate,
+                                cache.planId,
+                                cache.tasks.map((x) =>
+                                  x.id === id
+                                    ? { ...x, actual_worked_minutes: m }
+                                    : x,
+                                ),
+                              );
+                            }
+                            dispatchDailyPlanSynced();
+                          }}
+                          onError={(msg) => setError(msg)}
+                          busy={busyId === t.id}
+                          anyOperationBusy={busyId != null}
+                          setBusy={setBusyId}
+                        />
                       </div>
 
                       {/*

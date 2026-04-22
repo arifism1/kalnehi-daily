@@ -11,6 +11,8 @@ import {
   subYears,
 } from "date-fns";
 
+import { plannedMinutesFromSlot } from "@/lib/dailyPlanTime";
+
 export const SAVED_PLANS_PAGE_SIZE = 50;
 export const SAVED_PLANS_PREVIEW_COUNT = 3;
 
@@ -50,6 +52,9 @@ export type SavedPlansRangeValidation =
 export type SavedPlanTaskMini = {
   status: string | null;
   title: string | null;
+  actual_worked_minutes: number | null;
+  time_start: string | null;
+  time_end: string | null;
 };
 
 export type SavedPlanListRowRaw = {
@@ -65,6 +70,12 @@ export type SavedPlanListItem = {
   totalTasks: number;
   completedTasks: number;
   completionPercent: number;
+  /** Sum of `actual_worked_minutes` across tasks. */
+  totalWorkedMinutes: number;
+  /** Sum of planned slot minutes where both start and end exist. */
+  totalPlannedMinutes: number;
+  /** `null` when no worked time was logged (not tracked). */
+  workedVsPlannedPercent: number | null;
   previewTitles: string[];
 };
 
@@ -121,6 +132,22 @@ export function toSavedPlanListItem(row: SavedPlanListRowRaw): SavedPlanListItem
   const completedTasks = tasks.filter((task) => task.status === "done").length;
   const completionPercent =
     totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  let totalWorkedMinutes = 0;
+  let totalPlannedMinutes = 0;
+  for (const task of tasks) {
+    const w = task.actual_worked_minutes;
+    if (w != null && w > 0) {
+      totalWorkedMinutes += w;
+    }
+    const p = plannedMinutesFromSlot(task.time_start, task.time_end);
+    if (p != null && p > 0) {
+      totalPlannedMinutes += p;
+    }
+  }
+  const workedVsPlannedPercent =
+    totalWorkedMinutes > 0 && totalPlannedMinutes > 0
+      ? Math.min(999, Math.round((totalWorkedMinutes / totalPlannedMinutes) * 100))
+      : null;
   const previewTitles = tasks
     .map((task) => task.title?.trim() ?? "")
     .filter((title) => title.length > 0)
@@ -133,6 +160,9 @@ export function toSavedPlanListItem(row: SavedPlanListRowRaw): SavedPlanListItem
     totalTasks,
     completedTasks,
     completionPercent,
+    totalWorkedMinutes,
+    totalPlannedMinutes,
+    workedVsPlannedPercent,
     previewTitles,
   };
 }

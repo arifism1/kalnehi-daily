@@ -20,6 +20,7 @@ import {
   Target,
   TrendingUp,
   Bookmark,
+  CalendarDays,
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
@@ -72,6 +73,14 @@ const CATEGORIES: Category[] = [
         icon: ListTodo,
         liveHint: (d) => (d.todayTaskCount > 0 ? `${d.todayTaskCount} tasks today` : null),
         fallback: "No plan yet",
+      },
+      {
+        id: "saved-daily-plans",
+        href: "/saved-plans",
+        label: "Saved Daily Plans",
+        icon: CalendarDays,
+        staticHint: "Archive, completion & time stats",
+        fallback: "Browse past days",
       },
       {
         id: "dictate-my-day",

@@ -88,6 +88,7 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
         label: "Saved Daily Plans",
         shortLabel: "Saved plans",
         Icon: CalendarDays,
+        featureId: "saved-daily-plans",
       },
       {
         href: "/dictate-day",

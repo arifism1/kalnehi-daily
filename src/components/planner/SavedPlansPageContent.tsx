@@ -67,7 +67,9 @@ export function SavedPlansPageContent() {
         const supabase = getSupabaseBrowserClient();
         const { data, error: queryError } = await supabase
           .from("daily_plans")
-          .select("id, plan_date, daily_tasks(status, title)")
+          .select(
+            "id, plan_date, daily_tasks(status, title, actual_worked_minutes, time_start, time_end)",
+          )
           .eq("user_id", user.id)
           .gte("plan_date", dateWindow.startDate)
           .lte("plan_date", dateWindow.endDate)
@@ -266,6 +268,22 @@ export function SavedPlansPageContent() {
                       </p>
                       <p className="mt-1 text-sm text-kal-muted">
                         {plan.completedTasks}/{plan.totalTasks} tasks completed
+                        {" · "}
+                        {plan.totalWorkedMinutes > 0
+                          ? `${plan.totalWorkedMinutes} min logged`
+                          : "0 min logged"}
+                        {plan.totalPlannedMinutes > 0 ? (
+                          <>
+                            {" · "}
+                            {plan.workedVsPlannedPercent != null ? (
+                              <span>
+                                Worked vs planned: {plan.workedVsPlannedPercent}%
+                              </span>
+                            ) : (
+                              <span>Worked vs planned: Not tracked</span>
+                            )}
+                          </>
+                        ) : null}
                       </p>
                     </div>
                     <div className="inline-flex items-center gap-2 rounded-full border border-kal-border bg-kal-card-muted/60 px-3 py-1 text-xs font-semibold text-kal-muted">

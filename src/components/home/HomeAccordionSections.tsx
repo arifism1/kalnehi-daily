@@ -7,6 +7,7 @@ import {
   Brain,
   Camera,
   CheckCircle,
+  CalendarDays,
   ChevronDown,
   Clock,
   Flower2,
@@ -88,6 +89,13 @@ const UnifiedDailyPlanListLazy = dynamic(
     })),
   { ssr: false },
 );
+const SavedPlansHomeWidgetLazy = dynamic(
+  () =>
+    import("@/components/home/SavedPlansHomeWidget").then((m) => ({
+      default: m.SavedPlansHomeWidget,
+    })),
+  { ssr: false },
+);
 const DictateMyDayLazy = dynamic(
   () => import("@/components/voice/DictateMyDay").then((m) => ({ default: m.DictateMyDay })),
   { ssr: false },
@@ -163,6 +171,17 @@ export function HomeAccordionSections() {
           title="Today's Daily Plan"
           className="kal-glass-subtle rounded-2xl border-kal-border/60 p-4"
         />
+      ),
+    },
+    {
+      id: "saved-daily-plans",
+      title: "Saved Daily Plans",
+      icon: CalendarDays,
+      content: (
+        <div className="kal-glass-subtle rounded-2xl border border-kal-border/60 p-4">
+          <h3 className="mb-2 text-sm font-bold text-kal-text">Recent plans</h3>
+          <SavedPlansHomeWidgetLazy />
+        </div>
       ),
     },
     {

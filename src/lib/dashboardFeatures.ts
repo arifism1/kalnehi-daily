@@ -4,6 +4,7 @@ import {
   BookOpen,
   Brain,
   Camera,
+  CalendarDays,
   CheckCircle,
   Clock,
   Flower2,
@@ -58,6 +59,12 @@ export const DASHBOARD_FEATURES: DashboardFeature[] = [
     title: "Daily Plan",
     icon: ListTodo,
     description: "Plan and execute today's study tasks in one place.",
+  },
+  {
+    id: "saved-daily-plans",
+    title: "Saved Daily Plans",
+    icon: CalendarDays,
+    description: "Review past days, completion, and time worked vs planned.",
   },
   {
     id: "dictate-my-day",

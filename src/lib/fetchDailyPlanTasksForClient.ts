@@ -29,6 +29,7 @@ const DAILY_PLANS_WITH_TASKS_SELECT = `
     status,
     source,
     syllabus_master_id,
+    actual_worked_minutes,
     created_at,
     updated_at,
     syllabus_master ( id, subject, chapter, microtopic, exam_name )
