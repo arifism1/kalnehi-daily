@@ -11,7 +11,6 @@ import {
   Clock,
   Flower2,
   HelpCircle,
-  Inbox,
   LayersIcon,
   LineChart,
   ListTodo,
@@ -100,13 +99,6 @@ const TargetScoreBlueprintClientLazy = dynamic(
     })),
   { ssr: false },
 );
-const PendingTasksClientLazy = dynamic(
-  () =>
-    import("@/components/engine/PendingTasksClient").then((m) => ({
-      default: m.PendingTasksClient,
-    })),
-  { ssr: false },
-);
 const MeditationPageLazy = dynamic(
   () =>
     import("@/components/meditation/MeditationPage").then((m) => ({ default: m.MeditationPage })),
@@ -184,12 +176,6 @@ export function HomeAccordionSections() {
       title: "Target Score Blueprint",
       icon: Target,
       content: <TargetScoreBlueprintClientLazy />,
-    },
-    {
-      id: "pending-tasks",
-      title: "Pending Tasks",
-      icon: Inbox,
-      content: <PendingTasksClientLazy />,
     },
     {
       id: "brain-yoga",

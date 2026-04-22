@@ -92,6 +92,16 @@ const nextConfig: NextConfig = {
     viewTransition: true,
   },
 
+  async redirects() {
+    return [
+      {
+        source: "/pending",
+        destination: "/missed-tasks",
+        permanent: true,
+      },
+    ];
+  },
+
   async rewrites() {
     return [
       {

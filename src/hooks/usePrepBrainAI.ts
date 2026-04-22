@@ -178,50 +178,141 @@ export function usePrepBrainAI() {
             ...(conversationId ? { conversationId } : {}),
           }),
         });
-        const data = (await res.json()) as {
-          ok?: boolean;
-          message?: string;
-          error?: string;
-          usage?: PrepBrainUsagePayload;
-          groq_model?: string;
-          conversation_id?: string | null;
-        };
-        if (data.usage) {
-          const phase: AiUsagePhase =
-            data.usage.phase ?? "none";
-          setUsage({ ...data.usage, phase });
-        }
-        const reply = data.message;
-        if (!res.ok || !data.ok || typeof reply !== "string" || !reply) {
-          setMessages((prev) => prev.slice(0, -1));
-          const tokenBlocked =
-            res.status === 403 &&
-            data.usage != null &&
-            data.usage.limit > 0 &&
-            data.usage.used >= data.usage.limit;
-          if (tokenBlocked) {
-            setError(null);
-          } else {
-            setError(
-              surfaceOptionalString(
-                data.error,
-                "Could not reach PrepBrain. Try again.",
-              ),
-            );
+
+        const contentType = res.headers.get("content-type") ?? "";
+        if (res.ok && contentType.includes("text/event-stream") && res.body) {
+          setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+          let buf = "";
+          let streamOk = true;
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buf += decoder.decode(value, { stream: true });
+            const events = buf.split("\n\n");
+            buf = events.pop() ?? "";
+            for (const raw of events) {
+              for (const line of raw.split("\n")) {
+                const t = line.trim();
+                if (!t.startsWith("data: ")) continue;
+                let payload: {
+                  type?: string;
+                  delta?: string;
+                  ok?: boolean;
+                  error?: string;
+                  message?: string;
+                  usage?: PrepBrainUsagePayload;
+                  groq_model?: string;
+                  conversation_id?: string | null;
+                };
+                try {
+                  payload = JSON.parse(t.slice(6)) as typeof payload;
+                } catch {
+                  continue;
+                }
+                if (payload.type === "chunk" && typeof payload.delta === "string") {
+                  setMessages((prev) => {
+                    const next = [...prev];
+                    const lastM = next[next.length - 1];
+                    if (lastM?.role === "assistant") {
+                      next[next.length - 1] = {
+                        role: "assistant",
+                        content: lastM.content + payload.delta,
+                      };
+                    }
+                    return next;
+                  });
+                } else if (payload.type === "done") {
+                  if (payload.ok === false) {
+                    setMessages((p) => p.slice(0, -2));
+                    const u = payload.usage;
+                    const tokenBlocked =
+                      u != null && u.limit > 0 && u.used >= u.limit;
+                    if (tokenBlocked) {
+                      setError(null);
+                    } else {
+                      setError(
+                        surfaceOptionalString(
+                          payload.error,
+                          "Could not reach PrepBrain. Try again.",
+                        ),
+                      );
+                    }
+                  } else {
+                    if (payload.usage) {
+                      const phase: AiUsagePhase =
+                        payload.usage.phase ?? "none";
+                      setUsage({ ...payload.usage, phase });
+                    }
+                    if (typeof payload.groq_model === "string" && payload.groq_model) {
+                      setLastGroqModel(payload.groq_model);
+                      console.log(`[PrepBrain] Using model: ${payload.groq_model}`);
+                    }
+                    if (typeof payload.conversation_id === "string" && payload.conversation_id) {
+                      setConversationId(payload.conversation_id);
+                    }
+                    void refreshConversations();
+                  }
+                }
+              }
+            }
           }
-          return;
+        } else {
+          const data = (await res.json()) as {
+            ok?: boolean;
+            message?: string;
+            error?: string;
+            usage?: PrepBrainUsagePayload;
+            groq_model?: string;
+            conversation_id?: string | null;
+          };
+          if (data.usage) {
+            const phase: AiUsagePhase = data.usage.phase ?? "none";
+            setUsage({ ...data.usage, phase });
+          }
+          const reply = data.message;
+          if (!res.ok || !data.ok || typeof reply !== "string" || !reply) {
+            setMessages((prev) => prev.slice(0, -1));
+            const tokenBlocked =
+              res.status === 403 &&
+              data.usage != null &&
+              data.usage.limit > 0 &&
+              data.usage.used >= data.usage.limit;
+            if (tokenBlocked) {
+              setError(null);
+            } else {
+              setError(
+                surfaceOptionalString(
+                  data.error,
+                  "Could not reach PrepBrain. Try again.",
+                ),
+              );
+            }
+            return;
+          }
+          if (typeof data.groq_model === "string" && data.groq_model) {
+            setLastGroqModel(data.groq_model);
+            console.log(`[PrepBrain] Using model: ${data.groq_model}`);
+          }
+          if (typeof data.conversation_id === "string" && data.conversation_id) {
+            setConversationId(data.conversation_id);
+          }
+          setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+          void refreshConversations();
         }
-        if (typeof data.groq_model === "string" && data.groq_model) {
-          setLastGroqModel(data.groq_model);
-          console.log(`[PrepBrain] Using model: ${data.groq_model}`);
-        }
-        if (typeof data.conversation_id === "string" && data.conversation_id) {
-          setConversationId(data.conversation_id);
-        }
-        setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
-        void refreshConversations();
       } catch {
-        setMessages((prev) => prev.slice(0, -1));
+        setMessages((prev) => {
+          const n = prev.length;
+          if (n >= 2) {
+            const a = prev[n - 1];
+            const u = prev[n - 2];
+            if (u.role === "user" && a.role === "assistant") {
+              return prev.slice(0, -2);
+            }
+          }
+          return prev.slice(0, -1);
+        });
         setError("Network error. Check your connection and try again.");
       } finally {
         setIsSending(false);

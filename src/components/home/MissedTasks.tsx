@@ -1,24 +1,54 @@
 "use client";
 
 import { addDays, format, parseISO } from "date-fns";
-import { AlertTriangle, CalendarCheck } from "lucide-react";
+import {
+  AlertTriangle,
+  CalendarCheck,
+  Check,
+  Loader2,
+  Trash2,
+} from "lucide-react";
 import Link from "next/link";
+import clsx from "clsx";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { MissedTasksEmptyIllustration } from "@/components/illustrations/MissedTasksEmptyIllustration";
-import { useCallback, useMemo, useState } from "react";
-
+import { AddEditTaskSheet } from "@/components/planner/AddEditTaskSheet";
+import { TaskCard } from "@/components/task/TaskCard";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { TransientNotice } from "@/components/ui/TransientNotice";
+import { useCalendarDate } from "@/hooks/useCalendarDate";
+import {
+  isOverduePendingRevisionReminder,
+  type RevisionDifficulty,
+} from "@/lib/engine/revisionSchedule";
 import { applyOptimisticTaskUpdate } from "@/lib/taskMutations";
 import { deleteTaskWithUndo } from "@/lib/taskUndo";
-import { useCalendarDate } from "@/hooks/useCalendarDate";
-import { findMissedIncompleteTasks } from "@/lib/progressEngine";
+import {
+  hydrateUserPlannerTextFromServer,
+  plannerTextMarkRevisionReminderDone,
+  plannerTextRemoveRevision,
+  plannerTextSetRevisionReminderNextDue,
+} from "@/lib/userPlannerTextClient";
+import { getUserPlannerTextBundleCached } from "@/lib/userPlannerTextLocal";
+import type { RevisionQueueEntry } from "@/lib/userPlannerTextTypes";
 import { resolveMicrotopicForTask } from "@/lib/resolveMicrotopicForTask";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useTaskStore, type Task } from "@/store/useTaskStore";
+import { findMissedIncompleteTasks } from "@/lib/progressEngine";
 import { surfaceOptionalString, USER_ERROR } from "@/lib/userFacingErrors";
 
-import { AddEditTaskSheet } from "@/components/planner/AddEditTaskSheet";
-import { TaskCard } from "@/components/task/TaskCard";
-import { TransientNotice } from "@/components/ui/TransientNotice";
+const PRIORITY_LABEL: Record<RevisionDifficulty, string> = {
+  easy: "Easy",
+  medium: "Medium",
+  hard: "Hard",
+};
+
+type MissedFilter = "all" | "daily" | "revision";
+
+type MissedRow =
+  | { kind: "daily"; sortKey: string; task: Task }
+  | { kind: "revision"; sortKey: string; item: RevisionQueueEntry };
 
 function isPlaceholderDraftTask(t: Task): boolean {
   const hasName = (t.name ?? "").trim().length > 0;
@@ -39,14 +69,87 @@ export function MissedTasks() {
   const today = useCalendarDate();
   const taskList = useMemo(() => Object.values(tasksRecord), [tasksRecord]);
 
-  const missed = useMemo(
-    () => findMissedIncompleteTasks(taskList, today).filter((t) => !isPlaceholderDraftTask(t)),
-    [taskList, today],
-  );
+  const [revisionItems, setRevisionItems] = useState<RevisionQueueEntry[]>([]);
+  const [revisionLoading, setRevisionLoading] = useState(false);
+  const [filter, setFilter] = useState<MissedFilter>("all");
+  const [deleteRevision, setDeleteRevision] = useState<RevisionQueueEntry | null>(null);
+  const [deleteRevisionBusy, setDeleteRevisionBusy] = useState(false);
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editTask, setEditTask] = useState<Task | null>(null);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
+
+  const refreshRevision = useCallback(async () => {
+    if (!userId) {
+      setRevisionItems([]);
+      setRevisionLoading(false);
+      return;
+    }
+    setRevisionLoading(true);
+    try {
+      const bundle = await hydrateUserPlannerTextFromServer(userId);
+      setRevisionItems(bundle.revisionItems);
+    } finally {
+      setRevisionLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    void refreshRevision();
+  }, [refreshRevision]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !userId) return;
+    const onPlanner = () => {
+      void getUserPlannerTextBundleCached(userId).then((b) => {
+        if (b) setRevisionItems(b.revisionItems);
+      });
+    };
+    window.addEventListener("kalnehi-user-planner-text-changed", onPlanner);
+    return () =>
+      window.removeEventListener("kalnehi-user-planner-text-changed", onPlanner);
+  }, [userId]);
+
+  const missedDaily = useMemo(
+    () =>
+      findMissedIncompleteTasks(taskList, today).filter(
+        (t) => !isPlaceholderDraftTask(t),
+      ),
+    [taskList, today],
+  );
+
+  const missedRevision = useMemo(
+    () => revisionItems.filter((it) => isOverduePendingRevisionReminder(it, today)),
+    [revisionItems, today],
+  );
+
+  const combinedRows = useMemo((): MissedRow[] => {
+    const out: MissedRow[] = [];
+    for (const t of missedDaily) {
+      out.push({ kind: "daily", sortKey: t.assigned_date, task: t });
+    }
+    for (const it of missedRevision) {
+      out.push({ kind: "revision", sortKey: it.nextDue, item: it });
+    }
+    out.sort((a, b) => {
+      const c = a.sortKey.localeCompare(b.sortKey);
+      if (c !== 0) return c;
+      return a.kind.localeCompare(b.kind);
+    });
+    return out;
+  }, [missedDaily, missedRevision]);
+
+  const filteredRows = useMemo(() => {
+    if (filter === "all") return combinedRows;
+    if (filter === "daily")
+      return combinedRows.filter((r) => r.kind === "daily");
+    return combinedRows.filter((r) => r.kind === "revision");
+  }, [combinedRows, filter]);
+
+  const allCaughtUp = useMemo(() => {
+    if (userId && revisionLoading) return false;
+    return missedDaily.length === 0 && missedRevision.length === 0;
+  }, [userId, revisionLoading, missedDaily.length, missedRevision.length]);
 
   const onDelete = useCallback(
     async (t: Task) => {
@@ -91,15 +194,48 @@ export function MissedTasks() {
     [userId, today],
   );
 
-  if (missed.length === 0) {
+  const onRevisionDone = useCallback(
+    async (it: RevisionQueueEntry) => {
+      if (!userId) return;
+      const b = await plannerTextMarkRevisionReminderDone(userId, it.id, today);
+      setRevisionItems(b.revisionItems);
+    },
+    [userId, today],
+  );
+
+  const onRevisionMoveToToday = useCallback(
+    async (it: RevisionQueueEntry) => {
+      if (!userId) return;
+      const b = await plannerTextSetRevisionReminderNextDue(userId, it.id, today);
+      setRevisionItems(b.revisionItems);
+    },
+    [userId, today],
+  );
+
+  const onRevisionDelete = useCallback(
+    async (it: RevisionQueueEntry) => {
+      if (!userId) return;
+      setDeleteRevisionBusy(true);
+      try {
+        const b = await plannerTextRemoveRevision(userId, it.id);
+        setRevisionItems(b.revisionItems);
+      } finally {
+        setDeleteRevisionBusy(false);
+        setDeleteRevision(null);
+      }
+    },
+    [userId],
+  );
+
+  if (allCaughtUp) {
     return (
       <div className="flex flex-col items-center justify-center px-6 py-6 text-center">
         <MissedTasksEmptyIllustration className="h-36 w-36" />
         <h2 className="mt-3 text-base font-medium text-kal-text">
           You&apos;re all caught up
         </h2>
-        <p className="mt-1.5 text-[13px] text-kal-muted">
-          No carry-over tasks from previous days.
+        <p className="mt-1.5 text-[13px] text-kal-muted max-w-sm">
+          No overdue daily plan tasks and no past-due revision reminders.
         </p>
         <Link
           href="/daily-plan"
@@ -126,44 +262,172 @@ export function MissedTasks() {
             id="missed-heading"
             className="text-xs font-bold uppercase tracking-wide text-amber-900 sm:text-sm dark:text-amber-100"
           >
-            Carry-over targets
+            Overdue &amp; missed
           </h2>
           <p className="mt-0.5 text-[11px] leading-snug text-kal-text-secondary sm:mt-1 sm:text-xs sm:leading-relaxed dark:text-amber-200/85">
-            From days you didn&apos;t close — move them forward or finish them
-            today.
+            Daily plan tasks and revision reminders you haven&apos;t closed —
+            reschedule or finish them.
           </p>
         </div>
       </div>
+
+      <div
+        className="mt-4 flex flex-wrap gap-1.5"
+        role="group"
+        aria-label="Filter by type"
+      >
+        {(
+          [
+            { id: "all" as const, label: "All" },
+            { id: "daily" as const, label: "Daily Task" },
+            { id: "revision" as const, label: "Revision Reminder" },
+          ] as const
+        ).map((opt) => (
+          <button
+            key={opt.id}
+            type="button"
+            onClick={() => setFilter(opt.id)}
+            className={clsx(
+              "min-h-[36px] rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
+              filter === opt.id
+                ? "border-kal-accent bg-kal-accent/15 text-kal-text"
+                : "border-kal-border/70 bg-white/50 text-kal-muted hover:border-kal-accent/40 hover:text-kal-text dark:bg-zinc-900/50",
+            )}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
+      {userId && revisionLoading && missedDaily.length > 0 ? (
+        <p className="mt-2 flex items-center gap-2 text-xs text-kal-muted">
+          <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" aria-hidden />
+          Syncing revision reminders…
+        </p>
+      ) : null}
+
       <TransientNotice
         message={actionNotice}
         onDismiss={() => setActionNotice(null)}
         variant="amber"
       />
-      <ul className="mt-4 space-y-3 sm:mt-5 sm:space-y-4">
-        {missed.map((t) => (
-          <li key={t.id} className="space-y-3">
-            <TaskCard
-              task={t}
-              microtopic={resolveMicrotopicForTask(t, syllabusById)}
-              appearance="missed"
-              onEdit={() => {
-                setEditTask(t);
-                setSheetOpen(true);
-              }}
-              onDelete={() => void onDelete(t)}
-              onShiftDay={(d) => void onShiftDay(t, d)}
-            />
-            <button
-              type="button"
-              onClick={() => void onMoveToToday(t)}
-              className="kal-btn-accent flex w-full min-h-[48px] items-center justify-center gap-2 rounded-2xl py-3 text-xs font-bold uppercase tracking-wide active:scale-[0.99]"
-            >
-              <CalendarCheck className="h-4 w-4 shrink-0 opacity-95" aria-hidden />
-              Move to today
-            </button>
-          </li>
-        ))}
-      </ul>
+
+      {filteredRows.length === 0 && combinedRows.length > 0 ? (
+        <p className="mt-4 rounded-xl border border-kal-border/50 bg-kal-card-muted/50 px-4 py-3 text-sm text-kal-text-secondary">
+          Nothing in this filter.{" "}
+          <button
+            type="button"
+            onClick={() => setFilter("all")}
+            className="font-semibold text-kal-accent underline underline-offset-2 hover:text-kal-accent-hover"
+          >
+            Show all
+          </button>
+        </p>
+      ) : null}
+
+      {userId && revisionLoading && missedDaily.length === 0 && missedRevision.length === 0 ? (
+        <div className="mt-8 flex justify-center py-6">
+          <Loader2
+            className="h-8 w-8 animate-spin text-kal-accent/50"
+            aria-label="Loading"
+          />
+        </div>
+      ) : null}
+
+      {!(userId && revisionLoading && missedDaily.length === 0 && missedRevision.length === 0) &&
+      filteredRows.length > 0 ? (
+        <ul className="mt-4 space-y-3 sm:mt-5 sm:space-y-4">
+          {filteredRows.map((row) =>
+            row.kind === "daily" ? (
+              <li key={`d-${row.task.id}`} className="space-y-2">
+                <div className="flex justify-end">
+                  <span className="rounded-full border border-amber-200/90 bg-amber-50/90 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-900/90 dark:border-amber-500/30 dark:bg-amber-950/50 dark:text-amber-100">
+                    Daily Task
+                  </span>
+                </div>
+                <TaskCard
+                  task={row.task}
+                  microtopic={resolveMicrotopicForTask(row.task, syllabusById)}
+                  appearance="missed"
+                  onEdit={() => {
+                    setEditTask(row.task);
+                    setSheetOpen(true);
+                  }}
+                  onDelete={() => void onDelete(row.task)}
+                  onShiftDay={(d) => void onShiftDay(row.task, d)}
+                />
+                <button
+                  type="button"
+                  onClick={() => void onMoveToToday(row.task)}
+                  className="kal-btn-accent flex w-full min-h-[48px] items-center justify-center gap-2 rounded-2xl py-3 text-xs font-bold uppercase tracking-wide active:scale-[0.99]"
+                >
+                  <CalendarCheck
+                    className="h-4 w-4 shrink-0 opacity-95"
+                    aria-hidden
+                  />
+                  Move to today
+                </button>
+              </li>
+            ) : (
+              <li
+                key={`r-${row.item.id}`}
+                className="space-y-2 rounded-2xl border border-kal-border/50 bg-white/80 p-3.5 dark:bg-zinc-900/50"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <p className="min-w-0 font-semibold leading-snug text-kal-text">
+                    {row.item.title}
+                  </p>
+                  <span className="shrink-0 rounded-full border border-violet-200/90 bg-violet-50/90 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-violet-900/90 dark:border-violet-500/30 dark:bg-violet-950/50 dark:text-violet-200">
+                    Revision Reminder
+                  </span>
+                </div>
+                <p className="text-xs text-kal-muted">
+                  Was due{" "}
+                  <span className="font-medium tabular-nums text-kal-text">
+                    {row.item.nextDue}
+                  </span>
+                  <span className="mx-1.5">·</span>
+                  {PRIORITY_LABEL[row.item.difficulty]}
+                </p>
+                {row.item.notes.trim() ? (
+                  <p className="line-clamp-2 text-xs leading-relaxed text-kal-text-secondary">
+                    {row.item.notes}
+                  </p>
+                ) : null}
+                <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+                  <button
+                    type="button"
+                    onClick={() => void onRevisionDone(row.item)}
+                    disabled={!userId}
+                    className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-xl border border-kal-border/70 bg-kal-card-muted px-3 text-xs font-semibold text-kal-text hover:bg-kal-accent-soft/50 disabled:opacity-50"
+                  >
+                    <Check className="h-3.5 w-3.5" aria-hidden />
+                    Mark done
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void onRevisionMoveToToday(row.item)}
+                    disabled={!userId}
+                    className="kal-btn-accent inline-flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wide disabled:opacity-50"
+                  >
+                    <CalendarCheck className="h-3.5 w-3.5" aria-hidden />
+                    Move to today
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteRevision(row.item)}
+                    disabled={!userId}
+                    className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-rose-200/80 px-3 text-xs font-semibold text-rose-700 hover:bg-rose-50 dark:border-rose-900/50 dark:text-rose-300 dark:hover:bg-rose-950/40 disabled:opacity-50"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                    Delete
+                  </button>
+                </div>
+              </li>
+            ),
+          )}
+        </ul>
+      ) : null}
 
       <AddEditTaskSheet
         open={sheetOpen}
@@ -174,6 +438,19 @@ export function MissedTasks() {
         mode="edit"
         task={editTask}
         defaultAssignedDate={editTask?.assigned_date ?? today}
+      />
+
+      <ConfirmDialog
+        open={deleteRevision != null}
+        title="Delete reminder?"
+        description="This removes the revision reminder from your list."
+        confirmLabel="Delete"
+        busy={deleteRevisionBusy}
+        onCancel={() => !deleteRevisionBusy && setDeleteRevision(null)}
+        onConfirm={() => {
+          if (!deleteRevision) return;
+          void onRevisionDelete(deleteRevision);
+        }}
       />
     </section>
   );

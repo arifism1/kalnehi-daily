@@ -26,7 +26,10 @@ import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { usePrimaryExamLabel } from "@/hooks/usePrimaryExamLabel";
 import { useSyllabusTracker } from "@/hooks/useSyllabusTracker";
 import { shouldShowSyllabusComingSoon } from "@/lib/examProfile";
-import type { RevisionDifficulty } from "@/lib/engine/revisionSchedule";
+import {
+  isRevisionReminderOnOrAfterDate,
+  type RevisionDifficulty,
+} from "@/lib/engine/revisionSchedule";
 import { normalizeSyllabusMasterId } from "@/lib/syllabusIds";
 import type { MergedSyllabusRow } from "@/lib/userSyllabusMerge";
 import {
@@ -194,7 +197,9 @@ export function RevisionRemindersPageClient() {
 
   const sortedItems = useMemo(() => {
     const list = items.filter(
-      (r) => showArchived || r.status !== "archived",
+      (r) =>
+        (showArchived || r.status !== "archived") &&
+        isRevisionReminderOnOrAfterDate(r, today),
     );
     const rank = (s: string) =>
       s === "pending" ? 0 : s === "done" ? 1 : 2;
@@ -203,7 +208,7 @@ export function RevisionRemindersPageClient() {
       if (d !== 0) return d;
       return a.nextDue.localeCompare(b.nextDue);
     });
-  }, [items, showArchived]);
+  }, [items, showArchived, today]);
 
   const openAddModal = () => {
     setFormError(null);
@@ -283,9 +288,10 @@ export function RevisionRemindersPageClient() {
           <AlarmClock className="h-7 w-7 shrink-0 text-kal-accent/90" aria-hidden />
           Revision Reminders
         </h1>
-        <p className="kal-feature-lead mt-3 max-w-xl">
-          Your list only includes what you add — no automatic revision tasks in
-          your daily plan. Pick a custom topic or link one from your syllabus.
+          <p className="kal-feature-lead mt-3 max-w-xl">
+          Today and upcoming due dates only — past-due reminders live under Missed
+          Tasks. Your list is what you add; nothing is dropped into your daily
+          plan automatically.
         </p>
       </header>
 
@@ -327,8 +333,8 @@ export function RevisionRemindersPageClient() {
       ) : sortedItems.length === 0 ? (
         <div className="kal-glass-card rounded-2xl border border-kal-border/50 p-8 text-center">
           <p className="text-sm text-kal-muted">
-            No reminders yet. When you add one, it appears here — calm, visible,
-            under your control.
+            No reminders due today or later. Add one for a future date, or check
+            Missed Tasks if something was due before today.
           </p>
         </div>
       ) : (

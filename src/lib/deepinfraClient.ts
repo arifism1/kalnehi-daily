@@ -63,3 +63,38 @@ export async function deepinfraChat(
 
   return resp.json() as Promise<OpenAICompatibleChatResponse>;
 }
+
+/**
+ * POST streaming chat/completions. Returns the raw `fetch` Response so the caller
+ * can read `response.body` as an OpenAI-style SSE stream (`stream: true`).
+ */
+export async function deepinfraChatStreamRequest(
+  params: DeepInfraChatParams,
+): Promise<Response> {
+  const apiKey = process.env.DEEPINFRA_API_KEY?.trim();
+  if (!apiKey) throw new Error("DEEPINFRA_API_KEY is not set");
+
+  const resp = await fetch(`${DEEPINFRA_BASE_URL}/chat/completions`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: params.model,
+      messages: params.messages,
+      temperature: params.temperature,
+      max_tokens: params.max_tokens,
+      stream: true,
+    }),
+  });
+
+  if (!resp.ok) {
+    const body = await resp.text().catch(() => "");
+    throw new Error(`DeepInfra API error ${resp.status}: ${body.slice(0, 200)}`);
+  }
+  if (!resp.body) {
+    throw new Error("DeepInfra streaming response has no body");
+  }
+  return resp;
+}
