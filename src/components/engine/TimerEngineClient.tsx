@@ -57,6 +57,12 @@ export function TimerEngineClient() {
   const [pickedTaskId, setPickedTaskId] = useState<string | null>(null);
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [creatingTask, setCreatingTask] = useState(false);
+  /**
+   * Tracks when the timer auto-created a new task (free-form text → no existing match).
+   * Those tasks are auto-completed when the timer session ends so they don't pile up in
+   * Missed Tasks — the user studied the topic, the task is done.
+   */
+  const timerCreatedTaskIdRef = useRef<string | null>(null);
   const [customSec, setCustomSec] = useState(25 * 60);
   const [focusTarget, setFocusTarget] = useState<number | null>(null);
   const [tick, setTick] = useState(0);
@@ -143,6 +149,12 @@ export function TimerEngineClient() {
     async (taskId: string) => {
       if (!userId) return;
       await finalizeActiveTimerForTask(userId, taskId);
+      // If this task was auto-created by the timer session, mark it completed so it
+      // doesn't appear in Missed Tasks — the user just studied it.
+      if (timerCreatedTaskIdRef.current === taskId) {
+        timerCreatedTaskIdRef.current = null;
+        await applyOptimisticTaskUpdate(taskId, { status: TASK_STATUS.completed }, userId);
+      }
     },
     [userId],
   );
@@ -208,6 +220,7 @@ export function TimerEngineClient() {
         start_time: null,
       });
       if (!r.ok) return null;
+      timerCreatedTaskIdRef.current = r.id;
       return useTaskStore.getState().tasks[r.id] ?? null;
     } finally {
       setCreatingTask(false);
@@ -356,6 +369,9 @@ export function TimerEngineClient() {
                           setPickedTaskId(t.id);
                           setTaskInput(line);
                           setSuggestOpen(false);
+                          // Picking an existing task — clear the auto-create ref so we
+                          // don't accidentally auto-complete this task on timer stop.
+                          timerCreatedTaskIdRef.current = null;
                         }}
                       >
                         {line}
@@ -366,7 +382,7 @@ export function TimerEngineClient() {
               </ul>
             ) : null}
             <p className="mt-1.5 text-[11px] leading-relaxed text-kal-text-secondary">
-              New name creates a task for today — then the timer links to it.
+              New name creates a task for today and marks it done when you stop — or pick from your list to log time only.
             </p>
           </div>
 

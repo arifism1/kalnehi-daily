@@ -2,7 +2,7 @@
 
 import clsx from "clsx";
 import { Check, Info, Pause, Play, RefreshCw, Square } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Webcam from "react-webcam";
 
 import { applyOptimisticStudySessionCreate } from "@/lib/studySessionMutations";
@@ -13,12 +13,18 @@ import {
   type StudyDetectionSensitivity,
   type StudyStatusUi,
 } from "@/lib/studyDetection";
-import { useSettingsStore, type StudyCameraFacing } from "@/store/useSettingsStore";
+import {
+  applyWidestZoomToTrack,
+  getStudyCameraBaseVideoConstraints,
+  selectWideAngleDeviceId,
+} from "@/lib/studyCameraVideoUtils";
+import { useSettingsStore } from "@/store/useSettingsStore";
 import { USER_ERROR } from "@/lib/userFacingErrors";
 
 /**
- * Face + Pose + Hand run 100% in-browser via MediaPipe Tasks Vision (WASM).
- * No frames or video are uploaded—only session metadata after you tap End.
+ * Face + Pose + Hand run in-browser via MediaPipe Tasks Vision (WASM).
+ * Optional Gemini spot-checks send a single JPEG per interval when enabled in settings.
+ * Session end logs metadata only (no video stored by Kalnehi).
  */
 const WASM_VER = "0.10.34";
 const FACE_MODEL =
@@ -30,6 +36,43 @@ const HAND_MODEL =
 
 const CONFIDENCE_SMOOTH_FRAMES = 24; // ~0.8 s at 30 fps
 const OVERRIDE_DURATION_MS = 30_000;
+const VISION_VERDICT_TTL_MS = 3 * 60 * 1000;
+
+type VisionVerdict = {
+  person_visible: boolean;
+  is_studying: boolean;
+  confidence: "high" | "medium" | "low";
+  reason: string;
+  checkedAt: number;
+};
+
+function captureFrameBase64FromVideo(
+  video: HTMLVideoElement,
+  maxWidth = 854,
+): string | null {
+  const w = video.videoWidth;
+  const h = video.videoHeight;
+  if (w < 2 || h < 2) return null;
+  const scale = Math.min(1, maxWidth / w);
+  const cw = Math.max(2, Math.round(w * scale));
+  const ch = Math.max(2, Math.round(h * scale));
+  if (typeof document === "undefined") return null;
+  const canvas = document.createElement("canvas");
+  canvas.width = cw;
+  canvas.height = ch;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  ctx.drawImage(video, 0, 0, cw, ch);
+  const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+  const i = dataUrl.indexOf("base64,");
+  if (i < 0) return null;
+  return dataUrl.slice(i + 7);
+}
+
+function isVisionVerdictFresh(v: VisionVerdict | null): boolean {
+  if (!v) return false;
+  return Date.now() - v.checkedAt <= VISION_VERDICT_TTL_MS;
+}
 
 function formatClock(sec: number): string {
   const s = Math.max(0, Math.floor(sec));
@@ -215,6 +258,13 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
   const sensitivity = useSettingsStore(
     (s) => s.studyDetectionSensitivity,
   ) as StudyDetectionSensitivity;
+  const studyCameraVisionVerify =
+    useSettingsStore((s) => s.studyCameraVisionVerify ?? true);
+  const studyCameraVerifyIntervalMin =
+    useSettingsStore((s) => s.studyCameraVerifyIntervalMin ?? 3);
+
+  const [videoReady, setVideoReady] = useState(false);
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
 
   const webcamRef = useRef<Webcam | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -236,14 +286,55 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
   const overrideTickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   /** Mirrored ref so the rAF loop reads the latest value without re-creating the effect */
   const facingRef = useRef(facing);
+  const studyCameraVisionVerifyRef = useRef(studyCameraVisionVerify);
+  const visionVerdictRef = useRef<VisionVerdict | null>(null);
+  const visionDismissedRef = useRef(false);
+  /** True when the current paused state was caused by a high-confidence vision "not studying" check. */
+  const visionPausedByCheckRef = useRef(false);
+  const visionVerifyInFlightRef = useRef(false);
+  const firstVisionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const visionIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const wideSelectionDoneRef = useRef(false);
 
   useEffect(() => {
     facingRef.current = facing;
   }, [facing]);
 
+  useEffect(() => {
+    studyCameraVisionVerifyRef.current = studyCameraVisionVerify;
+  }, [studyCameraVisionVerify]);
+
+  useEffect(() => {
+    wideSelectionDoneRef.current = false;
+    setSelectedDeviceId(null);
+    setVideoReady(false);
+  }, [facing]);
+
+  const videoConstraints = useMemo(
+    () => getStudyCameraBaseVideoConstraints(facing, selectedDeviceId),
+    [facing, selectedDeviceId],
+  );
+
+  const handleUserMedia = useCallback((stream: MediaStream) => {
+    setVideoReady(true);
+    const track = stream.getVideoTracks()[0];
+    applyWidestZoomToTrack(track);
+    if (wideSelectionDoneRef.current) return;
+    wideSelectionDoneRef.current = true;
+    const currentId = track?.getSettings().deviceId;
+    void navigator.mediaDevices
+      .enumerateDevices()
+      .then((devices) => {
+        const next = selectWideAngleDeviceId(devices, facing, currentId);
+        if (next) setSelectedDeviceId(next);
+      })
+      .catch(() => {
+        /* keep default track */
+      });
+  }, [facing]);
+
   const [modelsReady, setModelsReady] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [videoReady, setVideoReady] = useState(false);
   const [phase, setPhase] = useState<SessionPhase>("idle");
   const [displaySeconds, setDisplaySeconds] = useState(0);
   const [smoothedConfidence, setSmoothedConfidence] = useState(0);
@@ -252,6 +343,9 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
   const [autoPaused, setAutoPaused] = useState(false);
   const [gentleNotice, setGentleNotice] = useState(false);
   const [overrideSecondsLeft, setOverrideSecondsLeft] = useState(0);
+  const [visionBannerReason, setVisionBannerReason] = useState<string | null>(null);
+  const [visionAutoPaused, setVisionAutoPaused] = useState(false);
+  const [visionVerdictUi, setVisionVerdictUi] = useState<VisionVerdict | null>(null);
 
   // MediaPipe / TFLite routes informational messages (e.g. "INFO: Created
   // TensorFlow Lite XNNPACK delegate for CPU.") through console.error, which
@@ -349,6 +443,12 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
   const startSession = useCallback(() => {
     setAutoPaused(false);
     setGentleNotice(false);
+    setVisionAutoPaused(false);
+    setVisionBannerReason(null);
+    visionVerdictRef.current = null;
+    visionDismissedRef.current = false;
+    setVisionVerdictUi(null);
+    visionPausedByCheckRef.current = false;
     sessionStartedAtRef.current = new Date().toISOString();
     activeStudyMsRef.current = 0;
     setDisplaySeconds(0);
@@ -360,6 +460,7 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
   }, []);
 
   const pauseSession = useCallback(() => {
+    visionPausedByCheckRef.current = false;
     sessionPhaseRef.current = "paused";
     setPhase("paused");
   }, []);
@@ -367,9 +468,26 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
   const resumeSession = useCallback(() => {
     setAutoPaused(false);
     setGentleNotice(false);
+    setVisionAutoPaused(false);
+    setVisionBannerReason(null);
+    visionPausedByCheckRef.current = false;
     badMsRef.current = 0;
     lastTsRef.current = performance.now();
     sessionPhaseRef.current = "running";
+    setPhase("running");
+  }, []);
+
+  const dismissVisionBanner = useCallback(() => {
+    visionDismissedRef.current = true;
+    setVisionBannerReason(null);
+    if (!visionPausedByCheckRef.current) return;
+    visionPausedByCheckRef.current = false;
+    badMsRef.current = 0;
+    lastTsRef.current = performance.now();
+    sessionPhaseRef.current = "running";
+    setVisionAutoPaused(false);
+    setAutoPaused(false);
+    setGentleNotice(false);
     setPhase("running");
   }, []);
 
@@ -402,6 +520,12 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
       setDisplaySeconds(0);
       setAutoPaused(false);
       setGentleNotice(false);
+      setVisionAutoPaused(false);
+      setVisionBannerReason(null);
+      visionVerdictRef.current = null;
+      setVisionVerdictUi(null);
+      visionDismissedRef.current = false;
+      visionPausedByCheckRef.current = false;
       idleGoodMsRef.current = 0;
       badMsRef.current = 0;
     };
@@ -425,6 +549,87 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
     });
     onDone();
   }, [subject, userId, onDone]);
+
+  // Gemini spot-checks: first after 90s, then on a fixed interval (default 3 min).
+  useEffect(() => {
+    if (firstVisionTimeoutRef.current) {
+      clearTimeout(firstVisionTimeoutRef.current);
+      firstVisionTimeoutRef.current = null;
+    }
+    if (visionIntervalRef.current) {
+      clearInterval(visionIntervalRef.current);
+      visionIntervalRef.current = null;
+    }
+    if (phase !== "running" || !studyCameraVisionVerify || !modelsReady || !videoReady) {
+      return;
+    }
+    const intervalMs = studyCameraVerifyIntervalMin * 60 * 1000;
+
+    const runVerify = async () => {
+      if (sessionPhaseRef.current !== "running" || !studyCameraVisionVerifyRef.current) {
+        return;
+      }
+      if (visionVerifyInFlightRef.current) return;
+      const video = webcamRef.current?.video;
+      if (!video || video.readyState < 2) return;
+      visionVerifyInFlightRef.current = true;
+      try {
+        const b64 = captureFrameBase64FromVideo(video);
+        if (!b64) return;
+        const res = await fetch("/api/study-camera/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ frame: b64 }),
+        });
+        const data = (await res.json()) as {
+          ok?: boolean;
+          verdict?: Omit<VisionVerdict, "checkedAt">;
+        };
+        if (sessionPhaseRef.current !== "running" || !res.ok || !data.ok || !data.verdict) {
+          return;
+        }
+        const v: VisionVerdict = { ...data.verdict, checkedAt: Date.now() };
+        visionVerdictRef.current = v;
+        visionDismissedRef.current = false;
+        setVisionVerdictUi(v);
+        if (!v.is_studying && v.confidence === "high") {
+          if (sessionPhaseRef.current === "running") {
+            sessionPhaseRef.current = "paused";
+            visionPausedByCheckRef.current = true;
+            setPhase("paused");
+            setVisionAutoPaused(true);
+            setAutoPaused(false);
+            setGentleNotice(false);
+            setVisionBannerReason(v.reason);
+            badMsRef.current = 0;
+          }
+        }
+      } catch {
+        /* keep MediaPipe-only behaviour */
+      } finally {
+        visionVerifyInFlightRef.current = false;
+      }
+    };
+
+    firstVisionTimeoutRef.current = setTimeout(() => {
+      void runVerify();
+      visionIntervalRef.current = setInterval(() => {
+        void runVerify();
+      }, intervalMs);
+    }, 90_000);
+
+    return () => {
+      if (firstVisionTimeoutRef.current) {
+        clearTimeout(firstVisionTimeoutRef.current);
+        firstVisionTimeoutRef.current = null;
+      }
+      if (visionIntervalRef.current) {
+        clearInterval(visionIntervalRef.current);
+        visionIntervalRef.current = null;
+      }
+    };
+  }, [phase, studyCameraVisionVerify, studyCameraVerifyIntervalMin, modelsReady, videoReady]);
 
   // Main detection + drawing loop
   useEffect(() => {
@@ -485,7 +690,24 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
       const smoothed = Math.round(buf.reduce((a, b) => a + b, 0) / buf.length);
 
       const isOverriding = Date.now() < overrideEndRef.current;
-      const studyingNow = isFrameStudying(signals.confidencePct, sensitivity) || isOverriding;
+      const baseStudying =
+        isFrameStudying(signals.confidencePct, sensitivity) || isOverriding;
+
+      const v = visionVerdictRef.current;
+      const vFresh = isVisionVerdictFresh(v);
+      const visOn = studyCameraVisionVerifyRef.current;
+
+      let studyingNow = baseStudying;
+      if (visOn && vFresh && v && !isOverriding) {
+        if (v.is_studying) {
+          studyingNow = true;
+        } else if (v.confidence === "high" && !visionDismissedRef.current) {
+          studyingNow = false;
+        } else {
+          studyingNow = baseStudying;
+        }
+      }
+      if (isOverriding) studyingNow = true;
 
       const ph = sessionPhaseRef.current;
 
@@ -520,6 +742,7 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
         } else {
           badMsRef.current += dt;
           if (badMsRef.current >= STUDY_TIMING_MS.runningAutoPause) {
+            visionPausedByCheckRef.current = false;
             setPhase("paused");
             setAutoPaused(true);
             setGentleNotice(true);
@@ -543,7 +766,20 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
     : smoothedConfidence >= 38 ? ("yellow" as const)
     : ("red" as const);
 
+  const aiSpotOk =
+    studyCameraVisionVerify &&
+    isVisionVerdictFresh(visionVerdictUi) &&
+    visionVerdictUi?.is_studying;
+  const aiNote = aiSpotOk ? " · AI spot-check: studying" : "";
+
   const statusLabel = (() => {
+    if (phase === "paused" && visionAutoPaused) {
+      return {
+        text: "Paused – Study check",
+        sub: "The latest AI spot-check could not confirm active studying.",
+        tone: "red" as const,
+      };
+    }
     if (phase === "paused" && autoPaused) {
       return {
         text: "Paused – Not studying",
@@ -551,30 +787,39 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
         tone: "red" as const,
       };
     }
+    if (phase === "paused") {
+      return {
+        text: "Paused",
+        sub: "Tap Resume when you are ready to continue",
+        tone: "neutral" as const,
+      };
+    }
     if (phase === "running") {
       if (frameStatus === "studying") {
         return {
           text: "Studying detected",
-          sub: `${smoothedConfidence}% confidence`,
+          sub: `${smoothedConfidence}% confidence${aiNote}`,
           tone: "green" as const,
         };
       }
       if (frameStatus === "unfocused") {
         return {
           text: "Sitting but not focused",
-          sub: `${smoothedConfidence}% · look at your book`,
+          sub: `${smoothedConfidence}% · look at your book${aiNote}`,
           tone: "yellow" as const,
         };
       }
       return {
         text: "Not studying",
-        sub: `${smoothedConfidence}% · settle in to continue`,
+        sub: `${smoothedConfidence}% · settle in to continue${aiNote}`,
         tone: "red" as const,
       };
     }
     return {
       text: "Ready",
-      sub: "Face + pose + hands (on-device)",
+      sub: studyCameraVisionVerify
+        ? "Face + pose + hands (on-device) · optional Gemini spot-checks"
+        : "Face + pose + hands (on-device)",
       tone: "neutral" as const,
     };
   })();
@@ -586,15 +831,12 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
       <div className="relative w-full overflow-hidden rounded-2xl border border-white/10 bg-black ring-1 ring-white/5">
         <div className="relative aspect-[4/3] w-full">
           <Webcam
+            key={`sc-${facing}-${selectedDeviceId ?? "def"}`}
             ref={webcamRef}
             audio={false}
             mirrored={facing === "user"}
-            videoConstraints={{
-              facingMode: facing,
-              width: { ideal: 1280 },
-              height: { ideal: 960 },
-            }}
-            onUserMedia={() => setVideoReady(true)}
+            videoConstraints={videoConstraints}
+            onUserMedia={handleUserMedia}
             className="h-full w-full object-cover"
           />
           {/* Skeleton overlay */}
@@ -622,8 +864,10 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
           </button>
 
           {/* Privacy badge — bottom-left */}
-          <div className="absolute bottom-2 left-2 rounded-md bg-black/75 px-2 py-1 text-[8px] font-medium leading-tight text-zinc-200 ring-1 ring-white/10">
-            🔒 On-device only · Private
+          <div className="absolute bottom-2 left-2 max-w-[min(100%,16rem)] rounded-md bg-black/75 px-2 py-1 text-[8px] font-medium leading-tight text-zinc-200 ring-1 ring-white/10">
+            {studyCameraVisionVerify
+              ? "🔒 MediaPipe on-device · optional Gemini spot-checks (no storage)"
+              : "🔒 On-device only · Private"}
           </div>
 
           {/* Subject label — bottom-right */}
@@ -638,9 +882,10 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
         <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-kal-accent" aria-hidden />
         <p className="text-xs leading-relaxed text-kal-muted">
           <span className="font-semibold text-kal-text-secondary">Camera tip:</span>{" "}
-          Position your camera so that both your face and hands, as well as the book or
-          notes you are studying, are clearly visible in the frame. The camera can be a
-          little far — just make sure your study setup is in view.
+          Place the phone or laptop <strong>farther back</strong> so the frame includes
+          your face, your hands, and the desk/notes. On supported phones we request the{" "}
+          <strong>widest (ultrawide)</strong> back lens when you use the rear camera and
+          the lowest zoom the browser allows, so more of your setup fits in view.
         </p>
       </div>
 
@@ -785,8 +1030,25 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
         </div>
       </div>
 
-      {/* ── Gentle notice when auto-paused ── */}
-      {gentleNotice && phase === "paused" ? (
+      {/* ── AI spot-check: not studying (high confidence) ── */}
+      {visionBannerReason && phase === "paused" && visionAutoPaused ? (
+        <div className="rounded-xl border border-orange-400/60 bg-orange-50 px-3 py-2.5 text-xs text-orange-900 dark:border-orange-500/40 dark:bg-orange-950/30 dark:text-orange-100">
+          <p className="font-semibold">Study check</p>
+          <p className="mt-1 text-orange-800/95 dark:text-orange-200/95">
+            {visionBannerReason}
+          </p>
+          <button
+            type="button"
+            onClick={dismissVisionBanner}
+            className="mt-2 font-semibold text-orange-800 underline underline-offset-2 dark:text-orange-200"
+          >
+            Dismiss &amp; resume
+          </button>
+        </div>
+      ) : null}
+
+      {/* ── Gentle notice when auto-paused (on-device signal) ── */}
+      {gentleNotice && phase === "paused" && autoPaused && !visionAutoPaused ? (
         <p className="rounded-xl border border-amber-400/50 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-500/30 dark:bg-amber-950/25 dark:text-amber-200">
           We paused because we couldn&apos;t see a steady studying signal.
           Tap Resume when you&apos;re back.

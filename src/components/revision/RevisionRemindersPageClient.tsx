@@ -1,5 +1,6 @@
 "use client";
 
+import { format, parseISO } from "date-fns";
 import {
   AlarmClock,
   Archive,
@@ -9,10 +10,12 @@ import {
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
+import clsx from "clsx";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { ScheduleRevisionReminderDialog } from "@/components/revision/ScheduleRevisionReminderDialog";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { DateFilterNativeInput } from "@/components/ui/DateFilterNativeInput";
 import { SyllabusComingSoon } from "@/components/syllabus/SyllabusComingSoon";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { usePrimaryExamLabel } from "@/hooks/usePrimaryExamLabel";
@@ -79,6 +82,7 @@ export function RevisionRemindersPageClient() {
   const [items, setItems] = useState<RevisionQueueEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [showArchived, setShowArchived] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<RevisionQueueEntry | null>(
     null,
@@ -127,6 +131,10 @@ export function RevisionRemindersPageClient() {
       );
   }, [userId]);
 
+  useEffect(() => {
+    setSelectedDate(null);
+  }, [showArchived]);
+
   const sortedItems = useMemo(() => {
     const list = items.filter(
       (r) =>
@@ -141,6 +149,163 @@ export function RevisionRemindersPageClient() {
       return a.nextDue.localeCompare(b.nextDue);
     });
   }, [items, showArchived, today]);
+
+  const dateItemCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const it of sortedItems) {
+      m.set(it.nextDue, (m.get(it.nextDue) ?? 0) + 1);
+    }
+    return m;
+  }, [sortedItems]);
+
+  const availableDates = useMemo(
+    () => [...dateItemCounts.keys()].sort((a, b) => a.localeCompare(b)),
+    [dateItemCounts],
+  );
+
+  const dateFilteredItems = useMemo(() => {
+    if (!selectedDate) return sortedItems;
+    return sortedItems.filter((it) => it.nextDue === selectedDate);
+  }, [sortedItems, selectedDate]);
+
+  const revisionItemsGrouped = useMemo(() => {
+    if (selectedDate !== null) return null;
+    const map = new Map<string, RevisionQueueEntry[]>();
+    for (const it of dateFilteredItems) {
+      const list = map.get(it.nextDue) ?? [];
+      list.push(it);
+      map.set(it.nextDue, list);
+    }
+    return [...map.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, items]) => ({ date, items }));
+  }, [dateFilteredItems, selectedDate]);
+
+  const revisionPickerBounds = useMemo(() => {
+    if (availableDates.length === 0) return null;
+    return {
+      min: today,
+      max: availableDates[availableDates.length - 1]!,
+    };
+  }, [availableDates, today]);
+
+  const showDateStrip = availableDates.length >= 2;
+
+  const renderRevisionItem = (it: RevisionQueueEntry, metaGrouped: boolean) => (
+    <li
+      key={it.id}
+      className="kal-glass-card rounded-xl border border-kal-border/50 px-4 py-3.5"
+    >
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold leading-snug text-kal-text">{it.title}</p>
+          <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-kal-muted">
+            {!metaGrouped ? (
+              <span>
+                Due{" "}
+                <span className="font-medium tabular-nums text-kal-text-secondary">
+                  {it.nextDue}
+                </span>
+              </span>
+            ) : null}
+            <span>{PRIORITY_LABEL[it.difficulty]}</span>
+            <span>{statusLabel(it.status)}</span>
+          </div>
+          {it.notes.trim() ? (
+            <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-kal-text-secondary">
+              {it.notes}
+            </p>
+          ) : null}
+        </div>
+        <div className="flex shrink-0 flex-wrap gap-1.5 sm:justify-end">
+          {it.status === "pending" ? (
+            <button
+              type="button"
+              className="rounded-lg border border-kal-border/70 bg-kal-card-muted px-2.5 py-1.5 text-[11px] font-semibold text-kal-text hover:bg-kal-accent-soft/50"
+              onClick={() => {
+                if (!userId) return;
+                void (async () => {
+                  const b = await plannerTextMarkRevisionReminderDone(
+                    userId,
+                    it.id,
+                    today,
+                  );
+                  setItems(b.revisionItems);
+                })();
+              }}
+            >
+              <Check className="mr-1 inline h-3 w-3" aria-hidden />
+              Done
+            </button>
+          ) : it.status === "done" ? (
+            <button
+              type="button"
+              className="rounded-lg border border-kal-border/70 px-2.5 py-1.5 text-[11px] font-semibold text-kal-muted hover:bg-kal-card-muted"
+              onClick={() => {
+                if (!userId) return;
+                void (async () => {
+                  const b = await plannerTextSetRevisionReminderStatus(
+                    userId,
+                    it.id,
+                    "pending",
+                  );
+                  setItems(b.revisionItems);
+                })();
+              }}
+            >
+              Reopen
+            </button>
+          ) : null}
+          {it.status !== "archived" ? (
+            <button
+              type="button"
+              className="rounded-lg border border-kal-border/70 px-2.5 py-1.5 text-[11px] font-semibold text-kal-muted hover:bg-kal-card-muted"
+              onClick={() => {
+                if (!userId) return;
+                void (async () => {
+                  const b = await plannerTextSetRevisionReminderStatus(
+                    userId,
+                    it.id,
+                    "archived",
+                  );
+                  setItems(b.revisionItems);
+                })();
+              }}
+            >
+              <Archive className="mr-1 inline h-3 w-3" aria-hidden />
+              Archive
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="rounded-lg border border-kal-border/70 px-2.5 py-1.5 text-[11px] font-semibold text-kal-muted hover:bg-kal-card-muted"
+              onClick={() => {
+                if (!userId) return;
+                void (async () => {
+                  const b = await plannerTextSetRevisionReminderStatus(
+                    userId,
+                    it.id,
+                    "pending",
+                  );
+                  setItems(b.revisionItems);
+                })();
+              }}
+            >
+              Restore
+            </button>
+          )}
+          <button
+            type="button"
+            className="rounded-lg border border-rose-200/80 px-2.5 py-1.5 text-[11px] font-semibold text-rose-700 hover:bg-rose-50 dark:border-rose-900/50 dark:text-rose-300 dark:hover:bg-rose-950/40"
+            onClick={() => setDeleteTarget(it)}
+          >
+            <Trash2 className="mr-1 inline h-3 w-3" aria-hidden />
+            Delete
+          </button>
+        </div>
+      </div>
+    </li>
+  );
 
   return (
     <div className="relative mx-auto max-w-2xl pb-20 pt-2 sm:pt-4">
@@ -204,6 +369,62 @@ export function RevisionRemindersPageClient() {
         </button>
       </div>
 
+      {!loading && sortedItems.length > 0 ? (
+        <div className="relative mb-4 flex flex-wrap items-center gap-2">
+          <div
+            className="flex min-w-0 flex-1 flex-wrap gap-2 overflow-x-auto pb-1 [scrollbar-width:thin] sm:flex-nowrap sm:-mx-1 sm:px-1"
+            role="group"
+            aria-label="Filter by due date"
+          >
+            <button
+              type="button"
+              onClick={() => setSelectedDate(null)}
+              className={clsx(
+                "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                selectedDate == null
+                  ? "border-kal-accent bg-kal-accent/10 text-kal-text"
+                  : "border-kal-border/70 bg-white/50 text-kal-muted hover:border-kal-accent/40 hover:text-kal-text dark:bg-zinc-900/50",
+              )}
+            >
+              All
+              <span className="rounded-full bg-kal-text/10 px-1.5 py-px text-[10px] tabular-nums text-kal-text">
+                {sortedItems.length}
+              </span>
+            </button>
+            {showDateStrip
+              ? availableDates.map((d) => {
+                  const n = dateItemCounts.get(d) ?? 0;
+                  return (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => setSelectedDate(d)}
+                      className={clsx(
+                        "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                        selectedDate === d
+                          ? "border-kal-accent bg-kal-accent/10 text-kal-text"
+                          : "border-kal-border/70 bg-white/50 text-kal-muted hover:border-kal-accent/40 hover:text-kal-text dark:bg-zinc-900/50",
+                      )}
+                    >
+                      {format(parseISO(d), "MMM d")}
+                      <span className="rounded-full bg-kal-text/10 px-1.5 py-px text-[10px] tabular-nums text-kal-text">
+                        {n}
+                      </span>
+                    </button>
+                  );
+                })
+              : null}
+          </div>
+          {revisionPickerBounds ? (
+            <DateFilterNativeInput
+              min={revisionPickerBounds.min}
+              max={revisionPickerBounds.max}
+              onSelect={setSelectedDate}
+            />
+          ) : null}
+        </div>
+      ) : null}
+
       {loading ? (
         <div className="flex justify-center py-16">
           <Loader2 className="h-8 w-8 animate-spin text-kal-accent/50" aria-label="Loading" />
@@ -215,123 +436,35 @@ export function RevisionRemindersPageClient() {
             Missed Tasks if something was due before today.
           </p>
         </div>
+      ) : dateFilteredItems.length === 0 && selectedDate != null ? (
+        <div className="kal-glass-card rounded-2xl border border-kal-border/50 p-6 text-center">
+          <p className="text-sm text-kal-text-secondary">
+            Nothing on this date.{" "}
+            <button
+              type="button"
+              onClick={() => setSelectedDate(null)}
+              className="font-semibold text-kal-accent underline underline-offset-2 hover:text-kal-accent-hover"
+            >
+              Show all dates
+            </button>
+          </p>
+        </div>
+      ) : selectedDate === null ? (
+        <div className="space-y-6">
+          {(revisionItemsGrouped ?? []).map(({ date, items }) => (
+            <section key={date} className="space-y-2.5">
+              <h3 className="border-b border-kal-border/50 pb-1.5 text-xs font-bold uppercase tracking-wide text-kal-accent">
+                {format(parseISO(date), "EEEE, MMM d, yyyy")}
+              </h3>
+              <ul className="space-y-2.5">
+                {items.map((it) => renderRevisionItem(it, true))}
+              </ul>
+            </section>
+          ))}
+        </div>
       ) : (
         <ul className="space-y-2.5">
-          {sortedItems.map((it) => (
-            <li
-              key={it.id}
-              className="kal-glass-card rounded-xl border border-kal-border/50 px-4 py-3.5"
-            >
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                <div className="min-w-0 flex-1">
-                  <p className="font-semibold leading-snug text-kal-text">
-                    {it.title}
-                  </p>
-                  <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-kal-muted">
-                    <span>
-                      Due{" "}
-                      <span className="font-medium tabular-nums text-kal-text-secondary">
-                        {it.nextDue}
-                      </span>
-                    </span>
-                    <span>{PRIORITY_LABEL[it.difficulty]}</span>
-                    <span>{statusLabel(it.status)}</span>
-                  </div>
-                  {it.notes.trim() ? (
-                    <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-kal-text-secondary">
-                      {it.notes}
-                    </p>
-                  ) : null}
-                </div>
-                <div className="flex shrink-0 flex-wrap gap-1.5 sm:justify-end">
-                  {it.status === "pending" ? (
-                    <button
-                      type="button"
-                      className="rounded-lg border border-kal-border/70 bg-kal-card-muted px-2.5 py-1.5 text-[11px] font-semibold text-kal-text hover:bg-kal-accent-soft/50"
-                      onClick={() => {
-                        if (!userId) return;
-                        void (async () => {
-                          const b = await plannerTextMarkRevisionReminderDone(
-                            userId,
-                            it.id,
-                            today,
-                          );
-                          setItems(b.revisionItems);
-                        })();
-                      }}
-                    >
-                      <Check className="mr-1 inline h-3 w-3" aria-hidden />
-                      Done
-                    </button>
-                  ) : it.status === "done" ? (
-                    <button
-                      type="button"
-                      className="rounded-lg border border-kal-border/70 px-2.5 py-1.5 text-[11px] font-semibold text-kal-muted hover:bg-kal-card-muted"
-                      onClick={() => {
-                        if (!userId) return;
-                        void (async () => {
-                          const b = await plannerTextSetRevisionReminderStatus(
-                            userId,
-                            it.id,
-                            "pending",
-                          );
-                          setItems(b.revisionItems);
-                        })();
-                      }}
-                    >
-                      Reopen
-                    </button>
-                  ) : null}
-                  {it.status !== "archived" ? (
-                    <button
-                      type="button"
-                      className="rounded-lg border border-kal-border/70 px-2.5 py-1.5 text-[11px] font-semibold text-kal-muted hover:bg-kal-card-muted"
-                      onClick={() => {
-                        if (!userId) return;
-                        void (async () => {
-                          const b = await plannerTextSetRevisionReminderStatus(
-                            userId,
-                            it.id,
-                            "archived",
-                          );
-                          setItems(b.revisionItems);
-                        })();
-                      }}
-                    >
-                      <Archive className="mr-1 inline h-3 w-3" aria-hidden />
-                      Archive
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      className="rounded-lg border border-kal-border/70 px-2.5 py-1.5 text-[11px] font-semibold text-kal-muted hover:bg-kal-card-muted"
-                      onClick={() => {
-                        if (!userId) return;
-                        void (async () => {
-                          const b = await plannerTextSetRevisionReminderStatus(
-                            userId,
-                            it.id,
-                            "pending",
-                          );
-                          setItems(b.revisionItems);
-                        })();
-                      }}
-                    >
-                      Restore
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    className="rounded-lg border border-rose-200/80 px-2.5 py-1.5 text-[11px] font-semibold text-rose-700 hover:bg-rose-50 dark:border-rose-900/50 dark:text-rose-300 dark:hover:bg-rose-950/40"
-                    onClick={() => setDeleteTarget(it)}
-                  >
-                    <Trash2 className="mr-1 inline h-3 w-3" aria-hidden />
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </li>
-          ))}
+          {dateFilteredItems.map((it) => renderRevisionItem(it, false))}
         </ul>
       )}
 
