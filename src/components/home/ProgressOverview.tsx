@@ -127,9 +127,10 @@ export function ProgressOverview() {
 
   const { secured, denom, marksPercent } = useMemo(() => {
     const microtopicById = microRecord;
+    const fallbackMax = syllabusScoreMax > 0 ? syllabusScoreMax : 720;
 
     let secured = 0;
-    let denom = 720;
+    let denom = fallbackMax;
     let marksPercent = 0;
 
     if (!advancedMarksProjectionEnabled && cuetScoringRollup) {
@@ -166,7 +167,7 @@ export function ProgressOverview() {
         denom = Math.round(syllabusRollup.totalMarksPool);
         if (denom <= 0) {
           secured = 0;
-          denom = 720;
+          denom = fallbackMax;
           marksPercent = 0;
         }
       }
@@ -176,13 +177,14 @@ export function ProgressOverview() {
         microtopicById,
       );
       secured = Math.round(mastered);
-      denom = total > 0 ? Math.round(total) : 720;
+      denom = total > 0 ? Math.round(total) : fallbackMax;
       marksPercent = denom > 0 ? (secured / denom) * 100 : 0;
     }
 
     return { secured, denom, marksPercent };
   }, [
     microRecord,
+    syllabusScoreMax,
     advancedMarksProjectionEnabled,
     cuetScoringRollup,
     syllabusMultiYear,
