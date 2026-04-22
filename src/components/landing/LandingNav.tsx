@@ -18,7 +18,7 @@ const EXAM_LINKS = [
 
 const NAV_LINKS = [
   { href: "#features", label: "Features" },
-  { href: "#pricing", label: "Pricing" },
+  { href: "/pricing", label: "Pricing" },
   { href: "/guides", label: "Guides" },
   { href: "/what-can-kalnehi-do", label: "What We Do" },
 ] as const;
@@ -170,7 +170,7 @@ export function LandingNav() {
               href="/auth"
               className="inline-flex min-h-[40px] items-center justify-center rounded-full bg-kal-accent px-5 text-sm font-bold text-white shadow-[0_4px_16px_rgba(255,122,0,0.28)] transition hover:brightness-105 active:scale-[0.99]"
             >
-              <span className="hidden sm:inline">Start free — 1 day on us</span>
+              <span className="hidden sm:inline">Start free — 3 days on us</span>
               <span className="sm:hidden">Start free</span>
             </Link>
 
@@ -234,7 +234,7 @@ export function LandingNav() {
                     onClick={() => setMenuOpen(false)}
                     className="flex min-h-[44px] items-center justify-center rounded-full bg-kal-accent text-sm font-bold text-white"
                   >
-                    Start free — 1 day on us
+                    Start free — 3 days on us
                   </Link>
                 </div>
               </nav>
@@ -254,7 +254,7 @@ export function LandingNav() {
           href="/auth"
           className="flex min-h-[52px] w-full items-center justify-center rounded-full bg-kal-accent text-sm font-bold text-white shadow-[0_4px_16px_rgba(255,122,0,0.28)]"
         >
-          Start free — no card · 1 day on us
+          Start free — no card · 3 days on us
         </Link>
       </div>
     </>

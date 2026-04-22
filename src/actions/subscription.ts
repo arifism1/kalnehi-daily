@@ -87,7 +87,7 @@ export type VerifyPlanUpgradePaymentResult =
 /** Legacy default for Razorpay fetches / upgrades when counts are missing. */
 const AUTOPAY_FALLBACK_TOTAL_COUNT = 12;
 
-const TRIAL_DAYS = 2;
+const TRIAL_DAYS = 3;
 
 async function getRemainingBillingCyclesForSubscription(
   razorpay: InstanceType<typeof Razorpay>,
@@ -719,7 +719,7 @@ export async function createRazorpayTrialSubscription(
   if (existing?.has_had_trial) {
     return {
       ok: false,
-      error: "You already used your 2-day paid trial. Subscribe monthly (₹299/mo) to continue.",
+      error: "You already used your 3-day paid trial. Subscribe monthly (₹499/mo) to continue.",
     };
   }
 
@@ -762,7 +762,7 @@ export async function createRazorpayTrialSubscription(
       addons: [
         {
           item: {
-            name: `${tierConfig.name} 2-Day Trial`,
+            name: `${tierConfig.name} 3-Day Trial`,
             amount: tierConfig.trialPricePaise,
             currency: "INR",
           },

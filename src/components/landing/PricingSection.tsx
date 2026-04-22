@@ -1,136 +1,159 @@
 import Link from "next/link";
-import { Check } from "lucide-react";
+import { Check, ArrowRight } from "lucide-react";
 
-const BENEFITS = [
-  "Dictate My Day + Self Type planners",
-  "Full syllabus with microtopics & predictions",
-  "Full execution planner + timer",
-  "Progress, Daily Log, Revision Engine",
-  "Full habits, motivation, meditation",
-  "Doubt Tracker & PrepBrain AI coach",
-];
-
-const TRUST_SIGNALS = [
-  "No card for free day",
-  "UPI & cards accepted",
-  "Cancel anytime",
-  "Works on Android, iOS, desktop",
-  "Installs as an app (PWA)",
-];
+const PLANS = [
+  {
+    name: "Basic",
+    price: "₹0",
+    duration: "3 days",
+    highlight: false,
+    features: [
+      "Daily planner + syllabus tracker",
+      "Focus timer + study camera",
+      "Streak + consistency heatmap",
+      "Doubt tracker",
+    ],
+    cta: "Start free — no card",
+    ctaHref: "/auth",
+    ctaClass:
+      "border border-kal-border bg-kal-card text-kal-text hover:border-kal-accent/40 hover:text-kal-accent",
+  },
+  {
+    name: "Smart Plan",
+    price: "₹499",
+    duration: "/month",
+    highlight: true,
+    features: [
+      "Everything in Basic",
+      "Marks engine + rank prediction",
+      "Spaced revision engine",
+      "PrepBrain AI coach",
+      "Voice control — 60 min/mo",
+      "20,00,000 AI tokens/month",
+    ],
+    cta: "Choose Smart Plan",
+    ctaHref: "/pricing",
+    ctaClass:
+      "bg-kal-accent text-white shadow-[0_4px_16px_rgba(255,122,0,0.28)] hover:brightness-105",
+  },
+] as const;
 
 export function PricingSection() {
   return (
-    <section className="bg-kal-page-end py-24 lg:py-32" id="pricing">
-      <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
+    <section id="pricing" className="bg-kal-page-end py-24 lg:py-32">
+      <div className="mx-auto max-w-5xl px-6 sm:px-8 lg:px-12">
         {/* Header */}
-        <div className="mb-14 text-center">
+        <div className="mb-12 text-center">
           <h2
-            className="mb-4 text-3xl font-normal leading-tight tracking-tight text-kal-text sm:text-4xl lg:text-[2.75rem]"
+            className="text-3xl font-normal leading-tight tracking-tight text-kal-text sm:text-4xl lg:text-[2.75rem]"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            One plan. Everything included.
+            Most students plan.
+            <br />
+            <span className="text-kal-accent">Toppers have a system.</span>
           </h2>
-          <p className="mx-auto max-w-lg text-lg text-kal-text-secondary">
-            No tiers, no feature gates, no surprise charges. Start free — no card needed.
+          <p className="mx-auto mt-4 max-w-xl text-base text-kal-text-secondary">
+            Start free. Upgrade when the AI shows you what you&apos;ve been missing.
+          </p>
+          <p className="mt-2 text-sm text-kal-muted">Three plans. One direction.</p>
+        </div>
+
+        {/* Plan cards */}
+        <div className="mx-auto grid max-w-2xl gap-5 sm:grid-cols-2">
+          {PLANS.map((plan) => (
+            <div
+              key={plan.name}
+              className={`relative flex flex-col rounded-2xl border-2 p-6 transition-shadow hover:shadow-[var(--kal-shadow-card-hover)] ${
+                plan.highlight
+                  ? "border-kal-accent/60 bg-gradient-to-b from-kal-accent/8 to-kal-bg-elevated shadow-[0_8px_32px_rgba(255,122,0,0.14)]"
+                  : "border-kal-border bg-kal-bg-elevated"
+              }`}
+            >
+              {plan.highlight && (
+                <div className="absolute -top-px left-1/2 -translate-x-1/2">
+                  <span className="inline-block rounded-b-xl bg-kal-accent px-4 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-[0_4px_12px_rgba(255,122,0,0.3)]">
+                    Most popular
+                  </span>
+                </div>
+              )}
+
+              <div className={plan.highlight ? "mt-3" : ""}>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-kal-muted">
+                  {plan.name}
+                </p>
+                <div className="mt-1 flex items-baseline gap-1">
+                  <span
+                    className="text-4xl font-normal text-kal-text"
+                    style={{ fontFamily: "var(--font-display)" }}
+                  >
+                    {plan.price}
+                  </span>
+                  <span className="text-sm text-kal-muted">{plan.duration}</span>
+                </div>
+              </div>
+
+              <ul className="mt-5 flex-1 space-y-2.5">
+                {plan.features.map((f) => (
+                  <li key={f} className="flex items-start gap-2.5">
+                    <Check
+                      className="mt-0.5 h-4 w-4 shrink-0 text-kal-accent"
+                      strokeWidth={2.5}
+                      aria-hidden
+                    />
+                    <span className="text-sm text-kal-text-secondary">{f}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Link
+                href={plan.ctaHref}
+                className={`mt-6 inline-flex min-h-[48px] items-center justify-center rounded-full px-5 text-sm font-bold transition ${plan.ctaClass}`}
+              >
+                {plan.cta}
+              </Link>
+            </div>
+          ))}
+        </div>
+
+        {/* Smart Trial callout */}
+        <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-kal-border bg-kal-card/60 px-5 py-4 text-center backdrop-blur-sm">
+          <p className="text-sm text-kal-text-secondary">
+            Not sure yet?{" "}
+            <Link
+              href="/auth"
+              className="font-semibold text-kal-accent underline-offset-2 hover:underline"
+            >
+              Smart Trial — ₹19 for 3 days
+            </Link>{" "}
+            gives you the full AI experience before committing monthly.
           </p>
         </div>
 
-        <div className="mx-auto max-w-2xl">
-          {/* Trial steps */}
-          <div className="mb-8 grid gap-3 sm:grid-cols-3">
-            {[
-              { step: "1", label: "Free day", detail: "No card. Full access." },
-              { step: "2", label: "₹19 for 2 days", detail: "Paid trial. Still cheap." },
-              { step: "3", label: "₹299 / month", detail: "Cancel anytime." },
-            ].map(({ step, label, detail }) => (
-              <div
-                key={step}
-                className="flex flex-col gap-1.5 rounded-2xl border border-kal-border bg-kal-card-muted p-4 text-center backdrop-blur-sm"
-              >
-                <span className="mx-auto flex h-7 w-7 items-center justify-center rounded-full bg-kal-accent text-xs font-bold text-white">
-                  {step}
-                </span>
-                <p className="text-sm font-bold text-kal-text">{label}</p>
-                <p className="text-xs text-kal-muted">{detail}</p>
-              </div>
-            ))}
-          </div>
+        {/* View full comparison link */}
+        <div className="mt-8 flex justify-center">
+          <Link
+            href="/pricing"
+            className="inline-flex items-center gap-2 rounded-full border border-kal-border bg-transparent px-5 py-2.5 text-sm font-semibold text-kal-text-secondary transition hover:border-kal-accent/40 hover:text-kal-accent"
+          >
+            View full comparison
+            <ArrowRight className="h-4 w-4" aria-hidden />
+          </Link>
+        </div>
 
-          {/* Main pricing card */}
-          <div className="relative overflow-hidden rounded-2xl border-2 border-kal-accent/40 bg-kal-bg-elevated p-8 shadow-[0_16px_48px_-8px_rgba(255,122,0,0.15)] ring-1 ring-kal-accent/20 dark:shadow-[0_16px_48px_-8px_rgba(0,0,0,0.45)]">
-            {/* Top badge */}
-            <div className="absolute -top-px left-1/2 -translate-x-1/2">
-              <span className="inline-block rounded-b-2xl bg-kal-accent px-6 py-1.5 text-[11px] font-bold uppercase tracking-wider text-white shadow-[0_4px_12px_rgba(255,122,0,0.3)]">
-                Pro — Everything for serious prep
-              </span>
-            </div>
-
-            <div className="mt-6 flex flex-col items-center text-center">
-              {/* Price display */}
-              <div className="mb-2 flex items-baseline gap-2">
-                <span
-                  className="text-5xl font-normal tabular-nums text-kal-text"
-                  style={{ fontFamily: "var(--font-display)" }}
-                >
-                  ₹299
-                </span>
-                <span className="text-base text-kal-muted">/ month</span>
-              </div>
-              <p className="mb-1 text-sm text-kal-muted">
-                after a{" "}
-                <span className="font-semibold text-kal-text">free day</span> +{" "}
-                <span className="font-semibold text-kal-text">₹19 paid trial</span>
-              </p>
-              <p className="text-xs text-kal-muted">
-                60 voice min / month · 2 million PrepBrain AI tokens / month
-              </p>
-            </div>
-
-            {/* Divider */}
-            <div className="my-6 border-t border-kal-border" />
-
-            {/* Benefits */}
-            <ul className="mb-8 space-y-3">
-              {BENEFITS.map((b) => (
-                <li key={b} className="flex items-start gap-3">
-                  <Check
-                    className="mt-0.5 h-4 w-4 shrink-0 text-kal-accent"
-                    strokeWidth={2.5}
-                    aria-hidden
-                  />
-                  <span className="text-sm leading-snug text-kal-text-secondary">{b}</span>
-                </li>
-              ))}
-            </ul>
-
-            {/* CTA */}
-            <Link
-              href="/auth"
-              className="flex min-h-[52px] w-full items-center justify-center rounded-full bg-kal-accent text-base font-bold text-white shadow-[0_4px_16px_rgba(255,122,0,0.28)] transition hover:brightness-105 active:scale-[0.99]"
-            >
-              Start free — 1 day on us
-            </Link>
-
-            <p className="mt-3 text-center text-xs text-kal-muted">
-              No card needed to start. Add one only when you upgrade to the paid trial.
-            </p>
-          </div>
-
-          {/* Trust signals */}
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2.5">
-            {TRUST_SIGNALS.map((s) => (
-              <span key={s} className="flex items-center gap-1.5 text-sm text-kal-muted">
-                <span className="h-1 w-1 rounded-full bg-kal-accent/60" aria-hidden />
-                {s}
-              </span>
-            ))}
-          </div>
-
-          {/* AI quotas note */}
-          <p className="mt-6 text-center text-xs text-kal-muted">
-            Free day: 5 voice min + 300k AI tokens. Paid trial: 15 voice min + 500k tokens.
-            Monthly: 60 voice min + 2M tokens (resets each cycle).
-          </p>
+        {/* Trust signals */}
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+          {[
+            "No card for Basic",
+            "UPI & cards accepted",
+            "Cancel anytime",
+            "Works on Android, iOS, desktop",
+            "Installs as a PWA",
+          ].map((s) => (
+            <span key={s} className="flex items-center gap-1.5 text-xs text-kal-muted">
+              <span className="h-1 w-1 rounded-full bg-kal-accent/50" aria-hidden />
+              {s}
+            </span>
+          ))}
         </div>
       </div>
     </section>

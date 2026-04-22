@@ -4,12 +4,12 @@ import { KalnehiMark } from "@/components/KalnehiMark";
 const FOOTER_LINKS = {
   Product: [
     { href: "#features", label: "Features" },
-    { href: "#pricing", label: "Pricing" },
+    { href: "/pricing", label: "Pricing" },
     { href: "/what-can-kalnehi-do", label: "What Can Kalnehi Do?" },
     { href: "/best-study-practices", label: "Best Study Practices" },
     { href: "/guides", label: "Guides" },
     { href: "/brain-yoga", label: "Brain Yoga" },
-    { href: "/auth", label: "Start free — 1 day on us" },
+    { href: "/auth", label: "Start free — 3 days on us" },
   ],
   Exams: [
     { href: "/jee-study-planner", label: "JEE Planner" },
