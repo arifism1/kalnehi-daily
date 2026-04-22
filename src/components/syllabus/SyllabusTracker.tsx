@@ -12,7 +12,23 @@ import {
   Sparkles,
   Trash2,
 } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { addDays, format, parseISO } from "date-fns";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
+
+import { useAuthStore } from "@/store/useAuthStore";
+import { useCalendarDate } from "@/hooks/useCalendarDate";
+import {
+  hydrateUserPlannerTextRevisionsFromServer,
+  plannerTextUpsertManualRevisionReminderByMicrotopic,
+} from "@/lib/userPlannerTextClient";
+import type { UserPlannerTextBundle } from "@/lib/userPlannerTextTypes";
 
 import { deleteCustomSyllabusItem } from "@/actions/syllabus";
 import { ChapterMarksSheet } from "@/components/syllabus/ChapterMarksSheet";
@@ -85,6 +101,324 @@ function resolveStatus(
     return s;
   }
   return "not_begun";
+}
+
+function formatMicrotopicReminderTitle(row: MergedSyllabusRow): string {
+  const t =
+    (row.microtopic ?? "").trim() || (row.chapter ?? "").trim() || "Topic";
+  const s = (row.subject ?? "").trim() || "Subject";
+  return `${t} · ${s}`;
+}
+
+type SyllabusMicrotopicRowProps = {
+  row: MergedSyllabusRow;
+  rowIdx: number;
+  statusBySyllabusMasterId: Record<string, string>;
+  setMicrotopicStatus: ReturnType<typeof useSyllabusTracker>["setMicrotopicStatus"];
+  undoMicrotopicToStatus: ReturnType<
+    typeof useSyllabusTracker
+  >["undoMicrotopicToStatus"];
+  canCustomize: boolean;
+  catalogExamKey: string | null;
+  openSheet: (mode: SyllabusCustomizeSheetMode) => void;
+  setConfirmState: Dispatch<
+    SetStateAction<{
+      title: string;
+      description: string;
+      run: () => Promise<void>;
+    } | null>
+  >;
+  userId: string | undefined;
+  revisionBundle: UserPlannerTextBundle | null;
+  setRevisionBundle: (b: UserPlannerTextBundle) => void;
+};
+
+function SyllabusMicrotopicRow({
+  row,
+  rowIdx,
+  statusBySyllabusMasterId,
+  setMicrotopicStatus,
+  undoMicrotopicToStatus,
+  canCustomize,
+  catalogExamKey,
+  openSheet,
+  setConfirmState,
+  userId,
+  revisionBundle,
+  setRevisionBundle,
+}: SyllabusMicrotopicRowProps) {
+  const today = useCalendarDate();
+  const mr = row as MergedSyllabusRow;
+  const st = resolveStatus(row.id, statusBySyllabusMasterId);
+  const sid = normalizeSyllabusMasterId(row.id);
+  const est =
+    row.estimated_minutes != null && row.estimated_minutes > 0
+      ? `${row.estimated_minutes} min`
+      : "—";
+
+  const existingPendingManual = useMemo(() => {
+    if (!revisionBundle) return null;
+    const n = sid;
+    return (
+      revisionBundle.revisionItems.find(
+        (r) =>
+          r.reminderSource === "manual" &&
+          r.status === "pending" &&
+          r.microtopicId != null &&
+          normalizeSyllabusMasterId(r.microtopicId) === n,
+      ) ?? null
+    );
+  }, [revisionBundle, sid]);
+
+  const [due, setDue] = useState(() =>
+    format(addDays(parseISO(today), 7), "yyyy-MM-dd"),
+  );
+  const [revErr, setRevErr] = useState<string | null>(null);
+  const [savingRev, setSavingRev] = useState(false);
+  const [revSaved, setRevSaved] = useState(false);
+
+  useEffect(() => {
+    if (st !== "need_revision") return;
+    if (existingPendingManual?.nextDue) {
+      setDue(existingPendingManual.nextDue);
+    } else {
+      setDue(format(addDays(parseISO(today), 7), "yyyy-MM-dd"));
+    }
+  }, [st, existingPendingManual?.nextDue, today, row.id]);
+
+  const dateInputMin = due < today ? due : today;
+
+  const onSaveRevision = useCallback(async () => {
+    if (!userId) {
+      setRevErr("Sign in to save revision reminders.");
+      return;
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(due.trim())) {
+      setRevErr("Pick a valid due date.");
+      return;
+    }
+    setSavingRev(true);
+    setRevErr(null);
+    try {
+      const next = await plannerTextUpsertManualRevisionReminderByMicrotopic(
+        userId,
+        {
+          microtopicId: row.id,
+          title: formatMicrotopicReminderTitle(mr),
+          nextDue: due.trim(),
+        },
+      );
+      setRevisionBundle(next);
+      setRevSaved(true);
+      window.setTimeout(() => setRevSaved(false), 2500);
+    } catch {
+      setRevErr("Could not save. Try again when online.");
+    } finally {
+      setSavingRev(false);
+    }
+  }, [userId, due, mr, row.id, setRevisionBundle]);
+
+  return (
+    <li
+      className={clsx(
+        "border-l-2 border-kal-accent/20 py-2 pl-3 pr-2 sm:pl-4 sm:pr-3 dark:border-orange-500/15",
+        rowIdx > 0 && "mt-0 border-t border-kal-border/40 pt-3",
+      )}
+    >
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start gap-2.5">
+            <span
+              className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-kal-muted/45 ring-1 ring-kal-border/30"
+              aria-hidden
+            />
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-[13px] font-medium leading-snug text-kal-text-secondary sm:text-sm">
+                  {row.microtopic}
+                </p>
+                {mr.userSyllabus?.isUserAdded ? (
+                  <span className="rounded bg-violet-500/20 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-violet-200/95">
+                    Yours
+                  </span>
+                ) : null}
+                {mr.userSyllabus?.isDisplayEdited ? (
+                  <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-900 dark:text-amber-200/95">
+                    Customized
+                  </span>
+                ) : null}
+              </div>
+              <p className="text-[11px] leading-snug text-kal-muted">
+                Est.{" "}
+                <span className="font-medium tabular-nums text-kal-text-secondary/90">
+                  {est}
+                </span>
+              </p>
+            </div>
+          </div>
+          {canCustomize && catalogExamKey ? (
+            <div className="mt-2.5 flex items-center gap-1.5 pl-3.5 sm:pl-4">
+              <button
+                type="button"
+                title="Edit microtopic"
+                aria-label="Edit microtopic"
+                className="flex h-7 w-7 items-center justify-center rounded-lg border border-transparent text-kal-muted/80 transition-colors hover:border-kal-border hover:text-[#BA7517] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40"
+                onClick={() => {
+                  if (mr.userSyllabus?.isUserAdded) {
+                    openSheet({
+                      kind: "edit_user_microtopic",
+                      examName: catalogExamKey,
+                      customizationId: mr.userSyllabus.customizationId!,
+                      subject: row.subject,
+                      chapter: row.chapter,
+                      microtopic: row.microtopic,
+                    });
+                  } else {
+                    openSheet({
+                      kind: "edit_global_microtopic",
+                      examName: catalogExamKey,
+                      syllabusMasterId: row.id,
+                      subject: row.subject,
+                      chapter: row.chapter,
+                      microtopic: row.microtopic,
+                    });
+                  }
+                }}
+              >
+                <Pencil className="h-3.5 w-3.5" aria-hidden />
+              </button>
+              <button
+                type="button"
+                title="Remove microtopic"
+                aria-label="Remove microtopic"
+                className="flex h-7 w-7 items-center justify-center rounded-lg border border-transparent text-kal-muted/80 transition-colors hover:border-red-200 hover:text-[#E24B4A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/40"
+                onClick={() => {
+                  setConfirmState({
+                    title: mr.userSyllabus?.isUserAdded
+                      ? "Remove this microtopic?"
+                      : "Hide this microtopic?",
+                    description: mr.userSyllabus?.isUserAdded
+                      ? "Removes your added topic from your syllabus."
+                      : "Hides this catalog topic for you only.",
+                    run: async () => {
+                      if (
+                        mr.userSyllabus?.isUserAdded &&
+                        mr.userSyllabus.customizationId
+                      ) {
+                        const res = await deleteCustomSyllabusItem({
+                          examName: catalogExamKey,
+                          mode: "user_add",
+                          customizationId: mr.userSyllabus.customizationId,
+                        });
+                        if (!res.ok) throw new Error(res.error);
+                      } else {
+                        const res = await deleteCustomSyllabusItem({
+                          examName: catalogExamKey,
+                          mode: "global_microtopic",
+                          syllabusMasterId: row.id,
+                        });
+                        if (!res.ok) throw new Error(res.error);
+                      }
+                    },
+                  });
+                }}
+              >
+                <Trash2 className="h-3.5 w-3.5" aria-hidden />
+              </button>
+            </div>
+          ) : null}
+        </div>
+        <div className="min-w-0 w-full space-y-2 sm:w-auto sm:max-w-md sm:shrink-0">
+          <label className="sr-only" htmlFor={`st-${sid}`}>
+            Status for {row.microtopic}
+          </label>
+          <select
+            id={`st-${sid}`}
+            value={st}
+            onChange={(e) => {
+              const next = e.target.value as MicrotopicProgressStatus;
+              const prev = resolveStatus(row.id, statusBySyllabusMasterId);
+              if (next === prev) return;
+              void (async () => {
+                const ok = await setMicrotopicStatus(row.id, next);
+                if (!ok) return;
+                useUndoStore.getState().offerUndo({
+                  message: "Syllabus status updated",
+                  runUndo: async () => {
+                    await undoMicrotopicToStatus(row.id, prev);
+                  },
+                });
+              })();
+            }}
+            className={clsx(
+              "min-h-[44px] w-full min-w-0 rounded-lg border px-3 py-2 text-[13px] font-medium outline-none sm:min-w-[11.5rem] sm:text-sm",
+              "focus-visible:ring-2 focus-visible:ring-kal-accent/50",
+              statusSelectClasses(st),
+            )}
+          >
+            {MICROTOPIC_STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {STATUS_LABEL[s]}
+              </option>
+            ))}
+          </select>
+          {st === "need_revision" ? (
+            <div className="rounded-lg border border-amber-200/80 bg-amber-50/50 px-3 py-2.5 dark:border-amber-500/30 dark:bg-amber-950/30">
+              <p className="text-[11px] font-medium text-kal-text-secondary">
+                Revision due
+              </p>
+              <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end">
+                <div className="min-w-0 flex-1">
+                  <label
+                    className="sr-only"
+                    htmlFor={`rev-due-${sid}`}
+                  >
+                    Revision due date for {row.microtopic}
+                  </label>
+                  <input
+                    id={`rev-due-${sid}`}
+                    type="date"
+                    min={dateInputMin}
+                    value={due}
+                    onChange={(e) => {
+                      setDue(e.target.value);
+                      setRevErr(null);
+                    }}
+                    className="min-h-[40px] w-full rounded-lg border border-kal-border bg-kal-input-bg px-2 py-1.5 text-sm text-kal-text"
+                  />
+                </div>
+                <button
+                  type="button"
+                  disabled={savingRev}
+                  onClick={() => void onSaveRevision()}
+                  className="shrink-0 rounded-lg bg-kal-accent px-3 py-2 text-xs font-semibold text-kal-accent-foreground hover:bg-kal-accent-hover disabled:opacity-50"
+                >
+                  {savingRev
+                    ? "Saving…"
+                    : existingPendingManual
+                      ? "Update reminder"
+                      : "Save to reminders"}
+                </button>
+              </div>
+              {revErr ? (
+                <p className="mt-1.5 text-[11px] text-red-600 dark:text-red-300">
+                  {revErr}
+                </p>
+              ) : null}
+              {revSaved ? (
+                <p
+                  className="mt-1.5 text-[11px] font-medium text-kal-accent"
+                  role="status"
+                >
+                  Saved to revision reminders
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </li>
+  );
 }
 
 function ChapterBar({
@@ -205,6 +539,24 @@ export function SyllabusTracker() {
     rows: MergedSyllabusRow[];
   } | null>(null);
   const [showAllYears, setShowAllYears] = useState(false);
+  const [openSubject, setOpenSubject] = useState<string | null>(null);
+  const [openChapterId, setOpenChapterId] = useState<string | null>(null);
+  const [revisionBundle, setRevisionBundle] =
+    useState<UserPlannerTextBundle | null>(null);
+
+  const userId = useAuthStore((s) => s.user?.id);
+
+  useEffect(() => {
+    setOpenChapterId(null);
+  }, [openSubject]);
+
+  useEffect(() => {
+    if (!userId) {
+      setRevisionBundle(null);
+      return;
+    }
+    void hydrateUserPlannerTextRevisionsFromServer(userId).then(setRevisionBundle);
+  }, [userId]);
 
   const openSheet = useCallback((mode: SyllabusCustomizeSheetMode) => {
     setSheetMode(mode);
@@ -552,19 +904,41 @@ export function SyllabusTracker() {
               total: 0,
               percent: 0,
             };
+          const subjectIsOpen = openSubject === subject;
           return (
-            <details
+            <div
               key={subject}
-              className="kal-glass-panel group overflow-hidden rounded-2xl open:shadow-md dark:border-white/12"
+              className={clsx(
+                "kal-glass-panel overflow-hidden rounded-2xl dark:border-white/12",
+                subjectIsOpen && "shadow-md",
+              )}
             >
-              <summary className="cursor-pointer list-none px-5 py-4 text-base font-semibold text-kal-text marker:hidden [&::-webkit-details-marker]:hidden">
-                <div className="flex min-h-[48px] items-center justify-between gap-2">
-                  <span className="flex min-w-0 items-center gap-2">
+              <div
+                className="cursor-pointer list-none px-5 py-4 text-base font-semibold text-kal-text outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-kal-card"
+                role="button"
+                tabIndex={0}
+                aria-expanded={subjectIsOpen}
+                onClick={() =>
+                  setOpenSubject((prev) => (prev === subject ? null : subject))
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setOpenSubject((prev) =>
+                      prev === subject ? null : subject,
+                    );
+                  }
+                }}
+              >
+                <div className="flex min-h-[48px] items-start justify-between gap-2 sm:items-center">
+                  <span className="flex min-w-0 items-start gap-2 sm:items-center">
                     <BookMarked
                       className="h-5 w-5 shrink-0 text-kal-accent"
                       aria-hidden
                     />
-                    <span className="truncate">{subject}</span>
+                    <span className="min-w-0 break-words text-left leading-snug">
+                      {subject}
+                    </span>
                     {isUpscCseMainsExam(catalogExamKey) &&
                     isUpscMainsQualifyingPaperSubject(subject) ? (
                       <span
@@ -597,7 +971,13 @@ export function SyllabusTracker() {
                         </span>
                       </button>
                     ) : null}
-                    <ChevronDown className="h-5 w-5 shrink-0 text-kal-muted transition-transform duration-200 group-open:rotate-180" />
+                    <ChevronDown
+                      className={clsx(
+                        "h-5 w-5 shrink-0 text-kal-muted transition-transform duration-200",
+                        subjectIsOpen && "rotate-180",
+                      )}
+                      aria-hidden
+                    />
                   </span>
                 </div>
                 <p
@@ -612,7 +992,8 @@ export function SyllabusTracker() {
                   percent={subRoll.percent}
                   progressAriaLabel={`${subject}: ${subRoll.completed} of ${subRoll.total} microtopics complete, ${subRoll.percent} percent`}
                 />
-              </summary>
+              </div>
+              {subjectIsOpen ? (
               <div className="border-t border-kal-border">
                 {chapterNames.map((chapter, chapterIdx) => {
                   const chapterNumber = chapterIdx + 1;
@@ -628,82 +1009,123 @@ export function SyllabusTracker() {
                     showMarksUi && cr != null
                       ? `${cr.chapterMarksAwarded.toFixed(0)} / ${cr.chapterMarksTotal.toFixed(0)} chapter marks`
                       : null;
+                  const ck = chapterKey(subject, chapter);
+                  const chapterIsOpen =
+                    !syllabusLimited && openChapterId === ck;
                   return (
-                    <details
+                    <div
                       key={chapter}
-                      className="group/ch mb-5 border-b border-kal-border pb-5 last:mb-0 last:border-b-0 last:pb-0"
-                      onToggle={syllabusLimited ? (e) => { (e.currentTarget as HTMLDetailsElement).open = false; } : undefined}
+                      className="mb-5 border-b border-kal-border pb-5 last:mb-0 last:border-b-0 last:pb-0"
                     >
-                      <summary className="kal-glass-card cursor-pointer list-none rounded-xl border border-kal-border/90 px-0 py-0 shadow-sm marker:hidden ring-1 ring-black/[0.03] dark:ring-white/[0.04] [&::-webkit-details-marker]:hidden">
-                        <div className="flex flex-col gap-3.5 border-l-[4px] border-l-kal-accent py-4 pl-4 pr-3 sm:py-5 sm:pl-5 sm:pr-4">
-                          <div className="flex items-start justify-between gap-3">
-                            <span className="flex min-w-0 items-start gap-2.5">
-                              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-kal-card shadow-sm ring-1 ring-kal-border/50">
-                                <Layers
-                                  className="h-[1.15rem] w-[1.15rem] text-kal-accent"
+                      <div className="kal-glass-card overflow-hidden rounded-xl border border-kal-border/90 shadow-sm ring-1 ring-black/[0.03] dark:ring-white/[0.04]">
+                        <div
+                          className="flex flex-col gap-3.5 border-l-[4px] border-l-kal-accent"
+                        >
+                          <div
+                            className={clsx(
+                              "py-4 pl-4 pr-3 sm:py-5 sm:pl-5 sm:pr-4",
+                              !syllabusLimited &&
+                                "cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-kal-card",
+                            )}
+                            role={syllabusLimited ? undefined : "button"}
+                            tabIndex={syllabusLimited ? -1 : 0}
+                            aria-expanded={chapterIsOpen}
+                            onClick={
+                              syllabusLimited
+                                ? undefined
+                                : () =>
+                                    setOpenChapterId((prev) =>
+                                      prev === ck ? null : ck,
+                                    )
+                            }
+                            onKeyDown={
+                              syllabusLimited
+                                ? undefined
+                                : (e) => {
+                                    if (e.key === "Enter" || e.key === " ") {
+                                      e.preventDefault();
+                                      setOpenChapterId((prev) =>
+                                        prev === ck ? null : ck,
+                                      );
+                                    }
+                                  }
+                            }
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <span className="flex min-w-0 items-start gap-2.5">
+                                <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-kal-card shadow-sm ring-1 ring-kal-border/50">
+                                  <Layers
+                                    className="h-[1.15rem] w-[1.15rem] text-kal-accent"
+                                    aria-hidden
+                                  />
+                                </span>
+                                <span className="min-w-0 pt-0.5">
+                                  <span className="kal-category-label block text-kal-accent">
+                                    Chapter
+                                  </span>
+                                  <span className="mt-1 flex min-w-0 items-start gap-2.5 sm:gap-3">
+                                    <span className="shrink-0 border-r border-kal-border/55 pr-2.5 text-xl font-bold tabular-nums leading-none tracking-tight text-kal-text sm:pr-3 sm:text-2xl">
+                                      {chapterNumber}.
+                                    </span>
+                                    <span className="min-w-0 flex-1 break-words text-base font-bold leading-snug tracking-tight text-kal-text sm:text-lg">
+                                      {chapter}
+                                    </span>
+                                  </span>
+                                </span>
+                              </span>
+                              {syllabusLimited ? (
+                                <span
+                                  className="inline-flex shrink-0 items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
+                                  title="Upgrade to Pro to expand chapters and see microtopics"
+                                >
+                                  <Lock className="h-2.5 w-2.5" aria-hidden />
+                                  Pro
+                                </span>
+                              ) : (
+                                <ChevronDown
+                                  className={clsx(
+                                    "mt-1 h-5 w-5 shrink-0 text-kal-muted transition-transform duration-200",
+                                    chapterIsOpen && "rotate-180",
+                                  )}
                                   aria-hidden
                                 />
-                              </span>
-                              <span className="min-w-0 pt-0.5">
-                                <span className="kal-category-label block text-kal-accent">
-                                  Chapter
-                                </span>
-                                <span className="mt-1 flex min-w-0 items-baseline gap-2.5 sm:gap-3">
-                                  <span className="shrink-0 border-r border-kal-border/55 pr-2.5 text-xl font-bold tabular-nums leading-none tracking-tight text-kal-text sm:pr-3 sm:text-2xl">
-                                    {chapterNumber}.
-                                  </span>
-                                  <span className="min-w-0 flex-1 truncate text-base font-bold leading-snug tracking-tight text-kal-text sm:text-lg">
-                                    {chapter}
-                                  </span>
-                                </span>
-                              </span>
-                            </span>
-                            {syllabusLimited ? (
-                            <span
-                              className="inline-flex shrink-0 items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
-                              title="Upgrade to Pro to expand chapters and see microtopics"
+                              )}
+                            </div>
+
+                            <p className="pl-[2.875rem] text-[11px] tabular-nums text-kal-muted sm:pl-[3.125rem]">
+                              {cr?.completedCount ?? 0}/{cr?.totalCount ?? list.length}{" "}
+                              microtopics done · {pct}%
+                            </p>
+                            <div className="pl-[2.875rem] sm:pl-[3.125rem]">
+                              <ChapterBar percent={pct} />
+                            </div>
+                            <p
+                              className={clsx(
+                                "pl-[2.875rem] text-[11px] font-medium tabular-nums sm:pl-[3.125rem]",
+                                cr?.isChapterMastered
+                                  ? "text-kal-accent"
+                                  : "text-amber-900 dark:text-amber-200/90",
+                              )}
                             >
-                              <Lock className="h-2.5 w-2.5" aria-hidden />
-                              Pro
-                            </span>
-                          ) : (
-                            <ChevronDown className="mt-1 h-5 w-5 shrink-0 text-kal-muted transition-transform group-open/ch:rotate-180" />
-                          )}
+                              {showMarksUi && marksLine ? (
+                                <>
+                                  {marksLine}
+                                  {cr?.isChapterMastered
+                                    ? " · chapter mastered"
+                                    : " · complete all for chapter weight"}
+                                </>
+                              ) : (
+                                <>
+                                  {pct}% done
+                                  {cr?.isChapterMastered
+                                    ? " · chapter complete"
+                                    : " · finish all to complete"}
+                                </>
+                              )}
+                            </p>
                           </div>
 
-                          <p className="pl-[2.875rem] text-[11px] tabular-nums text-kal-muted sm:pl-[3.125rem]">
-                            {cr?.completedCount ?? 0}/{cr?.totalCount ?? list.length}{" "}
-                            microtopics done · {pct}%
-                          </p>
-                          <div className="pl-[2.875rem] sm:pl-[3.125rem]">
-                            <ChapterBar percent={pct} />
-                          </div>
-                          <p
-                            className={clsx(
-                              "pl-[2.875rem] text-[11px] font-medium tabular-nums sm:pl-[3.125rem]",
-                              cr?.isChapterMastered
-                                ? "text-kal-accent"
-                                : "text-amber-900 dark:text-amber-200/90",
-                            )}
-                          >
-                            {showMarksUi && marksLine ? (
-                              <>
-                                {marksLine}
-                                {cr?.isChapterMastered
-                                  ? " · chapter mastered"
-                                  : " · complete all for chapter weight"}
-                              </>
-                            ) : (
-                              <>
-                                {pct}% done
-                                {cr?.isChapterMastered
-                                  ? " · chapter complete"
-                                  : " · finish all to complete"}
-                              </>
-                            )}
-                          </p>
-
-                          <div className="flex flex-nowrap items-center gap-2 overflow-hidden border-t border-kal-border/50 pt-3.5">
+                          <div className="flex flex-nowrap items-center gap-2 overflow-hidden border-t border-kal-border/50 px-4 pb-4 pl-4 pr-3 pt-3.5 sm:pl-5 sm:pr-4">
                             {canCustomize && catalogExamKey ? (
                               <>
                                 <button
@@ -809,198 +1231,34 @@ export function SyllabusTracker() {
                             ) : null}
                           </div>
                         </div>
-                      </summary>
+                      </div>
+                      {chapterIsOpen ? (
                         <ul className="kal-glass-subtle mt-3 space-y-0 rounded-xl border border-kal-border/60 py-1 pl-2 pr-1 shadow-inner sm:mt-4 sm:pl-3 sm:pr-2">
-                        {list.map((row, rowIdx) => {
-                          const mr = row as MergedSyllabusRow;
-                          const st = resolveStatus(
-                            row.id,
-                            statusBySyllabusMasterId,
-                          );
-                          const sid = normalizeSyllabusMasterId(row.id);
-                          const est =
-                            row.estimated_minutes != null &&
-                            row.estimated_minutes > 0
-                              ? `${row.estimated_minutes} min`
-                              : "—";
-                          return (
-                            <li
+                          {list.map((row, rowIdx) => (
+                            <SyllabusMicrotopicRow
                               key={row.id}
-                              className={clsx(
-                                "border-l-2 border-kal-accent/20 py-2 pl-3 pr-2 sm:pl-4 sm:pr-3 dark:border-orange-500/15",
-                                rowIdx > 0 &&
-                                  "mt-0 border-t border-kal-border/40 pt-3",
-                              )}
-                            >
-                              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex items-start gap-2.5">
-                                    <span
-                                      className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-kal-muted/45 ring-1 ring-kal-border/30"
-                                      aria-hidden
-                                    />
-                                    <div className="min-w-0 flex-1 space-y-1.5">
-                                      <div className="flex flex-wrap items-center gap-2">
-                                        <p className="text-[13px] font-medium leading-snug text-kal-text-secondary sm:text-sm">
-                                          {row.microtopic}
-                                        </p>
-                                        {mr.userSyllabus?.isUserAdded ? (
-                                          <span className="rounded bg-violet-500/20 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-violet-200/95">
-                                            Yours
-                                          </span>
-                                        ) : null}
-                                        {mr.userSyllabus?.isDisplayEdited ? (
-                                          <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-900 dark:text-amber-200/95">
-                                            Customized
-                                          </span>
-                                        ) : null}
-                                      </div>
-                                      <p className="text-[11px] leading-snug text-kal-muted">
-                                        Est.{" "}
-                                        <span className="font-medium tabular-nums text-kal-text-secondary/90">
-                                          {est}
-                                        </span>
-                                      </p>
-                                    </div>
-                                  </div>
-                                  {canCustomize && catalogExamKey ? (
-                                    <div className="mt-2.5 flex items-center gap-1.5 pl-3.5 sm:pl-4">
-                                      <button
-                                        type="button"
-                                        title="Edit microtopic"
-                                        aria-label="Edit microtopic"
-                                        className="flex h-7 w-7 items-center justify-center rounded-lg border border-transparent text-kal-muted/80 transition-colors hover:border-kal-border hover:text-[#BA7517] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40"
-                                        onClick={() => {
-                                          if (mr.userSyllabus?.isUserAdded) {
-                                            openSheet({
-                                              kind: "edit_user_microtopic",
-                                              examName: catalogExamKey,
-                                              customizationId:
-                                                mr.userSyllabus
-                                                  .customizationId!,
-                                              subject: row.subject,
-                                              chapter: row.chapter,
-                                              microtopic: row.microtopic,
-                                            });
-                                          } else {
-                                            openSheet({
-                                              kind: "edit_global_microtopic",
-                                              examName: catalogExamKey,
-                                              syllabusMasterId: row.id,
-                                              subject: row.subject,
-                                              chapter: row.chapter,
-                                              microtopic: row.microtopic,
-                                            });
-                                          }
-                                        }}
-                                      >
-                                        <Pencil className="h-3.5 w-3.5" aria-hidden />
-                                      </button>
-                                      <button
-                                        type="button"
-                                        title="Remove microtopic"
-                                        aria-label="Remove microtopic"
-                                        className="flex h-7 w-7 items-center justify-center rounded-lg border border-transparent text-kal-muted/80 transition-colors hover:border-red-200 hover:text-[#E24B4A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/40"
-                                        onClick={() => {
-                                          setConfirmState({
-                                            title: mr.userSyllabus?.isUserAdded
-                                              ? "Remove this microtopic?"
-                                              : "Hide this microtopic?",
-                                            description: mr.userSyllabus
-                                              ?.isUserAdded
-                                              ? "Removes your added topic from your syllabus."
-                                              : "Hides this catalog topic for you only.",
-                                            run: async () => {
-                                              if (
-                                                mr.userSyllabus?.isUserAdded &&
-                                                mr.userSyllabus.customizationId
-                                              ) {
-                                                const res =
-                                                  await deleteCustomSyllabusItem(
-                                                    {
-                                                      examName: catalogExamKey,
-                                                      mode: "user_add",
-                                                      customizationId:
-                                                        mr.userSyllabus
-                                                          .customizationId,
-                                                    },
-                                                  );
-                                                if (!res.ok)
-                                                  throw new Error(res.error);
-                                              } else {
-                                                const res =
-                                                  await deleteCustomSyllabusItem(
-                                                    {
-                                                      examName: catalogExamKey,
-                                                      mode: "global_microtopic",
-                                                      syllabusMasterId: row.id,
-                                                    },
-                                                  );
-                                                if (!res.ok)
-                                                  throw new Error(res.error);
-                                              }
-                                            },
-                                          });
-                                        }}
-                                      >
-                                        <Trash2 className="h-3.5 w-3.5" aria-hidden />
-                                      </button>
-                                    </div>
-                                  ) : null}
-                                </div>
-                                <label className="sr-only" htmlFor={`st-${sid}`}>
-                                  Status for {row.microtopic}
-                                </label>
-                                <select
-                                  id={`st-${sid}`}
-                                  value={st}
-                                  onChange={(e) => {
-                                    const next =
-                                      e.target.value as MicrotopicProgressStatus;
-                                    const prev = resolveStatus(
-                                      row.id,
-                                      statusBySyllabusMasterId,
-                                    );
-                                    if (next === prev) return;
-                                    void (async () => {
-                                      const ok = await setMicrotopicStatus(
-                                        row.id,
-                                        next,
-                                      );
-                                      if (!ok) return;
-                                      useUndoStore.getState().offerUndo({
-                                        message: "Syllabus status updated",
-                                        runUndo: async () => {
-                                          await undoMicrotopicToStatus(
-                                            row.id,
-                                            prev,
-                                          );
-                                        },
-                                      });
-                                    })();
-                                  }}
-                                  className={clsx(
-                                    "min-h-[44px] w-full min-w-[11.5rem] shrink-0 rounded-lg border px-3 py-2 text-[13px] font-medium outline-none sm:w-auto sm:text-sm",
-                                    "focus-visible:ring-2 focus-visible:ring-kal-accent/50",
-                                    statusSelectClasses(st),
-                                  )}
-                                >
-                                  {MICROTOPIC_STATUSES.map((s) => (
-                                    <option key={s} value={s}>
-                                      {STATUS_LABEL[s]}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    </details>
+                              row={row as MergedSyllabusRow}
+                              rowIdx={rowIdx}
+                              statusBySyllabusMasterId={statusBySyllabusMasterId}
+                              setMicrotopicStatus={setMicrotopicStatus}
+                              undoMicrotopicToStatus={undoMicrotopicToStatus}
+                              canCustomize={canCustomize}
+                              catalogExamKey={catalogExamKey}
+                              openSheet={openSheet}
+                              setConfirmState={setConfirmState}
+                              userId={userId}
+                              revisionBundle={revisionBundle}
+                              setRevisionBundle={setRevisionBundle}
+                            />
+                          ))}
+                        </ul>
+                      ) : null}
+                    </div>
                   );
                 })}
               </div>
-            </details>
+              ) : null}
+            </div>
           );
         })}
       </div>
