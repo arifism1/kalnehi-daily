@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { ChartLine, Grid2x2, Home, Calendar, User } from "lucide-react";
+import { BookOpen, Grid2x2, Home, Calendar, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -16,7 +16,7 @@ type Tab = {
 const TABS: Tab[] = [
   { href: "/home", label: "Home", icon: Home },
   { href: "/daily-plan", label: "Plan", icon: Calendar, matchPrefix: true },
-  { href: "/progress", label: "Progress", icon: ChartLine, matchPrefix: true },
+  { href: "/syllabus", label: "Syllabus Tracker", icon: BookOpen, matchPrefix: true },
   { href: "/features", label: "Features", icon: Grid2x2, matchPrefix: true },
   { href: "/profile", label: "Profile", icon: User, matchPrefix: true },
 ];
