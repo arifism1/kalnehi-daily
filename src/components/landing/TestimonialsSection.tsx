@@ -45,7 +45,7 @@ const WALKTHROUGH = [
 
 export function TestimonialsSection() {
   return (
-    <section className="bg-[#F7F4EE] py-24 lg:py-32">
+    <section className="bg-kal-page py-24 lg:py-32">
       <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
         <div className="mb-14 max-w-xl">
           <h2
@@ -71,13 +71,13 @@ export function TestimonialsSection() {
               <div key={title} className="flex gap-5">
                 {/* Dot */}
                 <div className="relative flex flex-col items-center" aria-hidden>
-                  <div className="z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-kal-accent/30 bg-[#F7F4EE] text-base shadow-[0_0_0_4px_rgba(255,122,0,0.06)]">
+                  <div className="z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-kal-accent/30 bg-kal-page text-base shadow-[0_0_0_4px_rgba(255,122,0,0.06)] dark:shadow-[0_0_0_4px_rgba(255,140,26,0.12)]">
                     {icon}
                   </div>
                 </div>
 
                 {/* Card */}
-                <div className="flex-1 overflow-hidden rounded-2xl border border-kal-border bg-white/70 p-5 shadow-[0_2px_12px_rgba(100,75,40,0.05)]">
+                <div className="flex-1 overflow-hidden rounded-2xl border border-kal-border bg-kal-card p-5 shadow-[0_2px_12px_rgba(100,75,40,0.05)] backdrop-blur-sm dark:shadow-[0_2px_12px_rgba(0,0,0,0.3)]">
                   <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-kal-accent">
                       {title}

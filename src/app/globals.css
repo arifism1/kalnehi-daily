@@ -64,6 +64,9 @@
   --kal-ink-navy: #0E1525;
   --kal-forest: #1F3A2E;
   --kal-brick: #8A2B1F;
+  /** Hero grid + glow (used in inline styles; must track .dark via CSS vars) */
+  --kal-landing-hero-grid-line: rgba(200, 185, 165, 0.16);
+  --kal-landing-hero-radial: rgba(255, 122, 0, 0.07);
 
   /* ── Aliases for generic naming ───────────────────────────────────── */
   --background: var(--kal-page);
@@ -116,6 +119,9 @@
   --kal-success-soft: rgba(20, 83, 45, 0.3);
   --kal-success-border: rgba(134, 239, 172, 0.3);
   --kal-success-text: #86EFAC;
+
+  --kal-landing-hero-grid-line: rgba(255, 255, 255, 0.06);
+  --kal-landing-hero-radial: rgba(255, 140, 26, 0.1);
 
   --background: var(--kal-page);
   --foreground: var(--kal-text);

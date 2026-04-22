@@ -59,7 +59,7 @@ const PROBLEMS = [
 
 export function ProblemSection() {
   return (
-    <section className="bg-[#F7F4EE] py-24 lg:py-32">
+    <section className="bg-kal-page py-24 lg:py-32">
       <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
         {/* Header */}
         <div className="mb-14 max-w-2xl">
@@ -80,9 +80,9 @@ export function ProblemSection() {
           {PROBLEMS.map(({ icon, headline, body }) => (
             <div
               key={headline}
-              className="group rounded-2xl border border-[rgba(138,43,31,0.12)] bg-white/70 p-7 shadow-[0_2px_8px_rgba(100,75,40,0.05)] backdrop-blur-sm transition hover:shadow-[0_8px_24px_rgba(100,75,40,0.08)]"
+              className="group rounded-2xl border border-kal-border bg-kal-card p-7 shadow-[0_2px_8px_rgba(100,75,40,0.05)] backdrop-blur-sm transition hover:shadow-[0_8px_24px_rgba(100,75,40,0.08)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
             >
-              <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-[rgba(138,43,31,0.12)] bg-[rgba(138,43,31,0.05)]">
+              <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-kal-border bg-kal-card-muted">
                 {icon}
               </div>
               <h3 className="mb-3 text-base font-bold leading-snug text-kal-text">

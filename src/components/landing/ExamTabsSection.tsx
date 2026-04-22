@@ -64,7 +64,7 @@ const UNIVERSAL_FEATURES = [
 
 export function ExamTabsSection() {
   return (
-    <section className="bg-[#F2EFE8] py-24 lg:py-32">
+    <section className="bg-kal-page-end py-24 lg:py-32">
       <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
 
         {/* Header */}
@@ -85,7 +85,7 @@ export function ExamTabsSection() {
           {EXAM_GROUPS.map(({ label, color, exams }) => (
             <div
               key={label}
-              className="overflow-hidden rounded-2xl border border-[rgba(210,192,168,0.4)] bg-white/70 backdrop-blur-sm"
+              className="overflow-hidden rounded-2xl border border-kal-border bg-kal-card backdrop-blur-sm"
             >
               {/* Group header */}
               <div
@@ -98,7 +98,7 @@ export function ExamTabsSection() {
               </div>
 
               {/* Exam rows */}
-              <div className="divide-y divide-[rgba(210,192,168,0.25)]">
+              <div className="divide-y divide-kal-border">
                 {exams.map((name) => (
                   <div key={name} className="px-4 py-2.5">
                     <span className="text-sm font-medium text-kal-text">{name}</span>
@@ -110,7 +110,7 @@ export function ExamTabsSection() {
         </div>
 
         {/* Universal features note */}
-        <div className="overflow-hidden rounded-2xl border border-[rgba(210,192,168,0.4)] bg-white/70 p-8 backdrop-blur-sm">
+        <div className="overflow-hidden rounded-2xl border border-kal-border bg-kal-card p-8 backdrop-blur-sm">
           <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
             <div>
               <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-kal-accent">

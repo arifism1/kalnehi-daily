@@ -1,8 +1,8 @@
 export function FounderNoteSection() {
   return (
-    <section className="bg-[#F7F4EE] py-24 lg:py-32">
+    <section className="bg-kal-page py-24 lg:py-32">
       <div className="mx-auto max-w-3xl px-6 sm:px-8 lg:px-12">
-        <div className="rounded-2xl border border-kal-border bg-white/70 p-8 shadow-[0_4px_12px_rgba(100,75,40,0.05)] backdrop-blur-sm sm:p-10 lg:p-12">
+        <div className="rounded-2xl border border-kal-border bg-kal-card p-8 shadow-[0_4px_12px_rgba(100,75,40,0.05)] backdrop-blur-sm sm:p-10 lg:p-12 dark:shadow-[0_4px_12px_rgba(0,0,0,0.35)]">
           {/* Quote mark */}
           <div
             className="mb-6 text-6xl leading-none text-kal-accent/20"

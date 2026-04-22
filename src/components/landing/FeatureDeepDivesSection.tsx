@@ -72,7 +72,7 @@ const FEATURES: Feature[] = [
 
 export function FeatureDeepDivesSection() {
   return (
-    <section className="bg-[#F7F4EE] py-24 lg:py-32" id="features">
+    <section className="bg-kal-page py-24 lg:py-32" id="features">
       <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
         <div className="mb-16">
           <h2
@@ -120,7 +120,7 @@ export function FeatureDeepDivesSection() {
 
               {/* Illustration */}
               <div className="flex flex-1 items-center justify-center">
-                <div className="w-full max-w-md overflow-hidden rounded-2xl border border-[rgba(210,192,168,0.4)] bg-[#FAF7F2] shadow-[0_20px_60px_-12px_rgba(14,21,37,0.10)]">
+                <div className="w-full max-w-md overflow-hidden rounded-2xl border border-kal-border bg-kal-bg-elevated shadow-[0_20px_60px_-12px_rgba(14,21,37,0.10)] dark:shadow-[0_20px_60px_-12px_rgba(0,0,0,0.4)]">
                   {illustration}
                 </div>
               </div>
@@ -149,10 +149,10 @@ function DailyPlanIllustration() {
             key={label}
             className={`flex items-center gap-3 rounded-xl px-4 py-3 ${
               done
-                ? "border border-[rgba(134,239,172,0.3)] bg-[rgba(240,253,244,0.6)]"
+                ? "border border-kal-success-border/50 bg-kal-success-soft"
                 : active
-                  ? "border-[1.5px] border-[rgba(255,122,0,0.35)] bg-[rgba(255,243,232,0.7)]"
-                  : "border border-[rgba(210,192,168,0.3)] bg-white/50"
+                  ? "border-[1.5px] border-kal-accent/35 bg-kal-accent-soft"
+                  : "border border-kal-border bg-kal-card-muted"
             }`}
           >
             {/* Status circle */}
@@ -162,7 +162,7 @@ function DailyPlanIllustration() {
                   ? "bg-emerald-400"
                   : active
                     ? "bg-kal-accent"
-                    : "border-[1.5px] border-[rgba(180,162,138,0.5)]"
+                    : "border-[1.5px] border-kal-border-strong"
               }`}
             >
               {done && (
@@ -200,7 +200,7 @@ function DailyPlanIllustration() {
           <span className="text-[10px] text-kal-muted">1 of 3 done</span>
           <span className="text-[10px] font-bold text-kal-accent">33%</span>
         </div>
-        <div className="h-1.5 overflow-hidden rounded-full bg-[rgba(210,192,168,0.3)]">
+        <div className="h-1.5 overflow-hidden rounded-full bg-kal-border">
           <div className="h-full w-1/3 rounded-full bg-kal-accent" />
         </div>
       </div>
@@ -226,7 +226,7 @@ function SyllabusTrackerIllustration() {
               <span className="text-sm font-bold text-kal-text">{name}</span>
               <span className="font-serif text-base font-bold" style={{ color }}>{pct}%</span>
             </div>
-            <div className="h-2 overflow-hidden rounded-full bg-[rgba(210,192,168,0.2)]">
+            <div className="h-2 overflow-hidden rounded-full bg-kal-border/80">
               <div
                 className="h-full rounded-full transition-all"
                 style={{ width: `${pct}%`, backgroundColor: color, opacity: 0.8 }}
@@ -237,9 +237,9 @@ function SyllabusTrackerIllustration() {
       </div>
 
       {/* Insight badge */}
-      <div className="mt-6 inline-flex items-center gap-2 rounded-lg border border-[rgba(255,122,0,0.2)] bg-[rgba(255,243,232,0.8)] px-3 py-2">
+      <div className="mt-6 inline-flex items-center gap-2 rounded-lg border border-kal-accent/20 bg-kal-accent-soft px-3 py-2">
         <div className="h-1.5 w-1.5 rounded-full bg-kal-accent" aria-hidden />
-        <span className="text-[10px] font-semibold text-[#B35200]">15% of topics = 60% of marks</span>
+        <span className="text-[10px] font-semibold text-kal-accent-dark">15% of topics = 60% of marks</span>
       </div>
     </div>
   );
@@ -263,14 +263,14 @@ function MarksEngineIllustration() {
         <p className="mt-1 text-[11px] text-kal-muted">predicted out of 720</p>
       </div>
 
-      <div className="mb-5 h-px bg-[rgba(210,192,168,0.3)]" />
+      <div className="mb-5 h-px bg-kal-border" />
 
       {/* Subject breakdown */}
       <div className="space-y-3">
         {subjects.map(({ name, score, max, color }) => (
           <div key={name} className="flex items-center gap-3">
-            <span className="w-20 shrink-0 text-[11px] font-semibold text-[#4A3F33]">{name}</span>
-            <div className="flex-1 overflow-hidden rounded-full bg-[rgba(210,192,168,0.2)]" style={{ height: 8 }}>
+            <span className="w-20 shrink-0 text-[11px] font-semibold text-kal-text-secondary">{name}</span>
+            <div className="flex-1 overflow-hidden rounded-full bg-kal-border/80" style={{ height: 8 }}>
               <div
                 className="h-full rounded-full"
                 style={{ width: `${(score / max) * 100}%`, backgroundColor: color, opacity: 0.8 }}
@@ -307,23 +307,23 @@ function RevisionEngineIllustration() {
             key={name}
             className={`flex items-center gap-3 rounded-xl px-4 py-3 ${
               urgent
-                ? "border border-[rgba(252,165,165,0.45)] bg-[rgba(254,242,242,0.7)]"
-                : "border border-[rgba(210,192,168,0.3)] bg-white/50"
+                ? "border border-kal-danger-border bg-kal-danger-soft"
+                : "border border-kal-border bg-kal-card-muted"
             }`}
           >
             <div
               className="h-2.5 w-2.5 shrink-0 rounded-full"
-              style={{ backgroundColor: urgent ? "#EF4444" : "rgba(180,162,138,0.5)" }}
+              style={{ backgroundColor: urgent ? "#EF4444" : "var(--kal-border-strong)" }}
               aria-hidden
             />
-            <span className={`flex-1 text-sm font-medium ${urgent ? "font-bold text-kal-text" : "text-[#4A3F33]"}`}>
+            <span className={`flex-1 text-sm font-medium ${urgent ? "font-bold text-kal-text" : "text-kal-text-secondary"}`}>
               {name}
             </span>
             <span
               className={`shrink-0 rounded-lg px-2.5 py-1 text-[10px] font-semibold ${
                 urgent
-                  ? "bg-[#FEE2E2] text-[#B91C1C]"
-                  : "bg-[rgba(210,192,168,0.2)] text-[#7A6B5A]"
+                  ? "bg-kal-danger-soft text-kal-danger-text"
+                  : "bg-kal-border/50 text-kal-muted"
               }`}
             >
               {days} days ago
@@ -362,7 +362,7 @@ function FocusTimerIllustration() {
             <circle cx="60" cy="60" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="7" />
             <circle
               cx="60" cy="60" r={r}
-              fill="none" stroke="#FF7A00" strokeWidth="7" strokeLinecap="round"
+              fill="none" stroke="var(--kal-accent)" strokeWidth="7" strokeLinecap="round"
               strokeDasharray={`${circ * progress} ${circ * (1 - progress)}`}
               transform="rotate(-90 60 60)"
               opacity="0.9"
@@ -409,25 +409,25 @@ function PrepBrainIllustration() {
       <p className="mb-4 text-[9px] font-bold uppercase tracking-[0.14em] text-kal-muted">PrepBrain AI</p>
 
       {/* User message */}
-      <div className="mb-3 flex items-start justify-end gap-2">
-        <div className="max-w-[80%] rounded-2xl rounded-br-sm border border-[rgba(255,122,0,0.22)] bg-[rgba(255,243,232,0.85)] px-4 py-3">
+        <div className="mb-3 flex items-start justify-end gap-2">
+        <div className="max-w-[80%] rounded-2xl rounded-br-sm border border-kal-accent/25 bg-kal-accent-soft px-4 py-3">
           <p className="text-[11.5px] leading-relaxed text-kal-text">
             Based on my current syllabus and past data — if I want to score{" "}
             <span className="font-bold text-kal-accent">12 more marks</span>, what specifically should I study?
           </p>
         </div>
-        <div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[rgba(255,122,0,0.3)] bg-[rgba(255,122,0,0.1)] text-[9px] font-bold text-kal-accent">
+        <div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-kal-accent/30 bg-kal-accent-soft text-[9px] font-bold text-kal-accent">
           You
         </div>
       </div>
 
       {/* AI message */}
       <div className="mb-4 flex items-start gap-2">
-        <div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[rgba(99,102,241,0.3)] bg-[rgba(99,102,241,0.1)] text-[9px] font-bold text-indigo-500">
+        <div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-indigo-500/30 bg-indigo-500/10 text-[9px] font-bold text-indigo-600 dark:text-indigo-300">
           AI
         </div>
-        <div className="rounded-2xl rounded-bl-sm border border-[rgba(99,102,241,0.2)] bg-[rgba(238,242,255,0.85)] px-4 py-3">
-          <p className="mb-2 text-[11px] font-semibold text-indigo-700">Focus these 3 areas first:</p>
+        <div className="rounded-2xl rounded-bl-sm border border-indigo-500/20 bg-indigo-50/90 px-4 py-3 dark:border-indigo-400/25 dark:bg-indigo-950/45">
+          <p className="mb-2 text-[11px] font-semibold text-indigo-800 dark:text-indigo-200">Focus these 3 areas first:</p>
           <div className="space-y-1.5">
             {[
               { topic: "Optics — Wave theory", marks: "+5 marks", color: "#4338CA" },
@@ -436,7 +436,7 @@ function PrepBrainIllustration() {
             ].map(({ topic, marks }) => (
               <div key={topic} className="flex items-center justify-between gap-3">
                 <span className="text-[10.5px] text-kal-text">{topic}</span>
-                <span className="shrink-0 rounded-md bg-[rgba(99,102,241,0.12)] px-2 py-0.5 text-[9px] font-bold text-indigo-600">
+                <span className="shrink-0 rounded-md bg-indigo-500/12 px-2 py-0.5 text-[9px] font-bold text-indigo-700 dark:bg-indigo-400/15 dark:text-indigo-200">
                   {marks}
                 </span>
               </div>
@@ -446,9 +446,9 @@ function PrepBrainIllustration() {
       </div>
 
       {/* Syllabus-aware badge */}
-      <div className="flex items-center gap-2 rounded-lg border border-[rgba(99,102,241,0.18)] bg-[rgba(238,242,255,0.7)] px-3 py-2">
+      <div className="flex items-center gap-2 rounded-lg border border-indigo-500/18 bg-indigo-50/80 px-3 py-2 dark:border-indigo-400/22 dark:bg-indigo-950/40">
         <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400" aria-hidden />
-        <span className="text-[10px] font-semibold text-indigo-600">Based on your syllabus &amp; revision data</span>
+        <span className="text-[10px] font-semibold text-indigo-700 dark:text-indigo-200">Based on your syllabus &amp; revision data</span>
       </div>
     </div>
   );

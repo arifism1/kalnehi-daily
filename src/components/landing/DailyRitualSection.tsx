@@ -24,7 +24,7 @@ const BEATS = [
 
 export function DailyRitualSection() {
   return (
-    <section className="bg-[#F2EFE8] py-24 lg:py-32">
+    <section className="bg-kal-page-end py-24 lg:py-32">
       <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
         <div className="mb-16 max-w-xl">
           <h2
@@ -71,7 +71,7 @@ export function DailyRitualSection() {
 
               {/* Mockup */}
               <div className="flex flex-1 items-center justify-center lg:justify-start">
-                <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-[rgba(210,192,168,0.45)] bg-[rgba(255,252,248,0.95)] shadow-[0_16px_48px_-8px_rgba(14,21,37,0.12)]">
+                <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-kal-border bg-kal-card shadow-[0_16px_48px_-8px_rgba(14,21,37,0.12)] backdrop-blur-sm dark:shadow-[0_16px_48px_-8px_rgba(0,0,0,0.4)]">
                   {mockup}
                 </div>
               </div>
@@ -111,7 +111,7 @@ function PlanMockup() {
       {/* Type option */}
       <button
         type="button"
-        className="mb-4 flex w-full items-center gap-3 rounded-xl border border-kal-border bg-white/60 px-4 py-3 text-left"
+        className="mb-4 flex w-full items-center gap-3 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-left backdrop-blur-sm"
         aria-label="Self Type"
         tabIndex={-1}
       >
@@ -156,7 +156,7 @@ function ExecuteMockup() {
           <svg className="absolute h-24 w-24 -rotate-90" viewBox="0 0 96 96" aria-hidden>
             <circle cx="48" cy="48" r="42" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="5" />
             <circle
-              cx="48" cy="48" r="42" fill="none" stroke="#FF7A00" strokeWidth="5"
+              cx="48" cy="48" r="42" fill="none" stroke="var(--kal-accent)" strokeWidth="5"
               strokeDasharray={`${2 * Math.PI * 42}`}
               strokeDashoffset={`${2 * Math.PI * 42 * 0.45}`}
               strokeLinecap="round"
@@ -240,12 +240,12 @@ function RecoverMockup() {
       </div>
 
       {/* Daily log */}
-      <div className="rounded-xl border border-kal-border bg-white/60 p-3">
+      <div className="rounded-xl border border-kal-border bg-kal-card-muted p-3 backdrop-blur-sm">
         <div className="mb-2 flex items-center justify-between">
           <p className="text-[10px] font-bold text-kal-text">Daily Log</p>
           <span className="text-[10px] text-kal-muted">2 min</span>
         </div>
-        <div className="rounded-lg bg-[rgba(250,247,242,0.7)] px-3 py-2 text-[11px] leading-snug text-kal-muted italic">
+        <div className="rounded-lg bg-kal-page px-3 py-2 text-[11px] leading-snug text-kal-muted italic">
           "Electrochemistry clicked today. Optics revision needed — felt shaky..."
         </div>
       </div>

@@ -35,7 +35,7 @@ import {
 } from "@/lib/targetScoreBlueprint";
 import {
   getTargetBoostRecommendation,
-  saveTargetBoostRecommendationHistory,
+  saveBoostListToMyTarget,
   saveUserTargetBlueprint,
 } from "@/actions/targetBlueprint";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -253,8 +253,10 @@ export function TargetScoreBlueprintClient() {
     setNotice(null);
     setShowBoostMyTargetSuccess(false);
 
-    const res = await saveTargetBoostRecommendationHistory({
+    const res = await saveBoostListToMyTarget({
       examName: catalogExamKey.trim(),
+      maxScore,
+      estimatedMarksAtSave: estimate.estimatedExamMarks,
       targetBoost: boostRecommendation.targetBoost,
       achievedMarks: boostRecommendation.achievedMarks,
       selected: boostRecommendation.selected,
@@ -271,7 +273,7 @@ export function TargetScoreBlueprintClient() {
     setShowBoostMyTargetSuccess(true);
     setNotice("Boost list saved to My Target ✓");
     router.prefetch("/my-target");
-  }, [catalogExamKey, boostRecommendation, router]);
+  }, [catalogExamKey, boostRecommendation, estimate.estimatedExamMarks, maxScore, router]);
 
   if (!user) {
     return (

@@ -84,7 +84,7 @@ export function LandingNav() {
         className={clsx(
           "fixed top-0 left-0 right-0 z-50 pt-[env(safe-area-inset-top)] transition-all duration-300",
           scrolled
-            ? "border-b border-[rgba(210,192,168,0.35)] bg-[rgba(250,247,242,0.88)] shadow-[0_2px_8px_rgba(100,75,40,0.06)] backdrop-blur-xl"
+            ? "border-b border-kal-border bg-kal-card/90 shadow-[0_2px_8px_rgba(100,75,40,0.06)] backdrop-blur-xl dark:shadow-[0_2px_8px_rgba(0,0,0,0.25)]"
             : "bg-transparent",
         )}
       >
@@ -191,7 +191,7 @@ export function LandingNav() {
         {menuOpen && (
           <div
             ref={menuRef}
-            className="border-t border-kal-border bg-[rgba(250,247,242,0.96)] backdrop-blur-xl lg:hidden"
+            className="border-t border-kal-border bg-kal-card/95 backdrop-blur-xl lg:hidden"
           >
             <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
               <nav className="flex flex-col gap-1" aria-label="Mobile navigation">
@@ -246,7 +246,7 @@ export function LandingNav() {
       {/* Sticky bottom CTA bar — mobile only, appears after hero scroll */}
       <div
         className={clsx(
-          "fixed bottom-0 left-0 right-0 z-50 border-t border-kal-border bg-[rgba(250,247,242,0.95)] px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl transition-transform duration-300 lg:hidden",
+          "fixed bottom-0 left-0 right-0 z-50 border-t border-kal-border bg-kal-card/95 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl transition-transform duration-300 lg:hidden",
           stickyBarVisible ? "translate-y-0" : "translate-y-full",
         )}
       >
