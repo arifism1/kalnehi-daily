@@ -11,7 +11,10 @@ import {
   filterTasksForDate,
   findMissedIncompleteTasks,
 } from "@/lib/progressEngine";
-import { hydrateUserPlannerTextFromServer } from "@/lib/userPlannerTextClient";
+import {
+  hydrateUserPlannerTextRevisionsFromServer,
+  normalizePlannerTextBundle,
+} from "@/lib/userPlannerTextClient";
 import { getUserPlannerTextBundleCached } from "@/lib/userPlannerTextLocal";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useTaskStore } from "@/store/useTaskStore";
@@ -94,7 +97,17 @@ export function HomePriorityStrip() {
     }
     let cancelled = false;
     void (async () => {
-      const b = await hydrateUserPlannerTextFromServer(userId);
+      // Seed from IDB cache immediately for an instant badge count.
+      const cached = await getUserPlannerTextBundleCached(userId);
+      if (cached && !cancelled) {
+        setMissedRevCount(
+          normalizePlannerTextBundle(cached).revisionItems.filter((r) =>
+            isOverduePendingRevisionReminder(r, today),
+          ).length,
+        );
+      }
+      // Revision-only sync: one table, no productivity/todos/prefs overhead.
+      const b = await hydrateUserPlannerTextRevisionsFromServer(userId);
       if (cancelled) return;
       setMissedRevCount(
         b.revisionItems.filter((r) => isOverduePendingRevisionReminder(r, today))

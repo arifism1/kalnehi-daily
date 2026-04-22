@@ -26,7 +26,8 @@ import {
 import { applyOptimisticTaskUpdate } from "@/lib/taskMutations";
 import { deleteTaskWithUndo } from "@/lib/taskUndo";
 import {
-  hydrateUserPlannerTextFromServer,
+  hydrateUserPlannerTextRevisionsFromServer,
+  normalizePlannerTextBundle,
   plannerTextMarkRevisionReminderDone,
   plannerTextRemoveRevision,
   plannerTextSetRevisionReminderNextDue,
@@ -87,9 +88,15 @@ export function MissedTasks() {
       setRevisionLoading(false);
       return;
     }
+    // Seed from IDB cache immediately so the list appears without waiting for the network.
+    const cached = await getUserPlannerTextBundleCached(userId);
+    if (cached) {
+      setRevisionItems(normalizePlannerTextBundle(cached).revisionItems);
+    }
     setRevisionLoading(true);
     try {
-      const bundle = await hydrateUserPlannerTextFromServer(userId);
+      // Revision-only sync: single table query, no productivity/todos/prefs overhead.
+      const bundle = await hydrateUserPlannerTextRevisionsFromServer(userId);
       setRevisionItems(bundle.revisionItems);
     } finally {
       setRevisionLoading(false);
