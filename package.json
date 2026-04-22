@@ -19,7 +19,8 @@
     "verify:service-role": "node scripts/verify-service-role-scope.mjs",
     "verify:dast-staging": "node scripts/dast-staging-hints.mjs",
     "verify:security": "npm run security:audit && node scripts/verify-supabase-security.mjs && node scripts/verify-service-role-scope.mjs && node scripts/dast-staging-hints.mjs",
-    "generate:icons": "node scripts/generate-app-icons.mjs"
+    "generate:icons": "node scripts/generate-app-icons.mjs",
+    "test:rollup": "node --import tsx --test src/lib/syllabusRollup.projection.test.ts"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^0.10.34",
@@ -61,6 +62,7 @@
     "eslint-config-next": "^16.2.4",
     "sharp": "^0.34.5",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }

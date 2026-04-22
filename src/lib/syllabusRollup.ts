@@ -488,3 +488,16 @@ export function computeNeetYearProjections(
 
   return out.sort((a, b) => b.year - a.year);
 }
+
+/**
+ * Arithmetic mean of per-year exam-scale projections (each `projectedOutOf720` is
+ * out of the user's `maxScore`, e.g. 720 / 300 / 2350). Used for Home "Proj. score"
+ * so it matches a blend of `computeNeetYearProjections` years.
+ */
+export function averageProjectedOutOfMax(
+  projections: NeetYearProjection[],
+): number | null {
+  if (projections.length === 0) return null;
+  const sum = projections.reduce((a, p) => a + p.projectedOutOf720, 0);
+  return Math.round(sum / projections.length);
+}

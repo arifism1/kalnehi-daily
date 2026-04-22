@@ -8,7 +8,10 @@ import { useDailyPlanHomeExecution } from "@/hooks/useDailyPlanHomeExecution";
 import { useSyllabusTracker } from "@/hooks/useSyllabusTracker";
 import { useTargetExamDisplay } from "@/hooks/useTargetExamDisplay";
 import { shouldShowSyllabusComingSoon } from "@/lib/examProfile";
-import { buildSyllabusMultiYearCapture } from "@/lib/syllabusRollup";
+import {
+  averageProjectedOutOfMax,
+  buildSyllabusMultiYearCapture,
+} from "@/lib/syllabusRollup";
 import {
   isUpscCseMainsExam,
   UPSC_CSE_MAINS_UI_TOTAL_MARKS,
@@ -183,12 +186,23 @@ export function HomeDashboardBody({
     todayTasks.length,
   ]);
 
-  const { mastered, total } = useMemo(() => {
+  const { mastered, total, projectedScoreCaption } = useMemo(() => {
     if (cuetScoringRollup) {
       return {
         mastered: cuetScoringRollup.totalProjected,
         total: cuetScoringRollup.totalMax,
+        projectedScoreCaption: null as string | null,
       };
+    }
+    if (syllabusRows.length > 0 && neetYearProjections.length > 0) {
+      const avg = averageProjectedOutOfMax(neetYearProjections);
+      if (avg != null) {
+        return {
+          mastered: avg,
+          total: syllabusScoreMax,
+          projectedScoreCaption: "Based on past few years' exam patterns",
+        };
+      }
     }
     if (syllabusRows.length > 0) {
       return {
@@ -196,12 +210,18 @@ export function HomeDashboardBody({
         total: isUpscMainsUi
           ? UPSC_CSE_MAINS_UI_TOTAL_MARKS
           : syllabusRollup.totalMarksPool,
+        projectedScoreCaption: null as string | null,
       };
     }
-    return computeWeightedMarksTotals(realityTasks, microtopicById);
+    return {
+      ...computeWeightedMarksTotals(realityTasks, microtopicById),
+      projectedScoreCaption: null as string | null,
+    };
   }, [
     cuetScoringRollup,
     syllabusRows.length,
+    neetYearProjections,
+    syllabusScoreMax,
     syllabusRollup.totalMarksMastered,
     syllabusRollup.totalMarksPool,
     realityTasks,
@@ -263,6 +283,7 @@ export function HomeDashboardBody({
         syllabusMasteryPercent={syllabusMasteryPercent}
         marksMastered={mastered}
         marksTotal={total}
+        projectedScoreCaption={projectedScoreCaption}
         todayPercent={effectiveTodayPercent}
         todayTaskCount={effectiveTodayTotal}
         examDisplayName={examDisplayName}

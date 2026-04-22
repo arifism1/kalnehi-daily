@@ -64,26 +64,42 @@ export type UserPlannerTextServerPayload = {
 };
 
 /**
- * Merge server snapshot into a local bundle using per-row `updated_at` (and prefs/productivity row timestamps).
+ * Apply only `user_revision_queue_items` from the server. Keeps productivity, todos, prefs
+ * from `prev` (used by revision list hydration without a full planner fetch).
  */
-export function mergeUserPlannerTextFromServer(
+export function mergeServerRevisionsOnly(
   prev: UserPlannerTextBundle,
-  server: UserPlannerTextServerPayload,
+  serverRows: Tables<"user_revision_queue_items">[],
 ): UserPlannerTextBundle {
   const revMap = new Map<string, RevisionQueueEntry>();
   for (const it of prev.revisionItems) {
     revMap.set(it.id, it);
   }
-  for (const r of server.revisions) {
+  for (const r of serverRows) {
     const next = revisionFromRow(r);
     const cur = revMap.get(r.id);
     if (!cur || isoTs(r.updated_at) >= isoTs(cur.updatedAt)) {
       revMap.set(r.id, next);
     }
   }
+  return {
+    ...prev,
+    revisionItems: Array.from(revMap.values()),
+    updatedAt: Date.now(),
+  };
+}
+
+/**
+ * Merge server snapshot into a local bundle using per-row `updated_at` (and prefs/productivity row timestamps).
+ */
+export function mergeUserPlannerTextFromServer(
+  prev: UserPlannerTextBundle,
+  server: UserPlannerTextServerPayload,
+): UserPlannerTextBundle {
+  const withRevs = mergeServerRevisionsOnly(prev, server.revisions);
 
   const todoMap = new Map<string, PlannerTodoState>();
-  for (const t of prev.todos) {
+  for (const t of withRevs.todos) {
     todoMap.set(t.id, t);
   }
   for (const r of server.todos) {
@@ -134,8 +150,8 @@ export function mergeUserPlannerTextFromServer(
   }
 
   return {
-    userId: prev.userId,
-    revisionItems: Array.from(revMap.values()),
+    userId: withRevs.userId,
+    revisionItems: withRevs.revisionItems,
     productivity,
     productivityUpdatedAt,
     todos: mergedTodos,

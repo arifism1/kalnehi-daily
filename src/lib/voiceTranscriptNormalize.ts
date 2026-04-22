@@ -15,3 +15,14 @@ export function normalizeVoiceTranscriptForParsing(input: string): string {
   t = t.replace(/\s+/g, " ");
   return t.trim();
 }
+
+/** Collapse repeated consecutive tokens from on-device ASR (same as Dictate My Day). */
+export function normalizeSpeechTranscript(raw: string): string {
+  const parts = raw.trim().split(/\s+/).filter(Boolean);
+  const out: string[] = [];
+  for (const p of parts) {
+    if (out[out.length - 1] === p) continue;
+    out.push(p);
+  }
+  return out.join(" ");
+}
