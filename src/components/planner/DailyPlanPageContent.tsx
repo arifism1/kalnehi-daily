@@ -124,6 +124,7 @@ export function DailyPlanPageContent() {
         planDate={logDate}
         title={listTitle}
         onTasksLoaded={handleTasksLoaded}
+        showScheduleRevision
       />
 
       {/* Add tasks via source pages */}
