@@ -130,7 +130,8 @@ export type PrepBrainCompactContext = {
     completion_percent: number;
     execution_status: string;
     days_behind: number | null;
-    pending_from_past_days: number;
+    /** Daily-plan tasks from before today that are still incomplete (not the old Pending page). */
+    incomplete_tasks_from_past_days: number;
   };
   consistency: {
     execution_sessions_last_7d: number;
@@ -475,7 +476,7 @@ export function buildPrepBrainCompactContext(ctx: PrepBrainContext): PrepBrainCo
       ),
       execution_status: ctx.todays_planned_work.todays_execution_status_label,
       days_behind: ctx.todays_planned_work.days_behind_on_execution,
-      pending_from_past_days:
+      incomplete_tasks_from_past_days:
         ctx.todays_planned_work.count_of_incomplete_tasks_from_past_days,
     },
     consistency: {

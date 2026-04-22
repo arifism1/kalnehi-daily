@@ -228,6 +228,42 @@ export async function plannerTextSetRevisionReminderStatus(
   return next;
 }
 
+export async function plannerTextSetRevisionReminderNextDue(
+  userId: string,
+  id: string,
+  nextDueYyyyMmDd: string,
+): Promise<UserPlannerTextBundle> {
+  const due = nextDueYyyyMmDd.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(due)) {
+    return normalizePlannerTextBundle(
+      (await getUserPlannerTextBundleCached(userId)) ??
+        createEmptyUserPlannerTextBundle(userId),
+    );
+  }
+  const bundle = normalizePlannerTextBundle(
+    (await getUserPlannerTextBundleCached(userId)) ??
+      createEmptyUserPlannerTextBundle(userId),
+  );
+  const idx = bundle.revisionItems.findIndex((r) => r.id === id);
+  if (idx < 0) return bundle;
+  const prev = bundle.revisionItems[idx]!;
+  const entry: RevisionQueueEntry = {
+    ...prev,
+    nextDue: due,
+    updatedAt: nowIso(),
+  };
+  const nextItems = [...bundle.revisionItems];
+  nextItems[idx] = entry;
+  const next = { ...bundle, revisionItems: nextItems, updatedAt: Date.now() };
+  await saveUserPlannerTextBundleCached(next);
+  await enqueueUserPlannerTextOutbox(
+    userId,
+    revisionUpsertOpFromEntry(entry),
+  );
+  scheduleUserPlannerTextFlush(userId);
+  return next;
+}
+
 export async function plannerTextRemoveRevision(
   userId: string,
   id: string,

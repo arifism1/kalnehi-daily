@@ -115,7 +115,7 @@ export async function ensureAutomatedNotifications(): Promise<
 
     const today = format(new Date(), "yyyy-MM-dd");
 
-    const [{ count: pendingCount, error: pendingError }, { data: todayTasks, error: dayErr }, { data: streakRows, error: streakErr }] =
+    const [{ count: incompleteTaskCount, error: incompleteCountError }, { data: todayTasks, error: dayErr }, { data: streakRows, error: streakErr }] =
       await Promise.all([
         supabase
           .from("tasks")
@@ -135,19 +135,19 @@ export async function ensureAutomatedNotifications(): Promise<
           .gte("assigned_date", format(new Date(Date.now() - 1000 * 60 * 60 * 24 * 30), "yyyy-MM-dd"))
           .order("assigned_date", { ascending: false }),
       ]);
-    if (pendingError) throw pendingError;
+    if (incompleteCountError) throw incompleteCountError;
     if (dayErr) throw dayErr;
     if (streakErr) throw streakErr;
 
-    const pending = pendingCount ?? 0;
+    const incompleteTasks = incompleteTaskCount ?? 0;
     await insertIfMissingToday(
       supabase,
       user.id,
       "reminder",
-      "Pending tasks reminder",
-      pending > 0
-        ? `You have ${pending} pending tasks. Start with one high-impact task now.`
-        : "No pending tasks right now. Great momentum - keep it up.",
+      "Open tasks reminder",
+      incompleteTasks > 0
+        ? `You have ${incompleteTasks} incomplete task${incompleteTasks === 1 ? "" : "s"} in your plan. Start with one high-impact task now.`
+        : "No incomplete tasks in your backlog right now. Great momentum — keep it up.",
     );
 
     const totalToday = todayTasks?.length ?? 0;

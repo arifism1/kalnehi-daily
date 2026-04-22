@@ -1,21 +1,19 @@
 "use client";
 
 import clsx from "clsx";
-import {
-  CheckCircle2,
-  Clock,
-  Inbox,
-  LineChart,
-  ListTodo,
-} from "lucide-react";
+import { CheckCircle2, LineChart, ListTodo } from "lucide-react";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useCalendarDate } from "@/hooks/useCalendarDate";
+import { isOverduePendingRevisionReminder } from "@/lib/engine/revisionSchedule";
 import {
   filterTasksForDate,
   findMissedIncompleteTasks,
 } from "@/lib/progressEngine";
+import { hydrateUserPlannerTextFromServer } from "@/lib/userPlannerTextClient";
+import { getUserPlannerTextBundleCached } from "@/lib/userPlannerTextLocal";
+import { useAuthStore } from "@/store/useAuthStore";
 import { useTaskStore } from "@/store/useTaskStore";
 
 type PriorityCard = {
@@ -75,9 +73,11 @@ function PriorityCardItem({ card }: { card: PriorityCard }) {
 }
 
 export function HomePriorityStrip() {
+  const userId = useAuthStore((s) => s.user?.id);
   const today = useCalendarDate();
   const tasksRecord = useTaskStore((s) => s.tasks);
   const tasksHydrated = useTaskStore((s) => s.hydrated);
+  const [missedRevCount, setMissedRevCount] = useState(0);
 
   const { todayTasks, missedTasks } = useMemo(() => {
     const all = Object.values(tasksRecord);
@@ -87,14 +87,39 @@ export function HomePriorityStrip() {
     };
   }, [tasksRecord, today]);
 
-  const pendingTasks = useMemo(() => {
-    return Object.values(tasksRecord).filter(
-      (t) => t.status !== "completed" && t.assigned_date && t.assigned_date < today,
-    );
-  }, [tasksRecord, today]);
+  useEffect(() => {
+    if (!userId) {
+      setMissedRevCount(0);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      const b = await hydrateUserPlannerTextFromServer(userId);
+      if (cancelled) return;
+      setMissedRevCount(
+        b.revisionItems.filter((r) => isOverduePendingRevisionReminder(r, today))
+          .length,
+      );
+    })();
+    const onPlanner = () => {
+      void getUserPlannerTextBundleCached(userId).then((b) => {
+        if (!b) return;
+        setMissedRevCount(
+          b.revisionItems.filter((r) => isOverduePendingRevisionReminder(r, today))
+            .length,
+        );
+      });
+    };
+    window.addEventListener("kalnehi-user-planner-text-changed", onPlanner);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("kalnehi-user-planner-text-changed", onPlanner);
+    };
+  }, [userId, today]);
 
   const cards = useMemo((): PriorityCard[] => {
     const result: PriorityCard[] = [];
+    const missedTotal = missedTasks.length + missedRevCount;
 
     if (todayTasks.length === 0) {
       result.push({
@@ -106,28 +131,18 @@ export function HomePriorityStrip() {
       });
     }
 
-    if (pendingTasks.length > 0) {
-      result.push({
-        id: "pending",
-        href: "/pending",
-        icon: Inbox,
-        name: "Pending Tasks",
-        status: `${pendingTasks.length} pending`,
-      });
-    }
-
-    if (missedTasks.length > 0) {
+    if (missedTotal > 0) {
       result.push({
         id: "missed-tasks",
         href: "/missed-tasks",
         icon: LineChart,
         name: "Missed Tasks",
-        status: `${missedTasks.length} missed`,
+        status: `${missedTotal} missed`,
       });
     }
 
     return result;
-  }, [todayTasks.length, pendingTasks, missedTasks]);
+  }, [todayTasks.length, missedTasks.length, missedRevCount]);
 
   return (
     <section aria-label="Needs attention" className="space-y-2">

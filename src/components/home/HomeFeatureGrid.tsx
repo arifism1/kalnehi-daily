@@ -11,7 +11,6 @@ import {
   Clock,
   Flower2,
   HelpCircle,
-  Inbox,
   LineChart,
   ListTodo,
   MessageSquare,
@@ -52,7 +51,6 @@ type Category = {
 
 type LiveData = {
   todayTaskCount: number;
-  pendingCount: number;
   missedCount: number;
   syllabusMasteryPercent: number | null;
   marksMastered: number;
@@ -98,14 +96,6 @@ const CATEGORIES: Category[] = [
         icon: Clock,
         staticHint: "Start a focus session",
         fallback: "Start a focus session",
-      },
-      {
-        id: "pending-tasks",
-        href: "/pending",
-        label: "Pending Tasks",
-        icon: Inbox,
-        liveHint: (d) => (d.pendingCount > 0 ? `${d.pendingCount} pending` : null),
-        fallback: "All clear",
       },
       {
         id: "missed-tasks",
@@ -330,13 +320,9 @@ export function HomeFeatureGrid({
     const all = Object.values(tasksRecord);
     const todayTasks = filterTasksForDate(all, today);
     const missedTasks = findMissedIncompleteTasks(all, today);
-    const pendingTasks = all.filter(
-      (t) => t.status !== "completed" && t.assigned_date && t.assigned_date < today,
-    );
 
     return {
       todayTaskCount: todayTaskCount > 0 ? todayTaskCount : todayTasks.length,
-      pendingCount: pendingTasks.length,
       missedCount: missedTasks.length,
       syllabusMasteryPercent,
       marksMastered,

@@ -10,7 +10,11 @@
  * Throws if all candidates fail.
  */
 
-import { deepinfraChat, type OpenAICompatibleChatResponse } from "@/lib/deepinfraClient";
+import {
+  deepinfraChat,
+  deepinfraChatStreamRequest,
+  type OpenAICompatibleChatResponse,
+} from "@/lib/deepinfraClient";
 
 export type AiChatMessage = {
   role: "system" | "user" | "assistant";
@@ -127,4 +131,203 @@ export async function callChatCompletion(
   }
 
   throw lastErr ?? new Error("All AI candidates failed");
+}
+
+export type StreamingChatUsage = {
+  fullText: string;
+  modelUsed: string;
+  totalTokens: number;
+  promptTokens: number;
+  completionTokens: number;
+};
+
+export type StreamingChatResult = {
+  /** Emits one string chunk per model delta (may be a single character or a phrase). */
+  textStream: ReadableStream<string>;
+  /** Resolves when the provider stream ends (success or end of body). */
+  usagePromise: Promise<StreamingChatUsage>;
+};
+
+type OpenAiStreamLineJson = {
+  model?: string;
+  usage?: {
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    total_tokens?: number;
+  };
+  choices?: { delta?: { content?: string | null; role?: string } }[];
+};
+
+/**
+ * Converts an OpenAI-compatible SSE `chat/completions` body into text deltas
+ * and resolves usage from the last chunk that includes `usage` (or zeros).
+ */
+function openAiSseToTextStream(
+  body: ReadableStream<Uint8Array>,
+  defaultModel: string,
+): { textStream: ReadableStream<string>; usagePromise: Promise<StreamingChatUsage> } {
+  let resolveUsage!: (v: StreamingChatUsage) => void;
+  const usagePromise = new Promise<StreamingChatUsage>((r) => {
+    resolveUsage = r;
+  });
+
+  const textStream = new ReadableStream<string>({
+    async start(controller) {
+      const reader = body.getReader();
+      const dec = new TextDecoder();
+      let lineBuf = "";
+      let acc = "";
+      let modelUsed = defaultModel;
+      let promptTokens = 0;
+      let completionTokens = 0;
+      let totalTokens = 0;
+
+      const flushLine = (line: string) => {
+        const t = line.trim();
+        if (!t.startsWith("data: ")) return;
+        const data = t.slice(6);
+        if (data === "[DONE]") {
+          return;
+        }
+        try {
+          const json = JSON.parse(data) as OpenAiStreamLineJson;
+          if (typeof json.model === "string" && json.model) modelUsed = json.model;
+          if (json.usage) {
+            promptTokens = json.usage.prompt_tokens ?? promptTokens;
+            completionTokens = json.usage.completion_tokens ?? completionTokens;
+            totalTokens = json.usage.total_tokens ?? totalTokens;
+          }
+          const d = json.choices?.[0]?.delta?.content;
+          if (typeof d === "string" && d.length > 0) {
+            acc += d;
+            controller.enqueue(d);
+          }
+        } catch {
+          /* ignore partial JSON from chunk boundaries */
+        }
+      };
+
+      try {
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          lineBuf += dec.decode(value, { stream: true });
+          const lines = lineBuf.split("\n");
+          lineBuf = lines.pop() ?? "";
+          for (const line of lines) flushLine(line);
+        }
+        if (lineBuf.length > 0) {
+          for (const part of lineBuf.split("\n")) flushLine(part);
+        }
+        if (!totalTokens) {
+          const pc = promptTokens + completionTokens;
+          totalTokens = pc > 0 ? pc : 0;
+        }
+        resolveUsage({
+          fullText: acc,
+          modelUsed,
+          totalTokens,
+          promptTokens,
+          completionTokens,
+        });
+        controller.close();
+      } catch (e) {
+        resolveUsage({
+          fullText: acc,
+          modelUsed,
+          totalTokens: 0,
+          promptTokens: 0,
+          completionTokens: 0,
+        });
+        controller.error(e);
+      }
+    },
+  });
+
+  return { textStream, usagePromise };
+}
+
+async function groqOpenAiChatStream(params: {
+  model: string;
+  messages: AiChatMessage[];
+  temperature?: number;
+  max_tokens?: number;
+}): Promise<Response> {
+  const apiKey = process.env.GROQ_API_KEY?.trim();
+  if (!apiKey) throw new Error("GROQ_API_KEY is not set");
+
+  const resp = await fetch(`${GROQ_BASE_URL}/chat/completions`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: params.model,
+      messages: params.messages,
+      temperature: params.temperature,
+      max_tokens: params.max_tokens,
+      stream: true,
+    }),
+  });
+
+  if (!resp.ok) {
+    const b = await resp.text().catch(() => "");
+    throw new Error(`Groq API error ${resp.status}: ${b.slice(0, 200)}`);
+  }
+  if (!resp.body) throw new Error("Groq streaming response has no body");
+  return resp;
+}
+
+/**
+ * Same failover order as `callChatCompletion`, but returns an SSE text stream
+ * and a promise of final usage from the first successful candidate.
+ */
+export async function callStreamingChatCompletion(
+  candidates: ModelCandidate[],
+  messages: AiChatMessage[],
+  options: { temperature?: number; max_tokens?: number },
+): Promise<StreamingChatResult> {
+  if (candidates.length === 0) {
+    throw new Error("callStreamingChatCompletion: no model candidates provided");
+  }
+
+  let lastErr: unknown;
+
+  for (const candidate of candidates) {
+    try {
+      const resp =
+        candidate.provider === "deepinfra"
+          ? await deepinfraChatStreamRequest({
+              model: candidate.model,
+              messages,
+              temperature: options.temperature,
+              max_tokens: options.max_tokens,
+            })
+          : await groqOpenAiChatStream({
+              model: candidate.model,
+              messages,
+              temperature: options.temperature,
+              max_tokens: options.max_tokens,
+            });
+
+      const { textStream, usagePromise } = openAiSseToTextStream(
+        resp.body!,
+        candidate.model,
+      );
+      // Note: we cannot try the next candidate on empty text — the body is already consumed.
+      return {
+        textStream,
+        usagePromise: usagePromise.then((u) => ({ ...u, modelUsed: candidate.model })),
+      };
+    } catch (e) {
+      lastErr = e;
+      console.error(
+        `[aiChatClient] stream ${candidate.provider}/${candidate.model} failed:`,
+        e instanceof Error ? e.message : e,
+      );
+    }
+  }
+
+  throw lastErr ?? new Error("All AI streaming candidates failed");
 }

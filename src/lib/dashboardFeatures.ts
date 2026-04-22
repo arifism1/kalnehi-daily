@@ -8,7 +8,6 @@ import {
   Clock,
   Flower2,
   HelpCircle,
-  Inbox,
   LineChart,
   ListTodo,
   MessageSquare,
@@ -71,12 +70,6 @@ export const DASHBOARD_FEATURES: DashboardFeature[] = [
     title: "Target Score Blueprint",
     icon: Target,
     description: "Map the exact marks you need — subject by subject.",
-  },
-  {
-    id: "pending-tasks",
-    title: "Pending Tasks",
-    icon: Inbox,
-    description: "Never let a task slip — see everything that still needs doing.",
   },
   {
     id: "brain-yoga",

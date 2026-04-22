@@ -4,7 +4,8 @@ import { MissedTasksPageClient } from "./MissedTasksPageClient";
 
 export const metadata: Metadata = {
   title: "Missed Tasks — Kalnehi",
-  description: "Review and reschedule tasks you haven't completed from previous days.",
+  description:
+    "Overdue daily plan tasks and past-due revision reminders — reschedule or complete in one place.",
 };
 
 export default function MissedTasksPage() {

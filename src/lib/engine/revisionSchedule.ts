@@ -125,6 +125,22 @@ export function markRevisionReminderDone(
   };
 }
 
+/** Past-due revision reminders that still need action (Missed page). */
+export function isOverduePendingRevisionReminder(
+  it: RevisionItem,
+  todayYyyyMmDd: string,
+): boolean {
+  return it.status === "pending" && it.nextDue < todayYyyyMmDd;
+}
+
+/** Today or future — items shown on the main Revision Reminders list. */
+export function isRevisionReminderOnOrAfterDate(
+  it: RevisionItem,
+  todayYyyyMmDd: string,
+): boolean {
+  return it.nextDue >= todayYyyyMmDd;
+}
+
 export function dueAndUpcoming(
   items: RevisionItem[],
   today: string,

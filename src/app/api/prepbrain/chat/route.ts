@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 
 import type { Tables } from "@/types/supabase";
 
@@ -26,10 +26,14 @@ import { isFreeTrialWindowActive } from "@/lib/freeTrial";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 import { resolvePrepbrainGroqModels } from "@/lib/groqPrepbrainModel";
-import { callChatCompletion, type AiChatMessage } from "@/lib/aiChatClient";
+import {
+  callStreamingChatCompletion,
+  type AiChatMessage,
+} from "@/lib/aiChatClient";
 import { USER_ERROR } from "@/lib/userFacingErrors";
 import {
   buildPrepbrainUsageDisplayPayload,
+  computePrepbrainTokenPersist,
 } from "@/lib/prepbrainTokenAccounting";
 import {
   PREPBRAIN_AI_TOKEN_RESERVE_ESTIMATE,
@@ -95,6 +99,7 @@ function maxCompletionTokensForIntent(
 ): number {
   switch (intent) {
     case "general":
+    case "no_data":
     case "marks_score":
     case "today_plan":
     case "target_score":
@@ -127,6 +132,7 @@ type PrepBrainIntent =
   | "study_camera"
   | "target_score"
   | "small_talk"
+  | "no_data"
   | "general";
 
 function isCurrentlyPaid(
@@ -295,8 +301,38 @@ function isSmallTalk(msg: string): boolean {
   return false;
 }
 
+/**
+ * Generic study-technique / strategy questions with no user-specific prep data.
+ * Checked before other keyword routes so "improve" etc. do not override.
+ */
+function isGenericStrategyQuestion(msg: string): boolean {
+  const t = msg.trim().toLowerCase();
+  if (!t) return false;
+  if (isPrepBrainCapabilityQuestion(msg) || isPrepBrainValueChallengeQuestion(msg)) return false;
+  if (
+    /\b(my|mine|today|this week|my syllabus|my marks|my score|my plan|my streak|kalnehi|prepbrain)\b/.test(
+      t,
+    )
+  ) {
+    return false;
+  }
+  return (
+    /\bhow (to|do i|should i|can i)\b.{0,50}\b(study|focus|memorize|revise|avoid|handle)\b/.test(
+      t,
+    ) ||
+    /\b(pomodoro|spaced repetition|active recall|feynman|cornell|flashcard)\b/.test(t) ||
+    /\b(exam (stress|anxiety|pressure|fear|dread))\b/.test(t) ||
+    /\b(study (routine|schedule|technique|method|habit|tip)s?)\b/.test(t) ||
+    /\b(how (many|long|often|much) (should|do|to) (i|one) (study|sleep|take breaks))\b/.test(
+      t,
+    ) ||
+    /\bhow to (read|retain|concentrat|concentration)\b/.test(t)
+  );
+}
+
 function detectPrepBrainIntent(lastUserMessage: string): PrepBrainIntent {
   if (isSmallTalk(lastUserMessage)) return "small_talk";
+  if (isGenericStrategyQuestion(lastUserMessage)) return "no_data";
 
   const t = lastUserMessage.toLowerCase();
   if (
@@ -375,8 +411,10 @@ function detectPrepBrainIntent(lastUserMessage: string): PrepBrainIntent {
   return "general";
 }
 
-function selectToolsForIntent(intent: PrepBrainIntent): PrepbrainToolName[] {
+function selectToolsForIntent(intent: Exclude<PrepBrainIntent, "small_talk">): PrepbrainToolName[] {
   switch (intent) {
+    case "no_data":
+      return [];
     case "today_plan":
       return ["getTodayPlan", "getWeakStrongSubjects"];
     case "marks_score":
@@ -391,8 +429,12 @@ function selectToolsForIntent(intent: PrepBrainIntent): PrepbrainToolName[] {
       return ["getRecentStudyCameraData", "getTodayPlan"];
     case "target_score":
       return ["getTargetScoreBlueprint", "getSyllabusOverview"];
-    default:
-      return ["getTodayPlan", "getSyllabusOverview"];
+    case "general":
+      return ["getTodayPlan"];
+    default: {
+      const _exhaustive: never = intent;
+      return _exhaustive;
+    }
   }
 }
 
@@ -510,13 +552,19 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data: profileRaw, error: profileErr } = await admin
-    .from("user_profiles")
-    .select(
-      "subscription_status,subscription_end_date,trial_started_at,ai_tokens_used,ai_tokens_month,welcome_ai_tokens_used,paid_trial_ai_tokens_used,bonus_ai_tokens_ledger,primary_exam,target_exam,cuet_domain_subjects,upsc_optional_subjects",
-    )
-    .eq("user_id", user.id)
-    .maybeSingle();
+  const [profileRes, room, remainMs] = await Promise.all([
+    admin
+      .from("user_profiles")
+      .select(
+        "subscription_status,subscription_end_date,trial_started_at,ai_tokens_used,ai_tokens_month,welcome_ai_tokens_used,paid_trial_ai_tokens_used,bonus_ai_tokens_ledger,primary_exam,target_exam,cuet_domain_subjects,upsc_optional_subjects",
+      )
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    prepbrainAssertRoomBeforeTurn(admin, user.id, conversationIdIn),
+    prepbrainCooldownRemainMs(admin, user.id),
+  ]);
+
+  const { data: profileRaw, error: profileErr } = profileRes;
   const profile = profileRaw as ChatProfileRow | null;
 
   if (profileErr) {
@@ -536,6 +584,13 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { ok: false, error: "PrepBrain AI requires a Kalnehi account." },
       { status: 403 },
+    );
+  }
+
+  if (!room.ok) {
+    return NextResponse.json(
+      { ok: false, error: room.error },
+      { status: room.status },
     );
   }
 
@@ -565,15 +620,14 @@ export async function POST(request: Request) {
     );
   }
 
-  const room = await prepbrainAssertRoomBeforeTurn(
-    admin,
-    user.id,
-    conversationIdIn,
-  );
-  if (!room.ok) {
+  if (remainMs > 0) {
+    const retrySec = Math.max(1, Math.ceil(remainMs / 1000));
     return NextResponse.json(
-      { ok: false, error: room.error },
-      { status: room.status },
+      { ok: false, error: "Please wait a moment before sending again." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(retrySec) },
+      },
     );
   }
 
@@ -591,18 +645,6 @@ export async function POST(request: Request) {
     welcome_ai_tokens_used: welcomeUsed,
     paid_trial_ai_tokens_used: paidTrialUsed,
   };
-
-  const remainMs = await prepbrainCooldownRemainMs(admin, user.id);
-  if (remainMs > 0) {
-    const retrySec = Math.max(1, Math.ceil(remainMs / 1000));
-    return NextResponse.json(
-      { ok: false, error: "Please wait a moment before sending again." },
-      {
-        status: 429,
-        headers: { "Retry-After": String(retrySec) },
-      },
-    );
-  }
 
   const intent = detectPrepBrainIntent(last.content);
 
@@ -652,7 +694,6 @@ export async function POST(request: Request) {
   const marksLimit = 10;
 
   // Prefetched profile — passed to tool queries to eliminate redundant DB calls.
-  // We cast because Supabase types may lag the actual column select.
   const profileAny = profile as Record<string, unknown>;
   const prefetchedProfile: PrepbrainPrefetchedProfile = {
     primary_exam: (profileAny.primary_exam as string | null | undefined) ?? null,
@@ -661,82 +702,89 @@ export async function POST(request: Request) {
     upsc_optional_subjects: profileAny.upsc_optional_subjects ?? null,
   };
 
-  // Pre-fetch syllabus stats once if multiple syllabus tools need them.
-  const syllabusToolNames: PrepbrainToolName[] = ["getSyllabusOverview", "getWeakStrongSubjects"];
-  const syllabusToolsNeeded = selectedTools.filter((t) => syllabusToolNames.includes(t));
-  let prefetchedSyllabusStats: SyllabusStats | undefined;
-  if (syllabusToolsNeeded.length >= 2) {
-    const syllabusStatsCacheKey = "getSyllabusStats";
-    const memHit = toolCacheGet(user.id, syllabusStatsCacheKey);
-    if (memHit !== undefined) {
-      prefetchedSyllabusStats = memHit as SyllabusStats;
-    } else {
-      const redisHit = await redisToolGet(user.id, syllabusStatsCacheKey);
-      if (redisHit !== undefined) {
-        prefetchedSyllabusStats = redisHit as SyllabusStats;
-        toolCacheSet(user.id, syllabusStatsCacheKey, prefetchedSyllabusStats);
-      } else {
-        try {
-          prefetchedSyllabusStats = await fetchSyllabusSubjectCompletion(admin, user.id, prefetchedProfile);
-          toolCacheSet(user.id, syllabusStatsCacheKey, prefetchedSyllabusStats);
-          void redisToolSet(user.id, syllabusStatsCacheKey, prefetchedSyllabusStats);
-        } catch (e) {
-          console.error("[prepbrain/chat] prefetch syllabus stats failed", e);
+  const [toolPack, reserve] = await Promise.all([
+    (async () => {
+      if (selectedTools.length === 0) {
+        return {
+          toolData: {} as Record<string, unknown>,
+          toolDataMarkdown: "",
+          toolDataChars: 0,
+          toolDataEstTokens: 0,
+          toolCacheSources: {} as Record<string, "memory" | "redis" | "supabase">,
+        };
+      }
+      // Pre-fetch syllabus stats once if multiple syllabus tools need them.
+      const syllabusToolNames: PrepbrainToolName[] = ["getSyllabusOverview", "getWeakStrongSubjects"];
+      const syllabusToolsNeeded = selectedTools.filter((t) => syllabusToolNames.includes(t));
+      let prefetchedSyllabusStats: SyllabusStats | undefined;
+      if (syllabusToolsNeeded.length >= 2) {
+        const syllabusStatsCacheKey = "getSyllabusStats";
+        const memHit = toolCacheGet(user.id, syllabusStatsCacheKey);
+        if (memHit !== undefined) {
+          prefetchedSyllabusStats = memHit as SyllabusStats;
+        } else {
+          const redisHit = await redisToolGet(user.id, syllabusStatsCacheKey);
+          if (redisHit !== undefined) {
+            prefetchedSyllabusStats = redisHit as SyllabusStats;
+            toolCacheSet(user.id, syllabusStatsCacheKey, prefetchedSyllabusStats);
+          } else {
+            try {
+              prefetchedSyllabusStats = await fetchSyllabusSubjectCompletion(
+                admin,
+                user.id,
+                prefetchedProfile,
+              );
+              toolCacheSet(user.id, syllabusStatsCacheKey, prefetchedSyllabusStats);
+              void redisToolSet(user.id, syllabusStatsCacheKey, prefetchedSyllabusStats);
+            } catch (e) {
+              console.error("[prepbrain/chat] prefetch syllabus stats failed", e);
+            }
+          }
         }
       }
-    }
-  }
 
-  // Cache lookup order: in-memory (45s) → Redis (2-10 min) → Supabase.
-  const toolCacheSources: Record<string, "memory" | "redis" | "supabase"> = {};
-  const toolResultsRaw = await Promise.all(
-    selectedTools.map(async (tool) => {
-      // 1. In-memory cache (same instance, zero network)
-      const memCached = toolCacheGet(user.id, tool);
-      if (memCached !== undefined) {
-        toolCacheSources[tool] = "memory";
-        return [tool, memCached] as const;
-      }
-      // 2. Redis cache (cross-instance, 2-10 min TTL)
-      const redisCached = await redisToolGet(user.id, tool);
-      if (redisCached !== undefined) {
-        toolCacheSources[tool] = "redis";
-        toolCacheSet(user.id, tool, redisCached); // warm in-memory for this instance
-        return [tool, redisCached] as const;
-      }
-      // 3. Supabase (cold miss)
-      toolCacheSources[tool] = "supabase";
-      try {
-        const result = await runToolByName(tool, admin, user.id, prefetchedProfile, prefetchedSyllabusStats, marksLimit);
-        toolCacheSet(user.id, tool, result);
-        void redisToolSet(user.id, tool, result);
-        return [tool, result] as const;
-      } catch (e) {
-        console.error(`[prepbrain/chat] tool ${tool} failed`, e);
-        return [tool, { error: "unavailable" }] as const;
-      }
-    }),
-  );
-  const toolData = Object.fromEntries(toolResultsRaw) as Record<string, unknown>;
-  const toolDataMarkdown = serializePrepBrainToolData(toolData);
+      const toolCacheSources: Record<string, "memory" | "redis" | "supabase"> = {};
+      const toolResultsRaw = await Promise.all(
+        selectedTools.map(async (tool) => {
+          const memCached = toolCacheGet(user.id, tool);
+          if (memCached !== undefined) {
+            toolCacheSources[tool] = "memory";
+            return [tool, memCached] as const;
+          }
+          const redisCached = await redisToolGet(user.id, tool);
+          if (redisCached !== undefined) {
+            toolCacheSources[tool] = "redis";
+            toolCacheSet(user.id, tool, redisCached);
+            return [tool, redisCached] as const;
+          }
+          toolCacheSources[tool] = "supabase";
+          try {
+            const result = await runToolByName(
+              tool,
+              admin,
+              user.id,
+              prefetchedProfile,
+              prefetchedSyllabusStats,
+              marksLimit,
+            );
+            toolCacheSet(user.id, tool, result);
+            void redisToolSet(user.id, tool, result);
+            return [tool, result] as const;
+          } catch (e) {
+            console.error(`[prepbrain/chat] tool ${tool} failed`, e);
+            return [tool, { error: "unavailable" }] as const;
+          }
+        }),
+      );
+      const toolData = Object.fromEntries(toolResultsRaw) as Record<string, unknown>;
+      const toolDataMarkdown = serializePrepBrainToolData(toolData);
+      const toolDataChars = toolDataMarkdown.length;
+      const toolDataEstTokens = Math.ceil(toolDataChars / 4);
+      return { toolData, toolDataMarkdown, toolDataChars, toolDataEstTokens, toolCacheSources };
+    })(),
+    prepbrainAiTokenReserve(admin, user.id),
+  ]);
 
-  const toolDataChars = toolDataMarkdown.length;
-  const toolDataEstTokens = Math.ceil(toolDataChars / 4);
-
-  // Intent-aware system prompt: omits ~100-token marks module for non-marks intents.
-  const systemPrompt = buildPrepBrainSystemPrompt(intent);
-  const systemContent = `${systemPrompt}\n\n--- USER PREP DATA ---\n${toolDataMarkdown}\n--- END USER PREP DATA ---`;
-
-  const modelMessages = messagesForModel(fullMessages);
-
-  const aiMessages: AiChatMessage[] = [
-    { role: "system", content: systemContent },
-    ...modelMessages.map((m) => ({ role: m.role, content: m.content } as AiChatMessage)),
-  ];
-
-  const models = resolvePrepbrainGroqModels({ request, user });
-
-  const reserve = await prepbrainAiTokenReserve(admin, user.id);
   if (!reserve.ok) {
     return NextResponse.json(
       {
@@ -757,25 +805,38 @@ export async function POST(request: Request) {
     );
   }
   const reservationId = reserve.reservationId;
+  const { toolDataChars, toolDataEstTokens, toolCacheSources } = toolPack;
 
-  let assistantText = "";
-  let groqModelUsed = "";
-  let groqTotalTokens = 0;
-  let groqPromptTokens = 0;
-  let groqCompletionTokens = 0;
+  const systemPrompt = buildPrepBrainSystemPrompt(intent);
+  const systemContent =
+    selectedTools.length === 0
+      ? systemPrompt
+      : `${systemPrompt}\n\n--- USER PREP DATA ---\n${toolPack.toolDataMarkdown}\n--- END USER PREP DATA ---`;
 
+  const modelMessages = messagesForModel(fullMessages);
+  const aiMessages: AiChatMessage[] = [
+    { role: "system", content: systemContent },
+    ...modelMessages.map((m) => ({ role: m.role, content: m.content } as AiChatMessage)),
+  ];
+
+  const models = resolvePrepbrainGroqModels({ request, user });
   const maxCompletionTokens = maxCompletionTokensForIntent(intent);
 
+  let textStream: ReadableStream<string>;
+  let usagePromise: Promise<{
+    fullText: string;
+    modelUsed: string;
+    totalTokens: number;
+    promptTokens: number;
+    completionTokens: number;
+  }>;
   try {
-    const result = await callChatCompletion(models, aiMessages, {
+    const s = await callStreamingChatCompletion(models, aiMessages, {
       temperature: 0.65,
       max_tokens: maxCompletionTokens,
     });
-    assistantText = result.text;
-    groqModelUsed = result.modelUsed;
-    groqTotalTokens = result.totalTokens;
-    groqPromptTokens = result.promptTokens;
-    groqCompletionTokens = result.completionTokens;
+    textStream = s.textStream;
+    usagePromise = s.usagePromise;
   } catch (e) {
     await prepbrainAiTokenCancelReservation(admin, user.id, reservationId);
     console.error("[prepbrain/chat] AI error", e);
@@ -785,109 +846,170 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!assistantText) {
-    await prepbrainAiTokenCancelReservation(admin, user.id, reservationId);
-    console.error("[prepbrain/chat] AI returned empty content");
-    return NextResponse.json(
-      { ok: false, error: "Could not get a response. Try again." },
-      { status: 502 },
-    );
-  }
+  const encoder = new TextEncoder();
+  const sse = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      const reader = textStream.getReader();
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({ type: "chunk", delta: value })}\n\n`,
+            ),
+          );
+        }
+        const u = await usagePromise;
+        if (!u.fullText.trim()) {
+          await prepbrainAiTokenCancelReservation(admin, user.id, reservationId);
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({
+                type: "done",
+                ok: false,
+                error: "Could not get a response. Try again.",
+              })}\n\n`,
+            ),
+          );
+          controller.close();
+          return;
+        }
+        const groqTotalTokens = u.totalTokens;
+        const groqPromptTokens = u.promptTokens;
+        const groqCompletionTokens = u.completionTokens;
+        const actualRaw = Math.max(0, Math.floor(groqTotalTokens));
+        const promptComp = groqPromptTokens + groqCompletionTokens;
+        const billed =
+          actualRaw > 0
+            ? actualRaw
+            : promptComp > 0
+              ? promptComp
+              : PREPBRAIN_AI_TOKEN_RESERVE_ESTIMATE;
 
-  await touchPrepbrainCooldown(admin, user.id);
+        const persistNow = new Date();
+        const { tokenRow: rowAfter, patch: tokenPatch } = computePrepbrainTokenPersist(
+          phase,
+          tokenRow,
+          monthKey,
+          profile.bonus_ai_tokens_ledger,
+          billed,
+          persistNow,
+        );
+        const bonusAfter =
+          (tokenPatch.bonus_ai_tokens_ledger as unknown) ?? profile.bonus_ai_tokens_ledger;
+        const usageAfter = buildPrepbrainUsageDisplayPayload(
+          phase,
+          rowAfter,
+          monthKey,
+          bonusAfter,
+          persistNow,
+        );
 
-  console.log(
-    "[prepbrain/chat] model=%s intent=%s max_completion_tokens=%d tools=%s cache=%s redis=%s prompt_tokens=%d completion_tokens=%d total_tokens=%d tool_chars=%d tool_est_tokens=%d",
-    groqModelUsed,
-    intent,
-    maxCompletionTokens,
-    selectedTools.join(","),
-    selectedTools.map((t) => toolCacheSources[t] ?? "?").join(","),
-    isRedisConfigured() ? "yes" : "no",
-    groqPromptTokens,
-    groqCompletionTokens,
-    groqTotalTokens,
-    toolDataChars,
-    toolDataEstTokens,
-  );
+        await touchPrepbrainCooldown(admin, user.id);
 
-  const actualRaw = Math.max(0, Math.floor(groqTotalTokens));
-  const promptComp = groqPromptTokens + groqCompletionTokens;
-  const billed =
-    actualRaw > 0 ? actualRaw : promptComp > 0 ? promptComp : PREPBRAIN_AI_TOKEN_RESERVE_ESTIMATE;
+        const persistResult = await persistPrepbrainTurn({
+          admin,
+          userId: user.id,
+          conversationId: conversationIdIn,
+          userContent: last.content,
+          assistantContent: u.fullText,
+        });
 
-  const fin = await prepbrainAiTokenFinalize(admin, user.id, reservationId, billed);
-  if (!fin.ok) {
-    console.error("[prepbrain/chat] token finalize failed");
-  }
+        if (!persistResult.ok && persistResult.status === 400) {
+          await prepbrainAiTokenCancelReservation(admin, user.id, reservationId);
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({
+                type: "done",
+                ok: false,
+                error: persistResult.error,
+                usage: usageAfter,
+              })}\n\n`,
+            ),
+          );
+          controller.close();
+          return;
+        }
 
-  const persistNow = new Date();
-  const { data: profileAfter } = await admin
-    .from("user_profiles")
-    .select(
-      "ai_tokens_used,ai_tokens_month,welcome_ai_tokens_used,paid_trial_ai_tokens_used,bonus_ai_tokens_ledger",
-    )
-    .eq("user_id", user.id)
-    .maybeSingle();
+        if (!persistResult.ok) {
+          console.error("[prepbrain/chat] persist failed", persistResult);
+        }
 
-  const usageAfter = profileAfter
-    ? buildPrepbrainUsageDisplayPayload(
-        phase,
-        {
-          ai_tokens_used: profileAfter.ai_tokens_used,
-          ai_tokens_month: profileAfter.ai_tokens_month,
-          welcome_ai_tokens_used:
-            typeof profileAfter.welcome_ai_tokens_used === "number"
-              ? profileAfter.welcome_ai_tokens_used
-              : 0,
-          paid_trial_ai_tokens_used:
-            typeof profileAfter.paid_trial_ai_tokens_used === "number"
-              ? profileAfter.paid_trial_ai_tokens_used
-              : 0,
-        },
-        monthKey,
-        profileAfter.bonus_ai_tokens_ledger,
-        persistNow,
-      )
-    : buildPrepbrainUsageDisplayPayload(
-        phase,
-        tokenRow,
-        monthKey,
-        profile.bonus_ai_tokens_ledger,
-        persistNow,
-      );
+        const conversationOut = persistResult.ok
+          ? persistResult.conversationId
+          : conversationIdIn;
 
-  let conversationOut: string | null = conversationIdIn;
-  const persistResult = await persistPrepbrainTurn({
-    admin,
-    userId: user.id,
-    conversationId: conversationIdIn,
-    userContent: last.content,
-    assistantContent: assistantText,
+        console.log(
+          "[prepbrain/chat] model=%s intent=%s max_completion_tokens=%d tools=%s cache=%s redis=%s prompt_tokens=%d completion_tokens=%d total_tokens=%d tool_chars=%d tool_est_tokens=%d",
+          u.modelUsed,
+          intent,
+          maxCompletionTokens,
+          selectedTools.join(","),
+          selectedTools.map((t) => toolCacheSources[t] ?? "?").join(","),
+          isRedisConfigured() ? "yes" : "no",
+          groqPromptTokens,
+          groqCompletionTokens,
+          groqTotalTokens,
+          toolDataChars,
+          toolDataEstTokens,
+        );
+
+        const donePayload: Record<string, unknown> = {
+          type: "done",
+          ok: true,
+          message: u.fullText,
+          conversation_id: conversationOut,
+          usage: usageAfter,
+          groq_model: u.modelUsed,
+          intent,
+          tools_used: selectedTools,
+          cache_sources: toolCacheSources,
+          prompt_size: {
+            tool_chars: toolDataChars,
+            tool_est_tokens: toolDataEstTokens,
+          },
+        };
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify(donePayload)}\n\n`));
+        controller.close();
+
+        void after(async () => {
+          const fin = await prepbrainAiTokenFinalize(admin, user.id, reservationId, billed);
+          if (!fin.ok) {
+            console.error("[prepbrain/chat] token finalize failed (after response)");
+          }
+        });
+      } catch (err) {
+        await prepbrainAiTokenCancelReservation(admin, user.id, reservationId);
+        console.error("[prepbrain/chat] stream error", err);
+        try {
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({
+                type: "done",
+                ok: false,
+                error: "Could not get a response. Try again.",
+              })}\n\n`,
+            ),
+          );
+        } catch {
+          /* stream may be closed */
+        }
+        try {
+          controller.close();
+        } catch {
+          /* */
+        }
+      }
+    },
   });
-  if (persistResult.ok) {
-    conversationOut = persistResult.conversationId;
-  } else if (!persistResult.ok && persistResult.status === 400) {
-    return NextResponse.json(
-      { ok: false, error: persistResult.error, usage: usageAfter },
-      { status: 400 },
-    );
-  } else {
-    console.error("[prepbrain/chat] persist failed", persistResult);
-  }
 
-  return NextResponse.json({
-    ok: true,
-    message: assistantText,
-    conversation_id: conversationOut,
-    usage: usageAfter,
-    groq_model: groqModelUsed,
-    intent,
-    tools_used: selectedTools,
-    cache_sources: toolCacheSources,
-    prompt_size: {
-      tool_chars: toolDataChars,
-      tool_est_tokens: toolDataEstTokens,
+  return new Response(sse, {
+    status: 200,
+    headers: {
+      "Content-Type": "text/event-stream; charset=utf-8",
+      "Cache-Control": "no-cache, no-transform",
+      "X-Accel-Buffering": "no",
     },
   });
 }
