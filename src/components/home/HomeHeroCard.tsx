@@ -20,6 +20,8 @@ export type HomeHeroCardProps = {
   todayTaskCount: number;
   /** Human-readable exam name, e.g. "NEET UG" */
   examDisplayName?: string | null;
+  /** Muted line under "Proj. score" when showing multi-year exam-scale average */
+  projectedScoreCaption?: string | null;
 };
 
 function StatCell({
@@ -50,6 +52,7 @@ export function HomeHeroCard({
   todayPercent,
   todayTaskCount,
   examDisplayName,
+  projectedScoreCaption,
 }: HomeHeroCardProps) {
   const { examDate } = useTargetExamDate();
 
@@ -70,7 +73,7 @@ export function HomeHeroCard({
   }, [syllabusMasteryPercent]);
 
   const projScoreDisplay = useMemo(() => {
-    if (marksMastered > 0 && marksTotal > 0) {
+    if (marksTotal > 0) {
       return `${Math.round(marksMastered)}/${Math.round(marksTotal)}`;
     }
     return "—";
@@ -146,15 +149,28 @@ export function HomeHeroCard({
             style={{ background: "rgba(186,117,23,0.2)" }}
             aria-hidden
           />
-          <StatCell
-            value={projScoreDisplay}
-            label="Proj. score"
-            ariaLabel={
-              marksMastered > 0
-                ? `Projected score ${Math.round(marksMastered)} out of ${Math.round(marksTotal)}`
-                : "Projected score unavailable"
-            }
-          />
+          <div className="flex flex-1 flex-col items-center gap-0.5 px-2 py-3 text-center">
+            <span
+              className="kal-home-stat-value"
+              aria-label={
+                marksTotal > 0
+                  ? `Projected score ${Math.round(marksMastered)} out of ${Math.round(marksTotal)}${
+                      projectedScoreCaption ? `. ${projectedScoreCaption}` : ""
+                    }`
+                  : "Projected score unavailable"
+              }
+            >
+              {projScoreDisplay}
+            </span>
+            <span className="text-[10px] leading-tight text-kal-muted">
+              Proj. score
+            </span>
+            {projectedScoreCaption ? (
+              <span className="min-w-0 max-w-full px-0.5 text-[9px] leading-snug text-kal-muted sm:whitespace-nowrap sm:px-1">
+                {projectedScoreCaption}
+              </span>
+            ) : null}
+          </div>
           <div
             className="w-px self-stretch"
             style={{ background: "rgba(186,117,23,0.2)" }}

@@ -7,6 +7,7 @@ import {
   Archive,
   Check,
   Loader2,
+  Mic,
   Plus,
   Trash2,
   X,
@@ -22,9 +23,12 @@ import {
 
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { SyllabusComingSoon } from "@/components/syllabus/SyllabusComingSoon";
+import { useAiGate } from "@/hooks/useAiGate";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
+import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
 import { usePrimaryExamLabel } from "@/hooks/usePrimaryExamLabel";
 import { useSyllabusTracker } from "@/hooks/useSyllabusTracker";
+import { VoiceMinuteLimitLink } from "@/components/subscription/LimitExceededLinks";
 import { shouldShowSyllabusComingSoon } from "@/lib/examProfile";
 import {
   isRevisionReminderOnOrAfterDate,
@@ -33,7 +37,7 @@ import {
 import { normalizeSyllabusMasterId } from "@/lib/syllabusIds";
 import type { MergedSyllabusRow } from "@/lib/userSyllabusMerge";
 import {
-  hydrateUserPlannerTextFromServer,
+  hydrateUserPlannerTextRevisionsFromServer,
   plannerTextAppendRevisionReminder,
   plannerTextMarkRevisionReminderDone,
   plannerTextRemoveRevision,
@@ -42,8 +46,16 @@ import {
 import { getUserPlannerTextBundleCached } from "@/lib/userPlannerTextLocal";
 import type { RevisionQueueEntry } from "@/lib/userPlannerTextTypes";
 import { useAuthStore } from "@/store/useAuthStore";
+import { surfaceErrorForUi } from "@/lib/userFacingErrors";
+import { normalizeSpeechTranscript } from "@/lib/voiceTranscriptNormalize";
 
 const TOPIC_MATCH_CAP = 40;
+
+const SPEECH_LANGS: { value: string; label: string }[] = [
+  { value: "en-IN", label: "English (India)" },
+  { value: "hi-IN", label: "Hindi (India)" },
+  { value: "en-US", label: "English (US) fallback" },
+];
 
 function rowLabel(r: MergedSyllabusRow): string {
   return (r.microtopic ?? "").trim() || (r.chapter ?? "").trim() || "Topic";
@@ -112,6 +124,14 @@ export function RevisionRemindersPageClient() {
     null,
   );
   const [deleteBusy, setDeleteBusy] = useState(false);
+  const [speechLang, setSpeechLang] = useState("en-IN");
+  const [speechApiBusy, setSpeechApiBusy] = useState(false);
+  const [speechError, setSpeechError] = useState<string | null>(null);
+  const [speechQuotaExceeded, setSpeechQuotaExceeded] = useState(false);
+  const [speechQuotaNote, setSpeechQuotaNote] = useState<string | null>(null);
+  const [speechStructHint, setSpeechStructHint] = useState<string | null>(null);
+
+  const { hasAiAccess, canDoVoiceSession } = useAiGate();
 
   const searchWrapRef = useRef<HTMLDivElement | null>(null);
 
@@ -138,15 +158,138 @@ export function RevisionRemindersPageClient() {
     return out;
   }, [rows, syllabusQuery]);
 
+  const sendRevisionTranscript = useCallback(
+    async (transcript: string, occurredAt: string, durationSeconds: number) => {
+      const cleaned = normalizeSpeechTranscript(transcript);
+      if (!cleaned) {
+        setSpeechError("No speech captured. Try again.");
+        return;
+      }
+      if (!userId) return;
+      setSpeechApiBusy(true);
+      setSpeechError(null);
+      setSpeechQuotaExceeded(false);
+      setSpeechQuotaNote(null);
+      setSpeechStructHint(null);
+      try {
+        const parseRes = await fetch("/api/voice-parse-revision-reminder", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            transcript: cleaned,
+            today,
+            occurred_at: occurredAt,
+            durationSeconds,
+          }),
+        });
+        const res = (await parseRes.json()) as
+          | {
+              ok: true;
+              reminder: {
+                title: string;
+                next_due: string;
+                difficulty: RevisionDifficulty;
+                notes: string;
+              };
+              voice_seconds_charged?: number;
+            }
+          | { ok: false; error: string; openRawFallback?: boolean };
+
+        if (!res.ok) {
+          if (parseRes.status === 401) {
+            setSpeechError("Please sign in to use voice dictation.");
+            return;
+          }
+          if (parseRes.status === 429) {
+            setSpeechQuotaExceeded(true);
+            setSpeechError(
+              surfaceErrorForUi(
+                typeof res.error === "string" ? res.error : "Voice quota exceeded.",
+              ),
+            );
+            return;
+          }
+          if (res.openRawFallback) {
+            setTitleInput(cleaned.slice(0, 500));
+            setSourceTab("custom");
+            setSelectedSyllabusId(null);
+            setSpeechStructHint(
+              "Could not auto-fill all fields. Edit the title and date below, then save.",
+            );
+            return;
+          }
+          setSpeechError(surfaceErrorForUi(String(res.error ?? "Parse failed.")));
+          return;
+        }
+        setTitleInput(res.reminder.title);
+        setNextDue(res.reminder.next_due);
+        setDifficulty(res.reminder.difficulty);
+        setNotesInput(res.reminder.notes);
+        setSourceTab("custom");
+        setSelectedSyllabusId(null);
+        setSyllabusQuery("");
+        setSyllabusPickerOpen(false);
+        if (typeof res.voice_seconds_charged === "number") {
+          setSpeechQuotaNote(
+            `Used ${res.voice_seconds_charged}s of your voice time for this parse.`,
+          );
+        }
+      } catch {
+        setTitleInput(cleaned.slice(0, 500));
+        setSourceTab("custom");
+        setSelectedSyllabusId(null);
+        setSpeechStructHint(
+          "Could not reach the server. The topic was added as text — set the due date, then save.",
+        );
+      } finally {
+        setSpeechApiBusy(false);
+      }
+    },
+    [userId, today],
+  );
+
+  const {
+    clearError: clearSpeechRecognitionError,
+    error: speechRecognitionError,
+    isListening,
+    isSupported,
+    startListening,
+    stopListening,
+  } = useDeviceSpeechRecognition({
+    lang: speechLang,
+    maxSessionMs: null,
+    silenceMs: null,
+    onStart: () => {
+      setSpeechError(null);
+      setSpeechStructHint(null);
+    },
+    onTranscript: ({ transcript, occurredAt, durationSeconds }) => {
+      void sendRevisionTranscript(transcript, occurredAt, durationSeconds);
+    },
+  });
+
+  const voicePhase: "idle" | "listening" | "processing" = speechApiBusy
+    ? "processing"
+    : isListening
+      ? "listening"
+      : "idle";
+  const displaySpeechError = speechRecognitionError ?? speechError;
+
   const refresh = useCallback(async () => {
     if (!userId) {
       setItems([]);
       setLoading(false);
       return;
     }
-    setLoading(true);
+    const cached = await getUserPlannerTextBundleCached(userId);
+    if (cached) {
+      setItems(cached.revisionItems);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
     try {
-      const bundle = await hydrateUserPlannerTextFromServer(userId);
+      const bundle = await hydrateUserPlannerTextRevisionsFromServer(userId);
       setItems(bundle.revisionItems);
     } finally {
       setLoading(false);
@@ -220,6 +363,12 @@ export function RevisionRemindersPageClient() {
     setSelectedSyllabusId(null);
     setSyllabusPickerOpen(false);
     setNextDue(format(addDays(parseISO(today), 7), "yyyy-MM-dd"));
+    setSpeechError(null);
+    setSpeechQuotaExceeded(false);
+    setSpeechQuotaNote(null);
+    setSpeechStructHint(null);
+    setSpeechApiBusy(false);
+    clearSpeechRecognitionError();
     setModalOpen(true);
   };
 
@@ -265,7 +414,7 @@ export function RevisionRemindersPageClient() {
   };
 
   return (
-    <div className="relative mx-auto max-w-2xl pb-20 pt-2 [contain:layout_style_paint] sm:pt-4">
+    <div className="relative mx-auto max-w-2xl pb-20 pt-2 sm:pt-4">
       <div
         className="pointer-events-none absolute -right-20 -top-8 h-48 w-48 rounded-full bg-kal-accent/8 blur-3xl"
         aria-hidden
@@ -459,20 +608,20 @@ export function RevisionRemindersPageClient() {
 
       {modalOpen ? (
         <div
-          className="fixed inset-0 z-[80] flex items-end justify-center p-4 sm:items-center"
+          className="fixed inset-0 z-[80] flex items-center justify-center overflow-y-auto overflow-x-hidden p-4 [padding-bottom:max(1rem,env(safe-area-inset-bottom,0px))] [padding-top:max(1rem,env(safe-area-inset-top,0px))]"
           role="presentation"
         >
           <button
             type="button"
             aria-label="Close"
-            className="absolute inset-0 bg-kal-overlay backdrop-blur-sm"
+            className="fixed inset-0 bg-kal-overlay backdrop-blur-sm"
             onClick={() => !saving && setModalOpen(false)}
           />
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="revision-reminder-modal-title"
-            className="kal-glass-panel relative z-[81] w-full max-w-lg rounded-2xl p-5 shadow-lg sm:p-6"
+            className="kal-glass-panel relative z-[81] my-auto w-full max-w-lg max-h-[min(92dvh,100dvh-2rem)] overflow-y-auto overflow-x-hidden overscroll-contain rounded-2xl p-5 shadow-lg [-webkit-overflow-scrolling:touch] sm:max-h-[min(90dvh,85vh)] sm:p-6"
           >
             <div className="mb-4 flex items-start justify-between gap-3">
               <h2
@@ -522,6 +671,124 @@ export function RevisionRemindersPageClient() {
                 From syllabus
               </button>
             </div>
+
+            {userId ? (
+              <div className="mb-4 rounded-xl border border-kal-border/60 bg-kal-card-muted/20 p-3">
+                <p className="text-xs font-semibold text-kal-text-secondary">
+                  Add by voice
+                </p>
+                <p className="mt-0.5 text-[11px] leading-relaxed text-kal-muted">
+                  Uses available voice credits.
+                </p>
+                {!hasAiAccess || !canDoVoiceSession ? (
+                  <p className="mt-2 text-xs text-kal-muted">
+                    Voice allowance needed for speech-to-fields.{" "}
+                    <VoiceMinuteLimitLink />
+                  </p>
+                ) : (
+                  <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3">
+                    <label className="block min-w-0 flex-1 text-[11px] font-medium text-kal-muted">
+                      Speech language
+                      <select
+                        value={speechLang}
+                        onChange={(e) => setSpeechLang(e.target.value)}
+                        disabled={voicePhase !== "idle" || saving}
+                        className="mt-1 block w-full min-h-[40px] rounded-xl border border-kal-border bg-kal-input-bg px-2.5 text-sm text-kal-text"
+                      >
+                        {SPEECH_LANGS.map((l) => (
+                          <option key={l.value} value={l.value}>
+                            {l.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={
+                          voicePhase === "processing" ||
+                          !isSupported ||
+                          Boolean(saving) ||
+                          !hasAiAccess ||
+                          !canDoVoiceSession
+                        }
+                        onClick={() => {
+                          if (voicePhase === "listening") void stopListening();
+                          else void startListening();
+                        }}
+                        className={clsx(
+                          "flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition",
+                          voicePhase === "listening" && "animate-pulse",
+                          (voicePhase === "processing" || !isSupported) && "opacity-50",
+                        )}
+                        style={
+                          voicePhase === "listening"
+                            ? { border: "2px solid #EF9F27", backgroundColor: "#EF9F27" }
+                            : { border: "1.5px solid #EF9F27", backgroundColor: "#FFF3E4" }
+                        }
+                        aria-pressed={voicePhase === "listening"}
+                        aria-label={
+                          voicePhase === "listening"
+                            ? "Stop listening for reminder"
+                            : "Dictate revision reminder by voice"
+                        }
+                      >
+                        {voicePhase === "processing" ? (
+                          <Loader2
+                            className="h-5 w-5 animate-spin"
+                            style={{ color: "#EF9F27" }}
+                            aria-hidden
+                          />
+                        ) : (
+                          <Mic
+                            className="h-5 w-5"
+                            style={{
+                              color: voicePhase === "listening" ? "#ffffff" : "#EF9F27",
+                            }}
+                            aria-hidden
+                          />
+                        )}
+                      </button>
+                      <p
+                        className="min-w-0 text-xs font-medium text-kal-text-secondary"
+                        aria-live="polite"
+                      >
+                        {voicePhase === "listening"
+                          ? "Listening…"
+                          : voicePhase === "processing"
+                            ? "Filling form…"
+                            : "Tap the mic to dictate"}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {speechQuotaNote ? (
+                  <p className="mt-2 text-[11px] text-kal-text-secondary">{speechQuotaNote}</p>
+                ) : null}
+                {speechStructHint ? (
+                  <p className="mt-2 text-xs text-amber-700 dark:text-amber-300" role="status">
+                    {speechStructHint}
+                  </p>
+                ) : null}
+                {displaySpeechError ? (
+                  <p className="mt-2 text-xs text-rose-600 dark:text-rose-400" role="alert">
+                    {displaySpeechError}
+                    {speechQuotaExceeded ? (
+                      <>
+                        {" "}
+                        <VoiceMinuteLimitLink />
+                      </>
+                    ) : null}
+                  </p>
+                ) : null}
+                {!isSupported ? (
+                  <p className="mt-2 text-xs text-amber-800 dark:text-amber-200">
+                    Speech recognition is unavailable in this browser. Use Chrome, Edge, or
+                    the Kalnehi app.
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
 
             {sourceTab === "custom" ? (
               <label className="mb-3 block">

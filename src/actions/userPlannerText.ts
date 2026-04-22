@@ -16,6 +16,33 @@ export type UserPlannerTextFetchResult =
     }
   | { ok: false; error: string };
 
+export type UserRevisionQueueFetchResult =
+  | { ok: true; revisions: Tables<"user_revision_queue_items">[] }
+  | { ok: false; error: string };
+
+/** One table — used by revision reminders list to avoid a full planner-text fetch. */
+export async function fetchUserRevisionQueueItemsForSync(): Promise<UserRevisionQueueFetchResult> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+      error: authErr,
+    } = await supabase.auth.getUser();
+    if (authErr || !user) return { ok: false, error: USER_ERROR.session };
+
+    const { data, error } = await supabase
+      .from("user_revision_queue_items")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("next_due", { ascending: true });
+
+    if (error) return { ok: false, error: formatSupabaseError(error) };
+    return { ok: true, revisions: data ?? [] };
+  } catch (e) {
+    return { ok: false, error: formatSupabaseError(e) };
+  }
+}
+
 export async function fetchUserPlannerTextData(): Promise<UserPlannerTextFetchResult> {
   try {
     const supabase = await createSupabaseServerClient();

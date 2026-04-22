@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { Bell, Menu } from "lucide-react";
+import { Bell, Menu, Mic } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -148,6 +148,18 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
 
           {/* Right controls */}
           <div className="flex items-center gap-1">
+            <Link
+              href="/dictate-day"
+              className={clsx(
+                "flex h-8 w-8 min-h-[32px] min-w-[32px] items-center justify-center rounded-xl border backdrop-blur-md transition-colors active:scale-[0.98]",
+                pathname === "/dictate-day"
+                  ? "border-kal-accent/35 bg-kal-accent-soft text-kal-accent shadow-sm"
+                  : "border-white/30 bg-white/45 text-kal-accent hover:border-white/45 hover:bg-white/65 dark:border-white/12 dark:bg-zinc-900/50",
+              )}
+              aria-label="Dictate My Day"
+            >
+              <Mic className="h-4.5 w-4.5 shrink-0" strokeWidth={2.25} aria-hidden />
+            </Link>
             <Link
               href="/notifications"
               className={clsx(

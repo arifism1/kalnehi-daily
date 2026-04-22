@@ -19,6 +19,7 @@ import {
 } from "@/lib/revision/plannedSchedule";
 import { shouldShowSyllabusComingSoon } from "@/lib/examProfile";
 import { normalizeSyllabusMasterId } from "@/lib/syllabusIds";
+import { plannerTextUpsertEngineRevisionReminder } from "@/lib/userPlannerTextClient";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { useAuthStore } from "@/store/useAuthStore";
 import type { MergedSyllabusRow } from "@/lib/userSyllabusMerge";
@@ -228,6 +229,25 @@ export function SmartRevisionEngineClient() {
     [topicStates, rowById, today],
   );
 
+  /** Mirror engine dates into Revision Reminders (`user_revision_queue_items`). */
+  const pushEngineRevisionReminder = useCallback(
+    async (syllabusId: string, displayTitle: string, nextDue: string) => {
+      if (!userId) return;
+      try {
+        await plannerTextUpsertEngineRevisionReminder(userId, {
+          microtopicId: syllabusId,
+          title: displayTitle.trim() || "Revision",
+          nextDue,
+        });
+      } catch {
+        setPlannedNotice(
+          "Review date saved. If your Revision Reminders list does not update, open that page or try again when online.",
+        );
+      }
+    },
+    [userId],
+  );
+
   const runOverridePlannedDate = useCallback(
     async (it: PlannedItem, effectiveDate: string) => {
       setPlannedBusyId(it.syllabusId);
@@ -242,12 +262,16 @@ export function SmartRevisionEngineClient() {
           setPlannedNotice(r.error);
           return;
         }
+        const displayTitle = it.row
+          ? formatTopicDisplay(it.row)
+          : (it.display ?? "").trim() || "Revision";
+        await pushEngineRevisionReminder(it.syllabusId, displayTitle, effectiveDate);
         await refreshData();
       } finally {
         setPlannedBusyId(null);
       }
     },
-    [refreshData],
+    [refreshData, pushEngineRevisionReminder],
   );
 
   const onMovePlannedReviewToToday = useCallback(
@@ -322,6 +346,11 @@ export function SmartRevisionEngineClient() {
         setPlannedNotice(r.error);
         return;
       }
+      await pushEngineRevisionReminder(
+        scheduleRowId,
+        formatTopicDisplay(row),
+        d,
+      );
       clearScheduleForm();
       setScheduleDate(format(addDays(parseISO(today), 1), "yyyy-MM-dd"));
       await refreshData();
@@ -336,6 +365,7 @@ export function SmartRevisionEngineClient() {
     today,
     refreshData,
     clearScheduleForm,
+    pushEngineRevisionReminder,
   ]);
 
   const heatmapGrid = useMemo(() => {
@@ -416,13 +446,19 @@ export function SmartRevisionEngineClient() {
           </Link>
         </div>
         <p className="mt-2 text-sm text-kal-text-secondary">
-          Your next review dates from your schedule, grouped by day. When a date is due,
-          a reminder is added to{" "}
+          Your next review dates from your schedule, grouped by day. The same due dates
+          appear on{" "}
+          <Link
+            href="/revision-reminders"
+            className="font-medium text-kal-accent underline"
+          >
+            Revision Reminders
+          </Link>{" "}
+          so you can check them off there. When a date is due, a nudge is also added to{" "}
           <Link href="/notifications" className="font-medium text-kal-accent underline">
             in-app Alerts
           </Link>{" "}
-          (once per day) so you do not have to remember alone. Move a review to today, add it
-          to your{" "}
+          (once per day). Move a review to today, add it to your{" "}
           <Link href="/daily-plan" className="font-medium text-kal-accent underline">
             daily plan
           </Link>

@@ -10,13 +10,17 @@ import {
   type RevisionReminderStatus,
 } from "@/lib/engine/revisionSchedule";
 import { maybeMigrateLegacyPlannerTextOnce } from "@/lib/userPlannerTextMigrate";
+import { normalizeSyllabusMasterId } from "@/lib/syllabusIds";
 import {
   createEmptyUserPlannerTextBundle,
   enqueueUserPlannerTextOutbox,
   getUserPlannerTextBundleCached,
   saveUserPlannerTextBundleCached,
 } from "@/lib/userPlannerTextLocal";
-import { mergeUserPlannerTextFromServer } from "@/lib/userPlannerTextMerge";
+import {
+  mergeServerRevisionsOnly,
+  mergeUserPlannerTextFromServer,
+} from "@/lib/userPlannerTextMerge";
 import { scheduleUserPlannerTextFlush } from "@/lib/userPlannerTextSync";
 import type {
   PlannerTodoState,
@@ -24,7 +28,10 @@ import type {
   UserPlannerTextBundle,
   UserPlannerTextOutboxOp,
 } from "@/lib/userPlannerTextTypes";
-import { fetchUserPlannerTextData } from "@/actions/userPlannerText";
+import {
+  fetchUserPlannerTextData,
+  fetchUserRevisionQueueItemsForSync,
+} from "@/actions/userPlannerText";
 import type { NotificationPrefs } from "@/lib/engine/notificationPrefs";
 
 function nowIso(): string {
@@ -67,6 +74,10 @@ function revisionUpsertOpFromEntry(
 }
 
 const hydrateInflight = new Map<string, Promise<UserPlannerTextBundle>>();
+const hydrateRevisionsOnlyInflight = new Map<
+  string,
+  Promise<UserPlannerTextBundle>
+>();
 
 export async function hydrateUserPlannerTextFromServer(
   userId: string,
@@ -91,6 +102,34 @@ export async function hydrateUserPlannerTextFromServer(
       hydrateInflight.delete(userId);
     });
     hydrateInflight.set(userId, p);
+  }
+  return p;
+}
+
+/** Single-table sync for the revision queue — use on `/revision-reminders` instead of full planner hydrate. */
+export async function hydrateUserPlannerTextRevisionsFromServer(
+  userId: string,
+): Promise<UserPlannerTextBundle> {
+  let p = hydrateRevisionsOnlyInflight.get(userId);
+  if (!p) {
+    p = (async () => {
+      await maybeMigrateLegacyPlannerTextOnce(userId);
+      let bundle =
+        (await getUserPlannerTextBundleCached(userId)) ??
+        createEmptyUserPlannerTextBundle(userId);
+      bundle = normalizePlannerTextBundle(bundle);
+      const fresh = await fetchUserRevisionQueueItemsForSync();
+      if (fresh.ok) {
+        bundle = normalizePlannerTextBundle(
+          mergeServerRevisionsOnly(bundle, fresh.revisions),
+        );
+        await saveUserPlannerTextBundleCached(bundle);
+      }
+      return normalizePlannerTextBundle(bundle);
+    })().finally(() => {
+      hydrateRevisionsOnlyInflight.delete(userId);
+    });
+    hydrateRevisionsOnlyInflight.set(userId, p);
   }
   return p;
 }
@@ -131,6 +170,91 @@ export async function plannerTextAppendRevisionReminder(
       createEmptyUserPlannerTextBundle(userId),
   );
   const item = buildRevisionReminderItem(input);
+  const entry: RevisionQueueEntry = { ...item, updatedAt: nowIso() };
+  const next: UserPlannerTextBundle = {
+    ...bundle,
+    revisionItems: [...bundle.revisionItems, entry],
+    updatedAt: Date.now(),
+  };
+  await saveUserPlannerTextBundleCached(next);
+  await enqueueUserPlannerTextOutbox(
+    userId,
+    revisionUpsertOpFromEntry(entry),
+  );
+  scheduleUserPlannerTextFlush(userId);
+  return next;
+}
+
+export type EngineRevisionReminderInput = {
+  microtopicId: string;
+  title: string;
+  nextDue: string;
+  /** Defaults to `medium` when omitted. */
+  difficulty?: RevisionDifficulty;
+};
+
+/**
+ * Keeps `user_revision_queue_items` in sync when the Smart Revision Engine sets
+ * a review date. Upserts by `microtopicId` + `reminderSource: "suggested"` so
+ * rescheduling does not create duplicate rows.
+ */
+export async function plannerTextUpsertEngineRevisionReminder(
+  userId: string,
+  input: EngineRevisionReminderInput,
+): Promise<UserPlannerTextBundle> {
+  const due = input.nextDue.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(due)) {
+    return normalizePlannerTextBundle(
+      (await getUserPlannerTextBundleCached(userId)) ??
+        createEmptyUserPlannerTextBundle(userId),
+    );
+  }
+  const norm = normalizeSyllabusMasterId(input.microtopicId);
+  const bundle = normalizePlannerTextBundle(
+    (await getUserPlannerTextBundleCached(userId)) ??
+      createEmptyUserPlannerTextBundle(userId),
+  );
+  const idx = bundle.revisionItems.findIndex(
+    (r) =>
+      r.reminderSource === "suggested" &&
+      r.microtopicId != null &&
+      normalizeSyllabusMasterId(r.microtopicId) === norm,
+  );
+  const title = (input.title ?? "").trim() || "Revision";
+  const difficulty: RevisionDifficulty = input.difficulty ?? "medium";
+
+  if (idx >= 0) {
+    const prev = bundle.revisionItems[idx]!;
+    const entry: RevisionQueueEntry = {
+      ...prev,
+      title: title.slice(0, 500),
+      nextDue: due,
+      difficulty,
+      updatedAt: nowIso(),
+    };
+    const nextItems = [...bundle.revisionItems];
+    nextItems[idx] = entry;
+    const next: UserPlannerTextBundle = {
+      ...bundle,
+      revisionItems: nextItems,
+      updatedAt: Date.now(),
+    };
+    await saveUserPlannerTextBundleCached(next);
+    await enqueueUserPlannerTextOutbox(
+      userId,
+      revisionUpsertOpFromEntry(entry),
+    );
+    scheduleUserPlannerTextFlush(userId);
+    return next;
+  }
+
+  const item = buildRevisionReminderItem({
+    title,
+    difficulty,
+    nextDue: due,
+    microtopicId: norm,
+    reminderSource: "suggested",
+  });
   const entry: RevisionQueueEntry = { ...item, updatedAt: nowIso() };
   const next: UserPlannerTextBundle = {
     ...bundle,
