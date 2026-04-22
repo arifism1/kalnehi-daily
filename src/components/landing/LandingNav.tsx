@@ -8,20 +8,79 @@ import { Menu, X } from "lucide-react";
 import { KalnehiMark } from "@/components/KalnehiMark";
 
 const EXAM_LINKS = [
-  { href: "/jee-study-planner", label: "JEE" },
-  { href: "/neet-study-planner", label: "NEET" },
-  { href: "/upsc-study-planner", label: "UPSC" },
-  { href: "/cuet-ug-study-planner", label: "CUET" },
-  { href: "/boards-study-planner", label: "Boards" },
-  { href: "/neet-pg-study-planner", label: "NEET PG" },
+  { href: "/jee", label: "JEE" },
+  { href: "/neet", label: "NEET" },
+  { href: "/upsc", label: "UPSC" },
+  { href: "/cat", label: "CAT" },
+  { href: "/gate", label: "GATE" },
+  { href: "/ca-intermediate", label: "CA Inter" },
+  { href: "/clat", label: "CLAT" },
+  { href: "/cuet", label: "CUET" },
+] as const;
+
+const FEATURE_LINKS = [
+  { href: "/features/prepbrain-ai", label: "PrepBrain AI" },
+  { href: "/features/syllabus-tracker", label: "Syllabus Tracker" },
+  { href: "/features/spaced-revision", label: "Spaced Revision" },
+  { href: "/features/voice-control", label: "Voice Control" },
+  { href: "/features/marks-engine", label: "Marks Engine" },
+  { href: "/features", label: "All features →" },
 ] as const;
 
 const NAV_LINKS = [
-  { href: "#features", label: "Features" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/guides", label: "Guides" },
-  { href: "/what-can-kalnehi-do", label: "What We Do" },
+  { href: "/blog", label: "Blog" },
+  { href: "/tools", label: "Free Tools" },
 ] as const;
+
+function NavFeaturesDropdown() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-kal-text-secondary transition-colors hover:text-kal-text"
+        aria-expanded={open}
+        aria-haspopup="menu"
+      >
+        Features
+        <svg className={clsx("h-3.5 w-3.5 transition-transform", open && "rotate-180")} viewBox="0 0 12 12" fill="none" aria-hidden>
+          <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute left-0 top-full mt-2 w-52 overflow-hidden rounded-2xl border border-kal-border bg-kal-card shadow-[0_16px_40px_-12px_rgba(0,0,0,0.2)] backdrop-blur-xl"
+        >
+          {FEATURE_LINKS.map(({ href, label }) => (
+            <Link
+              key={href}
+              href={href}
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-kal-text transition-colors hover:bg-kal-accent-soft hover:text-kal-accent-dark"
+            >
+              {label}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function LandingNav() {
   const [scrolled, setScrolled] = useState(false);
@@ -103,16 +162,6 @@ export function LandingNav() {
 
           {/* Center nav — desktop */}
           <nav className="hidden items-center gap-1 lg:flex" aria-label="Main navigation">
-            {NAV_LINKS.map(({ href, label }) => (
-              <Link
-                key={href}
-                href={href}
-                className="rounded-lg px-3 py-2 text-sm font-medium text-kal-text-secondary transition-colors hover:text-kal-text"
-              >
-                {label}
-              </Link>
-            ))}
-
             {/* Exams dropdown */}
             <div className="relative" ref={examsRef}>
               <button
@@ -139,7 +188,7 @@ export function LandingNav() {
                   id="landing-exams-menu"
                   role="menu"
                   aria-labelledby="landing-exams-trigger"
-                  className="absolute left-0 top-full mt-2 w-48 overflow-hidden rounded-2xl border border-kal-border bg-kal-card shadow-[0_16px_40px_-12px_rgba(0,0,0,0.2)] backdrop-blur-xl"
+                  className="absolute left-0 top-full mt-2 w-52 overflow-hidden rounded-2xl border border-kal-border bg-kal-card shadow-[0_16px_40px_-12px_rgba(0,0,0,0.2)] backdrop-blur-xl"
                 >
                   {EXAM_LINKS.map(({ href, label }) => (
                     <Link
@@ -153,9 +202,30 @@ export function LandingNav() {
                       {label}
                     </Link>
                   ))}
+                  <Link
+                    href="/jee-study-planner"
+                    role="menuitem"
+                    onClick={() => setExamsOpen(false)}
+                    className="flex items-center gap-2.5 px-4 py-3 text-xs font-semibold text-kal-accent-dark transition-colors hover:bg-kal-accent-soft border-t border-kal-border"
+                  >
+                    See all exams →
+                  </Link>
                 </div>
               )}
             </div>
+
+            {/* Features dropdown */}
+            <NavFeaturesDropdown />
+
+            {NAV_LINKS.map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                className="rounded-lg px-3 py-2 text-sm font-medium text-kal-text-secondary transition-colors hover:text-kal-text"
+              >
+                {label}
+              </Link>
+            ))}
           </nav>
 
           {/* Right actions */}
@@ -207,7 +277,7 @@ export function LandingNav() {
                 ))}
                 <div className="mt-1 border-t border-kal-border pt-1">
                   <p className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-kal-muted">
-                    Exam planners
+                    Exams
                   </p>
                   {EXAM_LINKS.map(({ href, label }) => (
                     <Link
@@ -217,6 +287,21 @@ export function LandingNav() {
                       className="rounded-xl px-4 py-3 text-sm font-medium text-kal-text transition-colors hover:bg-kal-accent-soft hover:text-kal-accent-dark flex items-center gap-2.5"
                     >
                       <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-kal-accent/50" aria-hidden />
+                      {label}
+                    </Link>
+                  ))}
+                </div>
+                <div className="mt-1 border-t border-kal-border pt-1">
+                  <p className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-kal-muted">
+                    Features
+                  </p>
+                  {FEATURE_LINKS.map(({ href, label }) => (
+                    <Link
+                      key={href}
+                      href={href}
+                      onClick={() => setMenuOpen(false)}
+                      className="rounded-xl px-4 py-3 text-sm font-medium text-kal-text transition-colors hover:bg-kal-accent-soft hover:text-kal-accent-dark flex items-center gap-2.5"
+                    >
                       {label}
                     </Link>
                   ))}
