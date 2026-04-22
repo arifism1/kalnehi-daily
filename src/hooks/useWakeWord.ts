@@ -61,6 +61,7 @@ type UseWakeWordResult = {
 export function useWakeWord(enabled: boolean): UseWakeWordResult {
   const openVoice = useVoiceCommandStore((s) => s.open);
   const voiceOpen = useVoiceCommandStore((s) => s.isOpen);
+  const isMicBusy = useVoiceCommandStore((s) => s.isMicBusy);
 
   const [isListening, setIsListening] = useState(false);
   const [isUnsupported, setIsUnsupported] = useState(false);
@@ -69,8 +70,8 @@ export function useWakeWord(enabled: boolean): UseWakeWordResult {
   const openVoiceRef = useRef(openVoice);
   useEffect(() => { openVoiceRef.current = openVoice; }, [openVoice]);
 
-  // Whether to actually run the listener right now
-  const shouldBeActive = enabled && !voiceOpen;
+  // Pause when the voice command sheet is open or any other voice input has the mic.
+  const shouldBeActive = enabled && !voiceOpen && !isMicBusy;
 
   useEffect(() => {
     if (!shouldBeActive) {

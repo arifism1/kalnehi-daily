@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { useVoiceCommandStore } from "@/store/useVoiceCommandStore";
+
 type SpeechStatus = "idle" | "listening";
 
 type UseDeviceSpeechRecognitionOptions = {
@@ -135,6 +137,12 @@ export function useDeviceSpeechRecognition({
   interimPreview = false,
   onPreviewTranscript,
 }: UseDeviceSpeechRecognitionOptions) {
+  // Stable shortcut — we call getState() so we never need this in a dep array
+  const setMicBusy = useCallback(
+    (busy: boolean) => useVoiceCommandStore.getState().setMicBusy(busy),
+    [],
+  );
+
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const speechStartedAtMsRef = useRef<number | null>(null);
   const finalTranscriptRef = useRef("");
@@ -212,6 +220,7 @@ export function useDeviceSpeechRecognition({
     clearTimers();
     recognitionRef.current = null;
     setStatus("idle");
+    setMicBusy(false);
 
     const transcript = finalTranscriptRef.current.trim();
     finalTranscriptRef.current = "";
@@ -242,7 +251,7 @@ export function useDeviceSpeechRecognition({
       occurredAt: new Date().toISOString(),
       durationSeconds,
     });
-  }, [clearTimers, onTranscript]);
+  }, [clearTimers, onTranscript, setMicBusy]);
 
   const requestMicPermission = useCallback(async (): Promise<string | null> => {
     if (typeof window !== "undefined" && !window.isSecureContext) {
@@ -373,6 +382,7 @@ export function useDeviceSpeechRecognition({
       onPreviewTranscriptRef.current?.("");
       clearTimers();
       setStatus("idle");
+      setMicBusy(false);
     };
 
     recognition.onend = () => {
@@ -384,6 +394,7 @@ export function useDeviceSpeechRecognition({
         processLocally: prepared.shouldProcessLocally,
         lang,
       });
+      setMicBusy(true);
       recognition.start();
       if (maxSessionMs != null && maxSessionMs > 0) {
         sessionTimerRef.current = window.setTimeout(() => {
@@ -393,6 +404,7 @@ export function useDeviceSpeechRecognition({
     } catch (startError) {
       recognitionRef.current = null;
       setStatus("idle");
+      setMicBusy(false);
       setError(microphoneErrorMessage(startError));
     }
   }, [
@@ -402,6 +414,7 @@ export function useDeviceSpeechRecognition({
     maxSessionMs,
     onStart,
     requestMicPermission,
+    setMicBusy,
     silenceMs,
     scheduleSilenceStop,
     stopRecognition,
@@ -415,8 +428,9 @@ export function useDeviceSpeechRecognition({
     return () => {
       stopRecognition("abort", true);
       clearTimers();
+      setMicBusy(false);
     };
-  }, [clearTimers, stopRecognition]);
+  }, [clearTimers, setMicBusy, stopRecognition]);
 
   return {
     clearError,
