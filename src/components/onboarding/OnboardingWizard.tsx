@@ -5,7 +5,6 @@ import {
   CalendarDays,
   ChevronLeft,
   GraduationCap,
-  LayoutDashboard,
   Phone,
   Target,
   User,
@@ -14,8 +13,7 @@ import {
 import { OnboardingStepIllustration } from "@/components/illustrations/OnboardingStepIllustration";
 import { useCallback, useEffect, useState } from "react";
 
-import { completeOnboarding, saveEnabledFeatures } from "@/actions/profile";
-import { FeatureSelector } from "@/components/features/FeatureSelector";
+import { completeOnboarding } from "@/actions/profile";
 import { GroupedExamSelect } from "@/components/profile/GroupedExamSelect";
 import { UpscOptionalSubjectPick } from "@/components/profile/UpscOptionalSubjectPick";
 import {
@@ -24,17 +22,14 @@ import {
   fetchExamsCatalog,
   type ExamCatalogRow,
 } from "@/lib/examsCatalog";
-import { ALL_FEATURE_IDS } from "@/lib/dashboardFeatures";
 import { toUserFacingMessage } from "@/lib/userFacingErrors";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import {
   isUpscCseMainsExam,
 } from "@/lib/upscMainsOptionalSubjects";
 import { useOnboardingStore } from "@/store/useOnboardingStore";
-import { useEnabledFeaturesStore } from "@/store/useEnabledFeaturesStore";
 
-const STEPS = 4;
-const ONBOARDING_VISIBLE_FEATURE_IDS = ALL_FEATURE_IDS.filter((id) => id !== "daily-log");
+const STEPS = 3;
 
 const CLASS_OPTIONS = [
   "Class 10",
@@ -62,11 +57,6 @@ export function OnboardingWizard() {
   const [loadingUpscOptionals, setLoadingUpscOptionals] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Feature selection state (step 4) — all pre-selected
-  const [selectedFeatures, setSelectedFeatures] = useState<string[]>(
-    ONBOARDING_VISIBLE_FEATURE_IDS,
-  );
 
   useEffect(() => {
     void (async () => {
@@ -155,7 +145,7 @@ export function OnboardingWizard() {
       });
       if (!res.ok) throw new Error(res.error);
       setLocalCompleted(true);
-      setStep(4);
+      window.location.assign("/");
     } catch (e) {
       setError(toUserFacingMessage(e));
     } finally {
@@ -170,32 +160,6 @@ export function OnboardingWizard() {
     upscOptionalSubject,
     setLocalCompleted,
   ]);
-
-  const finishWithFeatures = useCallback(async (featureIds: string[]) => {
-    setBusy(true);
-    setError(null);
-    try {
-      const sanitizedFeatureIds = featureIds.filter((id) => id !== "daily-log");
-      // If user selected all features, save null (= show all, no restriction).
-      const toSave =
-        sanitizedFeatureIds.length === ONBOARDING_VISIBLE_FEATURE_IDS.length
-          ? null
-          : sanitizedFeatureIds;
-      const res = await saveEnabledFeatures(toSave);
-      if (res.ok) {
-        useEnabledFeaturesStore.getState().setEnabledFeatures(toSave);
-      }
-    } catch {
-      // Non-critical — feature selection failure shouldn't block navigation.
-    } finally {
-      setBusy(false);
-    }
-    window.location.assign("/");
-  }, []);
-
-  const skipFeatureSelection = useCallback(() => {
-    window.location.assign("/");
-  }, []);
 
   const displayStep = step;
   const totalStepsDisplay = STEPS;
@@ -228,15 +192,9 @@ export function OnboardingWizard() {
         )}
       </div>
 
-      {step < 4 ? (
-        <p className="mb-6 text-center text-[11px] leading-relaxed text-kal-text-secondary">
-          Quick setup takes {totalStepsDisplay} steps. This helps us personalise your daily plan.
-        </p>
-      ) : (
-        <p className="mb-6 text-center text-[11px] leading-relaxed text-kal-text-secondary">
-          Last step — choose what you want on your home navigation.
-        </p>
-      )}
+      <p className="mb-6 text-center text-[11px] leading-relaxed text-kal-text-secondary">
+        Quick setup takes {totalStepsDisplay} steps. This helps us personalise your daily plan.
+      </p>
 
       {step === 1 && (
         <section className="kal-glass-panel flex flex-1 flex-col gap-5 rounded-2xl p-5 sm:p-6">
@@ -428,59 +386,6 @@ export function OnboardingWizard() {
           >
             {busy ? "Saving…" : "Continue"}
             <ArrowRight className="h-4 w-4" />
-          </button>
-        </section>
-      )}
-
-      {step === 4 && (
-        <section className="kal-glass-panel flex min-h-0 flex-1 flex-col gap-4 rounded-2xl p-5 sm:p-6">
-          <OnboardingStepIllustration step={4} className="mx-auto w-full max-w-[200px] shrink-0 opacity-90" />
-          <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-            <div className="flex min-w-0 flex-1 items-start gap-2 sm:pr-2">
-              <LayoutDashboard
-                className="mt-0.5 h-6 w-6 shrink-0 text-kal-accent"
-                aria-hidden
-              />
-              <div className="min-w-0">
-                <h1 className="kal-feature-title">
-                  Choose your features
-                </h1>
-                <p className="mt-1 text-sm leading-relaxed text-kal-text-secondary">
-                  Select the tools you want to see every day. You can change this
-                  anytime in Settings.
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              disabled={busy || selectedFeatures.length === 0}
-              onClick={() => void finishWithFeatures(selectedFeatures)}
-              className="kal-btn-accent inline-flex min-h-[48px] shrink-0 items-center justify-center gap-2 self-end rounded-2xl px-4 py-3 text-sm font-semibold disabled:opacity-50 sm:min-h-[52px] sm:self-start sm:px-5 sm:py-3.5"
-            >
-              {busy ? "Saving…" : "Start using Kalnehi"}
-              <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
-            </button>
-          </div>
-
-          {error && (
-            <p className="shrink-0 text-sm font-medium text-kal-accent-dark dark:text-kal-accent">
-              {error}
-            </p>
-          )}
-
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
-            <FeatureSelector
-              selected={selectedFeatures}
-              onChange={setSelectedFeatures}
-            />
-          </div>
-
-          <button
-            type="button"
-            onClick={skipFeatureSelection}
-            className="shrink-0 text-center text-xs font-medium text-kal-text-secondary underline underline-offset-2 hover:text-kal-accent"
-          >
-            Skip — show all features
           </button>
         </section>
       )}
