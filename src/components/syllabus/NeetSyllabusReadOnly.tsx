@@ -46,7 +46,7 @@ export function NeetSyllabusReadOnly({ rows }: { rows: SyllabusRow[] }) {
         <h1 className="kal-feature-title mt-1 !text-white">
           Syllabus
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-zinc-400">
           Browse subjects, chapters, and microtopics with recent-year marks
           (read-only).
         </p>
@@ -71,7 +71,7 @@ export function NeetSyllabusReadOnly({ rows }: { rows: SyllabusRow[] }) {
                   />
                   {subject}
                 </span>
-                <ChevronDown className="h-5 w-5 shrink-0 text-zinc-500 transition-transform duration-200 group-open:rotate-180" />
+                <ChevronDown className="h-5 w-5 shrink-0 text-zinc-400 transition-transform duration-200 group-open:rotate-180" />
               </summary>
               <div className="border-t border-slate-800">
                 {chapterNames.map((chapter) => {
@@ -88,9 +88,9 @@ export function NeetSyllabusReadOnly({ rows }: { rows: SyllabusRow[] }) {
                               <span className="text-sm font-semibold text-zinc-100">
                                 {chapter}
                               </span>
-                              <ChevronDown className="h-4 w-4 shrink-0 text-zinc-500 transition-transform group-open/ch:rotate-180" />
+                              <ChevronDown className="h-4 w-4 shrink-0 text-zinc-400 transition-transform group-open/ch:rotate-180" />
                             </div>
-                            <p className="mt-1 text-[11px] text-zinc-500">
+                            <p className="mt-1 text-[11px] text-zinc-400">
                               {list.length} microtopic
                               {list.length === 1 ? "" : "s"}
                             </p>
@@ -116,9 +116,9 @@ export function NeetSyllabusReadOnly({ rows }: { rows: SyllabusRow[] }) {
                                   </span>{" "}
                                   marks weight
                                 </span>
-                                <span className="text-zinc-500">
+                                <span className="text-zinc-400">
                                   Years:{" "}
-                                  <span className="font-medium text-zinc-400">
+                                  <span className="font-medium text-zinc-300">
                                     {years}
                                   </span>
                                 </span>

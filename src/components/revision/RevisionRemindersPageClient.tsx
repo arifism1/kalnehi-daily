@@ -383,7 +383,7 @@ export function RevisionRemindersPageClient() {
                 "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
                 selectedDate == null
                   ? "border-kal-accent bg-kal-accent/10 text-kal-text"
-                  : "border-kal-border/70 bg-white/50 text-kal-muted hover:border-kal-accent/40 hover:text-kal-text dark:bg-zinc-900/50",
+                  : "border-kal-border/70 bg-white/50 text-kal-text-secondary hover:border-kal-accent/40 hover:text-kal-text dark:bg-zinc-900/50",
               )}
             >
               All
@@ -403,7 +403,7 @@ export function RevisionRemindersPageClient() {
                         "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
                         selectedDate === d
                           ? "border-kal-accent bg-kal-accent/10 text-kal-text"
-                          : "border-kal-border/70 bg-white/50 text-kal-muted hover:border-kal-accent/40 hover:text-kal-text dark:bg-zinc-900/50",
+                          : "border-kal-border/70 bg-white/50 text-kal-text-secondary hover:border-kal-accent/40 hover:text-kal-text dark:bg-zinc-900/50",
                       )}
                     >
                       {format(parseISO(d), "MMM d")}

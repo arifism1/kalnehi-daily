@@ -60,7 +60,19 @@ export function DailyPlanMicrotopicPicker({
   return (
     <div className={compact ? "space-y-2" : "space-y-3"}>
       <div>
-        <label className={labelCls}>Subject</label>
+        <div className="flex items-center justify-between gap-2">
+          <label className={labelCls}>Subject</label>
+          {subject ? (
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() => { setSubject(""); setChapter(""); onChange(null); }}
+              className="text-[11px] font-medium text-kal-muted hover:text-kal-text disabled:opacity-40"
+            >
+              Clear
+            </button>
+          ) : null}
+        </div>
         <select
           value={subject}
           disabled={disabled || microtopics.length === 0}
@@ -82,7 +94,19 @@ export function DailyPlanMicrotopicPicker({
       </div>
 
       <div>
-        <label className={labelCls}>Chapter</label>
+        <div className="flex items-center justify-between gap-2">
+          <label className={labelCls}>Chapter</label>
+          {chapter ? (
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() => { setChapter(""); onChange(null); }}
+              className="text-[11px] font-medium text-kal-muted hover:text-kal-text disabled:opacity-40"
+            >
+              Clear
+            </button>
+          ) : null}
+        </div>
         <select
           value={chapter}
           disabled={disabled || !subject}
@@ -102,7 +126,19 @@ export function DailyPlanMicrotopicPicker({
       </div>
 
       <div>
-        <label className={labelCls}>Microtopic</label>
+        <div className="flex items-center justify-between gap-2">
+          <label className={labelCls}>Microtopic</label>
+          {value ? (
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() => onChange(null)}
+              className="text-[11px] font-medium text-kal-muted hover:text-kal-text disabled:opacity-40"
+            >
+              Clear
+            </button>
+          ) : null}
+        </div>
         <select
           value={value ?? ""}
           disabled={disabled || !chapter}

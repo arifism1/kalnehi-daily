@@ -103,7 +103,7 @@ export function MotivationStrip() {
           — master the reason you execute
         </p>
       ) : (
-        <div className="flex gap-2 overflow-x-auto pb-1 sm:gap-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex justify-center gap-2 overflow-x-auto pb-1 sm:gap-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {rows.map((r) => (
             <figure
               key={r.slot}

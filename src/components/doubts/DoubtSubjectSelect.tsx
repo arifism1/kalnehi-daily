@@ -23,12 +23,24 @@ export function DoubtSubjectSelect({
 }: DoubtSubjectSelectProps) {
   return (
     <div className={clsx("block", className)}>
-      <label
-        htmlFor={id}
-        className="text-xs font-medium text-kal-muted"
-      >
-        {label}
-      </label>
+      <div className="flex items-center justify-between gap-2">
+        <label
+          htmlFor={id}
+          className="text-xs font-medium text-kal-muted"
+        >
+          {label}
+        </label>
+        {value ? (
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => onChange("")}
+            className="text-[11px] font-medium text-kal-muted hover:text-kal-text disabled:opacity-40"
+          >
+            Clear
+          </button>
+        ) : null}
+      </div>
       <p className="mt-0.5 text-[11px] leading-snug text-kal-text-secondary">
         Optional — pick a syllabus subject or General, or leave as &quot;No
         subject&quot;.

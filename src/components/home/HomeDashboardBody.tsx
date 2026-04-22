@@ -32,6 +32,7 @@ import type { DailyMotivationalPhraseRow } from "@/lib/dailyMotivationalPhrase";
 import { HomeFeatureGrid } from "./HomeFeatureGrid";
 import { HomeHeroCard } from "./HomeHeroCard";
 import { HomePriorityStrip } from "./HomePriorityStrip";
+import { MotivationStrip } from "./MotivationStrip";
 import { ThreeDayStrip } from "./ThreeDayStrip";
 
 export type HomeDashboardBodyProps = {
@@ -213,6 +214,13 @@ export function HomeDashboardBody({
         projectedScoreCaption: null as string | null,
       };
     }
+    // While the syllabus fetch is still in flight, don't show task-based marks
+    // (e.g. "3/66") — that metric is on a completely different scale and would
+    // immediately be replaced by the real projected score, causing a jerk.
+    // Return 0/0 so HomeHeroCard renders "—" as a stable placeholder.
+    if (syllabusLoading) {
+      return { mastered: 0, total: 0, projectedScoreCaption: null as string | null };
+    }
     return {
       ...computeWeightedMarksTotals(realityTasks, microtopicById),
       projectedScoreCaption: null as string | null,
@@ -224,6 +232,7 @@ export function HomeDashboardBody({
     syllabusScoreMax,
     syllabusRollup.totalMarksMastered,
     syllabusRollup.totalMarksPool,
+    syllabusLoading,
     realityTasks,
     microtopicById,
     isUpscMainsUi,
@@ -304,10 +313,13 @@ export function HomeDashboardBody({
         </p>
       )}
 
-      {/* Section C — Priority strip */}
+      {/* Section C — Purpose mode strip (conditional on purposeModeEnabled) */}
+      <MotivationStrip />
+
+      {/* Section D — Priority strip */}
       <HomePriorityStrip />
 
-      {/* Section D — All 18 features grid */}
+      {/* Section E — All 18 features grid */}
       <HomeFeatureGrid
         syllabusMasteryPercent={syllabusMasteryPercent}
         marksMastered={mastered}
@@ -316,7 +328,7 @@ export function HomeDashboardBody({
         todayTaskCount={effectiveTodayTotal}
       />
 
-      {/* Section E — 3-day execution */}
+      {/* Section F — 3-day execution */}
       <ThreeDayStrip
         yesterdayPercent={yesterdayStripPercent}
         todayPercent={todayStripPercent}

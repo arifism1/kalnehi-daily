@@ -120,7 +120,7 @@ export function KalnehiSidebar() {
               "focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-kal-accent/50",
               pathname === "/home" || pathname.startsWith("/home/")
                 ? "bg-[#FFF3E4] font-medium text-[#BA7517] dark:bg-kal-accent/10 dark:text-kal-accent"
-                : "font-normal text-kal-text-secondary hover:bg-black/[0.04] dark:hover:bg-white/5",
+                : "font-normal text-kal-text-secondary hover:bg-black/[0.04] hover:text-kal-text dark:hover:bg-white/5",
             )}
           >
             <Home
@@ -128,7 +128,7 @@ export function KalnehiSidebar() {
                 "h-4 w-4 shrink-0",
                 pathname === "/home" || pathname.startsWith("/home/")
                   ? "text-[#BA7517] dark:text-kal-accent"
-                  : "text-kal-muted",
+                  : "text-kal-text-secondary",
               )}
               aria-hidden
             />
@@ -166,13 +166,15 @@ export function KalnehiSidebar() {
                       "focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-kal-accent/50",
                       isActive
                         ? "bg-[#FFF3E4] font-medium text-[#BA7517] dark:bg-kal-accent/10 dark:text-kal-accent"
-                        : "font-normal text-kal-text-secondary hover:bg-black/[0.04] dark:hover:bg-white/5",
+                        : "font-normal text-kal-text-secondary hover:bg-black/[0.04] hover:text-kal-text dark:hover:bg-white/5",
                     )}
                   >
                     <Icon
                       className={clsx(
                         "h-4 w-4 shrink-0",
-                        isActive ? "text-[#BA7517] dark:text-kal-accent" : "text-kal-muted",
+                        isActive
+                          ? "text-[#BA7517] dark:text-kal-accent"
+                          : "text-kal-text-secondary",
                       )}
                       aria-hidden
                     />
@@ -187,7 +189,7 @@ export function KalnehiSidebar() {
 
       {/* Account section — always at the bottom */}
       <div className="mt-auto border-t border-kal-border/40 pt-2 pb-4">
-        <p className="px-4 pb-1 pt-3 text-[10px] font-medium uppercase tracking-[0.07em] text-kal-muted">
+        <p className="px-4 pb-1 pt-3 text-[10px] font-medium uppercase tracking-[0.07em] text-kal-text-secondary">
           Account
         </p>
         <ul>
@@ -206,13 +208,15 @@ export function KalnehiSidebar() {
                     "focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-kal-accent/50",
                     isActive
                       ? "bg-[#FFF3E4] font-medium text-[#BA7517] dark:bg-kal-accent/10 dark:text-kal-accent"
-                      : "font-normal text-kal-text-secondary hover:bg-black/[0.04] dark:hover:bg-white/5",
+                      : "font-normal text-kal-text-secondary hover:bg-black/[0.04] hover:text-kal-text dark:hover:bg-white/5",
                   )}
                 >
                   <Icon
                     className={clsx(
                       "h-4 w-4 shrink-0",
-                      isActive ? "text-[#BA7517] dark:text-kal-accent" : "text-kal-muted",
+                      isActive
+                        ? "text-[#BA7517] dark:text-kal-accent"
+                        : "text-kal-text-secondary",
                     )}
                     aria-hidden
                   />

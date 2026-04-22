@@ -23,9 +23,21 @@ export function DoubtTopicSelect({
 }: DoubtTopicSelectProps) {
   return (
     <div className={clsx("block", className)}>
-      <label htmlFor={id} className="text-xs font-medium text-kal-muted">
-        {label}
-      </label>
+      <div className="flex items-center justify-between gap-2">
+        <label htmlFor={id} className="text-xs font-medium text-kal-muted">
+          {label}
+        </label>
+        {value && options.length > 0 ? (
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => onChange("")}
+            className="text-[11px] font-medium text-kal-muted hover:text-kal-text disabled:opacity-40"
+          >
+            Clear
+          </button>
+        ) : null}
+      </div>
       <p className="mt-0.5 text-[11px] leading-snug text-kal-text-secondary">
         Pick a syllabus microtopic when you know it — or leave as &quot;No
         topic&quot;.

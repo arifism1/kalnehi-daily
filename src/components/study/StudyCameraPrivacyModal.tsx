@@ -78,7 +78,7 @@ export function StudyCameraPrivacyModal({
           ))}
         </ul>
 
-        <p className="mt-4 rounded-xl border border-white/[0.06] bg-slate-950/60 px-3 py-2.5 text-center text-[11px] leading-relaxed text-zinc-500">
+        <p className="mt-4 rounded-xl border border-white/[0.06] bg-slate-950/60 px-3 py-2.5 text-center text-[11px] leading-relaxed text-zinc-400">
           <span className="font-semibold text-zinc-400">🔒 On-device only</span>
           {" · "}
           Private and secure. You can turn this off anytime in Settings.

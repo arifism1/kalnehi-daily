@@ -91,7 +91,19 @@ export function TaskPlanner({
   return (
     <div className="space-y-4">
       <div>
-        <label className="text-xs font-medium text-kal-muted">Subject</label>
+        <div className="flex items-center justify-between gap-2">
+          <label className="text-xs font-medium text-kal-muted">Subject</label>
+          {subject ? (
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() => { onSubjectChange(""); onChapterChange(""); onMicrotopicIdChange(""); }}
+              className="text-[11px] font-medium text-kal-muted hover:text-kal-text disabled:opacity-40"
+            >
+              Clear
+            </button>
+          ) : null}
+        </div>
         <select
           value={subject}
           disabled={disabled || microtopics.length === 0}
@@ -112,7 +124,19 @@ export function TaskPlanner({
       </div>
 
       <div>
-        <label className="text-xs font-medium text-kal-muted">Chapter</label>
+        <div className="flex items-center justify-between gap-2">
+          <label className="text-xs font-medium text-kal-muted">Chapter</label>
+          {chapter ? (
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() => { onChapterChange(""); onMicrotopicIdChange(""); }}
+              className="text-[11px] font-medium text-kal-muted hover:text-kal-text disabled:opacity-40"
+            >
+              Clear
+            </button>
+          ) : null}
+        </div>
         <select
           value={chapter}
           disabled={disabled || !subject}
@@ -132,7 +156,19 @@ export function TaskPlanner({
       </div>
 
       <div>
-        <label className="text-xs font-medium text-kal-muted">Microtopic</label>
+        <div className="flex items-center justify-between gap-2">
+          <label className="text-xs font-medium text-kal-muted">Microtopic</label>
+          {microtopicId ? (
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() => onMicrotopicIdChange("")}
+              className="text-[11px] font-medium text-kal-muted hover:text-kal-text disabled:opacity-40"
+            >
+              Clear
+            </button>
+          ) : null}
+        </div>
         <select
           value={microtopicId}
           disabled={disabled || !chapter}

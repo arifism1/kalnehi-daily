@@ -81,8 +81,9 @@
   --kal-bg-elevated: #1e1812;
 
   --kal-text: #F5EFE6;
-  --kal-text-secondary: #CFC0AB;
-  --kal-muted: #9C8A75;
+  /* Slightly higher luminance for WCAG on warm dark browns (sidebar, glass panels) */
+  --kal-text-secondary: #D9CFC0;
+  --kal-muted: #C4B5A0;
 
   --kal-accent: #FF8C1A;
   --kal-accent-hover: #FF7A00;
@@ -263,10 +264,10 @@ body {
       inset 0 1px 0 0 rgba(255, 255, 255, 0.50);
   }
   .dark .kal-glass-subtle {
-    background-color: rgba(40, 32, 22, 0.62);
+    background-color: rgba(48, 38, 24, 0.78);
     box-shadow:
-      0 1px 2px rgba(0, 0, 0, 0.18),
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+      0 1px 2px rgba(0, 0, 0, 0.22),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
   }
 
   /* Sticky app chrome — translucent top bar */
@@ -402,6 +403,9 @@ body {
     font-variant-numeric: tabular-nums;
     line-height: 1.2;
     color: #ba7517;
+  }
+  .dark .kal-home-stat-value {
+    color: var(--kal-accent-dark); /* #FFB86C — warm amber, legible on dark card */
   }
 
   /* Muted paragraph under feature titles */
@@ -670,6 +674,27 @@ body {
   ::view-transition-old(root),
   ::view-transition-new(root) {
     animation: none;
+  }
+}
+
+/* ── Desktop two-column chrome layout helpers ─────────────────────────── */
+/* Applied only at lg (1024px+) where KalnehiSidebar is rendered.
+   kal-chrome-root locks the shell to the viewport so the sidebar never
+   scrolls off-screen; kal-chrome-main-scroll makes only the content
+   column scroll. Reuse these in any future two-column in-app layout. */
+@media (min-width: 1024px) {
+  .kal-chrome-root {
+    height: 100dvh;
+    max-height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .kal-chrome-body {
+    min-height: 0;
+  }
+  .kal-chrome-main-scroll {
+    min-height: 0;
+    overflow-y: auto;
   }
 }
 
