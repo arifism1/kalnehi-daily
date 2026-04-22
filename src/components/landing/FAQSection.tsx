@@ -10,7 +10,7 @@ export function FAQSection() {
   const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <section className="bg-[#F2EFE8] py-24 lg:py-32" id="faq">
+    <section className="bg-kal-page-end py-24 lg:py-32" id="faq">
       <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
         <div className="mb-14 max-w-lg">
           <h2
@@ -28,7 +28,7 @@ export function FAQSection() {
           {LANDING_FAQ_ITEMS.map(({ question, answer }, i) => (
             <div
               key={question}
-              className="overflow-hidden rounded-2xl border border-kal-border bg-white/70"
+              className="overflow-hidden rounded-2xl border border-kal-border bg-kal-card backdrop-blur-sm"
             >
               <button
                 type="button"

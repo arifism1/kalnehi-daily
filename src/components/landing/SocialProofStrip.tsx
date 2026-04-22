@@ -9,7 +9,7 @@ const TRUST_SIGNALS = [
 
 export function SocialProofStrip() {
   return (
-    <div className="border-y border-kal-border bg-white/60 py-5 backdrop-blur-sm">
+    <div className="border-y border-kal-border bg-kal-card py-5 backdrop-blur-sm">
       <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
         <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-kal-muted">

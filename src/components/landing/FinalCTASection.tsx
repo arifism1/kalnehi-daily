@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export function FinalCTASection() {
   return (
-    <section className="bg-[#F2EFE8] py-24 lg:py-32">
+    <section className="bg-kal-page-end py-24 lg:py-32">
       <div className="mx-auto max-w-4xl px-6 text-center sm:px-8 lg:px-12">
         <h2
           className="mb-8 text-4xl font-normal leading-[1.05] tracking-tight text-kal-text sm:text-5xl lg:text-6xl"

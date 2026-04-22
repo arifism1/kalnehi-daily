@@ -34,7 +34,7 @@ const FOOTER_LINKS = {
 
 export function LandingFooter() {
   return (
-    <footer className="border-t border-[rgba(210,192,168,0.4)] bg-[#F0EDE6]">
+    <footer className="border-t border-kal-border bg-kal-page-end">
       <div className="mx-auto max-w-7xl px-6 py-16 sm:px-8 lg:px-12">
         <div className="grid grid-cols-2 gap-10 md:grid-cols-4 lg:gap-16">
           {(Object.entries(FOOTER_LINKS) as [string, readonly { href: string; label: string }[]][]).map(

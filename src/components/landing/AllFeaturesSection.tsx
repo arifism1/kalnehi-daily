@@ -113,7 +113,7 @@ const ALL_FEATURES = [
 
 export function AllFeaturesSection() {
   return (
-    <section className="bg-[#F7F4EE] py-24 lg:py-32" id="all-features">
+    <section className="bg-kal-page py-24 lg:py-32" id="all-features">
       <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
         <div className="mb-14 flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
           <div>
@@ -139,11 +139,11 @@ export function AllFeaturesSection() {
           {ALL_FEATURES.map(({ emoji, title, tagline, detail }) => (
             <div
               key={title}
-              className="flex flex-col gap-3 rounded-2xl border border-[rgba(210,192,168,0.4)] bg-white/70 p-5 backdrop-blur-sm transition hover:border-kal-accent/25 hover:shadow-[0_8px_24px_rgba(255,122,0,0.07)]"
+              className="flex flex-col gap-3 rounded-2xl border border-kal-border bg-kal-card p-5 backdrop-blur-sm transition hover:border-kal-accent/25 hover:shadow-[0_8px_24px_rgba(255,122,0,0.07)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
             >
               <div className="flex items-start gap-3">
                 <span
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[rgba(255,122,0,0.07)] text-lg"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-kal-accent-soft text-lg"
                   aria-hidden
                 >
                   {emoji}
@@ -153,7 +153,7 @@ export function AllFeaturesSection() {
                   <p className="mt-0.5 text-xs leading-snug text-kal-accent/80">{tagline}</p>
                 </div>
               </div>
-              <p className="border-t border-[rgba(210,192,168,0.3)] pt-3 text-xs leading-relaxed text-kal-text-secondary">
+              <p className="border-t border-kal-border pt-3 text-xs leading-relaxed text-kal-text-secondary">
                 {detail}
               </p>
             </div>

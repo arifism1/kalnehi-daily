@@ -20,7 +20,7 @@ const TRUST_SIGNALS = [
 
 export function PricingSection() {
   return (
-    <section className="bg-[#F2EFE8] py-24 lg:py-32" id="pricing">
+    <section className="bg-kal-page-end py-24 lg:py-32" id="pricing">
       <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
         {/* Header */}
         <div className="mb-14 text-center">
@@ -45,7 +45,7 @@ export function PricingSection() {
             ].map(({ step, label, detail }) => (
               <div
                 key={step}
-                className="flex flex-col gap-1.5 rounded-2xl border border-kal-border bg-white/60 p-4 text-center"
+                className="flex flex-col gap-1.5 rounded-2xl border border-kal-border bg-kal-card-muted p-4 text-center backdrop-blur-sm"
               >
                 <span className="mx-auto flex h-7 w-7 items-center justify-center rounded-full bg-kal-accent text-xs font-bold text-white">
                   {step}
@@ -57,7 +57,7 @@ export function PricingSection() {
           </div>
 
           {/* Main pricing card */}
-          <div className="relative overflow-hidden rounded-2xl border-2 border-kal-accent/40 bg-white p-8 shadow-[0_16px_48px_-8px_rgba(255,122,0,0.15)] ring-1 ring-kal-accent/20">
+          <div className="relative overflow-hidden rounded-2xl border-2 border-kal-accent/40 bg-kal-bg-elevated p-8 shadow-[0_16px_48px_-8px_rgba(255,122,0,0.15)] ring-1 ring-kal-accent/20 dark:shadow-[0_16px_48px_-8px_rgba(0,0,0,0.45)]">
             {/* Top badge */}
             <div className="absolute -top-px left-1/2 -translate-x-1/2">
               <span className="inline-block rounded-b-2xl bg-kal-accent px-6 py-1.5 text-[11px] font-bold uppercase tracking-wider text-white shadow-[0_4px_12px_rgba(255,122,0,0.3)]">

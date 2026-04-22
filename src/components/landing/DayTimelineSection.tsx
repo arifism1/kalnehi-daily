@@ -83,7 +83,7 @@ const TIMELINE = [
 
 export function DayTimelineSection() {
   return (
-    <section className="bg-[#F7F4EE] py-24 lg:py-32">
+    <section className="bg-kal-page py-24 lg:py-32">
       <div className="mx-auto max-w-5xl px-6 sm:px-8 lg:px-12">
         <div className="mb-14">
           <h2
@@ -100,7 +100,7 @@ export function DayTimelineSection() {
         <div className="relative">
           {/* Vertical line */}
           <div
-            className="absolute left-[5.5rem] top-0 bottom-0 hidden w-px bg-[rgba(210,192,168,0.5)] sm:block"
+            className="absolute left-[5.5rem] top-0 bottom-0 hidden w-px bg-kal-border sm:block"
             aria-hidden
           />
 
@@ -117,7 +117,7 @@ export function DayTimelineSection() {
                 {/* Dot */}
                 <div className="relative hidden sm:flex w-10 shrink-0 items-start justify-center pt-[1.1rem]">
                   <div
-                    className={`relative z-10 flex h-6 w-6 items-center justify-center rounded-full border-2 bg-[#F7F4EE] text-xs transition-colors group-hover:border-kal-accent ${
+                    className={`relative z-10 flex h-6 w-6 items-center justify-center rounded-full border-2 bg-kal-page text-xs transition-colors group-hover:border-kal-accent ${
                       accent ? "border-kal-accent" : "border-kal-border"
                     }`}
                   >
@@ -133,16 +133,16 @@ export function DayTimelineSection() {
                   <div
                     className={`rounded-2xl border px-5 py-4 backdrop-blur-sm transition hover:shadow-[0_4px_12px_rgba(100,75,40,0.07)] sm:ml-2 ${
                       accent
-                        ? "border-[rgba(255,122,0,0.25)] bg-[rgba(255,243,232,0.45)]"
-                        : "border-kal-border bg-white/60"
+                        ? "border-kal-accent/25 bg-kal-accent-soft"
+                        : "border-kal-border bg-kal-card-muted"
                     }`}
                   >
                     <div className="mb-2 flex items-center gap-2">
                       <span
                         className={`rounded-md px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
                           accent
-                            ? "bg-[rgba(255,122,0,0.12)] text-kal-accent"
-                            : "bg-[rgba(210,192,168,0.25)] text-kal-muted"
+                            ? "bg-kal-accent-soft text-kal-accent"
+                            : "bg-kal-border/40 text-kal-muted"
                         }`}
                       >
                         {feature}
