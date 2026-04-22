@@ -24,6 +24,7 @@ import {
   User,
   ListTodo,
   Bookmark,
+  CalendarDays,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -58,6 +59,7 @@ const SIDEBAR_CATEGORIES: SidebarCategory[] = [
     dotColor: "#EF9F27",
     items: [
       { href: "/daily-plan", label: "Daily Plan", icon: ListTodo },
+      { href: "/saved-plans", label: "Saved Daily Plans", icon: CalendarDays },
       { href: "/dictate-day", label: "Dictate My Day", icon: Mic },
       { href: "/plan-my-day", label: "Plan My Day", icon: Sparkles },
       { href: "/timer", label: "Timer", icon: Clock },
