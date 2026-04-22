@@ -1,6 +1,17 @@
 "use client";
 
-import { CalendarDays, Check, Link2, Loader2, Mic, Pencil, Trash2, Type, X } from "lucide-react";
+import {
+  AlarmClock,
+  CalendarDays,
+  Check,
+  Link2,
+  Loader2,
+  Mic,
+  Pencil,
+  Trash2,
+  Type,
+  X,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -17,6 +28,10 @@ import {
   putDailyPlanTasksCache,
 } from "@/lib/fetchDailyPlanTasksForClient";
 import { DailyPlanMicrotopicPicker } from "@/components/planner/DailyPlanMicrotopicPicker";
+import { ScheduleRevisionReminderDialog } from "@/components/revision/ScheduleRevisionReminderDialog";
+import type { ScheduleRevisionInitialSnapshot } from "@/components/revision/ScheduleRevisionReminderDialog";
+import { RevisionScheduledToast } from "@/components/revision/RevisionScheduledToast";
+import { useAuthStore } from "@/store/useAuthStore";
 import { useUndoStore } from "@/store/useUndoStore";
 import { useTaskStore, type Microtopic } from "@/store/useTaskStore";
 import { findOverlappingTaskPairs } from "@/lib/dailyPlanOverlap";
@@ -65,6 +80,27 @@ function truncateEditSyllabusSummary(s: string, max: number): string {
 }
 
 /** Prefer server embed; fall back to client syllabus catalog so links show after save. */
+function buildRevisionInitialFromTask(
+  t: DailyTaskView,
+  catalog: Record<string, Microtopic>,
+): ScheduleRevisionInitialSnapshot {
+  const sid = t.syllabus_master_id?.trim() ?? "";
+  const resolved = resolveSyllabusForListRow(t, catalog);
+  if (resolved) {
+    const title = `${(resolved.microtopic || resolved.chapter).trim() || "Topic"} · ${(resolved.subject || "Subject").trim()}`;
+    return {
+      title,
+      microtopicId: sid || null,
+      sourceTab: "syllabus",
+    };
+  }
+  return {
+    title: (t.title || "").trim() || "Topic",
+    microtopicId: sid || null,
+    sourceTab: sid ? "syllabus" : "custom",
+  };
+}
+
 function resolveSyllabusForListRow(
   t: DailyTaskView,
   catalog: Record<string, Microtopic>,
@@ -455,6 +491,8 @@ type Props = {
   disablePastStatusToggle?: boolean;
   /** Called after tasks finish loading with the current task count (0 = empty). */
   onTasksLoaded?: (count: number) => void;
+  /** When true, done tasks get "Schedule revision" (Daily Plan). */
+  showScheduleRevision?: boolean;
 };
 
 export function UnifiedDailyPlanList({
@@ -463,7 +501,9 @@ export function UnifiedDailyPlanList({
   className = "",
   disablePastStatusToggle = false,
   onTasksLoaded,
+  showScheduleRevision = false,
 }: Props) {
+  const userId = useAuthStore((s) => s.user?.id);
   const today = useCalendarDate();
   const statusToggleLocked = Boolean(
     disablePastStatusToggle && planDate < today,
@@ -478,6 +518,17 @@ export function UnifiedDailyPlanList({
     initialSyllabusExpanded: boolean;
   } | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [scheduleRevisionTask, setScheduleRevisionTask] =
+    useState<DailyTaskView | null>(null);
+  const [revisionScheduledPopupOpen, setRevisionScheduledPopupOpen] =
+    useState(false);
+
+  const scheduleRevisionInitial = useMemo((): ScheduleRevisionInitialSnapshot => {
+    if (!scheduleRevisionTask) {
+      return { title: "", microtopicId: null, sourceTab: "custom" };
+    }
+    return buildRevisionInitialFromTask(scheduleRevisionTask, microtopicsById);
+  }, [scheduleRevisionTask, microtopicsById]);
 
   const load = useCallback(
     async (opts?: { silent?: boolean }) => {
@@ -820,6 +871,18 @@ export function UnifiedDailyPlanList({
                             {syllabusCtaLabel}
                           </button>
                         ) : null}
+                        {done && showScheduleRevision && userId ? (
+                          <button
+                            type="button"
+                            disabled={isDeleting}
+                            onClick={() => setScheduleRevisionTask(t)}
+                            className="mt-2 inline-flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-xl border border-kal-accent/35 bg-kal-accent/10 px-3 py-2 text-xs font-semibold text-kal-accent transition-colors hover:bg-kal-accent/15 disabled:opacity-40 sm:w-auto sm:justify-start"
+                            aria-haspopup="dialog"
+                          >
+                            <AlarmClock className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                            Schedule revision
+                          </button>
+                        ) : null}
                       </div>
 
                       {/*
@@ -864,6 +927,26 @@ export function UnifiedDailyPlanList({
           </>
         )}
       </section>
+
+      <RevisionScheduledToast
+        open={revisionScheduledPopupOpen}
+        onDismiss={() => setRevisionScheduledPopupOpen(false)}
+      />
+
+      <ScheduleRevisionReminderDialog
+        key={scheduleRevisionTask?.id ?? "closed"}
+        open={scheduleRevisionTask != null}
+        onOpenChange={(v) => {
+          if (!v) setScheduleRevisionTask(null);
+        }}
+        userId={userId}
+        showVoice={false}
+        dialogTitle="Schedule revision"
+        titleId="daily-plan-schedule-revision-dialog"
+        initial={scheduleRevisionInitial}
+        saveButtonLabel="Save reminder"
+        onSaved={() => setRevisionScheduledPopupOpen(true)}
+      />
 
       {/* Edit sheet */}
       {editing ? (
