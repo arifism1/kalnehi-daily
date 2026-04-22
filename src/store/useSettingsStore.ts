@@ -5,10 +5,10 @@ export type StudyCameraFacing = "user" | "environment";
 
 export type StudyDetectionSensitivity = "strict" | "balanced" | "lenient";
 
-export type AppearanceMode = "light" | "dark" | "system";
+export type AppearanceMode = "light" | "dark";
 
 type SettingsState = {
-  /** UI theme; light is default. `system` follows OS preference. */
+  /** UI theme: "light" (Orange theme) or "dark" (Coffee theme). */
   appearance: AppearanceMode;
   purposeModeEnabled: boolean;
   showCountdown: boolean;
@@ -29,6 +29,8 @@ type SettingsState = {
   studyCameraVisionVerify: boolean;
   /** Interval between vision checks in minutes (2, 3, or 5). */
   studyCameraVerifyIntervalMin: 2 | 3 | 5;
+  /** When true, continuously listens for "Hi Kalnehi" to trigger voice commands hands-free. Default on. */
+  wakeWordEnabled: boolean;
   setPurposeModeEnabled: (v: boolean) => void;
   setShowCountdown: (v: boolean) => void;
   setAdvancedMarksProjectionEnabled: (v: boolean) => void;
@@ -42,13 +44,14 @@ type SettingsState = {
   setStudyCameraVisionVerify: (v: boolean) => void;
   setStudyCameraVerifyIntervalMin: (v: 2 | 3 | 5) => void;
   setAppearance: (v: AppearanceMode) => void;
+  setWakeWordEnabled: (v: boolean) => void;
 };
 
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
       appearance: "light",
-      purposeModeEnabled: true,
+      purposeModeEnabled: false,
       showCountdown: true,
       advancedMarksProjectionEnabled: true,
       soundEffects: true,
@@ -60,6 +63,7 @@ export const useSettingsStore = create<SettingsState>()(
       studyDetectionSensitivity: "balanced",
       studyCameraVisionVerify: true,
       studyCameraVerifyIntervalMin: 3 as 2 | 3 | 5,
+      wakeWordEnabled: true,
 
       setPurposeModeEnabled: (purposeModeEnabled) =>
         set({ purposeModeEnabled }),
@@ -81,9 +85,22 @@ export const useSettingsStore = create<SettingsState>()(
       setStudyCameraVerifyIntervalMin: (studyCameraVerifyIntervalMin) =>
         set({ studyCameraVerifyIntervalMin }),
       setAppearance: (appearance) => set({ appearance }),
+      setWakeWordEnabled: (wakeWordEnabled) => set({ wakeWordEnabled }),
     }),
     {
       name: "kalnehi-settings",
+      version: 1,
+      migrate: (persisted: unknown) => {
+        const s = persisted as Record<string, unknown>;
+        if (s.appearance === "system") {
+          s.appearance =
+            typeof window !== "undefined" &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
+        }
+        return s;
+      },
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => ({
         appearance: s.appearance,
@@ -99,6 +116,7 @@ export const useSettingsStore = create<SettingsState>()(
         studyDetectionSensitivity: s.studyDetectionSensitivity,
         studyCameraVisionVerify: s.studyCameraVisionVerify,
         studyCameraVerifyIntervalMin: s.studyCameraVerifyIntervalMin,
+        wakeWordEnabled: s.wakeWordEnabled,
       }),
     },
   ),

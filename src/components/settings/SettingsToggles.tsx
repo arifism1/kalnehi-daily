@@ -45,9 +45,8 @@ function SheetSwitch({
 }
 
 const APPEARANCE_OPTIONS: { value: AppearanceMode; label: string }[] = [
-  { value: "light", label: "Light" },
-  { value: "system", label: "System" },
-  { value: "dark", label: "Dark" },
+  { value: "light", label: "Orange theme" },
+  { value: "dark", label: "Coffee theme" },
 ];
 
 function ToggleStateBadge({ checked }: { checked: boolean }) {
@@ -76,6 +75,8 @@ export function SettingsToggles() {
   const setSoundEffects = useSettingsStore((s) => s.setSoundEffects);
   const dailyReminders = useSettingsStore((s) => s.dailyReminders);
   const setDailyReminders = useSettingsStore((s) => s.setDailyReminders);
+  const wakeWordEnabled = useSettingsStore((s) => s.wakeWordEnabled);
+  const setWakeWordEnabled = useSettingsStore((s) => s.setWakeWordEnabled);
   const advancedMarksProjectionEnabled = useSettingsStore(
     (s) => s.advancedMarksProjectionEnabled,
   );
@@ -94,7 +95,7 @@ export function SettingsToggles() {
       <div className="px-3 py-4">
         <span className="text-[15px] font-medium text-kal-text">Theme</span>
         <p className="mt-0.5 text-xs text-kal-text-secondary">
-          Choose how Kalnehi looks. System follows your device preference.
+          Choose how Kalnehi looks.
         </p>
         <div
           className="kal-glass-subtle mt-3 flex gap-1 rounded-xl p-1"
@@ -194,6 +195,23 @@ export function SettingsToggles() {
           onChange={setDailyReminders}
           id={`${baseId}-r`}
           label="Toggle daily reminder nudges"
+        />
+      </div>
+      <div className="flex items-center justify-between gap-3 px-3 py-3.5">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="text-[15px] font-medium text-kal-text">Always listen for Hi Kalnehi</span>
+            <ToggleStateBadge checked={wakeWordEnabled} />
+          </div>
+          <p className="mt-0.5 text-xs text-kal-text-secondary">
+            Activates voice commands hands-free. Pauses when the app is in background.
+          </p>
+        </div>
+        <SheetSwitch
+          checked={wakeWordEnabled}
+          onChange={setWakeWordEnabled}
+          id={`${baseId}-ww`}
+          label="Toggle always listen for Hi Kalnehi"
         />
       </div>
     </div>

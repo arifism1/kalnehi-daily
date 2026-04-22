@@ -425,17 +425,16 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
               <div
                 role="status"
                 aria-live="polite"
-                className="inline-flex items-center gap-1.5 rounded-full px-[10px] py-1"
-                style={{
-                  backgroundColor: "#FFF3E4",
-                  border: "0.5px solid #FAC775",
-                }}
+                className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/80 bg-amber-50/95 px-[10px] py-1 text-amber-950 dark:border-amber-500/45 dark:bg-amber-950/50 dark:text-amber-50"
               >
-                <Mic className="h-3 w-3 shrink-0 text-kal-accent" aria-hidden />
-                <span className="text-[12px] font-medium text-kal-text">
+                <Mic
+                  className="h-3 w-3 shrink-0 text-amber-800 dark:text-amber-300"
+                  aria-hidden
+                />
+                <span className="text-[12px] font-medium text-amber-950 dark:text-amber-50">
                   {remText}
                 </span>
-                <span className="text-[11px] text-kal-muted">
+                <span className="text-[11px] text-amber-900/85 dark:text-amber-200/90">
                   / {capText} cap
                 </span>
               </div>
@@ -466,9 +465,9 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
           <Volume2 className="h-7 w-7 shrink-0 text-kal-accent" aria-hidden />
           Dictate My Day
         </h1>
-        <p className="kal-glass-subtle mt-3 rounded-xl px-3 py-2 text-xs leading-relaxed text-kal-muted">
-          <span className="font-medium text-kal-text-secondary">Tip:</span> Speak
-          naturally, then tap Stop when you&apos;re done.
+        <p className="kal-glass-subtle mt-3 rounded-xl px-3 py-2 text-xs leading-relaxed text-kal-text-secondary">
+          <span className="font-medium text-kal-text">Tip:</span> Speak naturally,
+          then tap Stop when you&apos;re done.
         </p>
       </header>
 
@@ -492,14 +491,14 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
               className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
                 logDate === d.id
                   ? "bg-kal-accent text-white"
-                  : "text-kal-muted hover:text-kal-text"
+                  : "text-kal-text-secondary hover:text-kal-text"
               }`}
             >
               {d.label}
             </button>
           ))}
         </div>
-        <label className="block text-[11px] font-medium text-kal-muted">
+        <label className="block text-[11px] font-medium text-kal-text-secondary">
           Plan date
           <input
             type="date"
@@ -508,7 +507,7 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
             className="mt-1 block min-h-[44px] rounded-xl border border-kal-border bg-kal-input-bg px-3 text-base sm:text-sm text-kal-text"
           />
         </label>
-        <label className="block text-[11px] font-medium text-kal-muted">
+        <label className="block text-[11px] font-medium text-kal-text-secondary">
           Speech language
           <select
             value={lang}
@@ -558,7 +557,7 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
             )}
           </button>
           <p
-            className="text-sm font-semibold tracking-wide text-kal-text-secondary"
+            className="text-sm font-semibold tracking-wide text-kal-text"
             aria-live="polite"
           >
             {phase === "listening"
@@ -588,12 +587,12 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
       <section className="kal-glass-panel rounded-[1.25rem] p-4 sm:p-6">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-sm font-bold text-kal-text">Preview (not saved yet)</h2>
-          <span className="text-xs text-kal-muted">{logDate}</span>
+          <span className="text-xs text-kal-text-secondary">{logDate}</span>
         </div>
-        <p className="mt-1 text-xs leading-relaxed text-kal-muted">
+        <p className="mt-1 text-xs leading-relaxed text-kal-text-secondary">
           Parsed lines land here first. Edit times or names, then use{" "}
-          <span className="font-semibold text-kal-text-secondary">{addPlanLabel}</span> — the
-          live list below shows the same date ({logDate}) and stays in sync with Self Type.
+          <span className="font-semibold text-kal-text">{addPlanLabel}</span> — the live
+          list below shows the same date ({logDate}) and stays in sync with Self Type.
         </p>
         {voiceQuotaNote ? (
           <p className="mt-2 rounded-lg border border-kal-accent/25 bg-kal-accent/5 px-3 py-2 text-xs text-kal-text-secondary">
@@ -617,7 +616,7 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
           }
           excludeFromSaveHint="Exclude this row from the next save"
         />
-        <p className="mt-2 text-[11px] leading-snug text-kal-muted">
+        <p className="mt-2 text-[11px] leading-snug text-kal-text-secondary">
           Tip: changing subject or chapter clears the microtopic link until you pick a
           microtopic again.
         </p>

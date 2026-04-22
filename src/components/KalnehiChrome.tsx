@@ -12,6 +12,10 @@ import {
   useState,
 } from "react";
 
+import { GlobalVoiceSheet } from "@/components/voice/GlobalVoiceSheet";
+import { WakeWordListener } from "@/components/voice/WakeWordListener";
+import { useVoiceCommandStore } from "@/store/useVoiceCommandStore";
+
 import { KalnehiMark } from "@/components/KalnehiMark";
 import { PwaInstallPromptDeferred } from "@/components/PwaInstallPromptDeferred";
 import { FreeTrialWelcomeBanner } from "@/components/subscription/FreeTrialWelcomeBanner";
@@ -60,6 +64,7 @@ const MINIMAL_CHROME_PATHS = new Set([
 export function KalnehiChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { open: openVoice, isOpen: voiceOpen } = useVoiceCommandStore();
   const onboarding = pathname === "/onboarding";
   const minimalChrome = MINIMAL_CHROME_PATHS.has(pathname);
 
@@ -122,9 +127,9 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-full min-h-dvh flex-col bg-kal-page text-kal-text">
+    <div className="kal-chrome-root flex min-h-full min-h-dvh flex-col bg-kal-page text-kal-text">
       {/* ── Top bar ────────────────────────────────────────────────────── */}
-      <header className="kal-glass-header sticky top-0 z-40 pt-[env(safe-area-inset-top)]">
+      <header className="kal-glass-header sticky top-0 z-40 shrink-0 pt-[env(safe-area-inset-top)]">
         <div className="flex h-[52px] w-full items-center justify-between gap-2 px-3 sm:h-[52px] sm:px-5">
           {/* Logo */}
           <Link
@@ -140,18 +145,20 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
 
           {/* Right controls */}
           <div className="flex items-center gap-1">
-            <Link
-              href="/dictate-day"
+            <button
+              type="button"
+              onClick={openVoice}
+              aria-label="Voice command"
+              aria-pressed={voiceOpen}
               className={clsx(
                 "flex h-8 w-8 min-h-[32px] min-w-[32px] items-center justify-center rounded-xl border backdrop-blur-md transition-colors active:scale-[0.98]",
-                pathname === "/dictate-day"
+                voiceOpen
                   ? "border-kal-accent/35 bg-kal-accent-soft text-kal-accent shadow-sm"
                   : "border-white/30 bg-white/45 text-kal-accent hover:border-white/45 hover:bg-white/65 dark:border-white/12 dark:bg-zinc-900/50",
               )}
-              aria-label="Dictate My Day"
             >
               <Mic className="h-4.5 w-4.5 shrink-0" strokeWidth={2.25} aria-hidden />
-            </Link>
+            </button>
             <Link
               href="/notifications"
               className={clsx(
@@ -180,12 +187,12 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
       </header>
 
       {/* ── Body: sidebar + content ─────────────────────────────────────── */}
-      <div className="flex min-w-0 flex-1">
+      <div className="kal-chrome-body flex min-w-0 flex-1">
         {/* Desktop sidebar — hidden below lg (900px) */}
         <KalnehiSidebar />
 
         {/* Main content area */}
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="kal-chrome-main-scroll flex min-w-0 flex-1 flex-col">
           <main
             className={clsx(
               "mx-auto w-full flex-1 px-4 py-6 sm:px-6 sm:py-8",
@@ -214,6 +221,8 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
       </QuietSavedToastBoundary>
       <TimerVisibilityBridge />
       <PwaInstallPromptDeferred />
+      <GlobalVoiceSheet />
+      <WakeWordListener />
     </div>
   );
 }

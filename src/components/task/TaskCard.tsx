@@ -422,7 +422,7 @@ export function TaskCard({
       className={clsx(
         "group rounded-xl border px-2 py-1.5 kal-shadow-card transition-all duration-200 ease-out sm:rounded-[1rem] sm:px-2.5 sm:py-2 md:px-3 md:py-2.5",
         appearance === "missed"
-          ? "border-amber-300/60 bg-amber-50/80 backdrop-blur-sm dark:border-amber-500/25 dark:from-amber-950/20 dark:to-slate-950/40 dark:bg-gradient-to-r"
+          ? "border-amber-300/60 bg-amber-50/80 backdrop-blur-sm dark:border-amber-500/30 dark:bg-[rgba(52,40,22,0.90)] dark:ring-1 dark:ring-white/[0.05]"
           : "kal-glass-subtle",
         done && "opacity-[0.95]",
       )}
@@ -544,7 +544,7 @@ export function TaskCard({
 
               <div className="mt-px flex min-w-0 items-center gap-1 sm:mt-0.5 sm:gap-1.5">
                 <p
-                  className="min-w-0 flex-1 truncate text-[9px] leading-snug tabular-nums text-kal-muted sm:text-[10px] md:text-[11px]"
+                  className="min-w-0 flex-1 truncate text-[9px] leading-snug tabular-nums text-kal-text-secondary/80 sm:text-[10px] md:text-[11px]"
                   title={secondaryMetaText}
                 >
                   {secondaryMetaText}

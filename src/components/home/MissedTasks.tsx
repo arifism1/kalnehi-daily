@@ -308,7 +308,7 @@ export function MissedTasks() {
     ) : (
       <li
         key={`r-${row.item.id}`}
-        className="space-y-2 rounded-2xl border border-kal-border/50 bg-white/80 p-3.5 dark:bg-zinc-900/50"
+        className="space-y-2 rounded-2xl border border-kal-border/50 bg-white/80 p-3.5 dark:border-kal-border-strong/50 dark:bg-[rgba(44,36,24,0.88)]"
       >
         <div className="flex items-start justify-between gap-2">
           <p className="min-w-0 font-semibold leading-snug text-kal-text">
@@ -392,7 +392,7 @@ export function MissedTasks() {
 
   return (
     <section
-      className="kal-glass-panel overflow-hidden rounded-2xl border border-amber-200/90 bg-gradient-to-br from-amber-50/95 via-white to-kal-accent-soft/25 p-4 shadow-md ring-1 ring-amber-900/[0.06] backdrop-blur-md sm:rounded-3xl sm:p-5 dark:border-amber-500/25 dark:from-amber-950/40 dark:via-zinc-950/55 dark:to-zinc-950/70 dark:ring-white/5"
+      className="kal-glass-panel overflow-hidden rounded-2xl border border-amber-200/90 bg-gradient-to-br from-amber-50/95 via-white to-kal-accent-soft/25 p-4 shadow-md ring-1 ring-amber-900/[0.06] backdrop-blur-md sm:rounded-3xl sm:p-5 dark:border-amber-500/30 dark:from-amber-950/30 dark:via-stone-900/50 dark:to-stone-900/65 dark:ring-white/[0.06]"
       aria-labelledby="missed-heading"
     >
       <div className="flex items-start gap-2.5 sm:gap-3">
@@ -433,7 +433,7 @@ export function MissedTasks() {
               "min-h-[36px] rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
               filter === opt.id
                 ? "border-kal-accent bg-kal-accent/15 text-kal-text"
-                : "border-kal-border/70 bg-white/50 text-kal-muted hover:border-kal-accent/40 hover:text-kal-text dark:bg-zinc-900/50",
+                : "border-kal-border/70 bg-white/50 text-kal-text-secondary hover:border-kal-accent/40 hover:text-kal-text dark:bg-zinc-900/50",
             )}
           >
             {opt.label}
@@ -455,7 +455,7 @@ export function MissedTasks() {
                 "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
                 selectedDate == null
                   ? "border-kal-accent bg-kal-accent/15 text-kal-text"
-                  : "border-kal-border/70 bg-white/50 text-kal-muted hover:border-kal-accent/40 hover:text-kal-text dark:bg-zinc-900/50",
+                  : "border-kal-border/70 bg-white/50 text-kal-text-secondary hover:border-kal-accent/40 hover:text-kal-text dark:bg-zinc-900/50",
               )}
             >
               All
@@ -475,7 +475,7 @@ export function MissedTasks() {
                         "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
                         selectedDate === d
                           ? "border-kal-accent bg-kal-accent/15 text-kal-text"
-                          : "border-kal-border/70 bg-white/50 text-kal-muted hover:border-kal-accent/40 hover:text-kal-text dark:bg-zinc-900/50",
+                          : "border-kal-border/70 bg-white/50 text-kal-text-secondary hover:border-kal-accent/40 hover:text-kal-text dark:bg-zinc-900/50",
                       )}
                     >
                       {format(parseISO(d), "MMM d")}
