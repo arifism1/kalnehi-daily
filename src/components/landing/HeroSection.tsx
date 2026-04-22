@@ -53,7 +53,7 @@ export function HeroSection() {
               href="/auth"
               className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-kal-accent px-8 text-base font-bold text-white shadow-[0_4px_20px_rgba(255,122,0,0.35)] transition hover:brightness-105 active:scale-[0.99]"
             >
-              Start free — 1 day on us
+              Start free — 3 days on us
             </Link>
             <Link
               href="/what-can-kalnehi-do"

@@ -69,9 +69,9 @@ const PAGE_SEO: Record<
   },
   pricing: {
     path: "/pricing",
-    title: `Pricing — Pro | ${SITE_NAME}`,
+    title: `Pricing — Basic, Smart Trial & Smart Plan | ${SITE_NAME}`,
     description:
-      `Simple plans for students who want PrepBrain AI, advanced tracking, and premium execution tools. See ${SITE_NAME} pricing for JEE, NEET, and Boards.`,
+      `Three plans for serious exam prep. Start free for 7 days on Basic, try AI-powered Smart Trial for ₹19, or unlock everything with Smart Plan at ₹499/month. PrepBrain AI, voice control, marks engine, and rank prediction.`,
   },
   about: {
     path: "/about",

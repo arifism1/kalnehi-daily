@@ -1,5 +1,5 @@
-/** Welcome trial: 1 calendar day from trial_started_at, separate from Razorpay 2-day paid trial. */
-export const FREE_TRIAL_MS = 24 * 60 * 60 * 1000;
+/** Welcome trial: 3 calendar days from trial_started_at, separate from Razorpay 3-day paid trial. */
+export const FREE_TRIAL_MS = 3 * 24 * 60 * 60 * 1000;
 export const FREE_TRIAL_PHOTO_CAP = 5;
 /** Five minutes of voice during welcome trial, stored as seconds in the database (RPC cap 300). */
 export const FREE_TRIAL_VOICE_CAP_SECONDS = 5 * 60;

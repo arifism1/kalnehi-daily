@@ -119,7 +119,7 @@ function buildUpdateFromSubscription(payload: WebhookEnvelope): ProfileUpdate | 
   const start = currentStart ? new Date(currentStart * 1000) : now;
   const end = currentEnd ? new Date(currentEnd * 1000) : new Date(now);
   if (!currentEnd) {
-    if (plan === "trial") end.setDate(end.getDate() + 2);
+    if (plan === "trial") end.setDate(end.getDate() + 3);
     else end.setMonth(end.getMonth() + 1);
   }
 
