@@ -1,10 +1,11 @@
 "use client";
 
 import clsx from "clsx";
-import { Check, Info, Pause, Play, RefreshCw, Square } from "lucide-react";
+import { Bot, Check, Info, Pause, Play, RefreshCw, Square } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Webcam from "react-webcam";
 
+import { deductAiStudyPartnerTime } from "@/actions/aiStudyPartner";
 import { applyOptimisticStudySessionCreate } from "@/lib/studySessionMutations";
 import {
   computeStudyFrameSignals,
@@ -246,13 +247,18 @@ function drawSkeleton(
 
 type SessionPhase = "idle" | "running" | "paused";
 
+const AI_PARTNER_FIRST_MS = 90_000;  // first feedback after 90s
+const AI_PARTNER_INTERVAL_MS = 3.5 * 60 * 1000; // then every 3.5 min
+const PARTNER_FEEDBACK_VISIBLE_MS = 12_000;
+
 type Props = {
   subject: string;
   userId: string;
+  aiPartnerMode?: boolean;
   onDone: () => void;
 };
 
-export function StudyCameraTracker({ subject, userId, onDone }: Props) {
+export function StudyCameraTracker({ subject, userId, aiPartnerMode = false, onDone }: Props) {
   const facing = useSettingsStore((s) => s.studyCameraFacing);
   const setFacing = useSettingsStore((s) => s.setStudyCameraFacing);
   const sensitivity = useSettingsStore(
@@ -295,6 +301,12 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
   const firstVisionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const visionIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const wideSelectionDoneRef = useRef(false);
+
+  // AI Partner refs
+  const firstPartnerTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const partnerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const partnerInFlightRef = useRef(false);
+  const partnerFeedbackHideRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     facingRef.current = facing;
@@ -347,6 +359,10 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
   const [visionAutoPaused, setVisionAutoPaused] = useState(false);
   const [visionVerdictUi, setVisionVerdictUi] = useState<VisionVerdict | null>(null);
 
+  // AI Partner state
+  const [partnerFeedback, setPartnerFeedback] = useState<string | null>(null);
+  const [partnerFeedbackVisible, setPartnerFeedbackVisible] = useState(false);
+
   // MediaPipe / TFLite routes informational messages (e.g. "INFO: Created
   // TensorFlow Lite XNNPACK delegate for CPU.") through console.error, which
   // Next.js dev overlay then flags as errors. Suppress those INFO lines only
@@ -359,6 +375,10 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
     };
     return () => {
       console.error = orig;
+      if (partnerFeedbackHideRef.current) clearTimeout(partnerFeedbackHideRef.current);
+      if (typeof window !== "undefined" && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
     };
   }, []);
 
@@ -536,6 +556,12 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
       return;
     }
 
+    if (aiPartnerMode && durSec > 0) {
+      deductAiStudyPartnerTime(durSec).catch((err: unknown) =>
+        console.error("[StudyCameraTracker] deductAiStudyPartnerTime error", err),
+      );
+    }
+
     resetSessionUi();
     const ended = new Date().toISOString();
     await applyOptimisticStudySessionCreate({
@@ -548,7 +574,7 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
       ended_at: ended,
     });
     onDone();
-  }, [subject, userId, onDone]);
+  }, [subject, userId, aiPartnerMode, onDone]);
 
   // Gemini spot-checks: first after 90s, then on a fixed interval (default 3 min).
   useEffect(() => {
@@ -574,7 +600,7 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
       if (!video || video.readyState < 2) return;
       visionVerifyInFlightRef.current = true;
       try {
-        const b64 = captureFrameBase64FromVideo(video);
+        const b64 = captureFrameBase64FromVideo(video, 640);
         if (!b64) return;
         const res = await fetch("/api/study-camera/verify", {
           method: "POST",
@@ -630,6 +656,81 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
       }
     };
   }, [phase, studyCameraVisionVerify, studyCameraVerifyIntervalMin, modelsReady, videoReady]);
+
+  // AI Partner feedback loop: first at 90s, then every 3.5 min
+  useEffect(() => {
+    if (firstPartnerTimeoutRef.current) {
+      clearTimeout(firstPartnerTimeoutRef.current);
+      firstPartnerTimeoutRef.current = null;
+    }
+    if (partnerIntervalRef.current) {
+      clearInterval(partnerIntervalRef.current);
+      partnerIntervalRef.current = null;
+    }
+    if (!aiPartnerMode || phase !== "running" || !modelsReady || !videoReady) return;
+
+    const runFeedback = async () => {
+      if (sessionPhaseRef.current !== "running") return;
+      if (partnerInFlightRef.current) return;
+      const video = webcamRef.current?.video;
+      if (!video || video.readyState < 2) return;
+      partnerInFlightRef.current = true;
+      try {
+        const b64 = captureFrameBase64FromVideo(video);
+        if (!b64) return;
+        const res = await fetch("/api/study-partner/feedback", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ frame: b64 }),
+        });
+        const data = (await res.json()) as { ok?: boolean; feedback?: string };
+        if (!res.ok || !data.ok || !data.feedback) return;
+        const text = data.feedback.trim();
+        if (!text) return;
+
+        // Show feedback overlay
+        setPartnerFeedback(text);
+        setPartnerFeedbackVisible(true);
+        if (partnerFeedbackHideRef.current) clearTimeout(partnerFeedbackHideRef.current);
+        partnerFeedbackHideRef.current = setTimeout(() => {
+          setPartnerFeedbackVisible(false);
+        }, PARTNER_FEEDBACK_VISIBLE_MS);
+
+        // Speak via TTS
+        if (typeof window !== "undefined" && window.speechSynthesis) {
+          window.speechSynthesis.cancel();
+          const utt = new SpeechSynthesisUtterance(text);
+          utt.rate = 0.92;
+          utt.pitch = 1;
+          utt.volume = 1;
+          window.speechSynthesis.speak(utt);
+        }
+      } catch {
+        /* silently ignore — partner feedback is best-effort */
+      } finally {
+        partnerInFlightRef.current = false;
+      }
+    };
+
+    firstPartnerTimeoutRef.current = setTimeout(() => {
+      void runFeedback();
+      partnerIntervalRef.current = setInterval(() => {
+        void runFeedback();
+      }, AI_PARTNER_INTERVAL_MS);
+    }, AI_PARTNER_FIRST_MS);
+
+    return () => {
+      if (firstPartnerTimeoutRef.current) {
+        clearTimeout(firstPartnerTimeoutRef.current);
+        firstPartnerTimeoutRef.current = null;
+      }
+      if (partnerIntervalRef.current) {
+        clearInterval(partnerIntervalRef.current);
+        partnerIntervalRef.current = null;
+      }
+    };
+  }, [aiPartnerMode, phase, modelsReady, videoReady]);
 
   // Main detection + drawing loop
   useEffect(() => {
@@ -827,55 +928,133 @@ export function StudyCameraTracker({ subject, userId, onDone }: Props) {
   return (
     <div className="flex min-h-[min(100dvh,52rem)] flex-col gap-4">
 
-      {/* ── Large camera preview ── */}
-      <div className="relative w-full overflow-hidden rounded-2xl border border-white/10 bg-black ring-1 ring-white/5">
-        <div className="relative aspect-[4/3] w-full">
-          <Webcam
-            key={`sc-${facing}-${selectedDeviceId ?? "def"}`}
-            ref={webcamRef}
-            audio={false}
-            mirrored={facing === "user"}
-            videoConstraints={videoConstraints}
-            onUserMedia={handleUserMedia}
-            className="h-full w-full object-cover"
-          />
-          {/* Skeleton overlay */}
-          <canvas
-            ref={canvasRef}
-            className="pointer-events-none absolute inset-0 h-full w-full"
-            aria-hidden
-          />
+      {/* ── Camera preview (+ AI Avatar panel in partner mode) ── */}
+      {aiPartnerMode ? (
+        /* Split layout: avatar top / webcam bottom on mobile; webcam left / avatar right on desktop */
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch sm:gap-4">
 
-          {/* Flip camera button — top-right overlay */}
-          <button
-            type="button"
-            onClick={() =>
-              setFacing(facing === "user" ? "environment" : "user")
-            }
-            className="absolute top-3 right-3 flex items-center gap-1.5 rounded-xl bg-black/55 px-3 py-2 text-xs font-semibold text-white shadow-lg backdrop-blur-sm ring-1 ring-white/10 transition-opacity active:opacity-70"
-            aria-label={
-              facing === "user"
-                ? "Switch to back camera"
-                : "Switch to front camera"
-            }
-          >
-            <RefreshCw className="h-4 w-4" />
-            {facing === "user" ? "Back" : "Front"}
-          </button>
+          {/* AI Avatar Panel — top on mobile, right on desktop */}
+          <div className="order-first flex flex-col items-center justify-center gap-4 rounded-2xl border border-kal-accent/20 bg-kal-card-muted px-5 py-6 sm:order-last sm:w-2/5">
+            {/* Active indicator pill */}
+            <div className="flex items-center gap-2 rounded-full bg-kal-accent/10 px-3 py-1.5 text-[11px] font-semibold text-kal-accent ring-1 ring-kal-accent/20">
+              <span className="relative flex h-2 w-2 shrink-0">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-kal-accent opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-kal-accent" />
+              </span>
+              AI Study Partner Active
+            </div>
 
-          {/* Privacy badge — bottom-left */}
-          <div className="absolute bottom-2 left-2 max-w-[min(100%,16rem)] rounded-md bg-black/75 px-2 py-1 text-[8px] font-medium leading-tight text-zinc-200 ring-1 ring-white/10">
-            {studyCameraVisionVerify
-              ? "🔒 MediaPipe on-device · optional Gemini spot-checks (no storage)"
-              : "🔒 On-device only · Private"}
+            {/* Animated avatar */}
+            <div className="relative flex h-24 w-24 items-center justify-center">
+              <span className="absolute inset-0 animate-ping rounded-full bg-kal-accent/15" />
+              <span className="absolute inset-3 rounded-full bg-kal-accent/10" />
+              <span className="relative z-10 flex h-20 w-20 items-center justify-center rounded-full bg-kal-accent/15 ring-2 ring-kal-accent/30">
+                <Bot className="h-9 w-9 text-kal-accent" aria-hidden />
+              </span>
+            </div>
+
+            {/* Speech bubble — shows last feedback or a default motivational line */}
+            <div className="w-full rounded-2xl border border-kal-border bg-kal-card px-4 py-3 text-xs leading-relaxed text-kal-text-secondary shadow-sm">
+              {partnerFeedback
+                ? partnerFeedback
+                : phase === "running"
+                  ? "Watching your desk — I\u2019ll check in with you soon!"
+                  : "Start your session and I\u2019ll keep you focused."}
+            </div>
           </div>
 
-          {/* Subject label — bottom-right */}
-          <div className="absolute right-2 bottom-2 max-w-[55%] truncate rounded-md bg-black/75 px-2 py-1 text-[9px] font-medium text-zinc-300 ring-1 ring-white/10">
-            {subj}
+          {/* Webcam — bottom on mobile, left on desktop */}
+          <div className="relative order-last w-full overflow-hidden rounded-2xl border border-white/10 bg-black ring-1 ring-white/5 sm:order-first sm:w-3/5">
+            <div className="relative aspect-[4/3] w-full">
+              <Webcam
+                key={`sc-${facing}-${selectedDeviceId ?? "def"}`}
+                ref={webcamRef}
+                audio={false}
+                mirrored={facing === "user"}
+                videoConstraints={videoConstraints}
+                onUserMedia={handleUserMedia}
+                className="h-full w-full object-cover"
+              />
+              <canvas
+                ref={canvasRef}
+                className="pointer-events-none absolute inset-0 h-full w-full"
+                aria-hidden
+              />
+              <button
+                type="button"
+                onClick={() => setFacing(facing === "user" ? "environment" : "user")}
+                className="absolute top-3 right-3 flex items-center gap-1.5 rounded-xl bg-black/55 px-3 py-2 text-xs font-semibold text-white shadow-lg backdrop-blur-sm ring-1 ring-white/10 transition-opacity active:opacity-70"
+                aria-label={facing === "user" ? "Switch to back camera" : "Switch to front camera"}
+              >
+                <RefreshCw className="h-4 w-4" />
+                {facing === "user" ? "Back" : "Front"}
+              </button>
+              <div className="absolute bottom-2 left-2 max-w-[min(100%,16rem)] rounded-md bg-black/75 px-2 py-1 text-[8px] font-medium leading-tight text-zinc-200 ring-1 ring-white/10">
+                {studyCameraVisionVerify
+                  ? "🔒 MediaPipe on-device · AI spot-checks (no storage)"
+                  : "🔒 On-device only · Private"}
+              </div>
+              <div className="absolute right-2 bottom-2 max-w-[55%] truncate rounded-md bg-black/75 px-2 py-1 text-[9px] font-medium text-zinc-300 ring-1 ring-white/10">
+                {subj}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        /* Standard single-column webcam layout */
+        <div className="relative w-full overflow-hidden rounded-2xl border border-white/10 bg-black ring-1 ring-white/5">
+          <div className="relative aspect-[4/3] w-full">
+            <Webcam
+              key={`sc-${facing}-${selectedDeviceId ?? "def"}`}
+              ref={webcamRef}
+              audio={false}
+              mirrored={facing === "user"}
+              videoConstraints={videoConstraints}
+              onUserMedia={handleUserMedia}
+              className="h-full w-full object-cover"
+            />
+            <canvas
+              ref={canvasRef}
+              className="pointer-events-none absolute inset-0 h-full w-full"
+              aria-hidden
+            />
+            <button
+              type="button"
+              onClick={() => setFacing(facing === "user" ? "environment" : "user")}
+              className="absolute top-3 right-3 flex items-center gap-1.5 rounded-xl bg-black/55 px-3 py-2 text-xs font-semibold text-white shadow-lg backdrop-blur-sm ring-1 ring-white/10 transition-opacity active:opacity-70"
+              aria-label={facing === "user" ? "Switch to back camera" : "Switch to front camera"}
+            >
+              <RefreshCw className="h-4 w-4" />
+              {facing === "user" ? "Back" : "Front"}
+            </button>
+            <div className="absolute bottom-2 left-2 max-w-[min(100%,16rem)] rounded-md bg-black/75 px-2 py-1 text-[8px] font-medium leading-tight text-zinc-200 ring-1 ring-white/10">
+              {studyCameraVisionVerify
+                ? "🔒 MediaPipe on-device · optional Gemini spot-checks (no storage)"
+                : "🔒 On-device only · Private"}
+            </div>
+            <div className="absolute right-2 bottom-2 max-w-[55%] truncate rounded-md bg-black/75 px-2 py-1 text-[9px] font-medium text-zinc-300 ring-1 ring-white/10">
+              {subj}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── AI Study Verification notice (AI Partner mode only) ── */}
+      {aiPartnerMode ? (
+        <div className="rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-kal-text-secondary">
+            AI Study Verification
+          </p>
+          <p className="mt-1.5 text-xs leading-relaxed text-kal-muted">
+            To ensure accurate focus tracking, we analyze a single webcam frame every 3.5 minutes
+            using AI. This helps verify that you are actively studying (reading, writing, or focused
+            on study material).
+          </p>
+          <p className="mt-1.5 text-xs font-medium text-kal-text-secondary">
+            No images are stored or retained at any time.
+          </p>
+        </div>
+      ) : null}
 
       {/* ── Camera positioning instruction — always visible ── */}
       <div className="kal-glass-subtle flex items-start gap-2.5 rounded-xl px-4 py-3">

@@ -1097,6 +1097,7 @@ export type Database = {
           usage_reset_date: string | null
           user_id: string | null
           voice_minutes_used_this_month: number | string
+          ai_study_partner_seconds_remaining: number
         }
         Insert: {
           ai_usage_row_version?: number
@@ -1149,6 +1150,7 @@ export type Database = {
           usage_reset_date?: string | null
           user_id?: string | null
           voice_minutes_used_this_month?: number | string
+          ai_study_partner_seconds_remaining?: number
         }
         Update: {
           ai_usage_row_version?: number
@@ -1201,6 +1203,7 @@ export type Database = {
           usage_reset_date?: string | null
           user_id?: string | null
           voice_minutes_used_this_month?: number | string
+          ai_study_partner_seconds_remaining?: number
         }
         Relationships: []
       }
@@ -1821,6 +1824,14 @@ export type Database = {
           assigned_date: string
           task_status: string
         }[]
+      }
+      add_ai_study_partner_seconds: {
+        Args: { p_user_id: string; p_seconds: number }
+        Returns: undefined
+      }
+      deduct_ai_study_partner_seconds: {
+        Args: { p_user_id: string; p_seconds: number }
+        Returns: undefined
       }
     }
     Enums: {

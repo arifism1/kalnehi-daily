@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Script from "next/script";
 import { addMonths, differenceInCalendarDays, format } from "date-fns";
-import { ArrowLeft, Brain, Crown, Loader2, Mic, RefreshCw } from "lucide-react";
+import { ArrowLeft, Bot, Brain, Crown, Loader2, Mic, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useState, useTransition } from "react";
 
 import {
@@ -13,8 +13,10 @@ import {
   createRazorpayMonthlySubscription,
   activateRazorpayMonthlySubscription,
 } from "@/actions/subscription";
+import { getAiStudyPartnerBalance } from "@/actions/aiStudyPartner";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ExtraCreditsSection } from "@/components/settings/ExtraCreditsSection";
+import { AiStudyPartnerPurchaseModal } from "@/components/study/AiStudyPartnerPurchaseModal";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { useAiGate } from "@/hooks/useAiGate";
 import { useFreeTrialLiveEndsIn } from "@/hooks/useFreeTrialLiveEndsIn";
@@ -225,6 +227,8 @@ export function MyPlanPageClient() {
   const [autopayMonths, setAutopayMonths] = useState(DEFAULT_AUTOPAY_MONTHS);
   const [resubBusy, setResubBusy] = useState(false);
   const [resubError, setResubError] = useState<string | null>(null);
+  const [aiPartnerBalance, setAiPartnerBalance] = useState<number | null>(null);
+  const [partnerPurchaseOpen, setPartnerPurchaseOpen] = useState(false);
   const user = useAuthStore((s) => s.user);
 
   const tierConfig = getTierConfig(tier);
@@ -293,6 +297,15 @@ export function MyPlanPageClient() {
     onWelcomeTrial,
     refetchVersion,
   ]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    void getAiStudyPartnerBalance()
+      .then((bal) => { if (!cancelled) setAiPartnerBalance(bal); })
+      .catch(() => { if (!cancelled) setAiPartnerBalance(0); });
+    return () => { cancelled = true; };
+  }, [user?.id]);
 
   const startResubscribe = useCallback(async () => {
     setResubBusy(true);
@@ -438,6 +451,14 @@ export function MyPlanPageClient() {
 
   return (
     <>
+    <AiStudyPartnerPurchaseModal
+      open={partnerPurchaseOpen}
+      onClose={() => setPartnerPurchaseOpen(false)}
+      onPurchased={() => {
+        setPartnerPurchaseOpen(false);
+        void getAiStudyPartnerBalance().then(setAiPartnerBalance).catch(() => null);
+      }}
+    />
     {(isCancelledWithAccess || welcomeTrialExpiredNoPay) && (
       <Script
         src="https://checkout.razorpay.com/v1/checkout.js"
@@ -816,6 +837,54 @@ export function MyPlanPageClient() {
               </div>
             )}
           </div>
+
+          {/* AI Study Partner balance */}
+          {user?.id ? (() => {
+            const totalSec = aiPartnerBalance ?? 0;
+            const h = Math.floor(totalSec / 3600);
+            const m = Math.floor((totalSec % 3600) / 60);
+            const s = totalSec % 60;
+            const balanceText =
+              aiPartnerBalance === null
+                ? "Loading…"
+                : totalSec === 0
+                  ? "No time remaining"
+                  : h > 0
+                    ? `${h}h ${m}m${s > 0 ? ` ${s}s` : ""} remaining`
+                    : m > 0
+                      ? `${m}m ${s}s remaining`
+                      : `${s}s remaining`;
+
+            return (
+              <div className="mt-4 rounded-2xl border border-kal-border bg-kal-card p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-kal-accent/10">
+                      <Bot className="h-4.5 w-4.5 text-kal-accent" aria-hidden />
+                    </span>
+                    <div>
+                      <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
+                        AI Study Partner
+                      </p>
+                      <p className={`mt-0.5 text-sm font-semibold ${totalSec === 0 && aiPartnerBalance !== null ? "text-amber-600 dark:text-amber-400" : "text-kal-text"}`}>
+                        {balanceText}
+                      </p>
+                      <p className="mt-0.5 text-[11px] text-kal-muted">
+                        Non-expiring · deducted only when you use it
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPartnerPurchaseOpen(true)}
+                    className="shrink-0 inline-flex min-h-[36px] items-center justify-center rounded-xl bg-kal-accent px-3 py-1.5 text-xs font-semibold text-kal-accent-foreground hover:bg-kal-accent-hover"
+                  >
+                    {totalSec === 0 && aiPartnerBalance !== null ? "Buy 30 hrs — ₹799" : "Buy More Hours"}
+                  </button>
+                </div>
+              </div>
+            );
+          })() : null}
 
           {hasAiAccess && hasPaidAccess && <ExtraCreditsSection />}
         </>

@@ -1321,7 +1321,7 @@ export async function incrementVoiceMinuteUsage(
 // ---------------------------------------------------------------------------
 
 async function addBonusCredits(
-  type: "photo_scans" | "voice_minutes" | "ai_tokens",
+  type: "photo_scans" | "voice_minutes" | "ai_tokens" | "ai_study_partner",
   amount: number,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const userId = await getAuthedUserId();
@@ -1333,6 +1333,10 @@ async function addBonusCredits(
     }
   } else if (type === "voice_minutes") {
     if (amount < 1 || amount > 500) {
+      return { ok: false, error: "Invalid credit amount." };
+    }
+  } else if (type === "ai_study_partner") {
+    if (amount < 1 || amount > 1_000_000) {
       return { ok: false, error: "Invalid credit amount." };
     }
   } else {
@@ -1378,6 +1382,17 @@ async function addBonusCredits(
     );
     patch.bonus_voice_minutes_ledger = ledger;
     patch.bonus_voice_minutes = totalActiveBonus(ledger, now);
+  } else if (type === "ai_study_partner") {
+    // Uses a dedicated column + RPC; bypass ledger system entirely.
+    const { error: rpcErr } = await admin.rpc("add_ai_study_partner_seconds", {
+      p_user_id: userId,
+      p_seconds: amount,
+    });
+    if (rpcErr) {
+      console.error("[subscription] addBonusCredits ai_study_partner rpc error", rpcErr);
+      return { ok: false, error: "Unable to add AI Study Partner credits." };
+    }
+    return { ok: true };
   } else {
     const ledger = addBonusPool(
       parseBonusLedger(data.bonus_ai_tokens_ledger),
