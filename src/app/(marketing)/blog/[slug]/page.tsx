@@ -3,9 +3,12 @@ import Link from "next/link";
 
 import { CTABanner } from "@/components/marketing/CTABanner";
 import { BlogCard } from "@/components/marketing/BlogCard";
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { ArticleJsonLd } from "@/components/seo/ArticleJsonLd";
+import { ogImageBlog } from "@/lib/og-image";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
 import { SITE_NAME } from "@/lib/seo-metadata";
+import { absoluteUrl } from "@/lib/site";
 import { getAllPosts, getPostBySlug, getRelatedPosts } from "@/content/blog";
 import { CATEGORY_LABELS } from "@/content/blog/types";
 
@@ -21,10 +24,16 @@ export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const post = getPostBySlug(slug);
   if (!post) return {};
+  const label = CATEGORY_LABELS[post.category] ?? post.category;
   return marketingPageMetadata({
     path: `/blog/${slug}`,
     title: `${post.title} | ${SITE_NAME}`,
     description: post.description,
+    ogType: "article",
+    articlePublishedTime: post.publishedAt,
+    articleModifiedTime: post.modifiedAt ?? post.publishedAt,
+    articleAuthor: "Kalnehi Daily",
+    ogImage: ogImageBlog(post.title, label),
   });
 }
 
@@ -128,12 +137,23 @@ export default async function BlogPostPage({ params }: Props) {
         description={post.description}
         publishedAt={post.publishedAt}
         modifiedAt={post.modifiedAt}
+        imageUrl={absoluteUrl(ogImageBlog(post.title, CATEGORY_LABELS[post.category] ?? post.category))}
         breadcrumbs={[
           { name: "Home", path: "/" },
           { name: "Blog", path: "/blog" },
           { name: CATEGORY_LABELS[post.category] ?? post.category, path: `/blog/category/${post.category}` },
           { name: post.title, path: `/blog/${slug}` },
         ]}
+      />
+
+      <Breadcrumbs
+        items={[
+          { name: "Home", path: "/" },
+          { name: "Blog", path: "/blog" },
+          { name: CATEGORY_LABELS[post.category] ?? post.category, path: `/blog/category/${post.category}` },
+          { name: post.title, path: `/blog/${slug}` },
+        ]}
+        className="mb-2"
       />
 
       <article className="space-y-8">

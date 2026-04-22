@@ -1,4 +1,5 @@
 import { WhatCanKalnehiDoClient } from "@/components/marketing/WhatCanKalnehiDoClient";
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
 import { SITE_NAME } from "@/lib/seo-metadata";
@@ -35,6 +36,11 @@ export default function WhatCanKalnehiDoPage() {
           },
         ]}
       />
+
+      <Breadcrumbs items={[
+          { name: "Home", path: "/" },
+          { name: "What Can Kalnehi Do?", path: "/what-can-kalnehi-do" },
+        ]} className="mb-2" />
       <WhatCanKalnehiDoClient />
     </>
   );

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
 import { SITE_NAME } from "@/lib/seo-metadata";
@@ -40,6 +41,15 @@ export default function DailyExamPrepSystemGuidePage() {
           },
         ]}
       />
+
+      <Breadcrumbs items={[
+          { name: "Home", path: "/" },
+          { name: "Guides", path: "/guides" },
+          {
+            name: "Daily exam prep system",
+            path: "/guides/daily-exam-prep-system-any-exam",
+          },
+        ]} className="mb-2" />
       <article className="space-y-8 text-sm leading-relaxed text-kal-text-secondary">
         <header className="space-y-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-kal-accent">

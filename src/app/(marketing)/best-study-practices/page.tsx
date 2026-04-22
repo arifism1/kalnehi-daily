@@ -1,4 +1,5 @@
 import { BestStudyPracticesClient } from "@/components/marketing/BestStudyPracticesClient";
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
 import { SITE_NAME } from "@/lib/seo-metadata";
@@ -40,6 +41,11 @@ export default function BestStudyPracticesPage() {
           },
         ]}
       />
+
+      <Breadcrumbs items={[
+          { name: "Home", path: "/" },
+          { name: "Best Study Practices", path: "/best-study-practices" },
+        ]} className="mb-2" />
       <BestStudyPracticesClient />
     </>
   );

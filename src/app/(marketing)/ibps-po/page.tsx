@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CTABanner } from "@/components/marketing/CTABanner";
 import { ExamHero } from "@/components/marketing/ExamHero";
 import { FAQBlock } from "@/components/marketing/FAQBlock";
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
 import { SITE_NAME } from "@/lib/seo-metadata";
@@ -26,6 +27,8 @@ export default function IbpsPoPage() {
         breadcrumbs={[{ name: "Home", path: "/" }, { name: "IBPS PO Preparation", path: "/ibps-po" }]}
         faqs={FAQS}
       />
+
+      <Breadcrumbs items={[{ name: "Home", path: "/" }, { name: "IBPS PO Preparation", path: "/ibps-po" }]} className="mb-2" />
       <article className="space-y-10">
         <ExamHero
           badge="IBPS PO — Probationary Officer"

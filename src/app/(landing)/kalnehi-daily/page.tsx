@@ -1,5 +1,6 @@
 import { marketingPageMetadata } from "@/lib/marketing-seo";
 import { absoluteUrl } from "@/lib/site";
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
 import { LandingPageContent } from "@/components/landing/LandingPageContent";
 import { LANDING_FAQ_ITEMS } from "@/lib/landing-faqs";
@@ -25,6 +26,11 @@ export default function KalnehiDailyMarketingLandingPage() {
         webPageCanonicalUrl={absoluteUrl("/")}
         faqs={[...LANDING_FAQ_ITEMS]}
       />
+
+      <Breadcrumbs items={[
+          { name: "Home", path: "/" },
+          { name: "Kalnehi Daily", path: "/kalnehi-daily" },
+        ]} className="mb-2" />
 
       <LandingPageContent />
     </>

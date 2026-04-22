@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { CTABanner } from "@/components/marketing/CTABanner";
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
 import { SITE_NAME } from "@/lib/seo-metadata";
@@ -56,6 +57,12 @@ export default async function SyllabusPage({ params }: Props) {
           { name: `${data.exam} Syllabus`, path: `/syllabus/${exam}` },
         ]}
       />
+
+      <Breadcrumbs items={[
+          { name: "Home", path: "/" },
+          { name: "Syllabus", path: "/syllabus/jee-main" },
+          { name: `${data.exam} Syllabus`, path: `/syllabus/${exam}` },
+        ]} className="mb-2" />
 
       <div className="space-y-10">
         <header className="space-y-3">

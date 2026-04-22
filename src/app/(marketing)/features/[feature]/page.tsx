@@ -3,6 +3,8 @@ import Link from "next/link";
 
 import { CTABanner } from "@/components/marketing/CTABanner";
 import { FAQBlock } from "@/components/marketing/FAQBlock";
+import { RelatedContent } from "@/components/marketing/RelatedContent";
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
 import { SITE_NAME } from "@/lib/seo-metadata";
@@ -47,6 +49,15 @@ export default async function FeaturePage({ params }: Props) {
         ]}
         faqs={feature.faqs}
         webPage={{ name: `${feature.name} | ${SITE_NAME}`, description: feature.metaDescription }}
+      />
+
+      <Breadcrumbs
+        items={[
+          { name: "Home", path: "/" },
+          { name: "Features", path: "/features" },
+          { name: feature.name, path: `/features/${slug}` },
+        ]}
+        className="mb-2"
       />
 
       <article className="space-y-10">
@@ -136,6 +147,8 @@ export default async function FeaturePage({ params }: Props) {
             </div>
           </section>
         )}
+
+        <RelatedContent pathname={`/features/${slug}`} />
 
         <FAQBlock items={feature.faqs} title={`${feature.name} — FAQ`} />
 

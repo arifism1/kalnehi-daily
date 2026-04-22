@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
 import { SITE_NAME } from "@/lib/seo-metadata";
@@ -40,6 +41,15 @@ export default function JeeConsistencyGuidePage() {
           },
         ]}
       />
+
+      <Breadcrumbs items={[
+          { name: "Home", path: "/" },
+          { name: "Guides", path: "/guides" },
+          {
+            name: "Consistency in JEE preparation",
+            path: "/guides/how-to-maintain-consistency-in-jee-preparation",
+          },
+        ]} className="mb-2" />
       <article className="space-y-6 text-sm leading-relaxed text-kal-text-secondary">
         <p className="text-xs font-semibold uppercase tracking-wide text-kal-accent">
           Blog-style guide · JEE 2026

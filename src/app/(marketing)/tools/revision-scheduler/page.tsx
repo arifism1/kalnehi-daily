@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { CTABanner } from "@/components/marketing/CTABanner";
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
 import { SITE_NAME } from "@/lib/seo-metadata";
@@ -45,6 +46,12 @@ export default function RevisionSchedulerPage() {
         ]}
         faqs={faqs}
       />
+
+      <Breadcrumbs items={[
+          { name: "Home", path: "/" },
+          { name: "Free Tools", path: "/tools" },
+          { name: "Revision Scheduler", path: "/tools/revision-scheduler" },
+        ]} className="mb-2" />
 
       <div className="space-y-10">
         <header className="space-y-3">

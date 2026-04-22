@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Brain, Leaf, Wind } from "lucide-react";
 
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
 import { SITE_NAME } from "@/lib/seo-metadata";
@@ -43,6 +44,12 @@ export default function BrainYogaMarketingPage() {
           },
         ]}
       />
+
+      <Breadcrumbs items={[
+          { name: "Home", path: "/" },
+          { name: "Guides", path: "/guides" },
+          { name: "Brain Yoga for Exam Warriors", path: "/brain-yoga" },
+        ]} className="mb-2" />
       <article className="space-y-8">
         <header className="space-y-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-kal-accent">

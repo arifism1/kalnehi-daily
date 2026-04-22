@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CTABanner } from "@/components/marketing/CTABanner";
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
 import { SITE_NAME } from "@/lib/seo-metadata";
@@ -41,6 +42,8 @@ export default function ToolsPage() {
           description: "Free calculators and planning tools for Indian competitive exam aspirants. No login required.",
         }}
       />
+
+      <Breadcrumbs items={[{ name: "Home", path: "/" }, { name: "Free Tools", path: "/tools" }]} className="mb-2" />
 
       <div className="space-y-10">
         <header className="space-y-4">
