@@ -31,8 +31,8 @@ export function buildFeedbackInsights(
       title: "Syllabus capture",
       body:
         syllabusMasteryPercent >= PROGRESS_THRESHOLDS.PARTIAL_MIN_PERCENT
-          ? `You are holding ${syllabusMasteryPercent.toFixed(0)}% of chapter-weight mastery — keep pushing weak chapters to lock full marks.`
-          : `Syllabus mastery is ${syllabusMasteryPercent.toFixed(0)}%. Conquer weak chapters before high-stakes mocks — every completed microtopic counts toward the chapter lock-in.`,
+          ? `You are holding ${syllabusMasteryPercent.toFixed(0)}% of chapter-weight progress — keep pushing weak chapters to lock full marks.`
+          : `Syllabus coverage is ${syllabusMasteryPercent.toFixed(0)}%. Conquer weak chapters before high-stakes mocks — every completed microtopic counts toward the chapter lock-in.`,
       tone:
         syllabusMasteryPercent >= 70
           ? "positive"

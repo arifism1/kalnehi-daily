@@ -60,7 +60,7 @@ export const FEATURE_LABELS: Record<FeatureKey, { name: string; upgradeHint: str
     upgradeHint: "Subscribe to Pro for handwriting scan and planning.",
   },
   self_type_day: { name: "Self Type Day", upgradeHint: "" },
-  syllabus: { name: "Syllabus Mastery Tracker", upgradeHint: "Subscribe to Pro for full syllabus with microtopics & predictions." },
+  syllabus: { name: "Syllabus Tracker", upgradeHint: "Subscribe to Pro for full syllabus with microtopics & predictions." },
   marks_engine: { name: "Marks Engine", upgradeHint: "Subscribe to Pro for marks predictions & microtopic analysis." },
   execution_planner: { name: "Execution Planner", upgradeHint: "Subscribe to Pro for the full execution planner." },
   timer: { name: "Timer", upgradeHint: "Subscribe to Pro for the full execution timer." },

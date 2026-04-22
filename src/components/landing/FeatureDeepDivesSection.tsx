@@ -19,14 +19,14 @@ const FEATURES: Feature[] = [
     illustration: <DailyPlanIllustration />,
   },
   {
-    tag: "Syllabus Mastery Tracker",
+    tag: "Syllabus Tracker",
     headline: "You've been studying. But do you know what you've actually covered? Most don't.",
     bullets: [
       "Track every subject, chapter, and microtopic — not just the ones that feel done.",
       "Most toppers know which 15% of the syllabus decides their rank. This shows you yours.",
       "Connects directly to your daily plan so what you study actually moves the needle.",
     ],
-    illustration: <SyllabusMasteryIllustration />,
+    illustration: <SyllabusTrackerIllustration />,
   },
   {
     tag: "Marks Engine & Predictions",
@@ -208,8 +208,8 @@ function DailyPlanIllustration() {
   );
 }
 
-/* ─── SyllabusMasteryIllustration ───────────────────────────────────────── */
-function SyllabusMasteryIllustration() {
+/* ─── SyllabusTrackerIllustration ───────────────────────────────────────── */
+function SyllabusTrackerIllustration() {
   const rows = [
     { name: "Physics",     pct: 61, color: "#4F86C6" },
     { name: "Chemistry",   pct: 44, color: "#5BA55B" },
@@ -218,7 +218,7 @@ function SyllabusMasteryIllustration() {
 
   return (
     <div className="p-6 select-none">
-      <p className="mb-5 text-[9px] font-bold uppercase tracking-[0.14em] text-kal-muted">Syllabus Mastery</p>
+      <p className="mb-5 text-[9px] font-bold uppercase tracking-[0.14em] text-kal-muted">Syllabus Tracker</p>
       <div className="space-y-5">
         {rows.map(({ name, pct, color }) => (
           <div key={name}>

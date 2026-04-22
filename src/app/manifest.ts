@@ -10,7 +10,7 @@ export default function manifest(): MetadataRoute.Manifest {
     // "Kalnehi" fits Play Store's 12-char short-name limit and looks clean on the home screen.
     short_name: "Kalnehi",
     description:
-      "Kalnehi Daily - Exam Prep Tracker: execution planner for Smart Exam Prep. Daily Plan with live task tracking, Syllabus Mastery Tracker, Brain Yoga focus resets, PrepBrain AI coaching, Notifications & push reminders, study sessions, habits, and progress analytics — start with a 1-day welcome trial, then Pro (2-day paid trial or monthly). All in one offline-ready PWA.",
+      "Kalnehi Daily - Exam Prep Tracker: execution planner for Smart Exam Prep. Daily Plan with live task tracking, Syllabus Tracker, Brain Yoga focus resets, PrepBrain AI coaching, Notifications & push reminders, study sessions, habits, and progress analytics — start with a 1-day welcome trial, then Pro (2-day paid trial or monthly). All in one offline-ready PWA.",
     start_url: "/",
     scope: "/",
     display: "standalone",
@@ -41,7 +41,7 @@ export default function manifest(): MetadataRoute.Manifest {
         sizes: "1080x1920",
         type: "image/png",
         form_factor: "narrow",
-        label: "Syllabus Mastery Tracker — chapter and topic progress",
+        label: "Syllabus Tracker — chapter and topic progress",
         platform: "play",
       },
       {
@@ -90,9 +90,9 @@ export default function manifest(): MetadataRoute.Manifest {
         ],
       },
       {
-        name: "Syllabus Mastery Tracker",
+        name: "Syllabus Tracker",
         short_name: "Syllabus",
-        description: "Track chapter mastery and topic coverage across your syllabus",
+        description: "Track chapter and topic progress across your syllabus",
         url: "/syllabus",
         icons: [
           { src: "/icon-maskable-192.png", sizes: "192x192", type: "image/png" },

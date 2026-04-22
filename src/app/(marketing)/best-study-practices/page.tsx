@@ -26,7 +26,7 @@ export default function BestStudyPracticesPage() {
           {
             question: "How does Kalnehi Daily implement these practices?",
             answer:
-              "Kalnehi Daily is an exam-prep execution app built around proven learning science: a written daily checklist (goal-setting research), syllabus mastery tracking (self-regulated learning), Brain Yoga guided resets (mindfulness research), execution signals (implementation intentions), smart reminders (spaced repetition), AI voice capture (dual coding), and PrepBrain AI insights (personalised tutoring research).",
+              "Kalnehi Daily is an exam-prep execution app built around proven learning science: a written daily checklist (goal-setting research), syllabus progress tracking (self-regulated learning), Brain Yoga guided resets (mindfulness research), execution signals (implementation intentions), smart reminders (spaced repetition), AI voice capture (dual coding), and PrepBrain AI insights (personalised tutoring research).",
           },
           {
             question: "Is there a free trial to experience all these features?",

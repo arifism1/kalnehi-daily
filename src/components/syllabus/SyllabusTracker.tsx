@@ -360,7 +360,7 @@ export function SyllabusTracker() {
           {displayExam} syllabus
         </p>
         <h1 className="kal-feature-title mt-1">
-          Syllabus Mastery Tracker
+          Syllabus Tracker
         </h1>
         <p className="mt-1 text-sm leading-relaxed text-kal-muted">
           {cuetScoringRollup
@@ -399,7 +399,7 @@ export function SyllabusTracker() {
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
             <p className="kal-category-label text-kal-accent">
-              {cuetScoringRollup ? "Overall CUET progress" : "Syllabus mastery"}
+              {cuetScoringRollup ? "Overall CUET progress" : "Syllabus progress"}
             </p>
             {!cuetScoringRollup && !showMarksUi ? (
               <p className="mt-1 text-[13px] font-medium leading-snug text-kal-muted">

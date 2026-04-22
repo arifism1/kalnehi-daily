@@ -79,7 +79,7 @@ export default function NeetStudyPlannerPage() {
               abandoning Physics numericals and Chemistry drills.
             </li>
             <li>
-              <strong className="text-kal-text">Syllabus Mastery Tracker:</strong> weight and completion so
+              <strong className="text-kal-text">Syllabus Tracker:</strong> weight and completion so
               revision months stay focused.
             </li>
             <li>

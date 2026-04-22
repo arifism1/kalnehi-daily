@@ -148,8 +148,8 @@ export function HomeAccordionSections() {
       content: <PrepBrainChatLazy />,
     },
     {
-      id: "syllabus-mastery-tracker",
-      title: "Syllabus Mastery Tracker",
+      id: "syllabus-tracker",
+      title: "Syllabus Tracker",
       icon: BookOpen,
       content: <SyllabusTrackerLazy />,
     },

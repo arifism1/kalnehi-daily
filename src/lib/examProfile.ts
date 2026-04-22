@@ -231,7 +231,7 @@ export function examScoreMax(
   if (n === "upsc cse prelims") return 400;
   /**
    * UPSC CSE Mains written maximum: merit 1750 + qualifying papers 600 = 2350.
-   * Projection rings use this cap. Syllabus Mastery "Marks secured" denominator is
+   * Projection rings use this cap. Syllabus Tracker "Marks secured" denominator is
    * `rollup.totalMarksPool` (sum of chapter weights from loaded `syllabus_master` rows);
    * it aims at 2350 but may differ slightly if catalog weights use estimates/rounding.
    */

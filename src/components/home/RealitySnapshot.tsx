@@ -301,10 +301,10 @@ export function RealitySnapshot({
             </div>
           ) : useSyllabusYears && syllabusMultiYear ? (
             <div className="grid grid-cols-1 items-stretch gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)] lg:gap-x-8 xl:gap-x-12">
-              {/* Left: syllabus mastery % */}
+              {/* Left: syllabus progress % */}
               <div className="flex min-w-0 flex-col items-center text-center lg:items-start lg:text-left">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-kal-muted sm:text-[11px]">
-                  Syllabus mastery
+                  Syllabus progress
                 </p>
                 {masteryDisplay != null ? (
                   <>
@@ -432,7 +432,7 @@ export function RealitySnapshot({
               {masteryDisplay != null && (
                 <div className="flex w-full max-w-[14rem] flex-col items-center text-center sm:max-w-none sm:flex-1 sm:basis-0">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-kal-muted sm:text-[11px]">
-                    Syllabus mastery
+                    Syllabus progress
                   </p>
                   <p className="mt-3 text-4xl font-bold tabular-nums text-kal-text sm:text-5xl">
                     {masteryDisplay}

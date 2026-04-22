@@ -103,7 +103,7 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
         Icon: Brain,
         featureId: "prepbrain-ai",
       },
-      { href: "/syllabus", label: "Syllabus Mastery Tracker", shortLabel: "Syllabus", Icon: BookOpen, featureId: "syllabus-mastery-tracker" },
+      { href: "/syllabus", label: "Syllabus Tracker", shortLabel: "Syllabus", Icon: BookOpen, featureId: "syllabus-tracker" },
       {
         href: "/target-score-blueprint",
         label: "Target Score Blueprint",

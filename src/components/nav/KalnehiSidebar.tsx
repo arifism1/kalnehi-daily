@@ -70,7 +70,7 @@ const SIDEBAR_CATEGORIES: SidebarCategory[] = [
     items: [
       { href: "/progress", label: "Progress", icon: TrendingUp },
       { href: "/consistency-tracker", label: "Consistency Tracker", icon: BarChart3 },
-      { href: "/syllabus", label: "Syllabus Mastery Tracker", icon: BookOpen },
+      { href: "/syllabus", label: "Syllabus Tracker", icon: BookOpen },
       { href: "/target-score-blueprint", label: "Target Score Blueprint", icon: Target },
       { href: "/my-target", label: "My Target", icon: Bookmark },
     ],

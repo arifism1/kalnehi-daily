@@ -34,7 +34,7 @@ const RESEARCH_SECTIONS: ResearchSection[] = [
   {
     id: "syllabus",
     emoji: "📚",
-    title: "Syllabus Mastery Tracking",
+    title: "Syllabus Tracker",
     researchHook: "You can be busy every day and still have no idea how much of the syllabus you've actually covered.",
     researchDetail:
       "IIT Bombay's research on entrance preparation found that the students who tracked their topic-level coverage adjusted their approach — and retained more heading into the exam. Most JEE and NEET toppers say the same thing in interviews: they knew their coverage map cold. Not how many hours they'd studied. Exactly which chapters were done, half-done, and quietly avoided.",
@@ -43,7 +43,7 @@ const RESEARCH_SECTIONS: ResearchSection[] = [
       "IIT Bombay Centre for Educational Technology — findings on metacognitive tracking in engineering entrance preparation (2021).",
     ],
     kalnehiConnection:
-      "Syllabus Mastery Tracker shows you what's done, what's half-done, and what you've been quietly skipping — then connects it directly to your daily plan.",
+      "Syllabus Tracker shows you what's done, what's half-done, and what you've been quietly skipping — then connects it directly to your daily plan.",
     accent: "from-violet-400/20 via-white/40 to-fuchsia-400/15",
     badgeColor: "bg-violet-500/15 text-violet-700 dark:text-violet-400",
   },

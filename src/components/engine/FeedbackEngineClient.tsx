@@ -95,7 +95,7 @@ export function FeedbackEngineClient() {
 
       <EngineCard title="How this works">
         <p className="text-sm text-kal-muted">
-          We combine today&apos;s weighted completion, your syllabus mastery
+          We combine today&apos;s weighted completion, your syllabus progress
           snapshot, and missed backlog — then translate into rank-aware language.
           Execute daily for sharper, more personal signals.
           {syllabusSoon

@@ -8,7 +8,7 @@ import { useTargetExamDate } from "@/hooks/useTargetExamDate";
 export type HomeHeroCardProps = {
   firstName: string;
   greetingLead: string;
-  /** Syllabus mastery % (0–100), null when unavailable */
+  /** Syllabus coverage % (0–100), null when unavailable */
   syllabusMasteryPercent: number | null;
   /** Projected/mastered marks numerator */
   marksMastered: number;
@@ -140,7 +140,7 @@ export function HomeHeroCard({
             label="Syllabus"
             ariaLabel={
               syllabusMasteryPercent != null
-                ? `${syllabusMasteryPercent.toFixed(1)} percent of syllabus mastered`
+                ? `${syllabusMasteryPercent.toFixed(1)} percent of syllabus complete`
                 : "Syllabus data unavailable"
             }
           />

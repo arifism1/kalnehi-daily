@@ -29,7 +29,7 @@ const FEATURES: FeatureCard[] = [
   {
     id: "syllabus",
     emoji: "📚",
-    title: "Syllabus Mastery Tracker",
+    title: "Syllabus Tracker",
     tagline: "You've been studying. But do you know what you've actually covered? Most don't.",
     bullets: [
       "Track every subject, chapter, and microtopic — not just the ones that feel done.",

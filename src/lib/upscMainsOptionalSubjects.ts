@@ -8,7 +8,7 @@ export const UPSC_CSE_MAINS_EXAM_NAME = "UPSC CSE Mains";
  */
 export const UPSC_CSE_MAINS_UI_TOTAL_MARKS = 2350;
 
-/** Headline % for Syllabus Mastery / related UI: mastered ÷ 2350 (cap 100%). */
+/** Headline % for Syllabus Tracker / related UI: mastered ÷ 2350 (cap 100%). */
 export function upscMainsSyllabusUiPercent(totalMarksMastered: number): number {
   const d = UPSC_CSE_MAINS_UI_TOTAL_MARKS;
   if (d <= 0) return 0;

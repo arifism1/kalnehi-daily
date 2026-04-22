@@ -14,9 +14,13 @@ export function normalizeEnabledFeaturesRow(raw: unknown): string[] | null {
   if (raw == null) return null;
   if (!Array.isArray(raw)) return null;
   if (raw.length === 0) return [];
-  const ids = raw.filter(
-    (id): id is string => typeof id === "string" && id.trim().length > 0,
-  );
+  const ids = raw
+    .filter(
+      (id): id is string => typeof id === "string" && id.trim().length > 0,
+    )
+    .map((id) =>
+      id === "syllabus-mastery-tracker" ? "syllabus-tracker" : id,
+    );
   return ids.length > 0 ? ids : [];
 }
 

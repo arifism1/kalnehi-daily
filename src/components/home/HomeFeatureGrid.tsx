@@ -134,15 +134,15 @@ const CATEGORIES: Category[] = [
         fallback: "Start your streak",
       },
       {
-        id: "syllabus-mastery-tracker",
+        id: "syllabus-tracker",
         href: "/syllabus",
-        label: "Syllabus Mastery",
+        label: "Syllabus Tracker",
         icon: BookOpen,
         liveHint: (d) =>
           d.syllabusMasteryPercent != null
-            ? `${d.syllabusMasteryPercent % 1 === 0 ? d.syllabusMasteryPercent.toFixed(0) : d.syllabusMasteryPercent.toFixed(1)}% mastered`
+            ? `${d.syllabusMasteryPercent % 1 === 0 ? d.syllabusMasteryPercent.toFixed(0) : d.syllabusMasteryPercent.toFixed(1)}% done`
             : null,
-        fallback: "Track mastery",
+        fallback: "Track your syllabus",
       },
       {
         id: "target-score-blueprint",

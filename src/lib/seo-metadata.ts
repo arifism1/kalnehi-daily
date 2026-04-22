@@ -86,9 +86,9 @@ const PAGE_SEO: Record<
   },
   syllabus: {
     path: "/syllabus",
-    title: `Syllabus Mastery Tracker — JEE, NEET & Boards | ${SITE_NAME}`,
+    title: `Syllabus Tracker — JEE, NEET & Boards | ${SITE_NAME}`,
     description:
-      `Track microtopics, weightage, and chapter-level mastery across your syllabus. ${SITE_NAME} connects syllabus progress to daily tasks and marks goals.`,
+      `Track microtopics, weightage, and chapter-level progress across your syllabus. ${SITE_NAME} connects syllabus progress to daily tasks and marks goals.`,
   },
   targetScoreBlueprint: {
     path: "/target-score-blueprint",

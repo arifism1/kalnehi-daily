@@ -9,7 +9,7 @@ const ALL_FEATURES = [
   },
   {
     emoji: "📚",
-    title: "Syllabus Mastery Tracker",
+    title: "Syllabus Tracker",
     tagline: "You've been studying. But do you know what you've actually covered?",
     detail: "Track every subject, chapter, and microtopic. Connects directly to your daily plan.",
   },

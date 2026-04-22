@@ -48,10 +48,10 @@ export const DASHBOARD_FEATURES: DashboardFeature[] = [
     description: "Your AI-powered personal prep coach, available 24/7.",
   },
   {
-    id: "syllabus-mastery-tracker",
-    title: "Syllabus Mastery Tracker",
+    id: "syllabus-tracker",
+    title: "Syllabus Tracker",
     icon: BookOpen,
-    description: "Track chapter-by-chapter mastery with microtopic precision.",
+    description: "Track chapter and microtopic progress with weight-aware precision.",
   },
   {
     id: "daily-planner",
