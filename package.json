@@ -23,6 +23,7 @@
     "test:rollup": "node --import tsx --test src/lib/syllabusRollup.projection.test.ts"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@mediapipe/tasks-vision": "^0.10.34",
     "@mistralai/mistralai": "^2.2.0",
     "@supabase/ssr": "^0.10.0",

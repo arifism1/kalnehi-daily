@@ -1,6 +1,6 @@
 "use client";
 
-import { addSelectedSyllabusRowsToDailyPlan } from "@/lib/quickTaskCreate";
+import { insertDailyTask } from "@/actions/dailyPlan";
 import { overrideNextReviewDate } from "@/actions/revision";
 import { ensureAutomatedNotifications } from "@/actions/notifications";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
@@ -294,23 +294,25 @@ export function SmartRevisionEngineClient() {
     [rescheduleDraft, runOverridePlannedDate],
   );
 
-  /** Manual only: creates academic `tasks` when the student taps the button (not on mount). */
+  /** Manual only: adds a daily_tasks row so the topic appears on the Daily Plan page. */
   const onAddPlannedToDailyPlan = useCallback(
     async (it: PlannedItem) => {
       if (!userId || !it.row) return;
       setPlannedBusyId(it.syllabusId);
       setPlannedNotice(null);
       try {
-        const r = await addSelectedSyllabusRowsToDailyPlan(userId, today, [it.row]);
+        const r = await insertDailyTask({
+          plan_date: today,
+          id: crypto.randomUUID(),
+          title: rowLabel(it.row),
+          source: "typed",
+          syllabus_master_id: String(it.row.id),
+        });
         if (!r.ok) {
           setPlannedNotice(r.error);
           return;
         }
-        setPlannedNotice(
-          r.created > 0
-            ? "Added to your daily plan for today."
-            : "That topic is already on today’s plan.",
-        );
+        setPlannedNotice("Added to your daily plan for today.");
       } finally {
         setPlannedBusyId(null);
       }

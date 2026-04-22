@@ -13,13 +13,13 @@ const SENSITIVITY = {
   },
   balanced: {
     // Raised from 0.48 — simply being still + facing camera no longer triggers this.
-    studyingMin: 0.52,
+    studyingMin: 0.58,
     unfocusedMax: 0.44,
     headDownBonus: 0.01,
   },
   lenient: {
     // Raised from 0.36 — phone-in-selfie false positives fall well below this.
-    studyingMin: 0.44,
+    studyingMin: 0.5,
     unfocusedMax: 0.36,
     headDownBonus: 0.008,
   },

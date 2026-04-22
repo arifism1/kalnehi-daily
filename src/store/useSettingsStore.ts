@@ -25,6 +25,10 @@ type SettingsState = {
   studyCameraPrivacyAcknowledged: boolean;
   /** Study detection thresholds (face + pose + hands). */
   studyDetectionSensitivity: StudyDetectionSensitivity;
+  /** When true, periodic single frames are sent to Google Gemini to verify real studying. */
+  studyCameraVisionVerify: boolean;
+  /** Interval between vision checks in minutes (2, 3, or 5). */
+  studyCameraVerifyIntervalMin: 2 | 3 | 5;
   setPurposeModeEnabled: (v: boolean) => void;
   setShowCountdown: (v: boolean) => void;
   setAdvancedMarksProjectionEnabled: (v: boolean) => void;
@@ -35,6 +39,8 @@ type SettingsState = {
   setStudyCameraAutoStart: (v: boolean) => void;
   setStudyCameraPrivacyAcknowledged: (v: boolean) => void;
   setStudyDetectionSensitivity: (v: StudyDetectionSensitivity) => void;
+  setStudyCameraVisionVerify: (v: boolean) => void;
+  setStudyCameraVerifyIntervalMin: (v: 2 | 3 | 5) => void;
   setAppearance: (v: AppearanceMode) => void;
 };
 
@@ -52,6 +58,8 @@ export const useSettingsStore = create<SettingsState>()(
       studyCameraAutoStart: true,
       studyCameraPrivacyAcknowledged: false,
       studyDetectionSensitivity: "balanced",
+      studyCameraVisionVerify: true,
+      studyCameraVerifyIntervalMin: 3 as 2 | 3 | 5,
 
       setPurposeModeEnabled: (purposeModeEnabled) =>
         set({ purposeModeEnabled }),
@@ -68,6 +76,10 @@ export const useSettingsStore = create<SettingsState>()(
         set({ studyCameraPrivacyAcknowledged }),
       setStudyDetectionSensitivity: (studyDetectionSensitivity) =>
         set({ studyDetectionSensitivity }),
+      setStudyCameraVisionVerify: (studyCameraVisionVerify) =>
+        set({ studyCameraVisionVerify }),
+      setStudyCameraVerifyIntervalMin: (studyCameraVerifyIntervalMin) =>
+        set({ studyCameraVerifyIntervalMin }),
       setAppearance: (appearance) => set({ appearance }),
     }),
     {
@@ -85,6 +97,8 @@ export const useSettingsStore = create<SettingsState>()(
         studyCameraAutoStart: s.studyCameraAutoStart,
         studyCameraPrivacyAcknowledged: s.studyCameraPrivacyAcknowledged,
         studyDetectionSensitivity: s.studyDetectionSensitivity,
+        studyCameraVisionVerify: s.studyCameraVisionVerify,
+        studyCameraVerifyIntervalMin: s.studyCameraVerifyIntervalMin,
       }),
     },
   ),
