@@ -270,6 +270,96 @@ export async function plannerTextUpsertEngineRevisionReminder(
   return next;
 }
 
+export type ManualRevisionReminderByMicrotopicInput = {
+  microtopicId: string;
+  title: string;
+  nextDue: string;
+  difficulty?: RevisionDifficulty;
+  notes?: string;
+};
+
+/**
+ * Syllabus Tracker: upsert a student-controlled reminder for a microtopic. Matches
+ * `reminderSource: "manual"` + same microtopic with **pending** status to avoid
+ * duplicate rows; completed/archived items stay as history and a new pending row
+ * is inserted if the student schedules again.
+ */
+export async function plannerTextUpsertManualRevisionReminderByMicrotopic(
+  userId: string,
+  input: ManualRevisionReminderByMicrotopicInput,
+): Promise<UserPlannerTextBundle> {
+  const due = input.nextDue.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(due)) {
+    return normalizePlannerTextBundle(
+      (await getUserPlannerTextBundleCached(userId)) ??
+        createEmptyUserPlannerTextBundle(userId),
+    );
+  }
+  const norm = normalizeSyllabusMasterId(input.microtopicId);
+  const bundle = normalizePlannerTextBundle(
+    (await getUserPlannerTextBundleCached(userId)) ??
+      createEmptyUserPlannerTextBundle(userId),
+  );
+  const idx = bundle.revisionItems.findIndex(
+    (r) =>
+      r.reminderSource === "manual" &&
+      r.status === "pending" &&
+      r.microtopicId != null &&
+      normalizeSyllabusMasterId(r.microtopicId) === norm,
+  );
+  const title = (input.title ?? "").trim() || "Revision";
+  const difficulty: RevisionDifficulty = input.difficulty ?? "medium";
+  const rawNotes = (input.notes ?? "").trim().slice(0, 5000);
+
+  if (idx >= 0) {
+    const prev = bundle.revisionItems[idx]!;
+    const entry: RevisionQueueEntry = {
+      ...prev,
+      title: title.slice(0, 500),
+      nextDue: due,
+      difficulty,
+      notes: rawNotes,
+      updatedAt: nowIso(),
+    };
+    const nextItems = [...bundle.revisionItems];
+    nextItems[idx] = entry;
+    const next: UserPlannerTextBundle = {
+      ...bundle,
+      revisionItems: nextItems,
+      updatedAt: Date.now(),
+    };
+    await saveUserPlannerTextBundleCached(next);
+    await enqueueUserPlannerTextOutbox(
+      userId,
+      revisionUpsertOpFromEntry(entry),
+    );
+    scheduleUserPlannerTextFlush(userId);
+    return next;
+  }
+
+  const item = buildRevisionReminderItem({
+    title,
+    difficulty,
+    nextDue: due,
+    microtopicId: norm,
+    notes: rawNotes,
+    reminderSource: "manual",
+  });
+  const entry: RevisionQueueEntry = { ...item, updatedAt: nowIso() };
+  const next: UserPlannerTextBundle = {
+    ...bundle,
+    revisionItems: [...bundle.revisionItems, entry],
+    updatedAt: Date.now(),
+  };
+  await saveUserPlannerTextBundleCached(next);
+  await enqueueUserPlannerTextOutbox(
+    userId,
+    revisionUpsertOpFromEntry(entry),
+  );
+  scheduleUserPlannerTextFlush(userId);
+  return next;
+}
+
 export async function plannerTextCompleteRevision(
   userId: string,
   id: string,
