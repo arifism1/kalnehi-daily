@@ -12,11 +12,13 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 
 const NAV_LINKS = [
   { href: "/", label: "Home" },
-  { href: "/kalnehi-daily", label: "Overview" },
-  { href: "/guides", label: "Guides" },
-  { href: "/best-study-practices", label: "Best Study Practices" },
-  { href: "/what-can-kalnehi-do", label: "What Can Kalnehi Do?" },
+  { href: "/features", label: "Features" },
+  { href: "/blog", label: "Blog" },
+  { href: "/tools", label: "Free Tools" },
   { href: "/pricing", label: "Pricing" },
+  { href: "/guides", label: "Guides" },
+  { href: "/about", label: "About" },
+  { href: "/changelog", label: "Changelog" },
 ] as const;
 
 export function MarketingNav() {
@@ -62,32 +64,30 @@ export function MarketingNav() {
       className="relative flex shrink-0 items-center gap-3 text-sm sm:gap-4"
       ref={menuRef}
     >
-      {/* Inline "Home" + "Guides" — visible on wider screens */}
+      {/* Inline links — visible on wider screens */}
       <Link
-        href="/"
+        href="/features"
         className="hidden whitespace-nowrap rounded-lg px-2.5 py-1.5 text-kal-text-secondary hover:text-kal-text sm:inline-flex"
       >
-        Home
+        Features
       </Link>
       <Link
-        href="/guides"
+        href="/blog"
         className="hidden whitespace-nowrap rounded-lg px-2.5 py-1.5 text-kal-text-secondary hover:text-kal-text sm:inline-flex"
       >
-        Guides
+        Blog
       </Link>
       <Link
-        href="/what-can-kalnehi-do"
+        href="/tools"
         className="hidden whitespace-nowrap rounded-lg px-2.5 py-1.5 text-sm font-medium text-kal-text-secondary hover:text-kal-text lg:inline-flex"
-        title="What Can Kalnehi Do?"
       >
-        What Can Kalnehi Do?
+        Free Tools
       </Link>
       <Link
-        href="/best-study-practices"
+        href="/pricing"
         className="hidden whitespace-nowrap rounded-lg px-2.5 py-1.5 text-sm font-medium text-kal-text-secondary hover:text-kal-text lg:inline-flex"
-        title="Best Study Practices"
       >
-        Best Study Practices
+        Pricing
       </Link>
 
       {/* Hamburger toggle */}
