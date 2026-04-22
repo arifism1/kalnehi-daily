@@ -15,6 +15,9 @@ import { fetchDailyPlanTasksForClient } from "@/lib/fetchDailyPlanTasksForClient
 import type { DailyTaskView } from "@/actions/dailyPlan";
 import type { VoiceCommandIntent } from "@/lib/voiceCommandGroq";
 
+// Post-speech silence debounce before the STT engine finalizes and phase becomes "processing".
+const VOICE_COMMAND_END_SILENCE_MS = 2000;
+
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
 function localISODate(): string {
@@ -244,12 +247,30 @@ export function GlobalVoiceSheet() {
     reset,
   } = useVoiceCommandStore();
 
+  // ─── Dismiss sheet the moment a voice-driven navigation lands ────────────────
+  // pathname changes as soon as Next.js transitions to the new route, so the
+  // sheet disappears before the destination page renders — no overlay needed.
+  // Only fires while the sheet is active (processing/done) to avoid closing
+  // during an unrelated in-app navigation that happens while the sheet is idle.
+  const prevPathnameRef = useRef(pathname);
+  useEffect(() => {
+    if (prevPathnameRef.current !== pathname) {
+      prevPathnameRef.current = pathname;
+      if (isOpen && (phase === "processing" || phase === "done")) {
+        if (closeTimerRef.current) {
+          clearTimeout(closeTimerRef.current);
+          closeTimerRef.current = null;
+        }
+        closeSheet();
+        reset();
+      }
+    }
+  }, [pathname, isOpen, phase, closeSheet, reset]);
+
   // ─── Execute an intent returned from the API ───────────────────────────────
 
   const execute = async (intent: VoiceCommandIntent, respText: string): Promise<void> => {
     setResponseText(respText);
-
-    let shouldAutoClose = true;
 
     switch (intent.intent) {
       case "navigate": {
@@ -293,7 +314,6 @@ export function GlobalVoiceSheet() {
       }
 
       case "schedule_revision": {
-        shouldAutoClose = false;
         setPhase("done");
         setTimeout(() => {
           closeSheet();
@@ -331,24 +351,23 @@ export function GlobalVoiceSheet() {
       }
 
       case "unknown": {
-        shouldAutoClose = false;
         // Auto-restart listening after showing the "didn't understand" message briefly
         closeTimerRef.current = setTimeout(() => {
           reset();                        // sets phase → "idle"
           autoStartedRef.current = false; // lets the auto-start effect fire again
         }, 1500);
-        break;
+        setPhase("done");
+        return;
       }
     }
 
+    // Non-navigation success (e.g. add_task, mark_completed in-place): show Done briefly then auto-close.
+    // Navigation intents are handled by the pathname effect above.
     setPhase("done");
-
-    if (shouldAutoClose) {
-      closeTimerRef.current = setTimeout(() => {
-        closeSheet();
-        reset();
-      }, 3000);
-    }
+    closeTimerRef.current = setTimeout(() => {
+      closeSheet();
+      reset();
+    }, 3000);
   };
 
   // Always keep the ref up-to-date
@@ -424,7 +443,7 @@ export function GlobalVoiceSheet() {
     clearError: clearSttError,
   } = useDeviceSpeechRecognition({
     lang: "en-IN",
-    silenceMs: 4000,
+    silenceMs: VOICE_COMMAND_END_SILENCE_MS,
     maxSessionMs: 30_000,
     interimPreview: true,
     onPreviewTranscript: (t) => {
