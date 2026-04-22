@@ -70,7 +70,7 @@ const APP_PRIORITY_FEATURES: SitemapPath[] = [
   { path: "/meditation", changeFrequency: "weekly", priority: 0.8 },
   { path: "/meditation/consistency", changeFrequency: "weekly", priority: 0.75 },
   { path: "/pricing", changeFrequency: "weekly", priority: 0.8 },
-  { path: "/my-plan", changeFrequency: "weekly", priority: 0.78 },
+  { path: "/my-subscription", changeFrequency: "weekly", priority: 0.78 },
   { path: "/settings", changeFrequency: "monthly", priority: 0.75 },
   { path: "/target-score-blueprint", changeFrequency: "weekly", priority: 0.76 },
   { path: "/my-target", changeFrequency: "weekly", priority: 0.72 },

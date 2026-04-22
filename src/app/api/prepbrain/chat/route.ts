@@ -310,7 +310,7 @@ function isGenericStrategyQuestion(msg: string): boolean {
   if (!t) return false;
   if (isPrepBrainCapabilityQuestion(msg) || isPrepBrainValueChallengeQuestion(msg)) return false;
   if (
-    /\b(my|mine|today|this week|my syllabus|my marks|my score|my plan|my streak|kalnehi|prepbrain)\b/.test(
+    /\b(my|mine|today|this week|my syllabus|my marks|my score|my plan|my subscription|my streak|kalnehi|prepbrain)\b/.test(
       t,
     )
   ) {

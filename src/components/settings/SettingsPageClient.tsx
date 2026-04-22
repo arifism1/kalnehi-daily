@@ -38,10 +38,10 @@ export function SettingsPageClient() {
           more. Every option here is optional. Subscription, billing,
           and AI credits live under{" "}
           <Link
-            href="/my-plan"
+            href="/my-subscription"
             className="font-semibold text-kal-accent underline underline-offset-2"
           >
-            My Plan
+            My Subscription
           </Link>
           . To connect Google and email sign-in on one account, use{" "}
           <Link

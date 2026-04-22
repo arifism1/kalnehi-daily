@@ -400,7 +400,7 @@ export function MyPlanPageClient() {
 
   if (status && status !== "expired" && !(isCancelled && !hasPaidAccess)) {
     rows.push({
-      label: "Plan",
+      label: "Billing",
       value:
         plan === "monthly"
           ? `${tierConfig.monthlyPriceDisplay}/month · cancel anytime`
@@ -477,7 +477,7 @@ export function MyPlanPageClient() {
         <p className="mt-3 text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
           Subscription
         </p>
-        <h1 className="kal-feature-title mt-1">My Plan</h1>
+        <h1 className="kal-feature-title mt-1">My Subscription</h1>
         <p className="mt-1 text-sm leading-relaxed text-kal-text-secondary">
           Monthly subscription — you are charged once per month. AutoPay is limited to the number of
           months you chose at signup (shown below when available). Cancel anytime; you keep access
@@ -564,7 +564,7 @@ export function MyPlanPageClient() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
-                  Current plan
+                  Current subscription
                 </p>
                 <h2 className="kal-section-heading mt-1.5">
                   {onWelcomeTrial
@@ -613,7 +613,7 @@ export function MyPlanPageClient() {
 
             <div className="border-b border-kal-border px-4 py-3">
               <h3 className="text-xs font-semibold uppercase tracking-widest text-kal-muted">
-                Plan &amp; dates
+                Subscription &amp; dates
               </h3>
             </div>
 

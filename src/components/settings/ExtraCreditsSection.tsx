@@ -175,7 +175,7 @@ export function ExtraCreditsSection() {
               {payError.text}
             </p>
             <PaymentErrorMailButton
-              flow="My Plan — extra AI credits"
+              flow="My Subscription — extra AI credits"
               error={payError.text}
               userEmail={userEmail}
               proof={payError.proof}

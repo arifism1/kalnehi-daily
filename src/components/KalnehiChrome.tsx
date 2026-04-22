@@ -2,7 +2,6 @@
 
 import clsx from "clsx";
 import { Bell, Menu, Mic } from "lucide-react";
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -22,14 +21,7 @@ import { UndoToast } from "@/components/ui/UndoToast";
 import { TimerVisibilityBridge } from "@/components/task/TimerVisibilityBridge";
 import { BottomTabBar } from "@/components/nav/BottomTabBar";
 import { KalnehiSidebar } from "@/components/nav/KalnehiSidebar";
-
-const MainNavigationMenu = dynamic(
-  () =>
-    import("@/components/MainNavigationMenu").then((m) => ({
-      default: m.MainNavigationMenu,
-    })),
-  { ssr: false },
-);
+import { MainNavigationMenu } from "@/components/MainNavigationMenu";
 
 class QuietSavedToastBoundary extends Component<
   { children: ReactNode },

@@ -200,7 +200,7 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
         Icon: LifeBuoy,
         menuAction: "contact-support",
       },
-      { href: "/my-plan", label: "My Plan", Icon: Crown },
+      { href: "/my-subscription", label: "My Subscription", Icon: Crown },
     ],
   },
 ];
@@ -253,7 +253,7 @@ const QUICK_NAV_HREF_ORDER: readonly string[] = [
 const QUICK_NAV_EXCLUDED_HREFS = new Set([
   "/profile",
   "/settings",
-  "/my-plan",
+  "/my-subscription",
   "/policies",
   "/revision-engine",
   "/revision-reminders",

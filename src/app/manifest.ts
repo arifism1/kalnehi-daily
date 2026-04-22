@@ -116,12 +116,12 @@ export default function manifest(): MetadataRoute.Manifest {
           { src: "/icon-maskable-192.png", sizes: "192x192", type: "image/png" },
         ],
       },
-      // 5th shortcut — Android shows max 4 on long-press; My Plan is kept for completeness.
+      // 5th shortcut — Android shows max 4 on long-press; My Subscription is kept for completeness.
       {
-        name: "My Plan",
-        short_name: "My Plan",
-        description: "View your subscription, AI credits, and plan details",
-        url: "/my-plan",
+        name: "My Subscription",
+        short_name: "My Subscription",
+        description: "View your subscription, AI credits, and billing details",
+        url: "/my-subscription",
         icons: [
           { src: "/icon-maskable-192.png", sizes: "192x192", type: "image/png" },
         ],
