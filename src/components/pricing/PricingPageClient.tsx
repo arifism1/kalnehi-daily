@@ -204,6 +204,7 @@ export function PricingPageClient() {
     subscriptionStatus === "cancelled" && hasPaidAccess;
   const user = useAuthStore((s) => s.user);
   const userEmail = user?.email ?? null;
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
   const [busy, setBusy] = useState(false);
   const [autopayMonths, setAutopayMonths] = useState(DEFAULT_AUTOPAY_MONTHS);
   const [checkoutError, setCheckoutError] = useState<{
@@ -300,6 +301,70 @@ export function PricingPageClient() {
     }
   }, [autopayMonths]);
 
+  const startAnnualCheckout = useCallback(async () => {
+    setBusy(true);
+    setCheckoutError(null);
+    try {
+      const res = await fetch("/api/annual-plan", { method: "POST" });
+      const created = (await res.json()) as {
+        ok: boolean;
+        error?: string;
+        keyId?: string;
+        orderId?: string;
+        amountPaise?: number;
+        prefill?: { name: string; email: string };
+      };
+      if (!created.ok) {
+        setCheckoutError({ text: created.error ?? "Could not create annual order." });
+        return;
+      }
+
+      if (typeof window === "undefined" || !window.Razorpay) {
+        setCheckoutError({ text: "Unable to load payment window. Refresh and try again." });
+        return;
+      }
+
+      const rzp = new window.Razorpay({
+        key: created.keyId,
+        name: SITE_NAME,
+        description: `Smart Plan Annual · ₹4,788/year`,
+        order_id: created.orderId,
+        amount: created.amountPaise,
+        currency: "INR",
+        theme: { color: "#FF7A00" },
+        prefill: created.prefill,
+        ...(created.prefill?.email
+          ? { readonly: { email: true } }
+          : {}),
+        handler: async (response: { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }) => {
+          const verified = await fetch("/api/annual-plan/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+            }),
+          });
+          const result = (await verified.json()) as { ok: boolean; error?: string };
+          if (!result.ok) {
+            setCheckoutError({ text: result.error ?? "Payment verification failed. Contact support." });
+            return;
+          }
+          window.location.assign("/home");
+        },
+      });
+      rzp.open();
+    } catch (error) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("[pricing] startAnnualCheckout failed", error);
+      }
+      setCheckoutError({ text: toUserFacingMessage(error) });
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
   const statusBanner = useMemo(() => {
     if (freeTrialActive && !hasPaidAccess) {
       const voiceMinLeft = Math.floor(freeTrialVoiceSecondsRemaining / 60);
@@ -389,13 +454,17 @@ export function PricingPageClient() {
   if (isActiveProSubscription) {
     buttonLabel = "Current plan";
   } else if (isCancelledWithAccess) {
-    buttonLabel = `Resubscribe — ${pro.monthlyPriceDisplay}/month`;
+    buttonLabel = billingCycle === "annual"
+      ? "Resubscribe — ₹4,788/year"
+      : `Resubscribe — ${pro.monthlyPriceDisplay}/month`;
   } else if (hasPaidAccess) {
     buttonLabel = "Manage in app";
   } else if (busy) {
     buttonLabel = "Opening checkout...";
   } else {
-    buttonLabel = `Subscribe — ${pro.monthlyPriceDisplay}/month`;
+    buttonLabel = billingCycle === "annual"
+      ? "Subscribe — ₹4,788/year"
+      : `Subscribe — ${pro.monthlyPriceDisplay}/month`;
   }
 
   return (
@@ -441,6 +510,39 @@ export function PricingPageClient() {
             </span>{" "}
             2 million tokens and 100 minutes of voice per month, with AutoPay for the duration you choose.
           </p>
+
+          {/* Billing cycle toggle */}
+          <div className="mx-auto mt-5 inline-flex rounded-full border border-kal-border bg-kal-card-muted p-1 gap-1">
+            <button
+              type="button"
+              aria-pressed={billingCycle === "monthly"}
+              onClick={() => setBillingCycle("monthly")}
+              className={`rounded-full px-5 py-2 text-xs font-bold transition-all ${
+                billingCycle === "monthly"
+                  ? "bg-kal-card text-kal-text shadow-sm"
+                  : "text-kal-text-secondary hover:text-kal-text"
+              }`}
+            >
+              Monthly · ₹499/mo
+            </button>
+            <button
+              type="button"
+              aria-pressed={billingCycle === "annual"}
+              onClick={() => setBillingCycle("annual")}
+              className={`flex items-center gap-1.5 rounded-full px-5 py-2 text-xs font-bold transition-all ${
+                billingCycle === "annual"
+                  ? "bg-kal-accent text-white shadow-sm"
+                  : "text-kal-text-secondary hover:text-kal-text"
+              }`}
+            >
+              Annual · ₹399/mo
+              <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide leading-none ${
+                billingCycle === "annual" ? "bg-white/25 text-white" : "bg-kal-accent/15 text-kal-accent"
+              }`}>
+                Save 20%
+              </span>
+            </button>
+          </div>
           <div className="kal-glass-panel mx-auto mt-6 max-w-xl rounded-2xl border-2 border-kal-accent/40 px-4 py-4 shadow-[0_16px_40px_-24px_rgba(255,122,0,0.25)] sm:px-5">
             <p className="text-sm font-semibold text-kal-text">New here? Take the feature tour first.</p>
             <div className="mt-3 flex flex-col gap-2 sm:flex-row">
@@ -462,7 +564,7 @@ export function PricingPageClient() {
 
         {statusBanner}
 
-        {!hasPaidAccess || isCancelledWithAccess ? (
+        {(!hasPaidAccess || isCancelledWithAccess) && billingCycle === "monthly" ? (
           <AutopayDurationPanel
             value={autopayMonths}
             onChange={setAutopayMonths}
@@ -485,12 +587,26 @@ export function PricingPageClient() {
             <p className="mt-1 text-xs text-kal-text-secondary">{pro.tagline}</p>
 
             <div className="mt-4 rounded-xl border border-kal-accent/40 bg-kal-accent/10 px-3 py-3">
-              <p className="text-lg font-bold leading-snug text-kal-text">
-                {pro.monthlyPriceDisplay}/month
-              </p>
-              <p className="mt-1 text-xs font-medium leading-snug text-kal-text-secondary">
-                AutoPay for the duration you choose above. Cancel anytime.
-              </p>
+              {billingCycle === "annual" ? (
+                <>
+                  <p className="text-lg font-bold leading-snug text-kal-text">
+                    ₹4,788/year
+                    <span className="ml-2 text-xs font-semibold text-kal-accent">₹399/mo</span>
+                  </p>
+                  <p className="mt-1 text-xs font-medium leading-snug text-kal-text-secondary">
+                    One-time payment · 12 months access · no recurring charge.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-lg font-bold leading-snug text-kal-text">
+                    {pro.monthlyPriceDisplay}/month
+                  </p>
+                  <p className="mt-1 text-xs font-medium leading-snug text-kal-text-secondary">
+                    AutoPay for the duration you choose above. Cancel anytime.
+                  </p>
+                </>
+              )}
             </div>
 
             <div className="mt-4 flex min-h-0 flex-1 flex-col">
@@ -511,7 +627,11 @@ export function PricingPageClient() {
               type="button"
               onClick={() => {
                 if (lockedBySubscription) return;
-                void startCheckout();
+                if (billingCycle === "annual") {
+                  void startAnnualCheckout();
+                } else {
+                  void startCheckout();
+                }
               }}
               disabled={busy || lockedBySubscription}
               aria-disabled={lockedBySubscription || undefined}

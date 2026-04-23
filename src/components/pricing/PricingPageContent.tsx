@@ -20,7 +20,7 @@ const FEATURES: { name: string; trial: FeatureValue; smart: FeatureValue }[] = [
   { name: "Spaced revision engine", trial: true, smart: true },
   { name: "Daily log & prep insights", trial: true, smart: true },
   { name: "PrepBrain AI coach", trial: true, smart: true },
-  { name: "Voice control", trial: "12 min total", smart: "100 hrs/month" },
+  { name: "Voice control", trial: "12 min total", smart: "100 min/month" },
   { name: "PrepBrain tokens", trial: "60,000 total", smart: "20,00,000/month" },
 ];
 
@@ -288,6 +288,7 @@ function PlanCardsSection() {
     name: string;
     price: string;
     duration: string;
+    annualNote?: string;
     tag: string | null;
     borderClass: string;
     badgeBg: string;
@@ -328,6 +329,7 @@ function PlanCardsSection() {
       name: "Smart Plan",
       price: "₹499",
       duration: "per month",
+      annualNote: "or ₹4,788/year · save 20%",
       tag: "Most popular",
       borderClass: "border-kal-accent/60",
       badgeBg: "bg-kal-accent",
@@ -412,6 +414,14 @@ function PlanCardsSection() {
                     {card.price}
                   </p>
                   <p className="text-xs text-kal-muted">{card.duration}</p>
+                  {card.annualNote && (
+                    <a
+                      href="#subscribe"
+                      className="mt-1 block text-[10px] font-semibold text-kal-accent hover:underline"
+                    >
+                      {card.annualNote}
+                    </a>
+                  )}
                 </div>
               </div>
 
