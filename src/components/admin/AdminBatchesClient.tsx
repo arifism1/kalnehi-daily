@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useMemo } from "react";
 
+import type { BatchComparisonRow } from "@/lib/admin/queries/batchComparisonQueries";
+import { AdminBatchComparisonSection } from "@/components/admin/AdminBatchComparisonSection";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type BatchRow = {
@@ -75,6 +78,7 @@ type Props = {
   payments: Payment[];
   kpi: KPI;
   engagement: Engagement;
+  batchComparison?: BatchComparisonRow[];
 };
 
 type View = "overview" | "waitlist-health" | "users" | "revenue" | "engagement";
@@ -183,6 +187,7 @@ export function AdminBatchesClient({
   payments,
   kpi,
   engagement,
+  batchComparison,
 }: Props) {
   const [view, setView] = useState<View>("overview");
   const [liveTime, setLiveTime] = useState(new Date());
@@ -639,6 +644,10 @@ export function AdminBatchesClient({
             ))}
           </div>
         </div>
+      )}
+
+      {batchComparison && batchComparison.length > 0 && (
+        <AdminBatchComparisonSection rows={batchComparison} />
       )}
     </div>
   );

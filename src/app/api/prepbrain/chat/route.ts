@@ -823,13 +823,7 @@ export async function POST(request: Request) {
   const maxCompletionTokens = maxCompletionTokensForIntent(intent);
 
   let textStream: ReadableStream<string>;
-  let usagePromise: Promise<{
-    fullText: string;
-    modelUsed: string;
-    totalTokens: number;
-    promptTokens: number;
-    completionTokens: number;
-  }>;
+  let usagePromise: Promise<import("@/lib/aiChatClient").StreamingChatUsage>;
   try {
     const s = await callStreamingChatCompletion(models, aiMessages, {
       temperature: 0.65,
@@ -974,7 +968,12 @@ export async function POST(request: Request) {
         controller.close();
 
         void after(async () => {
-          const fin = await prepbrainAiTokenFinalize(admin, user.id, reservationId, billed);
+          const fin = await prepbrainAiTokenFinalize(admin, user.id, reservationId, billed, {
+            inputTokens: groqPromptTokens,
+            outputTokens: groqCompletionTokens,
+            provider: u.providerUsed,
+            model: u.modelUsed,
+          });
           if (!fin.ok) {
             console.error("[prepbrain/chat] token finalize failed (after response)");
           }

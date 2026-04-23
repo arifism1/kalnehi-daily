@@ -4,47 +4,135 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 
-const NAV_ITEMS = [
-  { label: "Batches", href: "/admin/batches" },
-  { label: "Config", href: "/admin/config" },
+const NAV_GROUPS: {
+  label: string;
+  items: { label: string; href: string }[];
+}[] = [
+  {
+    label: "Live",
+    items: [{ label: "Overview", href: "/admin/overview" }],
+  },
+  {
+    label: "Growth",
+    items: [
+      { label: "Acquisition", href: "/admin/acquisition" },
+      { label: "Activation", href: "/admin/activation" },
+      { label: "Engagement", href: "/admin/engagement" },
+      { label: "Conversion", href: "/admin/conversion" },
+    ],
+  },
+  {
+    label: "Business",
+    items: [
+      { label: "Revenue", href: "/admin/revenue" },
+      { label: "Retention", href: "/admin/retention" },
+      { label: "AI usage", href: "/admin/ai-usage" },
+    ],
+  },
+  {
+    label: "Product",
+    items: [
+      { label: "Feature health", href: "/admin/feature-health" },
+      { label: "Notifications", href: "/admin/notifications" },
+      { label: "Batch analytics", href: "/admin/batches" },
+    ],
+  },
+  {
+    label: "Support",
+    items: [
+      { label: "User lookup", href: "/admin/users" },
+      { label: "Exam segments", href: "/admin/exam-segments" },
+    ],
+  },
+  {
+    label: "Technical",
+    items: [
+      { label: "System health", href: "/admin/system-health" },
+      { label: "Config", href: "/admin/config" },
+    ],
+  },
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <div className="min-h-screen bg-kal-page text-kal-text">
-      <header className="border-b border-kal-border bg-kal-card/80 backdrop-blur-sm">
-        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-bold uppercase tracking-widest text-kal-accent">
-              Admin
-            </span>
-            <span className="text-kal-border">·</span>
-            <span className="text-sm font-semibold text-kal-text">Kalnehi Daily</span>
+    <div className="min-h-screen bg-kal-page text-kal-text flex">
+      <aside className="hidden w-56 shrink-0 flex-col border-r border-kal-border bg-kal-card/40 lg:flex">
+        <div className="border-b border-kal-border px-4 py-4">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-kal-accent">Admin</span>
+          <p className="mt-0.5 text-sm font-semibold text-kal-text">Kalnehi Daily</p>
+        </div>
+        <nav className="flex-1 overflow-y-auto p-3 space-y-5">
+          {NAV_GROUPS.map((group) => (
+            <div key={group.label}>
+              <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-kal-muted mb-1.5">
+                {group.label}
+              </p>
+              <ul className="space-y-0.5">
+                {group.items.map((item) => {
+                  const active =
+                    item.href === "/admin/overview"
+                      ? pathname === item.href
+                      : pathname === item.href || pathname.startsWith(`${item.href}/`);
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        className={clsx(
+                          "block rounded-lg px-2 py-1.5 text-sm font-medium transition-colors",
+                          active
+                            ? "bg-kal-accent/15 text-kal-accent"
+                            : "text-kal-text-secondary hover:bg-kal-card hover:text-kal-text",
+                        )}
+                      >
+                        {item.label}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </nav>
+        <div className="border-t border-kal-border p-3">
+          <Link
+            href="/home"
+            className="block rounded-lg px-2 py-2 text-xs text-kal-muted hover:text-kal-text"
+          >
+            ← Back to app
+          </Link>
+        </div>
+      </aside>
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-10 border-b border-kal-border bg-kal-card/90 backdrop-blur-sm lg:hidden">
+          <div className="flex h-12 items-center justify-between gap-2 px-3">
+            <span className="text-xs font-bold uppercase tracking-widest text-kal-accent">Admin</span>
+            <Link href="/home" className="text-xs text-kal-muted">
+              App
+            </Link>
           </div>
-          <nav className="flex gap-1">
-            {NAV_ITEMS.map((item) => (
+          <div className="flex gap-1 overflow-x-auto border-t border-kal-border px-2 py-2">
+            {NAV_GROUPS.flatMap((g) => g.items).map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 className={clsx(
-                  "rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
-                  pathname.startsWith(item.href)
-                    ? "bg-kal-accent/10 text-kal-accent"
-                    : "text-kal-text-secondary hover:bg-kal-card hover:text-kal-text",
+                  "shrink-0 rounded-md px-2 py-1 text-[11px] font-medium",
+                  pathname === item.href || pathname.startsWith(`${item.href}/`)
+                    ? "bg-kal-accent text-white"
+                    : "bg-kal-card text-kal-text-secondary",
                 )}
               >
                 {item.label}
               </Link>
             ))}
-          </nav>
-          <Link href="/home" className="text-xs text-kal-muted hover:text-kal-text">
-            ← App
-          </Link>
-        </div>
-      </header>
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6">{children}</main>
+          </div>
+        </header>
+
+        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 sm:py-8">{children}</main>
+      </div>
     </div>
   );
 }

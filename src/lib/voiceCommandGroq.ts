@@ -15,7 +15,7 @@ export type VoiceCommandIntent =
   | { intent: "unknown"; clarification: string };
 
 export type VoiceCommandResult =
-  | { ok: true; intent: VoiceCommandIntent; response_text: string }
+  | { ok: true; intent: VoiceCommandIntent; response_text: string; inputTokens: number; outputTokens: number; model: string }
   | { ok: false; error: string };
 
 const VALID_NAV_PATHS = new Set([
@@ -252,6 +252,9 @@ async function callGroq(
     max_tokens: 200,
   });
 
+  const inputTokens = completion.usage?.prompt_tokens ?? 0;
+  const outputTokens = completion.usage?.completion_tokens ?? 0;
+  const modelUsed = completion.model ?? model;
   const content = completion.choices[0]?.message?.content ?? "";
   const parsed = extractFirstJsonObject(content);
 
@@ -261,6 +264,9 @@ async function callGroq(
       intent: { intent: "unknown", clarification: "Could not parse response." },
       response_text:
         "Sorry, I didn't quite catch that. Could you try saying it a different way?",
+      inputTokens,
+      outputTokens,
+      model: modelUsed,
     };
   }
 
@@ -277,10 +283,13 @@ async function callGroq(
       intent: { intent: "unknown", clarification: "Unrecognized intent." },
       response_text:
         "I wasn't sure what you meant. Try saying something like 'Add maths to today's plan' or 'Go to PrepBrain'.",
+      inputTokens,
+      outputTokens,
+      model: modelUsed,
     };
   }
 
-  return { ok: true, intent: intentObj, response_text: responseText };
+  return { ok: true, intent: intentObj, response_text: responseText, inputTokens, outputTokens, model: modelUsed };
 }
 
 export async function runVoiceCommand(

@@ -73,11 +73,19 @@ const FINALIZE_NON_RETRYABLE = new Set([
   "reservation_expired",
 ]);
 
+export type AiTokenSplitParams = {
+  inputTokens?: number;
+  outputTokens?: number;
+  provider?: string;
+  model?: string;
+};
+
 export async function prepbrainAiTokenFinalize(
   admin: SupabaseClient,
   userId: string,
   reservationId: string,
   actualTokens: number,
+  split?: AiTokenSplitParams,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const pActual = Math.max(0, Math.floor(actualTokens));
   let lastError = "Could not finalize AI token usage.";
@@ -91,6 +99,10 @@ export async function prepbrainAiTokenFinalize(
       p_user_id: userId,
       p_reservation_id: reservationId,
       p_actual: pActual,
+      ...(split?.inputTokens !== undefined ? { p_input_tokens: Math.floor(split.inputTokens) } : {}),
+      ...(split?.outputTokens !== undefined ? { p_output_tokens: Math.floor(split.outputTokens) } : {}),
+      ...(split?.provider !== undefined ? { p_provider: split.provider } : {}),
+      ...(split?.model !== undefined ? { p_model: split.model } : {}),
     });
     if (error) {
       console.error(

@@ -27,9 +27,9 @@ export type VoiceGroqContext = {
 
 /** Outcome: structured tasks, no API key/transcript (fallback), or strict mode could not parse JSON (parse_failed). */
 export type GroqVoiceFetchResult =
-  | { outcome: "structured"; tasks: GroqVoiceTask[] }
-  | { outcome: "fallback" }
-  | { outcome: "parse_failed" };
+  | { outcome: "structured"; tasks: GroqVoiceTask[]; inputTokens: number; outputTokens: number; model: string }
+  | { outcome: "fallback"; inputTokens: number; outputTokens: number; model: string }
+  | { outcome: "parse_failed"; inputTokens: number; outputTokens: number; model: string };
 
 export type FetchVoiceGroqOptions = {
   /**
@@ -167,22 +167,29 @@ function isWrongModelError(err: unknown): boolean {
   );
 }
 
+type GroqChatResult = { content: string; inputTokens: number; outputTokens: number; modelName: string };
+
 async function groqChat(
   apiKey: string,
   messages: ChatCompletionMessageParam[],
   opts: { temperature: number; max_tokens: number },
-): Promise<string> {
+): Promise<GroqChatResult> {
   const groq = new Groq({ apiKey });
   let lastErr: unknown;
   // Voice parsing is strictly locked to 8B — no 70B failover allowed.
-  for (const model of [GROQ_DEFAULT_PARSING_ID]) {
+  for (const modelName of [GROQ_DEFAULT_PARSING_ID]) {
     try {
       const completion = await groq.chat.completions.create({
-        model,
+        model: modelName,
         ...opts,
         messages,
       });
-      return messageContentToString(completion.choices[0]?.message?.content);
+      return {
+        content: messageContentToString(completion.choices[0]?.message?.content),
+        inputTokens: completion.usage?.prompt_tokens ?? 0,
+        outputTokens: completion.usage?.completion_tokens ?? 0,
+        modelName: completion.model ?? modelName,
+      };
     } catch (e) {
       lastErr = e;
       if (isTransientGroqError(e)) throw e;
@@ -232,15 +239,11 @@ async function callGroqOnce(
   apiKey: string,
   trimmed: string,
   ctx: VoiceGroqContext,
-): Promise<{ content: string }> {
-  const content = await groqChat(apiKey, [
+): Promise<GroqChatResult> {
+  return groqChat(apiKey, [
     { role: "system", content: VOICE_DICTATE_SYSTEM_PROMPT },
-    {
-      role: "user",
-      content: buildUserMessage(trimmed, ctx),
-    },
+    { role: "user", content: buildUserMessage(trimmed, ctx) },
   ], { temperature: 0.12, max_tokens: 2048 });
-  return { content };
 }
 
 async function callGroqRepair(
@@ -248,7 +251,7 @@ async function callGroqRepair(
   trimmed: string,
   ctx: VoiceGroqContext,
   failedSnippet: string,
-): Promise<string> {
+): Promise<GroqChatResult> {
   const nowIst = isoToIST_HHMM(ctx.referenceIso);
   return groqChat(
     apiKey,
@@ -276,7 +279,7 @@ async function callGroqMinimal(
   apiKey: string,
   trimmed: string,
   ctx: VoiceGroqContext,
-): Promise<string> {
+): Promise<GroqChatResult> {
   const nowIst = isoToIST_HHMM(ctx.referenceIso);
   return groqChat(
     apiKey,
@@ -315,24 +318,27 @@ function tasksFromModelContent(
   trimmed: string,
   referenceIso: string,
   strict: boolean,
+  tokenMeta: { inputTokens: number; outputTokens: number; model: string },
 ): GroqVoiceFetchResult {
   const rawTasks = extractTasksArrayFromGroqContent(content);
   if (!rawTasks) {
-    if (strict) return { outcome: "parse_failed" };
+    if (strict) return { outcome: "parse_failed", ...tokenMeta };
     return {
       outcome: "structured",
       tasks: [singleTaskFromRaw(trimmed, referenceIso)],
+      ...tokenMeta,
     };
   }
   const tasks = sanitizeTasks(rawTasks);
   if (tasks.length === 0) {
-    if (strict) return { outcome: "parse_failed" };
+    if (strict) return { outcome: "parse_failed", ...tokenMeta };
     return {
       outcome: "structured",
       tasks: [singleTaskFromRaw(trimmed, referenceIso)],
+      ...tokenMeta,
     };
   }
-  return { outcome: "structured", tasks };
+  return { outcome: "structured", tasks, ...tokenMeta };
 }
 
 /**
@@ -346,40 +352,57 @@ export async function fetchVoiceTasksFromGroq(
 ): Promise<GroqVoiceFetchResult> {
   const strict = options?.strictParsedTasks === true;
   const apiKey = process.env.GROQ_API_KEY?.trim();
+
+  const zeroTokens = { inputTokens: 0, outputTokens: 0, model: "" };
+
   if (!apiKey) {
-    return { outcome: "fallback" };
+    return { outcome: "fallback", ...zeroTokens };
   }
 
   const trimmed = normalizeVoiceTranscriptForParsing(
     transcript.trim().slice(0, MAX_TRANSCRIPT_CHARS),
   );
   if (!trimmed) {
-    return { outcome: "fallback" };
+    return { outcome: "fallback", ...zeroTokens };
   }
 
-  const attemptParse = (content: string): GroqVoiceFetchResult =>
-    tasksFromModelContent(content, trimmed, ctx.referenceIso, strict);
+  const attemptParse = (r: GroqChatResult): GroqVoiceFetchResult =>
+    tasksFromModelContent(r.content, trimmed, ctx.referenceIso, strict, {
+      inputTokens: r.inputTokens,
+      outputTokens: r.outputTokens,
+      model: r.modelName,
+    });
+
+  const addTokens = (
+    base: GroqVoiceFetchResult,
+    extra: GroqChatResult,
+  ): GroqVoiceFetchResult => ({
+    ...base,
+    inputTokens: base.inputTokens + extra.inputTokens,
+    outputTokens: base.outputTokens + extra.outputTokens,
+    model: base.model || extra.modelName,
+  });
 
   const run = async (): Promise<GroqVoiceFetchResult> => {
-    const { content } = await callGroqOnce(apiKey, trimmed, ctx);
-    console.log("Groq raw response:", content);
+    const first = await callGroqOnce(apiKey, trimmed, ctx);
+    console.log("Groq raw response:", first.content);
 
-    let result = attemptParse(content);
+    let result = attemptParse(first);
     if (strict && result.outcome === "parse_failed") {
       try {
-        const repaired = await callGroqRepair(apiKey, trimmed, ctx, content);
-        console.log("Groq repair response:", repaired);
-        result = attemptParse(repaired);
+        const repaired = await callGroqRepair(apiKey, trimmed, ctx, first.content);
+        console.log("Groq repair response:", repaired.content);
+        result = addTokens(attemptParse(repaired), first);
       } catch (e) {
         console.log("Groq repair error:", e instanceof Error ? e.message : String(e));
-        result = { outcome: "parse_failed" };
+        result = { outcome: "parse_failed", ...{ inputTokens: first.inputTokens, outputTokens: first.outputTokens, model: first.modelName } };
       }
     }
     if (strict && result.outcome === "parse_failed") {
       try {
         const minimal = await callGroqMinimal(apiKey, trimmed, ctx);
-        console.log("Groq minimal response:", minimal);
-        result = attemptParse(minimal);
+        console.log("Groq minimal response:", minimal.content);
+        result = addTokens(attemptParse(minimal), { inputTokens: result.inputTokens, outputTokens: result.outputTokens, modelName: result.model, content: "" });
       } catch (e) {
         console.log(
           "Groq minimal error:",
@@ -394,19 +417,21 @@ export async function fetchVoiceTasksFromGroq(
     return await run();
   } catch (first) {
     if (!isTransientGroqError(first)) {
-      if (strict) return { outcome: "parse_failed" };
+      if (strict) return { outcome: "parse_failed", ...zeroTokens };
       return {
         outcome: "structured",
         tasks: [singleTaskFromRaw(trimmed, ctx.referenceIso)],
+        ...zeroTokens,
       };
     }
     try {
       return await run();
     } catch {
-      if (strict) return { outcome: "parse_failed" };
+      if (strict) return { outcome: "parse_failed", ...zeroTokens };
       return {
         outcome: "structured",
         tasks: [singleTaskFromRaw(trimmed, ctx.referenceIso)],
+        ...zeroTokens,
       };
     }
   }
