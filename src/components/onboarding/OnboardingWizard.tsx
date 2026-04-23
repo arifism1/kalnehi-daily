@@ -145,7 +145,7 @@ export function OnboardingWizard() {
       });
       if (!res.ok) throw new Error(res.error);
       setLocalCompleted(true);
-      window.location.assign("/");
+      window.location.assign("/pricing");
     } catch (e) {
       setError(toUserFacingMessage(e));
     } finally {
