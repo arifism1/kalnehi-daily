@@ -151,6 +151,70 @@ export function AdminReferralsClient({ data }: { data: ReferralSnapshot }) {
         </div>
       )}
 
+      {/* Top exams from referral users */}
+      {data.igExamsSummary.length > 0 && (
+        <div className="rounded-2xl border border-kal-border bg-kal-card/40 p-4">
+          <h2 className="mb-1 text-sm font-semibold text-kal-text">Top exams — referral users</h2>
+          <p className="mb-3 text-xs text-kal-muted">
+            Exams targeted by users who signed up via any referral code.
+          </p>
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Summary bar list */}
+            <div className="space-y-1.5">
+              {data.igExamsSummary.map((e) => {
+                const maxCount = data.igExamsSummary[0]?.count ?? 1;
+                const pctW = Math.max(4, Math.round((e.count / maxCount) * 100));
+                return (
+                  <div key={e.exam} className="flex items-center gap-2 text-xs">
+                    <span className="w-28 shrink-0 truncate text-kal-text-secondary">{e.exam}</span>
+                    <div className="flex h-5 flex-1 items-center overflow-hidden rounded-sm bg-kal-border/30">
+                      <div
+                        className="h-full rounded-sm bg-kal-accent/60"
+                        style={{ width: `${pctW}%` }}
+                      />
+                    </div>
+                    <span className="w-6 shrink-0 text-right tabular-nums text-kal-text-secondary">
+                      {e.count}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Per-code exam breakdown */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-kal-border text-left text-[10px] font-bold uppercase tracking-wider text-kal-muted">
+                    <th className="pb-2 pr-3">Code</th>
+                    <th className="pb-2 pr-3">Exam</th>
+                    <th className="pb-2 text-right">Users</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-kal-border/30">
+                  {data.examsByCode.map((row) => (
+                    <tr key={`${row.code}-${row.exam}`}>
+                      <td className="py-1.5 pr-3 font-mono text-kal-muted">{row.code}</td>
+                      <td className="py-1.5 pr-3 text-kal-text-secondary">{row.exam}</td>
+                      <td className="py-1.5 text-right tabular-nums font-medium text-kal-text">
+                        {row.count}
+                      </td>
+                    </tr>
+                  ))}
+                  {data.examsByCode.length === 0 && (
+                    <tr>
+                      <td colSpan={3} className="py-3 text-center text-kal-muted">
+                        No exam data yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Code management */}
       <div className="rounded-2xl border border-kal-border bg-kal-card/40 p-4">
         <h2 className="mb-3 text-sm font-semibold text-kal-text">Referral code management</h2>
