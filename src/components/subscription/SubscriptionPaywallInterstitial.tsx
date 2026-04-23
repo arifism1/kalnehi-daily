@@ -80,6 +80,13 @@ export function SubscriptionPaywallInterstitial({
             </>
           )}
         </p>
+        {freeTrialEnded && (
+          <p className="mt-3 text-center text-xs leading-relaxed text-kal-muted">
+            The ₹19 waitlist skip is for new users only — it does not extend or restart a
+            trial. Only Smart Plan ({TIERS.pro.monthlyPriceDisplay}/month) continues your
+            access.
+          </p>
+        )}
         <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button
             type="button"

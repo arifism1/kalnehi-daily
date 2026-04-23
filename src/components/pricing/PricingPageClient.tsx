@@ -193,6 +193,7 @@ export function PricingPageClient() {
   const {
     hasPaidAccess,
     status: subscriptionStatus,
+    plan,
     freeTrialActive,
     freeTrialVoiceSecondsRemaining,
     freeTrialEndsAtIso,
@@ -403,7 +404,16 @@ export function PricingPageClient() {
         </div>
       );
     }
-    if (hasPaidAccess) {
+    if (hasPaidAccess && !isCancelledWithAccess) {
+      if (billingCycle === "annual" && plan !== "annual") {
+        return (
+          <div className="rounded-2xl border border-kal-accent/30 bg-kal-accent-soft/50 px-5 py-4 dark:border-kal-accent/25 dark:bg-kal-accent/10">
+            <p className="text-sm font-medium text-kal-accent-dark dark:text-kal-accent">
+              Upgrading to Annual will cancel your monthly plan and give you 12 months of access for ₹4,788 — no further monthly charges.
+            </p>
+          </div>
+        );
+      }
       return (
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 backdrop-blur-sm dark:border-emerald-800 dark:bg-emerald-950/30">
           <p className="text-sm font-medium text-emerald-900 dark:text-emerald-100">
@@ -440,18 +450,24 @@ export function PricingPageClient() {
     subscriptionStatus,
     hasPaidAccess,
     isCancelledWithAccess,
+    plan,
+    billingCycle,
     freeTrialActive,
     freeTrialVoiceSecondsRemaining,
     freeTrialEndsAtIso,
   ]);
 
-  const lockedBySubscription = hasPaidAccess && !isCancelledWithAccess;
+  const isMonthlyToAnnualUpgrade =
+    hasPaidAccess && !isCancelledWithAccess && billingCycle === "annual" && plan !== "annual";
+  const lockedBySubscription = hasPaidAccess && !isCancelledWithAccess && !isMonthlyToAnnualUpgrade;
   const isActiveProSubscription =
     hasPaidAccess &&
     (subscriptionStatus === "trial" || subscriptionStatus === "active");
 
   let buttonLabel: string;
-  if (isActiveProSubscription) {
+  if (isMonthlyToAnnualUpgrade) {
+    buttonLabel = busy ? "Opening checkout..." : "Upgrade to Annual — ₹4,788/year";
+  } else if (isActiveProSubscription) {
     buttonLabel = "Current plan";
   } else if (isCancelledWithAccess) {
     buttonLabel = billingCycle === "annual"

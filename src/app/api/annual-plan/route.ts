@@ -32,23 +32,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Service unavailable." }, { status: 503 });
   }
 
-  // Check user isn't already on Smart Plan.
+  // Check user isn't already on the annual plan.
   const { data: prof } = await admin
     .from("user_profiles")
-    .select("subscription_status, subscription_end_date, full_name")
+    .select("subscription_status, subscription_end_date, subscription_plan, full_name")
     .eq("user_id", user.id)
     .maybeSingle();
 
-  const p = prof as { subscription_status?: string | null; subscription_end_date?: string | null; full_name?: string | null } | null;
-  const isActivePaid =
-    (p?.subscription_status === "active" || p?.subscription_status === "cancelled") &&
+  const p = prof as { subscription_status?: string | null; subscription_end_date?: string | null; subscription_plan?: string | null; full_name?: string | null } | null;
+  const isAlreadyAnnual =
+    p?.subscription_plan === "annual" &&
     p?.subscription_end_date &&
     new Date(p.subscription_end_date) > new Date();
 
-  if (isActivePaid) {
+  if (isAlreadyAnnual) {
     return NextResponse.json({
       ok: false,
-      error: "You already have an active Smart Plan subscription.",
+      error: "You already have an active annual plan.",
     }, { status: 400 });
   }
 

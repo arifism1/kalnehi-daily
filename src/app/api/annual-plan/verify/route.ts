@@ -100,6 +100,23 @@ export async function POST(req: NextRequest) {
       kind: "annual_plan",
     });
 
+    // Best-effort: cancel existing monthly Razorpay subscription so the user
+    // is not double-charged after upgrading to annual. Failure is non-fatal.
+    try {
+      const { data: prof } = await admin
+        .from("user_profiles")
+        .select("razorpay_subscription_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      const subId = (prof as { razorpay_subscription_id?: string | null } | null)
+        ?.razorpay_subscription_id?.trim();
+      if (subId && /^sub_[a-zA-Z0-9]+$/.test(subId)) {
+        await razorpay.subscriptions.cancel(subId, false);
+      }
+    } catch (cancelErr) {
+      console.warn("[annual-plan/verify] monthly subscription cancel failed (non-fatal)", cancelErr);
+    }
+
     const now = new Date();
     const endsAt = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString();
 

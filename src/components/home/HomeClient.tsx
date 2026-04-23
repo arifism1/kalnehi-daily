@@ -1,16 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 
 import { ensureAutomatedNotifications } from "@/actions/notifications";
+import { ensureFreeTrialStarted } from "@/actions/subscription";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useRefreshTasksOnHomeFocus } from "@/hooks/useRefreshTasksOnHomeFocus";
+import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import {
   pickDailyPhraseIndex,
   type DailyMotivationalPhraseRow,
 } from "@/lib/dailyMotivationalPhrase";
+import { toUserFacingMessage } from "@/lib/userFacingErrors";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { useAuthStore } from "@/store/useAuthStore";
 
@@ -42,6 +45,31 @@ const HomeDashboardBody = dynamic(
 export function HomeClient() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
+  const {
+    welcomeTrialEligibleUnstarted,
+    onboardingDone,
+    refetch,
+  } = useSubscriptionAccess();
+
+  const [trialBusy, setTrialBusy] = useState(false);
+  const [trialError, setTrialError] = useState<string | null>(null);
+
+  const startFreeTrial = useCallback(async () => {
+    setTrialBusy(true);
+    setTrialError(null);
+    try {
+      const r = await ensureFreeTrialStarted();
+      if (!r.ok) {
+        setTrialError(r.error);
+        return;
+      }
+      if (r.started) refetch();
+    } catch (e) {
+      setTrialError(toUserFacingMessage(e));
+    } finally {
+      setTrialBusy(false);
+    }
+  }, [refetch]);
 
   useRefreshTasksOnHomeFocus();
 
@@ -154,6 +182,33 @@ export function HomeClient() {
   return (
     <div className="relative flex min-h-full flex-col gap-5 pb-6 text-kal-text sm:gap-6 sm:pb-8">
       <MotivationWallpaper />
+
+      {welcomeTrialEligibleUnstarted && onboardingDone && (
+        <div className="mx-auto w-full max-w-5xl px-4 sm:px-6">
+          <div className="kal-glass-panel rounded-2xl border-2 border-emerald-500/35 bg-emerald-500/[0.06] px-5 py-5 text-center dark:border-emerald-500/25 dark:bg-emerald-500/[0.08]">
+            <p className="text-sm font-semibold text-kal-text">
+              Start your 3-day free trial — every feature, no card required.
+            </p>
+            <p className="mt-1 text-xs leading-relaxed text-kal-text-secondary">
+              Your trial timer starts only after you tap this button.
+            </p>
+            {trialError && (
+              <p className="mt-2 text-xs font-medium text-kal-accent-dark dark:text-kal-accent">
+                {trialError}
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={() => { void startFreeTrial(); }}
+              disabled={trialBusy}
+              className="kal-btn-accent mt-4 inline-flex min-h-[48px] w-full max-w-xs items-center justify-center rounded-xl px-6 py-3 text-sm font-bold transition disabled:opacity-60"
+            >
+              {trialBusy ? "Starting…" : "Start Free Trial — 3 Days"}
+            </button>
+          </div>
+        </div>
+      )}
+
       <HomeDashboardBody {...bodyProps} />
     </div>
   );

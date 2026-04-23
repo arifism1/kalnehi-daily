@@ -230,7 +230,8 @@ export function MyPlanPageClient() {
 
   const tierConfig = getTierConfig(tier);
 
-  const canCancel = status === "trial" || status === "active";
+  const isAnnualPlan = plan === "annual";
+  const canCancel = (status === "trial" || status === "active") && !isAnnualPlan;
   const isCancelled = status === "cancelled";
   const isCancelledWithAccess = isCancelled && hasPaidAccess;
   const noActivePlan =
@@ -250,7 +251,7 @@ export function MyPlanPageClient() {
       | undefined {
       if (!hasPaidAccess) return undefined;
       if (status === "trial") return "paid_trial";
-      if (status === "active" || status === "cancelled") return "monthly";
+      if (status === "active" || status === "cancelled") return "monthly"; // annual also uses monthly token phase
       return undefined;
     }
 
@@ -392,8 +393,9 @@ export function MyPlanPageClient() {
   if (status && status !== "expired" && !(isCancelled && !hasPaidAccess)) {
     rows.push({
       label: "Billing",
-      value:
-          plan === "monthly" || plan === "trial"
+      value: isAnnualPlan
+        ? "₹4,788/year · one-time payment"
+        : plan === "monthly" || plan === "trial"
           ? `${tierConfig.monthlyPriceDisplay}/month · cancel anytime`
           : (plan ?? "—"),
     });
@@ -420,7 +422,9 @@ export function MyPlanPageClient() {
       ? "Active until"
       : status === "trial"
         ? "Trial ends"
-        : "Month ends on";
+        : isAnnualPlan
+          ? "Plan runs until"
+          : "Month ends on";
     rows.push({ label, value: formatDate(endDate) });
   }
 
@@ -468,9 +472,9 @@ export function MyPlanPageClient() {
         </p>
         <h1 className="kal-feature-title mt-1">My Subscription</h1>
         <p className="mt-1 text-sm leading-relaxed text-kal-text-secondary">
-          Monthly subscription — you are charged once per month. AutoPay is limited to the number of
-          months you chose at signup (shown below when available). Cancel anytime; you keep access
-          through the period you already paid for.
+          {isAnnualPlan
+            ? "Annual plan — one-time payment for 12 months of full access. No recurring charge."
+            : "Monthly subscription — you are charged once per month. AutoPay is limited to the number of months you chose at signup (shown below when available). Cancel anytime; you keep access through the period you already paid for."}
         </p>
       </div>
 
@@ -622,7 +626,7 @@ export function MyPlanPageClient() {
                       {statusLabel(status)}
                     </span>
                     <span className="text-sm font-semibold text-kal-text">
-                      {tierConfig.monthlyPriceDisplay}/month
+                      {isAnnualPlan ? "₹4,788/year" : `${tierConfig.monthlyPriceDisplay}/month`}
                     </span>
                   </div>
                 ) : null}
@@ -846,6 +850,16 @@ export function MyPlanPageClient() {
                     {message}
                   </p>
                 ) : null}
+              </div>
+            )}
+
+            {isAnnualPlan && hasPaidAccess && endDate && (
+              <div className="border-t border-kal-border px-4 py-3">
+                <p className="text-xs leading-relaxed text-kal-text-secondary">
+                  Your annual plan runs until{" "}
+                  <span className="font-semibold text-kal-text">{formatDate(endDate)}</span>.
+                  This was a one-time payment — there is no recurring charge to cancel.
+                </p>
               </div>
             )}
 
