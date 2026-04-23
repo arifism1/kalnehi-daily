@@ -32,7 +32,7 @@ export default function BestStudyPracticesPage() {
           {
             question: "Is there a free trial to experience all these features?",
             answer:
-              "Yes. New accounts get a 1-day welcome trial with limited voice and AI usage. You can then start a 2-day paid trial from the pricing page before continuing on monthly Pro.",
+              "Yes. New accounts get a 3-day free trial with every feature unlocked — including PrepBrain AI (60,000 tokens) and 12 minutes of voice. After 3 days, subscribe to Smart Plan (₹499/month) to keep full access.",
           },
           {
             question: "Which exams is Kalnehi Daily designed for?",

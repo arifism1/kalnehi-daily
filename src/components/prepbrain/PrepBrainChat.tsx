@@ -2,18 +2,14 @@
 
 import { format } from "date-fns";
 import {
-  BarChart3,
   Brain,
-  ClipboardCheck,
+  CheckCircle2,
   Loader2,
   Menu,
   Send,
-  Sparkles,
   SquarePen,
-  Target,
   Trash2,
   X,
-  type LucideIcon,
 } from "lucide-react";
 import clsx from "clsx";
 import Link from "next/link";
@@ -31,55 +27,13 @@ import {
 import { AiTokenLimitLinks } from "@/components/subscription/LimitExceededLinks";
 import { PrepBrainIllustration } from "@/components/illustrations/PrepBrainIllustration";
 
-type SuggestionCardDef = {
-  label: string;
-  hint: string;
-  prompt: string;
-  icon: LucideIcon;
-  iconRing: string;
-};
-
-const SUGGESTION_CARDS: SuggestionCardDef[] = [
-  {
-    label: "Boost my marks",
-    hint: "Where to focus first",
-    prompt:
-      "I need about 20 more marks — what should I focus on first?",
-    icon: Target,
-    iconRing: "bg-kal-accent-soft text-kal-accent ring-kal-accent/25",
-  },
-  {
-    label: "Weakest chapters",
-    hint: "Fix gaps with a plan",
-    prompt:
-      "Which chapters are my weakest right now, and how should I fix them?",
-    icon: BarChart3,
-    iconRing: "bg-sky-500/10 text-sky-700 ring-sky-500/20 dark:text-sky-300",
-  },
-  {
-    label: "Habits & calm",
-    hint: "Meditation & consistency",
-    prompt:
-      "I'm not meditating regularly. What should I do this week?",
-    icon: Sparkles,
-    iconRing: "bg-violet-500/10 text-violet-700 ring-violet-500/20 dark:text-violet-300",
-  },
-  {
-    label: "Daily execution",
-    hint: "Are you on track?",
-    prompt:
-      "Based on my data, am I executing my daily plan well enough?",
-    icon: ClipboardCheck,
-    iconRing: "bg-emerald-500/10 text-emerald-800 ring-emerald-500/20 dark:text-emerald-300",
-  },
-];
 
 function prepbrainUsagePeriodLabel(phase: AiUsagePhase): string {
   switch (phase) {
     case "welcome":
-      return "1-day welcome trial";
+      return "3-day free trial";
     case "paid_trial":
-      return "2-day paid trial";
+      return "Smart Plan (trial)";
     case "monthly":
       return "Monthly plan";
     default:
@@ -528,49 +482,92 @@ export function PrepBrainChat() {
         {messages.length === 0 && !isSending && (
           <div className="mx-auto flex max-w-2xl flex-col items-center gap-4 text-center sm:gap-8">
             <PrepBrainIllustration className="w-full max-w-[160px] sm:max-w-[200px]" />
-            <p className="max-w-md px-1 text-sm leading-snug text-kal-text-secondary/95 sm:text-[15px] sm:leading-relaxed">
-              What should we focus on today? PrepBrain reads your Kalnehi data each send.
-            </p>
-            <div className="w-full space-y-2 text-left sm:space-y-4">
-              <p className="text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-kal-text-secondary/80 sm:text-[11px] sm:tracking-[0.2em]">
-                Try asking
-              </p>
-              {/* Mobile: horizontal strip — less vertical space */}
-              <div className="-mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 pt-0.5 [-webkit-overflow-scrolling:touch] [scrollbar-width:thin] sm:mx-0 sm:grid sm:snap-none sm:grid-cols-2 sm:gap-3 sm:overflow-visible sm:pb-0 sm:pt-0">
-                {SUGGESTION_CARDS.map((card) => {
-                  const Icon = card.icon;
-                  return (
-                    <button
-                      key={card.prompt}
-                      type="button"
-                      onClick={() => {
-                        setError(null);
-                        void sendMessage(card.prompt);
-                      }}
-                      disabled={isSending || atTokenLimit}
-                      className="kal-glass-card group touch-manipulation flex w-[min(42vw,10.5rem)] shrink-0 snap-start flex-col items-stretch gap-2 rounded-xl p-2.5 text-left shadow-sm transition-all hover:ring-1 hover:ring-kal-accent/25 active:scale-[0.99] disabled:opacity-50 sm:w-auto sm:snap-none sm:flex-row sm:items-start sm:gap-3 sm:rounded-2xl sm:p-3.5 sm:shadow-md sm:hover:-translate-y-0.5 sm:hover:shadow-lg"
-                    >
-                      <span
-                        className={clsx(
-                          "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset sm:h-10 sm:w-10 sm:rounded-2xl",
-                          card.iconRing,
-                        )}
-                      >
-                        <Icon className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2} aria-hidden />
-                      </span>
-                      <span className="min-w-0 sm:pt-0.5">
-                        <span className="block text-[13px] font-semibold leading-tight text-kal-text sm:text-[15px] sm:leading-snug">
-                          {card.label}
+            {/* Instruction box */}
+            <div className="kal-glass-card w-full rounded-2xl p-4 text-left sm:p-5">
+              {/* Title */}
+              <div className="mb-3 flex items-center gap-2 sm:mb-4">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-kal-accent-soft ring-1 ring-kal-accent/25">
+                  <Brain className="h-4 w-4 text-kal-accent" aria-hidden />
+                </span>
+                <span className="text-[13px] font-semibold tracking-tight text-kal-text sm:text-sm">
+                  PrepBrain – Your Strategy Coach
+                </span>
+              </div>
+
+              {/* For / Not For columns */}
+              <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
+                {/* What it's for */}
+                <div>
+                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-kal-text-secondary/70 sm:text-[11px]">
+                    Use PrepBrain for
+                  </p>
+                  <ul className="space-y-1.5">
+                    {[
+                      "Boosting your marks — where to focus first",
+                      "Identifying weak areas and what to prioritize",
+                      "Revision strategy & spaced repetition planning",
+                      "Mental preparation, focus & handling exam pressure",
+                      "Analyzing your progress and giving clear next steps",
+                    ].map((item) => (
+                      <li key={item} className="flex items-start gap-2">
+                        <CheckCircle2
+                          className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400"
+                          aria-hidden
+                        />
+                        <span className="text-[12px] leading-snug text-kal-text-secondary sm:text-[13px]">
+                          {item}
                         </span>
-                        <span className="mt-0.5 block text-[10px] leading-tight text-kal-text-secondary sm:mt-1 sm:text-[13px] sm:leading-snug">
-                          {card.hint}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* What it's NOT for */}
+                <div>
+                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-kal-text-secondary/70 sm:text-[11px]">
+                    Not for
+                  </p>
+                  <ul className="space-y-1.5">
+                    {[
+                      "Solving questions or giving answers to academic problems",
+                      "Explaining concepts or teaching topics",
+                    ].map((item) => (
+                      <li key={item} className="flex items-start gap-2">
+                        <X
+                          className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-500/80"
+                          aria-hidden
+                        />
+                        <span className="text-[12px] leading-snug text-kal-text-secondary sm:text-[13px]">
+                          {item}
                         </span>
-                      </span>
-                    </button>
-                  );
-                })}
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* Example prompts */}
+                  <div className="mt-4">
+                    <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-kal-text-secondary/70 sm:text-[11px]">
+                      Example prompts
+                    </p>
+                    <ul className="space-y-1.5">
+                      {[
+                        "I need about 20 more marks — what should I focus on first?",
+                        "I'm not meditating regularly. What should I do this week?",
+                        "Based on my data, am I executing my daily plan well enough?",
+                      ].map((prompt) => (
+                        <li
+                          key={prompt}
+                          className="kal-glass-subtle rounded-lg px-2.5 py-1.5 text-[11px] italic leading-snug text-kal-text-secondary sm:text-[12px]"
+                        >
+                          "{prompt}"
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
               </div>
             </div>
+
           </div>
         )}
 

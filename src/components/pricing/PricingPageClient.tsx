@@ -6,9 +6,7 @@ import { useCallback, useMemo, useState } from "react";
 import { CalendarClock, Check, Crown } from "lucide-react";
 
 import {
-  activateRazorpaySubscription,
   activateRazorpayMonthlySubscription,
-  createRazorpayTrialSubscription,
   createRazorpayMonthlySubscription,
   ensureFreeTrialStarted,
 } from "@/actions/subscription";
@@ -21,7 +19,6 @@ import {
   clampAutopayMonths,
   DEFAULT_AUTOPAY_MONTHS,
 } from "@/lib/autopayMonths";
-import { formatWelcomeVoiceTimeLeft } from "@/lib/freeTrial";
 import { SITE_NAME } from "@/lib/seo-metadata";
 import { toUserFacingMessage } from "@/lib/userFacingErrors";
 import { TIERS } from "@/lib/subscriptionTiers";
@@ -52,12 +49,10 @@ function AutopayDurationPanel({
   value,
   onChange,
   disabled,
-  hasHadTrial,
 }: {
   value: number;
   onChange: (months: number) => void;
   disabled: boolean;
-  hasHadTrial: boolean;
 }) {
   const monthWord = value === 1 ? "month" : "months";
 
@@ -75,14 +70,14 @@ function AutopayDurationPanel({
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-kal-accent">
-                Pro subscription
+                Smart Plan subscription
               </p>
               <h2 className="kal-section-heading mt-0.5">
                 How long should AutoPay run?
               </h2>
               <p className="mt-1 text-xs leading-snug text-kal-text-secondary sm:mt-1.5">
-                <span className="font-semibold text-kal-text">Monthly</span> billing: set how many
-                post-trial monthly charges your UPI or card mandate may take. You can cancel anytime
+                <span className="font-semibold text-kal-text">Monthly</span> billing at ₹499/month. Set how many
+                monthly charges your UPI or card mandate may take. Cancel anytime
                 &mdash; even before all months are used &mdash; and keep access for what you&apos;ve
                 already paid.
               </p>
@@ -177,26 +172,16 @@ function AutopayDurationPanel({
               />
               <p className="text-[0.7rem] leading-snug text-kal-text sm:text-xs">
                 <span className="font-semibold text-kal-text">Summary:</span>{" "}
-                {hasHadTrial ? (
-                  <>
-                    Up to{" "}
-                    <span className="font-bold text-kal-accent tabular-nums">{value}</span> monthly
-                    payment{value === 1 ? "" : "s"}, then stops unless you subscribe again.
-                  </>
-                ) : (
-                  <>
-                    After trial, up to{" "}
-                    <span className="font-bold text-kal-accent tabular-nums">{value}</span> monthly
-                    payment{value === 1 ? "" : "s"}, then stops unless you subscribe again.
-                  </>
-                )}
+                Up to{" "}
+                <span className="font-bold text-kal-accent tabular-nums">{value}</span> monthly
+                payment{value === 1 ? "" : "s"}, then stops unless you subscribe again.
               </p>
             </div>
           </fieldset>
         </div>
       </div>
       <p className="text-center text-[0.65rem] font-medium uppercase tracking-[0.12em] text-kal-text-secondary">
-        Next — subscribe to Pro below
+        Next — subscribe below
       </p>
     </div>
   );
@@ -207,7 +192,6 @@ const pro = TIERS.pro;
 export function PricingPageClient() {
   const {
     hasPaidAccess,
-    hasHadTrial,
     status: subscriptionStatus,
     freeTrialActive,
     freeTrialVoiceSecondsRemaining,
@@ -259,9 +243,7 @@ export function PricingPageClient() {
     setBusy(true);
     setCheckoutError(null);
     try {
-      const created = hasHadTrial
-        ? await createRazorpayMonthlySubscription("pro", autopayMonths)
-        : await createRazorpayTrialSubscription("pro", autopayMonths);
+      const created = await createRazorpayMonthlySubscription("pro", autopayMonths);
       if (!created.ok) {
         setCheckoutError({
           text: created.error,
@@ -277,9 +259,7 @@ export function PricingPageClient() {
         return;
       }
 
-      const description = hasHadTrial
-        ? `${pro.name} (${pro.monthlyPriceDisplay}/mo) · AutoPay up to ${autopayMonths} monthly charge${autopayMonths === 1 ? "" : "s"}`
-        : `${pro.name} 2-day trial (${pro.trialPriceDisplay}) · then ${pro.monthlyPriceDisplay}/mo · AutoPay up to ${autopayMonths} monthly charge${autopayMonths === 1 ? "" : "s"}`;
+      const description = `${pro.name} (${pro.monthlyPriceDisplay}/mo) · AutoPay up to ${autopayMonths} monthly charge${autopayMonths === 1 ? "" : "s"}`;
       const rzp = new window.Razorpay({
         key: created.keyId,
         name: SITE_NAME,
@@ -293,9 +273,7 @@ export function PricingPageClient() {
           ? { readonly: { email: true, contact: true } }
           : { readonly: { email: true } }),
         handler: async (response: RazorpayCheckoutResponse) => {
-          const updated = hasHadTrial
-            ? await activateRazorpayMonthlySubscription({ ...response })
-            : await activateRazorpaySubscription({ ...response });
+          const updated = await activateRazorpayMonthlySubscription({ ...response });
           if (!updated.ok) {
             setCheckoutError({
               text: updated.error,
@@ -306,7 +284,7 @@ export function PricingPageClient() {
             });
             return;
           }
-          window.location.assign("/");
+          window.location.assign("/home");
         },
       });
       rzp.open();
@@ -320,23 +298,24 @@ export function PricingPageClient() {
     } finally {
       setBusy(false);
     }
-  }, [autopayMonths, hasHadTrial]);
+  }, [autopayMonths]);
 
   const statusBanner = useMemo(() => {
     if (freeTrialActive && !hasPaidAccess) {
+      const voiceMinLeft = Math.floor(freeTrialVoiceSecondsRemaining / 60);
+      const voiceSecLeft = freeTrialVoiceSecondsRemaining % 60;
+      const voiceStr =
+        voiceMinLeft > 0
+          ? `${voiceMinLeft}m ${voiceSecLeft > 0 ? `${voiceSecLeft}s` : ""}`.trim()
+          : `${freeTrialVoiceSecondsRemaining}s`;
       return (
         <div className="rounded-2xl border border-kal-accent/35 bg-gradient-to-br from-kal-accent/12 to-kal-card-muted px-5 py-4 shadow-sm dark:border-kal-accent/25">
-          <p className="text-sm font-semibold text-kal-text">1-day free trial is active</p>
+          <p className="text-sm font-semibold text-kal-text">Your 3-day free trial is active</p>
           <p className="mt-2 text-sm leading-relaxed text-kal-text-secondary">
-            You have{" "}
-            <span className="font-semibold text-kal-text">
-              {formatWelcomeVoiceTimeLeft(freeTrialVoiceSecondsRemaining)}
-            </span>{" "}
-            of welcome voice time
+            You have <span className="font-semibold text-kal-text">{voiceStr} of voice time</span> remaining
             {freeTrialEndsAtIso ? (
               <>
-                {" "}
-                (ends{" "}
+                {" "}(trial ends{" "}
                 {new Date(freeTrialEndsAtIso).toLocaleString(undefined, {
                   dateStyle: "medium",
                   timeStyle: "short",
@@ -344,7 +323,7 @@ export function PricingPageClient() {
                 )
               </>
             ) : null}
-            . Then start the 2-day paid trial (₹19), then ₹299/month AutoPay — cancel anytime.
+            . Subscribe to Smart Plan below to continue after your trial — 2M tokens and 100 hours of voice every month.
           </p>
         </div>
       );
@@ -360,14 +339,10 @@ export function PricingPageClient() {
       );
     }
     if (hasPaidAccess) {
-      const trialHint =
-        subscriptionStatus === "trial"
-          ? " During your 2-day paid trial you have 15 voice minutes and 5,00,000 (5 lakh) PrepBrain tokens. After the first successful charge you get 60 voice minutes and 2,000,000 (2 million) tokens per month."
-          : "";
       return (
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 backdrop-blur-sm dark:border-emerald-800 dark:bg-emerald-950/30">
           <p className="text-sm font-medium text-emerald-900 dark:text-emerald-100">
-            You already have Pro access.{trialHint}{" "}
+            You already have Smart Plan access.{" "}
             <Link href="/my-subscription" className="font-bold underline underline-offset-2">
               My Subscription
             </Link>{" "}
@@ -389,7 +364,7 @@ export function PricingPageClient() {
       return (
         <div className="rounded-2xl border border-amber-300 bg-amber-50 px-5 py-4 backdrop-blur-sm dark:border-amber-800 dark:bg-amber-950/30">
           <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-            Your subscription has been cancelled and access has ended. Subscribe to Pro below to
+            Your subscription has been cancelled and access has ended. Subscribe to Smart Plan below to
             continue.
           </p>
         </div>
@@ -414,17 +389,13 @@ export function PricingPageClient() {
   if (isActiveProSubscription) {
     buttonLabel = "Current plan";
   } else if (isCancelledWithAccess) {
-    buttonLabel = hasHadTrial
-      ? `Resubscribe — ${pro.monthlyPriceDisplay}/month`
-      : `Resubscribe — ${pro.trialPriceDisplay} trial`;
+    buttonLabel = `Resubscribe — ${pro.monthlyPriceDisplay}/month`;
   } else if (hasPaidAccess) {
     buttonLabel = "Manage in app";
   } else if (busy) {
     buttonLabel = "Opening checkout...";
-  } else if (hasHadTrial) {
-    buttonLabel = `Subscribe — ${pro.monthlyPriceDisplay}/month`;
   } else {
-    buttonLabel = `Start 2-day trial — ${pro.trialPriceDisplay}`;
+    buttonLabel = `Subscribe — ${pro.monthlyPriceDisplay}/month`;
   }
 
   return (
@@ -434,13 +405,14 @@ export function PricingPageClient() {
         strategy="afterInteractive"
       />
       <section className="mx-auto max-w-5xl space-y-8 pb-10">
+        {/* Start free trial CTA — shown to logged-in users who haven't started their trial yet */}
         {showWelcomeFreeCta ? (
           <div className="kal-glass-panel rounded-2xl border-2 border-emerald-500/35 bg-emerald-500/[0.06] px-5 py-5 text-center dark:border-emerald-500/25 dark:bg-emerald-500/[0.08]">
             <p className="text-sm font-semibold text-kal-text">
-              Choose the free welcome access first, or go straight to Smart Trial / Smart Plan below.
+              Start your 3-day free trial — every feature, no card required.
             </p>
             <p className="mt-1 text-xs leading-relaxed text-kal-text-secondary">
-              Your 3-day welcome timer starts only after you tap this — not before.
+              Your trial timer starts only after you tap this button.
             </p>
             <button
               type="button"
@@ -450,35 +422,24 @@ export function PricingPageClient() {
               disabled={welcomeFreeBusy || busy}
               className="kal-btn-accent mt-4 inline-flex min-h-[48px] w-full max-w-md items-center justify-center rounded-xl px-6 py-3 text-sm font-bold transition disabled:opacity-60 sm:w-auto"
             >
-              {welcomeFreeBusy ? "Starting…" : "Start Free — 3 days"}
+              {welcomeFreeBusy ? "Starting…" : "Start Free Trial — 3 Days"}
             </button>
           </div>
         ) : null}
 
         <header className="kal-glass-panel rounded-2xl px-6 py-8 text-center">
           <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-kal-accent">
-            Kalnehi Pro
+            Kalnehi Smart Plan
           </p>
           <h1 className="kal-feature-title mt-3">
-            One simple plan for full prep
+            One plan. Everything included.
           </h1>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-kal-text-secondary">
-            <span className="font-semibold text-kal-text">Step 1 — 1-day free trial:</span> 5 voice
-            minutes + 300,000 PrepBrain AI tokens.{" "}
+            <span className="font-semibold text-kal-text">3-day free trial:</span> all features, 60,000 PrepBrain tokens, 12 minutes voice — no card needed.{" "}
             <span className="font-semibold text-kal-text">
-              Step 2 — 2-day paid trial ({pro.trialPriceDisplay}):
+              Smart Plan ({pro.monthlyPriceDisplay}/month):
             </span>{" "}
-            15 voice minutes + 500,000 tokens.{" "}
-            <span className="font-semibold text-kal-text">
-              Step 3 — {pro.monthlyPriceDisplay}/month:
-            </span>{" "}
-            60 voice minutes
-            + 2,000,000 (2 million) tokens per month, AutoPay for the duration you choose — cancel
-            anytime.
-          </p>
-          <p className="mx-auto mt-2 max-w-2xl text-sm leading-relaxed text-kal-text-secondary">
-            After your free day, you can keep using Kalnehi with a 2-day paid trial for{" "}
-            {pro.trialPriceDisplay}. When that trial ends, subscribe to the monthly plan to continue.
+            2 million tokens and 100 hours of voice per month, with AutoPay for the duration you choose.
           </p>
           <div className="kal-glass-panel mx-auto mt-6 max-w-xl rounded-2xl border-2 border-kal-accent/40 px-4 py-4 shadow-[0_16px_40px_-24px_rgba(255,122,0,0.25)] sm:px-5">
             <p className="text-sm font-semibold text-kal-text">New here? Take the feature tour first.</p>
@@ -506,14 +467,13 @@ export function PricingPageClient() {
             value={autopayMonths}
             onChange={setAutopayMonths}
             disabled={busy}
-            hasHadTrial={hasHadTrial}
           />
         ) : null}
 
         <div className="mx-auto max-w-lg">
           <article className="kal-glass-panel relative flex min-h-0 flex-col rounded-2xl border-2 border-kal-accent/50 p-5 pb-6 ring-2 ring-kal-accent/30">
             <span className="absolute -top-3 left-4 rounded-full bg-kal-accent px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-kal-accent-foreground">
-              Pro
+              Smart Plan
             </span>
 
             <div className="mt-2 flex items-center gap-2">
@@ -524,49 +484,13 @@ export function PricingPageClient() {
             </div>
             <p className="mt-1 text-xs text-kal-text-secondary">{pro.tagline}</p>
 
-            <ol className="mt-4 space-y-2 rounded-xl border border-kal-accent/30 bg-kal-accent/5 px-3 py-3 text-left text-xs leading-relaxed text-kal-text-secondary">
-              <li>
-                <span className="font-semibold text-kal-text">1.</span> Free: 1 day · 5 min voice ·
-                3,00,000 (3 lakh) AI tokens
-              </li>
-              <li>
-                <span className="font-semibold text-kal-text">2.</span> Paid trial: 2 days ·{" "}
-                {pro.trialPriceDisplay} · 15 min voice · 5,00,000 (5 lakh) tokens — keeps access after
-                your free day.
-              </li>
-              <li>
-                <span className="font-semibold text-kal-text">3.</span> Then {pro.monthlyPriceDisplay}
-                /mo · 60 min voice · 2,000,000 (2 million) tokens (resets monthly) — continue after the
-                paid trial.
-              </li>
-            </ol>
-
             <div className="mt-4 rounded-xl border border-kal-accent/40 bg-kal-accent/10 px-3 py-3">
-              {hasHadTrial && !hasPaidAccess ? (
-                <>
-                  <p className="text-lg font-bold leading-snug text-kal-text">
-                    {pro.monthlyPriceDisplay}/month
-                  </p>
-                  <p className="mt-1 text-xs font-medium leading-snug text-kal-text-secondary">
-                    No trial — charged monthly from first payment. Uses the AutoPay length you set
-                    above.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p className="text-lg font-bold leading-snug text-kal-text">
-                    {pro.trialPriceDisplay} for 2 days
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-kal-text">
-                    → then {pro.monthlyPriceDisplay}/month
-                  </p>
-                  {!hasPaidAccess ? (
-                    <p className="kal-glass-subtle mt-2 rounded-lg border border-white/30 px-2 py-1.5 text-[0.65rem] font-medium leading-snug text-kal-text-secondary dark:border-white/10">
-                      AutoPay length uses the slider above (billed monthly after trial).
-                    </p>
-                  ) : null}
-                </>
-              )}
+              <p className="text-lg font-bold leading-snug text-kal-text">
+                {pro.monthlyPriceDisplay}/month
+              </p>
+              <p className="mt-1 text-xs font-medium leading-snug text-kal-text-secondary">
+                AutoPay for the duration you choose above. Cancel anytime.
+              </p>
             </div>
 
             <div className="mt-4 flex min-h-0 flex-1 flex-col">
@@ -620,7 +544,7 @@ export function PricingPageClient() {
             ) : null}
             <div className="mt-1 flex justify-center">
               <PaymentErrorMailButton
-                flow="Pricing — trial checkout"
+                flow="Pricing — checkout"
                 error={checkoutError.text}
                 userEmail={userEmail}
                 proof={checkoutError.proof}

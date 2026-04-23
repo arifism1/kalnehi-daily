@@ -1,5 +1,6 @@
 import { eachDayOfInterval, endOfMonth, format, startOfMonth } from "date-fns";
 
+import type { DailyPlanProgressMap } from "@/lib/effectiveDayCompletion";
 import {
   computeWeightedCompletionPercent,
   filterTasksForDate,
@@ -23,11 +24,20 @@ function bandForPercent(p: number | null): DayHeatCell["band"] {
   return "red";
 }
 
+/**
+ * Build a per-day heatmap for a calendar month.
+ *
+ * When `dailyPlanOverlay` is provided, each day prefers the unified
+ * daily-plan percent (from `daily_tasks`) over the weighted academic-task
+ * completion — matching the same priority rule used on the Home dashboard.
+ * Days without a daily-plan entry fall back to `tasks`-based calculation.
+ */
 export function buildMonthHeatmap(
   year: number,
   monthIndex0: number,
   allTasks: Task[],
   microtopicById: Record<string, Microtopic>,
+  dailyPlanOverlay?: DailyPlanProgressMap | null,
 ): DayHeatCell[] {
   const start = startOfMonth(new Date(year, monthIndex0, 1));
   const end = endOfMonth(start);
@@ -35,6 +45,18 @@ export function buildMonthHeatmap(
 
   return days.map((d) => {
     const date = format(d, "yyyy-MM-dd");
+
+    const planSnap = dailyPlanOverlay?.get(date);
+    if (planSnap && planSnap.totalCount > 0) {
+      return {
+        date,
+        weekday: d.getDay(),
+        weightedPercent: planSnap.percent,
+        band: bandForPercent(planSnap.percent),
+        taskCount: planSnap.totalCount,
+      };
+    }
+
     const dayTasks = filterTasksForDate(allTasks, date);
     const taskCount = dayTasks.length;
     const weightedPercent =

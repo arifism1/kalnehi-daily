@@ -1,5 +1,6 @@
 import { format, subDays } from "date-fns";
 
+import type { DailyPlanProgressMap } from "@/lib/effectiveDayCompletion";
 import {
   classifyDailyProgressBand,
   classifyProgressMessageWithScope,
@@ -22,12 +23,25 @@ export function buildSevenDayTrend(
   today: string,
   allTasks: Task[],
   microtopicById: Record<string, Microtopic>,
+  dailyPlanOverlay?: DailyPlanProgressMap | null,
 ): DayTrend[] {
   const out: DayTrend[] = [];
   const ref = new Date(today + "T12:00:00");
   for (let i = 6; i >= 0; i--) {
     const d = subDays(ref, i);
     const date = format(d, "yyyy-MM-dd");
+
+    const planSnap = dailyPlanOverlay?.get(date);
+    if (planSnap && planSnap.totalCount > 0) {
+      out.push({
+        date,
+        weightedPercent: planSnap.percent,
+        band: classifyDailyProgressBand(planSnap.percent, planSnap.totalCount),
+        taskCount: planSnap.totalCount,
+      });
+      continue;
+    }
+
     const dayTasks = filterTasksForDate(allTasks, date);
     const weightedPercent =
       dayTasks.length === 0
@@ -53,23 +67,25 @@ export function buildDailyEngineSnapshot(
   today: string,
   allTasks: Task[],
   microtopicById: Record<string, Microtopic>,
+  dailyPlanOverlay?: DailyPlanProgressMap | null,
 ): DailyEngineSnapshot {
   const realityTasks = filterTasksThroughDate(allTasks, today);
   const todayTasks = filterTasksForDate(allTasks, today);
-  const todayWeighted = computeWeightedCompletionPercent(
-    todayTasks,
-    microtopicById,
-  );
-  const todayBand = classifyDailyProgressBand(
-    todayWeighted,
-    todayTasks.length,
-  );
-  const progressMessage = classifyProgressMessageWithScope(
-    todayTasks,
-    todayWeighted,
-  );
 
-  const trend = buildSevenDayTrend(today, allTasks, microtopicById);
+  const planTodaySnap = dailyPlanOverlay?.get(today);
+  const todayWeighted =
+    planTodaySnap && planTodaySnap.totalCount > 0
+      ? planTodaySnap.percent
+      : computeWeightedCompletionPercent(todayTasks, microtopicById);
+  const todayCount =
+    planTodaySnap && planTodaySnap.totalCount > 0
+      ? planTodaySnap.totalCount
+      : todayTasks.length;
+
+  const todayBand = classifyDailyProgressBand(todayWeighted, todayCount);
+  const progressMessage = classifyProgressMessageWithScope(todayTasks, todayWeighted);
+
+  const trend = buildSevenDayTrend(today, allTasks, microtopicById, dailyPlanOverlay);
   const withData = trend.filter((t) => t.taskCount > 0);
   const sevenDayAvg =
     withData.length === 0

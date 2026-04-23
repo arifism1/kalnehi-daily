@@ -1,11 +1,13 @@
 "use client";
 
 import clsx from "clsx";
+import { format, parseISO, subDays } from "date-fns";
 import { CalendarDays } from "lucide-react";
 import { useId, useMemo } from "react";
 
 import { CircularProgressRing } from "@/components/ui/CircularProgressRing";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
+import { useDailyPlanExecutionForRange } from "@/hooks/useDailyPlanExecutionForRange";
 import { classifyDailyProgressBand } from "@/lib/progressEngine";
 import {
   buildDailyExecutionSeries,
@@ -27,24 +29,32 @@ export function DailyExecutionPanel() {
 
   const allTasks = useMemo(() => Object.values(tasksRecord), [tasksRecord]);
 
+  // Fetch unified daily-plan progress for the last 120 days (covers streak +
+  // 7-day bars + week-over-week comparison) so panels match the home dashboard.
+  const overlayStart = useMemo(
+    () => format(subDays(parseISO(today), 120), "yyyy-MM-dd"),
+    [today],
+  );
+  const dailyPlanOverlay = useDailyPlanExecutionForRange(overlayStart, today);
+
   const todaySnap = useMemo(
-    () => computeDayExecutionSnapshot(allTasks, microRecord, today),
-    [allTasks, microRecord, today],
+    () => computeDayExecutionSnapshot(allTasks, microRecord, today, dailyPlanOverlay),
+    [allTasks, microRecord, today, dailyPlanOverlay],
   );
 
   const series7 = useMemo(
-    () => buildDailyExecutionSeries(allTasks, microRecord, today, 7),
-    [allTasks, microRecord, today],
+    () => buildDailyExecutionSeries(allTasks, microRecord, today, 7, dailyPlanOverlay),
+    [allTasks, microRecord, today, dailyPlanOverlay],
   );
 
   const streak = useMemo(
-    () => computeExecutionStreak(allTasks, microRecord, today, 60),
-    [allTasks, microRecord, today],
+    () => computeExecutionStreak(allTasks, microRecord, today, 60, 120, dailyPlanOverlay),
+    [allTasks, microRecord, today, dailyPlanOverlay],
   );
 
   const wow = useMemo(
-    () => compareExecutionWeekOverWeek(allTasks, microRecord, today),
-    [allTasks, microRecord, today],
+    () => compareExecutionWeekOverWeek(allTasks, microRecord, today, dailyPlanOverlay),
+    [allTasks, microRecord, today, dailyPlanOverlay],
   );
 
   const band = classifyDailyProgressBand(

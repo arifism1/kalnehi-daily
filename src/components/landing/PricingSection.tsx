@@ -3,15 +3,16 @@ import { Check, ArrowRight } from "lucide-react";
 
 const PLANS = [
   {
-    name: "Basic",
+    name: "3-Day Free Trial",
     price: "₹0",
     duration: "3 days",
     highlight: false,
     features: [
+      "Every feature fully unlocked",
       "Daily planner + syllabus tracker",
-      "Focus timer + study camera",
-      "Streak + consistency heatmap",
-      "Doubt tracker",
+      "Marks engine + rank prediction",
+      "PrepBrain AI — 60,000 tokens",
+      "Voice control — 12 minutes",
     ],
     cta: "Start free — no card",
     ctaHref: "/auth",
@@ -24,14 +25,13 @@ const PLANS = [
     duration: "/month",
     highlight: true,
     features: [
-      "Everything in Basic",
+      "Everything in the free trial, every month",
       "Marks engine + rank prediction",
       "Spaced revision engine",
-      "PrepBrain AI coach",
-      "Voice control — 60 min/mo",
-      "20,00,000 AI tokens/month",
+      "PrepBrain AI — 20,00,000 tokens/month",
+      "Voice control — 100 hours/month",
     ],
-    cta: "Choose Smart Plan",
+    cta: "Subscribe — ₹499/month",
     ctaHref: "/pricing",
     ctaClass:
       "bg-kal-accent text-white shadow-[0_4px_16px_rgba(255,122,0,0.28)] hover:brightness-105",
@@ -53,9 +53,9 @@ export function PricingSection() {
             <span className="text-kal-accent">Toppers have a system.</span>
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-base text-kal-text-secondary">
-            Start free. Upgrade when the AI shows you what you&apos;ve been missing.
+            Start free for 3 days. Upgrade to Smart Plan to keep going.
           </p>
-          <p className="mt-2 text-sm text-kal-muted">Three plans. One direction.</p>
+          <p className="mt-2 text-sm text-kal-muted">Two simple options. One direction.</p>
         </div>
 
         {/* Plan cards */}
@@ -115,20 +115,6 @@ export function PricingSection() {
           ))}
         </div>
 
-        {/* Smart Trial callout */}
-        <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-kal-border bg-kal-card/60 px-5 py-4 text-center backdrop-blur-sm">
-          <p className="text-sm text-kal-text-secondary">
-            Not sure yet?{" "}
-            <Link
-              href="/auth"
-              className="font-semibold text-kal-accent underline-offset-2 hover:underline"
-            >
-              Smart Trial — ₹19 for 3 days
-            </Link>{" "}
-            gives you the full AI experience before committing monthly.
-          </p>
-        </div>
-
         {/* View full comparison link */}
         <div className="mt-8 flex justify-center">
           <Link
@@ -143,7 +129,7 @@ export function PricingSection() {
         {/* Trust signals */}
         <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
           {[
-            "No card for Basic",
+            "No card for free trial",
             "UPI & cards accepted",
             "Cancel anytime",
             "Works on Android, iOS, desktop",

@@ -64,7 +64,7 @@ const FEATURES: Feature[] = [
     bullets: [
       "Ask questions in the context of what you're actually preparing for, not generically.",
       "Answers connected to your syllabus coverage, so advice is specific, not generic.",
-      "Pro includes PrepBrain AI and monthly voice dictation (limits vary by welcome, paid trial, or monthly billing).",
+      "Smart Plan includes 2 million PrepBrain AI tokens and 100 hours of voice per month. 3-day free trial included with every new account.",
     ],
     illustration: <PrepBrainIllustration />,
   },

@@ -5,14 +5,14 @@ const FACTS = [
     detail: "Plan, track, revise, stay consistent — nothing left to juggle separately.",
   },
   {
-    value: "₹19",
-    label: "to try it for 2 days",
-    detail: "After a free day, a paid 2-day trial costs less than an autorickshaw ride.",
+    value: "3",
+    label: "days free, no card",
+    detail: "Every feature unlocked for 3 days. Your trial starts when you're ready.",
   },
   {
-    value: "₹299",
+    value: "₹499",
     label: "per month, full access",
-    detail: "No tier below this, no feature gates above it. Everything, always.",
+    detail: "2 million PrepBrain tokens and 100 hours of voice every month. Everything, always.",
   },
   {
     value: "27",
@@ -59,13 +59,12 @@ export function OutcomesBlock() {
         {/* AI quotas row */}
         <div className="mt-10 rounded-2xl border border-white/[0.06] bg-white/[0.03] p-6">
           <p className="mb-5 text-center text-[10px] font-bold uppercase tracking-widest text-white/30">
-            AI usage included in Pro
+            AI usage by plan
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
             {[
-              { label: "Free day", voice: "5 min", tokens: "300k tokens" },
-              { label: "₹19 trial", voice: "15 min", tokens: "500k tokens" },
-              { label: "₹299/month", voice: "60 min", tokens: "2M tokens" },
+              { label: "3-day free trial", voice: "12 min total", tokens: "60k tokens" },
+              { label: "Smart Plan (₹499/mo)", voice: "100 hrs/month", tokens: "2M tokens/month" },
             ].map(({ label, voice, tokens }) => (
               <div key={label} className="text-center">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-kal-accent/60">{label}</p>

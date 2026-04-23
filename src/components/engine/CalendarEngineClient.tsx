@@ -2,6 +2,7 @@
 
 import {
   addMonths,
+  endOfMonth,
   format,
   startOfMonth,
   subMonths,
@@ -9,6 +10,7 @@ import {
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { useDailyPlanExecutionForRange } from "@/hooks/useDailyPlanExecutionForRange";
 import { useRefreshTasksOnHomeFocus } from "@/hooks/useRefreshTasksOnHomeFocus";
 import {
   buildMonthHeatmap,
@@ -45,10 +47,21 @@ export function CalendarEngineClient() {
   const year = cursor.getFullYear();
   const monthIndex0 = cursor.getMonth();
 
+  const monthStart = useMemo(
+    () => format(startOfMonth(new Date(year, monthIndex0, 1)), "yyyy-MM-dd"),
+    [year, monthIndex0],
+  );
+  const monthEnd = useMemo(
+    () => format(endOfMonth(new Date(year, monthIndex0, 1)), "yyyy-MM-dd"),
+    [year, monthIndex0],
+  );
+
+  const dailyPlanOverlay = useDailyPlanExecutionForRange(monthStart, monthEnd);
+
   const cells = useMemo(() => {
     const tasks = Object.values(tasksRecord);
-    return buildMonthHeatmap(year, monthIndex0, tasks, microRecord);
-  }, [year, monthIndex0, tasksRecord, microRecord]);
+    return buildMonthHeatmap(year, monthIndex0, tasks, microRecord, dailyPlanOverlay);
+  }, [year, monthIndex0, tasksRecord, microRecord, dailyPlanOverlay]);
 
   const leadBlank = useMemo(() => {
     if (cells.length === 0) return 0;

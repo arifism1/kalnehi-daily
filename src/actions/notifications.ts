@@ -3,6 +3,10 @@
 import { format } from "date-fns";
 
 import { formatSupabaseError } from "@/lib/supabase";
+import {
+  resolveNotificationFeature,
+  type NotificationFeatureId,
+} from "@/lib/notificationFeatureTags";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { TablesInsert } from "@/types/supabase";
 
@@ -15,7 +19,11 @@ export type UserNotification = {
   kind: NotificationKind;
   created_at: string;
   read: boolean;
+  /** Product area: derived from title/kind, used for feature pills and filters. */
+  feature: NotificationFeatureId;
 };
+
+export type { NotificationFeatureId } from "@/lib/notificationFeatureTags";
 
 /** PostgREST: table not exposed or not created yet (run migration in Supabase). */
 function isUserNotificationsTableMissing(error: unknown): boolean {
@@ -259,12 +267,58 @@ export async function listUserNotifications(
       throw error;
     }
 
+    const rows = data ?? [];
     return {
       ok: true,
-      notifications: (data ?? []) as UserNotification[],
+      notifications: rows.map((row) => {
+        const r = row as {
+          id: string;
+          title: string;
+          message: string;
+          kind: string;
+          created_at: string;
+          read: boolean;
+        };
+        return {
+          ...r,
+          kind: r.kind as NotificationKind,
+          feature: resolveNotificationFeature(r.title, r.kind),
+        };
+      }),
     };
   } catch (e) {
     console.error("[listUserNotifications] failed", e);
+    return { ok: false, error: formatSupabaseError(e) };
+  }
+}
+
+export async function clearAllUserNotifications(): Promise<
+  { ok: true; deleted: number } | { ok: false; error: string }
+> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return { ok: false, error: "Not signed in." };
+    }
+
+    const { data, error } = await supabase
+      .from("user_notifications")
+      .delete()
+      .eq("user_id", user.id)
+      .select("id");
+    if (error) {
+      if (isUserNotificationsTableMissing(error)) {
+        return { ok: true, deleted: 0 };
+      }
+      throw error;
+    }
+    return { ok: true, deleted: (data ?? []).length };
+  } catch (e) {
+    console.error("[clearAllUserNotifications] failed", e);
     return { ok: false, error: formatSupabaseError(e) };
   }
 }

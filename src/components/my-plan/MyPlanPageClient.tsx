@@ -8,8 +8,6 @@ import { useCallback, useEffect, useState, useTransition } from "react";
 
 import {
   cancelSubscription,
-  createRazorpayTrialSubscription,
-  activateRazorpaySubscription,
   createRazorpayMonthlySubscription,
   activateRazorpayMonthlySubscription,
 } from "@/actions/subscription";
@@ -59,7 +57,7 @@ function formatDate(iso: string | null): string {
 function statusLabel(status: string | null): string {
   switch (status) {
     case "trial":
-      return "Trial (2-day)";
+      return "Smart Plan (Trial)";
     case "active":
       return "Active";
     case "expired":
@@ -197,7 +195,6 @@ export function MyPlanPageClient() {
     loading,
     status,
     hasPaidAccess,
-    hasHadTrial,
     tier,
     plan,
     startDate,
@@ -311,9 +308,7 @@ export function MyPlanPageClient() {
     setResubBusy(true);
     setResubError(null);
     try {
-      const created = hasHadTrial
-        ? await createRazorpayMonthlySubscription("pro", autopayMonths)
-        : await createRazorpayTrialSubscription("pro", autopayMonths);
+      const created = await createRazorpayMonthlySubscription("pro", autopayMonths);
       if (!created.ok) {
         setResubError(surfaceErrorForUi(created.error));
         return;
@@ -323,9 +318,7 @@ export function MyPlanPageClient() {
         return;
       }
       const tc = TIERS.pro;
-      const description = hasHadTrial
-        ? `${tc.name} (${tc.monthlyPriceDisplay}/mo) · AutoPay up to ${autopayMonths} monthly charge${autopayMonths === 1 ? "" : "s"}`
-        : `${tc.name} 2-day trial (${tc.trialPriceDisplay}) · then ${tc.monthlyPriceDisplay}/mo · AutoPay up to ${autopayMonths} monthly charge${autopayMonths === 1 ? "" : "s"}`;
+      const description = `${tc.name} (${tc.monthlyPriceDisplay}/mo) · AutoPay up to ${autopayMonths} monthly charge${autopayMonths === 1 ? "" : "s"}`;
       const rzp = new window.Razorpay({
         key: created.keyId,
         name: SITE_NAME,
@@ -339,14 +332,12 @@ export function MyPlanPageClient() {
           ? { readonly: { email: true, contact: true } }
           : { readonly: { email: true } }),
         handler: async (response: RazorpayCheckoutResponse) => {
-          const updated = hasHadTrial
-            ? await activateRazorpayMonthlySubscription({ ...response })
-            : await activateRazorpaySubscription({ ...response });
+          const updated = await activateRazorpayMonthlySubscription({ ...response });
           if (!updated.ok) {
             setResubError(surfaceErrorForUi(updated.error));
             return;
           }
-          window.location.assign("/");
+          window.location.assign("/home");
         },
       });
       rzp.open();
@@ -355,7 +346,7 @@ export function MyPlanPageClient() {
     } finally {
       setResubBusy(false);
     }
-  }, [autopayMonths, hasHadTrial]);
+  }, [autopayMonths]);
 
   function handleCancel() {
     setConfirmOpen(false);
@@ -402,11 +393,9 @@ export function MyPlanPageClient() {
     rows.push({
       label: "Billing",
       value:
-        plan === "monthly"
+          plan === "monthly" || plan === "trial"
           ? `${tierConfig.monthlyPriceDisplay}/month · cancel anytime`
-          : plan === "trial"
-            ? `${tierConfig.trialPriceDisplay} Trial`
-            : (plan ?? "—"),
+          : (plan ?? "—"),
     });
   }
 
@@ -459,7 +448,7 @@ export function MyPlanPageClient() {
         void getAiStudyPartnerBalance().then(setAiPartnerBalance).catch(() => null);
       }}
     />
-    {(isCancelledWithAccess || welcomeTrialExpiredNoPay) && (
+    {(isCancelledWithAccess || welcomeTrialExpiredNoPay || onWelcomeTrial) && (
       <Script
         src="https://checkout.razorpay.com/v1/checkout.js"
         strategy="afterInteractive"
@@ -495,7 +484,7 @@ export function MyPlanPageClient() {
             <div className="kal-glass-panel overflow-hidden rounded-2xl border border-kal-accent/35 bg-gradient-to-br from-kal-accent/10 to-kal-card-muted shadow-md dark:border-kal-accent/25">
               <div className="border-b border-kal-border px-5 py-3 sm:px-6">
                 <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
-                  1-day welcome trial
+                  3-day free trial
                 </p>
                 <p className="mt-1 text-sm font-medium text-kal-text">
                   {formatWelcomeVoiceTimeLeft(freeTrialVoiceSecondsRemaining)} of welcome voice time
@@ -506,9 +495,7 @@ export function MyPlanPageClient() {
                   </p>
                 ) : null}
                 <p className="mt-1 text-xs text-kal-text-secondary">
-                  Voice and PrepBrain limits do not roll over — use them within this window. After it
-                  ends, start a 2-day paid trial for {TIERS.pro.trialPriceDisplay}, then{" "}
-                  {TIERS.pro.monthlyPriceDisplay}/month for full Pro access.
+                  Voice (12 min) and PrepBrain tokens (60,000) are for the entire 3-day trial — use them within this window. After the trial ends, subscribe to Smart Plan ({TIERS.pro.monthlyPriceDisplay}/month) for 100 hours of voice and 2 million tokens every month.
                 </p>
               </div>
               <UsageBar
@@ -528,13 +515,60 @@ export function MyPlanPageClient() {
             </div>
           ) : null}
 
+          {onWelcomeTrial && !hasPaidAccess ? (
+            <div className="kal-glass-panel rounded-2xl border border-kal-accent/30 bg-kal-accent-soft/40 px-5 py-5 dark:bg-kal-accent/10">
+              <h3 className="text-base font-bold text-kal-text">Upgrade to Smart Plan</h3>
+              <p className="mt-2 text-sm text-kal-text-secondary">
+                You&apos;re on your 3-day free trial. Subscribe now to keep full access after your trial —{" "}
+                <span className="font-semibold text-kal-text">{TIERS.pro.monthlyPriceDisplay}/month</span>{" "}
+                for 2 million PrepBrain tokens and 100 hours of voice per month.
+              </p>
+              <div className="mt-3 space-y-2">
+                <p className="text-xs font-medium text-kal-text-secondary">AutoPay months:</p>
+                <div className="flex flex-wrap gap-2">
+                  {([1, 3, 6, 12] as const).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setAutopayMonths(m)}
+                      className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                        autopayMonths === m
+                          ? "bg-kal-accent text-white"
+                          : "border border-kal-border bg-kal-card text-kal-text-secondary hover:border-kal-accent/40"
+                      }`}
+                    >
+                      {m} {m === 1 ? "month" : "months"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => void startResubscribe()}
+                disabled={resubBusy}
+                className="kal-btn-accent mt-4 min-h-[44px] w-full sm:w-auto"
+              >
+                {resubBusy ? (
+                  <Loader2 className="mx-auto h-5 w-5 animate-spin" />
+                ) : (
+                  `Subscribe — ${TIERS.pro.monthlyPriceDisplay}/month`
+                )}
+              </button>
+              {resubError ? (
+                <p className="mt-3 text-sm text-[var(--kal-danger-text)]" role="status">
+                  {resubError}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+
           {welcomeTrialExpiredNoPay && !hasPaidAccess ? (
             <div className="kal-glass-panel rounded-2xl border border-kal-accent/30 bg-kal-accent-soft/40 px-5 py-5 dark:bg-kal-accent/10">
-              <h3 className="text-base font-bold text-kal-text">Free trial ended</h3>
+              <h3 className="text-base font-bold text-kal-text">Your 3-day trial has ended</h3>
               <p className="mt-2 text-sm text-kal-text-secondary">
-                Your 1-day welcome access is over. Unlock a 2-day paid trial for{" "}
-                <span className="font-semibold text-kal-text">{TIERS.pro.trialPriceDisplay}</span> — then{" "}
-                {TIERS.pro.monthlyPriceDisplay}/month. Cancel anytime.
+                Subscribe to Smart Plan to continue —{" "}
+                <span className="font-semibold text-kal-text">{TIERS.pro.monthlyPriceDisplay}/month</span>{" "}
+                for 2 million PrepBrain tokens and 100 hours of voice per month. Cancel anytime.
               </p>
               <button
                 type="button"
@@ -545,7 +579,7 @@ export function MyPlanPageClient() {
                 {resubBusy ? (
                   <Loader2 className="mx-auto h-5 w-5 animate-spin" />
                 ) : (
-                  "Start 2-day paid trial"
+                  `Subscribe — ${TIERS.pro.monthlyPriceDisplay}/month`
                 )}
               </button>
               {resubError ? (
@@ -575,7 +609,7 @@ export function MyPlanPageClient() {
                 </h2>
                 <p className="mt-1 text-sm text-kal-text-secondary">
                   {onWelcomeTrial
-                    ? "You're on a one-time 1-day preview with limited voice and PrepBrain AI. Subscribe anytime for full access."
+                    ? "You're on your 3-day free trial with 60,000 PrepBrain tokens and 12 minutes of voice. Subscribe to Smart Plan anytime for the full monthly quota."
                     : noActivePlan
                       ? `Choose a plan to unlock ${SITE_NAME}.`
                       : tierConfig.tagline}
@@ -588,10 +622,7 @@ export function MyPlanPageClient() {
                       {statusLabel(status)}
                     </span>
                     <span className="text-sm font-semibold text-kal-text">
-                      {plan === "trial"
-                        ? `${tierConfig.trialPriceDisplay} trial`
-                        : tierConfig.monthlyPriceDisplay}
-                      {plan !== "trial" ? "/month" : ""}
+                      {tierConfig.monthlyPriceDisplay}/month
                     </span>
                   </div>
                 ) : null}
@@ -635,7 +666,7 @@ export function MyPlanPageClient() {
               <div className="border-t border-kal-border">
                 <div className="border-b border-kal-border px-4 py-3">
                   <h3 className="text-xs font-semibold uppercase tracking-widest text-kal-muted">
-                    AI usage {status === "trial" ? "(paid trial)" : "(monthly)"}
+                    AI usage {status === "trial" ? "(Smart Plan trial)" : "(monthly)"}
                   </h3>
                 </div>
 
@@ -660,15 +691,10 @@ export function MyPlanPageClient() {
                   formatAsVoiceTime
                 />
                 {prepbrainUsage &&
-                (prepbrainUsage.phase === "paid_trial" ||
-                  prepbrainUsage.phase === "monthly") ? (
+                prepbrainUsage.phase === "monthly" ? (
                   <TokenUsageBar
                     icon={<Brain className="h-4 w-4" />}
-                    label={
-                      prepbrainUsage.phase === "paid_trial"
-                        ? "PrepBrain tokens (paid trial)"
-                        : "PrepBrain tokens (this month)"
-                    }
+                    label="PrepBrain tokens (this month)"
                     used={prepbrainUsage.used}
                     limit={prepbrainUsage.limit}
                   />
@@ -769,10 +795,7 @@ export function MyPlanPageClient() {
                     ) : (
                       <>
                         <RefreshCw className="h-4 w-4" />
-                        Resubscribe to {tierConfig.name} —{" "}
-                        {hasHadTrial
-                          ? `${TIERS.pro.monthlyPriceDisplay}/month`
-                          : `${TIERS.pro.trialPriceDisplay} trial`}
+                        Resubscribe to {tierConfig.name} — {TIERS.pro.monthlyPriceDisplay}/month
                       </>
                     )}
                   </button>

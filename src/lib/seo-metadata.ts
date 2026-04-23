@@ -69,9 +69,9 @@ const PAGE_SEO: Record<
   },
   pricing: {
     path: "/pricing",
-    title: `Pricing — Basic, Smart Trial & Smart Plan | ${SITE_NAME}`,
+    title: `Pricing — 3-Day Free Trial & Smart Plan | ${SITE_NAME}`,
     description:
-      `Three plans for serious exam prep. Start free for 7 days on Basic, try AI-powered Smart Trial for ₹19, or unlock everything with Smart Plan at ₹499/month. PrepBrain AI, voice control, marks engine, and rank prediction.`,
+      `Start with a 3-day free trial — every feature, no card required. Then ₹499/month with Smart Plan: 2 million PrepBrain AI tokens, 100 hours voice, marks engine, and rank prediction.`,
   },
   about: {
     path: "/about",

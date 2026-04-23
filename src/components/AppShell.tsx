@@ -139,7 +139,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
     if (pathname === "/onboarding") return "home";
 
-    if (pathname === "/pricing" && welcomeTrialEligibleUnstarted) return "render";
+    // Allow /pricing for users who can start a trial OR are already in one —
+    // they need to reach the checkout section to subscribe.
+    if (pathname === "/pricing" && (welcomeTrialEligibleUnstarted || freeTrialActive)) return "render";
 
     if (isPublicMarketingPath(pathname)) return "home";
 
@@ -153,6 +155,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     allowAppWithoutPaid,
     pathname,
     welcomeTrialEligibleUnstarted,
+    freeTrialActive,
   ]);
 
   useEffect(() => {

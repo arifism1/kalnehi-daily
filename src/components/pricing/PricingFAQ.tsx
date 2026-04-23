@@ -5,24 +5,32 @@ import { ChevronDown } from "lucide-react";
 
 const FAQS = [
   {
-    q: "What stops working on Day 4 of Basic?",
-    a: "The marks engine, rank prediction, spaced revision engine, daily log, prep insights, PrepBrain AI coach, and voice control all pause. Your daily planner, syllabus tracker, focus timer, streak heatmap, and doubt tracker remain fully accessible. Your data, streaks, and all progress are preserved exactly as you left them — nothing is deleted.",
+    q: "What is included in the 3-day free trial?",
+    a: "Everything. Your free trial unlocks the full Kalnehi Daily system — Daily planner, Syllabus tracker, Focus timer, Study camera, Streak heatmap, Doubt tracker, Marks engine, Rank prediction, Spaced revision engine, Daily log, and PrepBrain AI coach. You also get 60,000 PrepBrain AI tokens and 12 minutes of voice control for those 3 days.",
   },
   {
-    q: "What does PrepBrain actually do?",
-    a: "PrepBrain is your personalized AI prep coach, built around your prep — not a generic chatbot. Ask it to explain a concept in depth, quiz you on any topic, identify your weakest areas from your marks data, or suggest exactly what to revise today. It knows your syllabus, your progress, and your patterns. The more you use it, the sharper the guidance gets.",
+    q: "What happens after the 3-day free trial ends?",
+    a: "After your 3-day trial, you'll need to subscribe to Smart Plan (₹499/month) to keep using Kalnehi Daily. Your data, streaks, and all progress are preserved exactly as you left them — nothing is deleted. You can subscribe anytime from the pricing page or your subscription settings.",
+  },
+  {
+    q: "Is a credit card required to start the trial?",
+    a: "No. Your 3-day free trial requires no card at all. Just sign up, complete onboarding, and start your trial from the pricing page.",
+  },
+  {
+    q: "Can I upgrade to Smart Plan during the free trial?",
+    a: "Yes, absolutely. You can subscribe to Smart Plan at any point during your trial — or even before it starts. Your remaining trial time transitions immediately to your Smart Plan subscription.",
+  },
+  {
+    q: "What does PrepBrain AI actually do?",
+    a: "PrepBrain is your personalized AI prep coach built around your prep — not a generic chatbot. Ask it to explain a concept in depth, quiz you on any topic, identify your weakest areas from your marks data, or suggest exactly what to revise today. It knows your syllabus, your progress, and your patterns. Smart Plan gives you 2 million tokens per month.",
   },
   {
     q: "What can I do with voice control?",
-    a: "Speak to plan your day, log doubts, set reminders, and navigate the app — completely hands-free. Basic plan includes no voice time. Smart Trial gives you 15 minutes for the 3-day window. Smart Plan gives you 60 minutes every month, resetting each cycle. Extra voice minutes are available as add-ons from your subscription settings.",
-  },
-  {
-    q: "Can I go from Basic straight to Smart Plan?",
-    a: "Yes, absolutely. You don't need to take the Smart Trial first. At any point during your 3-day Basic window — or even after it ends — you can subscribe directly to Smart Plan at ₹499/month. The Smart Trial is an option for students who want a short AI-powered preview before committing monthly. It is not a required step.",
+    a: "Speak to plan your day, log doubts, set reminders, and navigate the app — completely hands-free. Your 3-day free trial includes 12 minutes of voice time. Smart Plan gives you 100 hours of voice every month, resetting each billing cycle.",
   },
   {
     q: "Is there a discount for longer autopay?",
-    a: "The price stays ₹499/month regardless of how many months you authorise. What changes is the control you set upfront — you decide how many monthly charges the autopay mandate can take (from 1 to 12). The mandate stops automatically after that count is reached. You can also cancel earlier anytime from settings.",
+    a: "The price stays ₹499/month regardless of how many months you authorise. What changes is the control you set upfront — you decide how many monthly charges the autopay mandate can take (from 1 to 12). The mandate stops automatically after that count is reached. You can also cancel anytime from settings.",
   },
 ] as const;
 

@@ -1,29 +1,28 @@
 import Link from "next/link";
 import { Check, Minus } from "lucide-react";
 
-import { AutopaySlider } from "./AutopaySlider";
 import { PathFlowchart } from "./PathFlowchart";
 import { PricingFAQ } from "./PricingFAQ";
+import { PricingPageClient } from "./PricingPageClient";
 import { PricingTableMobile } from "./PricingTableMobile";
 
 /* ─────────────────────────────── Data ─────────────────────────────── */
 
 type FeatureValue = boolean | string | null;
 
-const FEATURES: { name: string; basic: FeatureValue; trial: FeatureValue; smart: FeatureValue }[] =
-  [
-    { name: "Daily planner", basic: true, trial: true, smart: true },
-    { name: "Syllabus tracker", basic: true, trial: true, smart: true },
-    { name: "Focus timer + study camera", basic: true, trial: true, smart: true },
-    { name: "Streak + consistency heatmap", basic: true, trial: true, smart: true },
-    { name: "Doubt tracker", basic: true, trial: true, smart: true },
-    { name: "Marks engine + rank prediction", basic: false, trial: true, smart: true },
-    { name: "Spaced revision engine", basic: false, trial: true, smart: true },
-    { name: "Daily log & prep insights", basic: false, trial: true, smart: true },
-    { name: "PrepBrain AI coach", basic: false, trial: true, smart: true },
-    { name: "Voice control", basic: null, trial: "15 min", smart: "60 min" },
-    { name: "PrepBrain tokens", basic: null, trial: "5,00,000", smart: "20,00,000/mo" },
-  ];
+const FEATURES: { name: string; trial: FeatureValue; smart: FeatureValue }[] = [
+  { name: "Daily planner", trial: true, smart: true },
+  { name: "Syllabus tracker", trial: true, smart: true },
+  { name: "Focus timer + study camera", trial: true, smart: true },
+  { name: "Streak + consistency heatmap", trial: true, smart: true },
+  { name: "Doubt tracker", trial: true, smart: true },
+  { name: "Marks engine + rank prediction", trial: true, smart: true },
+  { name: "Spaced revision engine", trial: true, smart: true },
+  { name: "Daily log & prep insights", trial: true, smart: true },
+  { name: "PrepBrain AI coach", trial: true, smart: true },
+  { name: "Voice control", trial: "12 min total", smart: "100 hrs/month" },
+  { name: "PrepBrain tokens", trial: "60,000 total", smart: "20,00,000/month" },
+];
 
 /* ─────────────────────────────── Helpers ───────────────────────────── */
 
@@ -56,7 +55,6 @@ function FeatureCell({ value }: { value: FeatureValue }) {
 function HeroSection() {
   return (
     <section className="relative overflow-hidden pb-16 pt-12 sm:pb-20 sm:pt-16 lg:pb-24 lg:pt-20">
-      {/* Background atmosphere */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
@@ -67,7 +65,6 @@ function HeroSection() {
       />
 
       <div className="relative mx-auto max-w-4xl px-6 text-center">
-        {/* Eyebrow */}
         <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-kal-accent/30 bg-kal-accent-soft px-4 py-2">
           <span className="h-2 w-2 animate-pulse rounded-full bg-kal-accent" aria-hidden />
           <span className="text-xs font-bold uppercase tracking-widest text-kal-accent-dark dark:text-kal-accent">
@@ -75,44 +72,42 @@ function HeroSection() {
           </span>
         </div>
 
-        {/* Main headline */}
         <h1
           className="text-4xl font-normal leading-[1.1] tracking-tight text-kal-text sm:text-5xl lg:text-6xl"
           style={{ fontFamily: "var(--font-display)" }}
         >
-          Most students plan.
+          Every feature. Free.
           <br />
-          <span className="text-kal-accent">Toppers have a system.</span>
+          <span className="text-kal-accent">For 3 days.</span>
         </h1>
 
-        {/* Sub-headline */}
         <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-kal-text-secondary sm:text-xl">
-          Start free. Upgrade when the AI shows you what you&apos;ve been missing.
+          Start your free trial — no card required. Get full access to every tool including
+          PrepBrain AI, Marks Engine, Voice, and more.
         </p>
 
-        {/* Tagline */}
-        <p className="mt-3 text-sm font-medium text-kal-muted">Three plans. One direction.</p>
+        <p className="mt-3 text-sm font-medium text-kal-muted">
+          3-day trial then ₹499/month. Simple.
+        </p>
 
-        {/* CTAs */}
         <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <Link
             href="/auth"
             className="inline-flex min-h-[52px] w-full items-center justify-center rounded-full bg-kal-accent px-8 text-base font-bold text-white shadow-[0_4px_16px_rgba(255,122,0,0.32)] transition hover:brightness-105 active:scale-[0.98] sm:w-auto"
           >
-            Start 3-Day Free Basic Plan
+            Start 3-Day Free Trial
           </Link>
           <a
             href="#pricing-table"
             className="inline-flex min-h-[52px] w-full items-center justify-center rounded-full border border-kal-border bg-kal-card/70 px-8 text-base font-semibold text-kal-text backdrop-blur-sm transition hover:border-kal-accent/40 hover:text-kal-accent sm:w-auto"
           >
-            See all plans ↓
+            See what's included ↓
           </a>
         </div>
 
-        {/* Trust signals */}
         <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
           {[
-            "No card for Basic",
+            "No credit card required",
             "UPI & cards accepted",
             "Cancel anytime",
             "Works on Android, iOS, desktop",
@@ -131,16 +126,15 @@ function HeroSection() {
 function PricingTableSection() {
   return (
     <section id="pricing-table" className="py-16 sm:py-20">
-      <div className="mx-auto max-w-5xl px-4 sm:px-6">
-        {/* Section header */}
+      <div className="mx-auto max-w-4xl px-4 sm:px-6">
         <div className="mb-10 text-center">
           <h2
             className="text-2xl font-normal tracking-tight text-kal-text sm:text-3xl"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            Compare plans
+            What you get
           </h2>
-          <p className="mt-2 text-sm text-kal-muted">Pick what fits now. Switch anytime.</p>
+          <p className="mt-2 text-sm text-kal-muted">Everything unlocked during your trial. Keep it all with Smart Plan.</p>
         </div>
 
         {/* Mobile: tab switcher (hidden on md+) */}
@@ -150,142 +144,103 @@ function PricingTableSection() {
 
         {/* Desktop: full comparison table (hidden below md) */}
         <div className="hidden md:block">
-        {/* Table wrapper */}
-        <div className="overflow-x-auto rounded-2xl border border-kal-border shadow-[var(--kal-shadow-card)]">
-          <table className="w-full min-w-[560px] border-collapse">
-            {/* ── Plan header row ── */}
-            <thead>
-              <tr>
-                {/* Feature label column */}
-                <th className="w-[38%] bg-kal-card/80 px-4 py-5 text-left sm:px-6">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-kal-muted">
-                    Feature
-                  </span>
-                </th>
+          <div className="overflow-x-auto rounded-2xl border border-kal-border shadow-[var(--kal-shadow-card)]">
+            <table className="w-full min-w-[480px] border-collapse">
+              <thead>
+                <tr>
+                  <th className="w-[44%] bg-kal-card/80 px-4 py-5 text-left sm:px-6">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-kal-muted">
+                      Feature
+                    </span>
+                  </th>
 
-                {/* Basic */}
-                <th className="w-[20%] bg-kal-card/80 px-3 py-5 text-center align-top">
-                  <p className="text-xs font-bold uppercase tracking-wider text-kal-text-secondary">
-                    Basic
-                  </p>
-                  <p
-                    className="mt-1 text-2xl font-normal text-kal-text"
-                    style={{ fontFamily: "var(--font-display)" }}
-                  >
-                    ₹0
-                  </p>
-                  <p className="text-xs text-kal-muted">3 days</p>
-                  <Link
-                    href="/auth"
-                    className="mt-3 inline-flex min-h-[36px] items-center justify-center rounded-full border border-kal-border bg-kal-card px-3 text-xs font-semibold text-kal-text transition hover:border-kal-accent/40 hover:text-kal-accent"
-                  >
-                    Start free
-                  </Link>
-                </th>
-
-                {/* Smart Trial */}
-                <th className="w-[20%] bg-kal-card/80 px-3 py-5 text-center align-top">
-                  <p className="text-xs font-bold uppercase tracking-wider text-kal-text-secondary">
-                    Smart Trial
-                  </p>
-                  <p
-                    className="mt-1 text-2xl font-normal text-kal-text"
-                    style={{ fontFamily: "var(--font-display)" }}
-                  >
-                    ₹19
-                  </p>
-                  <p className="text-xs text-kal-muted">3 days</p>
-                  <Link
-                    href="/auth"
-                    className="mt-3 inline-flex min-h-[36px] items-center justify-center rounded-full border border-kal-border bg-kal-card px-3 text-xs font-semibold text-kal-text transition hover:border-kal-accent/40 hover:text-kal-accent"
-                  >
-                    Start trial
-                  </Link>
-                </th>
-
-                {/* Smart Plan — highlighted */}
-                <th className="w-[22%] bg-gradient-to-b from-kal-accent/10 to-kal-card/90 px-3 py-5 text-center align-top ring-2 ring-inset ring-kal-accent/50">
-                  <span className="inline-block rounded-full bg-kal-accent px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
-                    Most popular
-                  </span>
-                  <p className="mt-2 text-xs font-bold uppercase tracking-wider text-kal-accent">
-                    Smart Plan
-                  </p>
-                  <div className="mt-1 flex items-baseline justify-center gap-0.5">
+                  {/* 3-Day Free Trial */}
+                  <th className="w-[28%] bg-kal-card/80 px-3 py-5 text-center align-top">
+                    <p className="text-xs font-bold uppercase tracking-wider text-kal-text-secondary">
+                      3-Day Free Trial
+                    </p>
                     <p
-                      className="text-2xl font-normal text-kal-text"
+                      className="mt-1 text-2xl font-normal text-kal-text"
                       style={{ fontFamily: "var(--font-display)" }}
                     >
-                      ₹499
+                      ₹0
                     </p>
-                    <span className="text-xs text-kal-muted">/mo</span>
-                  </div>
-                  <Link
-                    href="/pricing"
-                    className="mt-3 inline-flex min-h-[36px] items-center justify-center rounded-full bg-kal-accent px-4 text-xs font-bold text-white shadow-[0_4px_12px_rgba(255,122,0,0.3)] transition hover:brightness-105"
-                  >
-                    Choose plan
-                  </Link>
-                </th>
-              </tr>
-            </thead>
+                    <p className="text-xs text-kal-muted">No card needed</p>
+                    <Link
+                      href="/auth"
+                      className="mt-3 inline-flex min-h-[36px] items-center justify-center rounded-full border border-kal-border bg-kal-card px-3 text-xs font-semibold text-kal-text transition hover:border-kal-accent/40 hover:text-kal-accent"
+                    >
+                      Start free trial
+                    </Link>
+                  </th>
 
-            {/* ── Feature rows ── */}
-            <tbody>
-              {FEATURES.map(({ name, basic, trial, smart }, i) => (
-                <tr
-                  key={name}
-                  className={i % 2 === 0 ? "bg-kal-card/30" : "bg-transparent"}
-                >
-                  <td className="px-4 py-3.5 text-sm font-medium text-kal-text-secondary sm:px-6">
-                    {name}
+                  {/* Smart Plan — highlighted */}
+                  <th className="w-[28%] bg-gradient-to-b from-kal-accent/10 to-kal-card/90 px-3 py-5 text-center align-top ring-2 ring-inset ring-kal-accent/50">
+                    <span className="inline-block rounded-full bg-kal-accent px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+                      Smart Plan
+                    </span>
+                    <div className="mt-2 flex items-baseline justify-center gap-0.5">
+                      <p
+                        className="text-2xl font-normal text-kal-text"
+                        style={{ fontFamily: "var(--font-display)" }}
+                      >
+                        ₹499
+                      </p>
+                      <span className="text-xs text-kal-muted">/mo</span>
+                    </div>
+                    <Link
+                      href="#subscribe"
+                      className="mt-3 inline-flex min-h-[36px] items-center justify-center rounded-full bg-kal-accent px-4 text-xs font-bold text-white shadow-[0_4px_12px_rgba(255,122,0,0.3)] transition hover:brightness-105"
+                    >
+                      Subscribe
+                    </Link>
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {FEATURES.map(({ name, trial, smart }, i) => (
+                  <tr
+                    key={name}
+                    className={i % 2 === 0 ? "bg-kal-card/30" : "bg-transparent"}
+                  >
+                    <td className="px-4 py-3.5 text-sm font-medium text-kal-text-secondary sm:px-6">
+                      {name}
+                    </td>
+                    <td className="px-3 py-3.5">
+                      <FeatureCell value={trial} />
+                    </td>
+                    <td className="bg-kal-accent/[0.04] px-3 py-3.5 ring-2 ring-inset ring-kal-accent/30">
+                      <FeatureCell value={smart} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+
+              <tfoot>
+                <tr className="border-t border-kal-border">
+                  <td className="px-4 py-4 sm:px-6" />
+                  <td className="px-3 py-4 text-center">
+                    <Link
+                      href="/auth"
+                      className="inline-flex min-h-[40px] items-center justify-center rounded-full border border-kal-border px-4 text-sm font-semibold text-kal-text-secondary transition hover:border-kal-accent/40 hover:text-kal-accent"
+                    >
+                      Start Free Trial
+                    </Link>
                   </td>
-                  <td className="px-3 py-3.5">
-                    <FeatureCell value={basic} />
-                  </td>
-                  <td className="px-3 py-3.5">
-                    <FeatureCell value={trial} />
-                  </td>
-                  <td className="bg-kal-accent/[0.04] px-3 py-3.5 ring-2 ring-inset ring-kal-accent/30">
-                    <FeatureCell value={smart} />
+                  <td className="bg-kal-accent/[0.04] px-3 py-4 text-center ring-2 ring-inset ring-kal-accent/30">
+                    <Link
+                      href="#subscribe"
+                      className="inline-flex min-h-[40px] items-center justify-center rounded-full bg-kal-accent px-5 text-sm font-bold text-white shadow-[0_4px_16px_rgba(255,122,0,0.28)] transition hover:brightness-105"
+                    >
+                      Subscribe — ₹499/mo
+                    </Link>
                   </td>
                 </tr>
-              ))}
-            </tbody>
-
-            {/* ── CTA footer row ── */}
-            <tfoot>
-              <tr className="border-t border-kal-border">
-                <td className="px-4 py-4 sm:px-6" />
-                <td className="px-3 py-4 text-center">
-                  <Link
-                    href="/auth"
-                    className="inline-flex min-h-[40px] items-center justify-center rounded-full border border-kal-border px-4 text-sm font-semibold text-kal-text-secondary transition hover:border-kal-accent/40 hover:text-kal-accent"
-                  >
-                    Start Free
-                  </Link>
-                </td>
-                <td className="px-3 py-4 text-center">
-                  <Link
-                    href="/auth"
-                    className="inline-flex min-h-[40px] items-center justify-center rounded-full border border-kal-border px-4 text-sm font-semibold text-kal-text-secondary transition hover:border-kal-accent/40 hover:text-kal-accent"
-                  >
-                    Start Trial
-                  </Link>
-                </td>
-                <td className="bg-kal-accent/[0.04] px-3 py-4 text-center ring-2 ring-inset ring-kal-accent/30">
-                  <Link
-                    href="/pricing"
-                    className="inline-flex min-h-[40px] items-center justify-center rounded-full bg-kal-accent px-5 text-sm font-bold text-white shadow-[0_4px_16px_rgba(255,122,0,0.28)] transition hover:brightness-105"
-                  >
-                    Choose Smart Plan
-                  </Link>
-                </td>
-              </tr>
-            </tfoot>
-          </table>
+              </tfoot>
+            </table>
+          </div>
         </div>
-        </div>{/* end hidden md:block */}
       </div>
     </section>
   );
@@ -297,7 +252,6 @@ function PlanCardsSection() {
     price: string;
     duration: string;
     tag: string | null;
-    tagColor: string;
     borderClass: string;
     badgeBg: string;
     badgeText: string;
@@ -308,51 +262,29 @@ function PlanCardsSection() {
     bullets: string[];
   }[] = [
     {
-      name: "Basic",
+      name: "3-Day Free Trial",
       price: "₹0",
       duration: "3 days",
-      tag: null,
-      tagColor: "",
+      tag: "Start here",
       borderClass: "border-kal-border",
       badgeBg: "bg-kal-card-muted",
       badgeText: "text-kal-muted",
-      cta: "Start 3-Day Free Basic Plan",
+      cta: "Start Free Trial",
       ctaHref: "/auth",
       ctaClass:
         "border border-kal-border bg-kal-card text-kal-text hover:border-kal-accent/40 hover:text-kal-accent",
-      intro: "For students who want to build the habit before spending anything.",
+      intro: "Everything unlocked for 3 days. No credit card. No commitments.",
       bullets: [
         "Daily planner + syllabus tracker",
         "Focus timer + study camera",
         "Streak + consistency heatmap",
         "Doubt tracker",
-        "3 days · No card · No pressure",
-        "After Day 3: AI tools pause — marks engine, rank prediction, spaced revision, daily log, PrepBrain AI, voice control",
-        "Streaks don't reset. Data doesn't disappear. Everything waits.",
-      ],
-    },
-    {
-      name: "Smart Trial",
-      price: "₹19",
-      duration: "3 days",
-      tag: "See everything",
-      tagColor: "text-kal-accent-dark dark:text-kal-accent",
-      borderClass: "border-kal-accent/40",
-      badgeBg: "bg-kal-accent-soft",
-      badgeText: "text-kal-accent-dark dark:text-kal-accent",
-      cta: "Start Smart Trial for ₹19",
-      ctaHref: "/auth",
-      ctaClass:
-        "border border-kal-accent/40 bg-kal-card text-kal-text hover:bg-kal-accent hover:text-white",
-      intro: "For students who want proof before committing monthly.",
-      bullets: [
         "Marks engine + rank prediction",
-        "Spaced revision engine + daily prep insights",
+        "Spaced revision engine + daily log",
         "PrepBrain AI coach",
-        "Voice control — 15 min · 5 lakh tokens",
-        "₹19 is one-time, not recurring",
-        "Upgrade after → continues seamlessly",
-        "Don't upgrade → falls back to Basic access",
+        "Voice control — 12 minutes total",
+        "PrepBrain AI tokens — 60,000 total",
+        "After Day 3: subscribe to Smart Plan to continue",
       ],
     },
     {
@@ -360,23 +292,21 @@ function PlanCardsSection() {
       price: "₹499",
       duration: "per month",
       tag: "Most popular",
-      tagColor: "text-white",
       borderClass: "border-kal-accent/60",
       badgeBg: "bg-kal-accent",
       badgeText: "text-white",
-      cta: "Choose Smart Plan",
-      ctaHref: "/pricing",
+      cta: "Subscribe — ₹499/month",
+      ctaHref: "#subscribe",
       ctaClass:
         "bg-kal-accent text-white shadow-[0_4px_16px_rgba(255,122,0,0.28)] hover:brightness-105",
-      intro: "The actual system. Everything, every month.",
+      intro: "The full system, every month. Unlimited AI. 100 hours of voice.",
       bullets: [
-        "Everything in Basic, plus the full AI layer",
+        "Everything in the free trial, every month",
+        "PrepBrain AI — 20 lakh tokens/month",
+        "Voice control — 100 hours/month",
         "Marks engine + rank prediction",
-        "Spaced revision engine · Daily log · Prep insights",
-        "PrepBrain AI coach",
-        "Voice control — 60 min/month",
-        "20 lakh PrepBrain tokens/month",
-        "AutoPay: you choose 1–12 months, stops on its own",
+        "Spaced revision + daily log + prep insights",
+        "AutoPay: choose 1–12 months, stops on its own",
         "Cancel anytime from settings — no calls, no forms",
       ],
     },
@@ -384,26 +314,25 @@ function PlanCardsSection() {
 
   return (
     <section className="bg-kal-page-end py-16 sm:py-20">
-      <div className="mx-auto max-w-6xl px-6 sm:px-8">
+      <div className="mx-auto max-w-5xl px-6 sm:px-8">
         <div className="mb-10 text-center">
           <h2
             className="text-2xl font-normal tracking-tight text-kal-text sm:text-3xl"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            What each plan is really for.
+            Two simple options.
           </h2>
           <p className="mt-2 text-sm text-kal-muted">
-            Not features. Honest descriptions of who each plan is built for.
+            Start free for 3 days. Keep going with Smart Plan.
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 md:max-w-3xl md:mx-auto">
           {cards.map((card) => (
             <div
               key={card.name}
               className={`kal-glass-panel flex flex-col rounded-2xl border-2 ${card.borderClass} p-6 transition-shadow hover:shadow-[var(--kal-shadow-card-hover)]`}
             >
-              {/* Plan header */}
               <div className="mb-5 flex items-start justify-between gap-3">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-widest text-kal-muted">
@@ -429,16 +358,14 @@ function PlanCardsSection() {
 
               {card.tag && (
                 <span
-                  className={`mb-4 inline-flex self-start rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${card.badgeBg} ${card.tagColor}`}
+                  className={`mb-4 inline-flex self-start rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${card.badgeBg} ${card.badgeText}`}
                 >
                   {card.tag}
                 </span>
               )}
 
-              {/* Intro line */}
               <p className="mb-4 text-sm font-medium text-kal-text">{card.intro}</p>
 
-              {/* Bullet points */}
               <ul className="flex-1 space-y-2">
                 {card.bullets.map((point) => (
                   <li key={point} className="flex items-start gap-2.5">
@@ -451,7 +378,6 @@ function PlanCardsSection() {
                 ))}
               </ul>
 
-              {/* CTA */}
               <Link
                 href={card.ctaHref}
                 className={`mt-6 inline-flex min-h-[48px] items-center justify-center rounded-full px-6 text-sm font-bold transition ${card.ctaClass}`}
@@ -469,16 +395,16 @@ function PlanCardsSection() {
 function PathSection() {
   return (
     <section className="py-16 sm:py-20">
-      <div className="mx-auto max-w-5xl px-6">
+      <div className="mx-auto max-w-4xl px-6">
         <div className="mb-10 text-center">
           <h2
             className="text-2xl font-normal tracking-tight text-kal-text sm:text-3xl"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            Your path to Smart Plan.
+            Your path forward.
           </h2>
           <p className="mt-2 text-sm text-kal-muted">
-            Two starting points. One destination. Both work.
+            Three days free. One plan after that.
           </p>
         </div>
         <PathFlowchart />
@@ -487,27 +413,27 @@ function PathSection() {
   );
 }
 
-function AutopaySection() {
+
+function CheckoutSection() {
   return (
-    <section className="bg-kal-page-end py-16 sm:py-20">
+    <section id="subscribe" className="py-16 sm:py-20 scroll-mt-16">
       <div className="mx-auto max-w-5xl px-6">
         <div className="mb-10 text-center">
           <h2
             className="text-2xl font-normal tracking-tight text-kal-text sm:text-3xl"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            On the autopay.
+            Subscribe to Smart Plan.
           </h2>
-          <p className="mt-2 max-w-xl mx-auto text-sm text-kal-muted">
-            You control the duration. Slide to choose how long autopay runs.
+          <p className="mt-2 text-sm text-kal-muted">
+            ₹499/month · cancel anytime · AutoPay for the duration you choose.
           </p>
         </div>
-        <AutopaySlider />
+        <PricingPageClient />
       </div>
     </section>
   );
 }
-
 
 function FAQSection() {
   return (
@@ -545,13 +471,13 @@ function ExamFooterStrip() {
             href="/auth"
             className="inline-flex min-h-[48px] w-full items-center justify-center rounded-full bg-kal-accent px-8 text-base font-bold text-white shadow-[0_4px_16px_rgba(255,122,0,0.28)] transition hover:brightness-105 active:scale-[0.98] sm:w-auto"
           >
-            Start 3-Day Free Basic Plan
+            Start 3-Day Free Trial
           </Link>
           <Link
-            href="/auth"
+            href="#subscribe"
             className="inline-flex min-h-[48px] w-full items-center justify-center rounded-full border border-kal-border bg-kal-card/70 px-8 text-base font-semibold text-kal-text backdrop-blur-sm transition hover:border-kal-accent/40 hover:text-kal-accent sm:w-auto"
           >
-            Start Smart Trial for ₹19
+            Subscribe — ₹499/month
           </Link>
         </div>
       </div>
@@ -568,7 +494,7 @@ export function PricingPageContent() {
       <PricingTableSection />
       <PlanCardsSection />
       <PathSection />
-      <AutopaySection />
+      <CheckoutSection />
       <FAQSection />
       <ExamFooterStrip />
     </div>

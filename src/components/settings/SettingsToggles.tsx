@@ -200,7 +200,7 @@ export function SettingsToggles() {
       <div className="flex items-center justify-between gap-3 px-3 py-3.5">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-[15px] font-medium text-kal-text">Always listen for Hi Kalnehi</span>
+            <span className="text-[15px] font-medium text-kal-text">Always listen for Hey Boss / Hi Boss</span>
             <ToggleStateBadge checked={wakeWordEnabled} />
           </div>
           <p className="mt-0.5 text-xs text-kal-text-secondary">
@@ -211,7 +211,7 @@ export function SettingsToggles() {
           checked={wakeWordEnabled}
           onChange={setWakeWordEnabled}
           id={`${baseId}-ww`}
-          label="Toggle always listen for Hi Kalnehi"
+          label="Toggle always listen for Hey Boss / Hi Boss"
         />
       </div>
     </div>

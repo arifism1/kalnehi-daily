@@ -6,22 +6,21 @@ import Link from "next/link";
 
 type FeatureValue = boolean | string | null;
 
-const FEATURES: { name: string; basic: FeatureValue; trial: FeatureValue; smart: FeatureValue }[] =
-  [
-    { name: "Daily planner", basic: true, trial: true, smart: true },
-    { name: "Syllabus tracker", basic: true, trial: true, smart: true },
-    { name: "Focus timer + study camera", basic: true, trial: true, smart: true },
-    { name: "Streak + consistency heatmap", basic: true, trial: true, smart: true },
-    { name: "Doubt tracker", basic: true, trial: true, smart: true },
-    { name: "Marks engine + rank prediction", basic: false, trial: true, smart: true },
-    { name: "Spaced revision engine", basic: false, trial: true, smart: true },
-    { name: "Daily log & prep insights", basic: false, trial: true, smart: true },
-    { name: "PrepBrain AI coach", basic: false, trial: true, smart: true },
-    { name: "Voice control", basic: null, trial: "15 min", smart: "60 min" },
-    { name: "PrepBrain tokens", basic: null, trial: "5,00,000", smart: "20,00,000/mo" },
-  ];
+const FEATURES: { name: string; trial: FeatureValue; smart: FeatureValue }[] = [
+  { name: "Daily planner", trial: true, smart: true },
+  { name: "Syllabus tracker", trial: true, smart: true },
+  { name: "Focus timer + study camera", trial: true, smart: true },
+  { name: "Streak + consistency heatmap", trial: true, smart: true },
+  { name: "Doubt tracker", trial: true, smart: true },
+  { name: "Marks engine + rank prediction", trial: true, smart: true },
+  { name: "Spaced revision engine", trial: true, smart: true },
+  { name: "Daily log & prep insights", trial: true, smart: true },
+  { name: "PrepBrain AI coach", trial: true, smart: true },
+  { name: "Voice control", trial: "12 min total", smart: "100 hrs/month" },
+  { name: "PrepBrain tokens", trial: "60,000 total", smart: "20,00,000/month" },
+];
 
-type PlanKey = "basic" | "trial" | "smart";
+type PlanKey = "trial" | "smart";
 
 const PLANS: {
   key: PlanKey;
@@ -33,20 +32,11 @@ const PLANS: {
   highlight: boolean;
 }[] = [
   {
-    key: "basic",
-    label: "Basic",
+    key: "trial",
+    label: "Free Trial",
     price: "₹0",
     duration: "3 days",
-    cta: "Start free",
-    ctaHref: "/auth",
-    highlight: false,
-  },
-  {
-    key: "trial",
-    label: "Smart Trial",
-    price: "₹19",
-    duration: "3 days",
-    cta: "Start trial",
+    cta: "Start free trial",
     ctaHref: "/auth",
     highlight: false,
   },
@@ -55,8 +45,8 @@ const PLANS: {
     label: "Smart Plan",
     price: "₹499",
     duration: "/month",
-    cta: "Choose Smart Plan",
-    ctaHref: "/pricing",
+    cta: "Subscribe — ₹499/month",
+    ctaHref: "#subscribe",
     highlight: true,
   },
 ];
@@ -70,7 +60,7 @@ function FeatureRow({ value }: { value: FeatureValue }) {
 }
 
 export function PricingTableMobile() {
-  const [active, setActive] = useState<PlanKey>("smart");
+  const [active, setActive] = useState<PlanKey>("trial");
   const plan = PLANS.find((p) => p.key === active)!;
 
   return (
@@ -80,11 +70,17 @@ export function PricingTableMobile() {
         {PLANS.map((p) => {
           const isActive = active === p.key;
           const badge =
-            p.key === "basic"
-              ? { label: "Free", color: isActive ? "bg-emerald-500/25 text-emerald-100" : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" }
-              : p.key === "trial"
-              ? { label: "₹19", color: isActive ? "bg-white/20 text-white" : "bg-kal-accent/15 text-kal-accent" }
-              : { label: "₹499", color: isActive ? "bg-white/20 text-white" : "bg-kal-accent/15 text-kal-accent" };
+            p.key === "trial"
+              ? {
+                  label: "Free",
+                  color: isActive
+                    ? "bg-emerald-500/25 text-emerald-100"
+                    : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+                }
+              : {
+                  label: "₹499",
+                  color: isActive ? "bg-white/20 text-white" : "bg-kal-accent/15 text-kal-accent",
+                };
 
           return (
             <button
@@ -101,7 +97,9 @@ export function PricingTableMobile() {
               }`}
             >
               <span className="text-[11px] font-bold leading-none">{p.label}</span>
-              <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide leading-none ${badge.color}`}>
+              <span
+                className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide leading-none ${badge.color}`}
+              >
                 {badge.label}
               </span>
             </button>
@@ -122,7 +120,12 @@ export function PricingTableMobile() {
           <div>
             {plan.highlight && (
               <span className="mb-1 inline-block rounded-full bg-kal-accent px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
-                Most popular
+                Smart Plan
+              </span>
+            )}
+            {!plan.highlight && (
+              <span className="mb-1 inline-block rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                3 Days Free
               </span>
             )}
             <p

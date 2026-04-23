@@ -719,7 +719,7 @@ export async function createRazorpayTrialSubscription(
   if (existing?.has_had_trial) {
     return {
       ok: false,
-      error: "You already used your 3-day paid trial. Subscribe monthly (₹499/mo) to continue.",
+      error: "You have already used the free trial. Subscribe to Smart Plan (₹499/month) to continue.",
     };
   }
 

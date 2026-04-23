@@ -14,7 +14,7 @@ import { TIERS } from "@/lib/subscriptionTiers";
 export function SubscriptionPaywallInterstitial({
   freeTrialEnded = false,
 }: {
-  /** After the 1-day welcome trial ended without a paid plan. */
+  /** After the 3-day free trial ended without a paid plan. */
   freeTrialEnded?: boolean;
 }) {
   const router = useRouter();
@@ -61,7 +61,7 @@ export function SubscriptionPaywallInterstitial({
           id={titleId}
           className="text-center text-lg font-bold tracking-tight text-kal-text"
         >
-          {freeTrialEnded ? "Free trial ended" : "Active plan required"}
+          {freeTrialEnded ? "Your 3-day trial has ended" : "Smart Plan required"}
         </h2>
         <p
           id={descId}
@@ -69,14 +69,14 @@ export function SubscriptionPaywallInterstitial({
         >
           {freeTrialEnded ? (
             <>
-              Your 1-day welcome trial is over. Start a 2-day paid trial for{" "}
-              <span className="font-semibold text-kal-text">{TIERS.pro.trialPriceDisplay}</span> — full
-              Pro access, then {TIERS.pro.monthlyPriceDisplay}/month on AutoPay. Cancel anytime.
+              Your 3-day free trial is over. Subscribe to{" "}
+              <span className="font-semibold text-kal-text">Smart Plan</span> for{" "}
+              <span className="font-semibold text-kal-text">{TIERS.pro.monthlyPriceDisplay}/month</span> — 2 million PrepBrain tokens and 100 hours of voice every month. Cancel anytime.
             </>
           ) : (
             <>
               A subscription is required to use Kalnehi Daily. Your plan is not
-              active right now. Choose a plan to continue.
+              active right now. Subscribe to Smart Plan to continue.
             </>
           )}
         </p>
@@ -93,7 +93,7 @@ export function SubscriptionPaywallInterstitial({
             href="/pricing"
             className="kal-btn-accent min-h-[48px] sm:min-h-[44px]"
           >
-            {freeTrialEnded ? "Start paid trial" : "View plans & pricing"}
+            {freeTrialEnded ? `Subscribe — ${TIERS.pro.monthlyPriceDisplay}/month` : "View plans & pricing"}
           </Link>
         </div>
       </div>
