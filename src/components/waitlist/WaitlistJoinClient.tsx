@@ -111,7 +111,11 @@ export function WaitlistJoinClient({ batchNumber, opensAt: _opensAt, opensAtForm
             </h1>
 
             <p className="mt-6 text-lg font-medium text-kal-text-secondary">
-              {totalInQueue.toLocaleString("en-IN")} students already in queue.
+              {totalInQueue === 0
+                ? "Be among the first — the queue is open."
+                : totalInQueue === 1
+                ? "1 student already in queue."
+                : `${totalInQueue.toLocaleString("en-IN")} students already in queue.`}
             </p>
 
             {opensAtFormatted && (

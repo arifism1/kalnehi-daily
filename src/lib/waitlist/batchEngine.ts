@@ -85,14 +85,15 @@ export async function countUsersAhead(position: number): Promise<number> {
   return count ?? 0;
 }
 
-/** Total users on the waitlist (all statuses). */
+/** Users currently waiting in the queue (status = 'waiting', not yet activated / skipped / expired). */
 export async function getTotalWaitlistCount(): Promise<number> {
   const admin = getSupabaseServiceRoleClient();
   if (!admin) return 0;
 
   const { count } = await admin
     .from("waitlist_entries")
-    .select("id", { count: "exact", head: true });
+    .select("id", { count: "exact", head: true })
+    .eq("status", "waiting");
 
   return count ?? 0;
 }

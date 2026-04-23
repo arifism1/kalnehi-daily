@@ -159,7 +159,7 @@ export function SavedPlansPageContent() {
       </header>
 
       <section className="kal-glass-panel rounded-3xl px-4 py-4 sm:px-5">
-        <div className="mb-4 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+        <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
           <label className="flex min-w-0 flex-col gap-1">
             <span className="text-xs font-semibold text-kal-muted">Start date</span>
             <input
@@ -184,7 +184,7 @@ export function SavedPlansPageContent() {
               className="min-h-[40px] min-w-0 max-w-full w-full rounded-xl border border-kal-border bg-kal-card-muted/60 px-2 text-sm text-kal-text outline-none transition-colors focus:border-kal-accent/50 sm:px-3"
             />
           </label>
-          <div className="col-span-2 flex items-end sm:col-span-1">
+          <div className="flex items-end">
             <button
               type="button"
               onClick={handleApplyCustomRange}

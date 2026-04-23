@@ -351,7 +351,7 @@ function PlanCardsSection() {
     },
   ];
 
-  const skipCard = {
+  const skipCard: (typeof cards)[number] = {
     name: "Skip the queue",
     price: "₹19",
     duration: "one time",
