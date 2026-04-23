@@ -27,6 +27,10 @@ export type ReferralSnapshot = {
     trials: number;
     conversions: number;
   };
+  /** Top exams across all referral users (any code), sorted desc, top 15. */
+  igExamsSummary: { exam: string; count: number }[];
+  /** Per-code exam breakdown, top 5 exams per code. */
+  examsByCode: { code: string; exam: string; count: number }[];
 };
 
 export async function getReferralSnapshot(): Promise<ReferralSnapshot | null> {
@@ -35,7 +39,7 @@ export async function getReferralSnapshot(): Promise<ReferralSnapshot | null> {
 
   const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-  const [{ data: codesData }, { data: eventsData }] = await Promise.all([
+  const [{ data: codesData }, { data: eventsData }, { data: profilesData }] = await Promise.all([
     admin
       .from("referral_codes" as never)
       .select("id, code, description, campaign, is_active, created_at")
@@ -44,6 +48,10 @@ export async function getReferralSnapshot(): Promise<ReferralSnapshot | null> {
       .from("referral_events" as never)
       .select("code, event_type, created_at")
       .gte("created_at" as never, since),
+    admin
+      .from("user_profiles")
+      .select("referral_source, target_exam, primary_exam" as "user_id")
+      .not("referral_source" as never, "is", null),
   ]);
 
   const codes = (codesData ?? []) as {
@@ -102,7 +110,44 @@ export async function getReferralSnapshot(): Promise<ReferralSnapshot | null> {
     };
   }
 
-  return { codes: codeRows, daily, totals };
+  // Exam breakdown from user_profiles for referral users.
+  const profiles = ((profilesData as unknown) ?? []) as {
+    referral_source: string | null;
+    target_exam: string | null;
+    primary_exam: string | null;
+  }[];
+
+  const examTotals = new Map<string, number>();
+  // code → exam → count
+  const examPerCode = new Map<string, Map<string, number>>();
+
+  for (const p of profiles) {
+    const code = p.referral_source ?? "__unknown__";
+    const exam = (p.target_exam || p.primary_exam || "Unknown").trim() || "Unknown";
+
+    examTotals.set(exam, (examTotals.get(exam) ?? 0) + 1);
+
+    if (!examPerCode.has(code)) examPerCode.set(code, new Map());
+    const m = examPerCode.get(code)!;
+    m.set(exam, (m.get(exam) ?? 0) + 1);
+  }
+
+  const igExamsSummary = [...examTotals.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 15)
+    .map(([exam, count]) => ({ exam, count }));
+
+  const examsByCode: { code: string; exam: string; count: number }[] = [];
+  for (const [code, examMap] of examPerCode.entries()) {
+    const topExams = [...examMap.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+    for (const [exam, count] of topExams) {
+      examsByCode.push({ code, exam, count });
+    }
+  }
+
+  return { codes: codeRows, daily, totals, igExamsSummary, examsByCode };
 }
 
 export async function toggleReferralCodeActive(
