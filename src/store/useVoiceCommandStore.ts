@@ -14,9 +14,7 @@ type VoiceCommandState = {
   responseText: string | null;
   error: string | null;
   pendingRevision: PendingRevision | null;
-  /** True once the user has explicitly clicked the mic button this session. Resets on page reload. */
-  wakeWordSessionActive: boolean;
-  /** True while any useDeviceSpeechRecognition session is active. Used to pause the wake word listener. */
+  /** True while any useDeviceSpeechRecognition session is active (avoids overlapping voice sessions). */
   isMicBusy: boolean;
 
   open: () => void;
@@ -37,10 +35,9 @@ export const useVoiceCommandStore = create<VoiceCommandState>((set) => ({
   responseText: null,
   error: null,
   pendingRevision: null,
-  wakeWordSessionActive: false,
   isMicBusy: false,
 
-  open: () => set({ isOpen: true, phase: "idle", transcript: null, responseText: null, error: null, wakeWordSessionActive: true }),
+  open: () => set({ isOpen: true, phase: "idle", transcript: null, responseText: null, error: null }),
   close: () => set({ isOpen: false }),
   setPhase: (phase) => set({ phase }),
   setTranscript: (transcript) => set({ transcript }),

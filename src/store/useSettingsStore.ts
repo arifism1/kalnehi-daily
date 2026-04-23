@@ -29,8 +29,6 @@ type SettingsState = {
   studyCameraVisionVerify: boolean;
   /** Interval between vision checks in minutes (2, 3, or 5). */
   studyCameraVerifyIntervalMin: 2 | 3 | 5;
-  /** When true, continuously listens for boss-style phrases ("hey boss", "hi boss", etc.) to trigger voice commands hands-free. Default on. */
-  wakeWordEnabled: boolean;
   setPurposeModeEnabled: (v: boolean) => void;
   setShowCountdown: (v: boolean) => void;
   setAdvancedMarksProjectionEnabled: (v: boolean) => void;
@@ -44,7 +42,6 @@ type SettingsState = {
   setStudyCameraVisionVerify: (v: boolean) => void;
   setStudyCameraVerifyIntervalMin: (v: 2 | 3 | 5) => void;
   setAppearance: (v: AppearanceMode) => void;
-  setWakeWordEnabled: (v: boolean) => void;
 };
 
 export const useSettingsStore = create<SettingsState>()(
@@ -63,7 +60,6 @@ export const useSettingsStore = create<SettingsState>()(
       studyDetectionSensitivity: "balanced",
       studyCameraVisionVerify: true,
       studyCameraVerifyIntervalMin: 3 as 2 | 3 | 5,
-      wakeWordEnabled: true,
 
       setPurposeModeEnabled: (purposeModeEnabled) =>
         set({ purposeModeEnabled }),
@@ -85,11 +81,10 @@ export const useSettingsStore = create<SettingsState>()(
       setStudyCameraVerifyIntervalMin: (studyCameraVerifyIntervalMin) =>
         set({ studyCameraVerifyIntervalMin }),
       setAppearance: (appearance) => set({ appearance }),
-      setWakeWordEnabled: (wakeWordEnabled) => set({ wakeWordEnabled }),
     }),
     {
       name: "kalnehi-settings",
-      version: 1,
+      version: 2,
       migrate: (persisted: unknown) => {
         const s = persisted as Record<string, unknown>;
         if (s.appearance === "system") {
@@ -99,6 +94,7 @@ export const useSettingsStore = create<SettingsState>()(
               ? "dark"
               : "light";
         }
+        delete s.wakeWordEnabled;
         return s;
       },
       storage: createJSONStorage(() => localStorage),
@@ -116,7 +112,6 @@ export const useSettingsStore = create<SettingsState>()(
         studyDetectionSensitivity: s.studyDetectionSensitivity,
         studyCameraVisionVerify: s.studyCameraVisionVerify,
         studyCameraVerifyIntervalMin: s.studyCameraVerifyIntervalMin,
-        wakeWordEnabled: s.wakeWordEnabled,
       }),
     },
   ),
