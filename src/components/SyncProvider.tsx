@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 import { KALNEHI_PROFILE_UPDATED_EVENT } from "@/lib/profileEvents";
 import { refreshExecutionLogFromServer } from "@/lib/refreshExecutionLog";
@@ -19,10 +19,17 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   const userId = useAuthStore((s) => s.user?.id);
   const { examLabel } = usePrimaryExamLabel();
   const setHydrated = useTaskStore((s) => s.setHydrated);
+  const hydrated = useTaskStore((s) => s.hydrated);
   const mergeServerTasks = useTaskStore((s) => s.mergeServerTasks);
   const setMicrotopics = useTaskStore((s) => s.setMicrotopics);
   const retrySeq = useSyncStore((s) => s.retrySeq);
   const persistTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /** One stable key so this effect’s dependency list length never changes (React 19+ dev + HMR). */
+  const taskRefreshGate = useMemo(
+    () => `${userId ?? ""}\0${examLabel ?? ""}\0${String(hydrated)}`,
+    [userId, examLabel, hydrated],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -45,7 +52,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   }, [mergeServerTasks, setMicrotopics, setHydrated]);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || !hydrated) return;
     let cancelled = false;
     void refreshTasksFromSupabase(userId).catch(() => {});
     const runSecondary = () => {
@@ -68,7 +75,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       cancelled = true;
       clearTimeout(t);
     };
-  }, [userId, examLabel]);
+  }, [taskRefreshGate]);
 
   useEffect(() => {
     if (!userId) return;

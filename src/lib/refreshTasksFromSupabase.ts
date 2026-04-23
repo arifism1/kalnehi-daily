@@ -21,11 +21,13 @@ import {
   type MergedSyllabusRow,
   type UserSyllabusCustomizationRow,
 } from "@/lib/userSyllabusMerge";
+import { toCalendarDateKey } from "@/lib/calendarDateKey";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { TASKS_SERVER_SYNC_LOOKBACK_DAYS } from "@/lib/taskRetentionPolicy";
 import { getAllOutboxMutations, persistMicrotopics, persistTasks } from "@/lib/taskIdb";
 import type { Microtopic, Task } from "@/store/useTaskStore";
 import { useTaskStore } from "@/store/useTaskStore";
+import type { TablesUpdate } from "@/types/supabase";
 
 /** Coalesce overlapping refreshes (login + flush + focus) into one in-flight request per user. */
 let refreshInFlight: Promise<void> | null = null;
@@ -42,9 +44,16 @@ function normalizeTaskRow(row: Record<string, unknown>): Task {
       ? STATUS_FROM_DB[row.status]
       : row.status;
 
+  const rawDate = (row as { assigned_date?: string | null }).assigned_date;
+  const assignedKey =
+    typeof rawDate === "string" ? toCalendarDateKey(rawDate) : null;
+  const assigned_date =
+    assignedKey ?? (typeof rawDate === "string" ? rawDate : "");
+
   return {
     ...row,
     status,
+    assigned_date,
     name: (row as { name?: string | null }).name ?? null,
     estimated_minutes:
       (row as { estimated_minutes?: number | null }).estimated_minutes ??
@@ -160,10 +169,17 @@ async function refreshTasksFromSupabaseImpl(userId: string): Promise<void> {
       .filter((m) => m.op === "task_create" || m.op === "task_update")
       .map((m) => m.taskId),
   );
+  const pendingUpdatePatchesByTaskId = new Map<string, TablesUpdate<"tasks">>();
+  for (const m of queue) {
+    if (m.op !== "task_update" || !m.patch) continue;
+    const prev = pendingUpdatePatchesByTaskId.get(m.taskId) ?? {};
+    pendingUpdatePatchesByTaskId.set(m.taskId, { ...prev, ...m.patch });
+  }
 
   useTaskStore.getState().mergeServerTasks(tasks, {
     pendingDeleteIds,
     pendingLocalMutationIds,
+    pendingUpdatePatchesByTaskId,
   });
   useTaskStore.getState().setMicrotopics(microtopics as Microtopic[]);
 

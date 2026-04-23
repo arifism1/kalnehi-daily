@@ -1,5 +1,7 @@
 import { addDays, format, parseISO } from "date-fns";
 
+import { toCalendarDateKey } from "@/lib/calendarDateKey";
+
 export type RevisionDifficulty = "hard" | "medium" | "easy";
 
 /** Workflow for revision reminders (distinct from spaced-repetition "log" UX). */
@@ -130,7 +132,10 @@ export function isOverduePendingRevisionReminder(
   it: RevisionItem,
   todayYyyyMmDd: string,
 ): boolean {
-  return it.status === "pending" && it.nextDue < todayYyyyMmDd;
+  if (it.status !== "pending") return false;
+  const t = toCalendarDateKey(todayYyyyMmDd) ?? todayYyyyMmDd;
+  const d = toCalendarDateKey(it.nextDue) ?? it.nextDue;
+  return d < t;
 }
 
 /** Today or future — items shown on the main Revision Reminders list. */
