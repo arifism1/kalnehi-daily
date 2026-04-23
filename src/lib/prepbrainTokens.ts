@@ -1,24 +1,25 @@
 /**
  * PrepBrain / HelpyJi Groq token budgets by subscription phase.
- * Welcome (1-day free): 300k — welcome_ai_tokens_used
- * Paid trial (2-day): 500k — paid_trial_ai_tokens_used (separate pool; cleared on first monthly charge)
- * Monthly Pro: 2M — ai_tokens_used + ai_tokens_month
+ * Welcome (3-day free trial): 60k — welcome_ai_tokens_used
+ * Monthly Pro (Smart Plan): 2M — ai_tokens_used + ai_tokens_month
  * Bonus: bonus_ai_tokens_ledger (30-day pools)
  */
 
 /** ~80% of limit — UI warning threshold. */
 export const PREPBRAIN_USAGE_WARN_RATIO = 0.8;
 
-export const WELCOME_AI_TOKEN_CAP = 300_000;
+export const WELCOME_AI_TOKEN_CAP = 60_000;
+/** @deprecated paid trial removed; kept for backward compat of existing Razorpay trial subscribers */
 export const PAID_TRIAL_AI_TOKEN_CAP = 500_000;
 export const MONTHLY_AI_TOKEN_CAP = 2_000_000;
 
 export const PREPBRAIN_LIMIT_MESSAGE_MONTHLY =
   "You have reached your monthly AI limit of 2 million tokens (shared between PrepBrain and HelpyJi). It will reset on the 1st of next month.";
 export const PREPBRAIN_LIMIT_MESSAGE_WELCOME =
-  "You have used all 300,000 PrepBrain AI tokens included in your 1-day free trial.";
+  "You have used all 60,000 PrepBrain AI tokens included in your 3-day free trial. Upgrade to Smart Plan (₹499/month) for 2 million tokens per month.";
+/** @deprecated paid trial removed */
 export const PREPBRAIN_LIMIT_MESSAGE_PAID_TRIAL =
-  "You have used all 500,000 PrepBrain AI tokens included in your 2-day paid trial.";
+  "You have used all PrepBrain AI tokens included in your trial. Upgrade to Smart Plan (₹499/month) for 2 million tokens per month.";
 
 const MONTH_KEY_TZ = "Asia/Kolkata";
 

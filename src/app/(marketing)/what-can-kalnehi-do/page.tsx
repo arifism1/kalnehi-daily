@@ -7,7 +7,7 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 export const metadata = marketingPageMetadata({
   path: "/what-can-kalnehi-do",
   title: `What Can Kalnehi Do? — complete feature tour for JEE, NEET & UPSC | ${SITE_NAME}`,
-  description: `Every feature of Kalnehi Daily in one place: Daily Plan, Syllabus Tracker, Execution Planner, Marks Engine, Revision Engine, Focus Timer, Consistency Heatmap, Habit Maker, Brain Yoga, PrepBrain AI, AI voice dictation, Doubt Tracker, Personal Motivation Vault, Daily Log, push notifications and reminders — built for JEE, NEET, UPSC and Boards. Start with a 1-day welcome trial or a 2-day paid trial.`,
+  description: `Every feature of Kalnehi Daily in one place: Daily Plan, Syllabus Tracker, Execution Planner, Marks Engine, Revision Engine, Focus Timer, Consistency Heatmap, Habit Maker, Brain Yoga, PrepBrain AI, AI voice dictation, Doubt Tracker, Personal Motivation Vault, Daily Log, push notifications and reminders — built for JEE, NEET, UPSC and Boards. Start with a 3-day free trial, no card required.`,
 });
 
 export default function WhatCanKalnehiDoPage() {
@@ -27,7 +27,7 @@ export default function WhatCanKalnehiDoPage() {
           {
             question: "Is there a trial?",
             answer:
-              "You can start with a 1-day welcome trial, then a 2-day paid trial from the pricing page, then continue monthly on Pro if it fits.",
+              "New accounts get a 3-day free trial — every feature unlocked, no card required. After 3 days, subscribe to Smart Plan (₹499/month) to continue.",
           },
           {
             question: "Can I install Kalnehi like an app?",

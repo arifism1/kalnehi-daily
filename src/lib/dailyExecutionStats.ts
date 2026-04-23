@@ -1,5 +1,6 @@
 import { format, parseISO, subDays } from "date-fns";
 
+import type { DailyPlanProgressMap } from "@/lib/effectiveDayCompletion";
 import {
   computeWeightedCompletionPercent,
   filterTasksForDate,
@@ -29,12 +30,35 @@ function sumTimeSpentSeconds(tasks: Task[]): number {
   return s;
 }
 
-/** Stats for tasks planned on a single calendar day. */
+/**
+ * Stats for tasks planned on a single calendar day.
+ *
+ * When `dailyPlanOverlay` is provided, the day prefers unified daily-plan
+ * percent (from `daily_tasks`) over academic-task weighted completion —
+ * matching the Home dashboard priority rule.
+ */
 export function computeDayExecutionSnapshot(
   allTasks: Task[],
   microtopicById: Record<string, Microtopic>,
   calendarDate: string,
+  dailyPlanOverlay?: DailyPlanProgressMap | null,
 ): DayExecutionSnapshot {
+  const dow = format(parseISO(calendarDate), "EEE");
+
+  const planSnap = dailyPlanOverlay?.get(calendarDate);
+  if (planSnap && planSnap.totalCount > 0) {
+    return {
+      date: calendarDate,
+      dow,
+      plannedTasks: planSnap.totalCount,
+      completedTasks: planSnap.doneCount,
+      weightedPercent: planSnap.percent,
+      // Time fields are not available from daily_tasks — keep 0
+      plannedMinutes: 0,
+      actualSecondsLogged: 0,
+    };
+  }
+
   const dayTasks = filterTasksForDate(allTasks, calendarDate);
   const plannedTasks = dayTasks.length;
   const completedTasks = dayTasks.filter(isTaskCompleted).length;
@@ -47,7 +71,7 @@ export function computeDayExecutionSnapshot(
 
   return {
     date: calendarDate,
-    dow: format(parseISO(calendarDate), "EEE"),
+    dow,
     plannedTasks,
     completedTasks,
     weightedPercent,
@@ -69,12 +93,13 @@ export function buildDailyExecutionSeries(
   microtopicById: Record<string, Microtopic>,
   endDate: string,
   numDays: number,
+  dailyPlanOverlay?: DailyPlanProgressMap | null,
 ): DailyExecutionSeriesPoint[] {
   const end = parseISO(endDate);
   const out: DailyExecutionSeriesPoint[] = [];
   for (let i = numDays - 1; i >= 0; i--) {
     const d = format(subDays(end, i), "yyyy-MM-dd");
-    const snap = computeDayExecutionSnapshot(allTasks, microtopicById, d);
+    const snap = computeDayExecutionSnapshot(allTasks, microtopicById, d, dailyPlanOverlay);
     out.push({
       date: d,
       dow: snap.dow,
@@ -95,12 +120,13 @@ export function computeExecutionStreak(
   endDate: string,
   minPercent = 60,
   maxDaysBack = 120,
+  dailyPlanOverlay?: DailyPlanProgressMap | null,
 ): number {
   let streak = 0;
   const end = parseISO(endDate);
   for (let i = 0; i < maxDaysBack; i++) {
     const d = format(subDays(end, i), "yyyy-MM-dd");
-    const snap = computeDayExecutionSnapshot(allTasks, microtopicById, d);
+    const snap = computeDayExecutionSnapshot(allTasks, microtopicById, d, dailyPlanOverlay);
     if (snap.plannedTasks === 0) break;
     if (snap.weightedPercent >= minPercent) streak += 1;
     else break;
@@ -127,14 +153,16 @@ export function compareExecutionWeekOverWeek(
   allTasks: Task[],
   microtopicById: Record<string, Microtopic>,
   today: string,
+  dailyPlanOverlay?: DailyPlanProgressMap | null,
 ): WeekOverWeekExecution {
-  const thisWeek = buildDailyExecutionSeries(allTasks, microtopicById, today, 7);
+  const thisWeek = buildDailyExecutionSeries(allTasks, microtopicById, today, 7, dailyPlanOverlay);
   const endPrev = format(subDays(parseISO(today), 7), "yyyy-MM-dd");
   const lastWeek = buildDailyExecutionSeries(
     allTasks,
     microtopicById,
     endPrev,
     7,
+    dailyPlanOverlay,
   );
   const thisWeekAvg = averagePercentWherePlanned(thisWeek);
   const lastWeekAvg = averagePercentWherePlanned(lastWeek);

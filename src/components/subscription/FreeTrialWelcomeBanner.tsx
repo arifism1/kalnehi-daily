@@ -44,10 +44,6 @@ export function FreeTrialWelcomeBanner() {
   return (
     <div className="mb-4 overflow-hidden rounded-2xl border border-kal-accent/25 bg-gradient-to-br from-kal-accent/12 via-kal-card to-kal-card-muted shadow-[0_12px_40px_-16px_rgba(0,0,0,0.15)] dark:border-kal-accent/20 dark:from-kal-accent/10 dark:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.4)]">
       <div className="relative px-4 py-3.5 sm:flex sm:items-center sm:gap-4 sm:px-5">
-        <div
-          className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-kal-accent/15 blur-2xl"
-          aria-hidden
-        />
         <div className="flex shrink-0 items-center justify-center rounded-xl bg-kal-accent/20 p-2 text-kal-accent ring-1 ring-kal-accent/25">
           <Sparkles className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2} aria-hidden />
         </div>

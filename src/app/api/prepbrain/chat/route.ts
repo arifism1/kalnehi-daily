@@ -614,7 +614,7 @@ export async function POST(request: Request) {
       {
         ok: false,
         error:
-          "PrepBrain AI is available during your 1-day free trial and with an active Pro subscription.",
+          "PrepBrain AI is available during your 3-day free trial and with an active Smart Plan subscription.",
       },
       { status: 403 },
     );

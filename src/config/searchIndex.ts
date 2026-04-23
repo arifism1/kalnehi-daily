@@ -58,7 +58,7 @@ const PAGE_OVERRIDES: Record<string, { title: string; description: string; type:
   },
   "/pricing": {
     title: "Pricing",
-    description: "Basic, Smart Trial, and Smart Plan — JEE, NEET, UPSC, and all major exams.",
+    description: "3-day free trial and Smart Plan (₹499/month) — JEE, NEET, UPSC, and all major exams.",
     type: "page",
   },
   "/search": {

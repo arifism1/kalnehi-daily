@@ -37,7 +37,7 @@ This is not AI for the sake of AI. PrepBrain exists because the single hardest p
     faqs: [
       { question: "What data does PrepBrain AI use to give advice?", answer: "PrepBrain reads your Kalnehi data — syllabus completion percentages, daily study logs, mock test scores you've entered, your target exam date, and your study session history. It never accesses anything outside Kalnehi." },
       { question: "Is PrepBrain AI a chatbot or a study planner?", answer: "It's a contextual study coach. You can ask it questions ('What should I study today?') or request analysis ('Why is my Chemistry score not improving?'). It uses your Kalnehi data to answer specifically, not generically." },
-      { question: "How many PrepBrain AI queries do I get?", answer: "Smart Plan includes 20 lakh (2 million) PrepBrain AI tokens per month, which resets every billing cycle. The Smart Trial (₹19) includes 5 lakh tokens for 3 days. Basic Plan has no AI access." },
+      { question: "How many PrepBrain AI queries do I get?", answer: "Smart Plan includes 20 lakh (2 million) PrepBrain AI tokens per month, which resets every billing cycle. The 3-day free trial includes 60,000 tokens for the entire trial period." },
       { question: "Is PrepBrain's advice accurate for all exams?", answer: "PrepBrain's strategy advice is based on your own data — completion rates, time invested, test scores. It doesn't hallucinate syllabus details because it's reading your actual tracker. For exam-specific weightage, it uses historical patterns that are updated periodically." },
     ],
     metaDescription: "PrepBrain AI reads your syllabus completion, mock scores and study logs to give personalised exam strategy advice. Not a chatbot — a data-driven study coach for JEE, NEET, UPSC and more.",
@@ -66,7 +66,7 @@ For aspirants who study in deep focus states, voice control preserves that state
     faqs: [
       { question: "What can I do with Hey Boss voice commands?", answer: "Log study sessions, mark chapters done/needs revision, set reminders and alarms, dictate your daily plan, ask PrepBrain AI questions, log doubts, check syllabus completion, navigate between Kalnehi sections, and record voice affirmations — all without touching the screen." },
       { question: "Does voice control work offline?", answer: "Voice recognition requires an internet connection for processing. However, Kalnehi caches your recent data so the app remains usable offline — you just can't issue voice commands without connectivity." },
-      { question: "How many minutes of voice control do I get?", answer: "Smart Plan includes 60 minutes of voice control per month, which resets on your billing date. Smart Trial (₹19 for 3 days) includes 15 minutes. Basic Plan has no voice control access." },
+      { question: "How many minutes of voice control do I get?", answer: "Smart Plan includes 100 hours of voice control per month, which resets on your billing date. The 3-day free trial includes 12 minutes of voice for the entire trial period." },
       { question: "Is Hey Boss always listening?", answer: "No. Hey Boss only activates when you tap the microphone button or enable the wake word mode manually. Kalnehi does not run background audio processing without explicit user permission." },
     ],
     metaDescription: "Hey Boss voice control lets you log study sessions, mark chapters, set reminders and ask PrepBrain AI — all hands-free. Built for JEE, NEET, UPSC and all competitive exam aspirants.",

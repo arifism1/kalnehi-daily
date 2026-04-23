@@ -53,34 +53,34 @@ const PRO_ACCESS: Record<FeatureKey, FeatureAccess> = {
 
 /** Human-readable upgrade prompt per blocked feature. */
 export const FEATURE_LABELS: Record<FeatureKey, { name: string; upgradeHint: string }> = {
-  plan_my_day: { name: "Plan My Day", upgradeHint: "Subscribe to Pro for full access." },
-  dictate_day: { name: "Dictate My Day", upgradeHint: "Subscribe to Pro for voice-based daily planning." },
+  plan_my_day: { name: "Plan My Day", upgradeHint: "Upgrade to Smart Plan (₹499/month) for full access." },
+  dictate_day: { name: "Dictate My Day", upgradeHint: "Upgrade to Smart Plan (₹499/month) for voice-based daily planning." },
   handwritten_scanner: {
     name: "Plan My Day",
-    upgradeHint: "Subscribe to Pro for handwriting scan and planning.",
+    upgradeHint: "Upgrade to Smart Plan (₹499/month) for handwriting scan and planning.",
   },
   self_type_day: { name: "Self Type Day", upgradeHint: "" },
-  syllabus: { name: "Syllabus Tracker", upgradeHint: "Subscribe to Pro for full syllabus with microtopics & predictions." },
-  marks_engine: { name: "Marks Engine", upgradeHint: "Subscribe to Pro for marks predictions & microtopic analysis." },
-  execution_planner: { name: "Execution Planner", upgradeHint: "Subscribe to Pro for the full execution planner." },
-  timer: { name: "Timer", upgradeHint: "Subscribe to Pro for the full execution timer." },
-  progress: { name: "Progress Tracker", upgradeHint: "Subscribe to Pro to track your preparation progress." },
-  daily_log: { name: "Daily Log", upgradeHint: "Subscribe to Pro for daily study logging." },
-  consistency_tracker: { name: "Consistency Tracker", upgradeHint: "Subscribe to Pro for the consistency calendar." },
-  revision: { name: "Revision Engine", upgradeHint: "Subscribe to Pro for the revision engine." },
-  habits: { name: "Habit Maker", upgradeHint: "Subscribe to Pro for full habit tracking with streaks." },
-  motivation: { name: "Personal Motivation Vault", upgradeHint: "Subscribe to Pro for the motivation vault." },
-  meditation: { name: "Meditation", upgradeHint: "Subscribe to Pro for meditation sessions." },
-  meditation_consistency: { name: "Meditation Consistency", upgradeHint: "Subscribe to Pro for meditation consistency tracking." },
-  doubts: { name: "Doubt Tracker", upgradeHint: "Subscribe to Pro for doubt tracking." },
+  syllabus: { name: "Syllabus Tracker", upgradeHint: "Upgrade to Smart Plan (₹499/month) for full syllabus with microtopics & predictions." },
+  marks_engine: { name: "Marks Engine", upgradeHint: "Upgrade to Smart Plan (₹499/month) for marks predictions & microtopic analysis." },
+  execution_planner: { name: "Execution Planner", upgradeHint: "Upgrade to Smart Plan (₹499/month) for the full execution planner." },
+  timer: { name: "Timer", upgradeHint: "Upgrade to Smart Plan (₹499/month) for the full execution timer." },
+  progress: { name: "Progress Tracker", upgradeHint: "Upgrade to Smart Plan (₹499/month) to track your preparation progress." },
+  daily_log: { name: "Daily Log", upgradeHint: "Upgrade to Smart Plan (₹499/month) for daily study logging." },
+  consistency_tracker: { name: "Consistency Tracker", upgradeHint: "Upgrade to Smart Plan (₹499/month) for the consistency calendar." },
+  revision: { name: "Revision Engine", upgradeHint: "Upgrade to Smart Plan (₹499/month) for the revision engine." },
+  habits: { name: "Habit Maker", upgradeHint: "Upgrade to Smart Plan (₹499/month) for full habit tracking with streaks." },
+  motivation: { name: "Personal Motivation Vault", upgradeHint: "Upgrade to Smart Plan (₹499/month) for the motivation vault." },
+  meditation: { name: "Meditation", upgradeHint: "Upgrade to Smart Plan (₹499/month) for meditation sessions." },
+  meditation_consistency: { name: "Meditation Consistency", upgradeHint: "Upgrade to Smart Plan (₹499/month) for meditation consistency tracking." },
+  doubts: { name: "Doubt Tracker", upgradeHint: "Upgrade to Smart Plan (₹499/month) for doubt tracking." },
   ai_photo_scan: {
     name: "Handwriting photo scans",
-    upgradeHint: "Subscribe to Pro for monthly handwriting photo scans.",
+    upgradeHint: "Upgrade to Smart Plan (₹499/month) for monthly handwriting photo scans.",
   },
-  ai_voice: { name: "AI Voice Dictation", upgradeHint: "Subscribe to Pro for AI voice dictation." },
+  ai_voice: { name: "AI Voice Dictation", upgradeHint: "Upgrade to Smart Plan (₹499/month) for AI voice dictation — 100 hours/month." },
   prepbrain_ai: {
     name: "PrepBrain AI",
-    upgradeHint: "Subscribe to Pro for PrepBrain AI — your personalized prep coach.",
+    upgradeHint: "Upgrade to Smart Plan (₹499/month) for PrepBrain AI — 2 million tokens per month.",
   },
 };
 
@@ -89,8 +89,8 @@ export type TierConfig = {
   name: string;
   monthlyPricePaise: number;
   monthlyPriceDisplay: string;
+  /** @deprecated paid trial removed; retained for backward-compat with existing Razorpay trial orders */
   trialPricePaise: number;
-  trialPriceDisplay: string;
   trialDays: number;
   /** Razorpay paid-trial window: voice + token caps differ from monthly. */
   trialPhotoScansLimit: number;
@@ -109,12 +109,11 @@ export const TIERS: Record<SubscriptionTier, TierConfig> = {
     monthlyPricePaise: 49900,
     monthlyPriceDisplay: "₹499",
     trialPricePaise: 1900,
-    trialPriceDisplay: "₹19",
     trialDays: 3,
     trialPhotoScansLimit: 5,
-    trialVoiceMinutesLimit: 15,
+    trialVoiceMinutesLimit: 12,
     photoScansPerMonth: 20,
-    voiceMinutesPerMonth: 60,
+    voiceMinutesPerMonth: 6000,
     maxTasksPerDay: null,
     tagline: "The complete AI-powered prep system",
     benefits: [
@@ -126,7 +125,7 @@ export const TIERS: Record<SubscriptionTier, TierConfig> = {
       "Spaced revision engine",
       "Daily log & prep insights",
       "PrepBrain AI coach",
-      "Voice control — 60 min/month",
+      "Voice control — 100 hours/month",
       "20,00,000 PrepBrain tokens/month",
     ],
   },

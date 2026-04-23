@@ -29,7 +29,7 @@ type SettingsState = {
   studyCameraVisionVerify: boolean;
   /** Interval between vision checks in minutes (2, 3, or 5). */
   studyCameraVerifyIntervalMin: 2 | 3 | 5;
-  /** When true, continuously listens for "Hi Kalnehi" to trigger voice commands hands-free. Default on. */
+  /** When true, continuously listens for boss-style phrases ("hey boss", "hi boss", etc.) to trigger voice commands hands-free. Default on. */
   wakeWordEnabled: boolean;
   setPurposeModeEnabled: (v: boolean) => void;
   setShowCountdown: (v: boolean) => void;

@@ -72,7 +72,7 @@ const FAQS = [
   {
     question: "How much does it cost for a JEE aspirant?",
     answer:
-      "Start completely free for 3 days with full access including PrepBrain AI. After that, Smart Plan is ₹499/month or ₹4,788/year (saves ₹1,200). There's also a ₹19 Smart Trial for 3 days if you want to test AI features before committing.",
+      "Start completely free for 3 days with full access including PrepBrain AI (60,000 tokens) and 12 minutes of voice — no card required. After your trial, Smart Plan is ₹499/month with 2 million tokens and 100 hours of voice per month.",
   },
 ];
 

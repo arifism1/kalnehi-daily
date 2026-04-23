@@ -4,33 +4,15 @@ import { useEffect, useRef, useState } from "react";
 
 import { useVoiceCommandStore } from "@/store/useVoiceCommandStore";
 
-// Group 1: "Kalnehi" phonetic variants (covers common STT mishearings)
-const KALNEHI_PHRASES = [
-  "hi kalnehi",  "hey kalnehi",
-  "hi kalnahi",  "hey kalnahi",
-  "hi kalni",    "hey kalni",
-  "hi kalney",   "hey kalney",
-  "hi calnahi",  "hey calnahi",
-  "hi colney",   "hey colney",
-];
-
-// Group 2: short "boss" trigger phrases
+// Boss-style trigger phrases (STT often adds punctuation, so normalization strips it first)
 const BOSS_PHRASES = [
-  "hey boss", "ok boss", "okay boss",
-  "yo boss",  "hi boss", "aye boss",
+  "hey boss", "hi boss", "ok boss", "okay boss",
+  "yo boss",  "aye boss", "hello boss",
 ];
 
-function containsWakeWord(text: string): boolean {
-  // Strip punctuation so "Hi, Kalnehi" (comma added by Chrome STT) still matches
+function containsBossWakePhrase(text: string): boolean {
   const t = text.toLowerCase().replace(/[^a-z0-9\s]/g, "").replace(/\s+/g, " ").trim();
-
-  if (KALNEHI_PHRASES.some((p) => t.includes(p))) return true;
-  if (BOSS_PHRASES.some((p) => t.includes(p))) return true;
-
-  // Loose proximity check: catches split-word transcriptions like "hi kal nehi"
-  const hasGreeting = /\b(hi|hey|ok|yo)\b/.test(t);
-  const hasKalStem = /\bkal/.test(t) || /\bcal/.test(t) || /\bkol/.test(t);
-  return hasGreeting && hasKalStem;
+  return BOSS_PHRASES.some((p) => t.includes(p));
 }
 
 function getSpeechRecognitionCtor(): typeof window.SpeechRecognition | null {
@@ -51,12 +33,14 @@ type UseWakeWordResult = {
 
 /**
  * Runs a lightweight continuous SpeechRecognition loop that only watches for
- * "Hi/Hey Kalnehi" in transcripts. When detected, opens the voice command sheet.
+ * boss-style trigger phrases (e.g. "hey boss", "hi boss") in transcripts.
+ * When detected, opens the voice command sheet.
  *
  * Pauses automatically when:
  * - `enabled` is false
  * - The tab is hidden (`document.visibilityState === "hidden"`)
  * - The voice command sheet is already open
+ * - Another voice input has the mic (`isMicBusy`)
  */
 export function useWakeWord(enabled: boolean): UseWakeWordResult {
   const openVoice = useVoiceCommandStore((s) => s.open);
@@ -139,7 +123,7 @@ export function useWakeWord(enabled: boolean): UseWakeWordResult {
       r.onresult = (event: SpeechRecognitionEvent) => {
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const chunk = event.results[i]?.[0]?.transcript ?? "";
-          if (containsWakeWord(chunk)) {
+          if (containsBossWakePhrase(chunk)) {
             // Wake word found — abort listener and open voice command sheet
             dead = true; // prevent re-start from onend
             abortCurrent();

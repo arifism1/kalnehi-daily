@@ -531,8 +531,8 @@ export function BestStudyPracticesClient() {
               Build the habits that top rankers swear by.
             </h2>
             <p className="mx-auto max-w-lg text-pretty text-sm leading-relaxed text-kal-text-secondary sm:text-base">
-              Every single practice on this page is live in the app right now. Start with a 1-day
-              free trial or a 2-day paid trial and feel the difference — don&apos;t just read about it.
+              Every single practice on this page is live in the app right now. Start your 3-day
+              free trial and feel the difference — don&apos;t just read about it.
             </p>
           </div>
 

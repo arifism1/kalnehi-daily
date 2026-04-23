@@ -1,8 +1,10 @@
 "use client";
 
+import { format, parseISO, subDays } from "date-fns";
 import { useMemo } from "react";
 
 import { useCalendarDate } from "@/hooks/useCalendarDate";
+import { useDailyPlanExecutionForRange } from "@/hooks/useDailyPlanExecutionForRange";
 import { useRefreshTasksOnHomeFocus } from "@/hooks/useRefreshTasksOnHomeFocus";
 import { buildDailyEngineSnapshot } from "@/lib/engine/dailyProgressDashboard";
 import {
@@ -29,10 +31,16 @@ export function DailyEngineClient() {
   const tasksRecord = useTaskStore((s) => s.tasks);
   const microRecord = useTaskStore((s) => s.microtopics);
 
+  const overlayStart = useMemo(
+    () => format(subDays(parseISO(today), 7), "yyyy-MM-dd"),
+    [today],
+  );
+  const dailyPlanOverlay = useDailyPlanExecutionForRange(overlayStart, today);
+
   const snap = useMemo(() => {
     const tasks = Object.values(tasksRecord);
-    return buildDailyEngineSnapshot(today, tasks, microRecord);
-  }, [today, tasksRecord, microRecord]);
+    return buildDailyEngineSnapshot(today, tasks, microRecord, dailyPlanOverlay);
+  }, [today, tasksRecord, microRecord, dailyPlanOverlay]);
 
   return (
     <div className="space-y-6">

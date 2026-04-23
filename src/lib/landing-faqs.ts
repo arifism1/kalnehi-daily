@@ -11,7 +11,7 @@ export const LANDING_FAQ_ITEMS = [
   {
     question: "How does the trial work?",
     answer:
-      "Day 1 is completely free — no card required. If you want to keep going, you pay ₹19 to unlock 2 more days (the paid trial). After those 3 days, it's ₹299/month with AutoPay. You can cancel before the paid trial converts — no charge.",
+      "Your first 3 days are completely free — no card required, every feature unlocked. After 3 days you subscribe to Smart Plan at ₹499/month with AutoPay. You choose how many months of AutoPay to authorise (1–12), and it stops automatically after that count. Cancel anytime from settings — no forms, no calls.",
   },
   {
     question: "What exams does Kalnehi support?",
@@ -26,7 +26,7 @@ export const LANDING_FAQ_ITEMS = [
   {
     question: "How much AI (PrepBrain) do I get?",
     answer:
-      "The free day includes 300,000 PrepBrain tokens and 5 minutes of voice dictation. The ₹19 paid trial gives you 500,000 tokens and 15 voice minutes. The monthly plan (₹299) includes 2 million tokens and 60 voice minutes — both reset each billing cycle.",
+      "The 3-day free trial includes 60,000 PrepBrain tokens and 12 minutes of voice dictation — shared across all 3 days. Smart Plan (₹499/month) includes 2 million tokens and 100 hours of voice every month, both resetting each billing cycle.",
   },
   {
     question: "Can I cancel at any time?",

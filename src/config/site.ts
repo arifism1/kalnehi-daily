@@ -32,22 +32,16 @@ export const ORGANIZATION_LOGO_PATH = "/icon-512x512.png" as const;
 
 export const PRICING_OFFERS = [
   {
-    name: "Basic Plan",
+    name: "3-Day Free Trial",
     price: "0",
     priceCurrency: "INR",
-    description: "3 days free, no AI, no voice",
-  },
-  {
-    name: "Smart Trial",
-    price: "19",
-    priceCurrency: "INR",
-    description: "3 days full access including PrepBrain AI and voice control",
+    description: "3 days full access — every feature, 60k PrepBrain tokens, 12 min voice. No card required.",
   },
   {
     name: "Smart Plan",
     price: "499",
     priceCurrency: "INR",
-    description: "Full monthly plan with PrepBrain AI, 60 min voice, 20 lakh tokens",
+    description: "Full monthly plan with 2 million PrepBrain AI tokens and 100 hours voice per month",
     unitCode: "MON" as const,
   },
 ] as const;

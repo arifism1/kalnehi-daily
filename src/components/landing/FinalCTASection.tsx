@@ -19,7 +19,7 @@ export function FinalCTASection() {
             Get started free
           </Link>
           <p className="text-sm text-kal-muted">
-            1 free day · ₹19 for 2 more · ₹299/month after. Cancel anytime.
+            3 days fully free · No card needed · Then ₹499/month · Cancel anytime.
           </p>
         </div>
       </div>
