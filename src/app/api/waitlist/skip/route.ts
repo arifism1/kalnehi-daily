@@ -33,14 +33,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Service unavailable." }, { status: 503 });
   }
 
-  // Check user hasn't already had a trial.
+  // Block users who have already used a trial (either legacy has_had_trial flag or
+  // the newer has_used_free_trial flag set by all post-launch trial-start code paths).
   const { data: prof } = await admin
     .from("user_profiles")
-    .select("has_had_trial, full_name")
+    .select("has_had_trial, has_used_free_trial, full_name")
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (prof && (prof as { has_had_trial?: boolean }).has_had_trial) {
+  const p = prof as { has_had_trial?: boolean; has_used_free_trial?: boolean; full_name?: string | null } | null;
+  if (p?.has_had_trial || p?.has_used_free_trial) {
     return NextResponse.json({
       ok: false,
       error: "You have already used a free trial. The ₹19 skip is only available to new users.",
@@ -68,9 +70,8 @@ export async function POST(req: NextRequest) {
       },
     })) as { id: string; amount: number };
 
-    const profileRow = prof as { full_name?: string | null } | null;
     const prefill: Record<string, string> = {
-      name: profileRow?.full_name ?? "",
+      name: p?.full_name ?? "",
       email: user.email ?? "",
     };
 

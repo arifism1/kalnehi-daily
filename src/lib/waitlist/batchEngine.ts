@@ -236,12 +236,35 @@ export async function getAdminConfig(key: string, defaultValue: string): Promise
   return (data as { value: string } | null)?.value ?? defaultValue;
 }
 
+/** Keys that can be written via setAdminConfig. Must match seeds in migration. */
+export const VALID_ADMIN_CONFIG_KEYS = new Set([
+  "batch_size",
+  "batch_cycle_days",
+  "trial_duration_days",
+  "free_token_allocation",
+  "free_voice_seconds",
+  "smart_trial_price_inr",
+  "smart_plan_monthly_price_inr",
+  "smart_plan_annual_price_inr",
+  "smart_plan_tokens_monthly",
+  "smart_plan_voice_minutes_monthly",
+  "retargeting_d7_enabled",
+  "retargeting_d14_enabled",
+  "skip_cta_show_threshold_days",
+  "skip_cta_primary_threshold_days",
+  "max_waitlist_skip_per_user",
+]);
+
 /** Write an admin_config value with audit trail. */
 export async function setAdminConfig(
   key: string,
   value: string,
   updatedBy: string,
 ): Promise<void> {
+  if (!VALID_ADMIN_CONFIG_KEYS.has(key)) {
+    throw new Error(`Unknown config key: ${key}`);
+  }
+
   const admin = getSupabaseServiceRoleClient();
   if (!admin) throw new Error("Service role unavailable");
 

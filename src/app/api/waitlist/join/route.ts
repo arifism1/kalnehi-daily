@@ -3,11 +3,12 @@
  * Assigns a waitlist position to the authenticated user (or unauthenticated via email only).
  * Fires WAITLIST_CONFIRM email immediately.
  */
+import crypto from "node:crypto";
 import { type NextRequest, NextResponse } from "next/server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
-import { getNextBatch, countUsersAhead, getTotalWaitlistCount } from "@/lib/waitlist/batchEngine";
+import { getNextBatch, countUsersAhead } from "@/lib/waitlist/batchEngine";
 import { sendWaitlistConfirm } from "@/lib/waitlist/notifications";
 
 export const runtime = "nodejs";
@@ -57,48 +58,51 @@ export async function POST(req: NextRequest) {
   }
 
   if (!userId) {
-    // Unauthenticated: store in waitlist_entries without user_id (position reserved by email).
-    // Check if email already joined.
-    const { data: existing } = await admin
-      .from("waitlist_entries")
-      .select("id, position")
-      .eq("contact_email", email)
-      .maybeSingle();
+    // Unauthenticated: derive a stable per-email UUID so UNIQUE(user_id) is never shared
+    // between two different unauthenticated users. The RPC handles duplicate detection
+    // by user_id (returns already_exists:true if this email already joined).
+    const anonUserId = crypto
+      .createHash("sha256")
+      .update(`anon:${email}`)
+      .digest("hex")
+      .replace(/^(.{8})(.{4})(.{4})(.{4})(.{12}).*$/, "$1-$2-$3-$4-$5");
 
-    if (existing) {
-      const e = existing as { id: string; position: number };
-      const aheadCount = await countUsersAhead(e.position);
-      return NextResponse.json({
-        ok: true,
-        alreadyExists: true,
-        position: e.position,
-        batchNumber: batch.batch_number,
-        opensAt: batch.opens_at,
-        aheadCount,
-      });
-    }
-
-    // Assign position.
-    const total = await getTotalWaitlistCount();
-    const position = total + 1;
-
-    const { error: insertErr } = await admin.from("waitlist_entries").insert({
-      user_id: userId ?? "00000000-0000-0000-0000-000000000000",
-      batch_id: batch.id,
-      position,
-      status: "waiting",
-      notification_channel: channel,
-      contact_email: email,
+    const { data: rpcResult, error: rpcErr } = await admin.rpc("assign_waitlist_position", {
+      p_user_id: anonUserId,
+      p_batch_id: batch.id,
+      p_notification_ch: channel,
+      p_contact_email: email,
     });
 
-    if (insertErr) {
-      console.error("[waitlist/join] insert error", insertErr.message);
+    if (rpcErr) {
+      console.error("[waitlist/join] anon RPC error", rpcErr.message);
       return NextResponse.json({ ok: false, error: "Failed to join waitlist." }, { status: 500 });
     }
 
-    const aheadCount = Math.max(0, position - 1);
+    const result = rpcResult as {
+      ok: boolean;
+      error?: string;
+      position?: number;
+      batch_number?: number;
+      opens_at?: string;
+      already_exists?: boolean;
+    };
+
+    if (!result.ok) {
+      return NextResponse.json({ ok: false, error: result.error ?? "Unknown error." }, { status: 400 });
+    }
+
+    const position = result.position ?? 1;
+    const aheadCount = await countUsersAhead(position);
     await sendWaitlistConfirm({ email, position, batchNumber: batch.batch_number, opensAt: batch.opens_at, aheadCount });
-    return NextResponse.json({ ok: true, position, batchNumber: batch.batch_number, opensAt: batch.opens_at, aheadCount });
+    return NextResponse.json({
+      ok: true,
+      alreadyExists: result.already_exists ?? false,
+      position,
+      batchNumber: batch.batch_number,
+      opensAt: batch.opens_at,
+      aheadCount,
+    });
   }
 
   // Authenticated: use RPC for atomic position assignment.

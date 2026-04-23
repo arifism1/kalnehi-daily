@@ -1,6 +1,7 @@
 /**
  * Request proxy (Next.js 16+): refreshes the Supabase session cookie and runs
- * `getUser()` on matched navigations.
+ * `getUser()` on matched navigations. Also applies per-IP rate limiting on
+ * public payment/waitlist API routes.
  *
  * **TTFB / perceived load:** Document requests pay for `getUser()` (JWT validation
  * round trip to Supabase) before HTML is returned. High WiFi throughput does not
@@ -14,6 +15,56 @@ import { type NextRequest, NextResponse } from "next/server";
 import { isLegalPath } from "@/lib/legal-paths";
 import { isPublicMarketingPath } from "@/lib/public-paths";
 import { getSupabaseConfig } from "@/lib/supabase";
+
+// ── Rate limiting ─────────────────────────────────────────────────────────────
+// Per-IP, per-minute limits on public payment and waitlist endpoints.
+const RATE_LIMITS: Record<string, number> = {
+  "/api/waitlist/join":        10,
+  "/api/waitlist/skip":        5,
+  "/api/waitlist/skip/verify": 10,
+  "/api/annual-plan":          5,
+  "/api/annual-plan/verify":   10,
+};
+const WINDOW_MS = 60_000;
+type RLCounter = { count: number; resetAt: number };
+const rlCounters = new Map<string, RLCounter>();
+
+function getRealIp(req: NextRequest): string {
+  return (
+    req.headers.get("x-real-ip") ??
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    "unknown"
+  );
+}
+
+function applyRateLimit(req: NextRequest): NextResponse | null {
+  const limit = RATE_LIMITS[req.nextUrl.pathname];
+  if (!limit) return null;
+
+  const key = `${getRealIp(req)}:${req.nextUrl.pathname}`;
+  const now = Date.now();
+  let entry = rlCounters.get(key);
+  if (!entry || now > entry.resetAt) {
+    entry = { count: 0, resetAt: now + WINDOW_MS };
+    rlCounters.set(key, entry);
+  }
+  entry.count += 1;
+
+  if (entry.count > limit) {
+    return NextResponse.json(
+      { ok: false, error: "Too many requests. Please try again in a minute." },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(Math.ceil((entry.resetAt - now) / 1000)),
+          "X-RateLimit-Limit": String(limit),
+          "X-RateLimit-Remaining": "0",
+        },
+      },
+    );
+  }
+  return null;
+}
 
 /** HTML and static routes that must work without a session (see AppShell gate). */
 function isProxyAuthExempt(pathname: string): boolean {
@@ -81,6 +132,9 @@ function tryWwwToApexRedirect(request: NextRequest): NextResponse | null {
 export async function proxy(request: NextRequest) {
   const apex = tryWwwToApexRedirect(request);
   if (apex) return apex;
+
+  const rateLimited = applyRateLimit(request);
+  if (rateLimited) return rateLimited;
 
   const supabaseResponse = NextResponse.next({
     request,
