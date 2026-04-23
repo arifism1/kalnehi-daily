@@ -40,7 +40,6 @@ export function TokenBudgetIndicator() {
 
   const cap = hasPaidAccess ? MONTHLY_AI_TOKEN_CAP : WELCOME_AI_TOKEN_CAP;
   const used = usage?.used ?? 0;
-  const cap = hasPaidAccess ? MONTHLY_AI_TOKEN_CAP : WELCOME_AI_TOKEN_CAP;
   const remaining = Math.max(0, cap - used);
   const pct = cap > 0 ? remaining / cap : 0;
 

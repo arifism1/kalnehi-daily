@@ -1970,6 +1970,22 @@ export type Database = {
         Args: { p_user_id: string; p_seconds: number }
         Returns: undefined
       }
+      assign_waitlist_position: {
+        Args: {
+          p_user_id: string
+          p_batch_id: string
+          p_notification_ch?: string
+          p_contact_email?: string | null
+        }
+        Returns: Json
+      }
+      activate_waitlist_skip: {
+        Args: {
+          p_user_id: string
+          p_razorpay_payment_id: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never

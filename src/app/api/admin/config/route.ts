@@ -5,7 +5,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { isAdminUser, setAdminConfig } from "@/lib/waitlist/batchEngine";
+import { isAdminUser, setAdminConfig, VALID_ADMIN_CONFIG_KEYS } from "@/lib/waitlist/batchEngine";
 
 export const runtime = "nodejs";
 
@@ -29,8 +29,8 @@ export async function POST(req: NextRequest) {
   const key = (body.key ?? "").trim();
   const value = (body.value ?? "").trim();
 
-  if (!key || key.length > 100) {
-    return NextResponse.json({ ok: false, error: "Invalid key." }, { status: 400 });
+  if (!key || !VALID_ADMIN_CONFIG_KEYS.has(key)) {
+    return NextResponse.json({ ok: false, error: "Unknown config key." }, { status: 400 });
   }
   if (value.length > 1000) {
     return NextResponse.json({ ok: false, error: "Value too long." }, { status: 400 });
