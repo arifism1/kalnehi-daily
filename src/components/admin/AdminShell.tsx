@@ -16,6 +16,7 @@ const NAV_GROUPS: {
     label: "Growth",
     items: [
       { label: "Acquisition", href: "/admin/acquisition" },
+      { label: "Referrals", href: "/admin/referrals" },
       { label: "Activation", href: "/admin/activation" },
       { label: "Engagement", href: "/admin/engagement" },
       { label: "Conversion", href: "/admin/conversion" },

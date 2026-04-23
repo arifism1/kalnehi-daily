@@ -27,8 +27,15 @@ const AuthAppNavPreviewMenu = dynamic(
     })),
   { ssr: false },
 );
+import { attachReferralToUser } from "@/actions/referral";
 import { trackAuthSuccess } from "@/lib/analytics";
 import { buildAuthCallbackUrl } from "@/lib/authCallbackUrl";
+import {
+  clearStoredReferral,
+  getStoredReferral,
+  isInstagramReferral,
+  type StoredReferral,
+} from "@/lib/referral-capture";
 import { SITE_NAME } from "@/lib/seo-metadata";
 import { formatSupabaseError, getSupabaseBrowserClient } from "@/lib/supabase";
 import { toUserFacingMessage } from "@/lib/userFacingErrors";
@@ -97,6 +104,7 @@ export default function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [verifyEmailSent, setVerifyEmailSent] = useState(false);
+  const [storedReferral, setStoredReferral] = useState<StoredReferral | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -104,6 +112,14 @@ export default function AuthPage() {
     if (err) {
       setError(toUserFacingMessage(new Error(decodeURIComponent(err))));
       window.history.replaceState({}, "", "/auth");
+    }
+    // Pre-fill referral badge if user arrived from Instagram.
+    if (isInstagramReferral()) {
+      const stored = getStoredReferral();
+      if (stored.ref) {
+        setStoredReferral(stored);
+        setMode("signup");
+      }
     }
   }, []);
 
@@ -160,6 +176,17 @@ export default function AuthPage() {
         if (!after) {
           setVerifyEmailSent(true);
           return;
+        }
+        // Attach referral attribution if user arrived via a referral link.
+        const ref = getStoredReferral();
+        if (ref.ref) {
+          void attachReferralToUser({
+            ref: ref.ref,
+            utmSource: ref.utmSource,
+            utmMedium: ref.utmMedium,
+            utmCampaign: ref.utmCampaign,
+            refUrl: ref.refUrl,
+          }).then(() => clearStoredReferral());
         }
         await redirectAfterAuth("sign_up");
       } else {
@@ -402,6 +429,20 @@ export default function AuthPage() {
             void submitEmailAuth();
           }}
         >
+          {mode === "signup" && storedReferral?.ref && (
+            <div>
+              <p className="flex items-center gap-1.5 text-xs font-semibold text-kal-text-secondary">
+                <KeyRound className="h-3.5 w-3.5" />
+                Referral code
+              </p>
+              <div className="mt-1.5 flex min-h-[44px] w-full items-center justify-between rounded-xl border border-kal-accent/25 bg-kal-accent/[0.04] px-4 py-2.5">
+                <span className="font-mono text-sm font-semibold tracking-wide text-kal-text">
+                  {storedReferral.ref}
+                </span>
+                <span className="text-xs font-semibold text-emerald-500">Applied ✓</span>
+              </div>
+            </div>
+          )}
           <div>
             <label
               htmlFor="auth-email"

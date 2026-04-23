@@ -18,6 +18,7 @@ import { toUserFacingMessage } from "@/lib/userFacingErrors";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { useAuthStore } from "@/store/useAuthStore";
 
+import { InstagramWelcomeBanner } from "@/components/InstagramWelcomeBanner";
 import { MotivationWallpaper } from "./MotivationWallpaper";
 import type { HomeDashboardBodyProps } from "./HomeDashboardBody";
 
@@ -225,6 +226,10 @@ export function HomeClient() {
   return (
     <div className="relative flex min-h-full flex-col gap-5 pb-6 text-kal-text sm:gap-6 sm:pb-8">
       <MotivationWallpaper />
+
+      <div className="mx-auto w-full max-w-5xl px-4 sm:px-6">
+        <InstagramWelcomeBanner />
+      </div>
 
       {welcomeTrialEligibleUnstarted && onboardingDone && (
         <div className="mx-auto w-full max-w-5xl px-4 sm:px-6">
