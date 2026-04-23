@@ -49,6 +49,7 @@ const NAV_GROUPS: {
     items: [
       { label: "System health", href: "/admin/system-health" },
       { label: "Config", href: "/admin/config" },
+      { label: "System", href: "/admin/system" },
     ],
   },
 ];

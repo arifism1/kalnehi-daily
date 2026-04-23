@@ -15,6 +15,7 @@ import { StoragePersistenceInit } from "@/components/StoragePersistenceInit";
 import { ThemeSync } from "@/components/ThemeSync";
 import { UiPrefsRemoteSync } from "@/components/UiPrefsRemoteSync";
 import { defaultSiteMetadata, SITE_NAME } from "@/lib/seo-metadata";
+import { KillSwitchGuard } from "@/components/KillSwitchGuard";
 
 import "./globals.css";
 
@@ -150,14 +151,16 @@ export default function RootLayout({
         <GoogleAnalytics />
         <ThemeSync />
         <ServiceWorkerRegister />
-        <AuthProvider>
-          <SubscriptionAccessProvider>
-            <UiPrefsRemoteSync />
-            <StoragePersistenceInit />
-            <FcmForegroundListener />
-            <AppShell>{children}</AppShell>
-          </SubscriptionAccessProvider>
-        </AuthProvider>
+        <KillSwitchGuard>
+          <AuthProvider>
+            <SubscriptionAccessProvider>
+              <UiPrefsRemoteSync />
+              <StoragePersistenceInit />
+              <FcmForegroundListener />
+              <AppShell>{children}</AppShell>
+            </SubscriptionAccessProvider>
+          </AuthProvider>
+        </KillSwitchGuard>
         <Analytics />
         <SpeedInsights sampleRate={0.5} />
       </body>

@@ -92,6 +92,75 @@ export type Database = {
         }
         Relationships: []
       }
+      app_config: {
+        Row: {
+          id: string
+          app_enabled: boolean
+          maintenance_message: string
+          maintenance_title: string
+          maintenance_eta: string | null
+          disabled_at: string | null
+          disabled_by: string | null
+          re_enabled_at: string | null
+          re_enabled_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          app_enabled?: boolean
+          maintenance_message?: string
+          maintenance_title?: string
+          maintenance_eta?: string | null
+          disabled_at?: string | null
+          disabled_by?: string | null
+          re_enabled_at?: string | null
+          re_enabled_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          app_enabled?: boolean
+          maintenance_message?: string
+          maintenance_title?: string
+          maintenance_eta?: string | null
+          disabled_at?: string | null
+          disabled_by?: string | null
+          re_enabled_at?: string | null
+          re_enabled_by?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      app_config_log: {
+        Row: {
+          id: string
+          action: string
+          performed_by: string | null
+          performed_at: string
+          old_value: Json | null
+          new_value: Json | null
+          reason: string | null
+        }
+        Insert: {
+          id?: string
+          action: string
+          performed_by?: string | null
+          performed_at?: string
+          old_value?: Json | null
+          new_value?: Json | null
+          reason?: string | null
+        }
+        Update: {
+          id?: string
+          action?: string
+          performed_by?: string | null
+          performed_at?: string
+          old_value?: Json | null
+          new_value?: Json | null
+          reason?: string | null
+        }
+        Relationships: []
+      }
       exams: {
         Row: {
           created_at: string
@@ -146,6 +215,36 @@ export type Database = {
           event?: string
           metadata?: Json | null
           created_at?: string
+        }
+        Relationships: []
+      }
+      feature_flags: {
+        Row: {
+          id: string
+          feature_key: string
+          enabled: boolean
+          description: string
+          disabled_message: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          feature_key: string
+          enabled?: boolean
+          description?: string
+          disabled_message?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          feature_key?: string
+          enabled?: boolean
+          description?: string
+          disabled_message?: string | null
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
