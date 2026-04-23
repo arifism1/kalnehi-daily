@@ -523,15 +523,11 @@ function tierFromRazorpayNote(raw: string | undefined): SubscriptionTier {
 
 const PAYMENT_KIND_EXTRA = "extra_credits" as const;
 const PAYMENT_KIND_UPGRADE = "plan_upgrade" as const;
-const PAYMENT_KIND_UPGRADE_MANDATE = "plan_upgrade_mandate" as const;
 
 async function claimRazorpayPaymentId(
   userId: string,
   paymentId: string,
-  kind:
-    | typeof PAYMENT_KIND_EXTRA
-    | typeof PAYMENT_KIND_UPGRADE
-    | typeof PAYMENT_KIND_UPGRADE_MANDATE,
+  kind: typeof PAYMENT_KIND_EXTRA | typeof PAYMENT_KIND_UPGRADE,
 ): Promise<"new" | "duplicate" | "error"> {
   const admin = getAdminClient();
   if (!admin) return "error";
