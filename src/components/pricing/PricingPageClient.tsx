@@ -10,6 +10,7 @@ import {
   activateRazorpayMonthlySubscription,
   createRazorpayTrialSubscription,
   createRazorpayMonthlySubscription,
+  ensureFreeTrialStarted,
 } from "@/actions/subscription";
 import { CancelSubscriptionButton } from "@/components/subscription/CancelSubscriptionButton";
 import { PaymentErrorMailButton } from "@/components/subscription/PaymentErrorMailButton";
@@ -211,6 +212,9 @@ export function PricingPageClient() {
     freeTrialActive,
     freeTrialVoiceSecondsRemaining,
     freeTrialEndsAtIso,
+    welcomeTrialEligibleUnstarted,
+    onboardingDone,
+    refetch,
   } = useSubscriptionAccess();
   const isCancelledWithAccess =
     subscriptionStatus === "cancelled" && hasPaidAccess;
@@ -223,6 +227,30 @@ export function PricingPageClient() {
     proof?: PaymentErrorProof;
     debugHint?: string;
   } | null>(null);
+  const [welcomeFreeBusy, setWelcomeFreeBusy] = useState(false);
+
+  const showWelcomeFreeCta =
+    !!user?.id && onboardingDone && welcomeTrialEligibleUnstarted;
+
+  const startWelcomeFreeTrial = useCallback(async () => {
+    setWelcomeFreeBusy(true);
+    setCheckoutError(null);
+    try {
+      const r = await ensureFreeTrialStarted();
+      if (!r.ok) {
+        setCheckoutError({ text: r.error });
+        return;
+      }
+      if (r.started) refetch();
+      window.location.assign("/home");
+    } catch (error) {
+      setCheckoutError({
+        text: toUserFacingMessage(error),
+      });
+    } finally {
+      setWelcomeFreeBusy(false);
+    }
+  }, [refetch]);
 
   const showCancel =
     subscriptionStatus === "trial" || subscriptionStatus === "active";
@@ -406,6 +434,27 @@ export function PricingPageClient() {
         strategy="afterInteractive"
       />
       <section className="mx-auto max-w-5xl space-y-8 pb-10">
+        {showWelcomeFreeCta ? (
+          <div className="kal-glass-panel rounded-2xl border-2 border-emerald-500/35 bg-emerald-500/[0.06] px-5 py-5 text-center dark:border-emerald-500/25 dark:bg-emerald-500/[0.08]">
+            <p className="text-sm font-semibold text-kal-text">
+              Choose the free welcome access first, or go straight to Smart Trial / Smart Plan below.
+            </p>
+            <p className="mt-1 text-xs leading-relaxed text-kal-text-secondary">
+              Your 3-day welcome timer starts only after you tap this — not before.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                void startWelcomeFreeTrial();
+              }}
+              disabled={welcomeFreeBusy || busy}
+              className="kal-btn-accent mt-4 inline-flex min-h-[48px] w-full max-w-md items-center justify-center rounded-xl px-6 py-3 text-sm font-bold transition disabled:opacity-60 sm:w-auto"
+            >
+              {welcomeFreeBusy ? "Starting…" : "Start Free — 3 days"}
+            </button>
+          </div>
+        ) : null}
+
         <header className="kal-glass-panel rounded-2xl px-6 py-8 text-center">
           <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-kal-accent">
             Kalnehi Pro
