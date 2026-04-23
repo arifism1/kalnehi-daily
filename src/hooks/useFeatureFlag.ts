@@ -8,8 +8,9 @@ type FlagsResponse = { flags: Record<string, FlagValue> };
 type CacheEntry = { data: FlagsResponse; fetchedAt: number };
 
 // Module-level cache shared across all hook instances.
-// TTL: 60 seconds — matches the server-side cache on /api/feature-flags.
-const CACHE_TTL_MS = 60_000;
+// TTL: 5 seconds — short enough to pick up Edge Config propagation quickly
+// while still preventing a flood of requests on rapid re-renders.
+const CACHE_TTL_MS = 5_000;
 let cacheEntry: CacheEntry | null = null;
 let pendingFetch: Promise<FlagsResponse> | null = null;
 
