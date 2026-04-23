@@ -1,16 +1,15 @@
 import { NextResponse } from "next/server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 
 export const runtime = "nodejs";
 
 const MAX_BASE64_CHARS = 140_000; // ~640×640 JPEG after base64 ≈ 100KB decoded
-const RATE_LIMIT_MS = 90_000;
+const RATE_LIMIT_MS = 90_000; // 90 seconds between requests
 
 const DEEPINFRA_API_URL = "https://api.deepinfra.com/v1/openai/chat/completions";
 const DEEPINFRA_MODEL = "Qwen/Qwen2.5-VL-32B-Instruct";
-
-const lastRequestAt = new Map<string, number>();
 
 const STUDY_MONITOR_PROMPT =
   "You are a study monitor. Look at this webcam image and decide if the student is actively studying.\n\n" +
@@ -117,22 +116,33 @@ export async function POST(request: Request) {
     );
   }
 
-  const now = Date.now();
-  const last = lastRequestAt.get(user.id) ?? 0;
-  if (now - last < RATE_LIMIT_MS) {
-    const retryAfterSec = Math.max(1, Math.ceil((RATE_LIMIT_MS - (now - last)) / 1000));
-    return NextResponse.json(
-      { ok: false, error: "Too many requests. Please wait before the next check." },
-      { status: 429, headers: { "Retry-After": String(retryAfterSec) } },
-    );
-  }
-  lastRequestAt.set(user.id, now);
-  if (lastRequestAt.size > 5_000) {
-    const toDelete: string[] = [];
-    for (const [k, t] of lastRequestAt) {
-      if (now - t > 600_000) toDelete.push(k);
+  // DB-backed rate limiting shared across all serverless instances.
+  const admin = getSupabaseServiceRoleClient();
+  if (admin) {
+    const now = new Date().toISOString();
+    const { data: cooldown } = await admin
+      .from("study_camera_cooldown" as never)
+      .select("last_request_at")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    const last = (cooldown as { last_request_at?: string } | null)?.last_request_at;
+    if (last) {
+      const elapsed = Date.now() - new Date(last).getTime();
+      if (elapsed < RATE_LIMIT_MS) {
+        const retryAfterSec = Math.max(1, Math.ceil((RATE_LIMIT_MS - elapsed) / 1000));
+        return NextResponse.json(
+          { ok: false, error: "Too many requests. Please wait before the next check." },
+          { status: 429, headers: { "Retry-After": String(retryAfterSec) } },
+        );
+      }
     }
-    for (const k of toDelete) lastRequestAt.delete(k);
+
+    await admin
+      .from("study_camera_cooldown" as never)
+      .upsert({ user_id: user.id, last_request_at: now } as never, {
+        onConflict: "user_id",
+      });
   }
 
   try {

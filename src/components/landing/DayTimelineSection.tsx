@@ -49,9 +49,9 @@ const TIMELINE = [
   },
   {
     time: "16:30",
-    feature: "Revision Engine",
-    caption: "Revision Engine flags Probability — 18 days ago.",
-    detail: "You studied it. It's fading. One tap and it's queued for tomorrow. You didn't have to remember to do this.",
+    feature: "Revision reminders",
+    caption: "Probability due today — you set the date last week.",
+    detail: "Open the list, do a short recall pass, mark done or slide the next due date. The queue holds you accountable without guessing what to open.",
     icon: "🔁",
     accent: false,
   },

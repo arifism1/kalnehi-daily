@@ -21,7 +21,7 @@ const FOOTER_LINKS = {
     { href: "/features/prepbrain-ai", label: "PrepBrain AI" },
     { href: "/features/voice-control", label: "Voice Control" },
     { href: "/features/syllabus-tracker", label: "Syllabus Tracker" },
-    { href: "/features/spaced-revision", label: "Spaced Revision" },
+    { href: "/features/spaced-revision", label: "Revision reminders" },
     { href: "/features/marks-engine", label: "Marks Engine" },
     { href: "/features/study-timer", label: "Study Timer" },
     { href: "/features/consistency-tracker", label: "Consistency Tracker" },

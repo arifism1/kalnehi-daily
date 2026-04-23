@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Service unavailable." }, { status: 503 });
   }
 
-  const isAdmin = await isAdminUser(user.id);
+  const isAdmin = await isAdminUser(user.id, user.email ?? undefined);
   if (!isAdmin) {
     return NextResponse.json({ ok: false, error: "Forbidden." }, { status: 403 });
   }
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Service unavailable." }, { status: 503 });
   }
 
-  const isAdmin = await isAdminUser(user.id);
+  const isAdmin = await isAdminUser(user.id, user.email ?? undefined);
   if (!isAdmin) {
     return NextResponse.json({ ok: false, error: "Forbidden." }, { status: 403 });
   }

@@ -11,29 +11,11 @@ import {
   examScoreMax,
   isCuetExam,
   primaryMarksYearFromTargetExam,
-  resolveSyllabusExam,
-  syllabusCatalogExamName,
 } from "@/lib/examProfile";
-import {
-  parseCuetDomainSubjectsJson,
-  syllabusSubjectInCuetDomains,
-} from "@/lib/cuetDomainSubjects";
+import { loadSyllabusDataForUser } from "@/lib/syllabusDataForUser";
+import type { MergedSyllabusRow } from "@/lib/userSyllabusMerge";
 import type { MicrotopicProgressStatus } from "@/lib/syllabusConstants";
 import { normalizeSyllabusMasterId } from "@/lib/syllabusIds";
-import type { SyllabusRow } from "@/lib/syllabusGrouping";
-import {
-  applyMarksOverridesToRows,
-  type SyllabusMarksOverrideRow,
-} from "@/lib/applySyllabusMarksOverrides";
-import {
-  coalesceProgressByCanonicalIds,
-  dedupeMergedSyllabusRowsByPlacement,
-} from "@/lib/syllabusDedupe";
-import { fetchUserMicrotopicProgressForSyllabusIds } from "@/lib/fetchUserMicrotopicProgressForSyllabusIds";
-import {
-  mergeSyllabusWithUserCustomizations,
-  type MergedSyllabusRow,
-} from "@/lib/userSyllabusMerge";
 import {
   computeCuetScoringRollup,
   computeNeetYearProjections,
@@ -42,44 +24,8 @@ import {
 } from "@/lib/syllabusRollup";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { KALNEHI_PROFILE_UPDATED_EVENT } from "@/lib/profileEvents";
-import { fetchSyllabusMasterRowsForExam } from "@/lib/syllabusMasterQuery";
-import {
-  isUpscCseMainsExam,
-  shouldKeepUpscMainsRow,
-} from "@/lib/upscMainsOptionalSubjects";
 import { toUserFacingMessage } from "@/lib/userFacingErrors";
 import { useAuthStore } from "@/store/useAuthStore";
-
-function progressRowsToMap(
-  rows: { syllabus_master_id: unknown; status: unknown }[] | null,
-): Record<string, string> {
-  const map: Record<string, string> = {};
-  for (const r of rows ?? []) {
-    const sid = r.syllabus_master_id;
-    if (
-      sid != null &&
-      String(sid).length > 0 &&
-      typeof r.status === "string"
-    ) {
-      map[normalizeSyllabusMasterId(String(sid))] = r.status;
-    }
-  }
-  return map;
-}
-
-function filterProgressToSyllabusIds(
-  fullMap: Record<string, string>,
-  syllabusRows: SyllabusRow[],
-): Record<string, string> {
-  const allowed = new Set(
-    syllabusRows.map((r) => normalizeSyllabusMasterId(r.id)),
-  );
-  const out: Record<string, string> = {};
-  for (const id of allowed) {
-    if (fullMap[id] !== undefined) out[id] = fullMap[id];
-  }
-  return out;
-}
 
 /** Keys are normalized `syllabus_master.id` strings. */
 type SyllabusTrackerCache = {
@@ -155,28 +101,13 @@ export function useSyllabusTracker() {
       }
       try {
         const supabase = getSupabaseBrowserClient();
+        const loaded = await loadSyllabusDataForUser(supabase, userId);
 
-        const { data: profile, error: profileErr } = await supabase
-          .from("user_profiles")
-          .select("primary_exam, target_exam, cuet_domain_subjects, upsc_optional_subjects")
-          .eq("user_id", userId)
-          .maybeSingle();
+        setTargetExamLabel(loaded.examLabel);
+        setCuetDomainSubjects(loaded.cuetDomainSubjects);
+        setUpscOptionalSubject(loaded.upscOptionalSubject);
 
-        if (profileErr) throw profileErr;
-
-        const examLabel = resolveSyllabusExam(profile);
-        setTargetExamLabel(examLabel ?? null);
-
-        const domains = parseCuetDomainSubjectsJson(
-          profile?.cuet_domain_subjects,
-        );
-        const optionalSubject = Array.isArray(profile?.upsc_optional_subjects)
-          ? (profile.upsc_optional_subjects[0]?.trim() || null)
-          : null;
-        setCuetDomainSubjects(domains);
-        setUpscOptionalSubject(optionalSubject);
-
-        if (!examLabel?.trim()) {
+        if (!loaded.examLabel?.trim() || !loaded.catalogExamKey) {
           if (myId !== loadSeqRef.current) return;
           setRows([]);
           setStatusBySyllabusMasterId({});
@@ -185,97 +116,24 @@ export function useSyllabusTracker() {
           return;
         }
 
-        // Maps profile `exam_name` (from `exams` catalog) to `syllabus_master.exam_name`
-        // (e.g. legacy JEE Main → JEE Main 2025). Same rules as task refresh.
-        const examKey = syllabusCatalogExamName(examLabel);
-        if (!examKey) {
-          if (myId !== loadSeqRef.current) return;
-          setRows([]);
-          setStatusBySyllabusMasterId({});
-          setCatalogExamKey(null);
-          setError(null);
-          return;
-        }
-        setCatalogExamKey(examKey);
-
-        const [syllabus, customsRes, marksRes] = await Promise.all([
-          fetchSyllabusMasterRowsForExam(
-            supabase,
-            examKey,
-            optionalSubject ?? null,
-          ),
-          supabase
-            .from("user_syllabus_customizations")
-            .select("*")
-            .eq("user_id", userId)
-            .eq("exam_name", examKey),
-          supabase
-            .from("user_syllabus_marks_overrides")
-            .select("syllabus_master_id, marks_2025, marks_2024, marks_2023")
-            .eq("user_id", userId)
-            .eq("exam_name", examKey),
-        ]);
-
-        const { data: customs, error: cuErr } = customsRes;
-        const { data: marksOverrides, error: moErr } = marksRes;
-        if (cuErr) throw cuErr;
-        if (moErr) throw moErr;
-
-        let merged = mergeSyllabusWithUserCustomizations(
-          syllabus,
-          customs ?? [],
-          examKey,
-        );
-        if (examKey === "CUET" && domains.length > 0) {
-          merged = merged.filter((r) =>
-            syllabusSubjectInCuetDomains(r.subject, domains),
-          );
-        } else if (examKey === "CUET") {
-          merged = [];
-        }
-        if (isUpscCseMainsExam(examKey)) {
-          merged = merged.filter((row) =>
-            shouldKeepUpscMainsRow({
-              subject: row.subject,
-              selectedOptional: optionalSubject,
-            }),
-          );
-        }
-        const sorted = applyMarksOverridesToRows(
-          merged,
-          (marksOverrides ?? []) as SyllabusMarksOverrideRow[],
-        );
-        const syllabusIdsForProgress = sorted.map((r) =>
-          normalizeSyllabusMasterId(r.id),
-        );
-        const prog = await fetchUserMicrotopicProgressForSyllabusIds(
-          supabase,
-          userId,
-          syllabusIdsForProgress,
-        );
-        const { rows: deduped, droppedToCanonical } =
-          dedupeMergedSyllabusRowsByPlacement(sorted);
-        const fullMap = progressRowsToMap(prog);
-        const fullMapCoalesced = coalesceProgressByCanonicalIds(
-          fullMap,
-          droppedToCanonical,
-        );
-        const map = filterProgressToSyllabusIds(fullMapCoalesced, deduped);
+        setCatalogExamKey(loaded.catalogExamKey);
 
         if (myId !== loadSeqRef.current) return;
         const pending = pendingStatusRef.current;
         const finalMap =
-          Object.keys(pending).length > 0 ? { ...map, ...pending } : map;
-        setRows(deduped);
+          Object.keys(pending).length > 0
+            ? { ...loaded.statusBySyllabusMasterId, ...pending }
+            : loaded.statusBySyllabusMasterId;
+        setRows(loaded.rows);
         setStatusBySyllabusMasterId(finalMap);
         trackerCache = {
           userId,
-          rows: deduped,
+          rows: loaded.rows,
           statusBySyllabusMasterId: finalMap,
-          targetExamLabel: examLabel ?? null,
-          cuetDomainSubjects: domains,
-          upscOptionalSubject: optionalSubject,
-          catalogExamKey: examKey,
+          targetExamLabel: loaded.examLabel,
+          cuetDomainSubjects: loaded.cuetDomainSubjects,
+          upscOptionalSubject: loaded.upscOptionalSubject,
+          catalogExamKey: loaded.catalogExamKey,
           loadedAt: Date.now(),
         };
         if (silent) setError(null);

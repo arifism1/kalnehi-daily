@@ -9,6 +9,7 @@ import {
   Camera,
   CheckCircle,
   Clock,
+  ClipboardList,
   Crown,
   Flower2,
   HelpCircle,
@@ -16,7 +17,7 @@ import {
   LineChart,
   MessageSquare,
   Mic,
-  PenTool,
+  NotebookPen,
   Settings,
   Sparkles,
   Target,
@@ -25,6 +26,7 @@ import {
   ListTodo,
   Bookmark,
   CalendarDays,
+  TestTube2,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -64,6 +66,7 @@ const SIDEBAR_CATEGORIES: SidebarCategory[] = [
       { href: "/plan-my-day", label: "Plan My Day", icon: Sparkles },
       { href: "/timer", label: "Timer", icon: Clock },
       { href: "/missed-tasks", label: "Missed Tasks", icon: LineChart },
+      { href: "/daily-log", label: "Daily Debrief", icon: NotebookPen },
     ],
   },
   {
@@ -72,6 +75,7 @@ const SIDEBAR_CATEGORIES: SidebarCategory[] = [
     items: [
       { href: "/progress", label: "Progress", icon: TrendingUp },
       { href: "/consistency-tracker", label: "Consistency Tracker", icon: BarChart3 },
+      { href: "/mock-tests", label: "Mock Test Tracker", icon: TestTube2 },
       { href: "/syllabus", label: "Syllabus Tracker", icon: BookOpen },
       { href: "/target-score-blueprint", label: "Target Score Blueprint", icon: Target },
       { href: "/my-target", label: "My Target", icon: Bookmark },
@@ -81,9 +85,9 @@ const SIDEBAR_CATEGORIES: SidebarCategory[] = [
     title: "Learn & Revise",
     dotColor: "#7F77DD",
     items: [
-      { href: "/revision-engine", label: "Revision Engine", icon: PenTool },
       { href: "/revision-reminders", label: "Revision Reminders", icon: AlarmClock },
       { href: "/doubts", label: "Doubt Tracker", icon: HelpCircle },
+      { href: "/mistake-log", label: "Mistake Log", icon: ClipboardList },
       { href: "/prepbrain", label: "PrepBrain AI", icon: Brain },
       { href: "/study-sessions", label: "On-camera Sessions", icon: Camera },
     ],

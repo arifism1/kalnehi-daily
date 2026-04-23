@@ -39,7 +39,10 @@ export type KalnehiPageSeoKey =
   | "progress"
   | "mySubscription"
   | "waitlist"
-  | "waitlist-position";
+  | "waitlist-position"
+  | "daily-log"
+  | "mock-tests"
+  | "mistake-log";
 
 const PAGE_SEO: Record<
   KalnehiPageSeoKey,
@@ -158,6 +161,24 @@ const PAGE_SEO: Record<
     title: `Your Waitlist Position — ${SITE_NAME}`,
     description:
       `Track your position in the Kalnehi Daily waitlist. See exactly when your batch opens and skip the queue instantly for ₹19.`,
+  },
+  "daily-log": {
+    path: "/daily-log",
+    title: `Daily Debrief — end-of-day reflection | ${SITE_NAME}`,
+    description:
+      `60-second end-of-day check-in: log what you finished, what you skipped, and tomorrow's top priority. ${SITE_NAME} surfaces patterns over time.`,
+  },
+  "mock-tests": {
+    path: "/mock-tests",
+    title: `Mock Test Tracker — score trends by subject | ${SITE_NAME}`,
+    description:
+      `Log every mock test with per-subject scores and track your performance over time. Works for NEET, JEE, UPSC, CAT, CA Final, and any exam.`,
+  },
+  "mistake-log": {
+    path: "/mistake-log",
+    title: `Mistake Log — error pattern tracker | ${SITE_NAME}`,
+    description:
+      `Log every mistake with 4-type taxonomy: Knowledge Gap, Application Error, Careless, Time Pressure. ${SITE_NAME} reveals your real bottleneck across any exam.`,
   },
 };
 

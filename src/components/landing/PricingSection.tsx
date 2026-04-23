@@ -27,7 +27,7 @@ const PLANS = [
     features: [
       "Everything in the free trial, every month",
       "Marks engine + rank prediction",
-      "Spaced revision engine",
+      "Revision reminders",
       "PrepBrain AI — 20,00,000 tokens/month",
       "Voice control — 100 minutes/month",
     ],

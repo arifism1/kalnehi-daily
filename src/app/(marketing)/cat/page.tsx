@@ -160,7 +160,7 @@ export default function CatPage() {
           <div className="space-y-3">
             {[
               { cmd: "Hey Boss, log 45 minutes of Quant — Time and Work chapter", result: "Session logged, Quant tracker updated" },
-              { cmd: "Hey Boss, mark Number Theory as needs revision", result: "Revision window scheduled in spaced revision engine" },
+              { cmd: "Hey Boss, mark Number Theory as needs revision", result: "Topic flagged; add or update a revision reminder with your next due date" },
               { cmd: "Hey Boss, set a daily reminder to read one editorial at 7 AM", result: "Daily reading habit created with morning reminder" },
             ].map(({ cmd, result }) => (
               <div key={cmd} className="kal-glass-card rounded-xl p-4 space-y-1">

@@ -124,7 +124,6 @@ const PAGES_SITEMAP: SitemapEntry[] = [
   { path: "/prepbrain", priority: 0.65, changeFrequency: weekly },
   { path: "/marks-engine", priority: 0.6, changeFrequency: weekly },
   { path: "/daily-engine", priority: 0.6, changeFrequency: weekly },
-  { path: "/revision-engine", priority: 0.6, changeFrequency: weekly },
   { path: "/revision-reminders", priority: 0.6, changeFrequency: weekly },
   { path: "/progress", priority: 0.6, changeFrequency: weekly },
   { path: "/heatmap", priority: 0.55, changeFrequency: weekly },

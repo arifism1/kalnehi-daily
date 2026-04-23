@@ -167,7 +167,7 @@ export default async function SyllabusPage({ params }: Props) {
 
         <CTABanner
           headline={`Track your ${data.exam} syllabus coverage in Kalnehi`}
-          subtext="PrepBrain AI, Spaced Revision Engine, and daily planning — all around your exam syllabus."
+          subtext="PrepBrain AI, revision reminders, and daily planning — all around your exam syllabus."
         />
       </div>
     </>

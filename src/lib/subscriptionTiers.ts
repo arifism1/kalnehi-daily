@@ -26,7 +26,9 @@ export type FeatureKey =
   | "doubts"
   | "ai_photo_scan"
   | "ai_voice"
-  | "prepbrain_ai";
+  | "prepbrain_ai"
+  | "mock_tests"
+  | "mistake_log";
 
 const PRO_ACCESS: Record<FeatureKey, FeatureAccess> = {
   plan_my_day: "allowed",
@@ -49,6 +51,8 @@ const PRO_ACCESS: Record<FeatureKey, FeatureAccess> = {
   ai_photo_scan: "allowed",
   ai_voice: "allowed",
   prepbrain_ai: "allowed",
+  mock_tests: "allowed",
+  mistake_log: "allowed",
 };
 
 /** Human-readable upgrade prompt per blocked feature. */
@@ -67,7 +71,10 @@ export const FEATURE_LABELS: Record<FeatureKey, { name: string; upgradeHint: str
   progress: { name: "Progress Tracker", upgradeHint: "Upgrade to Smart Plan (₹499/month) to track your preparation progress." },
   daily_log: { name: "Daily Log", upgradeHint: "Upgrade to Smart Plan (₹499/month) for daily study logging." },
   consistency_tracker: { name: "Consistency Tracker", upgradeHint: "Upgrade to Smart Plan (₹499/month) for the consistency calendar." },
-  revision: { name: "Revision Engine", upgradeHint: "Upgrade to Smart Plan (₹499/month) for the revision engine." },
+  revision: {
+    name: "Revision Reminders",
+    upgradeHint: "Upgrade to Smart Plan (₹499/month) for revision reminders and your due list.",
+  },
   habits: { name: "Habit Maker", upgradeHint: "Upgrade to Smart Plan (₹499/month) for full habit tracking with streaks." },
   motivation: { name: "Personal Motivation Vault", upgradeHint: "Upgrade to Smart Plan (₹499/month) for the motivation vault." },
   meditation: { name: "Meditation", upgradeHint: "Upgrade to Smart Plan (₹499/month) for meditation sessions." },
@@ -82,6 +89,8 @@ export const FEATURE_LABELS: Record<FeatureKey, { name: string; upgradeHint: str
     name: "PrepBrain AI",
     upgradeHint: "Upgrade to Smart Plan (₹499/month) for PrepBrain AI — 2 million tokens per month.",
   },
+  mock_tests: { name: "Mock Test Tracker", upgradeHint: "Upgrade to Smart Plan (₹499/month) to track mock tests and score trends." },
+  mistake_log: { name: "Mistake Log", upgradeHint: "Upgrade to Smart Plan (₹499/month) to log and analyse your mistake patterns." },
 };
 
 export type TierConfig = {
@@ -122,7 +131,7 @@ export const TIERS: Record<SubscriptionTier, TierConfig> = {
       "Streak + consistency heatmap",
       "Doubt tracker",
       "Marks engine + rank prediction",
-      "Spaced revision engine",
+      "Revision reminders & due list",
       "Daily log & prep insights",
       "PrepBrain AI coach",
       "Voice control — 100 minutes/month",
@@ -145,12 +154,6 @@ export function parseSubscriptionTier(
   return null;
 }
 
-export function compareSubscriptionTiers(
-  _a: SubscriptionTier,
-  _b: SubscriptionTier,
-): number {
-  return 0;
-}
 
 export function getTierConfig(_tier: string | null | undefined): TierConfig {
   return TIERS.pro;

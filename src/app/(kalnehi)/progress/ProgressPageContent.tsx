@@ -1,6 +1,8 @@
 "use client";
 
+import { AnonymousLeaderboardCard } from "@/components/progress/AnonymousLeaderboardCard";
 import { DailyExecutionPanel } from "@/components/progress/DailyExecutionPanel";
+import { SubjectTimeDistributionCard } from "@/components/progress/SubjectTimeDistributionCard";
 import { ProgressOverview } from "@/components/home/ProgressOverview";
 import { useRefreshTasksOnHomeFocus } from "@/hooks/useRefreshTasksOnHomeFocus";
 
@@ -20,6 +22,8 @@ export default function ProgressPageContent() {
         </p>
       </header>
       <DailyExecutionPanel />
+      <AnonymousLeaderboardCard />
+      <SubjectTimeDistributionCard />
       <ProgressOverview />
     </div>
   );

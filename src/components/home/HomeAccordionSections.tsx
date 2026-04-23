@@ -6,9 +6,10 @@ import {
   BookOpen,
   Brain,
   Camera,
-  CheckCircle,
   CalendarDays,
+  CheckCircle,
   ChevronDown,
+  ClipboardList,
   Clock,
   Flower2,
   HelpCircle,
@@ -17,9 +18,10 @@ import {
   ListTodo,
   MessageSquare,
   Mic,
-  PenTool,
+  NotebookPen,
   Sparkles,
   Target,
+  TestTube2,
   TrendingUp,
   X,
 } from "lucide-react";
@@ -44,10 +46,6 @@ const StudySessionsPageContent = dynamic(
 );
 const ProgressRouteLazy = dynamic(
   () => import("@/app/(kalnehi)/progress/ProgressRouteLazy"),
-  { ssr: false },
-);
-const SmartRevisionRouteLazy = dynamic(
-  () => import("@/app/(kalnehi)/revision-engine/SmartRevisionRouteLazy"),
   { ssr: false },
 );
 const RevisionRemindersRouteLazy = dynamic(
@@ -129,7 +127,27 @@ const TimerEngineClientLazy = dynamic(
     })),
   { ssr: false },
 );
-
+const DailyReflectionClientLazy = dynamic(
+  () =>
+    import("@/components/reflection/DailyReflectionClient").then((m) => ({
+      default: m.DailyReflectionClient,
+    })),
+  { ssr: false },
+);
+const MockTestsClientLazy = dynamic(
+  () =>
+    import("@/components/mock-tests/MockTestsClient").then((m) => ({
+      default: m.MockTestsClient,
+    })),
+  { ssr: false },
+);
+const MistakeLogClientLazy = dynamic(
+  () =>
+    import("@/components/mistake-log/MistakeLogClient").then((m) => ({
+      default: m.MistakeLogClient,
+    })),
+  { ssr: false },
+);
 export function HomeAccordionSections() {
   const today = useCalendarDate();
   const [openSectionId, setOpenSectionId] = useState<string | null>(null);
@@ -148,6 +166,12 @@ export function HomeAccordionSections() {
       title: "Doubt Tracker",
       icon: HelpCircle,
       content: <DoubtTrackerLazy />,
+    },
+    {
+      id: "mistake-log",
+      title: "Mistake Log",
+      icon: ClipboardList,
+      content: <MistakeLogClientLazy />,
     },
     {
       id: "prepbrain-ai",
@@ -183,6 +207,12 @@ export function HomeAccordionSections() {
           <SavedPlansHomeWidgetLazy />
         </div>
       ),
+    },
+    {
+      id: "daily-debrief",
+      title: "Daily Debrief",
+      icon: NotebookPen,
+      content: <DailyReflectionClientLazy />,
     },
     {
       id: "dictate-my-day",
@@ -233,10 +263,10 @@ export function HomeAccordionSections() {
       content: <ProgressRouteLazy />,
     },
     {
-      id: "revision-engine",
-      title: "Revision Engine",
-      icon: PenTool,
-      content: <SmartRevisionRouteLazy />,
+      id: "mock-test-tracker",
+      title: "Mock Test Tracker",
+      icon: TestTube2,
+      content: <MockTestsClientLazy />,
     },
     {
       id: "revision-reminders",

@@ -361,7 +361,7 @@ export function PricingPageClient() {
       const rzp = new window.Razorpay({
         key: created.keyId,
         name: SITE_NAME,
-        description: `Smart Plan Annual · ₹4,788/year`,
+        description: `Smart Plan Annual · ₹4,790/year`,
         order_id: created.orderId,
         amount: created.amountPaise,
         currency: "INR",
@@ -442,7 +442,7 @@ export function PricingPageClient() {
         return (
           <div className="rounded-2xl border border-kal-accent/30 bg-kal-accent-soft/50 px-5 py-4 dark:border-kal-accent/25 dark:bg-kal-accent/10">
             <p className="text-sm font-medium text-kal-accent-dark dark:text-kal-accent">
-              Upgrading to Annual will cancel your monthly plan and give you 12 months of access for ₹4,788 — no further monthly charges.
+              Upgrading to Annual will cancel your monthly plan and give you 12 months of access for ₹4,790 — no further monthly charges.
             </p>
           </div>
         );
@@ -499,12 +499,12 @@ export function PricingPageClient() {
 
   let buttonLabel: string;
   if (isMonthlyToAnnualUpgrade) {
-    buttonLabel = busy ? "Opening checkout..." : "Upgrade to Annual — ₹4,788/year";
+    buttonLabel = busy ? "Opening checkout..." : "Upgrade to Annual — ₹4,790/year";
   } else if (isActiveProSubscription) {
     buttonLabel = "Current plan";
   } else if (isCancelledWithAccess) {
     buttonLabel = billingCycle === "annual"
-      ? "Resubscribe — ₹4,788/year"
+      ? "Resubscribe — ₹4,790/year"
       : `Resubscribe — ${pro.monthlyPriceDisplay}/month`;
   } else if (hasPaidAccess) {
     buttonLabel = "Manage in app";
@@ -512,7 +512,7 @@ export function PricingPageClient() {
     buttonLabel = "Opening checkout...";
   } else {
     buttonLabel = billingCycle === "annual"
-      ? "Subscribe — ₹4,788/year"
+      ? "Subscribe — ₹4,790/year"
       : `Subscribe — ${pro.monthlyPriceDisplay}/month`;
   }
 
@@ -739,7 +739,7 @@ export function PricingPageClient() {
               {billingCycle === "annual" ? (
                 <>
                   <p className="text-lg font-bold leading-snug text-kal-text">
-                    ₹4,788/year
+                    ₹4,790/year
                     <span className="ml-2 text-xs font-semibold text-kal-accent">₹399/mo</span>
                   </p>
                   <p className="mt-1 text-xs font-medium leading-snug text-kal-text-secondary">
@@ -806,6 +806,16 @@ export function PricingPageClient() {
             <p className="text-sm text-kal-accent-dark dark:text-kal-accent" role="status">
               {checkoutError.text}
             </p>
+            {!user?.id ? (
+              <div className="mt-2 flex justify-center">
+                <Link
+                  href="/auth"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-kal-accent px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:brightness-105"
+                >
+                  Sign in →
+                </Link>
+              </div>
+            ) : null}
             {checkoutError.debugHint ? (
               <p className="mt-2 text-left text-xs leading-snug text-kal-accent-dark/90 dark:text-kal-accent/90">
                 {checkoutError.debugHint}

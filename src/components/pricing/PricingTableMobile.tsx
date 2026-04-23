@@ -13,7 +13,7 @@ const FEATURES: { name: string; trial: FeatureValue; smart: FeatureValue }[] = [
   { name: "Streak + consistency heatmap", trial: true, smart: true },
   { name: "Doubt tracker", trial: true, smart: true },
   { name: "Marks engine + rank prediction", trial: true, smart: true },
-  { name: "Spaced revision engine", trial: true, smart: true },
+  { name: "Revision reminders", trial: true, smart: true },
   { name: "Daily log & prep insights", trial: true, smart: true },
   { name: "PrepBrain AI coach", trial: true, smart: true },
   { name: "Voice control", trial: "12 min total", smart: "100 min/month" },

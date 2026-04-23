@@ -6,6 +6,7 @@ import {
   Camera,
   CalendarDays,
   CheckCircle,
+  ClipboardList,
   Clock,
   Flower2,
   HelpCircle,
@@ -13,9 +14,10 @@ import {
   ListTodo,
   MessageSquare,
   Mic,
-  PenTool,
+  NotebookPen,
   Sparkles,
   Target,
+  TestTube2,
   TrendingUp,
   type LucideIcon,
 } from "lucide-react";
@@ -43,6 +45,12 @@ export const DASHBOARD_FEATURES: DashboardFeature[] = [
     description: "Log and resolve your doubts before exam day.",
   },
   {
+    id: "mistake-log",
+    title: "Mistake Log",
+    icon: ClipboardList,
+    description: "Log errors by type (knowledge, application, careless, time) and spot patterns.",
+  },
+  {
     id: "prepbrain-ai",
     title: "PrepBrain AI",
     icon: Brain,
@@ -65,6 +73,12 @@ export const DASHBOARD_FEATURES: DashboardFeature[] = [
     title: "Saved Daily Plans",
     icon: CalendarDays,
     description: "Review past days, completion, and time worked vs planned.",
+  },
+  {
+    id: "daily-debrief",
+    title: "Daily Debrief",
+    icon: NotebookPen,
+    description: "60-second end-of-day check-in: finished, skipped, tomorrow’s top task.",
   },
   {
     id: "dictate-my-day",
@@ -116,10 +130,10 @@ export const DASHBOARD_FEATURES: DashboardFeature[] = [
     description: "See your preparation trajectory at a glance.",
   },
   {
-    id: "revision-engine",
-    title: "Smart Revision Engine",
-    icon: PenTool,
-    description: "Syllabus-aware suggestions, active recall, and realistic spacing you can override.",
+    id: "mock-test-tracker",
+    title: "Mock Test Tracker",
+    icon: TestTube2,
+    description: "Log mocks with per-subject scores and see trends over time.",
   },
   {
     id: "revision-reminders",

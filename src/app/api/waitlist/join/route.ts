@@ -11,6 +11,10 @@ import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 import { ensureJoinableBatch, countUsersAhead } from "@/lib/waitlist/batchEngine";
 import { sendWaitlistConfirm } from "@/lib/waitlist/notifications";
 
+// Max 5 join attempts per IP per 10-minute window.
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
+const RATE_LIMIT_MAX = 5;
+
 export const runtime = "nodejs";
 
 const MAX_NAME = 120;
@@ -40,6 +44,7 @@ export async function POST(req: NextRequest) {
   }
 
   const fullName = (body.fullName ?? "").slice(0, MAX_NAME).trim();
+
   const email = (body.email ?? "").slice(0, MAX_EMAIL).trim().toLowerCase();
   const phone = normalizePhone((body.phone ?? "").slice(0, MAX_PHONE));
   const exam = (body.exam ?? "").slice(0, MAX_EXAM).trim();
@@ -58,15 +63,47 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Please select the exam you are preparing for." }, { status: 400 });
   }
 
-  // Try to get session (optional — user may join before auth).
-  const supabase = await createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  const userId = user?.id;
+  // IP-based rate limiting — 5 attempts per 10-minute window per IP.
+  // Uses a service-role DB table so the limit is shared across all serverless instances.
+  const rawIp =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    req.headers.get("x-real-ip") ??
+    "unknown";
+  const ipHash = crypto.createHash("sha256").update(rawIp).digest("hex");
+  // Bucket timestamp to nearest 10-minute window (UTC).
+  const windowStart = new Date(
+    Math.floor(Date.now() / RATE_LIMIT_WINDOW_MS) * RATE_LIMIT_WINDOW_MS,
+  ).toISOString();
 
   const admin = getSupabaseServiceRoleClient();
   if (!admin) {
     return NextResponse.json({ ok: false, error: "Service unavailable." }, { status: 503 });
   }
+
+  // Upsert and read back the attempt count atomically.
+  const { data: rlRow, error: rlErr } = await admin
+    .from("waitlist_join_rate_limits" as never)
+    .upsert(
+      { ip_hash: ipHash, window_start: windowStart, attempt_count: 1 } as never,
+      { onConflict: "ip_hash,window_start", ignoreDuplicates: false },
+    )
+    .select("attempt_count")
+    .maybeSingle();
+
+  if (!rlErr && rlRow) {
+    const count = (rlRow as { attempt_count: number }).attempt_count;
+    if (count > RATE_LIMIT_MAX) {
+      return NextResponse.json(
+        { ok: false, error: "Too many requests. Please try again later." },
+        { status: 429, headers: { "Retry-After": "600" } },
+      );
+    }
+  }
+
+  // Try to get session (optional — user may join before auth).
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const userId = user?.id;
 
   // Ensure a scheduled batch exists (creates one if the table is empty).
   const batch = await ensureJoinableBatch();

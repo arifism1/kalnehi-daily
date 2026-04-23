@@ -24,13 +24,28 @@ interface Release {
 
 const RELEASES: Release[] = [
   {
+    version: "2.5",
+    date: "April 2026",
+    summary: "Revision reminders are the single home for due-date revision; legacy Smart Revision Engine screen removed.",
+    changes: [
+      {
+        version: "2.5",
+        date: "April 2026",
+        type: "improvement",
+        title: "Revision reminders only",
+        description:
+          "The standalone Smart Revision Engine page is removed. Use Revision Reminders for your due list (and link syllabus microtopics when you want). Old /revision-engine links redirect to /revision-reminders.",
+      },
+    ],
+  },
+  {
     version: "2.4",
     date: "April 2026",
     summary: "PrepBrain AI context improvements, CUET and NDA syllabus added to Syllabus Tracker, mobile revision scheduling improvements.",
     changes: [
       { version: "2.4", date: "April 2026", type: "feature", title: "CUET and NDA syllabus added", description: "Syllabus Tracker now includes complete syllabi for CUET UG/PG and NDA (Maths + GAT). Select your exam during onboarding or from Settings → Exam." },
       { version: "2.4", date: "April 2026", type: "improvement", title: "PrepBrain AI context awareness", description: "PrepBrain now considers your revision history alongside coverage — giving advice that accounts for topics you studied long ago and haven't revisited." },
-      { version: "2.4", date: "April 2026", type: "improvement", title: "Mobile revision scheduling", description: "The Spaced Revision Engine's scheduling view is now fully optimized for mobile. Swipe to mark topics as revised, reschedule, or skip." },
+      { version: "2.4", date: "April 2026", type: "improvement", title: "Mobile revision reminders", description: "Revision Reminders is easier to use on mobile: sort by due date, reschedule, and mark items done in fewer taps." },
       { version: "2.4", date: "April 2026", type: "fix", title: "Voice log persistence on Safari iOS", description: "Fixed an issue where voice-logged doubts were not saving correctly on Safari (iOS 17+). All voice input now persists correctly." },
     ],
   },

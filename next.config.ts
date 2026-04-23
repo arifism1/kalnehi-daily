@@ -95,6 +95,11 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        source: "/revision-engine",
+        destination: "/revision-reminders",
+        permanent: true,
+      },
+      {
         source: "/pending",
         destination: "/missed-tasks",
         permanent: true,
@@ -102,6 +107,11 @@ const nextConfig: NextConfig = {
       {
         source: "/my-plan",
         destination: "/my-subscription",
+        permanent: true,
+      },
+      {
+        source: "/planner/exam-timeline",
+        destination: "/planner",
         permanent: true,
       },
     ];

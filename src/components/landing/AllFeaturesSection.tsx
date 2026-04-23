@@ -45,9 +45,9 @@ const ALL_FEATURES = [
   },
   {
     emoji: "🔄",
-    title: "Revision Engine",
-    tagline: "Topics you studied 3 weeks ago are already fading. This catches them before the mock does.",
-    detail: "Flags chapters by time since last covered. Revision that's planned is revision that actually happens.",
+    title: "Revision reminders",
+    tagline: "A dated queue beats a vague promise to \"revise later.\"",
+    detail: "Due dates, priorities, optional syllabus links — reschedule anytime, push to your daily plan when ready.",
   },
   {
     emoji: "🔥",

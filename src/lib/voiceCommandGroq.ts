@@ -56,7 +56,6 @@ const VALID_NAV_PATHS = new Set([
   "/target-score-blueprint",
   // Learn & revise
   "/revision-reminders",
-  "/revision-engine",
   "/syllabus",
   "/doubts",
   "/prepbrain",
@@ -110,7 +109,7 @@ Valid paths:
   Planning: /daily-plan, /daily-log, /daily-engine, /dictate-day, /plan-my-day, /saved-plans, /missed-tasks, /calendar, /timer, /study-sessions, /study-camera, /paste-handwritten
   Planner: /planner, /planner/habits, /planner/schedule, /planner/weekly, /planner/todos, /planner/routine, /planner/productivity
   Track: /progress, /consistency-tracker, /heatmap, /marks-engine, /my-target, /target-score-blueprint
-  Revise: /revision-reminders, /revision-engine, /syllabus, /doubts, /prepbrain, /helpyji
+  Revise: /revision-reminders, /syllabus, /doubts, /prepbrain, /helpyji
   Wellbeing: /habits, /meditation, /meditation/consistency, /motivation
 - "Go to home" → {"intent":"navigate","path":"/home","response_text":"Going home."}
 - "Go to daily plan" → {"intent":"navigate","path":"/daily-plan","response_text":"Going to your daily plan."}

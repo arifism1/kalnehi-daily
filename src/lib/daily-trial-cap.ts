@@ -40,14 +40,9 @@ export function getNextMidnightInTz(tz = "Asia/Kolkata"): Date {
   const month = Number(parts.find((p) => p.type === "month")?.value);
   const day   = Number(parts.find((p) => p.type === "day")?.value);
 
-  // Construct tomorrow midnight in the target timezone by appending one day.
-  // We create an ISO string that represents midnight in that timezone and
-  // convert to UTC via the offset.
-  const tomorrowISO = `${year}-${String(month).padStart(2, "0")}-${String(day + 1).padStart(2, "0")}T00:00:00`;
-
-  // Use Intl to find the UTC offset at that moment.
-  // We do this by parsing the local time string back with the tz.
-  const tomorrowLocal = new Date(`${tomorrowISO}`);
+  // Construct a Date representing tomorrow — Date.UTC handles month/year overflow
+  // correctly (e.g. day 31 of a 30-day month rolls into the next month).
+  const tomorrowLocal = new Date(Date.UTC(year, month - 1, day + 1));
 
   // Create a formatter to get the offset.
   const offsetFormatter = new Intl.DateTimeFormat("en-US", {

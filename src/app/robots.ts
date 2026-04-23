@@ -77,7 +77,6 @@ export default function robots(): MetadataRoute.Robots {
           "/syllabus",
           "/prepbrain",
           "/marks-engine",
-          "/revision-engine",
           "/study-sessions",
           "/habits",
           "/heatmap",

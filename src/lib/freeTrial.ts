@@ -105,7 +105,7 @@ export function isPaidSubscriptionAccess(
 }
 
 /**
- * True when the 24h welcome trial window has ended (started and past end), and user is not on paid access.
+ * True when the 3-day welcome trial window has ended (started and past end), and user is not on paid access.
  */
 export function isWelcomeTrialExpired(
   trialStartedAt: string | null | undefined,

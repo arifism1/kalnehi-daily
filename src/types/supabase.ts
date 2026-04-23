@@ -721,6 +721,215 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_reflections: {
+        Row: {
+          id: string
+          user_id: string
+          reflection_date: string
+          finished_today: string | null
+          skipped_today: string | null
+          tomorrow_priority: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          reflection_date?: string
+          finished_today?: string | null
+          skipped_today?: string | null
+          tomorrow_priority?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          reflection_date?: string
+          finished_today?: string | null
+          skipped_today?: string | null
+          tomorrow_priority?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      exam_phase_plans: {
+        Row: {
+          id: string
+          user_id: string
+          phase: string
+          subject: string
+          weekly_hours_target: number | null
+          revision_cycles: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          phase: string
+          subject: string
+          weekly_hours_target?: number | null
+          revision_cycles?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          phase?: string
+          subject?: string
+          weekly_hours_target?: number | null
+          revision_cycles?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      mistake_logs: {
+        Row: {
+          id: string
+          user_id: string
+          logged_at: string
+          subject: string
+          syllabus_master_id: string | null
+          topic_label: string | null
+          mistake_type: string
+          source: string | null
+          mock_test_id: string | null
+          note: string | null
+          flag_for_revision: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          logged_at?: string
+          subject: string
+          syllabus_master_id?: string | null
+          topic_label?: string | null
+          mistake_type: string
+          source?: string | null
+          mock_test_id?: string | null
+          note?: string | null
+          flag_for_revision?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          logged_at?: string
+          subject?: string
+          syllabus_master_id?: string | null
+          topic_label?: string | null
+          mistake_type?: string
+          source?: string | null
+          mock_test_id?: string | null
+          note?: string | null
+          flag_for_revision?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mistake_logs_syllabus_master_id_fkey"
+            columns: ["syllabus_master_id"]
+            isOneToOne: false
+            referencedRelation: "syllabus_master"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mistake_logs_mock_test_id_fkey"
+            columns: ["mock_test_id"]
+            isOneToOne: false
+            referencedRelation: "mock_tests"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      mock_tests: {
+        Row: {
+          id: string
+          user_id: string
+          test_date: string
+          test_name: string
+          exam_name: string
+          score_type: string
+          max_score: number | null
+          total_score: number | null
+          duration_minutes: number | null
+          self_rating: string | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          test_date?: string
+          test_name?: string
+          exam_name?: string
+          score_type?: string
+          max_score?: number | null
+          total_score?: number | null
+          duration_minutes?: number | null
+          self_rating?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          test_date?: string
+          test_name?: string
+          exam_name?: string
+          score_type?: string
+          max_score?: number | null
+          total_score?: number | null
+          duration_minutes?: number | null
+          self_rating?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      mock_test_subject_scores: {
+        Row: {
+          id: string
+          mock_test_id: string
+          subject: string
+          max_score: number | null
+          score: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          mock_test_id: string
+          subject: string
+          max_score?: number | null
+          score?: number | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          mock_test_id?: string
+          subject?: string
+          max_score?: number | null
+          score?: number | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mock_test_subject_scores_mock_test_id_fkey"
+            columns: ["mock_test_id"]
+            isOneToOne: false
+            referencedRelation: "mock_tests"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       tasks: {
         Row: {
           assigned_date: string
@@ -2129,6 +2338,45 @@ export type Database = {
           },
         ]
       }
+      leaderboard_weekly_metrics: {
+        Row: {
+          cohort_key: string
+          cohort_rank: number | null
+          cohort_size: number | null
+          composite: number
+          syllabus_overall_pct: number
+          top_percent: number | null
+          updated_at: string
+          user_id: string
+          week_start: string
+          weekly_seconds: number
+        }
+        Insert: {
+          cohort_key: string
+          cohort_rank?: number | null
+          cohort_size?: number | null
+          composite: number
+          syllabus_overall_pct: number
+          top_percent?: number | null
+          updated_at?: string
+          user_id: string
+          week_start: string
+          weekly_seconds?: number
+        }
+        Update: {
+          cohort_key?: string
+          cohort_rank?: number | null
+          cohort_size?: number | null
+          composite?: number
+          syllabus_overall_pct?: number
+          top_percent?: number | null
+          updated_at?: string
+          user_id?: string
+          week_start?: string
+          weekly_seconds?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -2189,6 +2437,10 @@ export type Database = {
       upsc_cse_mains_syllabus_rows: {
         Args: { p_optional?: string | null }
         Returns: Database["public"]["Tables"]["syllabus_master"]["Row"][]
+      }
+      recompute_leaderboard_weekly_top_percents: {
+        Args: { p_week_start: string }
+        Returns: undefined
       }
       fetch_task_sessions_for_log: {
         Args: { p_since: string; p_limit?: number }
