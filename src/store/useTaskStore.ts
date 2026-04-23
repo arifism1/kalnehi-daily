@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-import type { Tables } from "@/types/supabase";
+import type { Tables, TablesUpdate } from "@/types/supabase";
 
 export type Microtopic = Tables<"syllabus_master">;
 export type Task = Tables<"tasks">;
@@ -13,6 +13,15 @@ export type MergeServerTasksOptions = {
   pendingDeleteIds?: ReadonlySet<string>;
   /** Keep current Zustand row — pending create/update not flushed yet. */
   pendingLocalMutationIds?: ReadonlySet<string>;
+  /**
+   * When the outbox has a `task_update` for a row the server also returned, merge
+   * `server row + patch` so we do not need a pre-filled local copy (e.g. before IDB
+   * hydration completes).
+   */
+  pendingUpdatePatchesByTaskId?: ReadonlyMap<
+    string,
+    TablesUpdate<"tasks">
+  >;
 };
 
 type TaskStore = {
@@ -45,10 +54,17 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   mergeServerTasks: (tasks, opts) => {
     const pendingDeleteIds = opts?.pendingDeleteIds;
     const pendingLocalMutationIds = opts?.pendingLocalMutationIds;
+    const patchById = opts?.pendingUpdatePatchesByTaskId;
     const next = { ...get().tasks };
     for (const t of tasks) {
       if (pendingDeleteIds?.has(t.id)) continue;
-      if (pendingLocalMutationIds?.has(t.id)) continue;
+      if (pendingLocalMutationIds?.has(t.id)) {
+        const patch = patchById?.get(t.id);
+        if (patch) {
+          next[t.id] = { ...t, ...patch } as Task;
+        }
+        continue;
+      }
       next[t.id] = t;
     }
     set({ tasks: next });

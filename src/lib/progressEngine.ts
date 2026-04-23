@@ -1,5 +1,6 @@
 import { differenceInCalendarDays, parseISO } from "date-fns";
 
+import { toCalendarDateKey } from "@/lib/calendarDateKey";
 import type { Microtopic, Task } from "@/store/useTaskStore";
 
 export const PROGRESS_THRESHOLDS = {
@@ -97,11 +98,12 @@ export function findMissedIncompleteTasks(
   tasks: Task[],
   todayCalendarDate: string,
 ): Task[] {
-  return tasks.filter(
-    (t) =>
-      !isTaskCompleted(t) &&
-      t.assigned_date < todayCalendarDate,
-  );
+  const todayKey = toCalendarDateKey(todayCalendarDate) ?? todayCalendarDate;
+  return tasks.filter((t) => {
+    const d = toCalendarDateKey(t.assigned_date);
+    if (d == null) return false;
+    return !isTaskCompleted(t) && d < todayKey;
+  });
 }
 
 export function summarizeDailyReset(
@@ -147,14 +149,19 @@ export function filterTasksThroughDate(
   tasks: Task[],
   todayCalendarDate: string,
 ): Task[] {
-  return tasks.filter((t) => t.assigned_date <= todayCalendarDate);
+  const endKey = toCalendarDateKey(todayCalendarDate) ?? todayCalendarDate;
+  return tasks.filter((t) => {
+    const d = toCalendarDateKey(t.assigned_date);
+    return d != null && d <= endKey;
+  });
 }
 
 export function filterTasksForDate(
   tasks: Task[],
   calendarDate: string,
 ): Task[] {
-  return tasks.filter((t) => t.assigned_date === calendarDate);
+  const want = toCalendarDateKey(calendarDate) ?? calendarDate;
+  return tasks.filter((t) => toCalendarDateKey(t.assigned_date) === want);
 }
 
 /** Sum of marks weights for a day’s tasks (planned load). */

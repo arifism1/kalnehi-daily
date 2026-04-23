@@ -46,10 +46,10 @@ export function DataAndThisDeviceSection() {
           </Link>
           . For a full export of account data or deletion, email{" "}
           <a
-            href="mailto:support@kalnehi.com"
+            href="mailto:curioversitylearning@gmail.com"
             className="font-semibold text-kal-accent underline underline-offset-2"
           >
-            support@kalnehi.com
+            curioversitylearning@gmail.com
           </a>
           .
         </p>

@@ -1,5 +1,6 @@
 "use client";
 
+import { toCalendarDateKey } from "@/lib/calendarDateKey";
 import type { TablesInsert, TablesUpdate } from "@/types/supabase";
 import { USER_ERROR } from "@/lib/userFacingErrors";
 import { dispatchTasksSync } from "@/lib/taskRefreshDispatch";
@@ -21,11 +22,16 @@ import { useTaskStore } from "@/store/useTaskStore";
 function mergeTask(taskId: string, patch: TablesUpdate<"tasks">): Task | null {
   const prev = useTaskStore.getState().tasks[taskId];
   if (!prev) return null;
-  return {
+  const merged = {
     ...prev,
     ...patch,
     updated_at: new Date().toISOString(),
   } as Task;
+  if (typeof merged.assigned_date === "string") {
+    const k = toCalendarDateKey(merged.assigned_date);
+    if (k) merged.assigned_date = k;
+  }
+  return merged;
 }
 
 const taskUpdateChains = new Map<string, Promise<unknown>>();
