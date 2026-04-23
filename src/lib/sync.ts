@@ -24,7 +24,10 @@ import { USER_ERROR } from "@/lib/userFacingErrors";
 import type { Json, TablesInsert } from "@/types/supabase";
 import { flushHabitOutbox } from "@/lib/habitSync";
 import { flushMotivationOutbox } from "@/lib/motivationSync";
-import { flushUserPlannerTextOutbox } from "@/lib/userPlannerTextSync";
+import {
+  cancelPendingUserPlannerTextDebounce,
+  flushUserPlannerTextOutbox,
+} from "@/lib/userPlannerTextSync";
 import { useSyncStore } from "@/store/useSyncStore";
 
 const MAX_RETRIES = 6;
@@ -56,6 +59,28 @@ export function scheduleOutboxFlush(userId: string | undefined): void {
     const uid = flushDebounceUserId;
     void flushOutbox(uid);
   }, OUTBOX_FLUSH_DEBOUNCE_MS);
+}
+
+/** Clears task outbox debounce without flushing; pair with `flushOutbox`. */
+export function cancelPendingTaskOutboxDebounce(): void {
+  if (flushDebounceTimer) {
+    clearTimeout(flushDebounceTimer);
+    flushDebounceTimer = null;
+  }
+}
+
+/**
+ * Cancel debounced flushes and push all IndexedDB outboxes immediately.
+ * Use on tab hide / pagehide so queued work is not stranded behind a timer.
+ */
+export function flushAllOutboxes(userId: string | undefined): void {
+  cancelPendingTaskOutboxDebounce();
+  cancelPendingUserPlannerTextDebounce();
+  if (!userId) return;
+  void flushOutbox(userId);
+  void flushMotivationOutbox(userId);
+  void flushHabitOutbox(userId);
+  void flushUserPlannerTextOutbox(userId);
 }
 
 /** Inserts a voice_timeline_entries row with the browser Supabase session (outbox flush). */
@@ -458,22 +483,14 @@ export async function reconcileConnectivity(
 
   if (navigator.onLine) {
     useSyncStore.getState().setOnline(true);
-    if (userId) {
-      void flushOutbox(userId);
-      void flushMotivationOutbox(userId);
-      void flushHabitOutbox(userId);
-      void flushUserPlannerTextOutbox(userId);
-    }
+    flushAllOutboxes(userId);
     return;
   }
 
   const reachable = await probeSameOriginReachable();
   useSyncStore.getState().setOnline(reachable);
-  if (reachable && userId) {
-    void flushOutbox(userId);
-    void flushMotivationOutbox(userId);
-    void flushHabitOutbox(userId);
-    void flushUserPlannerTextOutbox(userId);
+  if (reachable) {
+    flushAllOutboxes(userId);
   }
 }
 
@@ -707,10 +724,7 @@ export function initSyncManager(userId: string | undefined): () => void {
       offlineRecoverTimer = null;
     }
     useSyncStore.getState().setOnline(true);
-    void flushOutbox(userId);
-    void flushMotivationOutbox(userId);
-    void flushHabitOutbox(userId);
-    void flushUserPlannerTextOutbox(userId);
+    flushAllOutboxes(userId);
   };
   const onOffline = () => {
     useSyncStore.getState().setOnline(false);
@@ -735,6 +749,8 @@ export function initSyncManager(userId: string | undefined): () => void {
   const onVisibility = () => {
     if (document.visibilityState === "visible") {
       void reconcileConnectivity(userId);
+    } else {
+      flushAllOutboxes(userId);
     }
   };
   document.addEventListener("visibilitychange", onVisibility);
@@ -744,15 +760,19 @@ export function initSyncManager(userId: string | undefined): () => void {
   };
   window.addEventListener("focus", onFocus);
 
+  const onPageHide = () => {
+    flushAllOutboxes(userId);
+  };
+  window.addEventListener("pagehide", onPageHide);
+
   if (userId) {
-    void flushOutbox(userId);
-    void flushMotivationOutbox(userId);
-    void flushHabitOutbox(userId);
-    void flushUserPlannerTextOutbox(userId);
+    flushAllOutboxes(userId);
   }
 
   return () => {
+    flushAllOutboxes(userId);
     clearRetryTimer();
+    cancelPendingUserPlannerTextDebounce();
     if (flushDebounceTimer) {
       clearTimeout(flushDebounceTimer);
       flushDebounceTimer = null;
@@ -765,5 +785,6 @@ export function initSyncManager(userId: string | undefined): () => void {
     window.removeEventListener("offline", onOffline);
     document.removeEventListener("visibilitychange", onVisibility);
     window.removeEventListener("focus", onFocus);
+    window.removeEventListener("pagehide", onPageHide);
   };
 }

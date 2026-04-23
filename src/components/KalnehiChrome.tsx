@@ -13,6 +13,7 @@ import {
 } from "react";
 
 import { GlobalVoiceSheet } from "@/components/voice/GlobalVoiceSheet";
+import { Day3Paywall } from "@/components/paywall/Day3Paywall";
 import { useVoiceCommandStore } from "@/store/useVoiceCommandStore";
 
 import { KalnehiMark } from "@/components/KalnehiMark";
@@ -221,6 +222,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
       <TimerVisibilityBridge />
       <PwaInstallPromptDeferred />
       <GlobalVoiceSheet />
+      <Day3Paywall />
     </div>
   );
 }

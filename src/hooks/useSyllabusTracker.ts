@@ -119,6 +119,8 @@ export function useSyllabusTracker() {
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
   const saveFeedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loadSeqRef = useRef(0);
+  const pendingStatusRef = useRef<Record<string, string>>({});
 
   const maxScore = useMemo(() => {
     if (isCuetExam(targetExamLabel)) {
@@ -134,6 +136,7 @@ export function useSyllabusTracker() {
 
   const load = useCallback(
     async (opts?: { silent?: boolean }) => {
+      const myId = ++loadSeqRef.current;
       const silent = opts?.silent === true;
       if (!userId) {
         trackerCache = null;
@@ -174,6 +177,7 @@ export function useSyllabusTracker() {
         setUpscOptionalSubject(optionalSubject);
 
         if (!examLabel?.trim()) {
+          if (myId !== loadSeqRef.current) return;
           setRows([]);
           setStatusBySyllabusMasterId({});
           setCatalogExamKey(null);
@@ -185,6 +189,7 @@ export function useSyllabusTracker() {
         // (e.g. legacy JEE Main → JEE Main 2025). Same rules as task refresh.
         const examKey = syllabusCatalogExamName(examLabel);
         if (!examKey) {
+          if (myId !== loadSeqRef.current) return;
           setRows([]);
           setStatusBySyllabusMasterId({});
           setCatalogExamKey(null);
@@ -257,12 +262,16 @@ export function useSyllabusTracker() {
         );
         const map = filterProgressToSyllabusIds(fullMapCoalesced, deduped);
 
+        if (myId !== loadSeqRef.current) return;
+        const pending = pendingStatusRef.current;
+        const finalMap =
+          Object.keys(pending).length > 0 ? { ...map, ...pending } : map;
         setRows(deduped);
-        setStatusBySyllabusMasterId(map);
+        setStatusBySyllabusMasterId(finalMap);
         trackerCache = {
           userId,
           rows: deduped,
-          statusBySyllabusMasterId: map,
+          statusBySyllabusMasterId: finalMap,
           targetExamLabel: examLabel ?? null,
           cuetDomainSubjects: domains,
           upscOptionalSubject: optionalSubject,
@@ -271,6 +280,7 @@ export function useSyllabusTracker() {
         };
         if (silent) setError(null);
       } catch (e) {
+        if (myId !== loadSeqRef.current) return;
         const msg = toUserFacingMessage(e);
         if (silent) {
           setUpdateError(msg);
@@ -281,7 +291,7 @@ export function useSyllabusTracker() {
           setCatalogExamKey(null);
         }
       } finally {
-        if (!silent) setLoading(false);
+        if (myId === loadSeqRef.current) setLoading(false);
       }
     },
     [userId],
@@ -378,10 +388,12 @@ export function useSyllabusTracker() {
         previousSnapshot = m[key] ?? "not_begun";
         return { ...m, [key]: next };
       });
+      pendingStatusRef.current[key] = next;
 
       const res = await updateMicrotopicStatus(syllabusMasterId, next);
 
       if (!res.ok) {
+        delete pendingStatusRef.current[key];
         setStatusBySyllabusMasterId((m) => ({
           ...m,
           [key]: previousSnapshot,
@@ -396,6 +408,7 @@ export function useSyllabusTracker() {
       }));
 
       await load({ silent: true });
+      delete pendingStatusRef.current[key];
 
       if (saveFeedbackTimer.current) clearTimeout(saveFeedbackTimer.current);
       setSaveFeedback("Saved");
@@ -421,10 +434,12 @@ export function useSyllabusTracker() {
         snapshotBefore = m[key] ?? "not_begun";
         return { ...m, [key]: targetStatus };
       });
+      pendingStatusRef.current[key] = targetStatus;
 
       const res = await updateMicrotopicStatus(syllabusMasterId, targetStatus);
 
       if (!res.ok) {
+        delete pendingStatusRef.current[key];
         setStatusBySyllabusMasterId((m) => ({
           ...m,
           [key]: snapshotBefore,
@@ -439,6 +454,7 @@ export function useSyllabusTracker() {
       }));
 
       await load({ silent: true });
+      delete pendingStatusRef.current[key];
       return true;
     },
     [load],
@@ -464,16 +480,19 @@ export function useSyllabusTracker() {
         for (const k of keys) next[k] = nextStatus;
         return next;
       });
+      for (const k of keys) pendingStatusRef.current[k] = nextStatus;
 
       const res = await bulkUpdateChapterMicrotopics(microtopicIds, nextStatus);
 
       if (!res.ok) {
+        for (const k of keys) delete pendingStatusRef.current[k];
         setStatusBySyllabusMasterId(previousSnapshot);
         setUpdateError(res.error);
         return false;
       }
 
       await load({ silent: true });
+      for (const k of keys) delete pendingStatusRef.current[k];
 
       if (saveFeedbackTimer.current) clearTimeout(saveFeedbackTimer.current);
       setSaveFeedback(

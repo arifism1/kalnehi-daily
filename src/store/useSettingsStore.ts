@@ -7,7 +7,7 @@ export type StudyDetectionSensitivity = "strict" | "balanced" | "lenient";
 
 export type AppearanceMode = "light" | "dark";
 
-type SettingsState = {
+export type SettingsState = {
   /** UI theme: "light" (Orange theme) or "dark" (Coffee theme). */
   appearance: AppearanceMode;
   purposeModeEnabled: boolean;
@@ -43,6 +43,41 @@ type SettingsState = {
   setStudyCameraVerifyIntervalMin: (v: 2 | 3 | 5) => void;
   setAppearance: (v: AppearanceMode) => void;
 };
+
+/** Keys persisted locally and mirrored to `user_profiles.ui_prefs` when signed in. */
+export type UiPrefsPersisted = {
+  appearance: AppearanceMode;
+  purposeModeEnabled: boolean;
+  showCountdown: boolean;
+  advancedMarksProjectionEnabled: boolean;
+  soundEffects: boolean;
+  dailyReminders: boolean;
+  studyCameraEnabled: boolean;
+  studyCameraFacing: StudyCameraFacing;
+  studyCameraAutoStart: boolean;
+  studyCameraPrivacyAcknowledged: boolean;
+  studyDetectionSensitivity: StudyDetectionSensitivity;
+  studyCameraVisionVerify: boolean;
+  studyCameraVerifyIntervalMin: 2 | 3 | 5;
+};
+
+export function pickUiPrefsForSync(s: SettingsState): UiPrefsPersisted {
+  return {
+    appearance: s.appearance,
+    purposeModeEnabled: s.purposeModeEnabled,
+    showCountdown: s.showCountdown,
+    advancedMarksProjectionEnabled: s.advancedMarksProjectionEnabled,
+    soundEffects: s.soundEffects,
+    dailyReminders: s.dailyReminders,
+    studyCameraEnabled: s.studyCameraEnabled,
+    studyCameraFacing: s.studyCameraFacing,
+    studyCameraAutoStart: s.studyCameraAutoStart,
+    studyCameraPrivacyAcknowledged: s.studyCameraPrivacyAcknowledged,
+    studyDetectionSensitivity: s.studyDetectionSensitivity,
+    studyCameraVisionVerify: s.studyCameraVisionVerify,
+    studyCameraVerifyIntervalMin: s.studyCameraVerifyIntervalMin,
+  };
+}
 
 export const useSettingsStore = create<SettingsState>()(
   persist(
@@ -98,21 +133,7 @@ export const useSettingsStore = create<SettingsState>()(
         return s;
       },
       storage: createJSONStorage(() => localStorage),
-      partialize: (s) => ({
-        appearance: s.appearance,
-        purposeModeEnabled: s.purposeModeEnabled,
-        showCountdown: s.showCountdown,
-        advancedMarksProjectionEnabled: s.advancedMarksProjectionEnabled,
-        soundEffects: s.soundEffects,
-        dailyReminders: s.dailyReminders,
-        studyCameraEnabled: s.studyCameraEnabled,
-        studyCameraFacing: s.studyCameraFacing,
-        studyCameraAutoStart: s.studyCameraAutoStart,
-        studyCameraPrivacyAcknowledged: s.studyCameraPrivacyAcknowledged,
-        studyDetectionSensitivity: s.studyDetectionSensitivity,
-        studyCameraVisionVerify: s.studyCameraVisionVerify,
-        studyCameraVerifyIntervalMin: s.studyCameraVerifyIntervalMin,
-      }),
+      partialize: (s) => pickUiPrefsForSync(s),
     },
   ),
 );

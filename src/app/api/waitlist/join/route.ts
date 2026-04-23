@@ -1,0 +1,157 @@
+/**
+ * POST /api/waitlist/join
+ * Assigns a waitlist position to the authenticated user (or unauthenticated via email only).
+ * Fires WAITLIST_CONFIRM email immediately.
+ */
+import { type NextRequest, NextResponse } from "next/server";
+
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
+import { getNextBatch, countUsersAhead, getTotalWaitlistCount } from "@/lib/waitlist/batchEngine";
+import { sendWaitlistConfirm } from "@/lib/waitlist/notifications";
+
+export const runtime = "nodejs";
+
+const MAX_NAME = 120;
+const MAX_EMAIL = 320;
+const MAX_EXAM = 120;
+
+type JoinBody = {
+  fullName?: string;
+  email?: string;
+  exam?: string;
+  notificationChannel?: string;
+};
+
+export async function POST(req: NextRequest) {
+  let body: JoinBody;
+  try {
+    body = (await req.json()) as JoinBody;
+  } catch {
+    return NextResponse.json({ ok: false, error: "Invalid request body." }, { status: 400 });
+  }
+
+  const fullName = (body.fullName ?? "").slice(0, MAX_NAME).trim();
+  const email = (body.email ?? "").slice(0, MAX_EMAIL).trim().toLowerCase();
+  const exam = (body.exam ?? "").slice(0, MAX_EXAM).trim();
+  const channel = (body.notificationChannel ?? "email") as "email" | "push" | "both";
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return NextResponse.json({ ok: false, error: "A valid email address is required." }, { status: 400 });
+  }
+
+  // Try to get session (optional — user may join before auth).
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const userId = user?.id;
+
+  const admin = getSupabaseServiceRoleClient();
+  if (!admin) {
+    return NextResponse.json({ ok: false, error: "Service unavailable." }, { status: 503 });
+  }
+
+  // Find the next scheduled batch.
+  const batch = await getNextBatch();
+  if (!batch) {
+    return NextResponse.json({ ok: false, error: "No open batch at this time. Please check back soon." }, { status: 503 });
+  }
+
+  if (!userId) {
+    // Unauthenticated: store in waitlist_entries without user_id (position reserved by email).
+    // Check if email already joined.
+    const { data: existing } = await admin
+      .from("waitlist_entries")
+      .select("id, position")
+      .eq("contact_email", email)
+      .maybeSingle();
+
+    if (existing) {
+      const e = existing as { id: string; position: number };
+      const aheadCount = await countUsersAhead(e.position);
+      return NextResponse.json({
+        ok: true,
+        alreadyExists: true,
+        position: e.position,
+        batchNumber: batch.batch_number,
+        opensAt: batch.opens_at,
+        aheadCount,
+      });
+    }
+
+    // Assign position.
+    const total = await getTotalWaitlistCount();
+    const position = total + 1;
+
+    const { error: insertErr } = await admin.from("waitlist_entries").insert({
+      user_id: userId ?? "00000000-0000-0000-0000-000000000000",
+      batch_id: batch.id,
+      position,
+      status: "waiting",
+      notification_channel: channel,
+      contact_email: email,
+    });
+
+    if (insertErr) {
+      console.error("[waitlist/join] insert error", insertErr.message);
+      return NextResponse.json({ ok: false, error: "Failed to join waitlist." }, { status: 500 });
+    }
+
+    const aheadCount = Math.max(0, position - 1);
+    await sendWaitlistConfirm({ email, position, batchNumber: batch.batch_number, opensAt: batch.opens_at, aheadCount });
+    return NextResponse.json({ ok: true, position, batchNumber: batch.batch_number, opensAt: batch.opens_at, aheadCount });
+  }
+
+  // Authenticated: use RPC for atomic position assignment.
+  const { data: rpcResult, error: rpcErr } = await admin.rpc("assign_waitlist_position", {
+    p_user_id: userId,
+    p_batch_id: batch.id,
+    p_notification_ch: channel,
+    p_contact_email: email,
+  });
+
+  if (rpcErr) {
+    console.error("[waitlist/join] RPC error", rpcErr.message);
+    return NextResponse.json({ ok: false, error: "Failed to join waitlist." }, { status: 500 });
+  }
+
+  const result = rpcResult as {
+    ok: boolean;
+    error?: string;
+    position?: number;
+    batch_number?: number;
+    opens_at?: string;
+    already_exists?: boolean;
+  };
+
+  if (!result.ok) {
+    return NextResponse.json({ ok: false, error: result.error ?? "Unknown error." }, { status: 400 });
+  }
+
+  const position = result.position ?? 1;
+  const aheadCount = await countUsersAhead(position);
+
+  // Update contact_email and full_name on profile if provided.
+  if (fullName) {
+    await admin
+      .from("user_profiles")
+      .update({ full_name: fullName, updated_at: new Date().toISOString() })
+      .eq("user_id", userId);
+  }
+
+  await sendWaitlistConfirm({
+    email,
+    position,
+    batchNumber: result.batch_number ?? batch.batch_number,
+    opensAt: result.opens_at ?? batch.opens_at,
+    aheadCount,
+  });
+
+  return NextResponse.json({
+    ok: true,
+    alreadyExists: result.already_exists ?? false,
+    position,
+    batchNumber: result.batch_number ?? batch.batch_number,
+    opensAt: result.opens_at ?? batch.opens_at,
+    aheadCount,
+  });
+}

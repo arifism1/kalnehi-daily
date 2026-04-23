@@ -2,6 +2,7 @@
 
 export type HabitOutboxOp =
   | { kind: "habit_create"; id: string; name: string }
+  | { kind: "habit_delete"; id: string }
   | {
       kind: "habit_log_upsert";
       habitId: string;

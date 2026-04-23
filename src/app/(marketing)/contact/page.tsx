@@ -65,7 +65,7 @@ export default function ContactPage() {
           {[
             { q: "How do I cancel my subscription?", a: "Go to Settings → Subscription → Cancel. Your access continues until the end of the billing period. No questions asked." },
             { q: "Can I get a refund?", a: "We offer a full refund within 7 days of any paid charge if you're not satisfied. Email support@kalnehi.com with your account email and reason." },
-            { q: "Is my data safe if I cancel?", a: "Yes. Your data is retained for 90 days after cancellation. You can export it anytime from Settings → Privacy → Export data." },
+            { q: "Is my data safe if I cancel?", a: "Yes. Your data is retained for 90 days after cancellation. For a full export of your account data, email support@kalnehi.com from your registered address." },
             { q: "I forgot my password. What do I do?", a: "Use 'Forgot password' on the sign-in page. A reset link is sent to your registered email within 2 minutes." },
           ].map((item) => (
             <div key={item.q} className="space-y-1 border-b border-kal-border last:border-0 pb-3 last:pb-0">

@@ -5,6 +5,7 @@
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
 
 import type { HabitOutboxOp } from "@/lib/habitTypes";
+import { registerOutboxBackgroundSync } from "@/lib/pwaBackgroundSync";
 import type { Tables } from "@/types/supabase";
 
 export type UserHabitRow = Tables<"user_habits">;
@@ -63,9 +64,15 @@ export async function getHabitBundleCached(userId: string): Promise<HabitBundle 
   return row.bundle;
 }
 
+export function notifyHabitBundleChanged(): void {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event("kalnehi-habits-changed"));
+}
+
 export async function saveHabitBundleCached(bundle: HabitBundle): Promise<void> {
   const db = await getDb();
   await db.put("bundles", { key: BUNDLE_KEY, bundle });
+  notifyHabitBundleChanged();
 }
 
 export async function enqueueHabitOutbox(
@@ -79,6 +86,7 @@ export async function enqueueHabitOutbox(
     op,
     createdAt: Date.now(),
   });
+  registerOutboxBackgroundSync().catch(() => {});
 }
 
 export async function getAllHabitOutbox(): Promise<OutboxRow[]> {

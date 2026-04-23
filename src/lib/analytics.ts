@@ -1,3 +1,6 @@
+import { saveSignupAttributionOnce } from "@/actions/clientProfileExtras";
+import type { Json } from "@/types/supabase";
+
 const STORAGE_KEY = "kalnehi_first_touch_v1";
 
 export type FirstTouch = {
@@ -70,6 +73,15 @@ function pushDataLayer(data: DataLayer) {
  */
 export function trackAuthSuccess(event: "login" | "sign_up"): void {
   const ft = getFirstTouch();
+  if (ft) {
+    void saveSignupAttributionOnce({
+      landingPath: ft.landingPath,
+      referrer: ft.referrer,
+      capturedAt: ft.capturedAt,
+      utm: ft.utm,
+      event,
+    } as unknown as Json);
+  }
   const organic = isProbablyOrganicSearch(ft);
   const payload = {
     kalnehi_first_landing: ft?.landingPath ?? "",
