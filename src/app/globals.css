@@ -617,10 +617,16 @@ body {
   /* Remove grey/blue tap-highlight flash (the most visible web-app tell) */
   html {
     -webkit-tap-highlight-color: transparent;
-    /* Eliminate the 300 ms tap delay on Android Chrome */
-    touch-action: manipulation;
     /* Prevent pull-to-refresh / overscroll glow triggering by accident */
     overscroll-behavior-y: none;
+  }
+
+  /* Eliminate the 300 ms tap delay on interactive controls without applying
+     touch-action: manipulation to <html>, which can interfere with native
+     scroll-gesture arbitration on iOS Safari when the page has horizontal
+     overflow-x-auto carousels. */
+  a, button, [role="button"], input, select, textarea, label {
+    touch-action: manipulation;
   }
 
   /* Suppress the iOS long-press "Open in Safari" / "Copy Link" callout */
@@ -701,6 +707,10 @@ body {
   .kal-chrome-main-scroll {
     min-height: 0;
     overflow-y: auto;
+    /* Contain scroll chain within the inner column on iPad/desktop so
+       over-scroll at the content boundary does not propagate to the
+       viewport-locked kal-chrome-root. */
+    overscroll-behavior-y: contain;
   }
 }
 
