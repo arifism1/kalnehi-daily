@@ -24,10 +24,11 @@ function isProxyAuthExempt(pathname: string): boolean {
   if (pathname === "/offline.html" || pathname === "/manifest.webmanifest") {
     return true;
   }
+  if (pathname === "/opengraph-image") return true;
   if (
     pathname === "/sitemap.xml" ||
     pathname === "/robots.txt" ||
-    pathname === "/opengraph-image"
+    /^\/sitemap-[^/]+\.xml$/.test(pathname)
   ) {
     return true;
   }
@@ -48,6 +49,15 @@ function tryWwwToApexRedirect(request: NextRequest): NextResponse | null {
   } catch {
     return null;
   }
+  const path = request.nextUrl.pathname;
+  if (
+    path === "/sitemap.xml" ||
+    path === "/robots.txt" ||
+    /^\/sitemap-[^/]+\.xml$/.test(path)
+  ) {
+    return null;
+  }
+
   const host = request.headers.get("host")?.split(":")[0] ?? "";
   if (!host || host === "localhost" || host.startsWith("127.")) return null;
   if (host === `www.${canonicalHost}`) {

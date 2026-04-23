@@ -1,12 +1,12 @@
 import { getAllPosts } from "@/content/blog";
 import { getSyllabusSlugs } from "@/content/syllabus";
-import { absoluteProductionUrl } from "@/lib/site";
+import { absoluteSitemapUrl } from "@/lib/site";
 
 export const revalidateSitemapSeconds = 86400;
 
 const TOP_FIVE_EXAMS = new Set(["/jee", "/neet", "/upsc", "/cat", "/gate"]);
 
-/** All marketing exam and exam-adjacent landing paths (sitemap-exams). */
+/** Exam landing paths only (sitemap-exams); planner/adjacent pages stay in sitemap-pages. */
 export const EXAM_SITEMAP_PATHS: string[] = [
   "/jee",
   "/jee-main",
@@ -32,13 +32,6 @@ export const EXAM_SITEMAP_PATHS: string[] = [
   "/cuet",
   "/cbse-class-12",
   "/ipmat",
-  "/jee-study-planner",
-  "/neet-study-planner",
-  "/neet-pg-study-planner",
-  "/upsc-study-planner",
-  "/cuet-ug-study-planner",
-  "/boards-study-planner",
-  "/brain-yoga",
 ];
 
 type ChangeFreq = "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
@@ -55,6 +48,7 @@ const yearly: ChangeFreq = "yearly";
  */
 const PAGES_SITEMAP: SitemapEntry[] = [
   { path: "/", priority: 1, changeFrequency: weekly },
+  { path: "/blog", priority: 0.85, changeFrequency: weekly },
   { path: "/pricing", priority: 0.9, changeFrequency: weekly },
   { path: "/what-can-kalnehi-do", priority: 0.95, changeFrequency: weekly },
   { path: "/best-study-practices", priority: 0.95, changeFrequency: monthly },
@@ -171,14 +165,10 @@ function blogPriority(published: Date): number {
   return 0.5;
 }
 
+/** Post URLs only; `/blog` is listed in sitemap-pages.xml. */
 export function getBlogSitemapEntries(): SitemapEntry[] {
   const posts = getAllPosts();
-  const blogIndex: SitemapEntry = {
-    path: "/blog",
-    priority: 0.7,
-    changeFrequency: "weekly",
-  };
-  const postEntries: SitemapEntry[] = posts.map((p) => {
+  return posts.map((p) => {
     const published = new Date(p.publishedAt);
     const mod = p.modifiedAt ? new Date(p.modifiedAt) : published;
     return {
@@ -188,7 +178,6 @@ export function getBlogSitemapEntries(): SitemapEntry[] {
       lastMod: mod,
     };
   });
-  return [blogIndex, ...postEntries];
 }
 
 function escapeXml(s: string): string {
@@ -206,7 +195,7 @@ export function buildUrlsetXml(
 ): string {
   const body = entries
     .map((e) => {
-      const loc = absoluteProductionUrl(e.path);
+      const loc = absoluteSitemapUrl(e.path);
       const last = (e.lastMod ?? defaultLastMod).toISOString();
       return `  <url>
     <loc>${escapeXml(loc)}</loc>
@@ -224,9 +213,9 @@ ${body}
 }
 
 export function buildSitemapIndexXml(): string {
-  const l1 = absoluteProductionUrl("/sitemap-pages.xml");
-  const l2 = absoluteProductionUrl("/sitemap-blog.xml");
-  const l3 = absoluteProductionUrl("/sitemap-exams.xml");
+  const l1 = absoluteSitemapUrl("/sitemap-pages.xml");
+  const l2 = absoluteSitemapUrl("/sitemap-blog.xml");
+  const l3 = absoluteSitemapUrl("/sitemap-exams.xml");
   return `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
