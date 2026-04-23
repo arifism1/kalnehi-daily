@@ -176,7 +176,7 @@ export function HomePriorityStrip() {
       ) : (
         <ul
           role="list"
-          className="flex gap-3 overflow-x-auto overflow-y-hidden overscroll-x-contain pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="flex gap-3 overflow-x-auto overflow-y-hidden overscroll-x-contain [touch-action:pan-x] pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {cards.map((card) => (
             <PriorityCardItem key={card.id} card={card} />

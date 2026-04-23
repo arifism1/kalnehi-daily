@@ -451,7 +451,7 @@ export function MissedTasks() {
       {filteredRows.length > 0 ? (
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <div
-            className="flex min-w-0 flex-1 flex-wrap gap-2 overflow-x-auto overflow-y-hidden overscroll-x-contain pb-1 [scrollbar-width:thin] sm:flex-nowrap sm:-mx-1 sm:px-1"
+            className="flex min-w-0 flex-1 flex-wrap gap-2 overflow-x-auto overflow-y-hidden overscroll-x-contain [touch-action:pan-x] pb-1 [scrollbar-width:thin] sm:flex-nowrap sm:-mx-1 sm:px-1"
             role="group"
             aria-label="Filter by due date"
           >

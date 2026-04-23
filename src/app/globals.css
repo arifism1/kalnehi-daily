@@ -617,8 +617,10 @@ body {
   /* Remove grey/blue tap-highlight flash (the most visible web-app tell) */
   html {
     -webkit-tap-highlight-color: transparent;
-    /* Prevent pull-to-refresh / overscroll glow triggering by accident */
-    overscroll-behavior-y: none;
+    /* contain: still blocks pull-to-refresh scroll-chain propagation but
+       preserves the iOS rubber-band cue so Safari can detect and engage
+       scroll for pages with a small scrollable range (e.g. trial banner). */
+    overscroll-behavior-y: contain;
   }
 
   /* Eliminate the 300 ms tap delay on interactive controls without applying
@@ -711,6 +713,9 @@ body {
        over-scroll at the content boundary does not propagate to the
        viewport-locked kal-chrome-root. */
     overscroll-behavior-y: contain;
+    /* Explicitly allow vertical panning so iOS Safari engages native
+       momentum scroll immediately on this inner overflow container. */
+    touch-action: pan-y;
   }
 }
 
