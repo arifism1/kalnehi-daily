@@ -2,12 +2,14 @@
  * GET /api/feature-flags
  * Requires an authenticated session.
  * Returns a map of feature key → { enabled, message } for client-side use.
- * Cached 60s server-side.
+ *
+ * Data source: Vercel Edge Config (sub-millisecond reads, instant propagation
+ * after admin toggle). Falls back to Supabase with 15 s cache in local dev.
  */
 import { NextResponse } from "next/server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { fetchFeatureFlags } from "@/lib/admin/killSwitch";
+import { readFeatureFlags } from "@/lib/edgeConfig";
 
 export const runtime = "nodejs";
 
@@ -21,21 +23,15 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
-  const flags = await fetchFeatureFlags();
-
-  const flagMap: Record<string, { enabled: boolean; message: string | null }> = {};
-  for (const flag of flags) {
-    flagMap[flag.feature_key] = {
-      enabled: flag.enabled,
-      message: flag.disabled_message ?? null,
-    };
-  }
+  const flags = await readFeatureFlags();
 
   return NextResponse.json(
-    { flags: flagMap },
+    { flags },
     {
       headers: {
-        "Cache-Control": "private, max-age=60",
+        // Short private cache — the hook has its own 5 s client-side cache.
+        // Keeps Edge Config reads low while allowing near-instant propagation.
+        "Cache-Control": "private, max-age=5, stale-while-revalidate=5",
       },
     },
   );

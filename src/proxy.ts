@@ -1,7 +1,14 @@
 /**
  * Request proxy (Next.js 16+): refreshes the Supabase session cookie and runs
  * `getUser()` on matched navigations. Also applies per-IP rate limiting on
- * public payment/waitlist API routes.
+ * public payment/waitlist API routes, and enforces the global kill switch via
+ * Vercel Edge Config (sub-millisecond read, instant propagation).
+ *
+ * **Kill switch flow (when app is disabled):**
+ *  1. readAppStatus() reads from Edge Config (< 1 ms in production).
+ *  2. Non-exempt paths get blocked; admin users always bypass.
+ *  3. Page requests receive full maintenance HTML (HTTP 503).
+ *     API requests receive JSON { error: "maintenance" } (HTTP 503).
  *
  * **TTFB / perceived load:** Document requests pay for `getUser()` (JWT validation
  * round trip to Supabase) before HTML is returned. High WiFi throughput does not
@@ -10,11 +17,13 @@
  * response times in production monitoring.
  */
 import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 
 import { isLegalPath } from "@/lib/legal-paths";
 import { isPublicMarketingPath } from "@/lib/public-paths";
 import { getSupabaseConfig } from "@/lib/supabase";
+import { readAppStatus, type AppStatus } from "@/lib/edgeConfig";
 
 // ── Rate limiting ─────────────────────────────────────────────────────────────
 // Per-IP, per-minute limits on public payment and waitlist endpoints.
@@ -65,6 +74,145 @@ function applyRateLimit(req: NextRequest): NextResponse | null {
     );
   }
   return null;
+}
+
+// ── Kill switch ───────────────────────────────────────────────────────────────
+
+/**
+ * Paths that bypass the kill switch entirely.
+ * These must be reachable even when the app is offline:
+ *  - /auth* so admins can log in when their session expires during an outage.
+ *  - /api/app-status so the maintenance screen refresh button can poll.
+ *  - Legal pages (ToS / Privacy) — always publicly accessible.
+ */
+function isKillSwitchExempt(pathname: string): boolean {
+  if (pathname === "/auth" || pathname === "/auth/reset") return true;
+  if (pathname.startsWith("/auth/callback")) return true;
+  if (pathname === "/api/app-status") return true;
+  // /maintenance is the redirect target for blocked requests — must be exempt
+  // to avoid an infinite redirect loop.
+  if (pathname === "/maintenance") return true;
+  if (isLegalPath(pathname)) return true;
+  return false;
+}
+
+// Module-level cache for admin check results (30 s) so repeated requests
+// from an admin while the app is offline don't hammer the DB.
+const _adminCache = new Map<string, { result: boolean; expiresAt: number }>();
+const ADMIN_CACHE_TTL_MS = 30_000;
+
+async function isAdminInProxy(userId: string, email?: string | null): Promise<boolean> {
+  const now = Date.now();
+  const cached = _adminCache.get(userId);
+  if (cached && now < cached.expiresAt) return cached.result;
+
+  try {
+    const { url } = getSupabaseConfig();
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+    if (!serviceKey) return false;
+
+    const admin = createClient(url, serviceKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+
+    // Try by user_id first, then by email.
+    const { data: byId } = await admin
+      .from("admin_users")
+      .select("user_id")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (byId) {
+      _adminCache.set(userId, { result: true, expiresAt: now + ADMIN_CACHE_TTL_MS });
+      return true;
+    }
+
+    if (email) {
+      const { data: byEmail } = await admin
+        .from("admin_users")
+        .select("user_id")
+        .eq("email", email)
+        .maybeSingle();
+      if (byEmail) {
+        _adminCache.set(userId, { result: true, expiresAt: now + ADMIN_CACHE_TTL_MS });
+        return true;
+      }
+    }
+  } catch {
+    // Fail open — if admin check fails, return false (show maintenance screen).
+  }
+
+  _adminCache.set(userId, { result: false, expiresAt: now + ADMIN_CACHE_TTL_MS });
+  return false;
+}
+
+function _esc(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function buildMaintenanceHtml(status: AppStatus): string {
+  const { maintenance_title, maintenance_message, maintenance_eta } = status;
+  const etaHtml = maintenance_eta
+    ? `<p class="eta">Expected back: ${_esc(maintenance_eta)}</p>`
+    : "";
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Kalnehi Daily — Maintenance</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#FAF7F2;color:#1A1714;font-family:'DM Sans',system-ui,-apple-system,sans-serif;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2.5rem 1.5rem;text-align:center}
+    .logo{width:52px;height:52px;margin-bottom:2rem;background:#FF7A00;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:1.5rem;font-weight:700}
+    h1{font-family:'DM Serif Display',Georgia,serif;font-size:clamp(2rem,5vw,2.75rem);font-weight:400;color:#1A1714;margin-bottom:1rem;line-height:1.2}
+    .msg{font-size:1rem;color:#5C5349;line-height:1.7;max-width:38ch;margin:0 auto 1.5rem}
+    .eta{color:#8B7355;font-size:0.875rem;margin-bottom:1.5rem}
+    hr{border:none;border-top:1px solid #E8E2D8;width:3rem;margin:0 auto 1.5rem}
+    .btn{display:inline-block;padding:0.625rem 1.75rem;border:1.5px solid #1A1714;border-radius:8px;background:transparent;color:#1A1714;font-size:0.9375rem;cursor:pointer;transition:opacity .15s;font-family:inherit;letter-spacing:.01em}
+    .btn:hover{opacity:.6}
+    .btn:disabled{opacity:.35;cursor:default}
+    #status-msg{color:#5C5349;font-size:0.8125rem;margin-top:.75rem;min-height:1.25em}
+    .social{color:#8B7355;font-size:0.8125rem;margin-top:1.5rem}
+    .tagline{color:#C4B8A8;font-size:0.6875rem;margin-top:auto;padding-top:2.5rem;letter-spacing:.1em;text-transform:uppercase}
+  </style>
+</head>
+<body>
+  <div class="logo" aria-hidden="true">K</div>
+  <h1>${_esc(maintenance_title)}</h1>
+  <p class="msg">${_esc(maintenance_message)}</p>
+  ${etaHtml}
+  <hr />
+  <button class="btn" id="refreshBtn" onclick="checkStatus()">Refresh</button>
+  <p id="status-msg"></p>
+  <p class="social">Follow <strong>@kalnehi</strong> on Instagram for updates</p>
+  <p class="tagline">Win Daily.</p>
+  <script>
+    var cd=0;
+    function checkStatus(){
+      var btn=document.getElementById('refreshBtn');
+      var msg=document.getElementById('status-msg');
+      if(cd>0)return;
+      btn.disabled=true;cd=10;
+      var t=setInterval(function(){
+        cd--;
+        if(cd<=0){clearInterval(t);btn.disabled=false;btn.textContent='Refresh';}
+        else{btn.textContent='Refresh ('+cd+'s)';}
+      },1000);
+      fetch('/api/app-status').then(function(r){return r.json();}).then(function(d){
+        if(d.app_enabled){location.reload();}
+        else{msg.textContent="Still offline \u2014 we\u2019ll be back soon.";}
+      }).catch(function(){
+        msg.textContent="Couldn\u2019t check status. Try again shortly.";
+      });
+    }
+  </script>
+</body>
+</html>`;
 }
 
 /** HTML and static routes that must work without a session (see AppShell gate). */
@@ -137,10 +285,7 @@ export async function proxy(request: NextRequest) {
   const rateLimited = applyRateLimit(request);
   if (rateLimited) return rateLimited;
 
-  const supabaseResponse = NextResponse.next({
-    request,
-  });
-
+  const supabaseResponse = NextResponse.next({ request });
   const { url, anonKey } = getSupabaseConfig();
 
   const supabase = createServerClient(url, anonKey, {
@@ -156,11 +301,53 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Run auth + Edge Config read in parallel — no added latency in production.
+  const [{ data: { user } }, appStatus] = await Promise.all([
+    supabase.auth.getUser(),
+    readAppStatus(),
+  ]);
 
   const pathname = request.nextUrl.pathname;
+
+  // ── Kill switch enforcement ──────────────────────────────────────────────────
+  // Only runs the admin DB check when the app is actually disabled.
+  // Normal (app enabled) path: zero extra overhead beyond the Edge Config read.
+  if (!appStatus.app_enabled && !isKillSwitchExempt(pathname)) {
+    const adminOk = user
+      ? await isAdminInProxy(user.id, user.email)
+      : false;
+
+    if (!adminOk) {
+      // API routes → JSON 503 (callers expect JSON, not HTML).
+      if (pathname.startsWith("/api/")) {
+        return new Response(
+          JSON.stringify({
+            error: "maintenance",
+            message: appStatus.maintenance_message,
+          }),
+          {
+            status: 503,
+            headers: {
+              "Content-Type": "application/json",
+              "Retry-After": "30",
+            },
+          },
+        );
+      }
+
+      // Page navigations AND RSC requests (client-side navigation) →
+      // redirect to /maintenance so the browser makes a fresh full HTML
+      // request. The root layout's KillSwitchGuard intercepts and renders
+      // the MaintenanceScreen. This avoids the broken JSON-503-for-RSC
+      // problem where the Next.js router shows an error overlay instead
+      // of the maintenance page.
+      return NextResponse.redirect(new URL("/maintenance", request.url), {
+        status: 307,
+      });
+    }
+  }
+
+  // ── Auth gate (existing logic) ───────────────────────────────────────────────
   if (!user && !isProxyAuthExempt(pathname)) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/auth";

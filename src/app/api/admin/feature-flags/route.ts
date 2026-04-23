@@ -10,6 +10,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 import { isAdminUser } from "@/lib/waitlist/batchEngine";
 import { FEATURE_FLAGS_CACHE_TAG } from "@/lib/admin/killSwitch";
+import { writeFeatureFlag } from "@/lib/edgeConfig";
 
 export const runtime = "nodejs";
 
@@ -90,6 +91,12 @@ export async function POST(req: NextRequest) {
     performed_by: user.id,
     old_value,
     new_value: { enabled: body.enabled, disabled_message: body.enabled ? null : newMessage },
+  });
+
+  // Push to Edge Config — all serverless instances see the new state instantly.
+  await writeFeatureFlag(featureKey, {
+    enabled: body.enabled,
+    message: body.enabled ? null : newMessage,
   });
 
   revalidateTag(FEATURE_FLAGS_CACHE_TAG, { expire: 0 });

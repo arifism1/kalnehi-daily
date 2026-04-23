@@ -12,6 +12,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 import { isAdminUser } from "@/lib/waitlist/batchEngine";
 import { fetchAppConfig, APP_CONFIG_CACHE_TAG } from "@/lib/admin/killSwitch";
+import { writeAppStatus } from "@/lib/edgeConfig";
 import type { Json } from "@/types/supabase";
 
 export const runtime = "nodejs";
@@ -113,7 +114,11 @@ export async function POST(req: NextRequest) {
       reason: reason?.trim() || null,
     });
 
-    // Bust the 30s cache immediately so next request sees the new state.
+    // Push to Edge Config — all serverless instances see the new state instantly.
+    // Non-fatal if Edge Config is not configured (e.g. local dev).
+    await writeAppStatus({ app_enabled });
+
+    // Also bust the Next.js ISR cache so server components re-render promptly.
     revalidateTag(APP_CONFIG_CACHE_TAG, { expire: 0 });
 
     // Send internal alert (Slack-compatible webhook).
@@ -169,6 +174,14 @@ export async function POST(req: NextRequest) {
       performed_by: user.id,
       old_value: old_value as Json | null,
       new_value: updateFields as unknown as Json,
+    });
+
+    // Push updated message/title/eta to Edge Config so the maintenance screen
+    // reflects the latest copy without waiting for cache expiry.
+    await writeAppStatus({
+      ...(maintenance_title !== undefined && { maintenance_title }),
+      ...(maintenance_message !== undefined && { maintenance_message }),
+      ...(maintenance_eta !== undefined && { maintenance_eta: maintenance_eta || null }),
     });
 
     revalidateTag(APP_CONFIG_CACHE_TAG, { expire: 0 });
