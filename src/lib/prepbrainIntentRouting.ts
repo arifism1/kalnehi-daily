@@ -124,14 +124,10 @@ export function detectPrepBrainIntent(lastUserMessage: string): PrepBrainIntent 
   if (isGenericStrategyQuestion(lastUserMessage)) return "no_data";
 
   const t = lastUserMessage.toLowerCase();
-  if (
-    t.includes("today") ||
-    t.includes("daily plan") ||
-    t.includes("today plan") ||
-    t.includes("schedule")
-  ) {
-    return "today_plan";
-  }
+
+  // Focus/priority phrasing is checked BEFORE the "today" keyword so that
+  // "what should I focus on today?" routes to marks_score (gets marks + weak
+  // subjects) rather than today_plan (gets only the task list).
   if (
     t.includes("mark") ||
     t.includes("score") ||
@@ -145,6 +141,14 @@ export function detectPrepBrainIntent(lastUserMessage: string): PrepBrainIntent 
     t.includes("rank")
   ) {
     return "marks_score";
+  }
+  if (
+    t.includes("today") ||
+    t.includes("daily plan") ||
+    t.includes("today plan") ||
+    t.includes("schedule")
+  ) {
+    return "today_plan";
   }
   if (
     t.includes("weak") ||

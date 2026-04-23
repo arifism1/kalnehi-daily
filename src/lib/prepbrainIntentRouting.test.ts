@@ -29,11 +29,19 @@ describe("detectPrepBrainIntent — today_plan", () => {
   it("'show me my daily plan' → today_plan", () => {
     assert.equal(detectPrepBrainIntent("show me my daily plan"), "today_plan");
   });
+
+  it("plain today question without focus phrasing stays today_plan", () => {
+    assert.equal(detectPrepBrainIntent("what can I do today to study better?"), "today_plan");
+  });
 });
 
 describe("detectPrepBrainIntent — marks_score (focus phrasing fixes)", () => {
   it("screenshot phrase: 'spaces I focus more on' → marks_score", () => {
     assert.equal(detectPrepBrainIntent("can you tell me a few spaces I focus more on now"), "marks_score");
+  });
+
+  it("focus + today combined → marks_score (focus wins over today)", () => {
+    assert.equal(detectPrepBrainIntent("what should I focus on today?"), "marks_score");
   });
 
   it("'focus on' (original) → marks_score", () => {
