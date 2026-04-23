@@ -230,13 +230,13 @@ function DailyTaskEditSheet({
       />
 
       <div
-        className="kal-glass-panel relative z-10 w-full max-w-lg rounded-t-[1.25rem] p-5 sm:rounded-[1.25rem] sm:p-6"
+        className="kal-glass-panel relative z-10 flex min-h-0 w-full max-w-lg max-h-[92dvh] flex-col overflow-hidden rounded-t-[1.25rem] sm:rounded-[1.25rem]"
         role="dialog"
         aria-modal="true"
         aria-label="Edit task"
       >
         {/* Header */}
-        <div className="mb-4 flex items-center justify-between">
+        <div className="flex shrink-0 items-center justify-between border-b border-kal-border/60 px-5 pb-3 pt-5 sm:px-6 sm:pt-6">
           <div>
             <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-muted">
               Edit task
@@ -255,6 +255,7 @@ function DailyTaskEditSheet({
           </button>
         </div>
 
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 py-4 sm:px-6 [-webkit-overflow-scrolling:touch]">
         <div className="space-y-4">
           <div>
             <label htmlFor="edit-task-title" className="text-xs font-medium text-kal-muted">
@@ -424,8 +425,9 @@ function DailyTaskEditSheet({
             {error}
           </p>
         ) : null}
+        </div>
 
-        <div className="mt-5 flex gap-2">
+        <div className="flex shrink-0 gap-2 border-t border-kal-border/60 px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-6">
           <button
             type="button"
             onClick={onClose}

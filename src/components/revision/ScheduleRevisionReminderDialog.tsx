@@ -391,9 +391,9 @@ export function ScheduleRevisionReminderDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="kal-glass-panel relative z-[81] my-auto w-full max-w-lg max-h-[min(92dvh,100dvh-2rem)] overflow-y-auto overflow-x-hidden overscroll-contain rounded-2xl p-5 shadow-lg [-webkit-overflow-scrolling:touch] sm:max-h-[min(90dvh,85vh)] sm:p-6"
+        className="kal-glass-panel relative z-[81] my-auto flex min-h-0 w-full max-w-lg max-h-[min(92dvh,100dvh-2rem)] flex-col overflow-hidden rounded-2xl shadow-lg sm:max-h-[min(90dvh,85dvh)]"
       >
-        <div className="mb-4 flex items-start justify-between gap-3">
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-kal-border/50 px-5 pb-3 pt-5 sm:px-6 sm:pt-6">
           <h2 id={titleId} className="text-lg font-bold text-kal-text">
             {dialogTitle}
           </h2>
@@ -408,6 +408,7 @@ export function ScheduleRevisionReminderDialog({
           </button>
         </div>
 
+        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain px-5 py-4 sm:px-6 [-webkit-overflow-scrolling:touch]">
         {syllabusSoon && examLabel ? (
           <p className="mb-3 text-xs text-kal-muted">
             Syllabus picker is limited for your exam — you can still add a custom topic
@@ -675,7 +676,9 @@ export function ScheduleRevisionReminderDialog({
             className="mt-1.5 w-full resize-y rounded-xl border border-kal-border bg-kal-card-muted px-3 py-2.5 text-sm text-kal-text placeholder:text-kal-muted focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
           />
         </label>
+        </div>
 
+        <div className="shrink-0 border-t border-kal-border/50 px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6">
         {formError ? (
           <p className="mb-3 text-sm font-medium text-rose-600 dark:text-rose-400">
             {formError}
@@ -706,6 +709,7 @@ export function ScheduleRevisionReminderDialog({
               saveButtonLabel
             )}
           </button>
+        </div>
         </div>
       </div>
     </div>

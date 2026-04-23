@@ -371,11 +371,11 @@ export function AddEditTaskSheet({
         onClick={handleClose}
       />
       <div
-        className="kal-glass-panel relative z-10 max-h-[min(92vh,40rem)] w-full max-w-lg overflow-y-auto rounded-t-[1.25rem] p-4 sm:rounded-[1.25rem] sm:p-6"
+        className="kal-glass-panel relative z-10 flex min-h-0 w-full max-w-lg max-h-[min(92dvh,40rem)] flex-col overflow-hidden rounded-t-[1.25rem] sm:rounded-[1.25rem]"
         role="dialog"
         aria-modal="true"
       >
-        <div className="flex items-start justify-between gap-2 border-b border-kal-border pb-3">
+        <div className="flex shrink-0 items-start justify-between gap-2 border-b border-kal-border px-4 pb-3 pt-4 sm:px-6 sm:pt-6">
           <div>
             <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-muted">
               Task planner
@@ -399,14 +399,15 @@ export function AddEditTaskSheet({
           </button>
         </div>
 
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4 sm:px-6 [-webkit-overflow-scrolling:touch]">
         {draftError ? (
-          <p className="mt-4 rounded-xl bg-kal-danger-soft border border-kal-danger-border px-3 py-2 text-sm text-kal-danger-text">
+          <p className="rounded-xl bg-kal-danger-soft border border-kal-danger-border px-3 py-2 text-sm text-kal-danger-text">
             {draftError}
           </p>
         ) : null}
 
         {showForm ? (
-          <div className="mt-5 space-y-5">
+          <div className={draftError ? "mt-5 space-y-5" : "space-y-5"}>
             <div>
               <label
                 htmlFor="task-name"
@@ -581,8 +582,9 @@ export function AddEditTaskSheet({
             {error}
           </p>
         )}
+        </div>
 
-        <div className="mt-6 flex gap-2">
+        <div className="flex shrink-0 gap-2 border-t border-kal-border px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-6">
           <button
             type="button"
             onClick={handleClose}

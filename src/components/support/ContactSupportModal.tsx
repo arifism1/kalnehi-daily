@@ -184,7 +184,7 @@ export function ContactSupportModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="contact-support-title"
-        className="kal-glass-panel relative z-[81] flex max-h-[min(92dvh,40rem)] w-full max-w-md flex-col overflow-hidden rounded-2xl sm:max-h-[min(88dvh,36rem)]"
+        className="kal-glass-panel relative z-[81] flex min-h-0 max-h-[min(92dvh,40rem)] w-full max-w-md flex-col overflow-hidden rounded-2xl sm:max-h-[min(88dvh,36rem)]"
       >
         <div className="flex shrink-0 items-start justify-between gap-3 border-b border-white/15 px-5 pb-4 pt-5 dark:border-white/10">
           <div className="min-w-0">

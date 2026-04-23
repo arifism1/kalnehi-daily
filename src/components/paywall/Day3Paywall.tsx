@@ -168,8 +168,8 @@ export function Day3Paywall() {
         aria-modal="true"
         aria-labelledby="day3-paywall-title"
       >
-        <div className="kal-glass-panel w-full max-w-lg rounded-2xl border border-kal-border shadow-[0_24px_80px_-16px_rgba(0,0,0,0.45)] overflow-y-auto max-h-[92dvh]">
-          <div className="p-6 sm:p-8">
+        <div className="kal-glass-panel flex min-h-0 w-full max-w-lg max-h-[92dvh] flex-col overflow-hidden rounded-2xl border border-kal-border shadow-[0_24px_80px_-16px_rgba(0,0,0,0.45)]">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-6 sm:p-8 [-webkit-overflow-scrolling:touch]">
 
             {/* Header */}
             <div className="mb-6">

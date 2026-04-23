@@ -509,7 +509,7 @@ export async function flushOutbox(userId: string | undefined): Promise<void> {
   clearRetryTimer();
 
   try {
-    const queue = await getAllOutboxMutations();
+    let queue = await getAllOutboxMutations();
     if (queue.length === 0) {
       useSyncStore.getState().setPendingCount(0);
       useSyncStore.getState().setLastSyncError(null);
@@ -586,15 +586,17 @@ export async function flushOutbox(userId: string | undefined): Promise<void> {
       }
     }
 
+    // Successful bulk creates are removed from IDB. Re-fetch so the sequential
+    // pass only sees remaining ops in createdAt order — including task_creates
+    // the batch did not apply (retried with createTask via applyOne), so
+    // task_session never runs before its task row exists.
+    queue = await getAllOutboxMutations();
+
     for (const m of queue) {
       const fails = m.failCount ?? 0;
 
       if (fails >= MAX_RETRIES) {
         deadLettered++;
-        continue;
-      }
-      if (m.op === "task_create" && m.insert) {
-        // Already handled via batch path above.
         continue;
       }
 

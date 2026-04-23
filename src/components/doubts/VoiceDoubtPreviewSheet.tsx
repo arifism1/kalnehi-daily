@@ -171,7 +171,7 @@ export function VoiceDoubtPreviewSheet({
         onClick={handleClose}
         disabled={saving}
       />
-      <div className="kal-glass-panel relative z-[66] flex max-h-[min(92dvh,42rem)] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl shadow-2xl sm:max-h-[min(90vh,40rem)] sm:rounded-3xl">
+      <div className="kal-glass-panel relative z-[66] flex min-h-0 max-h-[min(92dvh,42rem)] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl shadow-2xl sm:max-h-[min(90dvh,40rem)] sm:rounded-3xl">
         <div className="flex shrink-0 items-start justify-between gap-2 border-b border-kal-border px-5 pb-3 pt-4">
           <div className="min-w-0">
             <p className="flex items-center gap-1.5 text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-kal-accent">

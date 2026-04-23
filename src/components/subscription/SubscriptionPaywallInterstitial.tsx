@@ -52,8 +52,9 @@ export function SubscriptionPaywallInterstitial({
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={descId}
-        className="kal-glass-panel relative z-[81] w-full max-w-md rounded-2xl p-6 sm:rounded-2xl"
+        className="kal-glass-panel relative z-[81] flex min-h-0 w-full max-w-md max-h-[min(92dvh,40rem)] flex-col overflow-hidden rounded-2xl sm:rounded-2xl"
       >
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-6 py-6 [-webkit-overflow-scrolling:touch] sm:px-6">
         <div className="kal-glass-subtle mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full">
           <Lock className="h-6 w-6 text-kal-text-secondary" aria-hidden />
         </div>
@@ -87,7 +88,8 @@ export function SubscriptionPaywallInterstitial({
             access.
           </p>
         )}
-        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        </div>
+        <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-kal-border/50 px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end">
           <button
             type="button"
             onClick={() => router.back()}
