@@ -139,11 +139,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
     if (pathname === "/onboarding") return "home";
 
-    // Allow /pricing for users who can start a trial OR are already in one —
-    // they need to reach the checkout section to subscribe.
-    if (pathname === "/pricing" && (welcomeTrialEligibleUnstarted || freeTrialActive)) return "render";
-
-    if (isPublicMarketingPath(pathname)) return "home";
+    // Logged-in subscribers can still read the blog, pricing, tools, and other
+    // marketing pages. Only the main landings send them into the app.
+    if (isPublicMarketingPath(pathname)) {
+      if (pathname === "/" || pathname === "/kalnehi-daily") return "home";
+      return "render";
+    }
 
     return "render";
   }, [
@@ -154,8 +155,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     onboardingDone,
     allowAppWithoutPaid,
     pathname,
-    welcomeTrialEligibleUnstarted,
-    freeTrialActive,
   ]);
 
   useEffect(() => {
