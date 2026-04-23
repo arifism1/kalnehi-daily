@@ -26,7 +26,7 @@ const FAQS = [
   },
   {
     q: "What can I do with voice control?",
-    a: "Speak to plan your day, log doubts, set reminders, and navigate the app — completely hands-free. Your 3-day free trial includes 12 minutes of voice time. Smart Plan gives you 100 hours of voice every month, resetting each billing cycle.",
+    a: "Speak to plan your day, log doubts, set reminders, and navigate the app — completely hands-free. Your 3-day free trial includes 12 minutes of voice time. Smart Plan gives you 100 minutes of voice every month, resetting each billing cycle.",
   },
   {
     q: "Is there a discount for longer autopay?",

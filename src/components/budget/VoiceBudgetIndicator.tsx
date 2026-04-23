@@ -3,13 +3,14 @@
 import clsx from "clsx";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { FREE_TRIAL_VOICE_CAP_MINUTES } from "@/lib/freeTrial";
+import { TIERS } from "@/lib/subscriptionTiers";
 
-const SMART_PLAN_VOICE_MINUTES = 6000; // 100 hours
+const SMART_PLAN_VOICE_MINUTES = TIERS.pro.voiceMinutesPerMonth;
 
 /**
  * Shows voice budget in a compact indicator.
  * Trial: X min / 12 min remaining.
- * Smart Plan: X hr remaining.
+ * Smart Plan: X min remaining.
  */
 export function VoiceBudgetIndicator() {
   const {

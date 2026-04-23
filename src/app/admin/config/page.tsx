@@ -23,12 +23,12 @@ const CONFIG_DESCRIPTIONS: Record<string, string> = {
 };
 
 export default async function AdminConfigPage() {
-  const [config, supabase] = await Promise.all([
-    getAllAdminConfig(),
-    createSupabaseServerClient(),
-  ]);
-
+  // Verify identity before fetching any sensitive data.
+  // (AdminLayout also enforces this, but defense-in-depth matters.)
+  const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
+
+  const config = await getAllAdminConfig();
 
   return (
     <AdminConfigClient

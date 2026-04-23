@@ -1404,6 +1404,7 @@ export type Database = {
           razorpay_payment_id: string | null
           notification_channel: string
           contact_email: string | null
+          contact_phone: string | null
           joined_at: string
           activated_at: string | null
           created_at: string
@@ -1418,6 +1419,7 @@ export type Database = {
           razorpay_payment_id?: string | null
           notification_channel?: string
           contact_email?: string | null
+          contact_phone?: string | null
           joined_at?: string
           activated_at?: string | null
           created_at?: string
@@ -1432,6 +1434,7 @@ export type Database = {
           razorpay_payment_id?: string | null
           notification_channel?: string
           contact_email?: string | null
+          contact_phone?: string | null
           joined_at?: string
           activated_at?: string | null
           created_at?: string
@@ -1976,6 +1979,7 @@ export type Database = {
           p_batch_id: string
           p_notification_ch?: string
           p_contact_email?: string | null
+          p_contact_phone?: string | null
         }
         Returns: Json
       }

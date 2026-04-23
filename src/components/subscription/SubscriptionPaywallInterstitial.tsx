@@ -71,7 +71,7 @@ export function SubscriptionPaywallInterstitial({
             <>
               Your 3-day free trial is over. Subscribe to{" "}
               <span className="font-semibold text-kal-text">Smart Plan</span> for{" "}
-              <span className="font-semibold text-kal-text">{TIERS.pro.monthlyPriceDisplay}/month</span> — 2 million PrepBrain tokens and 100 hours of voice every month. Cancel anytime.
+              <span className="font-semibold text-kal-text">{TIERS.pro.monthlyPriceDisplay}/month</span> — 2 million PrepBrain tokens and 100 minutes of voice every month. Cancel anytime.
             </>
           ) : (
             <>
