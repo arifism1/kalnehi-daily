@@ -1084,6 +1084,7 @@ export type Database = {
           subscription_start_date: string | null
           subscription_status: string | null
           subscription_tier: string | null
+          signup_attribution: Json | null
           system_push_notifications: boolean
           target_exam: string | null
           target_exam_date: string | null
@@ -1093,11 +1094,13 @@ export type Database = {
           trial_photo_scans_used: number
           trial_started_at: string | null
           trial_voice_seconds_used: number
+          ui_prefs: Json | null
           updated_at: string | null
           usage_reset_date: string | null
           user_id: string | null
           voice_minutes_used_this_month: number | string
           ai_study_partner_seconds_remaining: number
+          payment_grace_until: string | null
         }
         Insert: {
           ai_usage_row_version?: number
@@ -1137,6 +1140,7 @@ export type Database = {
           subscription_start_date?: string | null
           subscription_status?: string | null
           subscription_tier?: string | null
+          signup_attribution?: Json | null
           system_push_notifications?: boolean
           target_exam?: string | null
           target_exam_date?: string | null
@@ -1146,11 +1150,13 @@ export type Database = {
           trial_photo_scans_used?: number
           trial_started_at?: string | null
           trial_voice_seconds_used?: number
+          ui_prefs?: Json | null
           updated_at?: string | null
           usage_reset_date?: string | null
           user_id?: string | null
           voice_minutes_used_this_month?: number | string
           ai_study_partner_seconds_remaining?: number
+          payment_grace_until?: string | null
         }
         Update: {
           ai_usage_row_version?: number
@@ -1190,6 +1196,7 @@ export type Database = {
           subscription_start_date?: string | null
           subscription_status?: string | null
           subscription_tier?: string | null
+          signup_attribution?: Json | null
           system_push_notifications?: boolean
           target_exam?: string | null
           target_exam_date?: string | null
@@ -1199,11 +1206,13 @@ export type Database = {
           trial_photo_scans_used?: number
           trial_started_at?: string | null
           trial_voice_seconds_used?: number
+          ui_prefs?: Json | null
           updated_at?: string | null
           usage_reset_date?: string | null
           user_id?: string | null
           voice_minutes_used_this_month?: number | string
           ai_study_partner_seconds_remaining?: number
+          payment_grace_until?: string | null
         }
         Relationships: []
       }
@@ -1308,6 +1317,134 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      admin_config: {
+        Row: {
+          key: string
+          value: string
+          previous_value: string | null
+          updated_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          key: string
+          value: string
+          previous_value?: string | null
+          updated_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          key?: string
+          value?: string
+          previous_value?: string | null
+          updated_by?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      admin_users: {
+        Row: {
+          user_id: string
+          added_by: string | null
+          added_at: string
+        }
+        Insert: {
+          user_id: string
+          added_by?: string | null
+          added_at?: string
+        }
+        Update: {
+          user_id?: string
+          added_by?: string | null
+          added_at?: string
+        }
+        Relationships: []
+      }
+      batches: {
+        Row: {
+          id: string
+          batch_number: number
+          opens_at: string
+          closes_at: string | null
+          status: string
+          size: number
+          notes: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          batch_number: number
+          opens_at: string
+          closes_at?: string | null
+          status?: string
+          size?: number
+          notes?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          batch_number?: number
+          opens_at?: string
+          closes_at?: string | null
+          status?: string
+          size?: number
+          notes?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      waitlist_entries: {
+        Row: {
+          id: string
+          user_id: string
+          batch_id: string | null
+          position: number
+          status: string
+          skipped_waitlist: boolean
+          razorpay_payment_id: string | null
+          notification_channel: string
+          contact_email: string | null
+          joined_at: string
+          activated_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          batch_id?: string | null
+          position: number
+          status?: string
+          skipped_waitlist?: boolean
+          razorpay_payment_id?: string | null
+          notification_channel?: string
+          contact_email?: string | null
+          joined_at?: string
+          activated_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          batch_id?: string | null
+          position?: number
+          status?: string
+          skipped_waitlist?: boolean
+          razorpay_payment_id?: string | null
+          notification_channel?: string
+          contact_email?: string | null
+          joined_at?: string
+          activated_at?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waitlist_entries_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "batches"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       razorpay_processed_payments: {
         Row: {

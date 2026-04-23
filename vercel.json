@@ -24,6 +24,14 @@
     {
       "path": "/api/cron/sweep-prepbrain-ai-token-reservations",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/open-batches",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/notification-sequences",
+      "schedule": "*/30 * * * *"
     }
   ]
 }

@@ -4,6 +4,8 @@
 
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
 
+import { registerOutboxBackgroundSync } from "@/lib/pwaBackgroundSync";
+
 import type { MotivationOutboxOp } from "@/lib/motivationTypes";
 import type { Tables } from "@/types/supabase";
 
@@ -97,6 +99,7 @@ export async function enqueueMotivationOutbox(
     op,
     createdAt: Date.now(),
   });
+  registerOutboxBackgroundSync().catch(() => {});
 }
 
 export async function getAllMotivationOutbox(): Promise<OutboxRow[]> {

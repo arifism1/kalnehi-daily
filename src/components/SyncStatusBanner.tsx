@@ -51,11 +51,11 @@ export function SyncStatusBanner() {
   const onRetry = useCallback(async () => {
     setRetrying(true);
     try {
-      const { retryDeadLettered, flushOutbox } = await import("@/lib/sync");
+      const { retryDeadLettered, flushAllOutboxes } = await import("@/lib/sync");
       await retryDeadLettered();
       const userId =
         (await import("@/store/useAuthStore")).useAuthStore.getState().user?.id;
-      if (userId) await flushOutbox(userId);
+      flushAllOutboxes(userId);
     } finally {
       setRetrying(false);
     }

@@ -1,3 +1,4 @@
+import type { DailyPlanDateSnapshot } from "@/lib/effectiveDayCompletion";
 import {
   classifyDailyProgressBand,
   computeWeightedCompletionPercent,
@@ -13,16 +14,28 @@ export type FeedbackInsight = {
   tone: "positive" | "neutral" | "urgent";
 };
 
+/**
+ * When `dailyPlanToday` has `totalCount > 0`, today’s % and band follow unified
+ * `daily_tasks` (same as home / Consistency) instead of academic `tasks` only.
+ */
 export function buildFeedbackInsights(
   today: string,
   tasks: Task[],
   microtopicById: Record<string, Microtopic>,
   syllabusMasteryPercent: number | null,
+  dailyPlanToday?: DailyPlanDateSnapshot | null,
 ): FeedbackInsight[] {
   const out: FeedbackInsight[] = [];
   const todayTasks = filterTasksForDate(tasks, today);
-  const todayPct = computeWeightedCompletionPercent(todayTasks, microtopicById);
-  const band = classifyDailyProgressBand(todayPct, todayTasks.length);
+  const hasUnified =
+    dailyPlanToday != null && dailyPlanToday.totalCount > 0;
+  const todayPct = hasUnified
+    ? dailyPlanToday!.percent
+    : computeWeightedCompletionPercent(todayTasks, microtopicById);
+  const countForBand = hasUnified
+    ? dailyPlanToday!.totalCount
+    : todayTasks.length;
+  const band = classifyDailyProgressBand(todayPct, countForBand);
 
   const missed = findMissedIncompleteTasks(tasks, today);
 
@@ -42,7 +55,7 @@ export function buildFeedbackInsights(
     });
   }
 
-  if (todayTasks.length > 0) {
+  if (countForBand > 0) {
     out.push({
       title: "Today’s execution",
       body:

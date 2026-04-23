@@ -2,6 +2,11 @@
 
 import { useCallback } from "react";
 
+import {
+  fetchDailyPlanExecutionLagDays,
+  fetchDailyPlanProgressForDate,
+  fetchIncompleteDailyTasksBeforeDate,
+} from "@/lib/prepBrainDailyPlanData";
 import { buildPrepBrainContext, type PrepBrainContext } from "@/lib/prepBrainContext";
 import {
   isUpscCseMainsExam,
@@ -75,6 +80,16 @@ export function usePrepBrainContextSnapshot() {
           : Promise.resolve({ sessionCount: 0, distinctDays: 0 }),
       ]);
 
+    const supabase = getSupabaseBrowserClient();
+    const [dailyPlanToday, incompleteDailyTasksFromPastDays, dailyPlanExecutionLagDays] =
+      user?.id
+        ? await Promise.all([
+            fetchDailyPlanProgressForDate(supabase, user.id, calendarToday),
+            fetchIncompleteDailyTasksBeforeDate(supabase, user.id, calendarToday),
+            fetchDailyPlanExecutionLagDays(supabase, user.id, calendarToday),
+          ])
+        : [null, 0, null];
+
     const upscUi =
       isUpscCseMainsExam(catalogExamKey) && rollup
         ? {
@@ -103,6 +118,9 @@ export function usePrepBrainContextSnapshot() {
       habitBundle,
       meditation30d,
       syllabus_snapshot_overrides: upscUi,
+      dailyPlanToday,
+      incompleteDailyTasksFromPastDays,
+      dailyPlanExecutionLagDays,
     });
   }, [
     tasksRecord,

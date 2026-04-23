@@ -37,7 +37,9 @@ export type KalnehiPageSeoKey =
   | "timer"
   | "motivation"
   | "progress"
-  | "mySubscription";
+  | "mySubscription"
+  | "waitlist"
+  | "waitlist-position";
 
 const PAGE_SEO: Record<
   KalnehiPageSeoKey,
@@ -144,6 +146,18 @@ const PAGE_SEO: Record<
     title: `My Subscription — billing & plan details | ${SITE_NAME}`,
     description:
       `View and manage your ${SITE_NAME} subscription: plan status, billing dates, extra AI and voice credits, and upgrade or cancellation options.`,
+  },
+  waitlist: {
+    path: "/waitlist",
+    title: `Join the Waitlist — ${SITE_NAME}`,
+    description:
+      `Join the Kalnehi Daily waitlist. Your spot is locked the moment you sign up. Full access for 3 days when your batch opens.`,
+  },
+  "waitlist-position": {
+    path: "/waitlist/position",
+    title: `Your Waitlist Position — ${SITE_NAME}`,
+    description:
+      `Track your position in the Kalnehi Daily waitlist. See exactly when your batch opens and skip the queue instantly for ₹19.`,
   },
 };
 

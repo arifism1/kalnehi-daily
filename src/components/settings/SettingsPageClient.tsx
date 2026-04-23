@@ -5,6 +5,7 @@ import { ArrowLeft, Image } from "lucide-react";
 import clsx from "clsx";
 
 import { AdminSendPushNotification } from "@/components/settings/AdminSendPushNotification";
+import { DataAndThisDeviceSection } from "@/components/settings/DataAndThisDeviceSection";
 import { CameraPlannerSettings } from "@/components/settings/CameraPlannerSettings";
 import { CustomizeFeaturesSection } from "@/components/settings/CustomizeFeaturesSection";
 import { PurposeModePhotos } from "@/components/settings/PurposeModePhotos";
@@ -61,6 +62,13 @@ export function SettingsPageClient() {
           Preferences
         </h2>
         <SettingsToggles />
+      </section>
+
+      <section aria-labelledby="data-device-heading">
+        <h2 id="data-device-heading" className="sr-only">
+          Data and device
+        </h2>
+        <DataAndThisDeviceSection />
       </section>
 
       <NotificationsSettingsGroup />

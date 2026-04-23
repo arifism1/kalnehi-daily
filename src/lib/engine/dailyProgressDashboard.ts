@@ -83,7 +83,11 @@ export function buildDailyEngineSnapshot(
       : todayTasks.length;
 
   const todayBand = classifyDailyProgressBand(todayWeighted, todayCount);
-  const progressMessage = classifyProgressMessageWithScope(todayTasks, todayWeighted);
+  const progressMessage = classifyProgressMessageWithScope(
+    todayTasks,
+    todayWeighted,
+    planTodaySnap && planTodaySnap.totalCount > 0 ? planTodaySnap.totalCount : 0,
+  );
 
   const trend = buildSevenDayTrend(today, allTasks, microtopicById, dailyPlanOverlay);
   const withData = trend.filter((t) => t.taskCount > 0);

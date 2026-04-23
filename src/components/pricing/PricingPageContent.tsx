@@ -76,38 +76,30 @@ function HeroSection() {
           className="text-4xl font-normal leading-[1.1] tracking-tight text-kal-text sm:text-5xl lg:text-6xl"
           style={{ fontFamily: "var(--font-display)" }}
         >
-          Every feature. Free.
-          <br />
-          <span className="text-kal-accent">For 3 days.</span>
+          One system for serious exam prep.
         </h1>
 
         <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-kal-text-secondary sm:text-xl">
-          Start your free trial — no card required. Get full access to every tool including
-          PrepBrain AI, Marks Engine, Voice, and more.
-        </p>
-
-        <p className="mt-3 text-sm font-medium text-kal-muted">
-          3-day trial then ₹499/month. Simple.
+          Access is by batch. Your spot is yours the moment you join.
         </p>
 
         <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <Link
-            href="/auth"
+            href="/waitlist"
             className="inline-flex min-h-[52px] w-full items-center justify-center rounded-full bg-kal-accent px-8 text-base font-bold text-white shadow-[0_4px_16px_rgba(255,122,0,0.32)] transition hover:brightness-105 active:scale-[0.98] sm:w-auto"
           >
-            Start 3-Day Free Trial
+            Join the Waitlist →
           </Link>
           <a
             href="#pricing-table"
             className="inline-flex min-h-[52px] w-full items-center justify-center rounded-full border border-kal-border bg-kal-card/70 px-8 text-base font-semibold text-kal-text backdrop-blur-sm transition hover:border-kal-accent/40 hover:text-kal-accent sm:w-auto"
           >
-            See what's included ↓
+            See what&apos;s inside ↓
           </a>
         </div>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
           {[
-            "No credit card required",
             "UPI & cards accepted",
             "Cancel anytime",
             "Works on Android, iOS, desktop",
@@ -116,6 +108,51 @@ function HeroSection() {
               <span className="h-1 w-1 rounded-full bg-kal-accent/50" aria-hidden />
               {s}
             </span>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function HowItWorksSection() {
+  const steps = [
+    {
+      num: "①",
+      title: "Join the waitlist",
+      body: "Your position is locked instantly. Skip for ₹19.",
+    },
+    {
+      num: "②",
+      title: "Batch opens",
+      body: "You get exactly 3 days of full access — free.",
+    },
+    {
+      num: "③",
+      title: "Try free, then decide",
+      body: "Smart Plan ₹499/month, or keep waiting.",
+    },
+  ];
+
+  return (
+    <section className="py-12 sm:py-16">
+      <div className="mx-auto max-w-4xl px-6">
+        <div className="grid gap-4 sm:grid-cols-3">
+          {steps.map((step) => (
+            <div
+              key={step.num}
+              className="kal-glass-panel rounded-2xl border border-kal-border p-6"
+            >
+              <p
+                className="mb-2 text-3xl font-normal text-kal-accent"
+                style={{ fontFamily: "var(--font-display)" }}
+                aria-hidden
+              >
+                {step.num}
+              </p>
+              <h3 className="text-base font-semibold text-kal-text">{step.title}</h3>
+              <p className="mt-1 text-sm leading-snug text-kal-text-secondary">{step.body}</p>
+            </div>
           ))}
         </div>
       </div>
@@ -167,10 +204,10 @@ function PricingTableSection() {
                     </p>
                     <p className="text-xs text-kal-muted">No card needed</p>
                     <Link
-                      href="/auth"
+                      href="/waitlist"
                       className="mt-3 inline-flex min-h-[36px] items-center justify-center rounded-full border border-kal-border bg-kal-card px-3 text-xs font-semibold text-kal-text transition hover:border-kal-accent/40 hover:text-kal-accent"
                     >
-                      Start free trial
+                      Join waitlist
                     </Link>
                   </th>
 
@@ -222,10 +259,10 @@ function PricingTableSection() {
                   <td className="px-4 py-4 sm:px-6" />
                   <td className="px-3 py-4 text-center">
                     <Link
-                      href="/auth"
+                      href="/waitlist"
                       className="inline-flex min-h-[40px] items-center justify-center rounded-full border border-kal-border px-4 text-sm font-semibold text-kal-text-secondary transition hover:border-kal-accent/40 hover:text-kal-accent"
                     >
-                      Start Free Trial
+                      Join Waitlist
                     </Link>
                   </td>
                   <td className="bg-kal-accent/[0.04] px-3 py-4 text-center ring-2 ring-inset ring-kal-accent/30">
@@ -262,18 +299,18 @@ function PlanCardsSection() {
     bullets: string[];
   }[] = [
     {
-      name: "3-Day Free Trial",
+      name: "Waitlist",
       price: "₹0",
-      duration: "3 days",
+      duration: "3-day trial when batch opens",
       tag: "Start here",
       borderClass: "border-kal-border",
       badgeBg: "bg-kal-card-muted",
       badgeText: "text-kal-muted",
-      cta: "Start Free Trial",
-      ctaHref: "/auth",
+      cta: "Join Waitlist →",
+      ctaHref: "/waitlist",
       ctaClass:
         "border border-kal-border bg-kal-card text-kal-text hover:border-kal-accent/40 hover:text-kal-accent",
-      intro: "Everything unlocked for 3 days. No credit card. No commitments.",
+      intro: "Join the batch queue. Get full access free when your batch opens.",
       bullets: [
         "Daily planner + syllabus tracker",
         "Focus timer + study camera",
@@ -312,6 +349,28 @@ function PlanCardsSection() {
     },
   ];
 
+  const skipCard = {
+    name: "Skip the queue",
+    price: "₹19",
+    duration: "one time",
+    tag: "Fastest",
+    borderClass: "border-kal-accent/40",
+    badgeBg: "bg-kal-accent/15",
+    badgeText: "text-kal-accent",
+    cta: "Start today →",
+    ctaHref: "/waitlist/position",
+    ctaClass:
+      "border border-kal-accent/60 bg-kal-accent/10 text-kal-accent hover:bg-kal-accent/15",
+    intro: "Don't want to wait for a batch? ₹19 gets you in right now.",
+    bullets: [
+      "Immediate access — no queue",
+      "Same 3-day free trial as batch users",
+      "60,000 PrepBrain tokens included",
+      "12 minutes voice included",
+      "One-time payment, no recurring charge",
+    ],
+  };
+
   return (
     <section className="bg-kal-page-end py-16 sm:py-20">
       <div className="mx-auto max-w-5xl px-6 sm:px-8">
@@ -320,15 +379,15 @@ function PlanCardsSection() {
             className="text-2xl font-normal tracking-tight text-kal-text sm:text-3xl"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            Two simple options.
+            Three simple options.
           </h2>
           <p className="mt-2 text-sm text-kal-muted">
-            Start free for 3 days. Keep going with Smart Plan.
+            Join the batch, skip the queue, or subscribe directly.
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 md:max-w-3xl md:mx-auto">
-          {cards.map((card) => (
+        <div className="grid gap-6 md:grid-cols-3">
+          {[...cards.slice(0, 1), skipCard, ...cards.slice(1)].map((card) => (
             <div
               key={card.name}
               className={`kal-glass-panel flex flex-col rounded-2xl border-2 ${card.borderClass} p-6 transition-shadow hover:shadow-[var(--kal-shadow-card-hover)]`}
@@ -468,10 +527,10 @@ function ExamFooterStrip() {
         </p>
         <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <Link
-            href="/auth"
+            href="/waitlist"
             className="inline-flex min-h-[48px] w-full items-center justify-center rounded-full bg-kal-accent px-8 text-base font-bold text-white shadow-[0_4px_16px_rgba(255,122,0,0.28)] transition hover:brightness-105 active:scale-[0.98] sm:w-auto"
           >
-            Start 3-Day Free Trial
+            Join Waitlist →
           </Link>
           <Link
             href="#subscribe"
@@ -491,9 +550,9 @@ export function PricingPageContent() {
   return (
     <div className="w-full">
       <HeroSection />
+      <HowItWorksSection />
       <PricingTableSection />
       <PlanCardsSection />
-      <PathSection />
       <CheckoutSection />
       <FAQSection />
       <ExamFooterStrip />

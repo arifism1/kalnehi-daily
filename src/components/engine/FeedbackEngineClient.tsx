@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { usePrimaryExamLabel } from "@/hooks/usePrimaryExamLabel";
 import { useRefreshTasksOnHomeFocus } from "@/hooks/useRefreshTasksOnHomeFocus";
+import { useTodayDailyPlanProgress } from "@/hooks/useTodayDailyPlanProgress";
 import { useSyllabusTracker } from "@/hooks/useSyllabusTracker";
 import { buildFeedbackInsights } from "@/lib/engine/feedbackInsights";
 import { shouldShowSyllabusComingSoon } from "@/lib/examProfile";
@@ -40,6 +41,7 @@ export function FeedbackEngineClient() {
     loading: syllabusLoading,
     error: syllabusError,
   } = useSyllabusTracker();
+  const dailyPlanToday = useTodayDailyPlanProgress();
 
   const syllabusSoon = shouldShowSyllabusComingSoon({
     examLabel,
@@ -58,7 +60,13 @@ export function FeedbackEngineClient() {
           ? upscMainsSyllabusUiPercent(rollup.totalMarksMastered)
           : rollup.overallPercent
         : null;
-    return buildFeedbackInsights(today, tasks, microRecord, syllabusPct);
+    return buildFeedbackInsights(
+      today,
+      tasks,
+      microRecord,
+      syllabusPct,
+      dailyPlanToday,
+    );
   }, [
     today,
     tasksRecord,
@@ -67,6 +75,7 @@ export function FeedbackEngineClient() {
     rollup.overallPercent,
     rollup.totalMarksMastered,
     catalogExamKey,
+    dailyPlanToday,
   ]);
 
   return (

@@ -35,6 +35,14 @@ export function scheduleUserPlannerTextFlush(
   }, PLANNER_TEXT_FLUSH_DEBOUNCE_MS);
 }
 
+/** Clears debounce without flushing; pair with immediate flush (e.g. tab hide). */
+export function cancelPendingUserPlannerTextDebounce(): void {
+  if (flushDebounceTimer) {
+    clearTimeout(flushDebounceTimer);
+    flushDebounceTimer = null;
+  }
+}
+
 export async function flushUserPlannerTextOutbox(
   userId: string | undefined,
 ): Promise<void> {

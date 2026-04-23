@@ -67,11 +67,16 @@ export function computeWeightedCompletionPercent(
   return Math.round((done / total) * 1000) / 10;
 }
 
+/**
+ * @param unifiedPlanTaskCount When &gt; 0, today has unified `daily_tasks` even if
+ *   academic `tasks` for this date are empty — don’t treat as “no scope”.
+ */
 export function classifyProgressMessageWithScope(
   tasks: Task[],
   weightedPercent: number,
+  unifiedPlanTaskCount = 0,
 ): ProgressMessage {
-  if (tasks.length === 0) return "falling_behind";
+  if (tasks.length === 0 && unifiedPlanTaskCount === 0) return "falling_behind";
   if (weightedPercent >= PROGRESS_THRESHOLDS.PERFECT_MIN_PERCENT) return "perfect";
   if (weightedPercent >= PROGRESS_THRESHOLDS.PARTIAL_MIN_PERCENT) return "partial";
   return "falling_behind";

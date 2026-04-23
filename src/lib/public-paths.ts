@@ -50,6 +50,9 @@ export const PUBLIC_MARKETING_PATHS = new Set<string>([
   "/features",
   // Tools master page
   "/tools",
+  // Waitlist pages (accessible without auth)
+  "/waitlist",
+  "/waitlist/position",
 ]);
 
 /** Prefix patterns for route families that are always public. */

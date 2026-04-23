@@ -140,12 +140,42 @@ export async function upsertHabitLogEntry(input: {
   }
 }
 
+export async function deleteUserHabit(
+  habitId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+      error: authErr,
+    } = await supabase.auth.getUser();
+    if (authErr || !user) return { ok: false, error: USER_ERROR.session };
+
+    const { error } = await supabase
+      .from("user_habits")
+      .delete()
+      .eq("id", habitId)
+      .eq("user_id", user.id);
+    if (error) return { ok: false, error: formatSupabaseError(error) };
+
+    revalidatePath("/habits");
+    revalidatePath("/planner/habits");
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: formatSupabaseError(e) };
+  }
+}
+
 export async function applyHabitOutboxOp(
   op: HabitOutboxOp,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   switch (op.kind) {
     case "habit_create": {
       const r = await createUserHabit({ id: op.id, name: op.name });
+      return r.ok ? { ok: true } : { ok: false, error: r.error };
+    }
+    case "habit_delete": {
+      const r = await deleteUserHabit(op.id);
       return r.ok ? { ok: true } : { ok: false, error: r.error };
     }
     case "habit_log_upsert": {

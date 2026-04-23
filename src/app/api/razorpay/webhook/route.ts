@@ -221,6 +221,7 @@ export async function POST(request: Request) {
       subscription_plan: "monthly",
       subscription_tier: inferTier(payload),
       razorpay_subscription_id: subscriptionId ?? patch.razorpay_subscription_id,
+      payment_grace_until: null, // Clear any grace period on successful renewal
       ...(autopayFromNotes !== null
         ? { subscription_autopay_months_total: autopayFromNotes }
         : {}),
@@ -329,12 +330,20 @@ export async function POST(request: Request) {
   }
 
   if (event === "subscription.pending") {
-    // Razorpay is actively retrying the charge. Keep the user's current access intact
-    // and wait for either subscription.charged (recovery) or subscription.halted (terminal).
-    console.info("[webhook] subscription.pending: retrying charge, no profile change", {
+    // Razorpay is actively retrying the charge. Grant a 3-day grace period so the user
+    // doesn't lose access during the retry window.
+    const gracePeriodMs = 3 * 24 * 60 * 60 * 1000;
+    const graceUntil = new Date(Date.now() + gracePeriodMs).toISOString();
+    const gracePatch: Record<string, unknown> = { payment_grace_until: graceUntil };
+    if (subscriptionId) {
+      await applyBySubscriptionId(supabase, subscriptionId, gracePatch);
+    } else if (userIdFromNotes) {
+      await applyByUserId(supabase, userIdFromNotes, gracePatch);
+    }
+    console.info("[webhook] subscription.pending: grace period set until", graceUntil, {
       subscriptionId: subscriptionId?.slice(0, 14) ?? "unknown",
     });
-    return okResponse({ noop: true });
+    return okResponse({ graceUntil });
   }
 
   if (event === "subscription.halted") {

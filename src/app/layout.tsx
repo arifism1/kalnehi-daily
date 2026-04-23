@@ -11,7 +11,9 @@ import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { OrganicEntryCapture } from "@/components/OrganicEntryCapture";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
+import { StoragePersistenceInit } from "@/components/StoragePersistenceInit";
 import { ThemeSync } from "@/components/ThemeSync";
+import { UiPrefsRemoteSync } from "@/components/UiPrefsRemoteSync";
 import { defaultSiteMetadata, SITE_NAME } from "@/lib/seo-metadata";
 
 import "./globals.css";
@@ -150,6 +152,8 @@ export default function RootLayout({
         <ServiceWorkerRegister />
         <AuthProvider>
           <SubscriptionAccessProvider>
+            <UiPrefsRemoteSync />
+            <StoragePersistenceInit />
             <FcmForegroundListener />
             <AppShell>{children}</AppShell>
           </SubscriptionAccessProvider>

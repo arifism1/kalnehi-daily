@@ -80,6 +80,11 @@ export type PrepBrainContext = {
     todays_execution_guidance_line: string;
     planned_marks_weight_total_for_today: number;
     estimated_minutes_planned_for_today: number;
+    /** Open academic `tasks` with assigned_date &lt; today. Omitted in older client payloads. */
+    count_of_incomplete_academic_tasks_from_past_days?: number;
+    /** Open unified `daily_tasks` with plan date &lt; today (not done). Omitted in older client payloads. */
+    count_of_incomplete_unified_plan_tasks_from_past_days?: number;
+    /** Sum of academic + unified incomplete carry-over; legacy payloads only had this field. */
     count_of_incomplete_tasks_from_past_days: number;
     days_behind_on_execution: number | null;
   };
@@ -168,6 +173,18 @@ export type PrepBrainContextInput = {
     overall_weighted_completion_percent: number;
     total_marks_pool_in_syllabus_model: number;
   } | null;
+  /**
+   * When `totalCount &gt; 0`, today’s execution % / band follow unified daily plan
+   * (same as home / consistency). Omitted in older snapshots — treat as no overlay.
+   */
+  dailyPlanToday?: { totalCount: number; doneCount: number; percent: number } | null;
+  /** Past-due `daily_tasks` (not done). Defaults to 0 if omitted. */
+  incompleteDailyTasksFromPastDays?: number;
+  /**
+   * Calendar lag from `computeDaysBehindExecution`-style logic on unified plans.
+   * Merged with academic days behind via max when both exist.
+   */
+  dailyPlanExecutionLagDays?: number | null;
 };
 
 function taskTitle(task: Task, microtopicById: Record<string, Microtopic>): string {
@@ -249,16 +266,48 @@ export function buildPrepBrainContext(input: PrepBrainContextInput): PrepBrainCo
     habitBundle,
     meditation30d,
     syllabus_snapshot_overrides,
+    dailyPlanToday: dailyPlanFromInput,
+    incompleteDailyTasksFromPastDays: incompleteDailyFromInput = 0,
+    dailyPlanExecutionLagDays: dailyPlanLagFromInput = null,
   } = input;
 
   const allThroughToday = filterTasksThroughDate(tasks, calendarToday);
   const todayTasks = filterTasksForDate(tasks, calendarToday);
   const weightedToday = computeWeightedCompletionPercent(todayTasks, microtopicById);
   const plannedW = sumPlannedMarksWeight(todayTasks, microtopicById);
-  const band = classifyDailyProgressBand(weightedToday, plannedW);
+
+  const dailyPlanToday =
+    dailyPlanFromInput != null &&
+    dailyPlanFromInput.totalCount > 0
+      ? dailyPlanFromInput
+      : null;
+  const hasUnifiedToday = dailyPlanToday != null;
+  const effectiveTodayPercent = hasUnifiedToday
+    ? dailyPlanToday!.percent
+    : weightedToday;
+  const effectiveCountForBand = hasUnifiedToday
+    ? dailyPlanToday!.totalCount
+    : todayTasks.length;
+  const band = classifyDailyProgressBand(
+    effectiveTodayPercent,
+    effectiveCountForBand,
+  );
   const { label: bandLabel, guidance: bandGuidance } = bandCopy(band);
+  const plannedForContext = hasUnifiedToday
+    ? dailyPlanToday!.totalCount
+    : Math.round(plannedW * 10) / 10;
   const missed = findMissedIncompleteTasks(tasks, calendarToday);
-  const daysBehind = computeDaysBehindExecution(allThroughToday, calendarToday);
+  const daysFromAcademic = computeDaysBehindExecution(allThroughToday, calendarToday);
+  const daysBehind =
+    daysFromAcademic == null
+      ? dailyPlanLagFromInput
+      : dailyPlanLagFromInput == null
+        ? daysFromAcademic
+        : Math.max(daysFromAcademic, dailyPlanLagFromInput);
+
+  const incompleteAcademic = missed.length;
+  const incompleteUnified = Math.max(0, incompleteDailyFromInput);
+  const countIncompletePastDays = incompleteAcademic + incompleteUnified;
 
   const cutoffDate = format(subDays(parseISO(calendarToday), 13), "yyyy-MM-dd");
   const recentPool = tasks.filter(
@@ -337,12 +386,16 @@ export function buildPrepBrainContext(input: PrepBrainContextInput): PrepBrainCo
       cuet_domain_summary: cuetScoringRollup ? mapCuet(cuetScoringRollup) : null,
     },
     todays_planned_work: {
-      completion_percent_for_todays_planned_tasks: weightedToday,
+      completion_percent_for_todays_planned_tasks: effectiveTodayPercent,
       todays_execution_status_label: bandLabel,
       todays_execution_guidance_line: bandGuidance,
-      planned_marks_weight_total_for_today: Math.round(plannedW * 10) / 10,
-      estimated_minutes_planned_for_today: sumEstimatedMinutes(todayTasks),
-      count_of_incomplete_tasks_from_past_days: missed.length,
+      planned_marks_weight_total_for_today: plannedForContext,
+      estimated_minutes_planned_for_today: hasUnifiedToday
+        ? 0
+        : sumEstimatedMinutes(todayTasks),
+      count_of_incomplete_academic_tasks_from_past_days: incompleteAcademic,
+      count_of_incomplete_unified_plan_tasks_from_past_days: incompleteUnified,
+      count_of_incomplete_tasks_from_past_days: countIncompletePastDays,
       days_behind_on_execution: daysBehind,
     },
     recent_tasks_last_two_weeks,
@@ -441,6 +494,16 @@ export function buildPrepBrainCompactContext(ctx: PrepBrainContext): PrepBrainCo
     if (d >= 3) {
       insights.push(`Backlog is about ${d} days; recovering old carry-over tasks should be prioritized.`);
     }
+  }
+
+  if (
+    insights.length < 2 &&
+    (ctx.todays_planned_work.count_of_incomplete_unified_plan_tasks_from_past_days ?? 0) >=
+      4
+  ) {
+    insights.push(
+      "Several items on past daily plan days are still open — clear or reschedule them before the pile grows.",
+    );
   }
 
   if (insights.length < 2 && ctx.meditation_last_30_days.distinct_days_with_a_session < 8) {

@@ -6,6 +6,7 @@
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
 
 import { NOTIFICATION_PREFS_DEFAULTS } from "@/lib/engine/notificationPrefs";
+import { registerOutboxBackgroundSync } from "@/lib/pwaBackgroundSync";
 import type {
   UserPlannerTextBundle,
   UserPlannerTextOutboxOp,
@@ -95,6 +96,7 @@ export async function enqueueUserPlannerTextOutbox(
     op,
     createdAt: Date.now(),
   });
+  registerOutboxBackgroundSync().catch(() => {});
 }
 
 export async function getAllUserPlannerTextOutbox(): Promise<OutboxRow[]> {
