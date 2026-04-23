@@ -9,30 +9,10 @@ import type { TablesInsert, TablesUpdate } from "@/types/supabase";
 /**
  * Reconcile app-side field names / values with the live Postgres schema.
  *
- * Actual DB columns (verified via PostgREST probing):
- *   id, user_id, microtopic_id (NOT NULL + FK), assigned_date, status,
- *   estimated_time_minutes, marks_value, created_at, updated_at,
- *   time_spent_seconds, start_time, end_time
- *
- * DB status check constraint accepts: not_started | in_progress | completed
- *
- * Columns in TypeScript types but NOT in the live DB:
- *   name, estimated_minutes (DB uses estimated_time_minutes), marks_weight
- *
- * Run this migration in Supabase Dashboard → SQL Editor to align the DB
- * with the app's full type, then simplify this function:
- *
- *   ALTER TABLE public.tasks ADD COLUMN IF NOT EXISTS name text;
- *   ALTER TABLE public.tasks ADD COLUMN IF NOT EXISTS marks_weight numeric;
- *   ALTER TABLE public.tasks ALTER COLUMN microtopic_id DROP NOT NULL;
- *   ALTER TABLE public.tasks DROP CONSTRAINT IF EXISTS tasks_status_check;
- *   ALTER TABLE public.tasks ADD CONSTRAINT tasks_status_check
- *     CHECK (status IN ('not_started','pending','in_progress','completed'));
+ * `estimated_minutes` is the app-side alias; the DB column is `estimated_time_minutes`.
+ * We map it here so callers can use either name.
  */
-const COLS_MISSING_FROM_DB: readonly string[] = [
-  "name",
-  "marks_weight",
-];
+const COLS_MISSING_FROM_DB: readonly string[] = [];
 
 const STATUS_TO_DB: Record<string, string> = {
   pending: "not_started",
@@ -104,15 +84,19 @@ export async function createTasksBulk(
   try {
     if (rows.length === 0) return { ok: true, ids: [] };
     const { supabase, userId } = await requireUser();
-    const payload = rows.map((row) =>
-      sanitizeTaskPayload({
-        ...row,
+    const payload = rows.map((row) => {
+      // Strip client-supplied `id` so the DB always generates a new UUID.
+      // Accepting caller-provided IDs risks overwriting another user's task
+      // if a row with that UUID already exists and RLS ever has a regression.
+      const { id: _stripped, ...rest } = row as TablesInsert<"tasks">;
+      return sanitizeTaskPayload({
+        ...rest,
         user_id: userId,
-      } as TablesInsert<"tasks">),
-    );
+      } as TablesInsert<"tasks">);
+    });
     const { data, error } = await supabase
       .from("tasks")
-      .upsert(payload, { onConflict: "id" })
+      .insert(payload)
       .select("id");
     if (error) throw error;
     revalidatePath("/");

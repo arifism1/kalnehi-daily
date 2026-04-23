@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 
 export const runtime = "nodejs";
 
 const MAX_BASE64_CHARS = 340_000; // ~250 KB JPEG after base64
 const RATE_LIMIT_MS = 120_000; // 1 request per 120s per user
-
-const lastRequestAt = new Map<string, number>();
 
 const STUDY_PARTNER_PROMPT =
   "You are a warm, encouraging AI study coach watching via the student's webcam. " +
@@ -82,23 +81,33 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Frame data too small." }, { status: 400 });
   }
 
-  // Rate limiting
-  const now = Date.now();
-  const last = lastRequestAt.get(user.id) ?? 0;
-  if (now - last < RATE_LIMIT_MS) {
-    const retryAfterSec = Math.max(1, Math.ceil((RATE_LIMIT_MS - (now - last)) / 1000));
-    return NextResponse.json(
-      { ok: false, error: "Too many requests. Please wait before the next feedback." },
-      { status: 429, headers: { "Retry-After": String(retryAfterSec) } },
-    );
-  }
-  lastRequestAt.set(user.id, now);
-  if (lastRequestAt.size > 5_000) {
-    const toDelete: string[] = [];
-    for (const [k, t] of lastRequestAt) {
-      if (now - t > 600_000) toDelete.push(k);
+  // DB-backed rate limiting shared across all serverless instances.
+  const admin = getSupabaseServiceRoleClient();
+  if (admin) {
+    const now = new Date().toISOString();
+    const { data: cooldown } = await admin
+      .from("study_partner_cooldown" as never)
+      .select("last_request_at")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    const last = (cooldown as { last_request_at?: string } | null)?.last_request_at;
+    if (last) {
+      const elapsed = Date.now() - new Date(last).getTime();
+      if (elapsed < RATE_LIMIT_MS) {
+        const retryAfterSec = Math.max(1, Math.ceil((RATE_LIMIT_MS - elapsed) / 1000));
+        return NextResponse.json(
+          { ok: false, error: "Too many requests. Please wait before the next feedback." },
+          { status: 429, headers: { "Retry-After": String(retryAfterSec) } },
+        );
+      }
     }
-    for (const k of toDelete) lastRequestAt.delete(k);
+
+    await admin
+      .from("study_partner_cooldown" as never)
+      .upsert({ user_id: user.id, last_request_at: now } as never, {
+        onConflict: "user_id",
+      });
   }
 
   try {

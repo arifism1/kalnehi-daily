@@ -44,7 +44,7 @@ export function HeroSection() {
           </h1>
 
           <p className="mb-8 max-w-lg text-lg leading-relaxed text-kal-text-secondary">
-            Your daily plan, syllabus tracker, focus timer, revision engine and AI prep
+            Your daily plan, syllabus tracker, focus timer, revision reminders and AI prep
             coach — all in one app. Built for aspirants who show up every day.
           </p>
 

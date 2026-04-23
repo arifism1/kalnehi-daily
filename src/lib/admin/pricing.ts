@@ -21,7 +21,7 @@ export async function loadAdminPricingInr(): Promise<AdminPricingInr> {
   return {
     smartTrialInr: num(cfg.smart_trial_price_inr, 19),
     smartMonthlyInr: num(cfg.smart_plan_monthly_price_inr, 499),
-    smartAnnualInr: num(cfg.smart_plan_annual_price_inr, 4788),
+    smartAnnualInr: num(cfg.smart_plan_annual_price_inr, 4790),
     deepinfraInputInrPerM: num(cfg.ai_deepinfra_input_inr_per_m, 2.82),
     deepinfraOutputInrPerM: num(cfg.ai_deepinfra_output_inr_per_m, 13.15),
     groqInputInrPerM: num(cfg.ai_groq_input_inr_per_m, 4.70),

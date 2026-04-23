@@ -394,7 +394,7 @@ export function MyPlanPageClient() {
     rows.push({
       label: "Billing",
       value: isAnnualPlan
-        ? "₹4,788/year · one-time payment"
+        ? "₹4,790/year · one-time payment"
         : plan === "monthly" || plan === "trial"
           ? `${tierConfig.monthlyPriceDisplay}/month · cancel anytime`
           : (plan ?? "—"),
@@ -626,7 +626,7 @@ export function MyPlanPageClient() {
                       {statusLabel(status)}
                     </span>
                     <span className="text-sm font-semibold text-kal-text">
-                      {isAnnualPlan ? "₹4,788/year" : `${tierConfig.monthlyPriceDisplay}/month`}
+                      {isAnnualPlan ? "₹4,790/year" : `${tierConfig.monthlyPriceDisplay}/month`}
                     </span>
                   </div>
                 ) : null}

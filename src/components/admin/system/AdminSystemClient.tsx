@@ -29,7 +29,7 @@ const FEATURE_LABELS: Record<string, string> = {
   prepbrain_ai: "PrepBrain AI coach",
   voice_control: "Voice commands & dictation",
   marks_engine: "Marks engine & rank prediction",
-  spaced_revision: "Spaced revision engine",
+  spaced_revision: "Revision reminders",
   study_camera: "On-camera study sessions",
   batch_system: "Batch opening & waitlist",
   payments: "Razorpay payment processing",

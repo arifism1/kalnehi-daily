@@ -48,6 +48,14 @@ const SITES = [
     scope: "Cron bearer only; reads user_scheduled_notifications for scheduled sends.",
   },
   {
+    file: "src/app/api/cron/refresh-leaderboard-snapshots/route.ts",
+    scope: "Cron bearer only; service role upserts all users’ weekly metrics then RPC recompute.",
+  },
+  {
+    file: "src/actions/leaderboard.ts",
+    scope: "After getUser(); select leaderboard_weekly_metrics .eq(user_id, user.id) only.",
+  },
+  {
     file: "src/app/api/user/system-push/route.ts",
     scope: "After getUser(); .eq(user_id, user.id).",
   },

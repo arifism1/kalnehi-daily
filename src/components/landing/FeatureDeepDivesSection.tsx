@@ -39,12 +39,12 @@ const FEATURES: Feature[] = [
     illustration: <MarksEngineIllustration />,
   },
   {
-    tag: "Revision Engine",
-    headline: "Topics you studied 3 weeks ago are already fading. This catches them before the mock does.",
+    tag: "Revision reminders",
+    headline: "A dated queue beats a vague promise to \"revise later.\"",
     bullets: [
-      "Flags chapters that need revisiting based on how long ago you covered them.",
-      "One bad mock score from forgotten content is demoralising. This makes it avoidable.",
-      "Revision that's planned is revision that actually happens.",
+      "Due dates, priorities, and optional syllabus links — in one list you control.",
+      "Reschedule when life happens; overdue items stay visible until you clear them.",
+      "Push a reminder into your daily plan when you are ready to execute.",
     ],
     illustration: <RevisionEngineIllustration />,
   },
@@ -297,9 +297,9 @@ function RevisionEngineIllustration() {
   return (
     <div className="p-6 select-none">
       <div className="mb-1 flex items-center justify-between">
-        <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-kal-muted">Revision Engine</p>
+        <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-kal-muted">Revision reminders</p>
       </div>
-      <p className="mb-4 text-[11px] text-kal-muted">Topics fading — needs revisiting</p>
+      <p className="mb-4 text-[11px] text-kal-muted">Due list — next reviews</p>
 
       <div className="space-y-2.5">
         {topics.map(({ name, days, urgent }) => (

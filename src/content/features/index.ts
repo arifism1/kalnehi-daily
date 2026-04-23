@@ -82,12 +82,12 @@ For JEE, this means all ~720 topics across Physics, Chemistry and Mathematics. F
 
 Each topic can be marked as: Not started, In progress, Done, or Needs revision. The tracker calculates your completion percentage per subject and overall. PrepBrain AI reads this data to give you strategy advice.
 
-The spaced revision engine is connected to the tracker — when you mark a chapter as "Done," it schedules review sessions at 1 day, 3 days, 1 week, 2 weeks, and 1 month. You never have to manually figure out what to revise.
+**Revision reminders** pair with the tracker: you choose due dates, optionally link a microtopic from the syllabus, and keep everything in one due list. When you are ready, add a reminder to your daily plan or reschedule it — you stay in control of the cadence.
 
 The tracker also shows your Target Score Blueprint — which chapters have the highest weightage for your exam — so you can prioritise where to spend your time when you can't cover everything.`,
     scenarios: [
       "A JEE aspirant opens the syllabus tracker 90 days before the exam. Physics shows 65% complete, Chemistry 72%, Maths 80%. PrepBrain reads this and immediately says: 'Physics is your highest risk — here are the 8 Physics chapters with the highest JEE weightage that you haven't completed yet. Cover these in the next 2 weeks.'",
-      "A NEET aspirant marks Genetics as 'Done' after finishing it for the first time. The spaced revision engine automatically schedules a Genetics review for tomorrow (1-day interval), then in 3 days, then in 1 week. They don't have to think about when to revise — it's planned.",
+      "A NEET aspirant finishes Genetics and adds a revision reminder for 1 week out, linked to that microtopic. When the due date hits, they see it in Revision Reminders, spend 20 minutes on active recall, then mark it done or push the next review.",
       "A UPSC aspirant uses the syllabus tracker across GS1, GS2, GS3, GS4, Essay, and their Optional (History). PrepBrain monitors all 6 tracks and alerts them when GS4 (Ethics) is 3 weeks behind schedule relative to the others.",
       "A CA Intermediate student tracks all 8 papers across 2 groups. Before their mock exam, they open the tracker and see Paper 6 (Auditing) is only 40% complete while everything else is 70%+. They reallocate 10 hours to Auditing that week.",
     ],
@@ -104,32 +104,30 @@ The tracker also shows your Target Score Blueprint — which chapters have the h
   },
   {
     slug: "spaced-revision",
-    name: "Spaced Revision Engine",
-    tagline: "Never Forget What You've Studied",
-    headline: "Spaced Revision Engine — The Science of Never Forgetting a Chapter",
-    description: `The Spaced Revision Engine is built on one of the most well-researched findings in learning science: the spacing effect. When you study something and then review it at increasing intervals (1 day, 3 days, 7 days, 14 days, 30 days), you retain it permanently with far less total study time than re-reading it repeatedly.
+    name: "Revision reminders",
+    tagline: "Your revision list, your dates",
+    headline: "Revision reminders — spaced review without the spreadsheet",
+    description: `Spacing reviews beats cramming — but only if you actually show up on the right days. **Revision reminders** in Kalnehi are your personal due list: add topics by name, link them to syllabus microtopics when you want, set priority, and pick due dates that match your exam timeline.
 
-Kalnehi's Spaced Revision Engine connects to your syllabus tracker. When you mark a chapter as "Done," the engine automatically schedules revision sessions at spaced intervals. When a revision is due, it appears in your daily plan. You don't have to think about what to revise — the system tells you.
+You decide the cadence (e.g. +1 day, +1 week, +1 month after a mock). Items can be pushed to your daily plan when you are ready, rescheduled when life happens, and marked done when you have genuinely revised. PrepBrain and the syllabus tracker still see what you marked as **Needs revision** so strategy advice stays grounded in your real backlog.
 
-For JEE and NEET aspirants, this is critical. The syllabus is large enough that chapters studied in June are often forgotten by November. The revision engine ensures you don't have to start from scratch when exam time comes — because you never fully forgot the chapter to begin with.
-
-The engine also learns from your "Needs Revision" markings — chapters you've flagged as difficult get more frequent review intervals than chapters you found easy.`,
+For large syllabi — JEE, NEET, UPSC, CA — the risk is not forgetting that revision matters; it is forgetting which chapter is due. A single sorted list fixes that.`,
     scenarios: [
-      "A JEE aspirant finishes Rotational Motion in September. The spaced revision engine schedules a review for the next day, then again in 3 days, then in 1 week, then 2 weeks, then a month. By December, when JEE Main preparation intensifies, Rotational Motion is firmly in long-term memory — not a chapter they need to 'redo.'",
-      "A UPSC aspirant finishes reading Laxmikant (Polity) Chapter 12 in March. The engine schedules a revision in 1 week. When the revision comes up, they spend 20 minutes reviewing rather than 3 hours re-reading. By the time Prelims arrives in May, they've reviewed every Polity chapter at least twice.",
-      "A CA Intermediate student marks Accounting Standards as 'Needs Revision' after struggling with AS 10 and AS 16. The engine assigns shorter intervals for these standards — they appear more frequently in the daily plan until mastered.",
-      "A NEET aspirant opens Kalnehi and sees their daily plan includes: 'Revision: Genetics (due today), Revision: Cell Division (due today).' These chapters were marked done 14 days ago. The 15-minute revision refreshes the memory with minimal time investment.",
+      "A JEE aspirant finishes Rotational Motion and adds reminders for 1 day, 1 week, and 3 weeks. Each time a row is due, they open Revision Reminders, do a short active-recall pass, then sets the next date.",
+      "A UPSC aspirant lists Polity chapters with staggered due dates before Prelims. They review in 20-minute blocks instead of re-reading full chapters cold.",
+      "A CA student links AS 10 and AS 16 from the syllabus tracker into reminders with closer due dates until mocks improve.",
+      "A NEET aspirant adds Genetics and Cell Division with the same due date; both show as due today in one list, so they batch revision before a mock.",
     ],
-    examCompatibility: "Spaced revision is most critical for high-content exams: JEE (large syllabus), NEET (Biology is heavy), UPSC (GS + Optional = 2-year content), CA (8 papers of advanced content). Benefits all exams with revision needs.",
+    examCompatibility: "Revision reminders work for every exam profile in Kalnehi. They are especially useful when the syllabus is large and easy to lose track of without a dated queue.",
     relatedFeatures: ["syllabus-tracker", "prepbrain-ai", "daily-planner"],
     relatedExams: ["/jee", "/neet", "/upsc", "/ca-intermediate"],
     faqs: [
-      { question: "What spaced repetition intervals does Kalnehi use?", answer: "Default intervals are: 1 day, 3 days, 7 days, 14 days, and 30 days after initial completion. For chapters marked 'Needs Revision,' intervals are shortened: 1 day, 2 days, 5 days, 10 days." },
-      { question: "Can I customise the revision intervals?", answer: "Yes. The default intervals follow established learning science, but you can adjust them in settings if your exam timeline requires a different revision cadence (e.g., all chapters need a final revision 1 week before the exam)." },
-      { question: "How do revision sessions appear in my daily plan?", answer: "Revisions due today automatically appear in your Kalnehi daily plan alongside your new learning tasks. The plan distinguishes between 'New Study' and 'Revision' sessions so you can plan your day accordingly." },
-      { question: "What happens if I miss a scheduled revision?", answer: "Missed revisions are carried forward to the next day and flagged. PrepBrain AI also alerts you when revision backlog is accumulating — a sign that you need to slow down on new chapters and clear the revision queue." },
+      { question: "Is this automatic spaced repetition from the syllabus tracker?", answer: "No. You set due dates and priorities. The tracker still shows Done / Needs revision for PrepBrain; reminders are the execution list you control." },
+      { question: "Can I link a reminder to a syllabus microtopic?", answer: "Yes. Linking keeps the title and subject aligned with your tracker and avoids duplicate free-text entries." },
+      { question: "How do reminders reach my daily plan?", answer: "When you schedule or add a revision task from the reminder flow, it can become a task on the day you choose. You can also work straight from the reminders page." },
+      { question: "What if I miss a due date?", answer: "The item stays overdue until you reschedule or complete it. Sort by due date to clear backlog before taking on new chapters." },
     ],
-    metaDescription: "Kalnehi's Spaced Revision Engine schedules chapter reviews at 1-day, 3-day, 1-week, 2-week and 1-month intervals automatically. Built on learning science, connected to your syllabus tracker.",
+    metaDescription: "Kalnehi revision reminders: due dates, syllabus links, and priorities in one list — so spaced review actually happens for JEE, NEET, UPSC, and more.",
   },
   {
     slug: "marks-engine",

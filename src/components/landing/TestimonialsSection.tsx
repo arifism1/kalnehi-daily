@@ -23,9 +23,9 @@ const WALKTHROUGH = [
   {
     time: "2:00 PM",
     icon: "🔁",
-    title: "Revision Engine",
-    action: "Flags what's fading. Adds it to tomorrow's plan.",
-    detail: "Optics: last studied 18 days ago. Added to revision queue.",
+    title: "Revision reminders",
+    action: "Due list shows Optics for today — you chose the cadence.",
+    detail: "Marked reviewed; next due date set for +14 days. Nothing slips off the radar.",
   },
   {
     time: "6:00 PM",

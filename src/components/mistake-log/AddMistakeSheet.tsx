@@ -1,0 +1,266 @@
+"use client";
+
+import clsx from "clsx";
+import { Loader2, Mic, MicOff, X } from "lucide-react";
+import { useCallback, useId, useState, useTransition } from "react";
+
+import { createMistakeLog, type MistakeType, type MistakeSource } from "@/actions/mistakeLogs";
+import { MistakeTypeGrid } from "@/components/mistake-log/MistakeTypeButton";
+import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
+
+type Props = {
+  open: boolean;
+  onClose: () => void;
+  onSaved: () => void;
+  syllabusSubjects: string[];
+};
+
+export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects }: Props) {
+  const baseId = useId();
+  const [subject, setSubject] = useState("");
+  const [topicLabel, setTopicLabel] = useState("");
+  const [mistakeType, setMistakeType] = useState<MistakeType | null>(null);
+  const [source, setSource] = useState<MistakeSource | "">("");
+  const [note, setNote] = useState("");
+  const [flagForRevision, setFlagForRevision] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const [voicePreview, setVoicePreview] = useState("");
+
+  const { isListening, isSupported, startListening, stopListening, error: voiceError, clearError } =
+    useDeviceSpeechRecognition({
+      lang: "en-IN",
+      silenceMs: 5000,
+      interimPreview: true,
+      onPreviewTranscript: setVoicePreview,
+      onTranscript: ({ transcript }) => {
+        setNote((prev) => (prev ? `${prev} ${transcript}` : transcript));
+        setVoicePreview("");
+      },
+    });
+
+  const reset = useCallback(() => {
+    setSubject("");
+    setTopicLabel("");
+    setMistakeType(null);
+    setSource("");
+    setNote("");
+    setFlagForRevision(false);
+    setSaveError(null);
+    setVoicePreview("");
+    clearError();
+  }, [clearError]);
+
+  const handleClose = useCallback(() => {
+    reset();
+    onClose();
+  }, [reset, onClose]);
+
+  const handleSave = useCallback(() => {
+    if (!subject) { setSaveError("Please select a subject."); return; }
+    if (!mistakeType) { setSaveError("Please select a mistake type."); return; }
+
+    setSaveError(null);
+    startTransition(async () => {
+      const result = await createMistakeLog({
+        subject,
+        topicLabel: topicLabel.trim() || null,
+        mistakeType,
+        source: (source as MistakeSource) || null,
+        note: note.trim() || null,
+        flagForRevision,
+      });
+      if (!result.ok) {
+        setSaveError(result.error);
+        return;
+      }
+      reset();
+      onSaved();
+      onClose();
+    });
+  }, [subject, topicLabel, mistakeType, source, note, flagForRevision, reset, onSaved, onClose]);
+
+  if (!open) return null;
+
+  const fieldLabel =
+    "text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-800 dark:text-zinc-200";
+  const fieldInput =
+    "w-full rounded-xl border border-zinc-300/95 dark:border-zinc-600 bg-[var(--kal-input-bg)] px-3 py-2.5 text-sm text-zinc-950 dark:text-zinc-100 outline-none focus:ring-2 focus:ring-kal-accent/50 focus:border-kal-accent/50";
+  const fieldSelect = clsx(fieldInput, "cursor-pointer");
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+      <div
+        className="absolute inset-0 bg-kal-overlay backdrop-blur-sm"
+        onClick={handleClose}
+        aria-hidden
+      />
+      <div
+        className="relative z-10 w-full max-w-lg overflow-y-auto max-h-[92dvh] rounded-t-2xl border border-zinc-200/95 bg-kal-bg shadow-2xl ring-1 ring-zinc-950/10 dark:border-zinc-600 sm:rounded-2xl dark:ring-white/10"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={`${baseId}-dialog-title`}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-zinc-200/90 p-4 dark:border-zinc-600/80">
+          <h2
+            id={`${baseId}-dialog-title`}
+            className="font-semibold text-zinc-950 dark:text-zinc-50"
+          >
+            Log a Mistake
+          </h2>
+          <button
+            type="button"
+            onClick={handleClose}
+            className="rounded-lg p-1.5 text-zinc-600 transition-colors hover:bg-zinc-200/80 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="space-y-5 p-4">
+          {/* Subject */}
+          <div className="space-y-1.5">
+            <label htmlFor={`${baseId}-subject`} className={fieldLabel}>
+              Subject *
+            </label>
+            <select
+              id={`${baseId}-subject`}
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              className={fieldSelect}
+            >
+              <option value="">Select subject…</option>
+              {syllabusSubjects.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Topic */}
+          <div className="space-y-1.5">
+            <label htmlFor={`${baseId}-topic`} className={fieldLabel}>
+              Topic / Chapter
+            </label>
+            <input
+              id={`${baseId}-topic`}
+              type="text"
+              value={topicLabel}
+              onChange={(e) => setTopicLabel(e.target.value)}
+              placeholder="e.g. Newton's 3rd Law, Organic Reactions…"
+              className={clsx(
+                fieldInput,
+                "placeholder:text-zinc-500 dark:placeholder:text-zinc-400",
+              )}
+            />
+          </div>
+
+          {/* Mistake Type */}
+          <div className="space-y-1.5">
+            <p className={fieldLabel}>Mistake Type *</p>
+            <MistakeTypeGrid value={mistakeType} onChange={setMistakeType} disabled={isPending} />
+          </div>
+
+          {/* Source */}
+          <div className="space-y-1.5">
+            <label htmlFor={`${baseId}-source`} className={fieldLabel}>
+              Source
+            </label>
+            <select
+              id={`${baseId}-source`}
+              value={source}
+              onChange={(e) => setSource(e.target.value as MistakeSource | "")}
+              className={fieldSelect}
+            >
+              <option value="">— none —</option>
+              <option value="mock_test">Mock Test</option>
+              <option value="practice">Practice</option>
+              <option value="class">Class</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          {/* Note */}
+          <div className="space-y-1.5">
+            <label htmlFor={`${baseId}-note`} className={fieldLabel}>
+              Note
+            </label>
+            <div className="relative">
+              <textarea
+                id={`${baseId}-note`}
+                rows={3}
+                value={isListening && voicePreview ? voicePreview : note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="Optional context, what you'll do differently…"
+                className={clsx(
+                  fieldInput,
+                  "min-h-0 resize-none pr-10 placeholder:text-zinc-500 dark:placeholder:text-zinc-400",
+                )}
+              />
+              {isSupported && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isListening) stopListening();
+                    else { clearError(); startListening(); }
+                  }}
+                  className={clsx(
+                    "absolute bottom-2 right-2 flex h-7 w-7 items-center justify-center rounded-lg border border-transparent transition-colors",
+                    isListening
+                      ? "border-red-200 bg-red-100 text-red-800 dark:border-red-800 dark:bg-red-950/50 dark:text-red-200"
+                      : "bg-zinc-200/90 text-zinc-800 hover:border-zinc-300 hover:bg-zinc-300/90 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:border-zinc-600 dark:hover:bg-zinc-700",
+                  )}
+                >
+                  {isListening ? <MicOff className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}
+                </button>
+              )}
+            </div>
+            {isListening && (
+              <p className="animate-pulse text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                Listening…
+              </p>
+            )}
+            {voiceError && (
+              <p className="text-xs font-medium text-red-700 dark:text-red-300">{voiceError}</p>
+            )}
+          </div>
+
+          {/* Flag for revision */}
+          <label className="flex cursor-pointer items-center gap-3">
+            <input
+              type="checkbox"
+              checked={flagForRevision}
+              onChange={(e) => setFlagForRevision(e.target.checked)}
+              className="h-4 w-4 rounded border-zinc-400 accent-kal-accent focus:ring-2 focus:ring-kal-accent/40 dark:border-zinc-500"
+            />
+            <span className="text-sm text-zinc-900 dark:text-zinc-100">Flag for revision</span>
+          </label>
+
+          {saveError && (
+            <p className="text-sm font-medium text-red-700 dark:text-red-300">{saveError}</p>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-3 pt-1">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="flex-1 rounded-xl border border-zinc-300/95 py-2.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-200/60 dark:border-zinc-600 dark:text-zinc-100 dark:hover:bg-zinc-800/80"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={isPending}
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-kal-accent py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-kal-accent/90 disabled:opacity-60"
+            >
+              {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              Save Mistake
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

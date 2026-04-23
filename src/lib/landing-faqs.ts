@@ -6,7 +6,7 @@ export const LANDING_FAQ_ITEMS = [
   {
     question: "What is Kalnehi Daily?",
     answer:
-      "Kalnehi Daily is a web app and installable PWA for serious exam prep: daily planning (voice or typed), syllabus and marks tracking where we have data, focus timer, revision reminders, habits, Brain Yoga, doubt logging, Daily Log, and PrepBrain AI. You pick your exam from a broad catalog; the deepest syllabus, marks prediction, and revision engine are built out today for JEE Main, NEET UG, and Class 11/12 Boards.",
+      "Kalnehi Daily is a web app and installable PWA for serious exam prep: daily planning (voice or typed), syllabus and marks tracking where we have data, focus timer, revision reminders, habits, Brain Yoga, doubt logging, Daily Log, and PrepBrain AI. You pick your exam from a broad catalog; the deepest syllabus, marks prediction, and revision reminder workflows tied to microtopic coverage are built out today for JEE Main, NEET UG, and Class 11/12 Boards.",
   },
   {
     question: "How does the trial work?",
@@ -16,7 +16,7 @@ export const LANDING_FAQ_ITEMS = [
   {
     question: "What exams does Kalnehi support?",
     answer:
-      "The in-app catalog lists 27 exam profiles (engineering, medical, management, law, banking, SSC, study abroad, CUET, and an “Other” option). Daily plan, focus timer, habits, doubt tracker, Daily Log, Brain Yoga, and PrepBrain AI work regardless of which exam you pick. The syllabus tracker, marks engine with weightage-backed predictions, and revision engine tied to microtopic coverage are fully built for JEE Main, NEET UG, and Class 11/12 Boards today. For other exams, use the same tools for execution and coaching; chapter-level graphs improve as we ship more syllabus data for that exam.",
+      "The in-app catalog lists 27 exam profiles (engineering, medical, management, law, banking, SSC, study abroad, CUET, and an “Other” option). Daily plan, focus timer, habits, doubt tracker, Daily Log, Brain Yoga, and PrepBrain AI work regardless of which exam you pick. The syllabus tracker, marks engine with weightage-backed predictions, and revision reminders tied to microtopic coverage are fully built for JEE Main, NEET UG, and Class 11/12 Boards today. For other exams, use the same tools for execution and coaching; chapter-level graphs improve as we ship more syllabus data for that exam.",
   },
   {
     question: "Does the Study Camera upload my handwritten notes anywhere?",

@@ -7,7 +7,7 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 export const metadata = marketingPageMetadata({
   path: "/what-can-kalnehi-do",
   title: `What Can Kalnehi Do? — complete feature tour for JEE, NEET & UPSC | ${SITE_NAME}`,
-  description: `Every feature of Kalnehi Daily in one place: Daily Plan, Syllabus Tracker, Execution Planner, Marks Engine, Revision Engine, Focus Timer, Consistency Heatmap, Habit Maker, Brain Yoga, PrepBrain AI, AI voice dictation, Doubt Tracker, Personal Motivation Vault, Daily Log, push notifications and reminders — built for JEE, NEET, UPSC and Boards. Start with a 3-day free trial, no card required.`,
+  description: `Every feature of Kalnehi Daily in one place: Daily Plan, Syllabus Tracker, Execution Planner, Marks Engine, Revision Reminders, Focus Timer, Consistency Heatmap, Habit Maker, Brain Yoga, PrepBrain AI, AI voice dictation, Doubt Tracker, Personal Motivation Vault, Daily Log, push notifications and reminders — built for JEE, NEET, UPSC and Boards. Start with a 3-day free trial, no card required.`,
 });
 
 export default function WhatCanKalnehiDoPage() {

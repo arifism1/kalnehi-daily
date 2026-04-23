@@ -77,18 +77,6 @@ type ActivateSubscriptionResult =
   | { ok: true; subscriptionId: string }
   | { ok: false; error: string };
 
-export type PlanUpgradeQuote = {
-  targetTier: SubscriptionTier;
-  amountPaise: number;
-  line: string;
-  remainingDays: number;
-};
-
-/** Result of verifying the single subscription Checkout (proration addon + recurring plan). */
-export type VerifyPlanUpgradePaymentResult =
-  | { ok: true; warning?: string }
-  | { ok: false; error: string };
-
 
 /** Legacy default for Razorpay fetches / upgrades when counts are missing. */
 const AUTOPAY_FALLBACK_TOTAL_COUNT = 12;
@@ -344,7 +332,6 @@ async function resolveRazorpayPlanIdWithApiFallback(
     });
     return { ok: false, reason: "api_error", envVar, expectedPaise };
   }
-  return { ok: false, reason: "no_match", envVar, expectedPaise };
 }
 
 function planCheckoutFailureMessage(
@@ -558,7 +545,7 @@ async function upsertProfileByUserId(
   userId: string,
   payload: {
     subscription_status: SubscriptionStatus;
-    subscription_plan: "trial" | "monthly";
+    subscription_plan: "trial" | "monthly" | "annual";
     subscription_tier: SubscriptionTier;
     subscription_start_date: string;
     subscription_end_date: string;
@@ -670,239 +657,6 @@ async function mergeResubscribeBonusesAfterMonthlyActivate(userId: string) {
       updated_at: now.toISOString(),
     })
     .eq("user_id", userId);
-}
-
-// ---------------------------------------------------------------------------
-// Create subscription (Pro only)
-// ---------------------------------------------------------------------------
-
-export async function createRazorpayTrialSubscription(
-  tier: SubscriptionTier = "pro",
-  autopayMonths?: unknown,
-): Promise<CreateSubscriptionResult> {
-  if (!isCheckoutTier(tier)) {
-    return { ok: false, error: "Invalid subscription tier." };
-  }
-
-  const months = clampAutopayMonths(autopayMonths ?? DEFAULT_AUTOPAY_MONTHS);
-
-  const userId = await getAuthedUserId();
-  if (!userId) return { ok: false, error: "Please sign in to subscribe." };
-
-  const prefill = await loadRazorpayPrefillForUser(userId);
-
-  const config = getRazorpayConfig();
-  if (!config) {
-    return {
-      ok: false,
-      error: "Payment system is not configured yet.",
-      code: "payment_not_configured",
-      debugHint: "Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in the server environment (e.g. Vercel Production).",
-    };
-  }
-
-  const admin = getAdminClient();
-  if (!admin) {
-    return {
-      ok: false,
-      error: "Payment system is not configured yet.",
-      code: "payment_not_configured",
-      debugHint:
-        "Set SUPABASE_SERVICE_ROLE_KEY and NEXT_PUBLIC_SUPABASE_URL so billing can update profiles.",
-    };
-  }
-
-  const { data: existing } = await admin
-    .from("user_profiles")
-    .select("subscription_status, subscription_end_date, has_had_trial")
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (existing?.has_had_trial) {
-    return {
-      ok: false,
-      error: "You have already used the free trial. Subscribe to Smart Plan (₹499/month) to continue.",
-    };
-  }
-
-  if (existing) {
-    const st = existing.subscription_status;
-    const endDate = existing.subscription_end_date
-      ? new Date(existing.subscription_end_date)
-      : null;
-    const stillHasAccess = endDate && endDate.getTime() > Date.now();
-    if ((st === "trial" || st === "active") && stillHasAccess) {
-      return { ok: false, error: "You already have an active subscription." };
-    }
-  }
-
-  const tierConfig = TIERS[tier];
-
-  try {
-    const razorpay = getRazorpayClient(config);
-    const hadEnvPlanId = Boolean(resolveRazorpayPlanId(tier));
-    const resolved = await resolveRazorpayPlanIdWithApiFallback(razorpay, tier);
-    if (!resolved.ok) {
-      console.error(
-        "[subscription] createRazorpayTrialSubscription: missing or invalid Razorpay plan id",
-        { tier, envVar: resolved.envVar, reason: resolved.reason },
-      );
-      const msg = planCheckoutFailureMessage(tier, resolved, "trial");
-      return {
-        ok: false,
-        error: msg.error,
-        code: msg.code,
-        debugHint: msg.debugHint,
-      };
-    }
-
-    const startAt = calculateTrialEnd(new Date());
-    const subscriptionCreateBody = {
-      total_count: months,
-      customer_notify: 1,
-      start_at: Math.floor(startAt.getTime() / 1000),
-      addons: [
-        {
-          item: {
-            name: `${tierConfig.name} 3-Day Trial`,
-            amount: tierConfig.trialPricePaise,
-            currency: "INR",
-          },
-        },
-      ],
-      notes: {
-        kalnehi_user_id: userId,
-        kalnehi_plan: "monthly",
-        kalnehi_tier: tier,
-        kalnehi_trial_days: String(TRIAL_DAYS),
-        kalnehi_autopay_months: String(months),
-      },
-    };
-
-    const createTrial = (planId: string) =>
-      (razorpay.subscriptions.create as unknown as (
-        body: Record<string, unknown>,
-      ) => Promise<{ id: string }>)({
-        plan_id: planId,
-        ...subscriptionCreateBody,
-      });
-
-    try {
-      const created = await createTrial(resolved.planId);
-      return {
-        ok: true,
-        keyId: config.keyId,
-        subscriptionId: created.id,
-        amountPaise: tierConfig.trialPricePaise,
-        prefill,
-      };
-    } catch (error) {
-      if (hadEnvPlanId && isLikelyInvalidRazorpayPlanIdError(error)) {
-        const fallback = await resolveRazorpayPlanIdWithApiFallback(razorpay, tier, {
-          skipEnv: true,
-        });
-        if (fallback.ok && fallback.planId !== resolved.planId) {
-          try {
-            const created = await createTrial(fallback.planId);
-            console.warn("[subscription] createRazorpayTrialSubscription: retried after invalid env plan id", {
-              tier,
-              fallbackPlanIdPrefix: fallback.planId.slice(0, 14),
-            });
-            return {
-              ok: true,
-              keyId: config.keyId,
-              subscriptionId: created.id,
-              amountPaise: tierConfig.trialPricePaise,
-              prefill,
-            };
-          } catch (retryErr) {
-            logRazorpaySubscriptionCreateFailure("createRazorpayTrialSubscription (retry)", { tier }, retryErr);
-            return { ok: false, error: safeErrorMessage(retryErr) };
-          }
-        }
-      }
-      logRazorpaySubscriptionCreateFailure("createRazorpayTrialSubscription", { tier }, error);
-      return { ok: false, error: safeErrorMessage(error) };
-    }
-  } catch (error) {
-    return { ok: false, error: safeErrorMessage(error) };
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Activate after payment
-// ---------------------------------------------------------------------------
-
-export async function activateRazorpaySubscription(params: {
-  razorpay_payment_id: string;
-  razorpay_subscription_id: string;
-  razorpay_signature: string;
-}): Promise<ActivateSubscriptionResult> {
-  const userId = await getAuthedUserId();
-  if (!userId) return { ok: false, error: "Session expired. Please sign in again." };
-
-  const paymentId = params.razorpay_payment_id?.trim() ?? "";
-  const subscriptionId = params.razorpay_subscription_id?.trim() ?? "";
-  const signature = params.razorpay_signature?.trim() ?? "";
-
-  if (!RAZORPAY_ID_RE.test(paymentId)) {
-    return { ok: false, error: "Invalid payment reference." };
-  }
-  if (!RAZORPAY_ID_RE.test(subscriptionId)) {
-    return { ok: false, error: "Invalid subscription reference." };
-  }
-  if (!HEX_SIGNATURE_RE.test(signature)) {
-    return { ok: false, error: "Invalid payment signature format." };
-  }
-
-  const config = getRazorpayConfig();
-  if (!config) return { ok: false, error: "Payment system is not configured yet." };
-
-  const expectedSignature = crypto
-    .createHmac("sha256", config.keySecret)
-    .update(`${paymentId}|${subscriptionId}`)
-    .digest("hex");
-
-  if (!timingSafeEqual(expectedSignature, signature)) {
-    return { ok: false, error: "Payment verification failed." };
-  }
-
-  let tier: SubscriptionTier = "pro";
-  let autopayMonthsTotal: number | null = null;
-  try {
-    const razorpay = getRazorpayClient(config);
-    const sub = (await razorpay.subscriptions.fetch(subscriptionId)) as {
-      id: string;
-      notes?: Record<string, string>;
-      total_count?: unknown;
-    };
-    const ownerUserId = sub.notes?.kalnehi_user_id?.trim();
-    if (ownerUserId !== userId) {
-      return { ok: false, error: "Subscription does not belong to this account." };
-    }
-    tier = tierFromRazorpayNote(sub.notes?.kalnehi_tier);
-    autopayMonthsTotal = autopayMonthsFromSubscriptionEntity(sub);
-  } catch {
-    return { ok: false, error: "Unable to verify subscription ownership." };
-  }
-
-  const start = new Date();
-  const trialEnd = calculateTrialEnd(start);
-  const updated = await upsertProfileByUserId(userId, {
-    subscription_status: "trial",
-    subscription_plan: "trial",
-    subscription_tier: tier,
-    subscription_start_date: start.toISOString(),
-    subscription_end_date: trialEnd.toISOString(),
-    razorpay_subscription_id: subscriptionId,
-    subscription_autopay_months_total: autopayMonthsTotal,
-    has_had_trial: true,
-  });
-  if (!updated.ok) return updated;
-
-  await resetMonthlyAiUsageCounters(userId);
-
-  return { ok: true, subscriptionId };
 }
 
 // ---------------------------------------------------------------------------
@@ -1714,50 +1468,6 @@ export async function verifyExtraCreditsPayment(params: {
     });
     return { ok: false, error: "Unable to verify payment." };
   }
-}
-
-// ---------------------------------------------------------------------------
-// Plan upgrade (single Checkout: subscription + proration addon, like trial flow)
-// ---------------------------------------------------------------------------
-
-export async function getPlanUpgradeQuotes(): Promise<
-  | { ok: true; quotes: PlanUpgradeQuote[] }
-  | { ok: false; error: string }
-> {
-  const userId = await getAuthedUserId();
-  if (!userId) return { ok: false, error: "Please sign in." };
-  return { ok: true, quotes: [] };
-}
-
-type CreatePlanUpgradeOrderResult =
-  | { ok: true; keyId: string; subscriptionId: string; amountPaise: number }
-  | {
-      ok: false;
-      error: string;
-      code?: SubscriptionCheckoutErrorCode;
-      debugHint?: string;
-    };
-
-export async function createPlanUpgradeOrder(
-  _targetTier: SubscriptionTier,
-): Promise<CreatePlanUpgradeOrderResult> {
-  const userId = await getAuthedUserId();
-  if (!userId) return { ok: false, error: "Please sign in." };
-  return {
-    ok: false,
-    error: "Kalnehi is now a single Pro plan — tier upgrades are not available.",
-    code: "plan_not_found",
-  };
-}
-
-export async function verifyPlanUpgradePayment(_params: {
-  razorpay_payment_id: string;
-  razorpay_subscription_id: string;
-  razorpay_signature: string;
-}): Promise<VerifyPlanUpgradePaymentResult> {
-  const userId = await getAuthedUserId();
-  if (!userId) return { ok: false, error: "Session expired. Please sign in again." };
-  return { ok: false, error: "Plan upgrades are no longer available." };
 }
 
 // ---------------------------------------------------------------------------

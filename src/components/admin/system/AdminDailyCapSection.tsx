@@ -93,7 +93,7 @@ export function AdminDailyCapSection({ initialConfig, initialHistory }: Props) {
   // Auto-refresh every 30 s.
   const refreshHistory = useCallback(async () => {
     try {
-      const res = await fetch("/api/admin/daily-cap/history");
+      const res = await fetch("/api/admin/daily-cap");
       if (res.ok) {
         const data = (await res.json()) as { history: DailyCountRow[] };
         setHistory(data.history ?? []);

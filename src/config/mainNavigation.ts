@@ -17,7 +17,6 @@ import {
   AlarmClock,
   Mic,
   LifeBuoy,
-  RotateCw,
   Settings,
   Shield,
   Sparkles,
@@ -139,13 +138,6 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
     title: "Study Tools",
     items: [
       {
-        href: "/revision-engine",
-        label: "Smart Revision Engine",
-        shortLabel: "Revision",
-        Icon: RotateCw,
-        featureId: "revision-engine",
-      },
-      {
         href: "/revision-reminders",
         label: "Revision Reminders",
         shortLabel: "Reminders",
@@ -255,7 +247,6 @@ const QUICK_NAV_EXCLUDED_HREFS = new Set([
   "/settings",
   "/my-subscription",
   "/policies",
-  "/revision-engine",
   "/revision-reminders",
 ]);
 

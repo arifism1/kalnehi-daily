@@ -29,7 +29,7 @@ export default function RevisionSchedulerPage() {
     { question: "What is spaced repetition?", answer: "Spaced repetition is a learning technique where you review material at increasing intervals. Instead of cramming everything the night before, you review on Day 1, Day 3, Day 7, Day 14 and Day 30 after first studying a topic. This matches how human memory works." },
     { question: "Which exams is this useful for?", answer: "All of them. JEE, NEET, UPSC, CAT, GATE, CA, CLAT, SSC, Banking — any exam with significant content volume benefits from spaced repetition. The more topics you cover, the more critical the scheduling becomes." },
     { question: "Can I export the schedule?", answer: "Yes. You can export as CSV (opens in Excel / Google Sheets) or copy as plain text to paste into your notes. No data is stored on our servers — everything runs in your browser." },
-    { question: "How is this different from Kalnehi's built-in revision engine?", answer: "This tool gives you a static schedule you can paste anywhere. Kalnehi's Spaced Revision Engine auto-schedules revision in your daily planner, sends reminders, and tracks what you've actually reviewed — it works without manual planning." },
+    { question: "How is this different from Kalnehi's revision reminders?", answer: "This tool gives you a static schedule you can paste anywhere. Inside Kalnehi, Revision Reminders is your dated queue — set due dates, link syllabus topics if you want, and push reviews into your daily plan when you're ready." },
   ];
 
   return (
@@ -97,8 +97,8 @@ export default function RevisionSchedulerPage() {
         </section>
 
         <CTABanner
-          headline="Kalnehi's Spaced Revision Engine does this automatically"
-          subtext="No manual scheduling. Your daily planner auto-includes revision slots. Start free for 3 days."
+          headline="Track the same intervals inside Kalnehi"
+          subtext="Revision Reminders keeps your due list next to your syllabus and daily plan. Start free for 3 days."
         />
       </div>
     </>

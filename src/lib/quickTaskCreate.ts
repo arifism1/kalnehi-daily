@@ -185,7 +185,7 @@ export async function bulkAddSyllabusMicrotopicsToDailyPlan(
 /**
  * One pending task per selected syllabus row for `assignedDate`. Skips duplicates on that date.
  *
- * **Revision / daily plan:** This is only called from explicit UI (e.g. Smart Revision Engine
+ * **Revision / daily plan:** This is only called from explicit UI (e.g. revision reminders
  * “Add to daily plan”). There is no automatic pipeline from revision state into `tasks` or
  * `daily_tasks` on load, cron, or notifications.
  */
