@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Check, Minus } from "lucide-react";
 
+import type { DailyCapStatus } from "@/lib/daily-trial-cap";
 import { PathFlowchart } from "./PathFlowchart";
 import { PricingFAQ } from "./PricingFAQ";
 import { PricingPageClient } from "./PricingPageClient";
@@ -52,7 +53,10 @@ function FeatureCell({ value }: { value: FeatureValue }) {
 
 /* ────────────────────────────── Sections ───────────────────────────── */
 
-function HeroSection() {
+function HeroSection({ capStatus }: { capStatus: DailyCapStatus }) {
+  const capFull = capStatus.capEnabled && capStatus.isFull;
+  const cap = capStatus.dailyCap;
+
   return (
     <section className="relative overflow-hidden pb-16 pt-12 sm:pb-20 sm:pt-16 lg:pb-24 lg:pt-20">
       <div
@@ -80,23 +84,37 @@ function HeroSection() {
         </h1>
 
         <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-kal-text-secondary sm:text-xl">
-          Access is by batch. Your spot is yours the moment you join.
+          Up to {cap.toLocaleString("en-IN")} free trials available each day. Spots reset at midnight IST.
         </p>
 
-        <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-          <Link
-            href="/waitlist"
-            className="inline-flex min-h-[52px] w-full items-center justify-center rounded-full bg-kal-accent px-8 text-base font-bold text-white shadow-[0_4px_16px_rgba(255,122,0,0.32)] transition hover:brightness-105 active:scale-[0.98] sm:w-auto"
-          >
-            Join the Waitlist →
-          </Link>
-          <a
-            href="#pricing-table"
-            className="inline-flex min-h-[52px] w-full items-center justify-center rounded-full border border-kal-border bg-kal-card/70 px-8 text-base font-semibold text-kal-text backdrop-blur-sm transition hover:border-kal-accent/40 hover:text-kal-accent sm:w-auto"
-          >
-            See what&apos;s inside ↓
-          </a>
-        </div>
+        {capFull ? (
+          <div className="mt-10 flex flex-col items-center gap-3">
+            <Link
+              href="/waitlist/position"
+              className="inline-flex min-h-[52px] w-full items-center justify-center rounded-full bg-kal-accent px-8 text-base font-bold text-white shadow-[0_4px_16px_rgba(255,122,0,0.32)] transition hover:brightness-105 active:scale-[0.98] sm:w-auto"
+            >
+              Don&apos;t want to wait? Start now for ₹19 →
+            </Link>
+            <p className="text-sm text-kal-text-secondary">
+              Today&apos;s free spots are full — new spots at midnight IST
+            </p>
+          </div>
+        ) : (
+          <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <Link
+              href="/#subscribe"
+              className="inline-flex min-h-[52px] w-full items-center justify-center rounded-full bg-kal-accent px-8 text-base font-bold text-white shadow-[0_4px_16px_rgba(255,122,0,0.32)] transition hover:brightness-105 active:scale-[0.98] sm:w-auto"
+            >
+              Start free — 3 days on us →
+            </Link>
+            <a
+              href="#pricing-table"
+              className="inline-flex min-h-[52px] w-full items-center justify-center rounded-full border border-kal-border bg-kal-card/70 px-8 text-base font-semibold text-kal-text backdrop-blur-sm transition hover:border-kal-accent/40 hover:text-kal-accent sm:w-auto"
+            >
+              See what&apos;s inside ↓
+            </a>
+          </div>
+        )}
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
           {[
@@ -115,22 +133,23 @@ function HeroSection() {
   );
 }
 
-function HowItWorksSection() {
+function HowItWorksSection({ capStatus }: { capStatus: DailyCapStatus }) {
+  const cap = capStatus.dailyCap;
   const steps = [
     {
       num: "①",
-      title: "Join the waitlist",
-      body: "Your position is locked instantly. Skip for ₹19.",
+      title: "Sign up",
+      body: "Create your account in 60 seconds.",
     },
     {
       num: "②",
-      title: "Batch opens",
-      body: "You get exactly 3 days of full access — free.",
+      title: "Claim a free spot",
+      body: `Up to ${cap.toLocaleString("en-IN")} spots available each day. Spots reset at midnight IST.`,
     },
     {
       num: "③",
       title: "Try free, then decide",
-      body: "Smart Plan ₹499/month, or keep waiting.",
+      body: "3 days of full access. Subscribe to Smart Plan if you want to continue.",
     },
   ];
 
@@ -204,10 +223,10 @@ function PricingTableSection() {
                     </p>
                     <p className="text-xs text-kal-muted">No card needed</p>
                     <Link
-                      href="/waitlist"
+                      href="/#subscribe"
                       className="mt-3 inline-flex min-h-[36px] items-center justify-center rounded-full border border-kal-border bg-kal-card px-3 text-xs font-semibold text-kal-text transition hover:border-kal-accent/40 hover:text-kal-accent"
                     >
-                      Join waitlist
+                      Start free today
                     </Link>
                   </th>
 
@@ -259,10 +278,10 @@ function PricingTableSection() {
                   <td className="px-4 py-4 sm:px-6" />
                   <td className="px-3 py-4 text-center">
                     <Link
-                      href="/waitlist"
+                      href="/#subscribe"
                       className="inline-flex min-h-[40px] items-center justify-center rounded-full border border-kal-border px-4 text-sm font-semibold text-kal-text-secondary transition hover:border-kal-accent/40 hover:text-kal-accent"
                     >
-                      Join Waitlist
+                      Start free today
                     </Link>
                   </td>
                   <td className="bg-kal-accent/[0.04] px-3 py-4 text-center ring-2 ring-inset ring-kal-accent/30">
@@ -283,7 +302,8 @@ function PricingTableSection() {
   );
 }
 
-function PlanCardsSection() {
+function PlanCardsSection({ capStatus }: { capStatus: DailyCapStatus }) {
+  const cap = capStatus.dailyCap;
   const cards: {
     name: string;
     price: string;
@@ -300,18 +320,18 @@ function PlanCardsSection() {
     bullets: string[];
   }[] = [
     {
-      name: "Waitlist",
+      name: "Free Trial",
       price: "₹0",
-      duration: "3-day trial when batch opens",
+      duration: "3-day trial",
       tag: "Start here",
       borderClass: "border-kal-border",
       badgeBg: "bg-kal-card-muted",
       badgeText: "text-kal-muted",
-      cta: "Join Waitlist →",
-      ctaHref: "/waitlist",
+      cta: "Start free today →",
+      ctaHref: "/#subscribe",
       ctaClass:
         "border border-kal-border bg-kal-card text-kal-text hover:border-kal-accent/40 hover:text-kal-accent",
-      intro: "Join the batch queue. Get full access free when your batch opens.",
+      intro: `Up to ${cap.toLocaleString("en-IN")} free spots available each day. Spots reset at midnight IST.`,
       bullets: [
         "Daily planner + syllabus tracker",
         "Focus timer + study camera",
@@ -322,7 +342,6 @@ function PlanCardsSection() {
         "PrepBrain AI coach",
         "Voice control — 12 minutes total",
         "PrepBrain AI tokens — 60,000 total",
-        "After Day 3: subscribe to Smart Plan to continue",
       ],
     },
     {
@@ -384,7 +403,7 @@ function PlanCardsSection() {
             Three simple options.
           </h2>
           <p className="mt-2 text-sm text-kal-muted">
-            Join the batch, skip the queue, or subscribe directly.
+            Start free today, skip the wait, or subscribe directly.
           </p>
         </div>
 
@@ -537,10 +556,10 @@ function ExamFooterStrip() {
         </p>
         <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <Link
-            href="/waitlist"
+            href="/#subscribe"
             className="inline-flex min-h-[48px] w-full items-center justify-center rounded-full bg-kal-accent px-8 text-base font-bold text-white shadow-[0_4px_16px_rgba(255,122,0,0.28)] transition hover:brightness-105 active:scale-[0.98] sm:w-auto"
           >
-            Join Waitlist →
+            Start free — 3 days on us →
           </Link>
           <Link
             href="#subscribe"
@@ -556,13 +575,13 @@ function ExamFooterStrip() {
 
 /* ─────────────────────────────── Export ────────────────────────────── */
 
-export function PricingPageContent() {
+export function PricingPageContent({ capStatus }: { capStatus: DailyCapStatus }) {
   return (
     <div className="w-full">
-      <HeroSection />
-      <HowItWorksSection />
+      <HeroSection capStatus={capStatus} />
+      <HowItWorksSection capStatus={capStatus} />
       <PricingTableSection />
-      <PlanCardsSection />
+      <PlanCardsSection capStatus={capStatus} />
       <CheckoutSection />
       <FAQSection />
       <ExamFooterStrip />

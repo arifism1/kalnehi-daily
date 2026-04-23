@@ -7,8 +7,11 @@ import crypto from "node:crypto";
 import Razorpay from "razorpay";
 import { type NextRequest, NextResponse } from "next/server";
 
+import { revalidateTag } from "next/cache";
+
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
+import { DAILY_CAP_STATUS_TAG } from "@/lib/daily-trial-cap";
 
 export const runtime = "nodejs";
 
@@ -139,6 +142,36 @@ export async function POST(req: NextRequest) {
       }
       return NextResponse.json({ ok: false, error: result.error ?? "Activation failed." }, { status: 400 });
     }
+
+    // Mark the user as having used the paid skip path (bypasses daily cap).
+    const todayIST = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date());
+    await admin
+      .from("user_profiles")
+      .update({
+        trial_access_type: "skip_paid",
+        trial_date: todayIST,
+        updated_at: new Date().toISOString(),
+      } as never)
+      .eq("user_id", user.id);
+
+    // Log analytics event.
+    void admin
+      .from("feature_events")
+      .insert({
+        user_id: user.id,
+        feature: "trial_cap",
+        event: "trial_cap_skip_paid",
+        metadata: {
+          razorpay_payment_id: paymentId,
+          date: new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date()),
+        },
+      } as never)
+      .then(({ error: e }: { error: { message: string } | null }) => {
+        if (e) console.warn("[waitlist/skip/verify] feature_events insert:", e.message);
+      });
+
+    // Invalidate daily cap cache so pricing page reflects latest state.
+    revalidateTag(DAILY_CAP_STATUS_TAG, { expire: 0 });
 
     return NextResponse.json({
       ok: true,

@@ -4,6 +4,7 @@ import { useState } from "react";
 import clsx from "clsx";
 
 import type { AppConfig, FeatureFlag, AppConfigLogEntry } from "@/lib/admin/killSwitch";
+import { AdminDailyCapSection, type DailyCountRow } from "./AdminDailyCapSection";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -171,6 +172,7 @@ type Props = {
   flags: FeatureFlag[];
   auditLog: AppConfigLogEntry[];
   userId: string;
+  dailyCapHistory?: DailyCountRow[];
 };
 
 type Modal =
@@ -179,7 +181,7 @@ type Modal =
   | { type: "disable-feature"; featureKey: string }
   | { type: "enable-feature"; featureKey: string };
 
-export function AdminSystemClient({ config: initial, flags: initialFlags, auditLog: initialLog }: Props) {
+export function AdminSystemClient({ config: initial, flags: initialFlags, auditLog: initialLog, dailyCapHistory = [] }: Props) {
   const [config, setConfig] = useState(initial);
   const [flags, setFlags] = useState(initialFlags);
   const [auditLog, setAuditLog] = useState(initialLog);
@@ -647,6 +649,11 @@ export function AdminSystemClient({ config: initial, flags: initialFlags, auditL
             </>
           )}
         </Section>
+
+        <AdminDailyCapSection
+          initialConfig={config}
+          initialHistory={dailyCapHistory}
+        />
       </div>
     </>
   );

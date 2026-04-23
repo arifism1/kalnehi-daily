@@ -16,6 +16,9 @@ export type AppConfig = {
   re_enabled_at: string | null;
   re_enabled_by: string | null;
   updated_at: string;
+  daily_trial_cap: number;
+  daily_cap_enabled: boolean;
+  daily_cap_timezone: string;
 };
 
 export type FeatureFlag = {

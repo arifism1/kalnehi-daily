@@ -2,6 +2,12 @@
 
 import crypto from "node:crypto";
 import Razorpay from "razorpay";
+import { revalidateTag } from "next/cache";
+
+import {
+  DAILY_CAP_STATUS_TAG,
+  getNextMidnightInTz,
+} from "@/lib/daily-trial-cap";
 
 import { createClient } from "@supabase/supabase-js";
 
@@ -1144,15 +1150,133 @@ async function applyPaidVoiceMinuteUsage(
   };
 }
 
-/** Idempotent: starts the one-time 24h welcome trial for eligible new accounts. */
+/** Idempotent: starts the one-time 3-day welcome trial for eligible new accounts. */
 export async function ensureFreeTrialStarted(): Promise<
-  { ok: true; started: boolean } | { ok: false; error: string }
+  | { ok: true; started: boolean }
+  | { ok: false; error: string }
+  | { ok: false; error: "daily_cap_reached"; queued: boolean; queuedFor: string; resetsAt: string; hoursUntilReset: number }
 > {
   const userId = await getAuthedUserId();
   if (!userId) return { ok: false, error: "Please sign in." };
 
   const admin = getAdminClient();
   if (!admin) return { ok: false, error: "Service unavailable." };
+
+  // ── Daily cap check ──────────────────────────────────────────────────────
+  // Read cap config directly (bypass cache so we always see the live value).
+  const { data: configRow } = await admin
+    .from("app_config")
+    .select("daily_cap_enabled, daily_trial_cap, daily_cap_timezone")
+    .limit(1)
+    .maybeSingle();
+
+  const capEnabled: boolean =
+    (configRow as { daily_cap_enabled: boolean } | null)?.daily_cap_enabled ?? false;
+
+  if (capEnabled) {
+    const tz: string =
+      (configRow as { daily_cap_timezone: string } | null)?.daily_cap_timezone ??
+      "Asia/Kolkata";
+    const resetsAt = getNextMidnightInTz(tz);
+    const hoursUntilReset = Math.max(
+      0,
+      Math.round(((resetsAt.getTime() - Date.now()) / (1000 * 60 * 60)) * 10) / 10,
+    );
+
+    const { data: rpcResult, error: rpcErr } = await admin.rpc(
+      "increment_daily_trial_count" as never,
+      { p_user_id: userId } as never,
+    );
+
+    if (rpcErr) {
+      console.error("[ensureFreeTrialStarted] RPC error:", rpcErr.message);
+      return { ok: false, error: "Unable to start welcome trial." };
+    }
+
+    const rpc = rpcResult as { ok: boolean; spots_remaining?: number; error?: string } | null;
+
+    if (!rpc?.ok) {
+      // Invalidate cache so UI immediately reflects full cap.
+      revalidateTag(DAILY_CAP_STATUS_TAG, { expire: 0 });
+
+      // Log the cap-hit event.
+      void admin
+        .from("feature_events")
+        .insert({
+          user_id: userId,
+          feature: "trial_cap",
+          event: "trial_cap_hit",
+          metadata: {
+            resetsAt: resetsAt.toISOString(),
+            hoursUntilReset,
+            spots_remaining: rpc?.spots_remaining ?? 0,
+          },
+        })
+        .then(({ error: e }) => {
+          if (e) console.warn("[ensureFreeTrialStarted] feature_events insert:", e.message);
+        });
+
+      // Enqueue for tomorrow's free-trial slot (idempotent — safe to call multiple times).
+      let queuedFor: string = resetsAt.toISOString().slice(0, 10); // fallback: tomorrow ISO date
+      try {
+        const { data: queueResult } = await admin.rpc(
+          "join_trial_queue" as never,
+          { p_user_id: userId } as never,
+        );
+        const qr = queueResult as { ok: boolean; queued_for?: string } | null;
+        if (qr?.ok && qr.queued_for) queuedFor = qr.queued_for;
+      } catch (e) {
+        console.warn("[ensureFreeTrialStarted] join_trial_queue failed (non-fatal):", e);
+      }
+
+      return {
+        ok: false,
+        error: "daily_cap_reached",
+        queued: true,
+        queuedFor,
+        resetsAt: resetsAt.toISOString(),
+        hoursUntilReset,
+      };
+    }
+
+    // Cap check passed — proceed with trial start.
+    const nowIso = new Date().toISOString();
+    const { data, error } = await admin
+      .from("user_profiles")
+      .update({
+        trial_started_at: nowIso,
+        has_used_free_trial: true,
+        updated_at: nowIso,
+        // trial_access_type and trial_date are already set by the RPC.
+      })
+      .eq("user_id", userId)
+      .eq("has_used_free_trial", false)
+      .select("id")
+      .maybeSingle();
+
+    if (error) return { ok: false, error: "Unable to start welcome trial." };
+
+    revalidateTag(DAILY_CAP_STATUS_TAG, { expire: 0 });
+
+    // Log successful cap-gated trial start.
+    void admin
+      .from("feature_events")
+      .insert({
+        user_id: userId,
+        feature: "trial_cap",
+        event: "trial_started_daily_cap",
+        metadata: {
+          date: new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(new Date()),
+          spots_remaining_after: rpc?.spots_remaining ?? 0,
+        },
+      })
+      .then(({ error: e }) => {
+        if (e) console.warn("[ensureFreeTrialStarted] feature_events insert:", e.message);
+      });
+
+    return { ok: true, started: !!data };
+  }
+  // ── Cap disabled — original flow ─────────────────────────────────────────
 
   const nowIso = new Date().toISOString();
   const { data, error } = await admin
