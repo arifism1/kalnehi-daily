@@ -67,7 +67,7 @@ For aspirants who study in deep focus states, voice control preserves that state
       { question: "What can I do with Hey Boss voice commands?", answer: "Log study sessions, mark chapters done/needs revision, set reminders and alarms, dictate your daily plan, ask PrepBrain AI questions, log doubts, check syllabus completion, navigate between Kalnehi sections, and record voice affirmations — all without touching the screen." },
       { question: "Does voice control work offline?", answer: "Voice recognition requires an internet connection for processing. However, Kalnehi caches your recent data so the app remains usable offline — you just can't issue voice commands without connectivity." },
       { question: "How many minutes of voice control do I get?", answer: "Smart Plan includes 100 hours of voice control per month, which resets on your billing date. The 3-day free trial includes 12 minutes of voice for the entire trial period." },
-      { question: "Is Hey Boss always listening?", answer: "No. Hey Boss only activates when you tap the microphone button or enable the wake word mode manually. Kalnehi does not run background audio processing without explicit user permission." },
+      { question: "Is Hey Boss always listening?", answer: "No. Voice control only runs when you tap the microphone — there is no continuous or background listening after you close the voice UI." },
     ],
     metaDescription: "Hey Boss voice control lets you log study sessions, mark chapters, set reminders and ask PrepBrain AI — all hands-free. Built for JEE, NEET, UPSC and all competitive exam aspirants.",
   },

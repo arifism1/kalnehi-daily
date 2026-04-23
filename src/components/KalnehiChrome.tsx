@@ -13,7 +13,6 @@ import {
 } from "react";
 
 import { GlobalVoiceSheet } from "@/components/voice/GlobalVoiceSheet";
-import { WakeWordListener } from "@/components/voice/WakeWordListener";
 import { useVoiceCommandStore } from "@/store/useVoiceCommandStore";
 
 import { KalnehiMark } from "@/components/KalnehiMark";
@@ -222,7 +221,6 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
       <TimerVisibilityBridge />
       <PwaInstallPromptDeferred />
       <GlobalVoiceSheet />
-      <WakeWordListener />
     </div>
   );
 }

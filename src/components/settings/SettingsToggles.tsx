@@ -75,8 +75,6 @@ export function SettingsToggles() {
   const setSoundEffects = useSettingsStore((s) => s.setSoundEffects);
   const dailyReminders = useSettingsStore((s) => s.dailyReminders);
   const setDailyReminders = useSettingsStore((s) => s.setDailyReminders);
-  const wakeWordEnabled = useSettingsStore((s) => s.wakeWordEnabled);
-  const setWakeWordEnabled = useSettingsStore((s) => s.setWakeWordEnabled);
   const advancedMarksProjectionEnabled = useSettingsStore(
     (s) => s.advancedMarksProjectionEnabled,
   );
@@ -88,7 +86,7 @@ export function SettingsToggles() {
     <SettingsExpandableSection
       sectionId="preferences-theme-home"
       title="Theme and Home"
-      description="Theme, exam countdown, projected marks, sound effects, and daily reminder nudges."
+      description="Theme, exam countdown, projected marks, sound effects, and daily reminder nudges. Voice commands use the microphone when you tap it — there is no always-on listening."
       icon={Palette}
     >
       <div className="kal-glass-panel divide-y divide-white/15 rounded-[1rem] px-1 dark:divide-white/10">
@@ -195,23 +193,6 @@ export function SettingsToggles() {
           onChange={setDailyReminders}
           id={`${baseId}-r`}
           label="Toggle daily reminder nudges"
-        />
-      </div>
-      <div className="flex items-center justify-between gap-3 px-3 py-3.5">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-[15px] font-medium text-kal-text">Always listen for Hey Boss / Hi Boss</span>
-            <ToggleStateBadge checked={wakeWordEnabled} />
-          </div>
-          <p className="mt-0.5 text-xs text-kal-text-secondary">
-            Activates voice commands hands-free. Pauses when the app is in background.
-          </p>
-        </div>
-        <SheetSwitch
-          checked={wakeWordEnabled}
-          onChange={setWakeWordEnabled}
-          id={`${baseId}-ww`}
-          label="Toggle always listen for Hey Boss / Hi Boss"
         />
       </div>
     </div>
