@@ -29,6 +29,7 @@ export type ModelCandidate = {
 export type AiChatResult = {
   text: string;
   modelUsed: string;
+  providerUsed: "deepinfra" | "groq";
   /** Model-reported total tokens (prompt + completion). 0 if unavailable. */
   totalTokens: number;
   promptTokens: number;
@@ -71,6 +72,7 @@ async function groqOpenAiChat(params: {
 function extractResult(
   resp: OpenAICompatibleChatResponse,
   model: string,
+  provider: "deepinfra" | "groq",
 ): AiChatResult {
   const raw = resp.choices?.[0]?.message?.content;
   const text = typeof raw === "string" ? raw.trim() : "";
@@ -78,7 +80,7 @@ function extractResult(
   const promptTokens = u?.prompt_tokens ?? 0;
   const completionTokens = u?.completion_tokens ?? 0;
   const totalTokens = u?.total_tokens ?? promptTokens + completionTokens;
-  return { text, modelUsed: model, totalTokens, promptTokens, completionTokens };
+  return { text, modelUsed: model, providerUsed: provider, totalTokens, promptTokens, completionTokens };
 }
 
 /**
@@ -116,7 +118,7 @@ export async function callChatCompletion(
         });
       }
 
-      const result = extractResult(resp, candidate.model);
+      const result = extractResult(resp, candidate.model, candidate.provider);
       if (result.text) return result;
 
       // Empty response from this candidate — treat as soft failure, try next
@@ -136,6 +138,7 @@ export async function callChatCompletion(
 export type StreamingChatUsage = {
   fullText: string;
   modelUsed: string;
+  providerUsed: "deepinfra" | "groq";
   totalTokens: number;
   promptTokens: number;
   completionTokens: number;
@@ -165,6 +168,7 @@ type OpenAiStreamLineJson = {
 function openAiSseToTextStream(
   body: ReadableStream<Uint8Array>,
   defaultModel: string,
+  provider: "deepinfra" | "groq",
 ): { textStream: ReadableStream<string>; usagePromise: Promise<StreamingChatUsage> } {
   let resolveUsage!: (v: StreamingChatUsage) => void;
   const usagePromise = new Promise<StreamingChatUsage>((r) => {
@@ -226,6 +230,7 @@ function openAiSseToTextStream(
         resolveUsage({
           fullText: acc,
           modelUsed,
+          providerUsed: provider,
           totalTokens,
           promptTokens,
           completionTokens,
@@ -235,6 +240,7 @@ function openAiSseToTextStream(
         resolveUsage({
           fullText: acc,
           modelUsed,
+          providerUsed: provider,
           totalTokens: 0,
           promptTokens: 0,
           completionTokens: 0,
@@ -314,11 +320,16 @@ export async function callStreamingChatCompletion(
       const { textStream, usagePromise } = openAiSseToTextStream(
         resp.body!,
         candidate.model,
+        candidate.provider,
       );
       // Note: we cannot try the next candidate on empty text — the body is already consumed.
       return {
         textStream,
-        usagePromise: usagePromise.then((u) => ({ ...u, modelUsed: candidate.model })),
+        usagePromise: usagePromise.then((u) => ({
+          ...u,
+          modelUsed: candidate.model,
+          providerUsed: candidate.provider,
+        })),
       };
     } catch (e) {
       lastErr = e;

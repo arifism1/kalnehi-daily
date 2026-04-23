@@ -5,8 +5,8 @@ import {
 } from "@/lib/voiceDraftFromGroq";
 
 export type ParseVoiceDraftResult =
-  | { ok: true; tasks: VoiceDraftTask[] }
-  | { ok: false; error: string; openRawFallback?: boolean };
+  | { ok: true; tasks: VoiceDraftTask[]; inputTokens: number; outputTokens: number; model: string }
+  | { ok: false; error: string; openRawFallback?: boolean; inputTokens: number; outputTokens: number; model: string };
 
 /**
  * Shared by server action + /api/voice-parse-draft. No DB or auth.
@@ -25,6 +25,8 @@ export async function runVoiceParseDraft(
     { strictParsedTasks: true },
   );
 
+  const tokenMeta = { inputTokens: groq.inputTokens, outputTokens: groq.outputTokens, model: groq.model };
+
   if (groq.outcome === "fallback") {
     const hasKey = Boolean(process.env.GROQ_API_KEY?.trim());
     return {
@@ -33,6 +35,7 @@ export async function runVoiceParseDraft(
         ? "Could not reach the voice parser (empty transcript or server misconfiguration)."
         : "Voice structuring needs GROQ_API_KEY on the server. You can still save the note below as raw text.",
       openRawFallback: true,
+      ...tokenMeta,
     };
   }
   if (groq.outcome === "parse_failed") {
@@ -41,6 +44,7 @@ export async function runVoiceParseDraft(
       error:
         "Could not turn that into tasks. Try again, or save the note as raw text below.",
       openRawFallback: true,
+      ...tokenMeta,
     };
   }
 
@@ -50,7 +54,8 @@ export async function runVoiceParseDraft(
       ok: false,
       error: "No tasks extracted. Try again or save as raw text below.",
       openRawFallback: true,
+      ...tokenMeta,
     };
   }
-  return { ok: true, tasks };
+  return { ok: true, tasks, ...tokenMeta };
 }

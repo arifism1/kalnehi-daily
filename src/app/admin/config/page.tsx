@@ -20,6 +20,12 @@ const CONFIG_DESCRIPTIONS: Record<string, string> = {
   skip_cta_show_threshold_days: "Min wait days to show ₹19 skip CTA",
   skip_cta_primary_threshold_days: "Min wait days to make ₹19 skip the primary CTA",
   max_waitlist_skip_per_user: "Max ₹19 skips per user (abuse prevention)",
+  // AI model pricing
+  ai_deepinfra_input_inr_per_m: "DeepInfra 20B — input price (₹ per 1M tokens) [auto-syncable]",
+  ai_deepinfra_output_inr_per_m: "DeepInfra 20B — output price (₹ per 1M tokens) [auto-syncable]",
+  ai_groq_input_inr_per_m: "Groq Llama 3.1 8B — input price (₹ per 1M tokens)",
+  ai_groq_output_inr_per_m: "Groq Llama 3.1 8B — output price (₹ per 1M tokens)",
+  ai_usd_to_inr_rate: "USD → INR conversion rate (used for DeepInfra price sync)",
 };
 
 export default async function AdminConfigPage() {
@@ -29,12 +35,14 @@ export default async function AdminConfigPage() {
   const { data: { user } } = await supabase.auth.getUser();
 
   const config = await getAllAdminConfig();
+  const deepinfraModelSlug = process.env.DEEPINFRA_CHAT_MODEL?.trim() ?? "";
 
   return (
     <AdminConfigClient
       config={config}
       descriptions={CONFIG_DESCRIPTIONS}
       userId={user?.id ?? ""}
+      deepinfraModelSlug={deepinfraModelSlug}
     />
   );
 }

@@ -1,4 +1,5 @@
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
+import { getBatchComparisonData } from "@/lib/admin/queries/batchComparisonQueries";
 import { AdminBatchesClient } from "@/components/admin/AdminBatchesClient";
 
 export const dynamic = "force-dynamic";
@@ -158,7 +159,7 @@ async function getAdminData() {
 export type AdminData = NonNullable<Awaited<ReturnType<typeof getAdminData>>>;
 
 export default async function AdminBatchesPage() {
-  const data = await getAdminData();
+  const [data, batchCmp] = await Promise.all([getAdminData(), getBatchComparisonData()]);
   if (!data) {
     return (
       <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-500">
@@ -177,6 +178,7 @@ export default async function AdminBatchesPage() {
       payments={data.payments}
       kpi={data.kpi}
       engagement={data.engagement}
+      batchComparison={batchCmp?.rows}
     />
   );
 }

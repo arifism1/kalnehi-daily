@@ -4,6 +4,7 @@ import { incrementVoiceMinuteUsage } from "@/actions/subscription";
 import { clampVoiceBillingDurationSeconds } from "@/lib/voiceDurationBilling";
 import { runVoiceCommand } from "@/lib/voiceCommandGroq";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 
 export async function POST(req: Request) {
   let body: unknown;
@@ -36,6 +37,21 @@ export async function POST(req: Request) {
   const voiceSecondsCharged = clampVoiceBillingDurationSeconds(o.durationSeconds);
 
   const result = await runVoiceCommand(transcript, pageContext);
+
+  // Log voice AI token usage (best-effort, non-blocking)
+  if (result.ok && (result.inputTokens > 0 || result.outputTokens > 0)) {
+    const svcClient = getSupabaseServiceRoleClient();
+    if (svcClient) {
+      void svcClient.from("voice_ai_usage_log").insert({
+        user_id: user.id,
+        feature: "voice_command",
+        input_tokens: result.inputTokens,
+        output_tokens: result.outputTokens,
+        provider: "groq",
+        model: result.model,
+      });
+    }
+  }
 
   if (!result.ok) {
     return NextResponse.json({ ok: false, error: result.error });

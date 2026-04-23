@@ -396,6 +396,7 @@ ${contextBlock}`;
   const candidates = resolveHelpyjiGroqModels(request);
   let assistantText = "";
   let aiModelUsed = "";
+  let aiProviderUsed: "deepinfra" | "groq" = "groq";
   let groqTotalTokens = 0;
   let groqPromptTokens = 0;
   let groqCompletionTokens = 0;
@@ -407,6 +408,7 @@ ${contextBlock}`;
     });
     assistantText = result.text;
     aiModelUsed = result.modelUsed;
+    aiProviderUsed = result.providerUsed;
     groqTotalTokens = result.totalTokens;
     groqPromptTokens = result.promptTokens;
     groqCompletionTokens = result.completionTokens;
@@ -433,7 +435,12 @@ ${contextBlock}`;
   const billed =
     actualRaw > 0 ? actualRaw : promptComp > 0 ? promptComp : PREPBRAIN_AI_TOKEN_RESERVE_ESTIMATE;
 
-  const fin = await prepbrainAiTokenFinalize(admin, user.id, reservationId, billed);
+  const fin = await prepbrainAiTokenFinalize(admin, user.id, reservationId, billed, {
+    inputTokens: groqPromptTokens,
+    outputTokens: groqCompletionTokens,
+    provider: aiProviderUsed,
+    model: aiModelUsed,
+  });
   if (!fin.ok) {
     console.error("[helpyji/chat] token finalize failed");
   }

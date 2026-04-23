@@ -253,6 +253,12 @@ export const VALID_ADMIN_CONFIG_KEYS = new Set([
   "skip_cta_show_threshold_days",
   "skip_cta_primary_threshold_days",
   "max_waitlist_skip_per_user",
+  // AI model pricing (INR per 1 million tokens)
+  "ai_deepinfra_input_inr_per_m",
+  "ai_deepinfra_output_inr_per_m",
+  "ai_groq_input_inr_per_m",
+  "ai_groq_output_inr_per_m",
+  "ai_usd_to_inr_rate",
 ]);
 
 /** Write an admin_config value with audit trail. */

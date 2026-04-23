@@ -122,6 +122,33 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_events: {
+        Row: {
+          id: string
+          user_id: string
+          feature: string
+          event: string
+          metadata: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          feature: string
+          event: string
+          metadata?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          feature?: string
+          event?: string
+          metadata?: Json | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       syllabus_master: {
         Row: {
           chapter: string
@@ -265,6 +292,39 @@ export type Database = {
           session_type?: string
           soundscape?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      voice_ai_usage_log: {
+        Row: {
+          id: string
+          user_id: string
+          feature: string
+          input_tokens: number
+          output_tokens: number
+          provider: string
+          model: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          feature: string
+          input_tokens?: number
+          output_tokens?: number
+          provider?: string
+          model?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          feature?: string
+          input_tokens?: number
+          output_tokens?: number
+          provider?: string
+          model?: string
+          created_at?: string
         }
         Relationships: []
       }
@@ -964,6 +1024,42 @@ export type Database = {
           },
         ]
       }
+      notification_sends: {
+        Row: {
+          id: string
+          user_id: string
+          channel: string
+          notification_type: string
+          sent_at: string
+          delivered_at: string | null
+          opened_at: string | null
+          clicked_at: string | null
+          converted_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          channel: string
+          notification_type: string
+          sent_at?: string
+          delivered_at?: string | null
+          opened_at?: string | null
+          clicked_at?: string | null
+          converted_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          channel?: string
+          notification_type?: string
+          sent_at?: string
+          delivered_at?: string | null
+          opened_at?: string | null
+          clicked_at?: string | null
+          converted_at?: string | null
+        }
+        Relationships: []
+      }
       user_notifications: {
         Row: {
           created_at: string
@@ -1226,6 +1322,10 @@ export type Database = {
           expires_at: string
           finalized_at: string | null
           cancelled_at: string | null
+          input_tokens: number | null
+          output_tokens: number | null
+          provider: string | null
+          model: string | null
         }
         Insert: {
           id?: string
@@ -1236,6 +1336,10 @@ export type Database = {
           expires_at: string
           finalized_at?: string | null
           cancelled_at?: string | null
+          input_tokens?: number | null
+          output_tokens?: number | null
+          provider?: string | null
+          model?: string | null
         }
         Update: {
           id?: string
@@ -1246,6 +1350,10 @@ export type Database = {
           expires_at?: string
           finalized_at?: string | null
           cancelled_at?: string | null
+          input_tokens?: number | null
+          output_tokens?: number | null
+          provider?: string | null
+          model?: string | null
         }
         Relationships: []
       }
@@ -1345,18 +1453,51 @@ export type Database = {
       admin_users: {
         Row: {
           user_id: string
+          email: string | null
+          user_id_claimed_at: string | null
+          updated_at: string
           added_by: string | null
           added_at: string
         }
         Insert: {
           user_id: string
+          email?: string | null
+          user_id_claimed_at?: string | null
+          updated_at?: string
           added_by?: string | null
           added_at?: string
         }
         Update: {
           user_id?: string
+          email?: string | null
+          user_id_claimed_at?: string | null
+          updated_at?: string
           added_by?: string | null
           added_at?: string
+        }
+        Relationships: []
+      }
+      admin_user_support_notes: {
+        Row: {
+          id: string
+          user_id: string
+          note: string
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          note: string
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          note?: string
+          created_by?: string | null
+          created_at?: string
         }
         Relationships: []
       }

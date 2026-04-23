@@ -1,22 +1,53 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Pencil, X } from "lucide-react";
+import { Check, Pencil, RefreshCw, X } from "lucide-react";
+
+import { syncDeepInfraPricing } from "@/lib/admin/syncDeepInfraPricing";
+
+const DEEPINFRA_SYNC_KEYS = new Set(["ai_deepinfra_input_inr_per_m", "ai_deepinfra_output_inr_per_m"]);
 
 type Props = {
   config: Record<string, string>;
   descriptions: Record<string, string>;
   userId: string;
+  deepinfraModelSlug?: string;
 };
 
 type EditState = { key: string; value: string } | null;
 
-export function AdminConfigClient({ config, descriptions, userId }: Props) {
+export function AdminConfigClient({ config, descriptions, userId, deepinfraModelSlug }: Props) {
   const [editing, setEditing] = useState<EditState>(null);
   const [saving, setSaving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [savedKeys, setSavedKeys] = useState<Set<string>>(new Set());
   const [localConfig, setLocalConfig] = useState(config);
+
+  async function handleSyncDeepInfra() {
+    setSyncing(true);
+    setSyncStatus(null);
+    setError(null);
+    try {
+      const result = await syncDeepInfraPricing();
+      if (!result.ok) {
+        setError(`Sync failed: ${result.error}`);
+      } else {
+        setLocalConfig((prev) => ({
+          ...prev,
+          ai_deepinfra_input_inr_per_m: String(result.inputInrPerM),
+          ai_deepinfra_output_inr_per_m: String(result.outputInrPerM),
+        }));
+        setSavedKeys((s) => new Set([...s, "ai_deepinfra_input_inr_per_m", "ai_deepinfra_output_inr_per_m"]));
+        setSyncStatus(`Synced ${result.modelSlug}: ₹${result.inputInrPerM}/M in, ₹${result.outputInrPerM}/M out`);
+      }
+    } catch {
+      setError("Sync request failed. Please try again.");
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   async function handleSave() {
     if (!editing) return;
@@ -49,12 +80,31 @@ export function AdminConfigClient({ config, descriptions, userId }: Props) {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-kal-text">Admin Config</h1>
-        <p className="mt-0.5 text-sm text-kal-muted">
-          Changes are logged with your user ID and timestamp. All changes take effect immediately.
-        </p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-kal-text">Admin Config</h1>
+          <p className="mt-0.5 text-sm text-kal-muted">
+            Changes are logged with your user ID and timestamp. All changes take effect immediately.
+          </p>
+        </div>
+        {deepinfraModelSlug && (
+          <button
+            type="button"
+            onClick={handleSyncDeepInfra}
+            disabled={syncing}
+            className="flex shrink-0 items-center gap-1.5 rounded-lg bg-kal-accent/15 px-3 py-2 text-xs font-medium text-kal-accent hover:bg-kal-accent/25 disabled:opacity-50"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${syncing ? "animate-spin" : ""}`} />
+            {syncing ? "Syncing…" : "Sync DeepInfra prices"}
+          </button>
+        )}
       </div>
+
+      {syncStatus && (
+        <div className="mb-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-500">
+          {syncStatus}
+        </div>
+      )}
 
       {error && (
         <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-500">
@@ -80,7 +130,14 @@ export function AdminConfigClient({ config, descriptions, userId }: Props) {
 
               return (
                 <tr key={key} className={i % 2 === 0 ? "bg-kal-card/20" : ""}>
-                  <td className="px-4 py-3 font-mono text-xs text-kal-text">{key}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-kal-text">
+                    {key}
+                    {DEEPINFRA_SYNC_KEYS.has(key) && (
+                      <span className="ml-1.5 rounded bg-kal-accent/15 px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-kal-accent">
+                        auto
+                      </span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-xs text-kal-text-secondary">
                     {descriptions[key] ?? "—"}
                   </td>
