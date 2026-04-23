@@ -1,11 +1,36 @@
 /**
- * Canonical production origin for Search Console sitemaps.
- * Never use preview hosts (`*.vercel.app`) here — Google rejects those URLs in the kalnehi.com property.
+ * Default apex origin (JSON-LD on some tool pages, legacy absolute URLs).
+ * Prefer `getSiteUrl()` for metadata; use `absoluteSitemapUrl()` for sitemap `loc` values.
  */
 export const SITE_URL = "https://kalnehi.com";
 
+/** GSC is registered on the www host; sitemap `loc` entries must match that property. */
+const DEFAULT_SITEMAP_BASE_URL = "https://www.kalnehi.com";
+
 /**
- * Absolute URL on the public production host only (for `sitemap.xml` entries).
+ * Base URL for all sitemap `loc` entries and the sitemap index. Override in production
+ * with `SITEMAP_BASE_URL` or `NEXT_PUBLIC_SITEMAP_BASE_URL` if the canonical host changes.
+ */
+export function getSitemapBaseUrl(): string {
+  const fromEnv =
+    process.env.SITEMAP_BASE_URL?.trim() ||
+    process.env.NEXT_PUBLIC_SITEMAP_BASE_URL?.trim();
+  if (fromEnv) return fromEnv.replace(/\/+$/, "");
+  return DEFAULT_SITEMAP_BASE_URL;
+}
+
+/**
+ * Absolute URL for sitemaps only (always the Search Console property host, default www).
+ */
+export function absoluteSitemapUrl(path: string): string {
+  const base = getSitemapBaseUrl();
+  if (!path || path === "/") return base;
+  const p = path.startsWith("/") ? path : `/${path}`;
+  return `${base}${p}`;
+}
+
+/**
+ * Absolute URL on a fixed non-preview host (tool page JSON-LD, RSS); uses apex `SITE_URL`.
  */
 export function absoluteProductionUrl(path: string): string {
   const base = SITE_URL.replace(/\/+$/, "");
