@@ -13,7 +13,7 @@ import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 import { isAdminUser } from "@/lib/waitlist/batchEngine";
 import { fetchAppConfig, APP_CONFIG_CACHE_TAG } from "@/lib/admin/killSwitch";
 import { writeAppStatus } from "@/lib/edgeConfig";
-import type { Json } from "@/types/supabase";
+import type { Json, Database } from "@/types/supabase";
 
 export const runtime = "nodejs";
 
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
     const old_value = current ? { app_enabled: current.app_enabled } : null;
     const new_value = { app_enabled };
 
-    const updateFields: Record<string, unknown> = {
+    const updateFields: Database["public"]["Tables"]["app_config"]["Update"] = {
       app_enabled,
       updated_at: now,
     };
@@ -154,7 +154,7 @@ export async function POST(req: NextRequest) {
         }
       : null;
 
-    const updateFields: Record<string, unknown> = { updated_at: now };
+    const updateFields: Database["public"]["Tables"]["app_config"]["Update"] = { updated_at: now };
     if (maintenance_title !== undefined) updateFields.maintenance_title = maintenance_title;
     if (maintenance_message !== undefined) updateFields.maintenance_message = maintenance_message;
     if (maintenance_eta !== undefined) updateFields.maintenance_eta = maintenance_eta || null;
