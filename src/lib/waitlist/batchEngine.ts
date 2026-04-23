@@ -57,6 +57,99 @@ export async function getNextBatch(): Promise<BatchRow | null> {
   return (data as BatchRow | null) ?? null;
 }
 
+/**
+ * Fetch the earliest scheduled batch — the correct target for new signups.
+ * Returns null only if the table is empty or the service role is unavailable.
+ * Use this for display; use ensureJoinableBatch for the join flow.
+ */
+export async function getNextJoinableBatch(): Promise<BatchRow | null> {
+  const admin = getSupabaseServiceRoleClient();
+  if (!admin) return null;
+
+  const { data } = await admin
+    .from("batches")
+    .select("*")
+    .eq("status", "scheduled")
+    .order("opens_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  return (data as BatchRow | null) ?? null;
+}
+
+/**
+ * Return the earliest scheduled batch, creating one if none exists.
+ * Safe to call concurrently: batch_number has a UNIQUE constraint and we use
+ * ON CONFLICT DO NOTHING so a race between two simultaneous calls produces
+ * exactly one new row and both callers end up with the same batch.
+ *
+ * opens_at policy: now + batch_cycle_days so the admin has time to adjust
+ * the schedule before the cron (open-batches) fires.
+ */
+export async function ensureJoinableBatch(): Promise<BatchRow | null> {
+  const admin = getSupabaseServiceRoleClient();
+  if (!admin) return null;
+
+  // Fast path: a scheduled batch already exists.
+  const { data: existing } = await admin
+    .from("batches")
+    .select("*")
+    .eq("status", "scheduled")
+    .order("opens_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (existing) return existing as BatchRow;
+
+  // Determine next batch_number and config values.
+  const [maxResult, configResult] = await Promise.all([
+    admin
+      .from("batches")
+      .select("batch_number")
+      .order("batch_number", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    admin
+      .from("admin_config")
+      .select("key, value")
+      .in("key", ["batch_size", "batch_cycle_days"]),
+  ]);
+
+  const maxBatchNumber = (maxResult.data as { batch_number: number } | null)?.batch_number ?? 0;
+  const nextBatchNumber = maxBatchNumber + 1;
+
+  const configRows = (configResult.data ?? []) as { key: string; value: string }[];
+  const configMap = Object.fromEntries(configRows.map((r) => [r.key, r.value]));
+  const batchSize = parseInt(configMap.batch_size ?? "10000", 10);
+  const batchCycleDays = parseInt(configMap.batch_cycle_days ?? "5", 10);
+
+  // opens_at: now + cycle days so admin can adjust the date before the cron fires.
+  const opensAt = new Date(Date.now() + batchCycleDays * 24 * 60 * 60 * 1000).toISOString();
+
+  const { error: insertErr } = await admin.from("batches").insert({
+    batch_number: nextBatchNumber,
+    opens_at: opensAt,
+    status: "scheduled",
+    size: batchSize,
+  });
+
+  if (insertErr && insertErr.code !== "23505") {
+    // 23505 = unique_violation from a concurrent insert — handled by re-fetch below.
+    console.error("[ensureJoinableBatch] insert error", insertErr.message);
+  }
+
+  // Re-fetch covers both success and the unique-violation race.
+  const { data: fresh } = await admin
+    .from("batches")
+    .select("*")
+    .eq("status", "scheduled")
+    .order("opens_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  return (fresh as BatchRow | null) ?? null;
+}
+
 /** Fetch all scheduled batches. */
 export async function getScheduledBatches(): Promise<BatchRow[]> {
   const admin = getSupabaseServiceRoleClient();

@@ -8,7 +8,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
-import { getNextBatch, countUsersAhead } from "@/lib/waitlist/batchEngine";
+import { ensureJoinableBatch, countUsersAhead } from "@/lib/waitlist/batchEngine";
 import { sendWaitlistConfirm } from "@/lib/waitlist/notifications";
 
 export const runtime = "nodejs";
@@ -68,10 +68,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Service unavailable." }, { status: 503 });
   }
 
-  // Find the next scheduled batch.
-  const batch = await getNextBatch();
+  // Ensure a scheduled batch exists (creates one if the table is empty).
+  const batch = await ensureJoinableBatch();
   if (!batch) {
-    return NextResponse.json({ ok: false, error: "No open batch at this time. Please check back soon." }, { status: 503 });
+    return NextResponse.json({ ok: false, error: "Service unavailable." }, { status: 503 });
   }
 
   if (!userId) {

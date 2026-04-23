@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 
 import type { BatchComparisonRow } from "@/lib/admin/queries/batchComparisonQueries";
 import { AdminBatchComparisonSection } from "@/components/admin/AdminBatchComparisonSection";
@@ -81,7 +81,7 @@ type Props = {
   batchComparison?: BatchComparisonRow[];
 };
 
-type View = "overview" | "waitlist-health" | "users" | "revenue" | "engagement";
+type View = "overview" | "waitlist-health" | "users" | "revenue" | "engagement" | "manage";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -193,6 +193,23 @@ export function AdminBatchesClient({
   const [liveTime, setLiveTime] = useState(new Date());
   const [userSearch, setUserSearch] = useState("");
 
+  // Manage tab state
+  const [manageBatches, setManageBatches] = useState<BatchRow[]>([...batches]);
+  const [createOpensAt, setCreateOpensAt] = useState("");
+  const [createSize, setCreateSize] = useState("10000");
+  const [createNotes, setCreateNotes] = useState("");
+  const [createBusy, setCreateBusy] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [createSuccess, setCreateSuccess] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<{ opensAt: string; size: string; notes: string; status: string }>({
+    opensAt: "", size: "", notes: "", status: "",
+  });
+  const [editBusy, setEditBusy] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [editSuccess, setEditSuccess] = useState<string | null>(null);
+  const successTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     const id = setInterval(() => setLiveTime(new Date()), 60_000);
     return () => clearInterval(id);
@@ -243,12 +260,93 @@ export function AdminBatchesClient({
     });
   }, [waitlistEntries, userSearch]);
 
+  async function handleCreateBatch(e: React.FormEvent) {
+    e.preventDefault();
+    setCreateError(null);
+    setCreateSuccess(null);
+    setCreateBusy(true);
+    try {
+      const res = await fetch("/api/admin/batches", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          opensAt: createOpensAt,
+          size: parseInt(createSize, 10),
+          notes: createNotes || undefined,
+        }),
+      });
+      const data = await res.json() as { ok: boolean; error?: string; batch?: BatchRow };
+      if (!data.ok) {
+        setCreateError(data.error ?? "Failed to create batch.");
+      } else {
+        setManageBatches((prev) => [...prev, data.batch!].sort((a, b) => a.batch_number - b.batch_number));
+        setCreateOpensAt("");
+        setCreateSize("10000");
+        setCreateNotes("");
+        setCreateSuccess(`Batch #${data.batch!.batch_number} created.`);
+        if (successTimer.current) clearTimeout(successTimer.current);
+        successTimer.current = setTimeout(() => setCreateSuccess(null), 4000);
+      }
+    } catch {
+      setCreateError("Network error. Please try again.");
+    } finally {
+      setCreateBusy(false);
+    }
+  }
+
+  function startEdit(b: BatchRow) {
+    setEditingId(b.id);
+    setEditForm({
+      opensAt: b.opens_at.slice(0, 16), // for datetime-local input
+      size: String(b.size),
+      notes: b.notes ?? "",
+      status: b.status,
+    });
+    setEditError(null);
+    setEditSuccess(null);
+  }
+
+  async function handleSaveEdit(batchId: string) {
+    setEditBusy(true);
+    setEditError(null);
+    setEditSuccess(null);
+    try {
+      const res = await fetch(`/api/admin/batches/${batchId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          opensAt: editForm.opensAt ? new Date(editForm.opensAt).toISOString() : undefined,
+          size: parseInt(editForm.size, 10),
+          notes: editForm.notes || undefined,
+          status: editForm.status,
+        }),
+      });
+      const data = await res.json() as { ok: boolean; error?: string; batch?: BatchRow };
+      if (!data.ok) {
+        setEditError(data.error ?? "Update failed.");
+      } else {
+        setManageBatches((prev) =>
+          prev.map((b) => (b.id === batchId ? { ...b, ...data.batch! } : b))
+        );
+        setEditingId(null);
+        setEditSuccess(`Batch #${data.batch!.batch_number} updated.`);
+        if (successTimer.current) clearTimeout(successTimer.current);
+        successTimer.current = setTimeout(() => setEditSuccess(null), 4000);
+      }
+    } catch {
+      setEditError("Network error. Please try again.");
+    } finally {
+      setEditBusy(false);
+    }
+  }
+
   const TABS: { id: View; label: string }[] = [
     { id: "overview", label: "Overview" },
     { id: "waitlist-health", label: "Waitlist Health" },
     { id: "users", label: "Users" },
     { id: "revenue", label: "Revenue" },
     { id: "engagement", label: "Engagement" },
+    { id: "manage", label: "Manage Batches" },
   ];
 
   return (
@@ -643,6 +741,189 @@ export function AdminBatchesClient({
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* ── VIEW: MANAGE BATCHES ──────────────────────────────────────────── */}
+      {view === "manage" && (
+        <div className="space-y-8">
+
+          {/* Create new batch */}
+          <div className="rounded-2xl border border-kal-border bg-kal-card/50 p-6">
+            <h2 className="mb-4 text-sm font-semibold text-kal-text">Create new batch</h2>
+            <form onSubmit={handleCreateBatch} className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-kal-muted" htmlFor="create-opens-at">
+                  Opens at (IST)
+                </label>
+                <input
+                  id="create-opens-at"
+                  type="datetime-local"
+                  required
+                  value={createOpensAt}
+                  onChange={(e) => setCreateOpensAt(e.target.value)}
+                  className="w-full rounded-lg border border-kal-border bg-kal-card px-3 py-2 text-sm text-kal-text focus:border-kal-accent/50 focus:outline-none focus:ring-1 focus:ring-kal-accent/30"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-kal-muted" htmlFor="create-size">
+                  Batch size
+                </label>
+                <input
+                  id="create-size"
+                  type="number"
+                  required
+                  min={1}
+                  max={1000000}
+                  value={createSize}
+                  onChange={(e) => setCreateSize(e.target.value)}
+                  className="w-full rounded-lg border border-kal-border bg-kal-card px-3 py-2 text-sm text-kal-text focus:border-kal-accent/50 focus:outline-none focus:ring-1 focus:ring-kal-accent/30"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-kal-muted" htmlFor="create-notes">
+                  Notes (optional)
+                </label>
+                <input
+                  id="create-notes"
+                  type="text"
+                  maxLength={2000}
+                  value={createNotes}
+                  onChange={(e) => setCreateNotes(e.target.value)}
+                  placeholder="e.g. Spring cohort"
+                  className="w-full rounded-lg border border-kal-border bg-kal-card px-3 py-2 text-sm text-kal-text placeholder:text-kal-muted focus:border-kal-accent/50 focus:outline-none focus:ring-1 focus:ring-kal-accent/30"
+                />
+              </div>
+              <div className="sm:col-span-3 flex items-center gap-4">
+                <button
+                  type="submit"
+                  disabled={createBusy}
+                  className="rounded-lg bg-kal-accent px-5 py-2 text-sm font-semibold text-white transition hover:brightness-105 disabled:opacity-60"
+                >
+                  {createBusy ? "Creating…" : "Create batch"}
+                </button>
+                {createError && <p className="text-xs text-red-500">{createError}</p>}
+                {createSuccess && <p className="text-xs text-emerald-500">{createSuccess}</p>}
+              </div>
+            </form>
+          </div>
+
+          {/* Edit existing batches */}
+          <div>
+            <h2 className="mb-3 text-sm font-semibold text-kal-text">All batches</h2>
+            {editSuccess && (
+              <p className="mb-3 text-xs text-emerald-500">{editSuccess}</p>
+            )}
+            <div className="overflow-hidden rounded-2xl border border-kal-border">
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-kal-border bg-kal-card/70">
+                    {["Batch", "Opens at", "Status", "Size", "Notes", "Actions"].map((h) => (
+                      <th key={h} className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-kal-muted whitespace-nowrap">
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {manageBatches.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-8 text-center text-sm text-kal-muted">
+                        No batches yet. Create one above.
+                      </td>
+                    </tr>
+                  ) : (
+                    manageBatches.map((b, i) => (
+                      <tr key={b.id} className={i % 2 === 0 ? "bg-kal-card/20" : ""}>
+                        {editingId === b.id ? (
+                          <>
+                            <td className="px-4 py-2 font-semibold text-kal-text">#{b.batch_number}</td>
+                            <td className="px-4 py-2">
+                              <input
+                                type="datetime-local"
+                                value={editForm.opensAt}
+                                onChange={(e) => setEditForm((f) => ({ ...f, opensAt: e.target.value }))}
+                                className="rounded-lg border border-kal-border bg-kal-card px-2 py-1 text-xs text-kal-text focus:border-kal-accent/50 focus:outline-none"
+                              />
+                            </td>
+                            <td className="px-4 py-2">
+                              <select
+                                value={editForm.status}
+                                onChange={(e) => setEditForm((f) => ({ ...f, status: e.target.value }))}
+                                className="rounded-lg border border-kal-border bg-kal-card px-2 py-1 text-xs text-kal-text focus:border-kal-accent/50 focus:outline-none"
+                              >
+                                <option value="scheduled">scheduled</option>
+                                <option value="active">active (opens batch)</option>
+                                <option value="analyzing">analyzing</option>
+                                <option value="complete">complete</option>
+                              </select>
+                            </td>
+                            <td className="px-4 py-2">
+                              <input
+                                type="number"
+                                min={1}
+                                value={editForm.size}
+                                onChange={(e) => setEditForm((f) => ({ ...f, size: e.target.value }))}
+                                className="w-24 rounded-lg border border-kal-border bg-kal-card px-2 py-1 text-xs text-kal-text focus:border-kal-accent/50 focus:outline-none"
+                              />
+                            </td>
+                            <td className="px-4 py-2">
+                              <input
+                                type="text"
+                                maxLength={200}
+                                value={editForm.notes}
+                                onChange={(e) => setEditForm((f) => ({ ...f, notes: e.target.value }))}
+                                placeholder="Notes"
+                                className="w-full min-w-[120px] rounded-lg border border-kal-border bg-kal-card px-2 py-1 text-xs text-kal-text placeholder:text-kal-muted focus:border-kal-accent/50 focus:outline-none"
+                              />
+                            </td>
+                            <td className="px-4 py-2">
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  disabled={editBusy}
+                                  onClick={() => void handleSaveEdit(b.id)}
+                                  className="rounded-lg bg-kal-accent px-3 py-1 text-xs font-semibold text-white disabled:opacity-60 hover:brightness-105"
+                                >
+                                  {editBusy ? "Saving…" : "Save"}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingId(null)}
+                                  className="rounded-lg border border-kal-border px-3 py-1 text-xs font-medium text-kal-text-secondary hover:text-kal-text"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                              {editError && <p className="mt-1 text-[10px] text-red-500">{editError}</p>}
+                            </td>
+                          </>
+                        ) : (
+                          <>
+                            <td className="px-4 py-3 font-semibold text-kal-text">#{b.batch_number}</td>
+                            <td className="px-4 py-3 text-xs text-kal-text-secondary whitespace-nowrap">{fmtDate(b.opens_at)}</td>
+                            <td className="px-4 py-3"><StatusBadge status={b.status} /></td>
+                            <td className="px-4 py-3 tabular-nums text-xs text-kal-text-secondary">{b.size.toLocaleString("en-IN")}</td>
+                            <td className="px-4 py-3 text-xs text-kal-muted max-w-[180px] truncate" title={b.notes ?? undefined}>{b.notes ?? "—"}</td>
+                            <td className="px-4 py-3">
+                              <button
+                                type="button"
+                                onClick={() => startEdit(b)}
+                                className="rounded-lg border border-kal-border px-3 py-1 text-xs font-medium text-kal-text-secondary hover:border-kal-accent/40 hover:text-kal-accent"
+                              >
+                                Edit
+                              </button>
+                            </td>
+                          </>
+                        )}
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
         </div>
       )}
 

@@ -1,4 +1,4 @@
-import { getNextBatch, getTotalWaitlistCount } from "@/lib/waitlist/batchEngine";
+import { ensureJoinableBatch, getTotalWaitlistCount } from "@/lib/waitlist/batchEngine";
 import { WaitlistJoinClient } from "@/components/waitlist/WaitlistJoinClient";
 import { kalnehiPageMetadata } from "@/lib/seo-metadata";
 
@@ -16,7 +16,7 @@ function formatBatchDate(iso: string): string {
 
 export default async function WaitlistPage() {
   const [batch, totalCount] = await Promise.all([
-    getNextBatch(),
+    ensureJoinableBatch(),
     getTotalWaitlistCount(),
   ]);
 
