@@ -166,7 +166,7 @@ const FEATURES: FeatureCard[] = [
     bullets: [
       "Ask questions in the context of what you're actually preparing for, not generically.",
       "Answers connected to your syllabus coverage, so advice is specific, not generic.",
-      "Smart Plan includes 2 million PrepBrain AI tokens and 100 hours of voice per month. 3-day free trial with every new account — no card required.",
+      "Smart Plan includes 2 million PrepBrain AI tokens and 100 minutes of voice per month. 3-day free trial with every new account — no card required.",
     ],
     accent: "from-indigo-400/25 via-white/40 to-blue-400/20",
   },

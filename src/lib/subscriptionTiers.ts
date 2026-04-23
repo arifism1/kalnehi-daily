@@ -77,7 +77,7 @@ export const FEATURE_LABELS: Record<FeatureKey, { name: string; upgradeHint: str
     name: "Handwriting photo scans",
     upgradeHint: "Upgrade to Smart Plan (₹499/month) for monthly handwriting photo scans.",
   },
-  ai_voice: { name: "AI Voice Dictation", upgradeHint: "Upgrade to Smart Plan (₹499/month) for AI voice dictation — 100 hours/month." },
+  ai_voice: { name: "AI Voice Dictation", upgradeHint: "Upgrade to Smart Plan (₹499/month) for AI voice dictation — 100 minutes/month." },
   prepbrain_ai: {
     name: "PrepBrain AI",
     upgradeHint: "Upgrade to Smart Plan (₹499/month) for PrepBrain AI — 2 million tokens per month.",
@@ -113,7 +113,7 @@ export const TIERS: Record<SubscriptionTier, TierConfig> = {
     trialPhotoScansLimit: 5,
     trialVoiceMinutesLimit: 12,
     photoScansPerMonth: 20,
-    voiceMinutesPerMonth: 6000,
+    voiceMinutesPerMonth: 100,
     maxTasksPerDay: null,
     tagline: "The complete AI-powered prep system",
     benefits: [
@@ -125,7 +125,7 @@ export const TIERS: Record<SubscriptionTier, TierConfig> = {
       "Spaced revision engine",
       "Daily log & prep insights",
       "PrepBrain AI coach",
-      "Voice control — 100 hours/month",
+      "Voice control — 100 minutes/month",
       "20,00,000 PrepBrain tokens/month",
     ],
   },

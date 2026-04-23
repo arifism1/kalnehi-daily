@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Unauthorized." }, { status: 401 });
   }
 
-  const admin = await isAdminUser(user.id);
+  const admin = await isAdminUser(user.id, user.email ?? undefined);
   if (!admin) {
     return NextResponse.json({ ok: false, error: "Forbidden." }, { status: 403 });
   }

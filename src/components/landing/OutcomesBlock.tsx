@@ -12,7 +12,7 @@ const FACTS = [
   {
     value: "₹499",
     label: "per month, full access",
-    detail: "2 million PrepBrain tokens and 100 hours of voice every month. Everything, always.",
+    detail: "2 million PrepBrain tokens and 100 minutes of voice every month. Everything, always.",
   },
   {
     value: "27",

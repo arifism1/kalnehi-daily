@@ -495,7 +495,7 @@ export function MyPlanPageClient() {
                   </p>
                 ) : null}
                 <p className="mt-1 text-xs text-kal-text-secondary">
-                  Voice (12 min) and PrepBrain tokens (60,000) are for the entire 3-day trial — use them within this window. After the trial ends, subscribe to Smart Plan ({TIERS.pro.monthlyPriceDisplay}/month) for 100 hours of voice and 2 million tokens every month.
+                  Voice (12 min) and PrepBrain tokens (60,000) are for the entire 3-day trial — use them within this window. After the trial ends, subscribe to Smart Plan ({TIERS.pro.monthlyPriceDisplay}/month) for 100 minutes of voice and 2 million tokens every month.
                 </p>
               </div>
               <UsageBar
@@ -521,7 +521,7 @@ export function MyPlanPageClient() {
               <p className="mt-2 text-sm text-kal-text-secondary">
                 You&apos;re on your 3-day free trial. Subscribe now to keep full access after your trial —{" "}
                 <span className="font-semibold text-kal-text">{TIERS.pro.monthlyPriceDisplay}/month</span>{" "}
-                for 2 million PrepBrain tokens and 100 hours of voice per month.
+                for 2 million PrepBrain tokens and 100 minutes of voice per month.
               </p>
               <div className="mt-3 space-y-2">
                 <p className="text-xs font-medium text-kal-text-secondary">AutoPay months:</p>
@@ -568,7 +568,7 @@ export function MyPlanPageClient() {
               <p className="mt-2 text-sm text-kal-text-secondary">
                 Subscribe to Smart Plan to continue —{" "}
                 <span className="font-semibold text-kal-text">{TIERS.pro.monthlyPriceDisplay}/month</span>{" "}
-                for 2 million PrepBrain tokens and 100 hours of voice per month. Cancel anytime.
+                for 2 million PrepBrain tokens and 100 minutes of voice per month. Cancel anytime.
               </p>
               <button
                 type="button"

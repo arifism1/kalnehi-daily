@@ -29,7 +29,7 @@ const PLANS = [
       "Marks engine + rank prediction",
       "Spaced revision engine",
       "PrepBrain AI — 20,00,000 tokens/month",
-      "Voice control — 100 hours/month",
+      "Voice control — 100 minutes/month",
     ],
     cta: "Subscribe — ₹499/month",
     ctaHref: "/pricing",

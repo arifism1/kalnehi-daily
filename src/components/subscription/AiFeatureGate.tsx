@@ -28,7 +28,7 @@ export function AiFeatureGate({ children }: Props) {
         <Lock className="h-8 w-8 text-kal-text-secondary" />
         <h3 className="text-lg font-bold text-kal-text">Voice dictation requires Smart Plan</h3>
         <p className="max-w-sm text-sm text-kal-text-secondary">
-          Your 3-day free trial has ended. Subscribe to Smart Plan (₹499/month) to get 100 hours of voice per month.
+          Your 3-day free trial has ended. Subscribe to Smart Plan (₹499/month) to get 100 minutes of voice per month.
         </p>
         <Link href="/pricing" className="kal-btn-accent">
           Subscribe — ₹499/month
@@ -47,7 +47,7 @@ export function AiFeatureGate({ children }: Props) {
           <h3 className="text-lg font-bold text-kal-text">Trial voice limit reached</h3>
           <p className="max-w-sm text-sm text-kal-text-secondary">
             You&apos;ve used all 12 minutes of voice included in your 3-day free trial. Upgrade to Smart Plan for{" "}
-            {TIERS.pro.monthlyPriceDisplay}/month and get 100 hours of voice every month.
+            {TIERS.pro.monthlyPriceDisplay}/month and get 100 minutes of voice every month.
           </p>
           <Link href="/pricing" className="kal-btn-accent">
             Upgrade to Smart Plan

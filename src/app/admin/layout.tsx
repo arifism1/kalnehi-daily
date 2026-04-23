@@ -15,7 +15,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     redirect("/auth");
   }
 
-  const isAdmin = await isAdminUser(user.id);
+  const isAdmin = await isAdminUser(user.id, user.email ?? undefined);
   if (!isAdmin) {
     redirect("/home");
   }

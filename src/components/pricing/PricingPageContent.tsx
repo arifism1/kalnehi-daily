@@ -336,11 +336,11 @@ function PlanCardsSection() {
       ctaHref: "#subscribe",
       ctaClass:
         "bg-kal-accent text-white shadow-[0_4px_16px_rgba(255,122,0,0.28)] hover:brightness-105",
-      intro: "The full system, every month. Unlimited AI. 100 hours of voice.",
+      intro: "The full system, every month. Unlimited AI. 100 minutes of voice.",
       bullets: [
         "Everything in the free trial, every month",
         "PrepBrain AI — 20 lakh tokens/month",
-        "Voice control — 100 hours/month",
+        "Voice control — 100 minutes/month",
         "Marks engine + rank prediction",
         "Spaced revision + daily log + prep insights",
         "AutoPay: choose 1–12 months, stops on its own",

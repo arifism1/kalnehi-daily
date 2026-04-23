@@ -218,7 +218,7 @@ export function PathFlowchart() {
           {[
             "Everything in the trial, every month",
             "PrepBrain AI — 20 lakh tokens/month",
-            "Voice control — 100 hours/month",
+            "Voice control — 100 minutes/month",
             "AutoPay — cancel anytime",
           ].map((line) => (
             <div key={line} className="flex items-start gap-2">

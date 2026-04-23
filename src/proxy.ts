@@ -24,6 +24,7 @@ const RATE_LIMITS: Record<string, number> = {
   "/api/waitlist/skip/verify": 10,
   "/api/annual-plan":          5,
   "/api/annual-plan/verify":   10,
+  "/api/admin/config":         20,  // Mutations only; low limit to deter abuse
 };
 const WINDOW_MS = 60_000;
 type RLCounter = { count: number; resetAt: number };

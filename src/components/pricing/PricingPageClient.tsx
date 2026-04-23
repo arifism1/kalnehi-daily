@@ -323,7 +323,7 @@ export function PricingPageClient() {
                 )
               </>
             ) : null}
-            . Subscribe to Smart Plan below to continue after your trial — 2M tokens and 100 hours of voice every month.
+            . Subscribe to Smart Plan below to continue after your trial — 2M tokens and 100 minutes of voice every month.
           </p>
         </div>
       );
@@ -439,7 +439,7 @@ export function PricingPageClient() {
             <span className="font-semibold text-kal-text">
               Smart Plan ({pro.monthlyPriceDisplay}/month):
             </span>{" "}
-            2 million tokens and 100 hours of voice per month, with AutoPay for the duration you choose.
+            2 million tokens and 100 minutes of voice per month, with AutoPay for the duration you choose.
           </p>
           <div className="kal-glass-panel mx-auto mt-6 max-w-xl rounded-2xl border-2 border-kal-accent/40 px-4 py-4 shadow-[0_16px_40px_-24px_rgba(255,122,0,0.25)] sm:px-5">
             <p className="text-sm font-semibold text-kal-text">New here? Take the feature tour first.</p>

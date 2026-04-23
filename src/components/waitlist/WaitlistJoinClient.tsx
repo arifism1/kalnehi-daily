@@ -15,10 +15,15 @@ type Props = {
   totalInQueue: number;
 };
 
+function normalizePhone(raw: string): string {
+  return raw.replace(/[\s\-().+]/g, "").replace(/^(0|91)/, "");
+}
+
 export function WaitlistJoinClient({ batchNumber, opensAt: _opensAt, opensAtFormatted, totalInQueue }: Props) {
   const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [exam, setExam] = useState("");
   const [channel, setChannel] = useState<"email" | "push" | "both">("email");
   const [busy, setBusy] = useState(false);
@@ -26,8 +31,21 @@ export function WaitlistJoinClient({ batchNumber, opensAt: _opensAt, opensAtForm
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!fullName.trim()) {
+      setError("Full name is required.");
+      return;
+    }
     if (!email.trim()) {
       setError("Email is required.");
+      return;
+    }
+    const normalizedPhone = normalizePhone(phone.trim());
+    if (!/^[6-9]\d{9}$/.test(normalizedPhone)) {
+      setError("Please enter a valid 10-digit Indian mobile number.");
+      return;
+    }
+    if (!exam) {
+      setError("Please select the exam you are preparing for.");
       return;
     }
     setBusy(true);
@@ -37,7 +55,7 @@ export function WaitlistJoinClient({ batchNumber, opensAt: _opensAt, opensAtForm
       const res = await fetch("/api/waitlist/join", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fullName, email, exam, notificationChannel: channel }),
+        body: JSON.stringify({ fullName, email, phone, exam, notificationChannel: channel }),
       });
       const data = (await res.json()) as {
         ok: boolean;
@@ -129,7 +147,7 @@ export function WaitlistJoinClient({ batchNumber, opensAt: _opensAt, opensAtForm
               {/* Full name */}
               <div>
                 <label className="mb-1 block text-xs font-semibold text-kal-text-secondary" htmlFor="wl-name">
-                  Full name
+                  Full name <span className="text-kal-accent">*</span>
                 </label>
                 <input
                   id="wl-name"
@@ -137,6 +155,7 @@ export function WaitlistJoinClient({ batchNumber, opensAt: _opensAt, opensAtForm
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Your name"
+                  required
                   maxLength={120}
                   className="w-full rounded-xl border border-kal-border bg-kal-card px-3.5 py-2.5 text-sm text-kal-text placeholder-kal-muted focus:border-kal-accent/50 focus:outline-none focus:ring-1 focus:ring-kal-accent/30"
                 />
@@ -159,18 +178,40 @@ export function WaitlistJoinClient({ batchNumber, opensAt: _opensAt, opensAtForm
                 />
               </div>
 
+              {/* Phone */}
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-kal-text-secondary" htmlFor="wl-phone">
+                  Mobile number <span className="text-kal-accent">*</span>
+                </label>
+                <div className="flex items-center rounded-xl border border-kal-border bg-kal-card focus-within:border-kal-accent/50 focus-within:ring-1 focus-within:ring-kal-accent/30">
+                  <span className="select-none pl-3.5 pr-2 text-sm text-kal-muted">+91</span>
+                  <input
+                    id="wl-phone"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="98765 43210"
+                    required
+                    maxLength={15}
+                    inputMode="tel"
+                    className="flex-1 bg-transparent py-2.5 pr-3.5 text-sm text-kal-text placeholder-kal-muted focus:outline-none"
+                  />
+                </div>
+              </div>
+
               {/* Exam */}
               <div>
                 <label className="mb-1 block text-xs font-semibold text-kal-text-secondary" htmlFor="wl-exam">
-                  Exam you&apos;re preparing for
+                  Exam you&apos;re preparing for <span className="text-kal-accent">*</span>
                 </label>
                 <select
                   id="wl-exam"
                   value={exam}
                   onChange={(e) => setExam(e.target.value)}
+                  required
                   className="w-full rounded-xl border border-kal-border bg-kal-card px-3.5 py-2.5 text-sm text-kal-text focus:border-kal-accent/50 focus:outline-none focus:ring-1 focus:ring-kal-accent/30"
                 >
-                  <option value="">Select exam (optional)</option>
+                  <option value="">Select your exam</option>
                   {EXAM_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>{o.label}</option>
                   ))}

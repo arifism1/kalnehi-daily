@@ -16,10 +16,17 @@ export const runtime = "nodejs";
 const MAX_NAME = 120;
 const MAX_EMAIL = 320;
 const MAX_EXAM = 120;
+const MAX_PHONE = 20;
+const PHONE_RE = /^[6-9]\d{9}$/;
+
+function normalizePhone(raw: string): string {
+  return raw.replace(/[\s\-().+]/g, "").replace(/^(0|91)/, "");
+}
 
 type JoinBody = {
   fullName?: string;
   email?: string;
+  phone?: string;
   exam?: string;
   notificationChannel?: string;
 };
@@ -34,11 +41,21 @@ export async function POST(req: NextRequest) {
 
   const fullName = (body.fullName ?? "").slice(0, MAX_NAME).trim();
   const email = (body.email ?? "").slice(0, MAX_EMAIL).trim().toLowerCase();
+  const phone = normalizePhone((body.phone ?? "").slice(0, MAX_PHONE));
   const exam = (body.exam ?? "").slice(0, MAX_EXAM).trim();
   const channel = (body.notificationChannel ?? "email") as "email" | "push" | "both";
 
+  if (!fullName) {
+    return NextResponse.json({ ok: false, error: "Full name is required." }, { status: 400 });
+  }
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ ok: false, error: "A valid email address is required." }, { status: 400 });
+  }
+  if (!PHONE_RE.test(phone)) {
+    return NextResponse.json({ ok: false, error: "A valid 10-digit Indian mobile number is required." }, { status: 400 });
+  }
+  if (!exam) {
+    return NextResponse.json({ ok: false, error: "Please select the exam you are preparing for." }, { status: 400 });
   }
 
   // Try to get session (optional — user may join before auth).
@@ -72,6 +89,7 @@ export async function POST(req: NextRequest) {
       p_batch_id: batch.id,
       p_notification_ch: channel,
       p_contact_email: email,
+      p_contact_phone: phone,
     });
 
     if (rpcErr) {
@@ -111,6 +129,7 @@ export async function POST(req: NextRequest) {
     p_batch_id: batch.id,
     p_notification_ch: channel,
     p_contact_email: email,
+    p_contact_phone: phone,
   });
 
   if (rpcErr) {
