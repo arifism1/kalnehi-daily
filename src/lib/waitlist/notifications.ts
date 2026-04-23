@@ -172,6 +172,29 @@ function day3MorningHtml(params: {
   return { subject, html };
 }
 
+function trialActivationHtml(): { subject: string; html: string } {
+  const subject = "Your free trial on Kalnehi Daily is now active";
+  const html = `
+<div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
+  <h2 style="font-size:22px;font-weight:600;margin-bottom:8px">Your free trial is live.</h2>
+  <p style="color:#444;margin:0 0 16px">
+    You were on our list for a free spot — it just opened. You now have <strong>3 days of full access</strong>
+    to every feature on Kalnehi Daily.
+  </p>
+  <a href="${process.env.NEXT_PUBLIC_APP_URL ?? "https://kalnehi.com"}"
+     style="display:inline-block;background:#ff7a00;color:#fff;padding:12px 24px;border-radius:99px;text-decoration:none;font-weight:700;margin:8px 0">
+    Start now →
+  </a>
+  <p style="color:#888;font-size:14px;margin-top:24px">
+    Your 3-day timer starts from the moment you open the app.<br>
+    If you haven't already, you can also skip the queue and start instantly for ₹19 at
+    <a href="${process.env.NEXT_PUBLIC_APP_URL ?? "https://kalnehi.com"}/waitlist/position"
+       style="color:#ff7a00">kalnehi.com/waitlist/position</a>.
+  </p>
+</div>`;
+  return { subject, html };
+}
+
 /* ─────────────────────────────── Send helpers ───────────────────────── */
 
 export async function sendEmail(to: string, subject: string, html: string): Promise<void> {
@@ -346,5 +369,10 @@ export async function sendRetargetingD14(params: {
   insight: string;
 }): Promise<void> {
   const { subject, html } = retargetingD14Html(params);
+  await sendEmail(params.email, subject, html);
+}
+
+export async function sendTrialActivationEmail(params: { email: string }): Promise<void> {
+  const { subject, html } = trialActivationHtml();
   await sendEmail(params.email, subject, html);
 }

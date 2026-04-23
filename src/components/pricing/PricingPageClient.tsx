@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Script from "next/script";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { CalendarClock, Check, Crown } from "lucide-react";
 
 import {
@@ -10,6 +10,8 @@ import {
   createRazorpayMonthlySubscription,
   ensureFreeTrialStarted,
 } from "@/actions/subscription";
+import { fetchDailyCapStatus } from "@/actions/dailyCap";
+import type { DailyCapStatus } from "@/lib/daily-trial-cap";
 import { CancelSubscriptionButton } from "@/components/subscription/CancelSubscriptionButton";
 import { PaymentErrorMailButton } from "@/components/subscription/PaymentErrorMailButton";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
@@ -214,6 +216,24 @@ export function PricingPageClient() {
     debugHint?: string;
   } | null>(null);
   const [welcomeFreeBusy, setWelcomeFreeBusy] = useState(false);
+  const [capStatus, setCapStatus] = useState<DailyCapStatus | null>(null);
+  const [queuedState, setQueuedState] = useState<{ queuedFor: string; resetsAt: string } | null>(null);
+
+  // Fetch daily cap status on mount; refresh every 60 s.
+  useEffect(() => {
+    let cancelled = false;
+    const load = () => {
+      void fetchDailyCapStatus().then((s) => {
+        if (!cancelled) setCapStatus(s);
+      });
+    };
+    load();
+    const id = window.setInterval(load, 60_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, []);
 
   const showWelcomeFreeCta =
     !!user?.id && onboardingDone && welcomeTrialEligibleUnstarted;
@@ -224,6 +244,19 @@ export function PricingPageClient() {
     try {
       const r = await ensureFreeTrialStarted();
       if (!r.ok) {
+        if (r.error === "daily_cap_reached") {
+          const capResult = r as { ok: false; error: "daily_cap_reached"; queued: boolean; queuedFor: string; resetsAt: string };
+          // Refresh cap status so UI switches to State C without full page reload.
+          void fetchDailyCapStatus().then(setCapStatus);
+          if (capResult.queued) {
+            setQueuedState({ queuedFor: capResult.queuedFor, resetsAt: capResult.resetsAt });
+          } else {
+            setCheckoutError({
+              text: "Today's free spots are full. New spots open at midnight IST.",
+            });
+          }
+          return;
+        }
         setCheckoutError({ text: r.error });
         return;
       }
@@ -490,26 +523,126 @@ export function PricingPageClient() {
         strategy="afterInteractive"
       />
       <section className="mx-auto max-w-5xl space-y-8 pb-10">
-        {/* Start free trial CTA — shown to logged-in users who haven't started their trial yet */}
+        {/* Start free trial CTA — four states: queued / cap full / spots available / cap off */}
         {showWelcomeFreeCta ? (
-          <div className="kal-glass-panel rounded-2xl border-2 border-emerald-500/35 bg-emerald-500/[0.06] px-5 py-5 text-center dark:border-emerald-500/25 dark:bg-emerald-500/[0.08]">
-            <p className="text-sm font-semibold text-kal-text">
-              Start your 3-day free trial — every feature, no card required.
-            </p>
-            <p className="mt-1 text-xs leading-relaxed text-kal-text-secondary">
-              Your trial timer starts only after you tap this button.
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                void startWelcomeFreeTrial();
-              }}
-              disabled={welcomeFreeBusy || busy}
-              className="kal-btn-accent mt-4 inline-flex min-h-[48px] w-full max-w-md items-center justify-center rounded-xl px-6 py-3 text-sm font-bold transition disabled:opacity-60 sm:w-auto"
-            >
-              {welcomeFreeBusy ? "Starting…" : "Start Free Trial — 3 Days"}
-            </button>
-          </div>
+          queuedState ? (
+            /* ── State D: user was just queued for tomorrow ──────────────────── */
+            <div className="kal-glass-panel rounded-2xl border-2 border-kal-accent/40 bg-kal-accent/[0.05] px-5 py-5 text-center">
+              <p className="text-sm font-semibold text-kal-text">
+                You&rsquo;re on tomorrow&rsquo;s list.
+              </p>
+              <p className="mt-1.5 text-xs leading-relaxed text-kal-text-secondary">
+                Your free trial will auto-activate at midnight IST. We&rsquo;ll email you when it&rsquo;s ready.
+              </p>
+              <p className="mt-2 text-[11px] text-kal-text-secondary">
+                Spot reserved for{" "}
+                <span className="font-semibold text-kal-text">
+                  {new Date(queuedState.queuedFor + "T00:00:00+05:30").toLocaleDateString("en-IN", {
+                    weekday: "long",
+                    day: "numeric",
+                    month: "long",
+                    timeZone: "Asia/Kolkata",
+                  })}
+                </span>
+              </p>
+              <div className="my-4 flex items-center gap-3 text-xs text-kal-text-secondary">
+                <span className="h-px flex-1 bg-kal-border/40" />
+                <span>or skip the wait</span>
+                <span className="h-px flex-1 bg-kal-border/40" />
+              </div>
+              <Link
+                href="/waitlist/position"
+                className="kal-btn-accent inline-flex min-h-[48px] w-full max-w-md items-center justify-center rounded-xl px-6 py-3 text-sm font-bold transition hover:brightness-105 sm:w-auto"
+              >
+                Start right now for ₹19 →
+              </Link>
+              <p className="mt-2 text-[11px] text-kal-text-secondary">
+                Same 3 days. Instant access.
+              </p>
+            </div>
+          ) : capStatus?.capEnabled && capStatus.isFull ? (
+            /* ── State C: cap full ───────────────────────────────────────────── */
+            <div className="kal-glass-panel rounded-2xl border-2 border-kal-border/60 bg-kal-card-muted/60 px-5 py-5 text-center">
+              {/* Primary outline button first */}
+              <button
+                type="button"
+                disabled
+                className="inline-flex min-h-[48px] w-full max-w-md items-center justify-center rounded-xl border-2 border-kal-accent px-6 py-3 text-sm font-bold text-kal-accent opacity-80 sm:w-auto"
+              >
+                Join tomorrow&rsquo;s waitlist →
+              </button>
+              {/* Text below primary button */}
+              <p className="mt-3 text-sm font-semibold text-kal-text">
+                Today&rsquo;s {capStatus.dailyCap.toLocaleString("en-IN")} free spots are full.
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-kal-text-secondary">
+                New spots open at midnight — in{" "}
+                <span className="font-semibold text-kal-text">
+                  {Math.floor(capStatus.hoursUntilReset)} hours
+                </span>
+                .
+              </p>
+              {/* Secondary filled-orange skip CTA */}
+              <div className="mt-4">
+                <Link
+                  href="/waitlist/position"
+                  className="kal-btn-accent inline-flex min-h-[48px] w-full max-w-md items-center justify-center rounded-xl px-6 py-3 text-sm font-bold transition hover:brightness-105 sm:w-auto"
+                >
+                  Don&rsquo;t want to wait? Start now for ₹19 →
+                </Link>
+              </div>
+              <p className="mt-3 text-[11px] leading-relaxed text-kal-text-secondary">
+                Your spot is yours the moment you pay ₹19.{" "}
+                Tomorrow&rsquo;s free spots open at midnight IST.
+              </p>
+            </div>
+          ) : (
+            /* ── State A / B: cap off or spots available ─────────────────────── */
+            <div className="kal-glass-panel rounded-2xl border-2 border-emerald-500/35 bg-emerald-500/[0.06] px-5 py-5 text-center dark:border-emerald-500/25 dark:bg-emerald-500/[0.08]">
+              <p className="text-sm font-semibold text-kal-text">
+                Start your 3-day free trial — every feature, no card required.
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-kal-text-secondary">
+                Your trial timer starts only after you tap this button.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  void startWelcomeFreeTrial();
+                }}
+                disabled={welcomeFreeBusy || busy}
+                className="kal-btn-accent mt-4 inline-flex min-h-[48px] w-full max-w-md items-center justify-center rounded-xl px-6 py-3 text-sm font-bold transition disabled:opacity-60 sm:w-auto"
+              >
+                {welcomeFreeBusy ? "Starting…" : "Start free — 3 days on us →"}
+              </button>
+              {/* State B: spot counter when cap is enabled and spots remain */}
+              {capStatus?.capEnabled && !capStatus.isFull ? (
+                <div className="mt-3">
+                  <div className="mx-auto max-w-xs overflow-hidden rounded-full bg-kal-border/30 h-1">
+                    <div
+                      className={`h-1 rounded-full transition-all ${
+                        capStatus.spotsRemaining < 100
+                          ? "bg-orange-500"
+                          : capStatus.trialsStartedToday / capStatus.dailyCap >= 0.8
+                          ? "bg-orange-400"
+                          : capStatus.trialsStartedToday / capStatus.dailyCap >= 0.5
+                          ? "bg-amber-400"
+                          : "bg-kal-border/60"
+                      }`}
+                      style={{
+                        width: `${Math.min(100, (capStatus.trialsStartedToday / capStatus.dailyCap) * 100)}%`,
+                      }}
+                    />
+                  </div>
+                  <p className="mt-1.5 text-[11px] text-kal-text-secondary">
+                    {capStatus.spotsRemaining < 100
+                      ? "Fewer than 100 spots remaining today"
+                      : `${capStatus.spotsRemaining.toLocaleString("en-IN")} of ${capStatus.dailyCap.toLocaleString("en-IN")} spots left today`}
+                  </p>
+                </div>
+              ) : null}
+            </div>
+          )
         ) : null}
 
         <header className="kal-glass-panel rounded-2xl px-6 py-8 text-center">

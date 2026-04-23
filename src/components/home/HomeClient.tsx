@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { ensureAutomatedNotifications } from "@/actions/notifications";
 import { ensureFreeTrialStarted } from "@/actions/subscription";
+import Link from "next/link";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useRefreshTasksOnHomeFocus } from "@/hooks/useRefreshTasksOnHomeFocus";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
@@ -53,13 +54,55 @@ export function HomeClient() {
 
   const [trialBusy, setTrialBusy] = useState(false);
   const [trialError, setTrialError] = useState<string | null>(null);
+  const [capReachedState, setCapReachedState] = useState<{
+    resetsAt: string;
+    hoursUntilReset: number;
+    queued: boolean;
+    queuedFor: string;
+  } | null>(null);
+
+  // Live countdown to IST midnight when cap is full.
+  const [countdown, setCountdown] = useState<{ h: number; m: number; s: number } | null>(null);
+  useEffect(() => {
+    if (!capReachedState) {
+      setCountdown(null);
+      return;
+    }
+    const tick = () => {
+      const diff = new Date(capReachedState.resetsAt).getTime() - Date.now();
+      if (diff <= 0) {
+        setCountdown({ h: 0, m: 0, s: 0 });
+        return;
+      }
+      const totalSec = Math.floor(diff / 1000);
+      setCountdown({
+        h: Math.floor(totalSec / 3600),
+        m: Math.floor((totalSec % 3600) / 60),
+        s: totalSec % 60,
+      });
+    };
+    tick();
+    const id = window.setInterval(tick, 1000);
+    return () => window.clearInterval(id);
+  }, [capReachedState]);
 
   const startFreeTrial = useCallback(async () => {
     setTrialBusy(true);
     setTrialError(null);
+    setCapReachedState(null);
     try {
       const r = await ensureFreeTrialStarted();
       if (!r.ok) {
+        if (r.error === "daily_cap_reached") {
+          const capResult = r as { ok: false; error: "daily_cap_reached"; queued: boolean; queuedFor: string; resetsAt: string; hoursUntilReset: number };
+          setCapReachedState({
+            resetsAt: capResult.resetsAt,
+            hoursUntilReset: capResult.hoursUntilReset,
+            queued: capResult.queued,
+            queuedFor: capResult.queuedFor,
+          });
+          return;
+        }
         setTrialError(r.error);
         return;
       }
@@ -185,27 +228,89 @@ export function HomeClient() {
 
       {welcomeTrialEligibleUnstarted && onboardingDone && (
         <div className="mx-auto w-full max-w-5xl px-4 sm:px-6">
-          <div className="kal-glass-panel rounded-2xl border-2 border-emerald-500/35 bg-emerald-500/[0.06] px-5 py-5 text-center dark:border-emerald-500/25 dark:bg-emerald-500/[0.08]">
-            <p className="text-sm font-semibold text-kal-text">
-              Start your 3-day free trial — every feature, no card required.
-            </p>
-            <p className="mt-1 text-xs leading-relaxed text-kal-text-secondary">
-              Your trial timer starts only after you tap this button.
-            </p>
-            {trialError && (
-              <p className="mt-2 text-xs font-medium text-kal-accent-dark dark:text-kal-accent">
-                {trialError}
+          {capReachedState ? (
+            /* ── Cap full: queued confirmation with countdown ─────────────────── */
+            <div className="kal-glass-panel rounded-2xl border-2 border-kal-border/60 bg-kal-card-muted/60 px-5 py-5 text-center">
+              {capReachedState.queued ? (
+                <>
+                  <p className="text-sm font-semibold text-kal-text">
+                    You&rsquo;re on tomorrow&rsquo;s list.
+                  </p>
+                  <p className="mt-1.5 text-xs leading-relaxed text-kal-text-secondary">
+                    Your free trial will auto-activate at midnight IST. We&rsquo;ll email you when it&rsquo;s ready.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-semibold text-kal-text">
+                    Today&rsquo;s free spots are full.
+                  </p>
+                  <p className="mt-1.5 text-xs leading-relaxed text-kal-text-secondary">
+                    New spots open at midnight IST
+                  </p>
+                </>
+              )}
+              {countdown && (
+                <p className="mt-2 text-lg font-bold tabular-nums text-kal-text">
+                  {String(countdown.h).padStart(2, "0")}:
+                  {String(countdown.m).padStart(2, "0")}:
+                  {String(countdown.s).padStart(2, "0")}
+                </p>
+              )}
+              <p className="mt-1 text-[11px] text-kal-text-secondary">
+                12:00 AM IST
+                {typeof window !== "undefined" && (() => {
+                  try {
+                    const local = new Intl.DateTimeFormat(undefined, {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      timeZoneName: "short",
+                    }).format(new Date(capReachedState.resetsAt));
+                    return ` (${local} your time)`;
+                  } catch {
+                    return "";
+                  }
+                })()}
               </p>
-            )}
-            <button
-              type="button"
-              onClick={() => { void startFreeTrial(); }}
-              disabled={trialBusy}
-              className="kal-btn-accent mt-4 inline-flex min-h-[48px] w-full max-w-xs items-center justify-center rounded-xl px-6 py-3 text-sm font-bold transition disabled:opacity-60"
-            >
-              {trialBusy ? "Starting…" : "Start Free Trial — 3 Days"}
-            </button>
-          </div>
+              <div className="my-4 flex items-center gap-3 text-xs text-kal-text-secondary">
+                <span className="h-px flex-1 bg-kal-border/40" />
+                <span>or skip the wait</span>
+                <span className="h-px flex-1 bg-kal-border/40" />
+              </div>
+              <Link
+                href="/waitlist/position"
+                className="kal-btn-accent inline-flex min-h-[48px] w-full max-w-xs items-center justify-center rounded-xl px-6 py-3 text-sm font-bold transition hover:brightness-105"
+              >
+                Start right now for ₹19
+              </Link>
+              <p className="mt-2 text-[11px] text-kal-text-secondary">
+                Same 3 days. Instant access.
+              </p>
+            </div>
+          ) : (
+            /* ── Normal: start trial button ───────────────────────────────────── */
+            <div className="kal-glass-panel rounded-2xl border-2 border-emerald-500/35 bg-emerald-500/[0.06] px-5 py-5 text-center dark:border-emerald-500/25 dark:bg-emerald-500/[0.08]">
+              <p className="text-sm font-semibold text-kal-text">
+                Start your 3-day free trial — every feature, no card required.
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-kal-text-secondary">
+                Your trial timer starts only after you tap this button.
+              </p>
+              {trialError && (
+                <p className="mt-2 text-xs font-medium text-kal-accent-dark dark:text-kal-accent">
+                  {trialError}
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={() => { void startFreeTrial(); }}
+                disabled={trialBusy}
+                className="kal-btn-accent mt-4 inline-flex min-h-[48px] w-full max-w-xs items-center justify-center rounded-xl px-6 py-3 text-sm font-bold transition disabled:opacity-60"
+              >
+                {trialBusy ? "Starting…" : "Start Free Trial — 3 Days"}
+              </button>
+            </div>
+          )}
         </div>
       )}
 
