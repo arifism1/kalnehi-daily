@@ -89,20 +89,20 @@ export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects }: Pr
   const fieldSelect = clsx(fieldInput, "cursor-pointer");
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
       <div
         className="absolute inset-0 bg-kal-overlay backdrop-blur-sm"
         onClick={handleClose}
         aria-hidden
       />
       <div
-        className="relative z-10 w-full max-w-lg overflow-y-auto max-h-[92dvh] rounded-t-2xl border border-zinc-200/95 bg-kal-bg shadow-2xl ring-1 ring-zinc-950/10 dark:border-zinc-600 sm:rounded-2xl dark:ring-white/10"
+        className="relative z-10 flex min-h-0 w-full max-w-lg max-h-[92dvh] flex-col overflow-hidden rounded-t-2xl border border-zinc-200/95 bg-kal-bg shadow-2xl ring-1 ring-zinc-950/10 dark:border-zinc-600 sm:rounded-2xl dark:ring-white/10"
         role="dialog"
         aria-modal="true"
         aria-labelledby={`${baseId}-dialog-title`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-zinc-200/90 p-4 dark:border-zinc-600/80">
+        <div className="flex shrink-0 items-center justify-between border-b border-zinc-200/90 p-4 dark:border-zinc-600/80">
           <h2
             id={`${baseId}-dialog-title`}
             className="font-semibold text-zinc-950 dark:text-zinc-50"
@@ -118,7 +118,7 @@ export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects }: Pr
           </button>
         </div>
 
-        <div className="space-y-5 p-4">
+        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-y-contain p-4 pb-2 [-webkit-overflow-scrolling:touch]">
           {/* Subject */}
           <div className="space-y-1.5">
             <label htmlFor={`${baseId}-subject`} className={fieldLabel}>
@@ -235,13 +235,13 @@ export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects }: Pr
             />
             <span className="text-sm text-zinc-900 dark:text-zinc-100">Flag for revision</span>
           </label>
+        </div>
 
+        <div className="shrink-0 border-t border-zinc-200/90 bg-kal-bg p-4 pt-3 dark:border-zinc-600/80 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           {saveError && (
-            <p className="text-sm font-medium text-red-700 dark:text-red-300">{saveError}</p>
+            <p className="mb-3 text-sm font-medium text-red-700 dark:text-red-300">{saveError}</p>
           )}
-
-          {/* Actions */}
-          <div className="flex gap-3 pt-1">
+          <div className="flex gap-3">
             <button
               type="button"
               onClick={handleClose}

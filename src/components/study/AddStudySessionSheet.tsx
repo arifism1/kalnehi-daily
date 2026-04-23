@@ -125,13 +125,13 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
           <div className="absolute inset-0 bg-black/65" aria-hidden />
         )}
         <div
-          className="relative z-10 max-h-[min(92dvh,100%)] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-kal-border bg-kal-card p-5 kal-shadow-card sm:max-h-[min(90vh,52rem)] sm:rounded-2xl sm:p-6"
+          className="relative z-10 flex min-h-0 w-full max-w-lg max-h-[min(92dvh,52rem)] flex-col overflow-hidden rounded-t-2xl border border-kal-border bg-kal-card kal-shadow-card sm:max-h-[min(90dvh,52rem)] sm:rounded-2xl"
           role="dialog"
           aria-modal="true"
         >
           {step === "camera" ? (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between gap-2">
+            <>
+              <div className="flex shrink-0 items-center justify-between gap-2 border-b border-kal-border px-5 py-4 sm:px-6">
                 <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
                   Live verification
                 </p>
@@ -144,16 +144,18 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              <StudyCameraTracker
-                subject={subject}
-                userId={userId}
-                aiPartnerMode={true}
-                onDone={onClose}
-              />
-            </div>
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 pb-5 pt-3 sm:px-6 sm:pb-6 [-webkit-overflow-scrolling:touch]">
+                <StudyCameraTracker
+                  subject={subject}
+                  userId={userId}
+                  aiPartnerMode={true}
+                  onDone={onClose}
+                />
+              </div>
+            </>
           ) : (
             <>
-              <div className="flex items-start justify-between gap-2 border-b border-kal-border pb-3">
+              <div className="flex shrink-0 items-start justify-between gap-2 border-b border-kal-border px-5 pb-3 pt-5 sm:px-6 sm:pt-6">
                 <div>
                   <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-muted">
                     Study session
@@ -172,7 +174,7 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
                 </button>
               </div>
 
-              <div className="mt-5 space-y-4">
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 py-4 sm:px-6 [-webkit-overflow-scrolling:touch]">
                 <label className="block text-xs font-medium text-kal-muted">
                   Subject
                   <input
@@ -188,6 +190,21 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
                   />
                 </label>
 
+                {!studyCameraEnabled ? (
+                  <div className="mt-4 rounded-2xl border border-dashed border-kal-border bg-kal-card-muted px-4 py-5 text-center">
+                    <p className="text-sm font-semibold text-kal-text">
+                      Verification not enabled
+                    </p>
+                    <p className="mt-1.5 text-xs leading-relaxed text-kal-muted">
+                      Turn on on-camera study sessions in Settings to log with
+                      on-device checks. Video stays on your device only — never
+                      uploaded.
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="shrink-0 border-t border-kal-border px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-6">
                 {studyCameraEnabled ? (
                   <button
                     type="button"
@@ -205,22 +222,12 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
                     )}
                   </button>
                 ) : (
-                  <div className="rounded-2xl border border-dashed border-kal-border bg-kal-card-muted px-4 py-5 text-center">
-                    <p className="text-sm font-semibold text-kal-text">
-                      Verification not enabled
-                    </p>
-                    <p className="mt-1.5 text-xs leading-relaxed text-kal-muted">
-                      Turn on on-camera study sessions in Settings to log with
-                      on-device checks. Video stays on your device only — never
-                      uploaded.
-                    </p>
-                    <Link
-                      href="/settings"
-                      className="mt-3 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-kal-accent px-4 text-sm font-semibold text-kal-accent-foreground hover:bg-kal-accent-hover"
-                    >
-                      Open Settings
-                    </Link>
-                  </div>
+                  <Link
+                    href="/settings"
+                    className="flex min-h-[52px] w-full items-center justify-center rounded-2xl bg-kal-accent px-4 text-sm font-semibold text-kal-accent-foreground hover:bg-kal-accent-hover"
+                  >
+                    Open Settings
+                  </Link>
                 )}
               </div>
             </>

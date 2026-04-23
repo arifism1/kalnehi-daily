@@ -180,12 +180,12 @@ export function SyllabusCustomizeSheet({
         disabled={busy}
       />
       <div
-        className="kal-glass-panel relative z-[71] max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-2xl p-6 sm:rounded-2xl"
+        className="kal-glass-panel relative z-[71] flex min-h-0 w-full max-w-lg max-h-[92dvh] flex-col overflow-hidden rounded-t-2xl sm:rounded-2xl"
         role="dialog"
         aria-modal="true"
         aria-labelledby="syllabus-sheet-title"
       >
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-kal-border/60 px-6 pb-3 pt-6 dark:border-white/10">
           <h2
             id="syllabus-sheet-title"
             className="text-lg font-bold tracking-tight text-kal-text"
@@ -203,13 +203,14 @@ export function SyllabusCustomizeSheet({
           </button>
         </div>
 
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-6 py-4 [-webkit-overflow-scrolling:touch]">
         {mode.kind === "rename_chapter" ? (
-          <p className="mt-2 text-xs leading-relaxed text-kal-muted">
+          <p className="text-xs leading-relaxed text-kal-muted">
             Renames this chapter for you only. Microtopics stay linked; labels
             update everywhere.
           </p>
         ) : (
-          <p className="mt-2 text-xs leading-relaxed text-kal-muted">
+          <p className="text-xs leading-relaxed text-kal-muted">
             Changes apply to your syllabus only — the shared catalog stays
             unchanged.
           </p>
@@ -267,14 +268,16 @@ export function SyllabusCustomizeSheet({
             </>
           )}
         </div>
+        </div>
 
+        <div className="shrink-0 border-t border-kal-border/60 bg-[var(--kal-page)]/95 px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-sm dark:border-white/10">
         {error ? (
-          <p className="mt-3 text-sm text-kal-danger-text" role="alert">
+          <p className="mb-3 text-sm text-kal-danger-text" role="alert">
             {error}
           </p>
         ) : null}
 
-        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button
             type="button"
             disabled={busy}
@@ -294,6 +297,7 @@ export function SyllabusCustomizeSheet({
           >
             {busy ? "Saving…" : "Save"}
           </button>
+        </div>
         </div>
       </div>
     </div>

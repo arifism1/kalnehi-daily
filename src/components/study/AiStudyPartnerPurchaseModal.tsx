@@ -124,11 +124,11 @@ export function AiStudyPartnerPurchaseModal({ open, onClose, onPurchased }: Prop
         onClick={onClose}
       >
         <div
-          className="kal-glass-panel w-full max-w-sm overflow-hidden rounded-t-2xl sm:rounded-2xl"
+          className="kal-glass-panel flex min-h-0 w-full max-w-sm max-h-[min(92dvh,40rem)] flex-col overflow-hidden rounded-t-2xl sm:rounded-2xl"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="border-b border-kal-border px-5 py-4">
+          <div className="shrink-0 border-b border-kal-border px-5 py-4">
             <div className="flex items-center gap-2">
               <Bot className="h-5 w-5 shrink-0 text-kal-accent" aria-hidden />
               <h2 className="text-sm font-semibold text-kal-text">AI Study Partner</h2>
@@ -143,8 +143,7 @@ export function AiStudyPartnerPurchaseModal({ open, onClose, onPurchased }: Prop
             </p>
           </div>
 
-          {/* Pack details */}
-          <div className="px-5 py-4">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 py-4 [-webkit-overflow-scrolling:touch]">
             <div className="kal-glass-subtle flex items-center justify-between gap-4 rounded-xl px-4 py-3">
               <div>
                 <p className="text-sm font-medium text-kal-text">Study with an AI partner for 30 hours and reduce executive dysfunction</p>
@@ -154,26 +153,24 @@ export function AiStudyPartnerPurchaseModal({ open, onClose, onPurchased }: Prop
               </div>
               <p className="shrink-0 text-lg font-bold text-kal-accent">₹799</p>
             </div>
+            {payError ? (
+              <div className="mt-3">
+                <p className="text-xs text-kal-danger-text" role="status">
+                  {payError.text}
+                </p>
+                <PaymentErrorMailButton
+                  flow="AI Study Partner — purchase"
+                  error={payError.text}
+                  userEmail={userEmail}
+                  proof={payError.proof}
+                  className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-kal-danger-border bg-kal-card px-3 py-1.5 text-xs font-semibold text-kal-danger-text underline-offset-2 hover:underline"
+                />
+              </div>
+            ) : null}
           </div>
 
-          {/* Error */}
-          {payError ? (
-            <div className="px-5 pb-3">
-              <p className="text-xs text-kal-danger-text" role="status">
-                {payError.text}
-              </p>
-              <PaymentErrorMailButton
-                flow="AI Study Partner — purchase"
-                error={payError.text}
-                userEmail={userEmail}
-                proof={payError.proof}
-                className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-kal-danger-border bg-kal-card px-3 py-1.5 text-xs font-semibold text-kal-danger-text underline-offset-2 hover:underline"
-              />
-            </div>
-          ) : null}
-
           {/* Actions */}
-          <div className="flex gap-2 border-t border-kal-border px-5 py-4">
+          <div className="flex shrink-0 gap-2 border-t border-kal-border px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
             <button
               type="button"
               onClick={onClose}

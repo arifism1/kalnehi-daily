@@ -900,8 +900,8 @@ export function DoubtTracker() {
             className="absolute inset-0 bg-black/65"
             onClick={() => !editSaving && setEditingId(null)}
           />
-          <div className="kal-glass-panel relative z-[61] max-h-[min(92vh,36rem)] w-full max-w-lg overflow-y-auto rounded-t-3xl p-6 sm:rounded-2xl">
-            <div className="flex items-start justify-between gap-2">
+          <div className="kal-glass-panel relative z-[61] flex min-h-0 w-full max-w-lg max-h-[min(92dvh,36rem)] flex-col overflow-hidden rounded-t-3xl sm:rounded-2xl">
+            <div className="flex shrink-0 items-start justify-between gap-2 border-b border-kal-border px-6 pb-3 pt-6">
               <h2
                 id={`${baseId}-edit-title`}
                 className="text-lg font-bold text-kal-text"
@@ -916,7 +916,9 @@ export function DoubtTracker() {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <label className="mt-4 block text-xs font-medium text-kal-muted">
+
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-6 py-4 [-webkit-overflow-scrolling:touch]">
+            <label className="block text-xs font-medium text-kal-muted">
               Title
               <input
                 value={editTitle}
@@ -996,7 +998,9 @@ export function DoubtTracker() {
                 ))}
               </div>
             </div>
-            <div className="mt-6 flex flex-col gap-2 sm:flex-row">
+            </div>
+
+            <div className="flex shrink-0 flex-col gap-2 border-t border-kal-border px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:flex-row">
               <button
                 type="button"
                 disabled={editSaving}

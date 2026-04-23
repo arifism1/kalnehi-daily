@@ -44,10 +44,10 @@ export function StudyCameraPrivacyModal({
       />
       <div
         className={clsx(
-          "relative z-10 max-h-[min(88dvh,32rem)] w-full max-w-md overflow-y-auto rounded-t-3xl border border-kal-accent/25 bg-[#0a101c] p-6 shadow-2xl sm:rounded-3xl sm:p-7",
+          "relative z-10 flex min-h-0 w-full max-w-md max-h-[min(88dvh,32rem)] flex-col overflow-hidden rounded-t-3xl border border-kal-accent/25 bg-[#0a101c] shadow-2xl sm:rounded-3xl",
         )}
       >
-        <div className="flex items-start gap-3">
+        <div className="flex shrink-0 items-start gap-3 border-b border-white/10 px-6 pb-4 pt-6 sm:px-7 sm:pt-7">
           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-kal-accent/15 text-kal-accent">
             <ShieldCheck className="h-6 w-6" aria-hidden />
           </span>
@@ -66,7 +66,8 @@ export function StudyCameraPrivacyModal({
           </div>
         </div>
 
-        <ul className="mt-5 space-y-3 text-sm leading-relaxed text-zinc-300">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-6 py-4 sm:px-7 [-webkit-overflow-scrolling:touch]">
+        <ul className="space-y-3 text-sm leading-relaxed text-zinc-300">
           {POINTS.map((text) => (
             <li key={text} className="flex gap-2">
               <Lock
@@ -83,8 +84,9 @@ export function StudyCameraPrivacyModal({
           {" · "}
           Private and secure. You can turn this off anytime in Settings.
         </p>
+        </div>
 
-        <div className="mt-6 flex flex-col gap-2 sm:flex-row-reverse">
+        <div className="flex shrink-0 flex-col gap-2 border-t border-white/10 px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-7 sm:flex-row-reverse">
           <button
             type="button"
             onClick={onContinue}

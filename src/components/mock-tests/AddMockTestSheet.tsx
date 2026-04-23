@@ -187,20 +187,20 @@ export function AddMockTestSheet({
     "w-full rounded-xl border border-zinc-300/95 dark:border-zinc-600 bg-[var(--kal-input-bg)] px-3 py-2.5 text-sm text-zinc-950 dark:text-zinc-100 placeholder:text-zinc-500 dark:placeholder:text-zinc-400 outline-none focus:ring-2 focus:ring-kal-accent/50 focus:border-kal-accent/50";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
       <div
         className="absolute inset-0 bg-kal-overlay backdrop-blur-sm"
         onClick={handleClose}
         aria-hidden
       />
       <div
-        className="relative z-10 w-full max-w-lg rounded-t-2xl sm:rounded-2xl border border-zinc-200/95 bg-kal-bg shadow-2xl ring-1 ring-zinc-950/10 dark:border-zinc-600 dark:ring-white/10 overflow-y-auto max-h-[92dvh]"
+        className="relative z-10 flex min-h-0 w-full max-w-lg max-h-[92dvh] flex-col overflow-hidden rounded-t-2xl border border-zinc-200/95 bg-kal-bg shadow-2xl ring-1 ring-zinc-950/10 dark:border-zinc-600 dark:ring-white/10 sm:rounded-2xl"
         role="dialog"
         aria-modal="true"
         aria-labelledby={`${baseId}-dialog-title`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-zinc-200/90 p-4 dark:border-zinc-600/80">
+        <div className="flex shrink-0 items-center justify-between border-b border-zinc-200/90 p-4 dark:border-zinc-600/80">
           <div className="flex items-center gap-3">
             {step === 2 && (
               <button
@@ -234,7 +234,7 @@ export function AddMockTestSheet({
           </button>
         </div>
 
-        <div className="p-4 space-y-4">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-4 pb-2 [-webkit-overflow-scrolling:touch]">
           {step === 1 ? (
             <>
               {/* Test Name */}
@@ -387,16 +387,6 @@ export function AddMockTestSheet({
                   className={clsx(fieldInput, "min-h-0 resize-none")}
                 />
               </div>
-
-              <button
-                type="button"
-                onClick={() => step1Valid && setStep(2)}
-                disabled={!step1Valid}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-kal-accent py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-kal-accent/90 disabled:opacity-50 transition-colors"
-              >
-                Subject scores
-                <ChevronRight className="h-4 w-4" />
-              </button>
             </>
           ) : (
             <>
@@ -456,16 +446,31 @@ export function AddMockTestSheet({
                   </div>
                 ))}
               </div>
+            </>
+          )}
+        </div>
 
+        <div className="shrink-0 border-t border-zinc-200/90 bg-kal-bg p-4 pt-3 dark:border-zinc-600/80 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          {step === 1 ? (
+            <button
+              type="button"
+              onClick={() => step1Valid && setStep(2)}
+              disabled={!step1Valid}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-kal-accent py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-kal-accent/90 disabled:opacity-50"
+            >
+              Subject scores
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          ) : (
+            <>
               {saveError && (
-                <p className="text-sm font-medium text-red-700 dark:text-red-300">{saveError}</p>
+                <p className="mb-3 text-sm font-medium text-red-700 dark:text-red-300">{saveError}</p>
               )}
-
               <button
                 type="button"
                 onClick={handleSave}
                 disabled={isPending}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-kal-accent py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-kal-accent/90 disabled:opacity-60 transition-colors"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-kal-accent py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-kal-accent/90 disabled:opacity-60"
               >
                 {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                 Save Test

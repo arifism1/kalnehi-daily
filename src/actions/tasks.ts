@@ -84,21 +84,39 @@ export async function createTasksBulk(
   try {
     if (rows.length === 0) return { ok: true, ids: [] };
     const { supabase, userId } = await requireUser();
-    const payload = rows.map((row) => {
-      // Strip client-supplied `id` so the DB always generates a new UUID.
-      // Accepting caller-provided IDs risks overwriting another user's task
-      // if a row with that UUID already exists and RLS ever has a regression.
-      const { id: _stripped, ...rest } = row as TablesInsert<"tasks">;
-      return sanitizeTaskPayload({
-        ...rest,
+    const payload = rows.map((row) =>
+      sanitizeTaskPayload({
+        ...(row as TablesInsert<"tasks">),
         user_id: userId,
-      } as TablesInsert<"tasks">);
-    });
+      } as TablesInsert<"tasks">),
+    );
     const { data, error } = await supabase
       .from("tasks")
       .insert(payload)
       .select("id");
-    if (error) throw error;
+    if (error) {
+      // One duplicate can fail the whole multi-row insert. Finish the rest
+      // row-by-row so new tasks still land (offline sync retries may mix states).
+      if (error.code === "23505") {
+        for (const row of rows) {
+          const one = sanitizeTaskPayload({
+            ...(row as TablesInsert<"tasks">),
+            user_id: userId,
+          } as TablesInsert<"tasks">);
+          const { error: rowErr } = await supabase.from("tasks").insert(one);
+          if (rowErr && rowErr.code !== "23505") {
+            return { ok: false, error: formatSupabaseError(rowErr) };
+          }
+        }
+        revalidatePath("/");
+        revalidatePath("/daily-plan");
+        const outIds = rows
+          .map((r) => (r as TablesInsert<"tasks">).id)
+          .filter((id): id is string => typeof id === "string" && id.length > 0);
+        return { ok: true, ids: outIds };
+      }
+      throw error;
+    }
     revalidatePath("/");
     revalidatePath("/daily-plan");
     return { ok: true, ids: (data ?? []).map((r) => r.id) };

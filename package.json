@@ -21,7 +21,8 @@
     "verify:security": "npm run security:audit && node scripts/verify-supabase-security.mjs && node scripts/verify-service-role-scope.mjs && node scripts/dast-staging-hints.mjs",
     "generate:icons": "node scripts/generate-app-icons.mjs",
     "test:rollup": "node --import tsx --test src/lib/syllabusRollup.projection.test.ts",
-    "test:leaderboard": "node --import tsx --test src/lib/leaderboardComposite.test.ts"
+    "test:leaderboard": "node --import tsx --test src/lib/leaderboardComposite.test.ts",
+    "test:prepbrain": "node --import tsx --test src/lib/prepbrainIntentRouting.test.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

@@ -96,8 +96,8 @@ export function ChapterMarksSheet({
         className="absolute inset-0 bg-black/65"
         onClick={() => !busy && onClose()}
       />
-      <div className="kal-glass-panel relative z-[66] max-h-[min(90dvh,36rem)] w-full max-w-lg overflow-y-auto rounded-t-3xl p-5 shadow-2xl sm:rounded-3xl">
-        <div className="flex items-start justify-between gap-2">
+      <div className="kal-glass-panel relative z-[66] flex min-h-0 w-full max-w-lg max-h-[min(90dvh,36rem)] flex-col overflow-hidden rounded-t-3xl shadow-2xl sm:rounded-3xl">
+        <div className="flex shrink-0 items-start justify-between gap-2 border-b border-kal-border/50 px-5 pb-3 pt-5">
           <div className="flex items-center gap-2">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-kal-accent/15 text-kal-accent">
               <SlidersHorizontal className="h-5 w-5" aria-hidden />
@@ -120,7 +120,9 @@ export function ChapterMarksSheet({
             <X className="h-5 w-5" />
           </button>
         </div>
-        <p className="mt-3 text-xs leading-relaxed text-kal-muted">
+
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 py-3 [-webkit-overflow-scrolling:touch]">
+        <p className="text-xs leading-relaxed text-kal-muted">
           Weights are stored for your account only and never change the shared
           syllabus catalog. Leave a year blank to use the catalog value for
           that year. Multi-year projections use 2025 / 2024 / 2023 columns when
@@ -139,15 +141,6 @@ export function ChapterMarksSheet({
             Primary pool for this exam uses marks_2023.
           </p>
         )}
-
-        {err ? (
-          <p
-            role="alert"
-            className="mt-3 rounded-lg border border-orange-500/35 bg-orange-950/40 px-3 py-2 text-xs text-orange-100"
-          >
-            {err}
-          </p>
-        ) : null}
 
         <div className="mt-4 space-y-3">
           {rows.map((r) => {
@@ -217,8 +210,18 @@ export function ChapterMarksSheet({
             );
           })}
         </div>
+        </div>
 
-        <div className="mt-6 flex flex-col gap-2 sm:flex-row">
+        <div className="shrink-0 border-t border-kal-border/50 px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
+        {err ? (
+          <p
+            role="alert"
+            className="mb-3 rounded-lg border border-orange-500/35 bg-orange-950/40 px-3 py-2 text-xs text-orange-100"
+          >
+            {err}
+          </p>
+        ) : null}
+        <div className="flex flex-col gap-2 sm:flex-row">
           <button
             type="button"
             disabled={busy}
@@ -242,6 +245,7 @@ export function ChapterMarksSheet({
           >
             Cancel
           </button>
+        </div>
         </div>
       </div>
     </div>
