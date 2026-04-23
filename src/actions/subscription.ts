@@ -904,6 +904,37 @@ async function applyPaidVoiceMinuteUsage(
   };
 }
 
+/**
+ * Non-blocking helper: inserts a trial_started referral_events row if the user
+ * has a referral_source set on their profile. Never throws or awaits externally.
+ */
+async function logReferralTrialStartedIfNeeded(
+  admin: ReturnType<typeof getAdminClient>,
+  userId: string,
+): Promise<void> {
+  if (!admin) return;
+  try {
+    const { data: profile } = await admin
+      .from("user_profiles")
+      .select("referral_source" as "user_id")
+      .eq("user_id", userId)
+      .maybeSingle();
+    const code = (profile as { referral_source?: string | null } | null)?.referral_source;
+    if (!code) return;
+    await admin
+      .from("referral_events" as never)
+      .insert({
+        code,
+        user_id: userId,
+        session_id: null,
+        event_type: "trial_started",
+        metadata: {},
+      } as never);
+  } catch (e) {
+    console.warn("[logReferralTrialStartedIfNeeded] non-fatal:", e);
+  }
+}
+
 /** Idempotent: starts the one-time 3-day welcome trial for eligible new accounts. */
 export async function ensureFreeTrialStarted(): Promise<
   | { ok: true; started: boolean }
@@ -1028,6 +1059,9 @@ export async function ensureFreeTrialStarted(): Promise<
         if (e) console.warn("[ensureFreeTrialStarted] feature_events insert:", e.message);
       });
 
+    // Non-blocking referral funnel event — only fires if user has a referral_source.
+    void logReferralTrialStartedIfNeeded(admin, userId);
+
     return { ok: true, started: !!data };
   }
   // ── Cap disabled — original flow ─────────────────────────────────────────
@@ -1046,6 +1080,10 @@ export async function ensureFreeTrialStarted(): Promise<
     .maybeSingle();
 
   if (error) return { ok: false, error: "Unable to start welcome trial." };
+
+  // Non-blocking referral funnel event — only fires if user has a referral_source.
+  void logReferralTrialStartedIfNeeded(admin, userId);
+
   return { ok: true, started: !!data };
 }
 

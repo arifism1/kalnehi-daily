@@ -9,6 +9,7 @@ import { SubscriptionAccessProvider } from "@/hooks/useSubscriptionAccess";
 import { FcmForegroundListener } from "@/components/FcmForegroundListener";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { OrganicEntryCapture } from "@/components/OrganicEntryCapture";
+import { ReferralCapture } from "@/components/ReferralCapture";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { StoragePersistenceInit } from "@/components/StoragePersistenceInit";
@@ -148,6 +149,7 @@ export default function RootLayout({
       <body className="flex min-h-full min-h-dvh flex-col bg-kal-page font-sans text-kal-text">
         <JsonLd />
         <OrganicEntryCapture />
+        <ReferralCapture />
         <GoogleAnalytics />
         <ThemeSync />
         <ServiceWorkerRegister />
