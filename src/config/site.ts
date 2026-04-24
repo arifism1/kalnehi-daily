@@ -39,7 +39,7 @@ export const PRICING_OFFERS = [
   },
   {
     name: "Smart Plan",
-    price: "499",
+    price: "399",
     priceCurrency: "INR",
     description: "Full monthly plan with 2 million PrepBrain AI tokens and 100 minutes voice per month",
     unitCode: "MON" as const,

@@ -11,7 +11,7 @@ interface CTABannerProps {
 
 export function CTABanner({
   headline = "Start free — 3 days on us",
-  subtext = "No credit card. Full access for 3 days. Then ₹499/month or ₹4,790/year.",
+  subtext = "No credit card. Full access for 3 days. Then ₹399/month — or save 10–20% with 6-month or annual plans.",
   primaryLabel = "Start free — 3 days on us",
   primaryHref = "/auth",
   secondaryLabel = "See pricing",

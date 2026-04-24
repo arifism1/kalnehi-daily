@@ -10,7 +10,7 @@ const FACTS = [
     detail: "Every feature unlocked for 3 days. Your trial starts when you're ready.",
   },
   {
-    value: "₹499",
+    value: "₹399",
     label: "per month, full access",
     detail: "2 million PrepBrain tokens and 100 minutes of voice every month. Everything, always.",
   },
@@ -64,7 +64,7 @@ export function OutcomesBlock() {
           <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
             {[
               { label: "3-day free trial", voice: "12 min total", tokens: "60k tokens" },
-              { label: "Smart Plan (₹499/mo)", voice: "100 hrs/month", tokens: "2M tokens/month" },
+              { label: "Smart Plan (₹399/mo)", voice: "100 hrs/month", tokens: "2M tokens/month" },
             ].map(({ label, voice, tokens }) => (
               <div key={label} className="text-center">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-kal-accent/60">{label}</p>

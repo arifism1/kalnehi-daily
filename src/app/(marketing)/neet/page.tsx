@@ -75,7 +75,7 @@ const FAQS = [
   {
     question: "What is the pricing for NEET aspirants?",
     answer:
-      "Start free for 3 days with full access. Smart Plan is ₹499/month or ₹4,790/year. For a 12-month NEET prep cycle, the annual plan costs less than ₹400/month — less than a single coaching batch's monthly fee for just notes.",
+      "Start free for 3 days with full access. Smart Plan is ₹399/month or ₹3,830/year. For a 12-month NEET prep cycle, the annual plan costs less than ₹320/month — less than a single coaching batch's monthly fee for just notes.",
   },
 ];
 

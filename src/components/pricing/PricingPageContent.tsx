@@ -240,7 +240,7 @@ function PricingTableSection() {
                         className="text-2xl font-normal text-kal-text"
                         style={{ fontFamily: "var(--font-display)" }}
                       >
-                        ₹499
+                        ₹399
                       </p>
                       <span className="text-xs text-kal-muted">/mo</span>
                     </div>
@@ -289,7 +289,7 @@ function PricingTableSection() {
                       href="#subscribe"
                       className="inline-flex min-h-[40px] items-center justify-center rounded-full bg-kal-accent px-5 text-sm font-bold text-white shadow-[0_4px_16px_rgba(255,122,0,0.28)] transition hover:brightness-105"
                     >
-                      Subscribe — ₹499/mo
+                      Subscribe — ₹399/mo
                     </Link>
                   </td>
                 </tr>
@@ -346,14 +346,14 @@ function PlanCardsSection({ capStatus }: { capStatus: DailyCapStatus }) {
     },
     {
       name: "Smart Plan",
-      price: "₹499",
+      price: "₹399",
       duration: "per month",
-      annualNote: "or ₹4,790/year · save 20%",
+      annualNote: "or ₹2,154/6 months (10% off) · ₹3,830/year (20% off)",
       tag: "Most popular",
       borderClass: "border-kal-accent/60",
       badgeBg: "bg-kal-accent",
       badgeText: "text-white",
-      cta: "Subscribe — ₹499/month",
+      cta: "Subscribe — ₹399/month",
       ctaHref: "#subscribe",
       ctaClass:
         "bg-kal-accent text-white shadow-[0_4px_16px_rgba(255,122,0,0.28)] hover:brightness-105",
@@ -514,7 +514,7 @@ function CheckoutSection() {
             Subscribe to Smart Plan.
           </h2>
           <p className="mt-2 text-sm text-kal-muted">
-            ₹499/month · cancel anytime · AutoPay for the duration you choose.
+            ₹399/month · cancel anytime · AutoPay for the duration you choose.
           </p>
         </div>
         <PricingPageClient />
@@ -565,7 +565,7 @@ function ExamFooterStrip() {
             href="#subscribe"
             className="inline-flex min-h-[48px] w-full items-center justify-center rounded-full border border-kal-border bg-kal-card/70 px-8 text-base font-semibold text-kal-text backdrop-blur-sm transition hover:border-kal-accent/40 hover:text-kal-accent sm:w-auto"
           >
-            Subscribe — ₹499/month
+            Subscribe — ₹399/month
           </Link>
         </div>
       </div>

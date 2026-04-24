@@ -78,7 +78,7 @@ function AutopayDurationPanel({
                 How long should AutoPay run?
               </h2>
               <p className="mt-1 text-xs leading-snug text-kal-text-secondary sm:mt-1.5">
-                <span className="font-semibold text-kal-text">Monthly</span> billing at ₹499/month. Set how many
+                <span className="font-semibold text-kal-text">Monthly</span> billing at ₹399/month. Set how many
                 monthly charges your UPI or card mandate may take. Cancel anytime
                 &mdash; even before all months are used &mdash; and keep access for what you&apos;ve
                 already paid.
@@ -207,7 +207,7 @@ export function PricingPageClient() {
     subscriptionStatus === "cancelled" && hasPaidAccess;
   const user = useAuthStore((s) => s.user);
   const userEmail = user?.email ?? null;
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "six_month" | "annual">("monthly");
   const [busy, setBusy] = useState(false);
   const [autopayMonths, setAutopayMonths] = useState(DEFAULT_AUTOPAY_MONTHS);
   const [checkoutError, setCheckoutError] = useState<{
@@ -361,7 +361,7 @@ export function PricingPageClient() {
       const rzp = new window.Razorpay({
         key: created.keyId,
         name: SITE_NAME,
-        description: `Smart Plan Annual · ₹4,790/year`,
+        description: `Smart Plan Annual · ₹3,830/year`,
         order_id: created.orderId,
         amount: created.amountPaise,
         currency: "INR",
@@ -392,6 +392,70 @@ export function PricingPageClient() {
     } catch (error) {
       if (process.env.NODE_ENV === "development") {
         console.error("[pricing] startAnnualCheckout failed", error);
+      }
+      setCheckoutError({ text: toUserFacingMessage(error) });
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
+  const startSixMonthCheckout = useCallback(async () => {
+    setBusy(true);
+    setCheckoutError(null);
+    try {
+      const res = await fetch("/api/six-month-plan", { method: "POST" });
+      const created = (await res.json()) as {
+        ok: boolean;
+        error?: string;
+        keyId?: string;
+        orderId?: string;
+        amountPaise?: number;
+        prefill?: { name: string; email: string };
+      };
+      if (!created.ok) {
+        setCheckoutError({ text: created.error ?? "Could not create 6-month order." });
+        return;
+      }
+
+      if (typeof window === "undefined" || !window.Razorpay) {
+        setCheckoutError({ text: "Unable to load payment window. Refresh and try again." });
+        return;
+      }
+
+      const rzp = new window.Razorpay({
+        key: created.keyId,
+        name: SITE_NAME,
+        description: `Smart Plan 6 Months · ₹2,154`,
+        order_id: created.orderId,
+        amount: created.amountPaise,
+        currency: "INR",
+        theme: { color: "#FF7A00" },
+        prefill: created.prefill,
+        ...(created.prefill?.email
+          ? { readonly: { email: true } }
+          : {}),
+        handler: async (response: { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }) => {
+          const verified = await fetch("/api/six-month-plan/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+            }),
+          });
+          const result = (await verified.json()) as { ok: boolean; error?: string };
+          if (!result.ok) {
+            setCheckoutError({ text: result.error ?? "Payment verification failed. Contact support." });
+            return;
+          }
+          window.location.assign("/home");
+        },
+      });
+      rzp.open();
+    } catch (error) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("[pricing] startSixMonthCheckout failed", error);
       }
       setCheckoutError({ text: toUserFacingMessage(error) });
     } finally {
@@ -442,7 +506,16 @@ export function PricingPageClient() {
         return (
           <div className="rounded-2xl border border-kal-accent/30 bg-kal-accent-soft/50 px-5 py-4 dark:border-kal-accent/25 dark:bg-kal-accent/10">
             <p className="text-sm font-medium text-kal-accent-dark dark:text-kal-accent">
-              Upgrading to Annual will cancel your monthly plan and give you 12 months of access for ₹4,790 — no further monthly charges.
+              Upgrading to Annual will cancel your monthly plan and give you 12 months of access for ₹3,830 — no further monthly charges.
+            </p>
+          </div>
+        );
+      }
+      if (billingCycle === "six_month" && plan !== "six_month" && plan !== "annual") {
+        return (
+          <div className="rounded-2xl border border-kal-accent/30 bg-kal-accent-soft/50 px-5 py-4 dark:border-kal-accent/25 dark:bg-kal-accent/10">
+            <p className="text-sm font-medium text-kal-accent-dark dark:text-kal-accent">
+              Upgrading to 6 Months will cancel your monthly plan and give you 6 months of access for ₹2,154 — no further monthly charges.
             </p>
           </div>
         );
@@ -490,30 +563,47 @@ export function PricingPageClient() {
     freeTrialEndsAtIso,
   ]);
 
-  const isMonthlyToAnnualUpgrade =
-    hasPaidAccess && !isCancelledWithAccess && billingCycle === "annual" && plan !== "annual";
-  const lockedBySubscription = hasPaidAccess && !isCancelledWithAccess && !isMonthlyToAnnualUpgrade;
+  const isUpgradeFromMonthly =
+    hasPaidAccess &&
+    !isCancelledWithAccess &&
+    ((billingCycle === "annual" && plan !== "annual") ||
+      (billingCycle === "six_month" && plan !== "six_month" && plan !== "annual"));
+  const lockedBySubscription = hasPaidAccess && !isCancelledWithAccess && !isUpgradeFromMonthly;
   const isActiveProSubscription =
     hasPaidAccess &&
     (subscriptionStatus === "trial" || subscriptionStatus === "active");
 
   let buttonLabel: string;
-  if (isMonthlyToAnnualUpgrade) {
-    buttonLabel = busy ? "Opening checkout..." : "Upgrade to Annual — ₹4,790/year";
+  if (isUpgradeFromMonthly) {
+    if (busy) {
+      buttonLabel = "Opening checkout...";
+    } else if (billingCycle === "annual") {
+      buttonLabel = "Upgrade to Annual — ₹3,830/year";
+    } else {
+      buttonLabel = "Upgrade to 6 Months — ₹2,154";
+    }
   } else if (isActiveProSubscription) {
     buttonLabel = "Current plan";
   } else if (isCancelledWithAccess) {
-    buttonLabel = billingCycle === "annual"
-      ? "Resubscribe — ₹4,790/year"
-      : `Resubscribe — ${pro.monthlyPriceDisplay}/month`;
+    if (billingCycle === "annual") {
+      buttonLabel = "Resubscribe — ₹3,830/year";
+    } else if (billingCycle === "six_month") {
+      buttonLabel = "Resubscribe — ₹2,154/6 months";
+    } else {
+      buttonLabel = `Resubscribe — ${pro.monthlyPriceDisplay}/month`;
+    }
   } else if (hasPaidAccess) {
     buttonLabel = "Manage in app";
   } else if (busy) {
     buttonLabel = "Opening checkout...";
   } else {
-    buttonLabel = billingCycle === "annual"
-      ? "Subscribe — ₹4,790/year"
-      : `Subscribe — ${pro.monthlyPriceDisplay}/month`;
+    if (billingCycle === "annual") {
+      buttonLabel = "Subscribe — ₹3,830/year";
+    } else if (billingCycle === "six_month") {
+      buttonLabel = "Subscribe — ₹2,154/6 months";
+    } else {
+      buttonLabel = `Subscribe — ${pro.monthlyPriceDisplay}/month`;
+    }
   }
 
   return (
@@ -666,25 +756,42 @@ export function PricingPageClient() {
               type="button"
               aria-pressed={billingCycle === "monthly"}
               onClick={() => setBillingCycle("monthly")}
-              className={`rounded-full px-5 py-2 text-xs font-bold transition-all ${
+              className={`rounded-full px-4 py-2 text-xs font-bold transition-all ${
                 billingCycle === "monthly"
                   ? "bg-kal-card text-kal-text shadow-sm"
                   : "text-kal-text-secondary hover:text-kal-text"
               }`}
             >
-              Monthly · ₹499/mo
+              Monthly · ₹399/mo
+            </button>
+            <button
+              type="button"
+              aria-pressed={billingCycle === "six_month"}
+              onClick={() => setBillingCycle("six_month")}
+              className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition-all ${
+                billingCycle === "six_month"
+                  ? "bg-kal-accent text-white shadow-sm"
+                  : "text-kal-text-secondary hover:text-kal-text"
+              }`}
+            >
+              6 Months · ₹359/mo
+              <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide leading-none ${
+                billingCycle === "six_month" ? "bg-white/25 text-white" : "bg-kal-accent/15 text-kal-accent"
+              }`}>
+                Save 10%
+              </span>
             </button>
             <button
               type="button"
               aria-pressed={billingCycle === "annual"}
               onClick={() => setBillingCycle("annual")}
-              className={`flex items-center gap-1.5 rounded-full px-5 py-2 text-xs font-bold transition-all ${
+              className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition-all ${
                 billingCycle === "annual"
                   ? "bg-kal-accent text-white shadow-sm"
                   : "text-kal-text-secondary hover:text-kal-text"
               }`}
             >
-              Annual · ₹399/mo
+              Annual · ₹319/mo
               <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide leading-none ${
                 billingCycle === "annual" ? "bg-white/25 text-white" : "bg-kal-accent/15 text-kal-accent"
               }`}>
@@ -713,7 +820,7 @@ export function PricingPageClient() {
 
         {statusBanner}
 
-        {(!hasPaidAccess || isCancelledWithAccess) && billingCycle === "monthly" ? (
+        {(!hasPaidAccess || isCancelledWithAccess || isUpgradeFromMonthly) && billingCycle === "monthly" ? (
           <AutopayDurationPanel
             value={autopayMonths}
             onChange={setAutopayMonths}
@@ -739,11 +846,21 @@ export function PricingPageClient() {
               {billingCycle === "annual" ? (
                 <>
                   <p className="text-lg font-bold leading-snug text-kal-text">
-                    ₹4,790/year
-                    <span className="ml-2 text-xs font-semibold text-kal-accent">₹399/mo</span>
+                    ₹3,830/year
+                    <span className="ml-2 text-xs font-semibold text-kal-accent">₹319/mo · Save 20%</span>
                   </p>
                   <p className="mt-1 text-xs font-medium leading-snug text-kal-text-secondary">
                     One-time payment · 12 months access · no recurring charge.
+                  </p>
+                </>
+              ) : billingCycle === "six_month" ? (
+                <>
+                  <p className="text-lg font-bold leading-snug text-kal-text">
+                    ₹2,154/6 months
+                    <span className="ml-2 text-xs font-semibold text-kal-accent">₹359/mo · Save 10%</span>
+                  </p>
+                  <p className="mt-1 text-xs font-medium leading-snug text-kal-text-secondary">
+                    One-time payment · 6 months access · no recurring charge.
                   </p>
                 </>
               ) : (
@@ -778,6 +895,8 @@ export function PricingPageClient() {
                 if (lockedBySubscription) return;
                 if (billingCycle === "annual") {
                   void startAnnualCheckout();
+                } else if (billingCycle === "six_month") {
+                  void startSixMonthCheckout();
                 } else {
                   void startCheckout();
                 }

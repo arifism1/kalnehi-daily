@@ -21,7 +21,7 @@ const PLANS = [
   },
   {
     name: "Smart Plan",
-    price: "₹499",
+    price: "₹399",
     duration: "/month",
     highlight: true,
     features: [
@@ -31,7 +31,7 @@ const PLANS = [
       "PrepBrain AI — 20,00,000 tokens/month",
       "Voice control — 100 minutes/month",
     ],
-    cta: "Subscribe — ₹499/month",
+    cta: "Subscribe — ₹399/month",
     ctaHref: "/pricing",
     ctaClass:
       "bg-kal-accent text-white shadow-[0_4px_16px_rgba(255,122,0,0.28)] hover:brightness-105",

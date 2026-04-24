@@ -76,7 +76,7 @@ const PAGE_SEO: Record<
     path: "/pricing",
     title: `Pricing — 3-Day Free Trial & Smart Plan | ${SITE_NAME}`,
     description:
-      `Start with a 3-day free trial — every feature, no card required. Then ₹499/month with Smart Plan: 2 million PrepBrain AI tokens, 100 minutes voice, marks engine, and rank prediction.`,
+      `Start with a 3-day free trial — every feature, no card required. Then ₹399/month with Smart Plan: 2 million PrepBrain AI tokens, 100 minutes voice, marks engine, and rank prediction.`,
   },
   about: {
     path: "/about",

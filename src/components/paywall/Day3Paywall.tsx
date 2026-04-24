@@ -223,7 +223,7 @@ export function Day3Paywall() {
                       className="text-3xl font-normal text-kal-text"
                       style={{ fontFamily: "var(--font-display)" }}
                     >
-                      ₹499
+                      ₹399
                     </span>
                     <span className="text-xs text-kal-muted">/month</span>
                   </div>

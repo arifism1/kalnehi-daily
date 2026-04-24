@@ -28,10 +28,10 @@ export function AiFeatureGate({ children }: Props) {
         <Lock className="h-8 w-8 text-kal-text-secondary" />
         <h3 className="text-lg font-bold text-kal-text">Voice dictation requires Smart Plan</h3>
         <p className="max-w-sm text-sm text-kal-text-secondary">
-          Your 3-day free trial has ended. Subscribe to Smart Plan (₹499/month) to get 100 minutes of voice per month.
+          Your 3-day free trial has ended. Subscribe to Smart Plan (₹399/month) to get 100 minutes of voice per month.
         </p>
         <Link href="/pricing" className="kal-btn-accent">
-          Subscribe — ₹499/month
+          Subscribe — ₹399/month
         </Link>
       </div>
     );

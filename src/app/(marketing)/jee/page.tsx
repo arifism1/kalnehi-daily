@@ -72,7 +72,7 @@ const FAQS = [
   {
     question: "How much does it cost for a JEE aspirant?",
     answer:
-      "Start completely free for 3 days with full access including PrepBrain AI (60,000 tokens) and 12 minutes of voice — no card required. After your trial, Smart Plan is ₹499/month with 2 million tokens and 100 minutes of voice per month.",
+      "Start completely free for 3 days with full access including PrepBrain AI (60,000 tokens) and 12 minutes of voice — no card required. After your trial, Smart Plan is ₹399/month with 2 million tokens and 100 minutes of voice per month.",
   },
 ];
 
@@ -213,7 +213,7 @@ export default function JeePage() {
 
         <CTABanner
           headline="Start your JEE prep system today"
-          subtext="3 days free. Full access. No credit card. Then ₹499/month."
+          subtext="3 days free. Full access. No credit card. Then ₹399/month."
         />
       </article>
     </>

@@ -1,7 +1,7 @@
 /**
- * POST /api/annual-plan/verify
- * Verifies Razorpay payment for annual Smart Plan (₹3,830) and activates it.
- * Sets subscription_status = 'active', subscription_end_date = now + 365 days.
+ * POST /api/six-month-plan/verify
+ * Verifies Razorpay payment for the 6-month Smart Plan (₹2,154) and activates it.
+ * Sets subscription_status = 'active', subscription_end_date = now + 183 days.
  */
 import crypto from "node:crypto";
 import Razorpay from "razorpay";
@@ -12,7 +12,7 @@ import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 
 export const runtime = "nodejs";
 
-const ANNUAL_PRICE_PAISE = 383000;
+const SIX_MONTH_PRICE_PAISE = 215400;
 const RAZORPAY_PAYMENT_ID_RE = /^pay_[a-zA-Z0-9]+$/;
 const RAZORPAY_ORDER_ID_RE = /^order_[a-zA-Z0-9]+$/;
 const HEX_SIGNATURE_RE = /^[a-f0-9]{64}$/;
@@ -79,10 +79,10 @@ export async function POST(req: NextRequest) {
     if (payment.order_id !== orderId || payment.status !== "captured") {
       return NextResponse.json({ ok: false, error: "Payment not complete." }, { status: 400 });
     }
-    if (Number(order.amount) !== ANNUAL_PRICE_PAISE || Number(payment.amount) !== ANNUAL_PRICE_PAISE) {
+    if (Number(order.amount) !== SIX_MONTH_PRICE_PAISE || Number(payment.amount) !== SIX_MONTH_PRICE_PAISE) {
       return NextResponse.json({ ok: false, error: "Amount mismatch." }, { status: 400 });
     }
-    if (order.notes?.kalnehi_user_id !== user.id || order.notes?.kalnehi_order_kind !== "annual_plan") {
+    if (order.notes?.kalnehi_user_id !== user.id || order.notes?.kalnehi_order_kind !== "six_month_plan") {
       return NextResponse.json({ ok: false, error: "Order mismatch." }, { status: 403 });
     }
 
@@ -97,11 +97,11 @@ export async function POST(req: NextRequest) {
     await admin.from("razorpay_processed_payments").insert({
       razorpay_payment_id: paymentId,
       user_id: user.id,
-      kind: "annual_plan",
+      kind: "six_month_plan",
     });
 
     // Best-effort: cancel existing monthly Razorpay subscription so the user
-    // is not double-charged after upgrading to annual. Failure is non-fatal.
+    // is not double-charged after upgrading. Failure is non-fatal.
     try {
       const { data: prof } = await admin
         .from("user_profiles")
@@ -114,15 +114,15 @@ export async function POST(req: NextRequest) {
         await razorpay.subscriptions.cancel(subId, false);
       }
     } catch (cancelErr) {
-      console.warn("[annual-plan/verify] monthly subscription cancel failed (non-fatal)", cancelErr);
+      console.warn("[six-month-plan/verify] monthly subscription cancel failed (non-fatal)", cancelErr);
     }
 
     const now = new Date();
-    const endsAt = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString();
+    const endsAt = new Date(now.getTime() + 183 * 24 * 60 * 60 * 1000).toISOString();
 
     await admin.from("user_profiles").update({
       subscription_status: "active",
-      subscription_plan: "annual",
+      subscription_plan: "six_month",
       subscription_tier: "pro",
       subscription_start_date: now.toISOString(),
       subscription_end_date: endsAt,
@@ -133,7 +133,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, endsAt });
   } catch (e) {
-    console.error("[annual-plan/verify] error", e instanceof Error ? e.message : e);
+    console.error("[six-month-plan/verify] error", e instanceof Error ? e.message : e);
     return NextResponse.json({ ok: false, error: "Payment processing failed." }, { status: 500 });
   }
 }
