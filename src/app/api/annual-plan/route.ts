@@ -1,6 +1,6 @@
 /**
  * POST /api/annual-plan
- * Creates a Razorpay order for Smart Plan Annual (₹3,830).
+ * Creates a Razorpay order for Smart Plan Annual (₹3,591).
  */
 import Razorpay from "razorpay";
 import { type NextRequest, NextResponse } from "next/server";
@@ -10,7 +10,7 @@ import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 
 export const runtime = "nodejs";
 
-const ANNUAL_PRICE_PAISE = 383000; // ₹3,830 in paise
+const ANNUAL_PRICE_PAISE = 359100; // ₹3,591 in paise
 
 function getRazorpayConfig() {
   const keyId = process.env.RAZORPAY_KEY_ID?.trim();

@@ -10,7 +10,7 @@ const FAQS = [
   },
   {
     q: "What happens after the 3-day free trial ends?",
-    a: "After your 3-day trial, you'll need to subscribe to Smart Plan to keep using Kalnehi Daily. You can choose monthly (₹399/month), 6 months upfront (₹2,154 — 10% off), or annual upfront (₹3,830 — 20% off). Your data, streaks, and all progress are preserved exactly as you left them — nothing is deleted. You can subscribe anytime from the pricing page or your subscription settings.",
+    a: "After your 3-day trial, you'll need to subscribe to Smart Plan to keep using Kalnehi Daily. You can choose monthly (₹399/month), 6 months upfront (₹2,154 — 10% off), or annual upfront (₹3,591 — 25% off). Your data, streaks, and all progress are preserved exactly as you left them — nothing is deleted. You can subscribe anytime from the pricing page or your subscription settings.",
   },
   {
     q: "Is a credit card required to start the trial?",
@@ -30,7 +30,7 @@ const FAQS = [
   },
   {
     q: "Is there a discount for longer autopay?",
-    a: "The monthly price stays ₹399/month regardless of how many months you authorise on the AutoPay plan. What changes is the control you set upfront — you decide how many monthly charges the autopay mandate can take (from 1 to 12). The mandate stops automatically after that count is reached. Alternatively, pay upfront for 6 months (₹2,154 — 10% off) or 12 months (₹3,830 — 20% off) for a bigger saving with no recurring charge at all. You can cancel anytime from settings.",
+    a: "The monthly price stays ₹399/month regardless of how many months you authorise on the AutoPay plan. What changes is the control you set upfront — you decide how many monthly charges the autopay mandate can take (from 1 to 12). The mandate stops automatically after that count is reached. Alternatively, pay upfront for 6 months (₹2,154 — 10% off) or 12 months (₹3,591 — 25% off) for a bigger saving with no recurring charge at all. You can cancel anytime from settings.",
   },
 ] as const;
 
