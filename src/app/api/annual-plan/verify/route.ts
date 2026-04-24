@@ -1,6 +1,6 @@
 /**
  * POST /api/annual-plan/verify
- * Verifies Razorpay payment for annual Smart Plan (₹3,830) and activates it.
+ * Verifies Razorpay payment for annual Smart Plan (₹3,591) and activates it.
  * Sets subscription_status = 'active', subscription_end_date = now + 365 days.
  */
 import crypto from "node:crypto";
@@ -12,7 +12,7 @@ import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 
 export const runtime = "nodejs";
 
-const ANNUAL_PRICE_PAISE = 383000;
+const ANNUAL_PRICE_PAISE = 359100;
 const RAZORPAY_PAYMENT_ID_RE = /^pay_[a-zA-Z0-9]+$/;
 const RAZORPAY_ORDER_ID_RE = /^order_[a-zA-Z0-9]+$/;
 const HEX_SIGNATURE_RE = /^[a-f0-9]{64}$/;

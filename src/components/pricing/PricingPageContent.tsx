@@ -348,7 +348,7 @@ function PlanCardsSection({ capStatus }: { capStatus: DailyCapStatus }) {
       name: "Smart Plan",
       price: "₹399",
       duration: "per month",
-      annualNote: "or ₹2,154/6 months (10% off) · ₹3,830/year (20% off)",
+      annualNote: "or ₹2,154/6 months (10% off) · ₹3,591/year (25% off)",
       tag: "Most popular",
       borderClass: "border-kal-accent/60",
       badgeBg: "bg-kal-accent",

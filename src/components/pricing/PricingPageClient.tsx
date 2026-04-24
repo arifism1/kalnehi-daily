@@ -361,7 +361,7 @@ export function PricingPageClient() {
       const rzp = new window.Razorpay({
         key: created.keyId,
         name: SITE_NAME,
-        description: `Smart Plan Annual · ₹3,830/year`,
+        description: `Smart Plan Annual · ₹3,591/year`,
         order_id: created.orderId,
         amount: created.amountPaise,
         currency: "INR",
@@ -506,7 +506,7 @@ export function PricingPageClient() {
         return (
           <div className="rounded-2xl border border-kal-accent/30 bg-kal-accent-soft/50 px-5 py-4 dark:border-kal-accent/25 dark:bg-kal-accent/10">
             <p className="text-sm font-medium text-kal-accent-dark dark:text-kal-accent">
-              Upgrading to Annual will cancel your monthly plan and give you 12 months of access for ₹3,830 — no further monthly charges.
+              Upgrading to Annual will cancel your monthly plan and give you 12 months of access for ₹3,591 — no further monthly charges.
             </p>
           </div>
         );
@@ -578,7 +578,7 @@ export function PricingPageClient() {
     if (busy) {
       buttonLabel = "Opening checkout...";
     } else if (billingCycle === "annual") {
-      buttonLabel = "Upgrade to Annual — ₹3,830/year";
+      buttonLabel = "Upgrade to Annual — ₹3,591/year";
     } else {
       buttonLabel = "Upgrade to 6 Months — ₹2,154";
     }
@@ -586,7 +586,7 @@ export function PricingPageClient() {
     buttonLabel = "Current plan";
   } else if (isCancelledWithAccess) {
     if (billingCycle === "annual") {
-      buttonLabel = "Resubscribe — ₹3,830/year";
+      buttonLabel = "Resubscribe — ₹3,591/year";
     } else if (billingCycle === "six_month") {
       buttonLabel = "Resubscribe — ₹2,154/6 months";
     } else {
@@ -598,7 +598,7 @@ export function PricingPageClient() {
     buttonLabel = "Opening checkout...";
   } else {
     if (billingCycle === "annual") {
-      buttonLabel = "Subscribe — ₹3,830/year";
+      buttonLabel = "Subscribe — ₹3,591/year";
     } else if (billingCycle === "six_month") {
       buttonLabel = "Subscribe — ₹2,154/6 months";
     } else {
@@ -791,11 +791,11 @@ export function PricingPageClient() {
                   : "text-kal-text-secondary hover:text-kal-text"
               }`}
             >
-              Annual · ₹319/mo
+              Annual · ₹299/mo
               <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide leading-none ${
                 billingCycle === "annual" ? "bg-white/25 text-white" : "bg-kal-accent/15 text-kal-accent"
               }`}>
-                Save 20%
+                Save 25%
               </span>
             </button>
           </div>
@@ -846,8 +846,8 @@ export function PricingPageClient() {
               {billingCycle === "annual" ? (
                 <>
                   <p className="text-lg font-bold leading-snug text-kal-text">
-                    ₹3,830/year
-                    <span className="ml-2 text-xs font-semibold text-kal-accent">₹319/mo · Save 20%</span>
+                    ₹3,591/year
+                    <span className="ml-2 text-xs font-semibold text-kal-accent">₹299/mo · Save 25%</span>
                   </p>
                   <p className="mt-1 text-xs font-medium leading-snug text-kal-text-secondary">
                     One-time payment · 12 months access · no recurring charge.
