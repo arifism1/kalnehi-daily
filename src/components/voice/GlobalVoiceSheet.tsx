@@ -1,8 +1,8 @@
 "use client";
 
 import clsx from "clsx";
-import { Check, Loader2, Mic, MicOff, X } from "lucide-react";
-import { useCallback, useEffect, useRef } from "react";
+import { Loader2, Mic, MicOff, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import { insertDailyTask, updateDailyTask } from "@/actions/dailyPlan";
@@ -16,9 +16,60 @@ import type { DailyTaskView } from "@/actions/dailyPlan";
 import type { VoiceCommandIntent } from "@/lib/voiceCommandGroq";
 
 // Post-speech silence debounce before the STT engine finalizes and phase becomes "processing".
-const VOICE_COMMAND_END_SILENCE_MS = 2000;
+// 1500 ms gives users time to start speaking AND lets the browser finalize results reliably.
+// (Same silenceMs controls both the initial "no speech" timeout and the post-speech gap.)
+const VOICE_COMMAND_END_SILENCE_MS = 1500;
 
-// ─── Utilities ────────────────────────────────────────────────────────────────
+// Example commands shown to the user while idle, to teach discoverability.
+const COMMAND_HINTS = [
+  "Go to daily plan",
+  "Add task: review notes",
+  "Mark completed: morning study",
+  "Schedule revision for Physics",
+  "Go to progress",
+  "Ask prepbrain: explain Newton's laws",
+  "Go to notifications",
+  "Add task: evening exercise",
+  "Go to syllabus",
+];
+
+// ─── Audio utilities ───────────────────────────────────────────────────────────
+
+function playStartChime(): void {
+  try {
+    const AudioCtxClass =
+      window.AudioContext ??
+      (window as unknown as { webkitAudioContext?: typeof AudioContext })
+        .webkitAudioContext;
+    if (!AudioCtxClass) return;
+    const ctx = new AudioCtxClass();
+    const gain = ctx.createGain();
+    gain.connect(ctx.destination);
+
+    const notes: [number, number][] = [
+      [440, 0],
+      [660, 0.1],
+    ];
+    notes.forEach(([freq, start]) => {
+      const osc = ctx.createOscillator();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      osc.connect(gain);
+      gain.gain.setValueAtTime(0.07, ctx.currentTime + start);
+      gain.gain.exponentialRampToValueAtTime(
+        0.001,
+        ctx.currentTime + start + 0.09,
+      );
+      osc.start(ctx.currentTime + start);
+      osc.stop(ctx.currentTime + start + 0.1);
+    });
+    setTimeout(() => ctx.close(), 600);
+  } catch {
+    // AudioContext unavailable — skip silently
+  }
+}
+
+// ─── Utilities ─────────────────────────────────────────────────────────────────
 
 function localISODate(): string {
   const d = new Date();
@@ -52,23 +103,98 @@ function fuzzyMatchTask(tasks: DailyTaskView[], subject: string): DailyTaskView 
   );
 }
 
+function shuffleArray<T>(arr: T[]): T[] {
+  return [...arr].sort(() => Math.random() - 0.5);
+}
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+// ─── AudioWaveform ──────────────────────────────────────────────────────────────
+
+const WAVEFORM_BARS = [
+  { frac: 0.38, delay: 0 },
+  { frac: 0.72, delay: 0.12 },
+  { frac: 1.0,  delay: 0.24 },
+  { frac: 0.85, delay: 0.36 },
+  { frac: 0.6,  delay: 0.18 },
+  { frac: 0.9,  delay: 0.30 },
+  { frac: 0.44, delay: 0.06 },
+];
+
+function AudioWaveform({ isListening }: { isListening: boolean }) {
+  return (
+    <div className="flex items-center justify-center gap-[3.5px] h-8" aria-hidden>
+      {WAVEFORM_BARS.map(({ frac, delay }, i) => (
+        <span
+          key={i}
+          className={clsx(
+            "w-[3px] rounded-full bg-kal-accent",
+            isListening ? "kal-voice-bar" : "opacity-20 transition-all duration-300",
+          )}
+          style={
+            isListening
+              ? ({
+                  animationDelay: `${delay}s`,
+                  "--bar-max-h": `${Math.round(frac * 26)}px`,
+                } as React.CSSProperties)
+              : { height: "3px" }
+          }
+        />
+      ))}
+    </div>
+  );
+}
+
+// ─── CommandHints ───────────────────────────────────────────────────────────────
+
+function CommandHints({ visible }: { visible: boolean }) {
+  const [hints, setHints] = useState<string[]>(() =>
+    shuffleArray(COMMAND_HINTS).slice(0, 3),
+  );
+  const [generation, setGeneration] = useState(0);
+
+  useEffect(() => {
+    if (!visible) return;
+    const id = setInterval(() => {
+      setHints(shuffleArray(COMMAND_HINTS).slice(0, 3));
+      setGeneration((g) => g + 1);
+    }, 4000);
+    return () => clearInterval(id);
+  }, [visible]);
+
+  if (!visible) return null;
+
+  return (
+    <div key={generation} className="px-4 pb-4 kal-fade-in-fast">
+      <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-kal-text-secondary/50">
+        Try saying
+      </p>
+      <div className="flex flex-wrap gap-1.5">
+        {hints.map((h) => (
+          <span
+            key={h}
+            className="rounded-lg border border-kal-accent/15 bg-kal-accent/[0.06] px-2.5 py-[3px] text-xs font-medium text-kal-accent/75"
+          >
+            &ldquo;{h}&rdquo;
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Sub-components ────────────────────────────────────────────────────────────
 
 function QuotaGate({ voiceMinuteStatus }: { voiceMinuteStatus: string }) {
   const router = useRouter();
   const { close: closeSheet, reset } = useVoiceCommandStore();
 
   return (
-    <div className="flex flex-col gap-3 px-4 py-4">
-      <div className="flex items-center gap-3">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-950/40">
-          <MicOff className="h-5 w-5 text-amber-600 dark:text-amber-400" aria-hidden />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-kal-text">Voice time used up</p>
-          <p className="mt-0.5 truncate text-xs text-kal-text-secondary">{voiceMinuteStatus}</p>
-        </div>
+    <div className="flex flex-col items-center gap-4 px-4 py-6">
+      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-950/40">
+        <MicOff className="h-6 w-6 text-amber-600 dark:text-amber-400" aria-hidden />
+      </div>
+      <div className="text-center">
+        <p className="text-sm font-semibold text-kal-text">Voice time used up</p>
+        <p className="mt-0.5 text-xs text-kal-text-secondary">{voiceMinuteStatus}</p>
       </div>
       <button
         type="button"
@@ -98,12 +224,18 @@ function ListeningState({
   onStopListening: () => void;
   onStartListening: () => void;
 }) {
+  const showHints = !transcript;
+
   return (
-    <div className="flex items-start gap-3 px-4 py-4">
-      <div className="relative shrink-0 mt-0.5">
+    <div className="flex flex-col items-center gap-3 px-4 pt-5 pb-2">
+      {/* Waveform */}
+      <AudioWaveform isListening={isListening} />
+
+      {/* Mic button */}
+      <div className="relative">
         {isListening && (
           <span
-            className="absolute inset-0 rounded-full bg-kal-accent/25 animate-ping"
+            className="absolute inset-0 rounded-full bg-kal-accent/20 animate-ping"
             aria-hidden
           />
         )}
@@ -112,41 +244,49 @@ function ListeningState({
           onClick={isListening ? onStopListening : onStartListening}
           aria-label={isListening ? "Stop listening" : "Start listening"}
           className={clsx(
-            "relative flex h-12 w-12 items-center justify-center rounded-full shadow-md transition-all duration-200",
+            "relative flex h-14 w-14 items-center justify-center rounded-full transition-all duration-200",
             isListening
-              ? "bg-kal-accent text-white scale-105"
-              : "bg-kal-accent/85 text-white hover:bg-kal-accent hover:scale-[1.03]",
+              ? "bg-kal-accent text-white scale-105 shadow-[0_4px_20px_rgba(255,122,0,0.4)]"
+              : "bg-kal-accent/85 text-white shadow-md hover:bg-kal-accent hover:scale-[1.04] hover:shadow-[0_4px_16px_rgba(255,122,0,0.28)]",
           )}
         >
-          <Mic className="h-5 w-5" strokeWidth={2} aria-hidden />
+          <Mic className="h-6 w-6" strokeWidth={2} aria-hidden />
         </button>
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="line-clamp-4 text-sm font-medium text-kal-text">
+
+      {/* Status text */}
+      <div className="text-center pb-1">
+        <p className="text-sm font-medium text-kal-text leading-snug line-clamp-3">
           {transcript
             ? transcript
             : isListening
-              ? "Listening… say your command"
-              : "Tap the mic to speak"}
+              ? "Go ahead, I'm listening\u2026"
+              : "Tap the mic \u2014 I'm ready"}
         </p>
-        <p className="mt-0.5 text-xs text-kal-text-secondary/70">{voiceMinuteStatus}</p>
+        <p className="mt-1 text-[11px] text-kal-text-secondary/60">{voiceMinuteStatus}</p>
       </div>
+
+      {/* Command hint chips — shown when idle and no transcript yet */}
+      <CommandHints visible={showHints} />
     </div>
   );
 }
 
 function ProcessingState({ transcript }: { transcript: string | null }) {
   return (
-    <div className="flex items-center gap-3 px-4 py-4">
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-kal-accent/10">
-        <Loader2 className="h-5 w-5 animate-spin text-kal-accent" aria-hidden />
+    <div className="flex flex-col items-center gap-4 px-4 py-6">
+      <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-kal-accent/10">
+        <Loader2 className="h-6 w-6 animate-spin text-kal-accent" aria-hidden />
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-kal-text">Thinking…</p>
+      <div className="w-full text-center space-y-2">
+        <p className="text-sm font-semibold text-kal-text">On it\u2026</p>
         {transcript && (
-          <p className="mt-0.5 truncate text-xs italic text-kal-text-secondary">
-            "{transcript}"
-          </p>
+          <div className="relative overflow-hidden rounded-xl bg-kal-accent/[0.06] px-3 py-2">
+            <p className="relative z-10 text-xs italic text-kal-text-secondary line-clamp-2">
+              &ldquo;{transcript}&rdquo;
+            </p>
+            <span className="kal-shimmer-sweep pointer-events-none absolute inset-0" aria-hidden />
+          </div>
         )}
       </div>
     </div>
@@ -155,15 +295,23 @@ function ProcessingState({ transcript }: { transcript: string | null }) {
 
 function DoneState({ responseText }: { responseText: string | null }) {
   return (
-    <div className="flex items-start gap-3 px-4 py-4">
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-950/40">
-        <Check className="h-5 w-5 text-emerald-600 dark:text-emerald-400" strokeWidth={2.5} aria-hidden />
+    <div className="flex flex-col items-center gap-3 px-4 py-6">
+      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-950/40">
+        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden>
+          <path
+            d="M4.5 12.5 L9.5 17.5 L19.5 7.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="text-emerald-600 dark:text-emerald-400 kal-check-draw"
+          />
+        </svg>
       </div>
-      <div className="min-w-0 flex-1 pt-0.5">
-        <p className="text-sm font-medium leading-snug text-kal-text">
-          {responseText ?? "Done!"}
-        </p>
-      </div>
+      <p className="text-center text-sm font-medium leading-snug text-kal-text">
+        {responseText ?? "Done!"}
+      </p>
     </div>
   );
 }
@@ -183,15 +331,13 @@ function ErrorState({
     (error ?? "").toLowerCase().includes("quota");
 
   return (
-    <div className="flex flex-col gap-3 px-4 py-4">
-      <div className="flex items-start gap-3">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-950/40">
-          <MicOff className="h-5 w-5 text-red-500 dark:text-red-400" aria-hidden />
-        </div>
-        <p className="flex-1 pt-1 text-sm leading-snug text-kal-text">
-          {error ?? "Something went wrong."}
-        </p>
+    <div className="flex flex-col items-center gap-4 px-4 py-6">
+      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-100 dark:bg-red-950/40">
+        <MicOff className="h-6 w-6 text-red-500 dark:text-red-400" aria-hidden />
       </div>
+      <p className="text-center text-sm leading-snug text-kal-text">
+        {error ?? "Something went wrong."}
+      </p>
       {isQuotaError ? (
         <button
           type="button"
@@ -217,7 +363,7 @@ function ErrorState({
   );
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
+// ─── Main component ────────────────────────────────────────────────────────────
 
 export function GlobalVoiceSheet() {
   const pathname = usePathname();
@@ -227,9 +373,11 @@ export function GlobalVoiceSheet() {
 
   const autoStartedRef = useRef(false);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Keep a stable ref to the latest execute function to avoid stale closures in STT callback
   const executeRef = useRef<((intent: VoiceCommandIntent, text: string) => Promise<void>) | null>(null);
+
+  // Animation state: `mounted` controls DOM presence, `animatingOut` selects CSS class.
+  const [mounted, setMounted] = useState(false);
+  const [animatingOut, setAnimatingOut] = useState(false);
 
   const {
     isOpen,
@@ -247,11 +395,23 @@ export function GlobalVoiceSheet() {
     reset,
   } = useVoiceCommandStore();
 
-  // ─── Dismiss sheet the moment a voice-driven navigation lands ────────────────
-  // pathname changes as soon as Next.js transitions to the new route, so the
-  // sheet disappears before the destination page renders — no overlay needed.
-  // Only fires while the sheet is active (processing/done) to avoid closing
-  // during an unrelated in-app navigation that happens while the sheet is idle.
+  // Drive modal mount / unmount with enter + exit animations.
+  useEffect(() => {
+    if (isOpen) {
+      setMounted(true);
+      setAnimatingOut(false);
+    } else if (mounted) {
+      setAnimatingOut(true);
+      const t = setTimeout(() => {
+        setMounted(false);
+        setAnimatingOut(false);
+      }, 150);
+      return () => clearTimeout(t);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  // Dismiss sheet the moment a voice-driven navigation lands.
   const prevPathnameRef = useRef(pathname);
   useEffect(() => {
     if (prevPathnameRef.current !== pathname) {
@@ -267,7 +427,7 @@ export function GlobalVoiceSheet() {
     }
   }, [pathname, isOpen, phase, closeSheet, reset]);
 
-  // ─── Execute an intent returned from the API ───────────────────────────────
+  // ─── Execute an intent returned from the API ─────────────────────────────────
 
   const execute = async (intent: VoiceCommandIntent, respText: string): Promise<void> => {
     setResponseText(respText);
@@ -351,18 +511,17 @@ export function GlobalVoiceSheet() {
       }
 
       case "unknown": {
-        // Auto-restart listening after showing the "didn't understand" message briefly
+        // Auto-restart listening after briefly showing the "didn't understand" message.
         closeTimerRef.current = setTimeout(() => {
-          reset();                        // sets phase → "idle"
-          autoStartedRef.current = false; // lets the auto-start effect fire again
+          reset();
+          autoStartedRef.current = false;
         }, 1500);
         setPhase("done");
         return;
       }
     }
 
-    // Non-navigation success (e.g. add_task, mark_completed in-place): show Done briefly then auto-close.
-    // Navigation intents are handled by the pathname effect above.
+    // Non-navigation success: show Done briefly then auto-close.
     setPhase("done");
     closeTimerRef.current = setTimeout(() => {
       closeSheet();
@@ -370,10 +529,9 @@ export function GlobalVoiceSheet() {
     }, 3000);
   };
 
-  // Always keep the ref up-to-date
   executeRef.current = execute;
 
-  // ─── Handle STT transcript ─────────────────────────────────────────────────
+  // ─── Handle STT transcript ───────────────────────────────────────────────────
 
   const handleTranscript = useCallback(
     async ({
@@ -406,9 +564,7 @@ export function GlobalVoiceSheet() {
         };
 
         if (!data.ok) {
-          const isQuota =
-            data.error === "quota_exceeded" ||
-            (res.status === 429);
+          const isQuota = data.error === "quota_exceeded" || res.status === 429;
           const msg = isQuota
             ? "You've used your voice time for this month. Get more from My Subscription."
             : (data.error ?? "Something went wrong. Please try again.");
@@ -429,7 +585,6 @@ export function GlobalVoiceSheet() {
         setPhase("error");
       }
     },
-    // pathname is the only external dep; setters are stable Zustand refs
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [pathname],
   );
@@ -452,14 +607,14 @@ export function GlobalVoiceSheet() {
     onTranscript: handleTranscript,
   });
 
-  // Auto-start listening when sheet opens
+  // Auto-start listening when sheet opens, with chime.
   useEffect(() => {
     if (!isOpen) {
       autoStartedRef.current = false;
       return;
     }
     if (phase !== "idle" || autoStartedRef.current || aiGate.loading) return;
-    if (!aiGate.canDoVoiceSession) return; // quota gate will display
+    if (!aiGate.canDoVoiceSession) return;
     if (!isSupported) {
       setError(
         "Voice commands are not supported in this browser. Try Chrome or the Kalnehi app.",
@@ -468,10 +623,18 @@ export function GlobalVoiceSheet() {
       return;
     }
     autoStartedRef.current = true;
+    playStartChime();
     startListening();
   }, [isOpen, phase, aiGate.loading, aiGate.canDoVoiceSession, isSupported, startListening, setError, setPhase]);
 
-  // Surface STT errors into store
+  // Stop listening whenever the sheet closes (regardless of how it was closed).
+  useEffect(() => {
+    if (!isOpen) {
+      stopListening();
+    }
+  }, [isOpen, stopListening]);
+
+  // Surface STT errors into store.
   useEffect(() => {
     if (sttError && (phase === "idle" || phase === "listening")) {
       setError(sttError);
@@ -480,7 +643,7 @@ export function GlobalVoiceSheet() {
     }
   }, [sttError, phase, setError, setPhase, clearSttError]);
 
-  // Cleanup on unmount
+  // Cleanup on unmount.
   useEffect(() => {
     return () => {
       if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
@@ -498,10 +661,13 @@ export function GlobalVoiceSheet() {
     clearSttError();
     reset();
     autoStartedRef.current = false;
+    playStartChime();
     startListening();
   }
 
-  // ─── Render ────────────────────────────────────────────────────────────────
+  const isListeningPhase = phase === "idle" || phase === "listening";
+
+  // ─── Render ──────────────────────────────────────────────────────────────────
 
   return (
     <>
@@ -521,30 +687,44 @@ export function GlobalVoiceSheet() {
         }
       />
 
-      {/* Voice modal — only when open */}
-      {isOpen && (
+      {/* Voice modal — rendered while mounted (includes exit animation window) */}
+      {mounted && (
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 z-[51] bg-black/35 backdrop-blur-[2px]"
+            className="kal-fade-in-fast fixed inset-0 z-[51] bg-black/35 backdrop-blur-[2px]"
+            style={
+              animatingOut
+                ? { opacity: 0, transition: "opacity 0.15s ease" }
+                : undefined
+            }
             onClick={handleClose}
             aria-hidden
           />
 
-          {/* Centered modal wrapper — pointer-events-none so clicks on backdrop pass through */}
-          <div className="fixed inset-0 z-[52] flex items-center justify-center p-4 pointer-events-none">
+          {/* Centered modal wrapper */}
+          <div className="pointer-events-none fixed inset-0 z-[52] flex items-center justify-center p-4">
             {/* Card */}
             <div
               role="dialog"
               aria-label="Voice command"
               aria-modal="true"
-              className="w-full max-w-sm rounded-2xl kal-glass-panel shadow-2xl pointer-events-auto"
+              className={clsx(
+                "pointer-events-auto w-full rounded-2xl kal-glass-panel shadow-2xl transition-[max-width] duration-300",
+                isListeningPhase ? "max-w-md" : "max-w-sm",
+                animatingOut ? "kal-voice-modal-out" : "kal-voice-modal-in",
+              )}
             >
               {/* Header */}
-              <div className="flex items-center justify-between border-b border-kal-border/30 px-4 pb-2 pt-3">
-                <p className="text-xs font-semibold uppercase tracking-wider text-kal-text-secondary">
-                  Voice Command
-                </p>
+              <div className="flex items-center justify-between border-b border-kal-border/30 px-4 pb-2.5 pt-3">
+                <div className="flex items-center gap-2">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-kal-text-secondary">
+                    Voice
+                  </p>
+                  <span className="rounded-md border border-kal-accent/15 bg-kal-accent/[0.06] px-1.5 py-[2px] text-[10px] font-medium text-kal-accent/60">
+                    ⌘.
+                  </span>
+                </div>
                 <button
                   type="button"
                   onClick={handleClose}
@@ -555,10 +735,10 @@ export function GlobalVoiceSheet() {
                 </button>
               </div>
 
-              {/* Content — each state renders its own padding/layout */}
+              {/* Content — each state renders its own layout */}
               {!aiGate.loading && !aiGate.canDoVoiceSession ? (
                 <QuotaGate voiceMinuteStatus={aiGate.voiceMinuteStatus} />
-              ) : phase === "idle" || phase === "listening" ? (
+              ) : isListeningPhase ? (
                 <ListeningState
                   isListening={isListening}
                   transcript={transcript}
@@ -567,6 +747,7 @@ export function GlobalVoiceSheet() {
                   onStartListening={() => {
                     reset();
                     autoStartedRef.current = true;
+                    playStartChime();
                     startListening();
                   }}
                 />

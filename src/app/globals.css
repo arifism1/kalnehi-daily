@@ -735,3 +735,80 @@ body {
     animation: none;
   }
 }
+
+/* ── Voice navigation animations ──────────────────────────────────────── */
+
+@keyframes kalVoiceBar {
+  from { height: 3px; opacity: 0.6; }
+  to   { height: var(--bar-max-h, 20px); opacity: 1; }
+}
+
+@keyframes kalCheckDraw {
+  from { stroke-dashoffset: 30; opacity: 0; }
+  to   { stroke-dashoffset: 0;  opacity: 1; }
+}
+
+@keyframes kalShimmerSweep {
+  0%   { transform: translateX(-120%); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translateX(220%);  opacity: 0; }
+}
+
+@keyframes kalVoiceModalIn {
+  from { opacity: 0; transform: scale(0.93) translateY(10px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);    }
+}
+
+@keyframes kalVoiceModalOut {
+  from { opacity: 1; transform: scale(1)    translateY(0);    }
+  to   { opacity: 0; transform: scale(0.93) translateY(10px); }
+}
+
+@keyframes kalFadeInFast {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.kal-voice-bar {
+  animation: kalVoiceBar 0.55s ease-in-out infinite alternate;
+}
+
+.kal-check-draw {
+  stroke-dasharray: 30;
+  stroke-dashoffset: 0;
+  animation: kalCheckDraw 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.kal-shimmer-sweep {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 122, 0, 0.13),
+    transparent
+  );
+  animation: kalShimmerSweep 1.8s ease-in-out infinite;
+}
+
+.kal-voice-modal-in {
+  animation: kalVoiceModalIn 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.kal-voice-modal-out {
+  animation: kalVoiceModalOut 0.15s ease-in both;
+}
+
+.kal-fade-in-fast {
+  animation: kalFadeInFast 0.25s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kal-voice-bar,
+  .kal-check-draw,
+  .kal-shimmer-sweep,
+  .kal-voice-modal-in,
+  .kal-voice-modal-out,
+  .kal-fade-in-fast {
+    animation: none;
+  }
+}

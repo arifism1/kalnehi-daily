@@ -25,7 +25,13 @@ export async function POST(req: Request) {
     );
   }
 
-  const supabase = await createSupabaseServerClient();
+  const voiceSecondsCharged = clampVoiceBillingDurationSeconds(o.durationSeconds);
+
+  // Run auth and Groq in parallel — neither depends on the other at this point.
+  const [supabase, result] = await Promise.all([
+    createSupabaseServerClient(),
+    runVoiceCommand(transcript, pageContext),
+  ]);
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -33,10 +39,6 @@ export async function POST(req: Request) {
   if (!user) {
     return NextResponse.json({ ok: false, error: "Please sign in." }, { status: 401 });
   }
-
-  const voiceSecondsCharged = clampVoiceBillingDurationSeconds(o.durationSeconds);
-
-  const result = await runVoiceCommand(transcript, pageContext);
 
   // Log voice AI token usage (best-effort, non-blocking)
   if (result.ok && (result.inputTokens > 0 || result.outputTokens > 0)) {
