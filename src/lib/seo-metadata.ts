@@ -42,10 +42,7 @@ export type KalnehiPageSeoKey =
   | "waitlist-position"
   | "daily-log"
   | "mock-tests"
-  | "mistake-log"
-  | "morning"
-  | "debrief"
-  | "eve";
+  | "mistake-log";
 
 const PAGE_SEO: Record<
   KalnehiPageSeoKey,
@@ -182,24 +179,6 @@ const PAGE_SEO: Record<
     title: `Mistake Log — error pattern tracker | ${SITE_NAME}`,
     description:
       `Log every mistake with 4-type taxonomy: Knowledge Gap, Application Error, Careless, Time Pressure. ${SITE_NAME} reveals your real bottleneck across any exam.`,
-  },
-  morning: {
-    path: "/morning",
-    title: `War Room (morning ritual) | ${SITE_NAME}`,
-    description:
-      `Start the day with your battle plan: three key moves and countdown to your exam — built for JEE, NEET, and Boards.`,
-  },
-  debrief: {
-    path: "/debrief",
-    title: `Night Debrief — calm recap | ${SITE_NAME}`,
-    description:
-      `End-of-day ritual: soft UI, honest stats, and reflection prompts before you reset for tomorrow.`,
-  },
-  eve: {
-    path: "/eve",
-    title: `Exam Eve — the night before | ${SITE_NAME}`,
-    description:
-      `A sacred screen the night before your exam: your discipline, your XP, and the mission you already built.`,
   },
 };
 

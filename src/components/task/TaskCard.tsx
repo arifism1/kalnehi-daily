@@ -22,9 +22,6 @@ import {
   applyOptimisticTaskUpdate,
   undoRestoreTaskUpdate,
 } from "@/lib/taskMutations";
-import { recordXpEvent } from "@/actions/xp";
-import { PulsingTimer } from "@/components/ui/PulsingTimer";
-import { AnimatedCheckmark } from "@/components/ui/AnimatedCheckmark";
 import {
   formatElapsedSeconds,
   formatTaskTimeRange,
@@ -322,10 +319,6 @@ export function TaskCard({
         userId,
       );
       if (res.ok) {
-        void recordXpEvent(
-          "task_complete",
-          `task-${task.id}-${task.assigned_date ?? ""}`,
-        );
         useUndoStore.getState().offerUndo({
           message: "Task completed",
           runUndo: async () => {
@@ -537,11 +530,8 @@ export function TaskCard({
                     <Loader2 className="h-3 w-3 shrink-0 animate-spin text-kal-accent sm:h-3.5 sm:w-3.5" />
                   )}
                   {done && (
-                    <span className="inline-flex shrink-0 items-center gap-0.5 rounded border border-kal-accent/35 bg-kal-accent/10 px-1 py-px text-[7px] font-bold uppercase tracking-[0.1em] text-kal-accent/95 sm:px-1.5 sm:text-[8px] sm:tracking-[0.12em]">
+                    <span className="shrink-0 rounded border border-kal-accent/35 bg-kal-accent/10 px-1 py-px text-[7px] font-bold uppercase tracking-[0.1em] text-kal-accent/95 sm:px-1.5 sm:text-[8px] sm:tracking-[0.12em]">
                       Conquered
-                      {justCompleted && (
-                        <AnimatedCheckmark className="text-kal-accent" size={12} show />
-                      )}
                     </span>
                   )}
                   {appearance === "missed" && !done && (
@@ -587,11 +577,9 @@ export function TaskCard({
                           className="flex h-9 min-w-9 min-h-[44px] items-center justify-center gap-0.5 rounded-lg bg-kal-accent px-1.5 text-kal-accent-foreground shadow-sm shadow-kal-accent/25 transition-colors hover:bg-kal-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/50 disabled:opacity-40 sm:h-8 sm:min-h-0 sm:min-w-8"
                         >
                           <Pause className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" aria-hidden />
-                          <PulsingTimer active>
-                            <span className="max-w-[2.75rem] truncate text-[8px] font-bold tabular-nums leading-none sm:text-[9px] md:text-[10px]">
-                              {elapsedDisplay}
-                            </span>
-                          </PulsingTimer>
+                          <span className="max-w-[2.75rem] truncate text-[8px] font-bold tabular-nums leading-none sm:text-[9px] md:text-[10px]">
+                            {elapsedDisplay}
+                          </span>
                         </button>
                         <button
                           type="button"
@@ -614,11 +602,9 @@ export function TaskCard({
                           className="flex h-9 min-w-9 min-h-[44px] items-center justify-center gap-0.5 rounded-lg bg-amber-600 px-1.5 text-amber-950 shadow-sm shadow-amber-950/25 transition-colors hover:bg-amber-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/45 disabled:opacity-40 sm:h-8 sm:min-h-0 sm:min-w-8"
                         >
                           <Play className="h-3 w-3 shrink-0 fill-current sm:h-3.5 sm:w-3.5" aria-hidden />
-                          <PulsingTimer active={false}>
-                            <span className="max-w-[2.75rem] truncate text-[8px] font-bold tabular-nums leading-none sm:text-[9px] md:text-[10px]">
-                              {elapsedDisplay}
-                            </span>
-                          </PulsingTimer>
+                          <span className="max-w-[2.75rem] truncate text-[8px] font-bold tabular-nums leading-none sm:text-[9px] md:text-[10px]">
+                            {elapsedDisplay}
+                          </span>
                         </button>
                         <button
                           type="button"

@@ -5,7 +5,6 @@ import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requirePaidOrTrialAccess } from "@/lib/subscriptionGuard";
 import type { Tables, TablesInsert } from "@/types/supabase";
-import { recordXpEvent } from "@/actions/xp";
 
 export type MockTestRow = Tables<"mock_tests">;
 export type MockTestSubjectScoreRow = Tables<"mock_test_subject_scores">;
@@ -104,12 +103,6 @@ export async function upsertMockTest(
 
     revalidatePath("/mock-tests");
     revalidatePath("/progress");
-    if (!input.id) {
-      const xpRes = await recordXpEvent("mock_logged", testId, ["/home", "/mock-tests"]);
-      if (!xpRes.ok) {
-        console.warn("[upsertMockTest] XP award skipped", xpRes.error);
-      }
-    }
     return { ok: true, id: testId };
   } catch (err) {
     return { ok: false, error: String(err) };

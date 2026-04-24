@@ -6,7 +6,6 @@ import { CalendarDays } from "lucide-react";
 import { useId, useMemo } from "react";
 
 import { CircularProgressRing } from "@/components/ui/CircularProgressRing";
-import { StreakFlame } from "@/components/ui/StreakFlame";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useDailyPlanExecutionForRange } from "@/hooks/useDailyPlanExecutionForRange";
 import { classifyDailyProgressBand } from "@/lib/progressEngine";
@@ -72,7 +71,7 @@ export function DailyExecutionPanel() {
   const insights: string[] = [];
   if (streak >= 2) {
     insights.push(
-      `Execution streak: ${streak} days — you passed the “quit by day 3” zone.`,
+      `You're on a ${streak}-day execution streak 🔥`,
     );
   }
   if (
@@ -106,9 +105,8 @@ export function DailyExecutionPanel() {
         <p className="text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-kal-accent sm:text-[0.7rem]">
           Daily execution
         </p>
-        <h2 className="kal-section-heading mt-1 flex flex-wrap items-center gap-2">
+        <h2 className="kal-section-heading mt-1">
           Today&apos;s momentum
-          {streak > 0 ? <StreakFlame streak={streak} className="text-sm" /> : null}
         </h2>
         <p className="mt-1.5 text-sm leading-relaxed text-kal-text-secondary">
           Planned work vs what you&apos;ve finished — weighted by task marks so

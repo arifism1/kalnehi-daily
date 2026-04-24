@@ -8,8 +8,6 @@ import { useTargetExamDate } from "@/hooks/useTargetExamDate";
 export type HomeHeroCardProps = {
   firstName: string;
   greetingLead: string;
-  /** When true, the top greeting block is hidden (e.g. replaced by War Room / DynamicGreeting). */
-  omitGreeting?: boolean;
   /** Syllabus coverage % (0–100), null when unavailable */
   syllabusMasteryPercent: number | null;
   /** Projected/mastered marks numerator */
@@ -48,7 +46,6 @@ function StatCell({
 export function HomeHeroCard({
   firstName,
   greetingLead,
-  omitGreeting = false,
   syllabusMasteryPercent,
   marksMastered,
   marksTotal,
@@ -107,25 +104,21 @@ export function HomeHeroCard({
       <div className="relative">
         {/* Greeting */}
         <div className="mb-3">
-          {!omitGreeting && (
-            <>
-              <p className="kal-home-hero-line">
-                {greetingLead}, {firstName}
-              </p>
-              {(examDisplayName ?? daysToExam != null) && (
-                <p className="mt-0.5 text-[11px] text-kal-text-secondary">
-                  {examDisplayName ?? "NEET UG"}
-                  {daysToExam != null && (
-                    <>
-                      {" · "}
-                      <span className="font-medium text-[#BA7517] dark:text-kal-accent-dark">
-                        {daysToExam} day{daysToExam === 1 ? "" : "s"} to exam
-                      </span>
-                    </>
-                  )}
-                </p>
+          <p className="kal-home-hero-line">
+            {greetingLead}, {firstName}
+          </p>
+          {(examDisplayName ?? daysToExam != null) && (
+            <p className="mt-0.5 text-[11px] text-kal-text-secondary">
+              {examDisplayName ?? "NEET UG"}
+              {daysToExam != null && (
+                <>
+                  {" · "}
+                  <span className="font-medium text-[#BA7517] dark:text-kal-accent-dark">
+                    {daysToExam} day{daysToExam === 1 ? "" : "s"} to exam
+                  </span>
+                </>
               )}
-            </>
+            </p>
           )}
         </div>
 

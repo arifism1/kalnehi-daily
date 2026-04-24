@@ -37,7 +37,6 @@ import {
 import { getUserPlannerTextBundleCached } from "@/lib/userPlannerTextLocal";
 import type { RevisionQueueEntry } from "@/lib/userPlannerTextTypes";
 import { useAuthStore } from "@/store/useAuthStore";
-import { recordXpEvent } from "@/actions/xp";
 
 const PRIORITY_LABEL: Record<RevisionDifficulty, string> = {
   easy: "Easy",
@@ -229,7 +228,6 @@ export function RevisionRemindersPageClient() {
                     today,
                   );
                   setItems(b.revisionItems);
-                  void recordXpEvent("revision_done", it.id, ["/home"]);
                 })();
               }}
             >
