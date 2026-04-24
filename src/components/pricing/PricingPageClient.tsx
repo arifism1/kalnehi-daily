@@ -750,32 +750,34 @@ export function PricingPageClient() {
             2 million tokens and 100 minutes of voice per month, with AutoPay for the duration you choose.
           </p>
 
-          {/* Billing cycle toggle */}
-          <div className="mx-auto mt-5 inline-flex rounded-full border border-kal-border bg-kal-card-muted p-1 gap-1">
+          {/* Billing cycle toggle — 3-column card grid, mobile-first */}
+          <div className="mx-auto mt-5 grid w-full max-w-lg grid-cols-3 gap-1.5 rounded-2xl border border-kal-border bg-kal-card-muted p-1.5">
             <button
               type="button"
               aria-pressed={billingCycle === "monthly"}
               onClick={() => setBillingCycle("monthly")}
-              className={`rounded-full px-4 py-2 text-xs font-bold transition-all ${
+              className={`flex flex-col items-center justify-center rounded-xl px-2 py-2.5 text-center transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kal-accent ${
                 billingCycle === "monthly"
                   ? "bg-kal-card text-kal-text shadow-sm"
                   : "text-kal-text-secondary hover:text-kal-text"
               }`}
             >
-              Monthly · ₹399/mo
+              <span className="text-[11px] font-bold leading-tight">Monthly</span>
+              <span className="mt-0.5 text-[11px] font-semibold tabular-nums">₹399/mo</span>
             </button>
             <button
               type="button"
               aria-pressed={billingCycle === "six_month"}
               onClick={() => setBillingCycle("six_month")}
-              className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition-all ${
+              className={`flex flex-col items-center justify-center rounded-xl px-2 py-2.5 text-center transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kal-accent ${
                 billingCycle === "six_month"
                   ? "bg-kal-accent text-white shadow-sm"
                   : "text-kal-text-secondary hover:text-kal-text"
               }`}
             >
-              6 Months · ₹359/mo
-              <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide leading-none ${
+              <span className="text-[11px] font-bold leading-tight">6 Months</span>
+              <span className="mt-0.5 text-[11px] font-semibold tabular-nums">₹359/mo</span>
+              <span className={`mt-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide leading-none ${
                 billingCycle === "six_month" ? "bg-white/25 text-white" : "bg-kal-accent/15 text-kal-accent"
               }`}>
                 Save 10%
@@ -785,14 +787,15 @@ export function PricingPageClient() {
               type="button"
               aria-pressed={billingCycle === "annual"}
               onClick={() => setBillingCycle("annual")}
-              className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition-all ${
+              className={`flex flex-col items-center justify-center rounded-xl px-2 py-2.5 text-center transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kal-accent ${
                 billingCycle === "annual"
                   ? "bg-kal-accent text-white shadow-sm"
                   : "text-kal-text-secondary hover:text-kal-text"
               }`}
             >
-              Annual · ₹299/mo
-              <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide leading-none ${
+              <span className="text-[11px] font-bold leading-tight">Annual</span>
+              <span className="mt-0.5 text-[11px] font-semibold tabular-nums">₹299/mo</span>
+              <span className={`mt-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide leading-none ${
                 billingCycle === "annual" ? "bg-white/25 text-white" : "bg-kal-accent/15 text-kal-accent"
               }`}>
                 Save 25%

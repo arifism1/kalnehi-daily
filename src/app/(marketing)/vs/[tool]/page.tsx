@@ -37,7 +37,7 @@ export default async function ComparisonPage({ params }: Props) {
       <MarketingPageJsonLd
         breadcrumbs={[
           { name: "Home", path: "/" },
-          { name: "Comparisons", path: "/vs/notion" },
+          { name: "Comparisons", path: "/vs" },
           { name: `vs ${data.competitorName}`, path: `/vs/${tool}` },
         ]}
         faqs={data.faqs.map((f) => ({ question: f.q, answer: f.a }))}
@@ -45,7 +45,7 @@ export default async function ComparisonPage({ params }: Props) {
 
       <Breadcrumbs items={[
           { name: "Home", path: "/" },
-          { name: "Comparisons", path: "/vs/notion" },
+          { name: "Comparisons", path: "/vs" },
           { name: `vs ${data.competitorName}`, path: `/vs/${tool}` },
         ]} className="mb-2" />
 
