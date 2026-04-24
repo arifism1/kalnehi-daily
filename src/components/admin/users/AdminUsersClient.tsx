@@ -19,7 +19,7 @@ export function AdminUsersClient({ initial, initialQ }: { initial: UserLookupBun
 
   async function act(
     userId: string,
-    action: "extend_trial" | "reset_ai_tokens" | "add_note" | "log_refund",
+    action: "extend_trial" | "reset_ai_tokens" | "add_note" | "log_refund" | "delete_user",
     extra?: Record<string, unknown>,
   ) {
     setBusy(`${userId}:${action}`);
@@ -31,6 +31,7 @@ export function AdminUsersClient({ initial, initialQ }: { initial: UserLookupBun
       });
       const j = (await res.json()) as { ok?: boolean; error?: string };
       if (!j.ok) alert(j.error ?? "Failed");
+      else if (action === "delete_user") router.push("/admin/users");
       else router.refresh();
     } finally {
       setBusy(null);
@@ -74,10 +75,12 @@ function UserCard({
 }: {
   u: UserLookupBundle;
   busy: string | null;
-  onAct: (userId: string, action: "extend_trial" | "reset_ai_tokens" | "add_note" | "log_refund", extra?: Record<string, unknown>) => void;
+  onAct: (userId: string, action: "extend_trial" | "reset_ai_tokens" | "add_note" | "log_refund" | "delete_user", extra?: Record<string, unknown>) => void;
 }) {
   const [note, setNote] = useState("");
   const [refund, setRefund] = useState("");
+  const [deleteStage, setDeleteStage] = useState<"idle" | "confirm">("idle");
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
   return (
     <div className="rounded-2xl border border-kal-border bg-kal-card/40 p-5 space-y-3">
@@ -185,6 +188,57 @@ function UserCard({
           ))}
         </div>
       )}
+
+      <div className="border-t border-red-500/20 pt-3 space-y-3">
+        {deleteStage === "idle" && (
+          <button
+            type="button"
+            disabled={busy !== null}
+            onClick={() => setDeleteStage("confirm")}
+            className="rounded-md border border-red-500/50 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50/10 disabled:opacity-50"
+          >
+            Delete account
+          </button>
+        )}
+
+        {deleteStage === "confirm" && (
+          <div className="rounded-lg border border-red-500/40 bg-red-500/5 p-3 space-y-3">
+            <p className="text-xs font-semibold text-red-600">This will permanently delete all data for this account and cannot be undone.</p>
+            <p className="text-xs text-kal-muted">
+              Type <span className="font-mono font-bold text-kal-text">{u.email ?? u.userId}</span> to confirm.
+            </p>
+            <input
+              type="text"
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              placeholder={u.email ?? u.userId}
+              className="w-full rounded border border-red-500/40 bg-kal-card/50 px-2 py-1 text-xs font-mono"
+            />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                disabled={busy !== null || deleteConfirmText !== (u.email ?? u.userId)}
+                onClick={() => {
+                  onAct(u.userId, "delete_user", { targetEmail: u.email ?? "" });
+                  setDeleteStage("idle");
+                  setDeleteConfirmText("");
+                }}
+                className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40"
+              >
+                {busy === `${u.userId}:delete_user` ? "Deleting…" : "Yes, delete permanently"}
+              </button>
+              <button
+                type="button"
+                disabled={busy !== null}
+                onClick={() => { setDeleteStage("idle"); setDeleteConfirmText(""); }}
+                className="rounded-md border border-kal-border px-3 py-1.5 text-xs text-kal-muted"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -15,6 +15,7 @@ type Body = {
   extendTrialDays?: number;
   note?: string;
   refundInr?: number;
+  targetEmail?: string;
 };
 
 export async function POST(req: NextRequest) {
@@ -45,6 +46,7 @@ export async function POST(req: NextRequest) {
 
   const action = (body.action ?? "").trim();
   const userId = (body.userId ?? "").trim();
+  const targetEmail = (body.targetEmail ?? "").trim().toLowerCase();
   if (!userId || !action) {
     return NextResponse.json({ ok: false, error: "userId and action required." }, { status: 400 });
   }
@@ -106,6 +108,38 @@ export async function POST(req: NextRequest) {
         created_by: user.id,
       });
       if (error) throw error;
+      return NextResponse.json({ ok: true });
+    }
+
+    if (action === "delete_user") {
+      // Block deletion of any admin account (check by user_id and by email)
+      let adminBlocked = false;
+      const { data: byId } = await admin
+        .from("admin_users")
+        .select("user_id")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (byId) adminBlocked = true;
+
+      if (!adminBlocked && targetEmail) {
+        const { data: byEmail } = await admin
+          .from("admin_users")
+          .select("user_id")
+          .eq("email", targetEmail)
+          .maybeSingle();
+        if (byEmail) adminBlocked = true;
+      }
+
+      if (adminBlocked) {
+        return NextResponse.json({ ok: false, error: "Cannot delete an admin account." }, { status: 403 });
+      }
+
+      // Manual cleanup for tables without FK cascade
+      await admin.from("waitlist_entries").delete().eq("user_id", userId);
+
+      // Delete the auth user — cascades all FK-linked tables
+      const { error: delErr } = await admin.auth.admin.deleteUser(userId, false);
+      if (delErr) throw delErr;
       return NextResponse.json({ ok: true });
     }
 
