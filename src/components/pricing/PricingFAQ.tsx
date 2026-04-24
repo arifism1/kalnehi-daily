@@ -6,7 +6,7 @@ import { ChevronDown } from "lucide-react";
 const FAQS = [
   {
     q: "What is included in the 3-day free trial?",
-    a: "Everything. Your free trial unlocks the full Kalnehi Daily system — Daily planner, Syllabus tracker, Focus timer, Study camera, Streak heatmap, Doubt tracker, Marks engine, Rank prediction, Revision reminders, Daily log, and PrepBrain AI coach. You also get 60,000 PrepBrain AI tokens and 12 minutes of voice control for those 3 days.",
+    a: "Everything. Your free trial unlocks the full Kalnehi Daily system — Daily planner, Syllabus tracker, Focus timer, Study camera, Streak heatmap, Doubt tracker, Marks engine, Rank prediction, Revision reminders, Daily log, and PrepBrain AI coach. You also get 60,000 PrepBrain AI tokens and 5 minutes of voice control for those 3 days.",
   },
   {
     q: "What happens after the 3-day free trial ends?",
@@ -26,7 +26,7 @@ const FAQS = [
   },
   {
     q: "What can I do with voice control?",
-    a: "Speak to plan your day, log doubts, set reminders, and navigate the app — completely hands-free. Your 3-day free trial includes 12 minutes of voice time. Smart Plan gives you 100 minutes of voice every month, resetting each billing cycle.",
+    a: "Speak to plan your day, log doubts, set reminders, and navigate the app — completely hands-free. Your 3-day free trial includes 5 minutes of voice time. Smart Plan gives you 100 minutes of voice every month, resetting each billing cycle.",
   },
   {
     q: "Is there a discount for longer autopay?",

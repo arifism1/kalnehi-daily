@@ -76,7 +76,7 @@ export type SubscriptionData = {
   welcomeTrialEligibleUnstarted: boolean;
   freeTrialEndsAtIso: string | null;
   freeTrialPhotoRemaining: number;
-  /** Seconds of voice remaining in the 3-day free trial (0–720). */
+  /** Seconds of voice remaining in the 3-day free trial (0–300). */
   freeTrialVoiceSecondsRemaining: number;
   /** Welcome trial clock ended, still no paid plan. */
   welcomeTrialExpiredNoPay: boolean;

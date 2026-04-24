@@ -1,8 +1,8 @@
 /** 3-day free trial from trial_started_at: full access to all features. */
 export const FREE_TRIAL_MS = 3 * 24 * 60 * 60 * 1000;
-/** 12 minutes of voice during the 3-day free trial, stored as seconds in the database (RPC cap 720). */
-export const FREE_TRIAL_VOICE_CAP_SECONDS = 12 * 60;
-export const FREE_TRIAL_VOICE_CAP_MINUTES = 12;
+/** 5 minutes of voice during the 3-day free trial, stored as seconds in the database (RPC cap 300). */
+export const FREE_TRIAL_VOICE_CAP_SECONDS = 5 * 60;
+export const FREE_TRIAL_VOICE_CAP_MINUTES = 5;
 /** Photo scans are fully accessible during the 3-day trial. */
 export const FREE_TRIAL_PHOTO_CAP = 999;
 

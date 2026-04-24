@@ -9,7 +9,7 @@ const CONFIG_DESCRIPTIONS: Record<string, string> = {
   batch_cycle_days: "Days between batch openings",
   trial_duration_days: "Free trial duration (days)",
   free_token_allocation: "AI tokens for free trial",
-  free_voice_seconds: "Voice seconds for free trial (720 = 12 min)",
+  free_voice_seconds: "Voice seconds for free trial (300 = 5 min)",
   smart_trial_price_inr: "₹19 waitlist skip price (INR)",
   smart_plan_monthly_price_inr: "Smart Plan monthly price (INR)",
   smart_plan_annual_price_inr: "Smart Plan annual price (INR)",

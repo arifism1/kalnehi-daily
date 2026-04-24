@@ -1451,6 +1451,8 @@ export type Database = {
       }
       user_profiles: {
         Row: {
+          xp: number
+          level: number
           ai_usage_row_version: number
           ai_tokens_month: string | null
           ai_tokens_used: number
@@ -1507,6 +1509,8 @@ export type Database = {
           payment_grace_until: string | null
         }
         Insert: {
+          xp?: number
+          level?: number
           ai_usage_row_version?: number
           ai_tokens_month?: string | null
           ai_tokens_used?: number
@@ -1563,6 +1567,8 @@ export type Database = {
           payment_grace_until?: string | null
         }
         Update: {
+          xp?: number
+          level?: number
           ai_usage_row_version?: number
           ai_tokens_month?: string | null
           ai_tokens_used?: number
@@ -1617,6 +1623,33 @@ export type Database = {
           voice_minutes_used_this_month?: number | string
           ai_study_partner_seconds_remaining?: number
           payment_grace_until?: string | null
+        }
+        Relationships: []
+      }
+      xp_events: {
+        Row: {
+          id: string
+          user_id: string
+          event_type: string
+          ref_id: string
+          xp_awarded: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          event_type: string
+          ref_id?: string
+          xp_awarded: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          event_type?: string
+          ref_id?: string
+          xp_awarded?: number
+          created_at?: string
         }
         Relationships: []
       }

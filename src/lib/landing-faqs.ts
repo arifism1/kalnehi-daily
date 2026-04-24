@@ -26,7 +26,7 @@ export const LANDING_FAQ_ITEMS = [
   {
     question: "How much AI (PrepBrain) do I get?",
     answer:
-      "The 3-day free trial includes 60,000 PrepBrain tokens and 12 minutes of voice dictation — shared across all 3 days. Smart Plan (₹399/month) includes 2 million tokens and 100 minutes of voice every month, both resetting each billing cycle.",
+      "The 3-day free trial includes 60,000 PrepBrain tokens and 5 minutes of voice dictation — shared across all 3 days. Smart Plan (₹399/month) includes 2 million tokens and 100 minutes of voice every month, both resetting each billing cycle.",
   },
   {
     question: "Can I cancel at any time?",

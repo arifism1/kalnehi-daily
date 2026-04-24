@@ -62,10 +62,9 @@ export async function POST(req: Request) {
     }
 
     // `duration` is in seconds as a float; round up to avoid zero-billing edge cases.
+    const rawDur = (transcription as { duration?: number }).duration;
     const durationSeconds = Math.ceil(
-      typeof transcription.duration === "number" && transcription.duration > 0
-        ? transcription.duration
-        : 5,
+      typeof rawDur === "number" && rawDur > 0 ? rawDur : 5,
     );
 
     return NextResponse.json({ ok: true, transcript, durationSeconds });

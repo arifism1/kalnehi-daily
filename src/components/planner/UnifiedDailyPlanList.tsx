@@ -46,6 +46,8 @@ import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { suggestSyllabusIdFromTitle } from "@/lib/suggestDailyTaskSyllabus";
 import { formatIstSlotRange12h } from "@/lib/voiceIst";
 import { surfaceErrorForUi } from "@/lib/userFacingErrors";
+import { recordXpEvent } from "@/actions/xp";
+import { SwipeableTask } from "@/components/planner/SwipeableTask";
 
 // ─── Source badge ────────────────────────────────────────────────────────────
 
@@ -497,8 +499,8 @@ type Props = {
   className?: string;
   /** When true, past plan dates (before local calendar "today") cannot toggle done/pending. */
   disablePastStatusToggle?: boolean;
-  /** Called after tasks finish loading with the current task count (0 = empty). */
-  onTasksLoaded?: (count: number) => void;
+  /** Called after tasks finish loading. */
+  onTasksLoaded?: (stats: { total: number; done: number }) => void;
   /** When true, done tasks get "Schedule revision" (Daily Plan). */
   showScheduleRevision?: boolean;
 };
@@ -560,7 +562,8 @@ export function UnifiedDailyPlanList({
           setTasks(res.tasks);
           putDailyPlanTasksCache(planDate, res.planId, res.tasks);
           if (!silent) setError(null);
-          onTasksLoaded?.(res.tasks.length);
+          const done = res.tasks.filter((t) => t.status === "done").length;
+          onTasksLoaded?.({ total: res.tasks.length, done });
         } else if (!silent && !cached) {
           setError(surfaceErrorForUi(res.error));
         }
@@ -570,7 +573,7 @@ export function UnifiedDailyPlanList({
         if (!silent && !cached) setLoading(false);
       }
     },
-    [planDate],
+    [planDate, onTasksLoaded],
   );
 
   useEffect(() => {
@@ -649,6 +652,9 @@ export function UnifiedDailyPlanList({
         );
         setError(surfaceErrorForUi(res.error));
       } else {
+        if (next === "done") {
+          void recordXpEvent("task_complete", `daily-${t.id}-${planDate}`);
+        }
         dispatchDailyPlanSynced();
       }
     } finally {
@@ -779,6 +785,12 @@ export function UnifiedDailyPlanList({
             <CalendarDays className="mb-2 h-6 w-6" style={{ color: "#FAC775" }} aria-hidden />
             <p className="text-sm font-semibold text-kal-text">Nothing here yet</p>
             <p className="mt-1 text-xs text-kal-muted">Your plan is empty for this date.</p>
+            <a
+              href="/plan-my-day"
+              className="mt-4 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-kal-accent px-4 text-sm font-semibold text-kal-accent-foreground"
+            >
+              Build your battle plan
+            </a>
           </div>
         ) : (
           <>
@@ -818,8 +830,20 @@ export function UnifiedDailyPlanList({
                         : "Mark as done";
 
                 return (
-                  <li
+                  <SwipeableTask
                     key={t.id}
+                    className="mb-0.5"
+                    disabled={Boolean(statusToggleLocked || isDeleting) || done || skipped}
+                    onSwipeRight={() => {
+                      if (!done && !skipped && !statusToggleLocked) void toggleDone(t);
+                    }}
+                    onSwipeLeft={() => {
+                      if (!statusToggleLocked) {
+                        setEditing({ task: t, initialSyllabusExpanded: false });
+                      }
+                    }}
+                  >
+                  <li
                     // `group` enables sm:group-hover to show action buttons on desktop hover
                     className={`group rounded-2xl border px-3 py-3 shadow-sm transition-all ${
                       done
@@ -1008,6 +1032,7 @@ export function UnifiedDailyPlanList({
                       </div>
                     </div>
                   </li>
+                  </SwipeableTask>
                 );
               })}
             </ul>
