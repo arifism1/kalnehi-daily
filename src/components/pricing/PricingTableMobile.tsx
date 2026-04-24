@@ -43,9 +43,9 @@ const PLANS: {
   {
     key: "smart",
     label: "Smart Plan",
-    price: "₹499",
+    price: "₹399",
     duration: "/month",
-    cta: "Subscribe — ₹499/month",
+    cta: "Subscribe — ₹399/month",
     ctaHref: "#subscribe",
     highlight: true,
   },
@@ -78,7 +78,7 @@ export function PricingTableMobile() {
                     : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
                 }
               : {
-                  label: "₹499",
+                  label: "₹399",
                   color: isActive ? "bg-white/20 text-white" : "bg-kal-accent/15 text-kal-accent",
                 };
 

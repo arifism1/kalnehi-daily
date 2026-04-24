@@ -27,7 +27,7 @@ export default function WhatCanKalnehiDoPage() {
           {
             question: "Is there a trial?",
             answer:
-              "New accounts get a 3-day free trial — every feature unlocked, no card required. After 3 days, subscribe to Smart Plan (₹499/month) to continue.",
+              "New accounts get a 3-day free trial — every feature unlocked, no card required. After 3 days, subscribe to Smart Plan (₹399/month) to continue.",
           },
           {
             question: "Can I install Kalnehi like an app?",

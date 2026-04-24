@@ -65,7 +65,7 @@ export function HeroSection() {
           </div>
 
           <p className="mt-3 text-xs text-kal-muted">
-            No card · 3 days fully free · Then ₹499/month · Cancel anytime
+            No card · 3 days fully free · Then ₹399/month · Cancel anytime
           </p>
         </div>
 

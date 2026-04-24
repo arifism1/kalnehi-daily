@@ -30,7 +30,7 @@ export function AutopaySlider() {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-kal-accent">
-                Smart Plan · ₹499/month
+                Smart Plan · ₹399/month
               </p>
               <h3 className="mt-1 text-lg font-semibold text-kal-text" style={{ fontFamily: "var(--font-display)" }}>
                 How long should autopay run?
@@ -117,7 +117,7 @@ export function AutopaySlider() {
               <p className="text-sm leading-snug text-kal-text">
                 <span className="font-semibold">Your choice:</span> Up to{" "}
                 <span className="font-bold tabular-nums text-kal-accent">{months}</span>{" "}
-                monthly payment{months === 1 ? "" : "s"} of ₹499 each.
+                monthly payment{months === 1 ? "" : "s"} of ₹399 each.
                 Autopay stops automatically after that. Cancel earlier anytime.
               </p>
             </div>
@@ -126,7 +126,7 @@ export function AutopaySlider() {
       </div>
 
       <p className="mt-3 text-center text-xs text-kal-muted">
-        Charges ₹499 every month for your chosen period, then stops on its own.
+        Charges ₹399 every month for your chosen period, then stops on its own.
         Cancel earlier anytime from settings.
       </p>
     </div>

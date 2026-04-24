@@ -1,6 +1,6 @@
 /**
- * POST /api/annual-plan
- * Creates a Razorpay order for Smart Plan Annual (₹3,830).
+ * POST /api/six-month-plan
+ * Creates a Razorpay order for Smart Plan 6-Month (₹2,154 — 10% off).
  */
 import Razorpay from "razorpay";
 import { type NextRequest, NextResponse } from "next/server";
@@ -10,7 +10,7 @@ import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 
 export const runtime = "nodejs";
 
-const ANNUAL_PRICE_PAISE = 383000; // ₹3,830 in paise
+const SIX_MONTH_PRICE_PAISE = 215400; // ₹2,154 in paise
 
 function getRazorpayConfig() {
   const keyId = process.env.RAZORPAY_KEY_ID?.trim();
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Service unavailable." }, { status: 503 });
   }
 
-  // Check user isn't already on the annual plan.
+  // Block if user already has an active 6-month plan.
   const { data: prof } = await admin
     .from("user_profiles")
     .select("subscription_status, subscription_end_date, subscription_plan, full_name")
@@ -40,15 +40,15 @@ export async function POST(req: NextRequest) {
     .maybeSingle();
 
   const p = prof as { subscription_status?: string | null; subscription_end_date?: string | null; subscription_plan?: string | null; full_name?: string | null } | null;
-  const isAlreadyAnnual =
-    p?.subscription_plan === "annual" &&
+  const isAlreadySixMonth =
+    p?.subscription_plan === "six_month" &&
     p?.subscription_end_date &&
     new Date(p.subscription_end_date) > new Date();
 
-  if (isAlreadyAnnual) {
+  if (isAlreadySixMonth) {
     return NextResponse.json({
       ok: false,
-      error: "You already have an active annual plan.",
+      error: "You already have an active 6-month plan.",
     }, { status: 400 });
   }
 
@@ -59,16 +59,16 @@ export async function POST(req: NextRequest) {
 
   try {
     const razorpay = new Razorpay({ key_id: config.keyId, key_secret: config.keySecret });
-    const receiptId = `annual_${user.id.replace(/-/g, "").slice(0, 16)}_${Date.now()}`;
+    const receiptId = `6mo_${user.id.replace(/-/g, "").slice(0, 16)}_${Date.now()}`;
 
     const order = (await razorpay.orders.create({
-      amount: ANNUAL_PRICE_PAISE,
+      amount: SIX_MONTH_PRICE_PAISE,
       currency: "INR",
       receipt: receiptId,
       notes: {
         kalnehi_user_id: user.id,
-        kalnehi_order_kind: "annual_plan",
-        kalnehi_price_paise: String(ANNUAL_PRICE_PAISE),
+        kalnehi_order_kind: "six_month_plan",
+        kalnehi_price_paise: String(SIX_MONTH_PRICE_PAISE),
       },
     })) as { id: string; amount: number };
 
@@ -76,12 +76,12 @@ export async function POST(req: NextRequest) {
       ok: true,
       keyId: config.keyId,
       orderId: order.id,
-      amountPaise: ANNUAL_PRICE_PAISE,
+      amountPaise: SIX_MONTH_PRICE_PAISE,
       prefill: { name: p?.full_name ?? "", email: user.email ?? "" },
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Unknown error";
-    console.error("[annual-plan] order creation failed", msg);
+    console.error("[six-month-plan] order creation failed", msg);
     return NextResponse.json({ ok: false, error: "Failed to create payment order." }, { status: 500 });
   }
 }

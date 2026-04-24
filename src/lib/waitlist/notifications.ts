@@ -340,7 +340,7 @@ export async function sendDay3Evening(params: {
   await sendPush(
     params.userId,
     "Your trial ends in a few hours",
-    `Your ${params.streakDays}-day streak is paused — not deleted. Continue for ₹499/month.`,
+    `Your ${params.streakDays}-day streak is paused — not deleted. Continue for ₹399/month.`,
     "/pricing",
   );
 }

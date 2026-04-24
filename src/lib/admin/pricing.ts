@@ -3,6 +3,7 @@ import { getAllAdminConfig } from "@/lib/waitlist/batchEngine";
 export type AdminPricingInr = {
   smartTrialInr: number;
   smartMonthlyInr: number;
+  smartSemiAnnualInr: number;
   smartAnnualInr: number;
   /** Per-provider input/output rates (INR per 1M tokens). */
   deepinfraInputInrPerM: number;
@@ -20,8 +21,9 @@ export async function loadAdminPricingInr(): Promise<AdminPricingInr> {
   const cfg = await getAllAdminConfig();
   return {
     smartTrialInr: num(cfg.smart_trial_price_inr, 19),
-    smartMonthlyInr: num(cfg.smart_plan_monthly_price_inr, 499),
-    smartAnnualInr: num(cfg.smart_plan_annual_price_inr, 4790),
+    smartMonthlyInr: num(cfg.smart_plan_monthly_price_inr, 399),
+    smartSemiAnnualInr: num(cfg.smart_plan_semi_annual_price_inr, 2154),
+    smartAnnualInr: num(cfg.smart_plan_annual_price_inr, 3830),
     deepinfraInputInrPerM: num(cfg.ai_deepinfra_input_inr_per_m, 2.82),
     deepinfraOutputInrPerM: num(cfg.ai_deepinfra_output_inr_per_m, 13.15),
     groqInputInrPerM: num(cfg.ai_groq_input_inr_per_m, 4.70),
@@ -59,6 +61,8 @@ export function paymentKindToInr(
       return p.smartTrialInr;
     case "annual_plan":
       return p.smartAnnualInr;
+    case "six_month_plan":
+      return p.smartSemiAnnualInr;
     case "plan_upgrade":
       return p.smartMonthlyInr;
     case "extra_credits":

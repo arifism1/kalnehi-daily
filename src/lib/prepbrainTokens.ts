@@ -16,10 +16,10 @@ export const MONTHLY_AI_TOKEN_CAP = 2_000_000;
 export const PREPBRAIN_LIMIT_MESSAGE_MONTHLY =
   "You have reached your monthly AI limit of 2 million tokens (shared between PrepBrain and HelpyJi). It will reset on the 1st of next month.";
 export const PREPBRAIN_LIMIT_MESSAGE_WELCOME =
-  "You have used all 60,000 PrepBrain AI tokens included in your 3-day free trial. Upgrade to Smart Plan (₹499/month) for 2 million tokens per month.";
+  "You have used all 60,000 PrepBrain AI tokens included in your 3-day free trial. Upgrade to Smart Plan (₹399/month) for 2 million tokens per month.";
 /** @deprecated paid trial removed */
 export const PREPBRAIN_LIMIT_MESSAGE_PAID_TRIAL =
-  "You have used all PrepBrain AI tokens included in your trial. Upgrade to Smart Plan (₹499/month) for 2 million tokens per month.";
+  "You have used all PrepBrain AI tokens included in your trial. Upgrade to Smart Plan (₹399/month) for 2 million tokens per month.";
 
 const MONTH_KEY_TZ = "Asia/Kolkata";
 

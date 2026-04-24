@@ -210,7 +210,7 @@ export function PathFlowchart() {
             className="text-3xl font-normal text-kal-accent"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            ₹499
+            ₹399
           </span>
           <span className="text-sm text-kal-muted">/month</span>
         </div>
@@ -231,7 +231,7 @@ export function PathFlowchart() {
           href="#subscribe"
           className="mt-4 flex min-h-[40px] items-center justify-center rounded-full bg-kal-accent text-xs font-bold text-white shadow-[0_4px_12px_rgba(255,122,0,0.28)] transition hover:brightness-105"
         >
-          Subscribe — ₹499/month
+          Subscribe — ₹399/month
         </Link>
       </div>
 

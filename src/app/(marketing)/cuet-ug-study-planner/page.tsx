@@ -39,7 +39,7 @@ export default function CuetUgStudyPlannerPage() {
           {
             question: "Is there a free tier?",
             answer:
-              `${SITE_NAME} offers a 3-day free trial (no card required), then Smart Plan at ₹499/month — see pricing. These public guides stay free to read.`,
+              `${SITE_NAME} offers a 3-day free trial (no card required), then Smart Plan at ₹399/month — see pricing. These public guides stay free to read.`,
           },
         ]}
       />
