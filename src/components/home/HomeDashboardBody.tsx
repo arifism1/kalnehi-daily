@@ -1,6 +1,6 @@
 "use client";
 
-import { addDays, format, parseISO, subDays } from "date-fns";
+import { addDays, format, parseISO } from "date-fns";
 import { useEffect, useMemo, useRef } from "react";
 
 import { useCalendarDate } from "@/hooks/useCalendarDate";
@@ -24,8 +24,6 @@ import {
   filterTasksForDate,
   filterTasksThroughDate,
 } from "@/lib/progressEngine";
-import { computeExecutionStreak } from "@/lib/dailyExecutionStats";
-import { useDailyPlanExecutionForRange } from "@/hooks/useDailyPlanExecutionForRange";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useTaskStore } from "@/store/useTaskStore";
@@ -36,17 +34,6 @@ import { HomeHeroCard } from "./HomeHeroCard";
 import { HomePriorityStrip } from "./HomePriorityStrip";
 import { MotivationStrip } from "./MotivationStrip";
 import { ThreeDayStrip } from "./ThreeDayStrip";
-import { DynamicGreeting } from "./DynamicGreeting";
-import { TargetScoreBar } from "./TargetScoreBar";
-import { StartTodayButton } from "./StartTodayButton";
-import { LevelBadge } from "@/components/gamification/LevelBadge";
-import { XPProgressBar } from "@/components/gamification/XPProgressBar";
-import { StreakPersonality } from "@/components/gamification/StreakPersonality";
-import { StreakXpBridge } from "@/components/gamification/StreakXpBridge";
-import { useUserXpProfile } from "@/hooks/useUserXpProfile";
-import { LiveStudyCounter } from "./LiveStudyCounter";
-import { LeaderboardRankChip } from "./LeaderboardRankChip";
-import Link from "next/link";
 
 export type HomeDashboardBodyProps = {
   firstName: string;
@@ -104,27 +91,6 @@ export function HomeDashboardBody({
     [today],
   );
   const taskList = useMemo(() => Object.values(tasksRecord), [tasksRecord]);
-
-  const overlayStart = useMemo(
-    () => format(subDays(parseISO(today), 120), "yyyy-MM-dd"),
-    [today],
-  );
-  const dailyPlanOverlay = useDailyPlanExecutionForRange(overlayStart, today);
-
-  const executionStreak = useMemo(
-    () =>
-      computeExecutionStreak(
-        taskList,
-        microtopicById,
-        today,
-        60,
-        120,
-        dailyPlanOverlay,
-      ),
-    [taskList, microtopicById, today, dailyPlanOverlay],
-  );
-
-  const { xp, level, loading: xpLoading } = useUserXpProfile();
 
   const { realityTasks, todayTasks, yesterdayTasks } = useMemo(() => {
     const reality = filterTasksThroughDate(taskList, today);
@@ -319,55 +285,10 @@ export function HomeDashboardBody({
 
   return (
     <>
-      <StreakXpBridge streak={executionStreak} />
-      <TargetScoreBar todayProgressPercent={effectiveTodayPercent} />
-      <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0 flex-1">
-          <DynamicGreeting firstName={firstName} />
-        </div>
-        <div className="flex min-w-0 flex-col items-stretch gap-1.5 sm:max-w-[200px]">
-          {xpLoading ? null : <LevelBadge xp={xp} level={level} className="self-end" />}
-          {!xpLoading && <XPProgressBar totalXp={xp} />}
-        </div>
-      </div>
-      <div className="mb-3">
-        <StartTodayButton />
-      </div>
-      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <StreakPersonality streak={executionStreak} className="flex-1" />
-        <div className="flex flex-col gap-1 sm:items-end">
-          <LiveStudyCounter />
-          <LeaderboardRankChip />
-        </div>
-      </div>
-      <p className="mb-2 text-center text-xs text-kal-muted">
-        <Link
-          href="/morning"
-          className="font-semibold text-kal-accent underline-offset-2 hover:underline"
-        >
-          War Room
-        </Link>
-        <span className="mx-1.5 text-kal-border">·</span>
-        <Link
-          href="/debrief"
-          className="font-semibold text-kal-accent underline-offset-2 hover:underline"
-        >
-          Night Debrief
-        </Link>
-        <span className="mx-1.5 text-kal-border">·</span>
-        <Link
-          href="/eve"
-          className="font-semibold text-amber-700 underline-offset-2 hover:underline dark:text-amber-300"
-        >
-          Exam eve
-        </Link>
-      </p>
-
       {/* Section A — Hero card */}
       <HomeHeroCard
         firstName={firstName}
         greetingLead={greetingLead}
-        omitGreeting
         syllabusMasteryPercent={syllabusMasteryPercent}
         marksMastered={mastered}
         marksTotal={total}

@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useMemo, useState, useCallback } from "react";
 
 import { UnifiedDailyPlanList } from "@/components/planner/UnifiedDailyPlanList";
-import { DailyPlanCard } from "@/components/reports/DailyPlanCard";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { usePlannerDateMidnightRollover } from "@/hooks/usePlannerDateMidnightRollover";
 import {
@@ -32,14 +31,9 @@ export function DailyPlanPageContent() {
   );
 
   const [taskCount, setTaskCount] = useState<number | null>(null);
-  const [taskDone, setTaskDone] = useState(0);
-  const handleTasksLoaded = useCallback(
-    (s: { total: number; done: number }) => {
-      setTaskCount(s.total);
-      setTaskDone(s.done);
-    },
-    [],
-  );
+  const handleTasksLoaded = useCallback((count: number) => {
+    setTaskCount(count);
+  }, []);
 
   if (!user) {
     return (
@@ -86,16 +80,6 @@ export function DailyPlanPageContent() {
           </Link>
         </p>
       </header>
-
-      {taskCount != null && taskCount > 0 && (
-        <div className="mb-5">
-          <DailyPlanCard
-            dateYmd={logDate}
-            doneCount={taskDone}
-            totalCount={taskCount}
-          />
-        </div>
-      )}
 
       {/* Date chips + date picker */}
       <div className="mb-5 flex flex-wrap items-center gap-2">
