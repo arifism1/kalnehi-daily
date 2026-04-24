@@ -2338,6 +2338,63 @@ export type Database = {
           },
         ]
       }
+      app_updates: {
+        Row: {
+          id: string
+          title: string
+          message: string
+          category: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          message: string
+          category?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          message?: string
+          category?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      user_app_update_reads: {
+        Row: {
+          user_id: string
+          update_id: string
+          read_at: string
+        }
+        Insert: {
+          user_id: string
+          update_id: string
+          read_at?: string
+        }
+        Update: {
+          user_id?: string
+          update_id?: string
+          read_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_app_update_reads_update_id_fkey"
+            columns: ["update_id"]
+            isOneToOne: false
+            referencedRelation: "app_updates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_app_update_reads_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leaderboard_weekly_metrics: {
         Row: {
           cohort_key: string

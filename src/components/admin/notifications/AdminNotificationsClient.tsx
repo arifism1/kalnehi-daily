@@ -1,6 +1,6 @@
 "use client";
 
-import type { AdminAppUpdate } from "@/actions/adminNotifications";
+import type { AdminAppUpdate } from "@/actions/adminNotifications.types";
 import { AdminKpiCard } from "@/components/admin/AdminKpiCard";
 import { AdminSendUpdateForm } from "@/components/admin/notifications/AdminSendUpdateForm";
 import type { NotificationAnalyticsSnapshot } from "@/lib/admin/queries/notificationQueries";

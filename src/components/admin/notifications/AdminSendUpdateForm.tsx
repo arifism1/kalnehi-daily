@@ -4,12 +4,15 @@ import { format } from "date-fns";
 import { useState } from "react";
 
 import {
-  APP_UPDATE_CATEGORIES,
   deleteAppUpdate,
   publishAppUpdate,
+} from "@/actions/adminNotifications";
+import {
+  APP_UPDATE_CATEGORIES,
   type AdminAppUpdate,
   type AppUpdateCategory,
-} from "@/actions/adminNotifications";
+} from "@/actions/adminNotifications.types";
+
 
 const CATEGORY_PILL: Record<string, string> = {
   "New Feature":

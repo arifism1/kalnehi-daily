@@ -4,28 +4,8 @@ import { formatSupabaseError } from "@/lib/supabase";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isAdminUser } from "@/lib/waitlist/batchEngine";
+import type { AdminAppUpdate, AppUpdateCategory } from "@/actions/adminNotifications.types";
 
-export type AppUpdateCategory =
-  | "New Feature"
-  | "Improvement"
-  | "Bug Fix"
-  | "Announcement";
-
-export const APP_UPDATE_CATEGORIES: AppUpdateCategory[] = [
-  "New Feature",
-  "Improvement",
-  "Bug Fix",
-  "Announcement",
-];
-
-export type AdminAppUpdate = {
-  id: string;
-  title: string;
-  message: string;
-  category: string;
-  created_at: string;
-  read_count: number;
-};
 
 async function requireAdmin(): Promise<
   { ok: true; userId: string } | { ok: false; error: string }
