@@ -49,7 +49,7 @@ export function useMediaRecorderVoice({
   const clearError = useCallback(() => setError(null), []);
 
   const transcribeBlob = useCallback(async (blob: Blob, recordingStartMs: number) => {
-    setIsTranscribing(true);
+    // isTranscribing is already set to true in stopRecording before this is called.
     try {
       const fd = new FormData();
       fd.set("audio", new File([blob], "voice-command.webm", { type: blob.type || "audio/webm" }));
@@ -90,6 +90,10 @@ export function useMediaRecorderVoice({
     const mr = mediaRecorderRef.current;
     if (!mr) return;
     const startedAt = startedAtRef.current ?? Date.now();
+    // Set transcribing immediately so the "On it…" spinner appears before the
+    // MediaRecorder onstop event fires and the upload begins.
+    setIsTranscribing(true);
+    setIsRecording(false);
     mr.onstop = () => {
       mr.stream.getTracks().forEach((t) => t.stop());
       const blob = new Blob(chunksRef.current, { type: mimeRef.current || "audio/webm" });
@@ -98,6 +102,7 @@ export function useMediaRecorderVoice({
       if (blob.size > 0) {
         void transcribeBlob(blob, startedAt);
       } else {
+        setIsTranscribing(false);
         setError("No audio was recorded. Please try again.");
       }
     };
@@ -105,9 +110,9 @@ export function useMediaRecorderVoice({
       mr.stop();
     } catch {
       mediaRecorderRef.current = null;
+      setIsTranscribing(false);
     }
     startedAtRef.current = null;
-    setIsRecording(false);
   }, [clearTimer, transcribeBlob]);
 
   const startRecording = useCallback(async () => {
