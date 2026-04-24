@@ -10,6 +10,7 @@ import { ScheduleRevisionReminderDialog } from "@/components/revision/ScheduleRe
 import { useAiGate } from "@/hooks/useAiGate";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
+import { useMediaRecorderVoice } from "@/hooks/useMediaRecorderVoice";
 import { useVoiceCommandStore } from "@/store/useVoiceCommandStore";
 import { fetchDailyPlanTasksForClient } from "@/lib/fetchDailyPlanTasksForClient";
 import type { DailyTaskView } from "@/actions/dailyPlan";
@@ -217,23 +218,27 @@ function ListeningState({
   voiceMinuteStatus,
   onStopListening,
   onStartListening,
+  whisperMode = false,
 }: {
   isListening: boolean;
   transcript: string | null;
   voiceMinuteStatus: string;
   onStopListening: () => void;
   onStartListening: () => void;
+  /** True when recording via MediaRecorder (Whisper fallback) instead of Web Speech API. */
+  whisperMode?: boolean;
 }) {
-  const showHints = !transcript;
+  const showHints = !transcript && !whisperMode;
+  const active = isListening || whisperMode;
 
   return (
     <div className="flex flex-col items-center gap-3 px-4 pt-5 pb-2">
       {/* Waveform */}
-      <AudioWaveform isListening={isListening} />
+      <AudioWaveform isListening={active} />
 
       {/* Mic button */}
       <div className="relative">
-        {isListening && (
+        {active && (
           <span
             className="absolute inset-0 rounded-full bg-kal-accent/20 animate-ping"
             aria-hidden
@@ -241,11 +246,11 @@ function ListeningState({
         )}
         <button
           type="button"
-          onClick={isListening ? onStopListening : onStartListening}
-          aria-label={isListening ? "Stop listening" : "Start listening"}
+          onClick={active ? onStopListening : onStartListening}
+          aria-label={active ? "Stop listening" : "Start listening"}
           className={clsx(
             "relative flex h-14 w-14 items-center justify-center rounded-full transition-all duration-200",
-            isListening
+            active
               ? "bg-kal-accent text-white scale-105 shadow-[0_4px_20px_rgba(255,122,0,0.4)]"
               : "bg-kal-accent/85 text-white shadow-md hover:bg-kal-accent hover:scale-[1.04] hover:shadow-[0_4px_16px_rgba(255,122,0,0.28)]",
           )}
@@ -256,12 +261,20 @@ function ListeningState({
 
       {/* Status text */}
       <div className="text-center pb-1">
+        {/* HD badge shown when using Whisper fallback */}
+        {whisperMode && (
+          <span className="mb-1.5 inline-flex items-center rounded-md border border-kal-accent/20 bg-kal-accent/[0.08] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-kal-accent/70">
+            HD
+          </span>
+        )}
         <p className="text-sm font-medium text-kal-text leading-snug line-clamp-3">
           {transcript
             ? transcript
-            : isListening
-              ? "Go ahead, I'm listening\u2026"
-              : "Tap the mic \u2014 I'm ready"}
+            : whisperMode
+              ? "Tap the mic when done\u2026"
+              : active
+                ? "Go ahead, I'm listening\u2026"
+                : "Tap the mic \u2014 I'm ready"}
         </p>
         <p className="mt-1 text-[11px] text-kal-text-secondary/60">{voiceMinuteStatus}</p>
       </div>
@@ -374,6 +387,8 @@ export function GlobalVoiceSheet() {
   const autoStartedRef = useRef(false);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const executeRef = useRef<((intent: VoiceCommandIntent, text: string) => Promise<void>) | null>(null);
+  // Prevents infinite retry: Whisper fallback fires at most once per session open.
+  const whisperFallbackAttemptedRef = useRef(false);
 
   // Animation state: `mounted` controls DOM presence, `animatingOut` selects CSS class.
   const [mounted, setMounted] = useState(false);
@@ -597,7 +612,7 @@ export function GlobalVoiceSheet() {
     error: sttError,
     clearError: clearSttError,
   } = useDeviceSpeechRecognition({
-    lang: "en-IN",
+    lang: "en-US",
     silenceMs: VOICE_COMMAND_END_SILENCE_MS,
     maxSessionMs: 30_000,
     interimPreview: true,
@@ -606,6 +621,17 @@ export function GlobalVoiceSheet() {
     },
     onTranscript: handleTranscript,
   });
+
+  // Whisper fallback — MediaRecorder + Groq distil-whisper-large-v3-en.
+  // Called only when Web Speech API fails (once per session open).
+  const {
+    isRecording: isWhisperRecording,
+    isTranscribing: isWhisperTranscribing,
+    error: whisperError,
+    clearError: clearWhisperError,
+    startRecording: startWhisperRecording,
+    stopRecording: stopWhisperRecording,
+  } = useMediaRecorderVoice({ onTranscript: handleTranscript });
 
   // Auto-start listening when sheet opens, with chime.
   useEffect(() => {
@@ -627,21 +653,42 @@ export function GlobalVoiceSheet() {
     startListening();
   }, [isOpen, phase, aiGate.loading, aiGate.canDoVoiceSession, isSupported, startListening, setError, setPhase]);
 
-  // Stop listening whenever the sheet closes (regardless of how it was closed).
+  // Stop listening/recording whenever the sheet closes (regardless of how it was closed).
   useEffect(() => {
     if (!isOpen) {
       stopListening();
+      stopWhisperRecording();
+      whisperFallbackAttemptedRef.current = false;
     }
-  }, [isOpen, stopListening]);
+  }, [isOpen, stopListening, stopWhisperRecording]);
 
-  // Surface STT errors into store.
+  // STT error handler — auto-trigger Whisper fallback on first failure.
   useEffect(() => {
-    if (sttError && (phase === "idle" || phase === "listening")) {
+    if (!sttError || !(phase === "idle" || phase === "listening")) return;
+
+    if (!whisperFallbackAttemptedRef.current) {
+      // First failure: silently switch to Whisper recording.
+      whisperFallbackAttemptedRef.current = true;
+      clearSttError();
+      setTranscript(null);
+      playStartChime();
+      void startWhisperRecording();
+    } else {
+      // Whisper already tried or STT error after fallback — surface to user.
       setError(sttError);
       setPhase("error");
       clearSttError();
     }
-  }, [sttError, phase, setError, setPhase, clearSttError]);
+  }, [sttError, phase, clearSttError, setError, setPhase, setTranscript, startWhisperRecording]);
+
+  // Surface Whisper errors into store.
+  useEffect(() => {
+    if (whisperError) {
+      setError(whisperError);
+      setPhase("error");
+      clearWhisperError();
+    }
+  }, [whisperError, setError, setPhase, clearWhisperError]);
 
   // Cleanup on unmount.
   useEffect(() => {
@@ -652,20 +699,25 @@ export function GlobalVoiceSheet() {
 
   function handleClose() {
     stopListening();
+    stopWhisperRecording();
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
     closeSheet();
     reset();
+    whisperFallbackAttemptedRef.current = false;
   }
 
   function handleRetry() {
     clearSttError();
+    clearWhisperError();
     reset();
     autoStartedRef.current = false;
+    whisperFallbackAttemptedRef.current = false;
     playStartChime();
     startListening();
   }
 
-  const isListeningPhase = phase === "idle" || phase === "listening";
+  const isWhisperActive = isWhisperRecording || isWhisperTranscribing;
+  const isListeningPhase = phase === "idle" || phase === "listening" || isWhisperActive;
 
   // ─── Render ──────────────────────────────────────────────────────────────────
 
@@ -738,15 +790,19 @@ export function GlobalVoiceSheet() {
               {/* Content — each state renders its own layout */}
               {!aiGate.loading && !aiGate.canDoVoiceSession ? (
                 <QuotaGate voiceMinuteStatus={aiGate.voiceMinuteStatus} />
+              ) : isWhisperTranscribing ? (
+                <ProcessingState transcript={transcript} />
               ) : isListeningPhase ? (
                 <ListeningState
                   isListening={isListening}
                   transcript={transcript}
                   voiceMinuteStatus={aiGate.voiceMinuteStatus}
-                  onStopListening={stopListening}
+                  whisperMode={isWhisperRecording}
+                  onStopListening={isWhisperRecording ? stopWhisperRecording : stopListening}
                   onStartListening={() => {
                     reset();
                     autoStartedRef.current = true;
+                    whisperFallbackAttemptedRef.current = false;
                     playStartChime();
                     startListening();
                   }}
