@@ -3,6 +3,11 @@ import Groq from "groq-sdk";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
+/** `verbose_json` adds `duration` (seconds); groq-sdk's Transcription type only declares `text`. */
+type GroqVerboseTranscription = Awaited<
+  ReturnType<InstanceType<typeof Groq>["audio"]["transcriptions"]["create"]>
+> & { duration?: number };
+
 const WHISPER_MODEL = "distil-whisper-large-v3-en";
 const MAX_AUDIO_BYTES = 4 * 1024 * 1024; // 4 MB
 
@@ -61,11 +66,10 @@ export async function POST(req: Request) {
       );
     }
 
+    const verbose = transcription as GroqVerboseTranscription;
     // `duration` is in seconds as a float; round up to avoid zero-billing edge cases.
     const durationSeconds = Math.ceil(
-      typeof transcription.duration === "number" && transcription.duration > 0
-        ? transcription.duration
-        : 5,
+      typeof verbose.duration === "number" && verbose.duration > 0 ? verbose.duration : 5,
     );
 
     return NextResponse.json({ ok: true, transcript, durationSeconds });
