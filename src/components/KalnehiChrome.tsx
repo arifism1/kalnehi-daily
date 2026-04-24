@@ -64,7 +64,7 @@ const MINIMAL_CHROME_PATHS = new Set([
 export function KalnehiChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
-  const { open: openVoice, isOpen: voiceOpen } = useVoiceCommandStore();
+  const { open: openVoice, close: closeVoice, isOpen: voiceOpen } = useVoiceCommandStore();
   const onboarding = pathname === "/onboarding";
   const minimalChrome = MINIMAL_CHROME_PATHS.has(pathname);
 
@@ -73,6 +73,22 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
       console.log("[KalnehiChrome] mounted", { path: pathname });
     }
   }, [pathname]);
+
+  // Global keyboard shortcut: Cmd+. (Mac) / Ctrl+. (Windows/Linux) toggles voice.
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === ".") {
+        e.preventDefault();
+        if (voiceOpen) {
+          closeVoice();
+        } else {
+          openVoice();
+        }
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [voiceOpen, openVoice, closeVoice]);
 
   if (onboarding) {
     return (
