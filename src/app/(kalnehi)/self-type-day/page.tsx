@@ -1,5 +1,5 @@
-import SelfTypeDayRouteLazy from "./SelfTypeDayRouteLazy";
+import { redirect } from "next/navigation";
 
 export default function SelfTypeDayRoutePage() {
-  return <SelfTypeDayRouteLazy />;
+  redirect("/daily-plan?open=self-type");
 }

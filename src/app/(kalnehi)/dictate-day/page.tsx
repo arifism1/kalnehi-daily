@@ -1,5 +1,5 @@
-import DictateDayRouteLazy from "./DictateDayRouteLazy";
+import { redirect } from "next/navigation";
 
 export default function DictateDayPage() {
-  return <DictateDayRouteLazy />;
+  redirect("/daily-plan?open=dictate");
 }
