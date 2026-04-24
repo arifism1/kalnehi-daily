@@ -105,10 +105,13 @@ export default function NotificationsPage() {
     return notifications.filter((n) => n.feature === filter);
   }, [notifications, filter]);
 
-  const dayGroups = useMemo(
-    () => groupUserNotificationsByLocalDay(filtered),
-    [filtered],
-  );
+  const dayGroups = useMemo(() => {
+    const sorted = [...filtered].sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
+    return groupUserNotificationsByLocalDay(sorted);
+  }, [filtered]);
 
   useEffect(() => {
     if (filter === "general" && (featureCounts.general ?? 0) === 0) {

@@ -32,6 +32,7 @@ import {
   filterTasksForDate,
   findMissedIncompleteTasks,
 } from "@/lib/progressEngine";
+import { FEATURE_CATEGORIES } from "@/lib/dashboardFeatures";
 import { useEnabledFeaturesStore } from "@/store/useEnabledFeaturesStore";
 import { useTaskStore } from "@/store/useTaskStore";
 
@@ -63,212 +64,200 @@ type LiveData = {
   todayTaskCount_: number;
 };
 
-const CATEGORIES: Category[] = [
-  {
-    title: "Plan & Execute",
-    dotColor: "#EF9F27",
-    items: [
-      {
-        id: "daily-planner",
-        href: "/daily-plan",
-        label: "Daily Plan",
-        icon: ListTodo,
-        liveHint: (d) => (d.todayTaskCount > 0 ? `${d.todayTaskCount} tasks today` : null),
-        fallback: "No plan yet",
-      },
-      {
-        id: "saved-daily-plans",
-        href: "/saved-plans",
-        label: "Saved Daily Plans",
-        icon: CalendarDays,
-        staticHint: "Archive, completion & time stats",
-        fallback: "Browse past days",
-      },
-      {
-        id: "daily-debrief",
-        href: "/daily-log",
-        label: "Daily Debrief",
-        icon: NotebookPen,
-        staticHint: "3 quick questions",
-        fallback: "End-of-day check-in",
-      },
-      {
-        id: "dictate-my-day",
-        href: "/dictate-day",
-        label: "Dictate My Day",
-        icon: Mic,
-        staticHint: "Voice plan your day",
-        fallback: "Voice plan your day",
-      },
-      {
-        id: "plan-my-day",
-        href: "/plan-my-day",
-        label: "Plan My Day",
-        icon: Sparkles,
-        staticHint: "AI-powered planning",
-        fallback: "AI-powered planning",
-      },
-      {
-        id: "timer",
-        href: "/timer",
-        label: "Timer",
-        icon: Clock,
-        staticHint: "Start a focus session",
-        fallback: "Start a focus session",
-      },
-      {
-        id: "missed-tasks",
-        href: "/missed-tasks",
-        label: "Missed Tasks",
-        icon: LineChart,
-        liveHint: (d) => (d.missedCount > 0 ? `${d.missedCount} missed` : null),
-        fallback: "Nothing missed",
-      },
-    ],
+const FEATURE_ITEM_BY_ID: Record<string, FeatureItem> = {
+  "daily-planner": {
+    id: "daily-planner",
+    href: "/daily-plan",
+    label: "Daily Plan",
+    icon: ListTodo,
+    liveHint: (d) => (d.todayTaskCount > 0 ? `${d.todayTaskCount} tasks today` : null),
+    fallback: "No plan yet",
   },
-  {
-    title: "Track & Measure",
-    dotColor: "#1D9E75",
-    items: [
-      {
-        id: "progress",
-        href: "/progress",
-        label: "Progress",
-        icon: TrendingUp,
-        liveHint: (d) =>
-          d.syllabusMasteryPercent != null
-            ? `${d.syllabusMasteryPercent % 1 === 0 ? d.syllabusMasteryPercent.toFixed(0) : d.syllabusMasteryPercent.toFixed(1)}% syllabus done`
-            : null,
-        fallback: "Track progress",
-      },
-      {
-        id: "consistency-tracker",
-        href: "/consistency-tracker",
-        label: "Consistency Tracker",
-        icon: BarChart3,
-        liveHint: (d) =>
-          d.streakDays != null && d.streakDays > 0
-            ? `${d.streakDays}-day streak`
-            : null,
-        fallback: "Start your streak",
-      },
-      {
-        id: "mock-test-tracker",
-        href: "/mock-tests",
-        label: "Mock Test Tracker",
-        icon: TestTube2,
-        staticHint: "Log scores by subject",
-        fallback: "Track your mocks",
-      },
-      {
-        id: "syllabus-tracker",
-        href: "/syllabus",
-        label: "Syllabus Tracker",
-        icon: BookOpen,
-        liveHint: (d) =>
-          d.syllabusMasteryPercent != null
-            ? `${d.syllabusMasteryPercent % 1 === 0 ? d.syllabusMasteryPercent.toFixed(0) : d.syllabusMasteryPercent.toFixed(1)}% done`
-            : null,
-        fallback: "Track your syllabus",
-      },
-      {
-        id: "target-score-blueprint",
-        href: "/target-score-blueprint",
-        label: "Target Score Blueprint",
-        icon: Target,
-        liveHint: (d) =>
-          d.marksMastered > 0 && d.marksTotal > 0
-            ? `Proj. ${Math.round(d.marksMastered)}/${Math.round(d.marksTotal)}`
-            : null,
-        fallback: "Set your target",
-      },
-      {
-        id: "my-target",
-        href: "/my-target",
-        label: "My Target",
-        icon: Bookmark,
-        staticHint: "View your goal",
-        fallback: "Set a goal",
-      },
-    ],
+  "plan-my-day": {
+    id: "plan-my-day",
+    href: "/plan-my-day",
+    label: "Plan My Day",
+    icon: Sparkles,
+    staticHint: "AI-powered planning",
+    fallback: "AI-powered planning",
   },
-  {
-    title: "Learn & Revise",
-    dotColor: "#7F77DD",
-    items: [
-      {
-        id: "revision-reminders",
-        href: "/revision-reminders",
-        label: "Revision Reminders",
-        icon: AlarmClock,
-        staticHint: "Your own due list",
-        fallback: "Add reminders",
-      },
-      {
-        id: "doubt-tracker",
-        href: "/doubts",
-        label: "Doubt Tracker",
-        icon: HelpCircle,
-        staticHint: "Track your doubts",
-        fallback: "No doubts logged",
-      },
-      {
-        id: "mistake-log",
-        href: "/mistake-log",
-        label: "Mistake Log",
-        icon: ClipboardList,
-        staticHint: "Error pattern taxonomy",
-        fallback: "Log a mistake",
-      },
-      {
-        id: "prepbrain-ai",
-        href: "/prepbrain",
-        label: "PrepBrain AI",
-        icon: Brain,
-        staticHint: "Ask anything",
-        fallback: "Ask anything",
-      },
-      {
-        id: "study-sessions",
-        href: "/study-sessions",
-        label: "On-camera Sessions",
-        icon: Camera,
-        staticHint: "Record a session",
-        fallback: "Start practicing",
-      },
-    ],
+  "dictate-my-day": {
+    id: "dictate-my-day",
+    href: "/dictate-day",
+    label: "Dictate My Day",
+    icon: Mic,
+    staticHint: "Voice plan your day",
+    fallback: "Voice plan your day",
   },
-  {
-    title: "Mindset & Discipline",
-    dotColor: "#D4537E",
-    items: [
-      {
-        id: "habit-maker",
-        href: "/habits",
-        label: "Habit Maker",
-        icon: CheckCircle,
-        staticHint: "Build your habits",
-        fallback: "Build your habits",
-      },
-      {
-        id: "personal-motivation",
-        href: "/motivation",
-        label: "Personal Motivation",
-        icon: MessageSquare,
-        staticHint: "View your why",
-        fallback: "View your why",
-      },
-      {
-        id: "brain-yoga",
-        href: "/meditation",
-        label: "Brain Yoga / Meditation",
-        icon: Flower2,
-        staticHint: "Clear your mind",
-        fallback: "Clear your mind",
-      },
-    ],
+  timer: {
+    id: "timer",
+    href: "/timer",
+    label: "Timer",
+    icon: Clock,
+    staticHint: "Start a focus session",
+    fallback: "Start a focus session",
   },
-];
+  "missed-tasks": {
+    id: "missed-tasks",
+    href: "/missed-tasks",
+    label: "Missed Tasks",
+    icon: LineChart,
+    liveHint: (d) => (d.missedCount > 0 ? `${d.missedCount} missed` : null),
+    fallback: "Nothing missed",
+  },
+  "daily-debrief": {
+    id: "daily-debrief",
+    href: "/daily-log",
+    label: "Daily Debrief",
+    icon: NotebookPen,
+    staticHint: "3 quick questions",
+    fallback: "End-of-day check-in",
+  },
+  "saved-daily-plans": {
+    id: "saved-daily-plans",
+    href: "/saved-plans",
+    label: "Saved Daily Plans",
+    icon: CalendarDays,
+    staticHint: "Archive, completion & time stats",
+    fallback: "Browse past days",
+  },
+  "consistency-tracker": {
+    id: "consistency-tracker",
+    href: "/consistency-tracker",
+    label: "Consistency Tracker",
+    icon: BarChart3,
+    liveHint: (d) =>
+      d.streakDays != null && d.streakDays > 0
+        ? `${d.streakDays}-day streak`
+        : null,
+    fallback: "Start your streak",
+  },
+  "mock-test-tracker": {
+    id: "mock-test-tracker",
+    href: "/mock-tests",
+    label: "Mock Test Tracker",
+    icon: TestTube2,
+    staticHint: "Log scores by subject",
+    fallback: "Track your mocks",
+  },
+  progress: {
+    id: "progress",
+    href: "/progress",
+    label: "Progress",
+    icon: TrendingUp,
+    liveHint: (d) =>
+      d.syllabusMasteryPercent != null
+        ? `${d.syllabusMasteryPercent % 1 === 0 ? d.syllabusMasteryPercent.toFixed(0) : d.syllabusMasteryPercent.toFixed(1)}% syllabus done`
+        : null,
+    fallback: "Track progress",
+  },
+  "syllabus-tracker": {
+    id: "syllabus-tracker",
+    href: "/syllabus",
+    label: "Syllabus Tracker",
+    icon: BookOpen,
+    liveHint: (d) =>
+      d.syllabusMasteryPercent != null
+        ? `${d.syllabusMasteryPercent % 1 === 0 ? d.syllabusMasteryPercent.toFixed(0) : d.syllabusMasteryPercent.toFixed(1)}% done`
+        : null,
+    fallback: "Track your syllabus",
+  },
+  "target-score-blueprint": {
+    id: "target-score-blueprint",
+    href: "/target-score-blueprint",
+    label: "Target Score Blueprint",
+    icon: Target,
+    liveHint: (d) =>
+      d.marksMastered > 0 && d.marksTotal > 0
+        ? `Proj. ${Math.round(d.marksMastered)}/${Math.round(d.marksTotal)}`
+        : null,
+    fallback: "Set your target",
+  },
+  "my-target": {
+    id: "my-target",
+    href: "/my-target",
+    label: "My Target",
+    icon: Bookmark,
+    staticHint: "View your goal",
+    fallback: "Set a goal",
+  },
+  "prepbrain-ai": {
+    id: "prepbrain-ai",
+    href: "/prepbrain",
+    label: "PrepBrain AI",
+    icon: Brain,
+    staticHint: "Ask anything",
+    fallback: "Ask anything",
+  },
+  "revision-reminders": {
+    id: "revision-reminders",
+    href: "/revision-reminders",
+    label: "Revision Reminders",
+    icon: AlarmClock,
+    staticHint: "Your own due list",
+    fallback: "Add reminders",
+  },
+  "doubt-tracker": {
+    id: "doubt-tracker",
+    href: "/doubts",
+    label: "Doubt Tracker",
+    icon: HelpCircle,
+    staticHint: "Track your doubts",
+    fallback: "No doubts logged",
+  },
+  "mistake-log": {
+    id: "mistake-log",
+    href: "/mistake-log",
+    label: "Mistake Log",
+    icon: ClipboardList,
+    staticHint: "Error pattern taxonomy",
+    fallback: "Log a mistake",
+  },
+  "study-sessions": {
+    id: "study-sessions",
+    href: "/study-sessions",
+    label: "On-camera sessions",
+    icon: Camera,
+    staticHint: "Record a session",
+    fallback: "Start practicing",
+  },
+  "habit-maker": {
+    id: "habit-maker",
+    href: "/habits",
+    label: "Habit Maker",
+    icon: CheckCircle,
+    staticHint: "Build your habits",
+    fallback: "Build your habits",
+  },
+  "personal-motivation": {
+    id: "personal-motivation",
+    href: "/motivation",
+    label: "Personal Motivation",
+    icon: MessageSquare,
+    staticHint: "View your why",
+    fallback: "View your why",
+  },
+  "brain-yoga": {
+    id: "brain-yoga",
+    href: "/meditation",
+    label: "Brain Yoga / Meditation",
+    icon: Flower2,
+    staticHint: "Clear your mind",
+    fallback: "Clear your mind",
+  },
+};
+
+const CATEGORIES: Category[] = FEATURE_CATEGORIES.map((cat) => ({
+  title: cat.title,
+  dotColor: cat.dotColor,
+  items: cat.featureIds.map((id) => {
+    const item = FEATURE_ITEM_BY_ID[id];
+    if (!item) {
+      throw new Error(`HomeFeatureGrid: missing FEATURE_ITEM_BY_ID[${id}]`);
+    }
+    return item;
+  }),
+}));
 
 /** Same rule as HomeAccordionSections: null = show all; else only listed ids. */
 function filterCategoriesByEnabledFeatures(

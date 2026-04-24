@@ -17,6 +17,10 @@ import { AddEditTaskSheet } from "@/components/planner/AddEditTaskSheet";
 import { TaskCard } from "@/components/task/TaskCard";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { DateFilterNativeInput } from "@/components/ui/DateFilterNativeInput";
+import {
+  isCustomDateFilter,
+  RelativeDatePresetChips,
+} from "@/components/ui/RelativeDatePresetChips";
 import { TransientNotice } from "@/components/ui/TransientNotice";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import {
@@ -167,11 +171,6 @@ export function MissedTasks() {
     return m;
   }, [filteredRows]);
 
-  const availableDates = useMemo(
-    () => [...dateRowCounts.keys()].sort((a, b) => a.localeCompare(b)),
-    [dateRowCounts],
-  );
-
   const dateFilteredRows = useMemo(() => {
     if (!selectedDate) return filteredRows;
     return filteredRows.filter((r) => r.sortKey === selectedDate);
@@ -186,19 +185,18 @@ export function MissedTasks() {
       map.set(r.sortKey, list);
     }
     return [...map.entries()]
-      .sort(([a], [b]) => a.localeCompare(b))
+      .sort(([a], [b]) => b.localeCompare(a))
       .map(([date, rows]) => ({ date, rows }));
   }, [dateFilteredRows, selectedDate]);
 
   const missedPickerBounds = useMemo(() => {
-    if (availableDates.length === 0) return null;
+    if (dateRowCounts.size === 0) return null;
+    const keys = [...dateRowCounts.keys()].sort((a, b) => a.localeCompare(b));
     return {
-      min: availableDates[0]!,
-      max: availableDates[availableDates.length - 1]!,
+      min: keys[0]!,
+      max: keys[keys.length - 1]!,
     };
-  }, [availableDates]);
-
-  const showDateStrip = availableDates.length >= 2;
+  }, [dateRowCounts]);
 
   const allCaughtUp = useMemo(() => {
     if (userId && revisionLoading) return false;
@@ -450,55 +448,21 @@ export function MissedTasks() {
 
       {filteredRows.length > 0 ? (
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <div
-            className="flex min-w-0 flex-1 flex-wrap gap-2 overflow-x-auto overflow-y-hidden overscroll-x-contain [touch-action:pan-x] pb-1 [scrollbar-width:thin] sm:flex-nowrap sm:-mx-1 sm:px-1"
-            role="group"
-            aria-label="Filter by due date"
-          >
-            <button
-              type="button"
-              onClick={() => setSelectedDate(null)}
-              className={clsx(
-                "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
-                selectedDate == null
-                  ? "border-kal-accent bg-kal-accent/15 text-kal-text"
-                  : "border-kal-border/70 bg-white/50 text-kal-text-secondary hover:border-kal-accent/40 hover:text-kal-text dark:bg-zinc-900/50",
-              )}
-            >
-              All
-              <span className="rounded-full bg-kal-text/10 px-1.5 py-px text-[10px] tabular-nums text-kal-text">
-                {filteredRows.length}
-              </span>
-            </button>
-            {showDateStrip
-              ? availableDates.map((d) => {
-                  const n = dateRowCounts.get(d) ?? 0;
-                  return (
-                    <button
-                      key={d}
-                      type="button"
-                      onClick={() => setSelectedDate(d)}
-                      className={clsx(
-                        "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
-                        selectedDate === d
-                          ? "border-kal-accent bg-kal-accent/15 text-kal-text"
-                          : "border-kal-border/70 bg-white/50 text-kal-text-secondary hover:border-kal-accent/40 hover:text-kal-text dark:bg-zinc-900/50",
-                      )}
-                    >
-                      {format(parseISO(d), "MMM d")}
-                      <span className="rounded-full bg-kal-text/10 px-1.5 py-px text-[10px] tabular-nums text-kal-text">
-                        {n}
-                      </span>
-                    </button>
-                  );
-                })
-              : null}
-          </div>
+          <RelativeDatePresetChips
+            todayYmd={today}
+            totalAll={filteredRows.length}
+            countByDate={dateRowCounts}
+            selectedDate={selectedDate}
+            onSelect={setSelectedDate}
+            activeVariant="strong"
+            className="overflow-y-hidden overscroll-x-contain [touch-action:pan-x]"
+          />
           {missedPickerBounds ? (
             <DateFilterNativeInput
               min={missedPickerBounds.min}
               max={missedPickerBounds.max}
               onSelect={setSelectedDate}
+              active={isCustomDateFilter(selectedDate, today)}
             />
           ) : null}
         </div>

@@ -94,7 +94,11 @@ export function DailyReflectionClient() {
         setIsEditing(true);
       }
       if (historyResult.ok) {
-        setRecentHistory(historyResult.data.filter((r) => r.reflection_date !== today));
+        setRecentHistory(
+          historyResult.data
+            .filter((r) => r.reflection_date !== today)
+            .sort((a, b) => b.reflection_date.localeCompare(a.reflection_date)),
+        );
       }
       setLoadingInit(false);
     }
@@ -157,7 +161,11 @@ export function DailyReflectionClient() {
       // Refresh history
       const histResult = await getRecentReflections(8);
       if (histResult.ok) {
-        setRecentHistory(histResult.data.filter((r) => r.reflection_date !== today));
+        setRecentHistory(
+          histResult.data
+            .filter((r) => r.reflection_date !== today)
+            .sort((a, b) => b.reflection_date.localeCompare(a.reflection_date)),
+        );
       }
     });
   }, [draft, today]);
