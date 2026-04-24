@@ -14,6 +14,7 @@ import {
 } from "@/components/planner/DailyPlanPreviewStaging";
 import { UnifiedDailyPlanList } from "@/components/planner/UnifiedDailyPlanList";
 import { VoiceMinuteLimitLink } from "@/components/subscription/LimitExceededLinks";
+import { VoiceListeningHint } from "@/components/voice/VoiceListeningHint";
 import { useAiGate } from "@/hooks/useAiGate";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { usePlannerDateMidnightRollover } from "@/hooks/usePlannerDateMidnightRollover";
@@ -23,6 +24,7 @@ import {
   isValidPlanDateString,
 } from "@/lib/dailyPlanUiDate";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
+import { VOICE_MAX_SESSION_MS, VOICE_SILENCE_AUTO_STOP_MS } from "@/lib/voiceConstants";
 import { slotFromStartEnd } from "@/lib/dailyPlanTime";
 import {
   FREE_TRIAL_VOICE_CAP_SECONDS,
@@ -251,8 +253,8 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
     stopListening,
   } = useDeviceSpeechRecognition({
     lang,
-    maxSessionMs: null,
-    silenceMs: null,
+    maxSessionMs: VOICE_MAX_SESSION_MS,
+    silenceMs: VOICE_SILENCE_AUTO_STOP_MS,
     onStart: () => {
       setError(null);
       setFallbackPanel(null);
@@ -566,6 +568,10 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
                 ? "Processing..."
                 : "Tap the mic to dictate"}
           </p>
+          <VoiceListeningHint
+            visible={phase === "listening"}
+            variant="dictation"
+          />
           {phase === "listening" ? (
             <button
               type="button"

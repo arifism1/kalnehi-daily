@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { VOICE_MAX_SESSION_MS } from "@/lib/voiceConstants";
+
 type TranscriptPayload = {
   transcript: string;
   occurredAt: string;
@@ -22,7 +24,7 @@ function getPreferredMimeType(): string {
 
 export function useMediaRecorderVoice({
   onTranscript,
-  maxMs = 30_000,
+  maxMs = VOICE_MAX_SESSION_MS,
 }: UseMediaRecorderVoiceOptions) {
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);

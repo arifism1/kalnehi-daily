@@ -23,6 +23,7 @@ import {
   useState,
 } from "react";
 
+import { VoiceListeningHint } from "@/components/voice/VoiceListeningHint";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
 import { useDoubtSyllabusSubjects } from "@/hooks/useDoubtSyllabusSubjects";
 import { useDoubtSyllabusTopicOptions } from "@/hooks/useDoubtSyllabusTopicOptions";
@@ -33,6 +34,7 @@ import {
   normalizeStoredDoubtTopic,
   resolveSubjectAgainstCatalog,
 } from "@/lib/doubtSubjects";
+import { VOICE_MAX_SESSION_MS, VOICE_SILENCE_AUTO_STOP_MS } from "@/lib/voiceConstants";
 import { resolveTopicLineAgainstCatalog } from "@/lib/doubtVoiceTagSyllabus";
 import { trimPrepBrainContextForDoubtTag } from "@/lib/prepBrainContextTrimForDoubt";
 import { surfaceOptionalString } from "@/lib/userFacingErrors";
@@ -434,8 +436,8 @@ export function DoubtTracker() {
     stopListening: stopVoiceListening,
   } = useDeviceSpeechRecognition({
     lang: voiceLang,
-    maxSessionMs: 30_000,
-    silenceMs: 3_500,
+    maxSessionMs: VOICE_MAX_SESSION_MS,
+    silenceMs: VOICE_SILENCE_AUTO_STOP_MS,
     onStart: () => {
       setVoiceError(null);
       setVoiceDoubtQuotaHit(false);
@@ -590,9 +592,13 @@ export function DoubtTracker() {
               ) : null}
             </div>
           ) : voiceListening ? (
-            <p className="text-center text-[11px] text-kal-muted sm:text-right">
-              Listening… tap the mic again to stop (max 30s).
-            </p>
+            <div className="w-full sm:text-right">
+              <VoiceListeningHint
+                visible
+                variant="dictation"
+                className="!text-right"
+              />
+            </div>
           ) : null}
         </div>
       </header>

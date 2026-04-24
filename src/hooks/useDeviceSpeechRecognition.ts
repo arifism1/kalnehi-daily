@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { VOICE_MAX_SESSION_MS, VOICE_SILENCE_AUTO_STOP_MS } from "@/lib/voiceConstants";
 import { useVoiceCommandStore } from "@/store/useVoiceCommandStore";
 
 type SpeechStatus = "idle" | "listening";
@@ -129,8 +130,8 @@ async function prepareOnDeviceRecognition(
 
 export function useDeviceSpeechRecognition({
   lang,
-  silenceMs = 5_000,
-  maxSessionMs = 60_000,
+  silenceMs = VOICE_SILENCE_AUTO_STOP_MS,
+  maxSessionMs = VOICE_MAX_SESSION_MS,
   onStart,
   onTranscript,
   onSpeechEngineInfo,

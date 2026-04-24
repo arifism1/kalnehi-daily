@@ -13,13 +13,10 @@ import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
 import { useMediaRecorderVoice } from "@/hooks/useMediaRecorderVoice";
 import { useVoiceCommandStore } from "@/store/useVoiceCommandStore";
 import { fetchDailyPlanTasksForClient } from "@/lib/fetchDailyPlanTasksForClient";
+import { VOICE_COMMAND_SILENCE_MS, VOICE_MAX_SESSION_MS } from "@/lib/voiceConstants";
 import type { DailyTaskView } from "@/actions/dailyPlan";
 import type { VoiceCommandIntent } from "@/lib/voiceCommandGroq";
-
-// Post-speech silence debounce before the STT engine finalizes and phase becomes "processing".
-// 1500 ms gives users time to start speaking AND lets the browser finalize results reliably.
-// (Same silenceMs controls both the initial "no speech" timeout and the post-speech gap.)
-const VOICE_COMMAND_END_SILENCE_MS = 1500;
+import { VoiceListeningHint } from "@/components/voice/VoiceListeningHint";
 
 // Example commands shown to the user while idle, to teach discoverability.
 const COMMAND_HINTS = [
@@ -271,11 +268,15 @@ function ListeningState({
           {transcript
             ? transcript
             : whisperMode
-              ? "Tap the mic when done\u2026"
+              ? "Tap the mic when done \u2014 up to 60s"
               : active
                 ? "Go ahead, I'm listening\u2026"
                 : "Tap the mic \u2014 I'm ready"}
         </p>
+        <VoiceListeningHint
+          visible={active && !transcript}
+          variant={whisperMode ? "whisper" : "command"}
+        />
         <p className="mt-1 text-[11px] text-kal-text-secondary/60">{voiceMinuteStatus}</p>
       </div>
 
@@ -526,10 +527,10 @@ export function GlobalVoiceSheet() {
       }
 
       case "unknown": {
-        // Auto-restart listening after briefly showing the "didn't understand" message.
+        // Show "didn't understand" briefly then close — user re-opens if needed.
         closeTimerRef.current = setTimeout(() => {
+          closeSheet();
           reset();
-          autoStartedRef.current = false;
         }, 1500);
         setPhase("done");
         return;
@@ -613,8 +614,8 @@ export function GlobalVoiceSheet() {
     clearError: clearSttError,
   } = useDeviceSpeechRecognition({
     lang: "en-US",
-    silenceMs: VOICE_COMMAND_END_SILENCE_MS,
-    maxSessionMs: 30_000,
+    silenceMs: VOICE_COMMAND_SILENCE_MS,
+    maxSessionMs: VOICE_MAX_SESSION_MS,
     interimPreview: true,
     onPreviewTranscript: (t) => {
       if (t) setTranscript(t);
@@ -631,7 +632,10 @@ export function GlobalVoiceSheet() {
     clearError: clearWhisperError,
     startRecording: startWhisperRecording,
     stopRecording: stopWhisperRecording,
-  } = useMediaRecorderVoice({ onTranscript: handleTranscript });
+  } = useMediaRecorderVoice({
+    onTranscript: handleTranscript,
+    maxMs: VOICE_MAX_SESSION_MS,
+  });
 
   // Auto-start listening when sheet opens, with chime.
   useEffect(() => {
@@ -662,12 +666,22 @@ export function GlobalVoiceSheet() {
     }
   }, [isOpen, stopListening, stopWhisperRecording]);
 
-  // STT error handler — auto-trigger Whisper fallback on first failure.
+  // STT error handler — auto-restart on "no speech", Whisper fallback on real failures.
   useEffect(() => {
     if (!sttError || !(phase === "idle" || phase === "listening")) return;
 
+    // "No speech captured" is not a device/browser failure — the silence timer
+    // fired before the user said anything. Just close the sheet quietly.
+    const isNoSpeech = sttError.toLowerCase().startsWith("no speech");
+    if (isNoSpeech) {
+      clearSttError();
+      closeSheet();
+      reset();
+      return;
+    }
+
     if (!whisperFallbackAttemptedRef.current) {
-      // First failure: silently switch to Whisper recording.
+      // First real failure: silently switch to Whisper recording.
       whisperFallbackAttemptedRef.current = true;
       clearSttError();
       setTranscript(null);

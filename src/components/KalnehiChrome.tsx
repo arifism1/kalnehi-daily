@@ -16,6 +16,7 @@ import { GlobalVoiceSheet } from "@/components/voice/GlobalVoiceSheet";
 import { Day3Paywall } from "@/components/paywall/Day3Paywall";
 import { useVoiceCommandStore } from "@/store/useVoiceCommandStore";
 
+import { LiveTargetBar } from "@/components/LiveTargetBar";
 import { KalnehiMark } from "@/components/KalnehiMark";
 import { PwaInstallPromptDeferred } from "@/components/PwaInstallPromptDeferred";
 import { FreeTrialWelcomeBanner } from "@/components/subscription/FreeTrialWelcomeBanner";
@@ -200,6 +201,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
             </button>
           </div>
         </div>
+        <LiveTargetBar />
       </header>
 
       {/* ── Body: sidebar + content ─────────────────────────────────────── */}
