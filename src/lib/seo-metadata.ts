@@ -110,9 +110,9 @@ const PAGE_SEO: Record<
   },
   dailyPlan: {
     path: "/daily-plan",
-    title: `Daily Plan — live task checklist for exam prep | ${SITE_NAME}`,
+    title: `Today's Plan — live task checklist for exam prep | ${SITE_NAME}`,
     description:
-      `Your unified Daily Plan: live tasks with prominent checkboxes, inline edit and delete, Master Today circle, and 3-Day Execution view. ${SITE_NAME} turns each day into concrete progress for JEE, NEET, UPSC & Boards.`,
+      `Your unified Today's Plan: live tasks with prominent checkboxes, inline edit and delete, Master Today circle, and 3-Day Execution view. ${SITE_NAME} turns each day into concrete progress for JEE, NEET, UPSC & Boards.`,
   },
   savedPlans: {
     path: "/saved-plans",

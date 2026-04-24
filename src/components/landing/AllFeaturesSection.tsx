@@ -3,7 +3,7 @@ import Link from "next/link";
 const ALL_FEATURES = [
   {
     emoji: "✅",
-    title: "Daily Plan",
+    title: "Today's Plan",
     tagline: "Most students lose the day before 10am. This stops that.",
     detail: "Live, tickable tasks. Edit mid-day when life happens. Every tick is real progress.",
   },

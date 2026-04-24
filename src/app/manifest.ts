@@ -33,7 +33,7 @@ export default function manifest(): MetadataRoute.Manifest {
         sizes: "1080x1920",
         type: "image/png",
         form_factor: "narrow",
-        label: "Daily Plan — live task checklist for Smart Exam Prep",
+        label: "Today's Plan — live task checklist for Smart Exam Prep",
         platform: "play",
       },
       {
@@ -81,8 +81,8 @@ export default function manifest(): MetadataRoute.Manifest {
     // Android long-press shortcuts — max 4 shown by Android launcher; keep most-used first.
     shortcuts: [
       {
-        name: "Daily Plan",
-        short_name: "Daily Plan",
+        name: "Today's Plan",
+        short_name: "Today's Plan",
         description: "Today's live task list — check off, edit, and execute",
         url: "/daily-plan",
         icons: [

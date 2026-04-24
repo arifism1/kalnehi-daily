@@ -9,7 +9,7 @@ interface Feature {
 
 const FEATURES: Feature[] = [
   {
-    tag: "Daily Plan",
+    tag: "Today's Plan",
     headline: "Most students lose the day before 10am. This stops that.",
     bullets: [
       "Your tasks for today — live, tickable, honest. Not a schedule you pretend to follow.",

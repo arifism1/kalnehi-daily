@@ -17,7 +17,7 @@ const FEATURES: FeatureCard[] = [
   {
     id: "daily-plan",
     emoji: "✅",
-    title: "Daily Plan",
+    title: "Today's Plan",
     tagline: "Most students lose the day before 10am. This stops that.",
     bullets: [
       "Your tasks for today — live, tickable, honest. Not a schedule you pretend to follow.",

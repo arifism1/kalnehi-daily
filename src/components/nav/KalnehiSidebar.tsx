@@ -59,7 +59,7 @@ const ACCOUNT_ITEMS: AccountItem[] = [
 ];
 
 const SIDEBAR_LINK_BY_ID: Record<string, SidebarItem> = {
-  "daily-planner": { href: "/daily-plan", label: "Daily Plan", icon: ListTodo },
+  "daily-planner": { href: "/daily-plan", label: "Today's Plan", icon: ListTodo },
   "plan-my-day": { href: "/plan-my-day", label: "Plan My Day", icon: Sparkles },
   "dictate-my-day": { href: "/daily-plan?open=dictate", label: "Dictate My Day", icon: Mic },
   timer: { href: "/timer", label: "Timer", icon: Clock },

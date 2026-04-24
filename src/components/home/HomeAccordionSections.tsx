@@ -164,12 +164,12 @@ export function HomeAccordionSections() {
   const allSections: AccordionSection[] = [
     {
       id: "daily-planner",
-      title: "Daily Plan",
+      title: "Today's Plan",
       icon: ListTodo,
       content: (
         <UnifiedDailyPlanListLazy
           planDate={today}
-          title="Today's Daily Plan"
+          title="Today's Plan"
           className="kal-glass-subtle rounded-2xl border-kal-border/60 p-4"
         />
       ),

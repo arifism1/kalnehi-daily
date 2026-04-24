@@ -97,7 +97,7 @@ export const FEATURE_CATEGORIES: FeatureCategoryDef[] = [
 export const DASHBOARD_FEATURES: DashboardFeature[] = [
   {
     id: "daily-planner",
-    title: "Daily Plan",
+    title: "Today's Plan",
     icon: ListTodo,
     description: "Plan and execute today's study tasks in one place.",
   },

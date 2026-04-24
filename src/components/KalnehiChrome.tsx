@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { Bell, Menu, Mic } from "lucide-react";
+import { Bell, Menu, MicVocal } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -173,7 +173,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
                   : "border-white/30 bg-white/45 text-kal-accent hover:border-white/45 hover:bg-white/65 dark:border-white/12 dark:bg-zinc-900/50",
               )}
             >
-              <Mic className="h-4.5 w-4.5 shrink-0" strokeWidth={2.25} aria-hidden />
+              <MicVocal className="h-4.5 w-4.5 shrink-0" strokeWidth={2.25} aria-hidden />
             </button>
             <Link
               href="/notifications"
