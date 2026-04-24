@@ -743,7 +743,7 @@ export function PricingPageClient() {
             One plan. Everything included.
           </h1>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-kal-text-secondary">
-            <span className="font-semibold text-kal-text">3-day free trial:</span> all features, 60,000 PrepBrain tokens, 12 minutes voice — no card needed.{" "}
+            <span className="font-semibold text-kal-text">3-day free trial:</span> all features, 60,000 PrepBrain tokens, 5 minutes voice — no card needed.{" "}
             <span className="font-semibold text-kal-text">
               Smart Plan ({pro.monthlyPriceDisplay}/month):
             </span>{" "}

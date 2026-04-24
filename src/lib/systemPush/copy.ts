@@ -14,7 +14,7 @@ export function morningKickstartPayload(firstName: string) {
   const kind = SYSTEM_PUSH_KIND.morning;
   return {
     title: `Good morning, ${safe}!`,
-    body: "Time to Master Today 🔥 What's your first task?",
+    body: "Competitors are already on the first block — open War Room and own hour one. 🔥",
     data: { kind, path: resolveSystemPushPath(kind) },
   };
 }
@@ -22,8 +22,8 @@ export function morningKickstartPayload(firstName: string) {
 export function eveningWindDownPayload() {
   const kind = SYSTEM_PUSH_KIND.evening;
   return {
-    title: "Great effort today!",
-    body: "Log your day and plan tomorrow's wins.",
+    title: "Day’s done. Debrief time.",
+    body: "Wind down, log honestly — tomorrow you come back sharper.",
     data: { kind, path: resolveSystemPushPath(kind) },
   };
 }

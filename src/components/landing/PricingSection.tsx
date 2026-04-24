@@ -12,7 +12,7 @@ const PLANS = [
       "Daily planner + syllabus tracker",
       "Marks engine + rank prediction",
       "PrepBrain AI — 60,000 tokens",
-      "Voice control — 12 minutes",
+      "Voice control — 5 minutes",
     ],
     cta: "Start free — no card",
     ctaHref: "/auth",

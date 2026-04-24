@@ -174,7 +174,7 @@ function KpiCard({ label, value, sub }: { label: string; value: string | number;
 }
 
 const TRIAL_TOKEN_CAP = 60_000;
-const TRIAL_VOICE_SEC_CAP = 720; // 12 min
+const TRIAL_VOICE_SEC_CAP = 300; // 5 min
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 

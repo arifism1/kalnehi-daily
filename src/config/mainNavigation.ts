@@ -77,11 +77,11 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
   {
     title: "DAILY ESSENTIALS",
     items: [
-      { href: "/", label: "Home", shortLabel: "Home", Icon: Home },
+      { href: "/", label: "War Room", shortLabel: "Home", Icon: Home },
       {
         href: "/daily-plan",
-        label: "Daily Plan",
-        shortLabel: "Daily plan",
+        label: "Battle Plan",
+        shortLabel: "Battle plan",
         Icon: Calendar,
         featureId: "daily-planner",
       },

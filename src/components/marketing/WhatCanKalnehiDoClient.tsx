@@ -178,7 +178,7 @@ const FEATURES: FeatureCard[] = [
     bullets: [
       "Talk out your day in one breath — voice dictation turns speech into a structured task list.",
       "Edit times and titles before you commit — you stay in control.",
-      "Your 3-day free trial includes voice time (12 min) so you can feel it before you subscribe.",
+      "Your 3-day free trial includes voice time (5 min) so you can feel it before you subscribe.",
     ],
     accent: "from-lime-400/20 via-white/40 to-yellow-400/20",
   },

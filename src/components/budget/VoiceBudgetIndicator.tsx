@@ -9,7 +9,7 @@ const SMART_PLAN_VOICE_MINUTES = TIERS.pro.voiceMinutesPerMonth;
 
 /**
  * Shows voice budget in a compact indicator.
- * Trial: X min / 12 min remaining.
+ * Trial: X min / 5 min remaining.
  * Smart Plan: X min remaining.
  */
 export function VoiceBudgetIndicator() {

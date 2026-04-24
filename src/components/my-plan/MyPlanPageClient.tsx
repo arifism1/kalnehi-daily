@@ -505,7 +505,7 @@ export function MyPlanPageClient() {
                   </p>
                 ) : null}
                 <p className="mt-1 text-xs text-kal-text-secondary">
-                  Voice (12 min) and PrepBrain tokens (60,000) are for the entire 3-day trial — use them within this window. After the trial ends, subscribe to Smart Plan ({TIERS.pro.monthlyPriceDisplay}/month) for 100 minutes of voice and 2 million tokens every month.
+                  Voice (5 min) and PrepBrain tokens (60,000) are for the entire 3-day trial — use them within this window. After the trial ends, subscribe to Smart Plan ({TIERS.pro.monthlyPriceDisplay}/month) for 100 minutes of voice and 2 million tokens every month.
                 </p>
               </div>
               <UsageBar
@@ -619,7 +619,7 @@ export function MyPlanPageClient() {
                 </h2>
                 <p className="mt-1 text-sm text-kal-text-secondary">
                   {onWelcomeTrial
-                    ? "You're on your 3-day free trial with 60,000 PrepBrain tokens and 12 minutes of voice. Subscribe to Smart Plan anytime for the full monthly quota."
+                    ? "You're on your 3-day free trial with 60,000 PrepBrain tokens and 5 minutes of voice. Subscribe to Smart Plan anytime for the full monthly quota."
                     : noActivePlan
                       ? `Choose a plan to unlock ${SITE_NAME}.`
                       : tierConfig.tagline}

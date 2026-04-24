@@ -5,6 +5,11 @@ import { ChevronLeft, ChevronRight, Loader2, X } from "lucide-react";
 import { useCallback, useEffect, useId, useMemo, useState, useTransition } from "react";
 
 import { upsertMockTest, type SubjectScoreInput } from "@/actions/mockTests";
+import { recordXpEvent } from "@/actions/xp";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { triggerConfetti } from "@/components/ui/ConfettiBlast";
+import { playCelebrationBeep } from "@/lib/celebrationSound";
+import { useAuthStore } from "@/store/useAuthStore";
 import {
   getMockTestUiPreset,
   getSuggestedSubjectMaxMarks,
@@ -34,6 +39,7 @@ export function AddMockTestSheet({
   examName,
   syllabusSubjects,
 }: Props) {
+  const userId = useAuthStore((s) => s.user?.id);
   const baseId = useId();
   const [step, setStep] = useState<1 | 2>(1);
 
@@ -158,6 +164,23 @@ export function AddMockTestSheet({
         setSaveError(result.error);
         return;
       }
+      const tot = totalScore ? Number(totalScore) : null;
+      if (tot != null && Number.isFinite(tot) && userId) {
+        const supabase = getSupabaseBrowserClient();
+        const { data: bp } = await supabase
+          .from("user_target_blueprints")
+          .select("target_clamped")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        const tgt = bp?.target_clamped;
+        if (typeof tgt === "number" && tot >= tgt) {
+          triggerConfetti("high");
+          playCelebrationBeep();
+          void recordXpEvent("milestone_mock_target", result.id, ["/home", "/mock-tests"]);
+        }
+      }
       reset();
       onSaved();
       onClose();
@@ -177,6 +200,7 @@ export function AddMockTestSheet({
     reset,
     onSaved,
     onClose,
+    userId,
   ]);
 
   if (!open) return null;

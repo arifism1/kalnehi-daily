@@ -120,7 +120,7 @@ export const TIERS: Record<SubscriptionTier, TierConfig> = {
     trialPricePaise: 1900,
     trialDays: 3,
     trialPhotoScansLimit: 5,
-    trialVoiceMinutesLimit: 12,
+    trialVoiceMinutesLimit: 5,
     photoScansPerMonth: 20,
     voiceMinutesPerMonth: 100,
     maxTasksPerDay: null,

@@ -35,7 +35,7 @@ export const PRICING_OFFERS = [
     name: "3-Day Free Trial",
     price: "0",
     priceCurrency: "INR",
-    description: "3 days full access — every feature, 60k PrepBrain tokens, 12 min voice. No card required.",
+    description: "3 days full access — every feature, 60k PrepBrain tokens, 5 min voice. No card required.",
   },
   {
     name: "Smart Plan",

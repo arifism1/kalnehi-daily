@@ -172,7 +172,7 @@ export function PathFlowchart() {
           {[
             "Every feature fully unlocked",
             "PrepBrain AI — 60,000 tokens",
-            "Voice control — 12 minutes",
+            "Voice control — 5 minutes",
           ].map((f) => (
             <div key={f} className="flex items-center gap-1.5">
               <span className="h-1 w-1 shrink-0 rounded-full bg-emerald-500/70" aria-hidden />

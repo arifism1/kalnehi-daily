@@ -127,7 +127,7 @@ export function WaitlistJoinClient({ batchNumber, opensAt: _opensAt, opensAtForm
             <div className="mt-8 space-y-2.5">
               {[
                 "Every tool unlocked — PrepBrain AI, Voice, Marks Engine",
-                "60,000 AI tokens · 12 min voice included",
+                "60,000 AI tokens · 5 min voice included",
                 "Your position is locked the moment you submit",
               ].map((point) => (
                 <div key={point} className="flex items-start gap-2.5">

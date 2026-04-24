@@ -46,7 +46,7 @@ export function AiFeatureGate({ children }: Props) {
           <Mic className="h-8 w-8 text-kal-accent" />
           <h3 className="text-lg font-bold text-kal-text">Trial voice limit reached</h3>
           <p className="max-w-sm text-sm text-kal-text-secondary">
-            You&apos;ve used all 12 minutes of voice included in your 3-day free trial. Upgrade to Smart Plan for{" "}
+            You&apos;ve used all 5 minutes of voice included in your 3-day free trial. Upgrade to Smart Plan for{" "}
             {TIERS.pro.monthlyPriceDisplay}/month and get 100 minutes of voice every month.
           </p>
           <Link href="/pricing" className="kal-btn-accent">
