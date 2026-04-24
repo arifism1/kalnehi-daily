@@ -162,30 +162,6 @@ export function HomeAccordionSections() {
    */
   const allSections: AccordionSection[] = [
     {
-      id: "doubt-tracker",
-      title: "Doubt Tracker",
-      icon: HelpCircle,
-      content: <DoubtTrackerLazy />,
-    },
-    {
-      id: "mistake-log",
-      title: "Mistake Log",
-      icon: ClipboardList,
-      content: <MistakeLogClientLazy />,
-    },
-    {
-      id: "prepbrain-ai",
-      title: "PrepBrain AI",
-      icon: Brain,
-      content: <PrepBrainChatLazy />,
-    },
-    {
-      id: "syllabus-tracker",
-      title: "Syllabus Tracker",
-      icon: BookOpen,
-      content: <SyllabusTrackerLazy />,
-    },
-    {
       id: "daily-planner",
       title: "Daily Plan",
       icon: ListTodo,
@@ -196,6 +172,36 @@ export function HomeAccordionSections() {
           className="kal-glass-subtle rounded-2xl border-kal-border/60 p-4"
         />
       ),
+    },
+    {
+      id: "plan-my-day",
+      title: "Plan My Day",
+      icon: Sparkles,
+      content: <PlanMyDayPageLazy />,
+    },
+    {
+      id: "dictate-my-day",
+      title: "Dictate My Day",
+      icon: Mic,
+      content: <DictateMyDayLazy />,
+    },
+    {
+      id: "timer",
+      title: "Timer",
+      icon: Clock,
+      content: <TimerEngineClientLazy />,
+    },
+    {
+      id: "missed-tasks",
+      title: "Missed Tasks",
+      icon: LineChart,
+      content: <MissedTasks />,
+    },
+    {
+      id: "daily-debrief",
+      title: "Daily Debrief",
+      icon: NotebookPen,
+      content: <DailyReflectionClientLazy />,
     },
     {
       id: "saved-daily-plans",
@@ -209,58 +215,10 @@ export function HomeAccordionSections() {
       ),
     },
     {
-      id: "daily-debrief",
-      title: "Daily Debrief",
-      icon: NotebookPen,
-      content: <DailyReflectionClientLazy />,
-    },
-    {
-      id: "dictate-my-day",
-      title: "Dictate My Day",
-      icon: Mic,
-      content: <DictateMyDayLazy />,
-    },
-    {
-      id: "target-score-blueprint",
-      title: "Target Score Blueprint",
-      icon: Target,
-      content: <TargetScoreBlueprintClientLazy />,
-    },
-    {
-      id: "brain-yoga",
-      title: "Brain Yoga / Meditation",
-      icon: Flower2,
-      content: <MeditationPageLazy />,
-    },
-    {
-      id: "my-target",
-      title: "My Target",
-      icon: Target,
-      content: <MyTargetClientLazy />,
-    },
-    {
-      id: "plan-my-day",
-      title: "Plan My Day",
-      icon: Sparkles,
-      content: <PlanMyDayPageLazy />,
-    },
-    {
-      id: "study-sessions",
-      title: "On-camera sessions",
-      icon: Camera,
-      content: <StudySessionsPageContent />,
-    },
-    {
-      id: "timer",
-      title: "Timer",
-      icon: Clock,
-      content: <TimerEngineClientLazy />,
-    },
-    {
-      id: "progress",
-      title: "Progress",
-      icon: TrendingUp,
-      content: <ProgressRouteLazy />,
+      id: "consistency-tracker",
+      title: "Consistency Tracker",
+      icon: BarChart3,
+      content: <ConsistencyTrackerRouteLazy />,
     },
     {
       id: "mock-test-tracker",
@@ -269,16 +227,58 @@ export function HomeAccordionSections() {
       content: <MockTestsClientLazy />,
     },
     {
+      id: "progress",
+      title: "Progress",
+      icon: TrendingUp,
+      content: <ProgressRouteLazy />,
+    },
+    {
+      id: "syllabus-tracker",
+      title: "Syllabus Tracker",
+      icon: BookOpen,
+      content: <SyllabusTrackerLazy />,
+    },
+    {
+      id: "target-score-blueprint",
+      title: "Target Score Blueprint",
+      icon: Target,
+      content: <TargetScoreBlueprintClientLazy />,
+    },
+    {
+      id: "my-target",
+      title: "My Target",
+      icon: Target,
+      content: <MyTargetClientLazy />,
+    },
+    {
+      id: "prepbrain-ai",
+      title: "PrepBrain AI",
+      icon: Brain,
+      content: <PrepBrainChatLazy />,
+    },
+    {
       id: "revision-reminders",
       title: "Revision Reminders",
       icon: AlarmClock,
       content: <RevisionRemindersRouteLazy />,
     },
     {
-      id: "consistency-tracker",
-      title: "Consistency Tracker",
-      icon: BarChart3,
-      content: <ConsistencyTrackerRouteLazy />,
+      id: "doubt-tracker",
+      title: "Doubt Tracker",
+      icon: HelpCircle,
+      content: <DoubtTrackerLazy />,
+    },
+    {
+      id: "mistake-log",
+      title: "Mistake Log",
+      icon: ClipboardList,
+      content: <MistakeLogClientLazy />,
+    },
+    {
+      id: "study-sessions",
+      title: "On-camera sessions",
+      icon: Camera,
+      content: <StudySessionsPageContent />,
     },
     {
       id: "habit-maker",
@@ -293,10 +293,10 @@ export function HomeAccordionSections() {
       content: <MotivationRouteLazy />,
     },
     {
-      id: "missed-tasks",
-      title: "Missed Tasks",
-      icon: LineChart,
-      content: <MissedTasks />,
+      id: "brain-yoga",
+      title: "Brain Yoga / Meditation",
+      icon: Flower2,
+      content: <MeditationPageLazy />,
     },
   ];
 

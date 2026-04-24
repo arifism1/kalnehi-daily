@@ -8,6 +8,8 @@ type DateFilterNativeInputProps = {
   min: string;
   max: string;
   onSelect: (ymd: string) => void;
+  /** Highlight when a non-preset calendar day is selected (e.g. custom from picker). */
+  active?: boolean;
   disabled?: boolean;
   className?: string;
 };
@@ -16,10 +18,16 @@ type DateFilterNativeInputProps = {
  * Native date picker triggered by a button (showPicker when available).
  * min/max are yyyy-MM-dd.
  */
+const pillActive =
+  "border-kal-accent bg-kal-accent/10 text-kal-text hover:border-kal-accent hover:text-kal-text";
+const pillIdle =
+  "border-kal-border/70 bg-white/50 text-kal-muted hover:border-kal-accent/40 hover:text-kal-text dark:bg-zinc-900/50";
+
 export function DateFilterNativeInput({
   min,
   max,
   onSelect,
+  active = false,
   disabled,
   className,
 }: DateFilterNativeInputProps) {
@@ -55,8 +63,7 @@ export function DateFilterNativeInput({
         }}
         className={clsx(
           "inline-flex min-h-[36px] items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
-          "border-kal-border/70 bg-white/50 text-kal-muted hover:border-kal-accent/40 hover:text-kal-text",
-          "dark:bg-zinc-900/50",
+          active ? pillActive : pillIdle,
           disabled && "pointer-events-none opacity-50",
         )}
         aria-label="Pick date from calendar"

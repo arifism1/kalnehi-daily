@@ -31,6 +31,8 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { FEATURE_CATEGORIES } from "@/lib/dashboardFeatures";
+
 type SidebarItem = {
   href: string;
   label: string;
@@ -55,53 +57,45 @@ const ACCOUNT_ITEMS: AccountItem[] = [
   { href: "/my-subscription", label: "My Subscription", icon: Crown },
 ];
 
-const SIDEBAR_CATEGORIES: SidebarCategory[] = [
-  {
-    title: "Plan & Execute",
-    dotColor: "#EF9F27",
-    items: [
-      { href: "/daily-plan", label: "Daily Plan", icon: ListTodo },
-      { href: "/saved-plans", label: "Saved Daily Plans", icon: CalendarDays },
-      { href: "/dictate-day", label: "Dictate My Day", icon: Mic },
-      { href: "/plan-my-day", label: "Plan My Day", icon: Sparkles },
-      { href: "/timer", label: "Timer", icon: Clock },
-      { href: "/missed-tasks", label: "Missed Tasks", icon: LineChart },
-      { href: "/daily-log", label: "Daily Debrief", icon: NotebookPen },
-    ],
+const SIDEBAR_LINK_BY_ID: Record<string, SidebarItem> = {
+  "daily-planner": { href: "/daily-plan", label: "Daily Plan", icon: ListTodo },
+  "plan-my-day": { href: "/plan-my-day", label: "Plan My Day", icon: Sparkles },
+  "dictate-my-day": { href: "/dictate-day", label: "Dictate My Day", icon: Mic },
+  timer: { href: "/timer", label: "Timer", icon: Clock },
+  "missed-tasks": { href: "/missed-tasks", label: "Missed Tasks", icon: LineChart },
+  "daily-debrief": { href: "/daily-log", label: "Daily Debrief", icon: NotebookPen },
+  "saved-daily-plans": { href: "/saved-plans", label: "Saved Daily Plans", icon: CalendarDays },
+  "consistency-tracker": { href: "/consistency-tracker", label: "Consistency Tracker", icon: BarChart3 },
+  "mock-test-tracker": { href: "/mock-tests", label: "Mock Test Tracker", icon: TestTube2 },
+  progress: { href: "/progress", label: "Progress", icon: TrendingUp },
+  "syllabus-tracker": { href: "/syllabus", label: "Syllabus Tracker", icon: BookOpen },
+  "target-score-blueprint": {
+    href: "/target-score-blueprint",
+    label: "Target Score Blueprint",
+    icon: Target,
   },
-  {
-    title: "Track & Measure",
-    dotColor: "#1D9E75",
-    items: [
-      { href: "/progress", label: "Progress", icon: TrendingUp },
-      { href: "/consistency-tracker", label: "Consistency Tracker", icon: BarChart3 },
-      { href: "/mock-tests", label: "Mock Test Tracker", icon: TestTube2 },
-      { href: "/syllabus", label: "Syllabus Tracker", icon: BookOpen },
-      { href: "/target-score-blueprint", label: "Target Score Blueprint", icon: Target },
-      { href: "/my-target", label: "My Target", icon: Bookmark },
-    ],
-  },
-  {
-    title: "Learn & Revise",
-    dotColor: "#7F77DD",
-    items: [
-      { href: "/revision-reminders", label: "Revision Reminders", icon: AlarmClock },
-      { href: "/doubts", label: "Doubt Tracker", icon: HelpCircle },
-      { href: "/mistake-log", label: "Mistake Log", icon: ClipboardList },
-      { href: "/prepbrain", label: "PrepBrain AI", icon: Brain },
-      { href: "/study-sessions", label: "On-camera Sessions", icon: Camera },
-    ],
-  },
-  {
-    title: "Mindset & Discipline",
-    dotColor: "#D4537E",
-    items: [
-      { href: "/habits", label: "Habit Maker", icon: CheckCircle },
-      { href: "/motivation", label: "Personal Motivation", icon: MessageSquare },
-      { href: "/meditation", label: "Brain Yoga / Meditation", icon: Flower2 },
-    ],
-  },
-];
+  "my-target": { href: "/my-target", label: "My Target", icon: Bookmark },
+  "prepbrain-ai": { href: "/prepbrain", label: "PrepBrain AI", icon: Brain },
+  "revision-reminders": { href: "/revision-reminders", label: "Revision Reminders", icon: AlarmClock },
+  "doubt-tracker": { href: "/doubts", label: "Doubt Tracker", icon: HelpCircle },
+  "mistake-log": { href: "/mistake-log", label: "Mistake Log", icon: ClipboardList },
+  "study-sessions": { href: "/study-sessions", label: "On-camera sessions", icon: Camera },
+  "habit-maker": { href: "/habits", label: "Habit Maker", icon: CheckCircle },
+  "personal-motivation": { href: "/motivation", label: "Personal Motivation", icon: MessageSquare },
+  "brain-yoga": { href: "/meditation", label: "Brain Yoga / Meditation", icon: Flower2 },
+};
+
+const SIDEBAR_CATEGORIES: SidebarCategory[] = FEATURE_CATEGORIES.map((cat) => ({
+  title: cat.title,
+  dotColor: cat.dotColor,
+  items: cat.featureIds.map((id) => {
+    const item = SIDEBAR_LINK_BY_ID[id];
+    if (!item) {
+      throw new Error(`KalnehiSidebar: missing SIDEBAR_LINK_BY_ID[${id}]`);
+    }
+    return item;
+  }),
+}));
 
 export function KalnehiSidebar() {
   const pathname = usePathname();
