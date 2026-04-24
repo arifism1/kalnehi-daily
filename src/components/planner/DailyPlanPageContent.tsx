@@ -3,8 +3,10 @@
 import { addDays, format, parseISO } from "date-fns";
 import { ArrowLeft, CalendarDays, Mic, Type, Zap } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
+import { useMemo, useState } from "react";
 
+import { TaskInputModal, type TaskInputMode } from "@/components/planner/TaskInputModal";
 import { UnifiedDailyPlanList } from "@/components/planner/UnifiedDailyPlanList";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { usePlannerDateMidnightRollover } from "@/hooks/usePlannerDateMidnightRollover";
@@ -18,6 +20,12 @@ export function DailyPlanPageContent() {
   const user = useAuthStore((s) => s.user);
   const today = useCalendarDate();
   const [logDate, setLogDate] = useState(today);
+  const searchParams = useSearchParams();
+
+  const openParam = searchParams.get("open");
+  const initialMode: TaskInputMode | null =
+    openParam === "dictate" ? "dictate" : openParam === "self-type" ? "self-type" : null;
+  const [modalMode, setModalMode] = useState<TaskInputMode | null>(initialMode);
 
   usePlannerDateMidnightRollover(today, setLogDate);
 
@@ -29,11 +37,6 @@ export function DailyPlanPageContent() {
     () => dailyPlanLiveHeading(logDate, today),
     [logDate, today],
   );
-
-  const [taskCount, setTaskCount] = useState<number | null>(null);
-  const handleTasksLoaded = useCallback((count: number) => {
-    setTaskCount(count);
-  }, []);
 
   if (!user) {
     return (
@@ -71,25 +74,17 @@ export function DailyPlanPageContent() {
             </span>
           </h1>
         </div>
-        <p className="mt-2">
-          <Link
-            href="/target-score-blueprint"
-            className="text-sm font-semibold text-kal-accent underline-offset-4 hover:underline"
-          >
-            Plan toward a target score
-          </Link>
-        </p>
       </header>
 
-      {/* Date chips + date picker */}
+      {/* Date chips + date picker + input action buttons */}
       <div className="mb-5 flex flex-wrap items-center gap-2">
-        <div className="flex min-h-[40px] items-center gap-1 rounded-xl border border-kal-border bg-kal-card-muted p-1">
+        <div className="flex min-h-[36px] items-center gap-1 rounded-xl border border-kal-border bg-kal-card-muted p-1">
           {DATE_CHIPS.map((d) => (
             <button
               key={d.id}
               type="button"
               onClick={() => setLogDate(d.id)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+              className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors ${
                 logDate === d.id
                   ? "bg-kal-accent text-white"
                   : "text-kal-muted hover:text-kal-text"
@@ -101,7 +96,7 @@ export function DailyPlanPageContent() {
         </div>
 
         {/* Arbitrary date picker */}
-        <label className="flex min-h-[40px] cursor-pointer items-center gap-1.5 rounded-xl border border-kal-border bg-kal-card-muted px-3 py-1 text-xs font-semibold text-kal-muted transition-colors hover:text-kal-text">
+        <label className="flex min-h-[36px] cursor-pointer items-center gap-1.5 rounded-xl border border-kal-border bg-kal-card-muted px-3 py-1 text-xs font-semibold text-kal-muted transition-colors hover:text-kal-text">
           <CalendarDays className="h-3.5 w-3.5 text-kal-accent" aria-hidden />
           <span className="sr-only">Pick a date</span>
           {!isChipDate && (
@@ -118,53 +113,37 @@ export function DailyPlanPageContent() {
             className="sr-only"
           />
         </label>
+
+        {/* Input mode buttons */}
+        <button
+          type="button"
+          onClick={() => setModalMode("dictate")}
+          className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-kal-border bg-kal-card-muted px-3 py-1 text-xs font-semibold text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-text"
+        >
+          <Mic className="h-3.5 w-3.5 text-kal-accent" aria-hidden />
+          Dictate
+        </button>
+        <button
+          type="button"
+          onClick={() => setModalMode("self-type")}
+          className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-kal-border bg-kal-card-muted px-3 py-1 text-xs font-semibold text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-text"
+        >
+          <Type className="h-3.5 w-3.5 text-kal-accent" aria-hidden />
+          Self Type
+        </button>
       </div>
 
       <UnifiedDailyPlanList
         planDate={logDate}
         title={listTitle}
-        onTasksLoaded={handleTasksLoaded}
         showScheduleRevision
       />
 
-      {/* Add tasks via source pages */}
-      {taskCount === 0 ? (
-        <div className="mt-6 flex flex-col gap-3">
-          <Link
-            href={`/dictate-day?planDate=${encodeURIComponent(logDate)}`}
-            className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white transition-colors"
-            style={{ backgroundColor: "#EF9F27" }}
-          >
-            <Mic className="h-4 w-4" aria-hidden />
-            Dictate My Day
-          </Link>
-          <Link
-            href={`/self-type-day?planDate=${encodeURIComponent(logDate)}`}
-            className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white transition-colors"
-            style={{ backgroundColor: "#EF9F27" }}
-          >
-            <Type className="h-4 w-4" aria-hidden />
-            Self Type
-          </Link>
-        </div>
-      ) : (
-        <div className="mt-6 flex flex-wrap justify-center gap-3">
-          <Link
-            href={`/dictate-day?planDate=${encodeURIComponent(logDate)}`}
-            className="inline-flex items-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-2.5 text-sm font-bold text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-text"
-          >
-            <Mic className="h-4 w-4 text-kal-accent" aria-hidden />
-            Dictate My Day
-          </Link>
-          <Link
-            href={`/self-type-day?planDate=${encodeURIComponent(logDate)}`}
-            className="inline-flex items-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-2.5 text-sm font-bold text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-text"
-          >
-            <Type className="h-4 w-4 text-kal-accent" aria-hidden />
-            Self Type
-          </Link>
-        </div>
-      )}
+      <TaskInputModal
+        mode={modalMode}
+        planDate={logDate}
+        onClose={() => setModalMode(null)}
+      />
     </div>
   );
 }

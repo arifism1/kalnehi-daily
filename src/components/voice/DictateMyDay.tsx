@@ -99,9 +99,15 @@ function scrollDictateLive(): void {
 type DictateMyDayProps = {
   /** Deep link from `/dictate-day?planDate=yyyy-MM-dd` (also accepts legacy `date`). */
   urlInitialPlanDate?: string | null;
+  /** When true, hides the live plan list below the input (e.g. when rendered inside a modal). */
+  hideLivePlan?: boolean;
+  /** When true, hides the page-level header and date/language row (for modal use). */
+  compact?: boolean;
+  /** Called after tasks are successfully committed to the plan. */
+  onCommitted?: () => void;
 };
 
-export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
+export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, compact = false, onCommitted }: DictateMyDayProps) {
   const user = useAuthStore((s) => s.user);
   const today = useCalendarDate();
 
@@ -398,6 +404,7 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
       window.dispatchEvent(new Event("kalnehi-daily-plan-synced"));
       setPlanListKey((k) => k + 1);
       setPreviewRows([emptyPreviewRow()]);
+      onCommitted?.();
       scrollDictateLive();
     } catch (e) {
       setError(surfaceErrorForUi(e));
@@ -420,124 +427,128 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
 
   return (
     <div className="space-y-8">
-      <header>
-        <p className="kal-category-label text-kal-accent">
-          Pro · Voice
-        </p>
-        {hasAiAccess && canDoVoiceSession && (() => {
-          const countdown =
-            isWelcomeTrial && freeTrialEndsAtIso
-              ? formatWelcomeTrialEndsIn(freeTrialEndsAtIso, nowMs)
-              : null;
-          const remText = isWelcomeTrial
-            ? formatWelcomeVoiceTimeLeft(welcomeVoiceSecondsRemaining)
-            : formatVoiceMinutesFractionalCompact(voiceMinutesRemaining);
-          const capText = isWelcomeTrial
-            ? formatVoiceMinutesFractionalCompact(FREE_TRIAL_VOICE_CAP_SECONDS / 60)
-            : formatVoiceMinutesFractionalCompact(voiceMinutesLimit);
+      {!compact && (
+        <>
+          <header>
+            <p className="kal-category-label text-kal-accent">
+              Pro · Voice
+            </p>
+            {hasAiAccess && canDoVoiceSession && (() => {
+              const countdown =
+                isWelcomeTrial && freeTrialEndsAtIso
+                  ? formatWelcomeTrialEndsIn(freeTrialEndsAtIso, nowMs)
+                  : null;
+              const remText = isWelcomeTrial
+                ? formatWelcomeVoiceTimeLeft(welcomeVoiceSecondsRemaining)
+                : formatVoiceMinutesFractionalCompact(voiceMinutesRemaining);
+              const capText = isWelcomeTrial
+                ? formatVoiceMinutesFractionalCompact(FREE_TRIAL_VOICE_CAP_SECONDS / 60)
+                : formatVoiceMinutesFractionalCompact(voiceMinutesLimit);
 
-          return (
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <div
-                role="status"
-                aria-live="polite"
-                className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/80 bg-amber-50/95 px-[10px] py-1 text-amber-950 dark:border-amber-500/45 dark:bg-amber-950/50 dark:text-amber-50"
-              >
-                <Mic
-                  className="h-3 w-3 shrink-0 text-amber-800 dark:text-amber-300"
-                  aria-hidden
-                />
-                <span className="text-[12px] font-medium text-amber-950 dark:text-amber-50">
-                  {remText}
-                </span>
-                <span className="text-[11px] text-amber-900/85 dark:text-amber-200/90">
-                  / {capText} cap
-                </span>
-              </div>
-              {countdown ? (
-                <span className="text-[0.65rem] font-semibold tabular-nums text-kal-accent sm:text-xs">
-                  {countdown}
-                </span>
-              ) : null}
-              {voiceMinutesRemaining <= 3 && hasPaidAccess ? (
-                <Link
-                  href="/my-subscription"
-                  className="text-xs font-semibold text-kal-accent hover:underline"
+              return (
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <div
+                    role="status"
+                    aria-live="polite"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/80 bg-amber-50/95 px-[10px] py-1 text-amber-950 dark:border-amber-500/45 dark:bg-amber-950/50 dark:text-amber-50"
+                  >
+                    <Mic
+                      className="h-3 w-3 shrink-0 text-amber-800 dark:text-amber-300"
+                      aria-hidden
+                    />
+                    <span className="text-[12px] font-medium text-amber-950 dark:text-amber-50">
+                      {remText}
+                    </span>
+                    <span className="text-[11px] text-amber-900/85 dark:text-amber-200/90">
+                      / {capText} cap
+                    </span>
+                  </div>
+                  {countdown ? (
+                    <span className="text-[0.65rem] font-semibold tabular-nums text-kal-accent sm:text-xs">
+                      {countdown}
+                    </span>
+                  ) : null}
+                  {voiceMinutesRemaining <= 3 && hasPaidAccess ? (
+                    <Link
+                      href="/my-subscription"
+                      className="text-xs font-semibold text-kal-accent hover:underline"
+                    >
+                      Buy more
+                    </Link>
+                  ) : isWelcomeTrial ? (
+                    <Link
+                      href="/pricing"
+                      className="text-xs font-semibold text-kal-accent hover:underline"
+                    >
+                      Upgrade
+                    </Link>
+                  ) : null}
+                </div>
+              );
+            })()}
+            <h1 className="kal-feature-title mt-1 flex flex-wrap items-center gap-2">
+              <Volume2 className="h-7 w-7 shrink-0 text-kal-accent" aria-hidden />
+              Dictate My Day
+            </h1>
+            <p className="kal-glass-subtle mt-3 rounded-xl px-3 py-2 text-xs leading-relaxed text-kal-text-secondary">
+              <span className="font-medium text-kal-text">Tip:</span> Speak naturally,
+              then tap Stop when you&apos;re done.
+            </p>
+          </header>
+
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="kal-glass-subtle flex min-h-[44px] items-center gap-1 rounded-xl p-1">
+              {[
+                { id: today, label: "Today" },
+                {
+                  id: format(addDays(parseISO(today), -1), "yyyy-MM-dd"),
+                  label: "Yesterday",
+                },
+                {
+                  id: format(addDays(parseISO(today), 1), "yyyy-MM-dd"),
+                  label: "Tomorrow",
+                },
+              ].map((d) => (
+                <button
+                  key={d.id}
+                  type="button"
+                  onClick={() => setLogDate(d.id)}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
+                    logDate === d.id
+                      ? "bg-kal-accent text-white"
+                      : "text-kal-text-secondary hover:text-kal-text"
+                  }`}
                 >
-                  Buy more
-                </Link>
-              ) : isWelcomeTrial ? (
-                <Link
-                  href="/pricing"
-                  className="text-xs font-semibold text-kal-accent hover:underline"
-                >
-                  Upgrade
-                </Link>
-              ) : null}
+                  {d.label}
+                </button>
+              ))}
             </div>
-          );
-        })()}
-        <h1 className="kal-feature-title mt-1 flex flex-wrap items-center gap-2">
-          <Volume2 className="h-7 w-7 shrink-0 text-kal-accent" aria-hidden />
-          Dictate My Day
-        </h1>
-        <p className="kal-glass-subtle mt-3 rounded-xl px-3 py-2 text-xs leading-relaxed text-kal-text-secondary">
-          <span className="font-medium text-kal-text">Tip:</span> Speak naturally,
-          then tap Stop when you&apos;re done.
-        </p>
-      </header>
-
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="kal-glass-subtle flex min-h-[44px] items-center gap-1 rounded-xl p-1">
-          {[
-            { id: today, label: "Today" },
-            {
-              id: format(addDays(parseISO(today), -1), "yyyy-MM-dd"),
-              label: "Yesterday",
-            },
-            {
-              id: format(addDays(parseISO(today), 1), "yyyy-MM-dd"),
-              label: "Tomorrow",
-            },
-          ].map((d) => (
-            <button
-              key={d.id}
-              type="button"
-              onClick={() => setLogDate(d.id)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
-                logDate === d.id
-                  ? "bg-kal-accent text-white"
-                  : "text-kal-text-secondary hover:text-kal-text"
-              }`}
-            >
-              {d.label}
-            </button>
-          ))}
-        </div>
-        <label className="block text-[11px] font-medium text-kal-text-secondary">
-          Plan date
-          <input
-            type="date"
-            value={logDate}
-            onChange={(e) => setLogDate(e.target.value)}
-            className="mt-1 block min-h-[44px] rounded-xl border border-kal-border bg-kal-input-bg px-3 text-base sm:text-sm text-kal-text"
-          />
-        </label>
-        <label className="block text-[11px] font-medium text-kal-text-secondary">
-          Speech language
-          <select
-            value={lang}
-            onChange={(e) => setLang(e.target.value)}
-            className="mt-1 block min-h-[44px] min-w-[12rem] rounded-xl border border-kal-border bg-kal-input-bg px-3 text-base sm:text-sm text-kal-text"
-          >
-            {LANGS.map((l) => (
-              <option key={l.value} value={l.value}>
-                {l.label}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
+            <label className="block text-[11px] font-medium text-kal-text-secondary">
+              Plan date
+              <input
+                type="date"
+                value={logDate}
+                onChange={(e) => setLogDate(e.target.value)}
+                className="mt-1 block min-h-[44px] rounded-xl border border-kal-border bg-kal-input-bg px-3 text-base sm:text-sm text-kal-text"
+              />
+            </label>
+            <label className="block text-[11px] font-medium text-kal-text-secondary">
+              Speech language
+              <select
+                value={lang}
+                onChange={(e) => setLang(e.target.value)}
+                className="mt-1 block min-h-[44px] min-w-[12rem] rounded-xl border border-kal-border bg-kal-input-bg px-3 text-base sm:text-sm text-kal-text"
+              >
+                {LANGS.map((l) => (
+                  <option key={l.value} value={l.value}>
+                    {l.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </>
+      )}
 
       <section className="kal-glass-panel rounded-[1.25rem] p-6 sm:p-8">
         <div className="flex flex-col items-center gap-5 text-center">
@@ -671,13 +682,15 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
         </div>
       </section>
 
-      <div id="dictate-live-plan">
-        <UnifiedDailyPlanList
-          key={planListKey}
-          planDate={logDate}
-          title={livePlanTitle}
-        />
-      </div>
+      {!hideLivePlan && (
+        <div id="dictate-live-plan">
+          <UnifiedDailyPlanList
+            key={planListKey}
+            planDate={logDate}
+            title={livePlanTitle}
+          />
+        </div>
+      )}
 
       {fallbackPanel ? (
         <section

@@ -84,7 +84,7 @@ const FEATURE_ITEM_BY_ID: Record<string, FeatureItem> = {
   },
   "dictate-my-day": {
     id: "dictate-my-day",
-    href: "/dictate-day",
+    href: "/daily-plan?open=dictate",
     label: "Dictate My Day",
     icon: Mic,
     staticHint: "Voice plan your day",

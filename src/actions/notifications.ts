@@ -274,3 +274,111 @@ export async function clearAllUserNotifications(): Promise<
     return { ok: false, error: formatSupabaseError(e) };
   }
 }
+
+export async function markAllGeneralNotificationsRead(): Promise<
+  { ok: true; updated: number } | { ok: false; error: string }
+> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    if (userError || !user) return { ok: false, error: "Not signed in." };
+
+    const { data, error } = await supabase
+      .from("user_notifications")
+      .update({ read: true })
+      .eq("user_id", user.id)
+      .eq("read", false)
+      .select("id");
+    if (error) {
+      if (isUserNotificationsTableMissing(error)) return { ok: true, updated: 0 };
+      throw error;
+    }
+    return { ok: true, updated: (data ?? []).length };
+  } catch (e) {
+    console.error("[markAllGeneralNotificationsRead] failed", e);
+    return { ok: false, error: formatSupabaseError(e) };
+  }
+}
+
+export type AppUpdate = {
+  id: string;
+  title: string;
+  message: string;
+  category: string;
+  created_at: string;
+  read: boolean;
+};
+
+export async function listAppUpdates(
+  limit = 50,
+): Promise<{ ok: true; updates: AppUpdate[] } | { ok: false; error: string }> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    if (userError || !user) return { ok: true, updates: [] };
+
+    // Single round-trip: PostgREST embeds user_app_update_reads as a LEFT JOIN.
+    // RLS on user_app_update_reads filters to auth.uid() = user_id automatically,
+    // so the embedded array is empty if unread, non-empty if read by this user.
+    const { data, error } = await supabase
+      .from("app_updates")
+      .select("id, title, message, category, created_at, user_app_update_reads(update_id)")
+      .order("created_at", { ascending: false })
+      .limit(Math.max(1, Math.min(200, limit)));
+
+    if (error) throw error;
+
+    type RawRow = {
+      id: string;
+      title: string;
+      message: string;
+      category: string;
+      created_at: string;
+      user_app_update_reads: { update_id: string }[];
+    };
+
+    const updates: AppUpdate[] = ((data ?? []) as unknown as RawRow[]).map((row) => ({
+      id: row.id,
+      title: row.title,
+      message: row.message,
+      category: row.category,
+      created_at: row.created_at,
+      read: Array.isArray(row.user_app_update_reads) && row.user_app_update_reads.length > 0,
+    }));
+
+    return { ok: true, updates };
+  } catch (e) {
+    console.error("[listAppUpdates] failed", e);
+    return { ok: false, error: formatSupabaseError(e) };
+  }
+}
+
+export async function markAllAppUpdatesRead(
+  ids: string[],
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (ids.length === 0) return { ok: true };
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    if (userError || !user) return { ok: false, error: "Not signed in." };
+
+    const rows = ids.map((update_id) => ({ user_id: user.id, update_id }));
+    const { error } = await supabase
+      .from("user_app_update_reads")
+      .upsert(rows, { onConflict: "user_id,update_id" });
+    if (error) throw error;
+    return { ok: true };
+  } catch (e) {
+    console.error("[markAllAppUpdatesRead] failed", e);
+    return { ok: false, error: formatSupabaseError(e) };
+  }
+}
