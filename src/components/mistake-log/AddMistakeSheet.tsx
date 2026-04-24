@@ -6,7 +6,9 @@ import { useCallback, useId, useState, useTransition } from "react";
 
 import { createMistakeLog, type MistakeType, type MistakeSource } from "@/actions/mistakeLogs";
 import { MistakeTypeGrid } from "@/components/mistake-log/MistakeTypeButton";
+import { VoiceListeningHint } from "@/components/voice/VoiceListeningHint";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
+import { VOICE_MAX_SESSION_MS, VOICE_SILENCE_AUTO_STOP_MS } from "@/lib/voiceConstants";
 
 type Props = {
   open: boolean;
@@ -30,7 +32,8 @@ export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects }: Pr
   const { isListening, isSupported, startListening, stopListening, error: voiceError, clearError } =
     useDeviceSpeechRecognition({
       lang: "en-IN",
-      silenceMs: 5000,
+      maxSessionMs: VOICE_MAX_SESSION_MS,
+      silenceMs: VOICE_SILENCE_AUTO_STOP_MS,
       interimPreview: true,
       onPreviewTranscript: setVoicePreview,
       onTranscript: ({ transcript }) => {
@@ -52,9 +55,10 @@ export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects }: Pr
   }, [clearError]);
 
   const handleClose = useCallback(() => {
+    stopListening();
     reset();
     onClose();
-  }, [reset, onClose]);
+  }, [reset, onClose, stopListening]);
 
   const handleSave = useCallback(() => {
     if (!subject) { setSaveError("Please select a subject."); return; }
@@ -216,9 +220,12 @@ export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects }: Pr
               )}
             </div>
             {isListening && (
-              <p className="animate-pulse text-xs font-medium text-zinc-600 dark:text-zinc-400">
-                Listening…
-              </p>
+              <>
+                <p className="animate-pulse text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                  Listening…
+                </p>
+                <VoiceListeningHint visible className="!text-left" variant="dictation" />
+              </>
             )}
             {voiceError && (
               <p className="text-xs font-medium text-red-700 dark:text-red-300">{voiceError}</p>

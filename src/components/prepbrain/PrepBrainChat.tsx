@@ -259,7 +259,7 @@ export function PrepBrainChat() {
       className={[
         "kal-glass-panel flex flex-col overflow-hidden rounded-3xl",
         historyOpen && "max-sm:touch-none",
-        "h-[min(calc(100dvh-7rem),760px)]",
+        "h-[min(calc(100dvh-9rem),760px)]",
         "sm:h-auto sm:min-h-[min(76vh,640px)] sm:max-h-none",
       ].join(" ")}
     >

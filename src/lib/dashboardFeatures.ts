@@ -6,6 +6,7 @@ import {
   Camera,
   CalendarDays,
   CheckCircle,
+  Clapperboard,
   ClipboardList,
   Clock,
   Flower2,
@@ -52,6 +53,7 @@ export const FEATURE_CATEGORIES: FeatureCategoryDef[] = [
       "timer",
       "missed-tasks",
       "daily-debrief",
+      "shareable-recap",
       "saved-daily-plans",
     ] as const,
   },
@@ -128,6 +130,12 @@ export const DASHBOARD_FEATURES: DashboardFeature[] = [
     title: "Daily Debrief",
     icon: NotebookPen,
     description: "60-second end-of-day check-in: finished, skipped, tomorrow’s top task.",
+  },
+  {
+    id: "shareable-recap",
+    title: "Today's Recap",
+    icon: Clapperboard,
+    description: "Cinematic end-of-day card — tasks, study time, streak — built to share.",
   },
   {
     id: "saved-daily-plans",

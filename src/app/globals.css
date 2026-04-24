@@ -691,32 +691,31 @@ body {
   }
 }
 
-/* ── Desktop two-column chrome layout helpers ─────────────────────────── */
-/* Applied only at lg (1024px+) where KalnehiSidebar is rendered.
-   kal-chrome-root locks the shell to the viewport so the sidebar never
-   scrolls off-screen; kal-chrome-main-scroll makes only the content
-   column scroll. Reuse these in any future two-column in-app layout. */
-@media (min-width: 1024px) {
-  .kal-chrome-root {
-    height: 100dvh;
-    max-height: 100dvh;
-    min-height: 0;
-    overflow: hidden;
-  }
-  .kal-chrome-body {
-    min-height: 0;
-  }
-  .kal-chrome-main-scroll {
-    min-height: 0;
-    overflow-y: auto;
-    /* Contain scroll chain within the inner column on iPad/desktop so
-       over-scroll at the content boundary does not propagate to the
-       viewport-locked kal-chrome-root. */
-    overscroll-behavior-y: contain;
-    /* Explicitly allow vertical panning so iOS Safari engages native
-       momentum scroll immediately on this inner overflow container. */
-    touch-action: pan-y;
-  }
+/* ── Chrome layout helpers (all screen sizes) ─────────────────────────── */
+/* kal-chrome-root locks the shell to the viewport height so the only
+   scrollable surface is kal-chrome-main-scroll. Applying at every
+   breakpoint prevents the outer document from competing with inner
+   overflow containers (e.g. the PrepBrain message list) on mobile,
+   where iOS/Android would otherwise route touch-scroll to the document
+   instead of the inner element. */
+.kal-chrome-root {
+  height: 100dvh;
+  max-height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+.kal-chrome-body {
+  min-height: 0;
+}
+.kal-chrome-main-scroll {
+  min-height: 0;
+  overflow-y: auto;
+  /* Contain scroll chain so over-scroll at the content boundary does not
+     propagate to the viewport-locked kal-chrome-root. */
+  overscroll-behavior-y: contain;
+  /* Explicitly allow vertical panning so iOS Safari engages native
+     momentum scroll immediately on this inner overflow container. */
+  touch-action: pan-y;
 }
 
 /* ── Landing page animations ──────────────────────────────────────────── */

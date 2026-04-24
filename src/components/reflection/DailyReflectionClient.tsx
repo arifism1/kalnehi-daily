@@ -4,8 +4,10 @@ import clsx from "clsx";
 import { CheckCircle2, Loader2, Mic, MicOff, PenLine, SkipForward, Target } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
+import { VoiceListeningHint } from "@/components/voice/VoiceListeningHint";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
+import { VOICE_MAX_SESSION_MS, VOICE_SILENCE_AUTO_STOP_MS } from "@/lib/voiceConstants";
 import {
   getTodayReflection,
   getRecentReflections,
@@ -113,7 +115,8 @@ export function DailyReflectionClient() {
   const { isListening, isSupported, startListening, stopListening, error: voiceError, clearError: clearVoiceError } =
     useDeviceSpeechRecognition({
       lang: "en-IN",
-      silenceMs: 6000,
+      maxSessionMs: VOICE_MAX_SESSION_MS,
+      silenceMs: VOICE_SILENCE_AUTO_STOP_MS,
       interimPreview: true,
       onPreviewTranscript: setVoicePreview,
       onTranscript: ({ transcript }) => {
@@ -251,7 +254,10 @@ export function DailyReflectionClient() {
                   )}
                 </div>
                 {isActive && isListening && (
-                  <p className="text-xs text-kal-text-secondary animate-pulse">Listening…</p>
+                  <div className="space-y-1">
+                    <p className="text-xs text-kal-text-secondary animate-pulse">Listening…</p>
+                    <VoiceListeningHint visible variant="dictation" className="!text-left" />
+                  </div>
                 )}
               </div>
             );

@@ -8,6 +8,7 @@ import {
   Brain,
   Camera,
   CheckCircle,
+  Clapperboard,
   ClipboardList,
   Clock,
   Flower2,
@@ -112,6 +113,14 @@ const FEATURE_ITEM_BY_ID: Record<string, FeatureItem> = {
     icon: NotebookPen,
     staticHint: "3 quick questions",
     fallback: "End-of-day check-in",
+  },
+  "shareable-recap": {
+    id: "shareable-recap",
+    href: "/recap",
+    label: "Today's Recap",
+    icon: Clapperboard,
+    staticHint: "Shareable story card",
+    fallback: "Screenshot & share",
   },
   "saved-daily-plans": {
     id: "saved-daily-plans",

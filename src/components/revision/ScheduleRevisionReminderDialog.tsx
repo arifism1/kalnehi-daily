@@ -6,6 +6,7 @@ import { Loader2, Mic, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { VoiceMinuteLimitLink } from "@/components/subscription/LimitExceededLinks";
+import { VoiceListeningHint } from "@/components/voice/VoiceListeningHint";
 import { useAiGate } from "@/hooks/useAiGate";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
@@ -18,6 +19,7 @@ import { plannerTextAppendRevisionReminder } from "@/lib/userPlannerTextClient";
 import type { UserPlannerTextBundle } from "@/lib/userPlannerTextTypes";
 import { surfaceErrorForUi } from "@/lib/userFacingErrors";
 import type { MergedSyllabusRow } from "@/lib/userSyllabusMerge";
+import { VOICE_MAX_SESSION_MS, VOICE_SILENCE_AUTO_STOP_MS } from "@/lib/voiceConstants";
 import { normalizeSpeechTranscript } from "@/lib/voiceTranscriptNormalize";
 
 const TOPIC_MATCH_CAP = 40;
@@ -252,8 +254,8 @@ export function ScheduleRevisionReminderDialog({
     stopListening,
   } = useDeviceSpeechRecognition({
     lang: speechLang,
-    maxSessionMs: null,
-    silenceMs: null,
+    maxSessionMs: VOICE_MAX_SESSION_MS,
+    silenceMs: VOICE_SILENCE_AUTO_STOP_MS,
     onStart: () => {
       setSpeechError(null);
       setSpeechStructHint(null);
@@ -269,6 +271,12 @@ export function ScheduleRevisionReminderDialog({
       ? "listening"
       : "idle";
   const displaySpeechError = speechRecognitionError ?? speechError;
+
+  useEffect(() => {
+    if (!open) {
+      void stopListening();
+    }
+  }, [open, stopListening]);
 
   // Reset form when dialog opens
   const initialTitle = (init.title ?? "").trim();
@@ -521,16 +529,23 @@ export function ScheduleRevisionReminderDialog({
                       />
                     )}
                   </button>
-                  <p
-                    className="min-w-0 text-xs font-medium text-kal-text-secondary"
-                    aria-live="polite"
-                  >
-                    {voicePhase === "listening"
-                      ? "Listening…"
-                      : voicePhase === "processing"
-                        ? "Filling form…"
-                        : "Tap the mic to dictate"}
-                  </p>
+                  <div className="min-w-0">
+                    <p
+                      className="text-xs font-medium text-kal-text-secondary"
+                      aria-live="polite"
+                    >
+                      {voicePhase === "listening"
+                        ? "Listening…"
+                        : voicePhase === "processing"
+                          ? "Filling form…"
+                          : "Tap the mic to dictate"}
+                    </p>
+                    <VoiceListeningHint
+                      visible={voicePhase === "listening"}
+                      className="!text-left"
+                      variant="dictation"
+                    />
+                  </div>
                 </div>
               </div>
             )}
