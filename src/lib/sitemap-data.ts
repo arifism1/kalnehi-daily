@@ -43,10 +43,11 @@ const monthly: ChangeFreq = "monthly";
 const yearly: ChangeFreq = "yearly";
 
 /**
- * All non-exam, non-blog-post public URLs for sitemap-pages.xml
- * (excludes /blog/* posts and /blog category/tag thin pages; includes /blog index).
+ * Marketing URLs only for sitemap-pages.xml (public, searchable, not behind paywall/auth).
+ * Excludes app-only URLs (e.g., /planner/*, /dashboard/*, /settings).
+ * These paths MUST be allowed by robots.txt.
  */
-const PAGES_SITEMAP: SitemapEntry[] = [
+const MARKETING_SITEMAP: SitemapEntry[] = [
   { path: "/", priority: 1, changeFrequency: weekly },
   { path: "/blog", priority: 0.85, changeFrequency: weekly },
   { path: "/pricing", priority: 0.9, changeFrequency: weekly },
@@ -103,45 +104,21 @@ const PAGES_SITEMAP: SitemapEntry[] = [
       changeFrequency: monthly,
     }),
   ),
-  { path: "/daily-plan", priority: 0.7, changeFrequency: weekly },
-  { path: "/planner", priority: 0.7, changeFrequency: weekly },
-  { path: "/planner/schedule", priority: 0.65, changeFrequency: weekly },
-  { path: "/planner/todos", priority: 0.65, changeFrequency: weekly },
-  { path: "/planner/weekly", priority: 0.65, changeFrequency: weekly },
-  { path: "/planner/routine", priority: 0.65, changeFrequency: weekly },
-  { path: "/planner/habits", priority: 0.65, changeFrequency: weekly },
-  { path: "/planner/productivity", priority: 0.65, changeFrequency: weekly },
-  { path: "/plan-my-day", priority: 0.65, changeFrequency: weekly },
-  { path: "/plan", priority: 0.65, changeFrequency: weekly },
-  { path: "/syllabus", priority: 0.7, changeFrequency: weekly },
-  { path: "/meditation", priority: 0.65, changeFrequency: weekly },
-  { path: "/meditation/consistency", priority: 0.6, changeFrequency: weekly },
-  { path: "/my-subscription", priority: 0.6, changeFrequency: weekly },
-  { path: "/settings", priority: 0.5, changeFrequency: monthly },
-  { path: "/target-score-blueprint", priority: 0.65, changeFrequency: weekly },
-  { path: "/my-target", priority: 0.6, changeFrequency: weekly },
-  { path: "/saved-plans", priority: 0.6, changeFrequency: weekly },
-  { path: "/study-sessions", priority: 0.65, changeFrequency: weekly },
-  { path: "/prepbrain", priority: 0.65, changeFrequency: weekly },
-  { path: "/marks-engine", priority: 0.6, changeFrequency: weekly },
-  { path: "/daily-engine", priority: 0.6, changeFrequency: weekly },
-  { path: "/revision-reminders", priority: 0.6, changeFrequency: weekly },
-  { path: "/progress", priority: 0.6, changeFrequency: weekly },
-  { path: "/heatmap", priority: 0.55, changeFrequency: weekly },
-  { path: "/calendar", priority: 0.55, changeFrequency: weekly },
-  { path: "/consistency-tracker", priority: 0.55, changeFrequency: weekly },
-  { path: "/habits", priority: 0.55, changeFrequency: weekly },
-  { path: "/timer", priority: 0.55, changeFrequency: weekly },
-  { path: "/motivation", priority: 0.5, changeFrequency: weekly },
-  { path: "/notifications", priority: 0.45, changeFrequency: monthly },
-  { path: "/feedback", priority: 0.45, changeFrequency: monthly },
-  { path: "/doubts", priority: 0.55, changeFrequency: weekly },
-  { path: "/profile", priority: 0.45, changeFrequency: monthly },
-  { path: "/onboarding", priority: 0.45, changeFrequency: monthly },
-  { path: "/dictate-day", priority: 0.45, changeFrequency: monthly },
-  { path: "/self-type", priority: 0.45, changeFrequency: monthly },
-  { path: "/self-type-day", priority: 0.45, changeFrequency: monthly },
 ];
+
+/**
+ * App-only URLs excluded from public sitemap (behind auth, paywall, or dynamic).
+ * These are intentionally NOT in sitemaps because robots.txt disallows them.
+ *
+ * KEPT FOR REFERENCE: in case you want to build a separate internal sitemap:
+ * /daily-plan, /planner/*, /meditation/*, /my-subscription, /settings,
+ * /target-score-blueprint, /my-target, /saved-plans, /study-sessions, /prepbrain,
+ * /marks-engine, /daily-engine, /revision-reminders, /progress, /heatmap,
+ * /calendar, /consistency-tracker, /habits, /timer, /motivation, /notifications,
+ * /feedback, /doubts, /profile, /onboarding, /dictate-day, /self-type*
+ */
+
+const PAGES_SITEMAP = MARKETING_SITEMAP;
 
 export function getPagesSitemapEntries(): SitemapEntry[] {
   return PAGES_SITEMAP;
