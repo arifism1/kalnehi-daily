@@ -357,7 +357,7 @@ function PlanCardsSection({ capStatus }: { capStatus: DailyCapStatus }) {
       ctaHref: "#subscribe",
       ctaClass:
         "bg-kal-accent text-white shadow-[0_4px_16px_rgba(255,122,0,0.28)] hover:brightness-105",
-      intro: "The full system, every month. Unlimited AI. 100 minutes of voice.",
+      intro: "The full system, every month. 20 lakh PrepBrain tokens. 100 minutes of voice.",
       bullets: [
         "Everything in the free trial, every month",
         "PrepBrain AI — 20 lakh tokens/month",

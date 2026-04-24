@@ -69,6 +69,7 @@ const PAGES_SITEMAP: SitemapEntry[] = [
   { path: "/features/habit-maker", priority: 0.8, changeFrequency: weekly },
   { path: "/features/daily-log", priority: 0.8, changeFrequency: weekly },
   { path: "/search", priority: 0.5, changeFrequency: weekly },
+  { path: "/vs", priority: 0.75, changeFrequency: monthly },
   { path: "/vs/notion", priority: 0.7, changeFrequency: monthly },
   { path: "/vs/google-calendar", priority: 0.7, changeFrequency: monthly },
   { path: "/vs/physical-timetable", priority: 0.7, changeFrequency: monthly },

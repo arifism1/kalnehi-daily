@@ -46,6 +46,8 @@ export const PUBLIC_MARKETING_PATHS = new Set<string>([
   "/cuet",
   "/cbse-class-12",
   "/ipmat",
+  // Comparisons hub (individual /vs/* pages use /vs/ prefix)
+  "/vs",
   // Feature master page
   "/features",
   // Tools master page
