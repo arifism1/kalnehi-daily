@@ -169,7 +169,7 @@ export default function JeePage() {
             <FeatureBlock
               title="Daily study load optimisation"
               description="Tell PrepBrain how many hours you have today. It'll suggest what to cover across Physics, Chemistry and Maths so you stay balanced and don't spend 4 hours on one subject every day."
-              tag="Daily Plan"
+              tag="Today's Plan"
             />
           </div>
         </section>

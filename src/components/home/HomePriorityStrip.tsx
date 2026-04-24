@@ -139,7 +139,7 @@ export function HomePriorityStrip() {
         id: "daily-plan",
         href: "/daily-plan",
         icon: ListTodo,
-        name: "Daily Plan",
+        name: "Today's Plan",
         status: "No plan yet",
       });
     }

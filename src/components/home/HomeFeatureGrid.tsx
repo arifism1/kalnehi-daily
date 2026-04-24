@@ -69,7 +69,7 @@ const FEATURE_ITEM_BY_ID: Record<string, FeatureItem> = {
   "daily-planner": {
     id: "daily-planner",
     href: "/daily-plan",
-    label: "Daily Plan",
+    label: "Today's Plan",
     icon: ListTodo,
     liveHint: (d) => (d.todayTaskCount > 0 ? `${d.todayTaskCount} tasks today` : null),
     fallback: "No plan yet",

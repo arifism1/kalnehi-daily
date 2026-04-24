@@ -91,7 +91,7 @@ export function SavedPlansHomeWidget() {
           href="/daily-plan"
           className="mt-3 inline-block text-sm font-semibold text-kal-accent hover:underline"
         >
-          Open Daily Plan
+          Open Today's Plan
         </Link>
       </div>
     );
