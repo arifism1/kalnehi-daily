@@ -20,14 +20,18 @@ export function WeeklyMagazineClient() {
   const { examDisplayName } = useTargetExamDisplay();
   const cardRef = useRef<HTMLDivElement>(null);
   const [busy, setBusy] = useState(false);
+  const [shareError, setShareError] = useState<string | null>(null);
 
   const onShare = useCallback(async () => {
     const el = cardRef.current;
     if (!el) return;
     setBusy(true);
+    setShareError(null);
     try {
       const blob = await exportShareablePng(el, { pixelRatio: 2 });
       await shareOrDownloadPng(blob, `kalnehi-week-${today}.png`);
+    } catch {
+      setShareError("Could not share the image. Try again.");
     } finally {
       setBusy(false);
     }
@@ -43,7 +47,17 @@ export function WeeklyMagazineClient() {
         )
       : 0;
 
-  const issueLabel = format(parseISO(today), "MMM yyyy").toUpperCase();
+  const issueLabel = (() => {
+    const firstDay = weekly.days[0]?.date;
+    const lastDay = weekly.days[weekly.days.length - 1]?.date;
+    if (!firstDay || !lastDay) return format(parseISO(today), "MMM yyyy").toUpperCase();
+    const firstMonth = format(parseISO(firstDay), "MMM");
+    const lastMonth = format(parseISO(lastDay), "MMM");
+    const year = format(parseISO(lastDay), "yyyy");
+    return firstMonth === lastMonth
+      ? `${lastMonth} ${year}`.toUpperCase()
+      : `${firstMonth}–${lastMonth} ${year}`.toUpperCase();
+  })();
 
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-6 pb-8">
@@ -152,6 +166,9 @@ export function WeeklyMagazineClient() {
               Daily recap
             </Link>
           </div>
+          {shareError && (
+            <p className="text-center text-sm text-red-500">{shareError}</p>
+          )}
         </>
       )}
     </div>

@@ -102,7 +102,12 @@ function fuzzyMatchTask(tasks: DailyTaskView[], subject: string): DailyTaskView 
 }
 
 function shuffleArray<T>(arr: T[]): T[] {
-  return [...arr].sort(() => Math.random() - 0.5);
+  const out = [...arr];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
 }
 
 // ─── AudioWaveform ──────────────────────────────────────────────────────────────
@@ -390,6 +395,8 @@ export function GlobalVoiceSheet() {
   const executeRef = useRef<((intent: VoiceCommandIntent, text: string) => Promise<void>) | null>(null);
   // Prevents infinite retry: Whisper fallback fires at most once per session open.
   const whisperFallbackAttemptedRef = useRef(false);
+  // Abort controller for the in-flight /api/voice-command fetch.
+  const voiceFetchAbortRef = useRef<AbortController | null>(null);
 
   // Animation state: `mounted` controls DOM presence, `animatingOut` selects CSS class.
   const [mounted, setMounted] = useState(false);
@@ -561,6 +568,9 @@ export function GlobalVoiceSheet() {
       setPhase("processing");
       setTranscript(text);
 
+      const controller = new AbortController();
+      voiceFetchAbortRef.current = controller;
+
       try {
         const res = await fetch("/api/voice-command", {
           method: "POST",
@@ -570,6 +580,7 @@ export function GlobalVoiceSheet() {
             page_context: pathname,
             durationSeconds,
           }),
+          signal: controller.signal,
         });
 
         const data = (await res.json()) as {
@@ -596,7 +607,8 @@ export function GlobalVoiceSheet() {
         }
 
         await executeRef.current?.(data.intent, data.response_text);
-      } catch {
+      } catch (e) {
+        if (e instanceof Error && e.name === "AbortError") return;
         setError("Network error. Check your connection and try again.");
         setPhase("error");
       }
@@ -657,11 +669,13 @@ export function GlobalVoiceSheet() {
     startListening();
   }, [isOpen, phase, aiGate.loading, aiGate.canDoVoiceSession, isSupported, startListening, setError, setPhase]);
 
-  // Stop listening/recording whenever the sheet closes (regardless of how it was closed).
+  // Stop listening/recording and abort any in-flight fetch when the sheet closes.
   useEffect(() => {
     if (!isOpen) {
       stopListening();
       stopWhisperRecording();
+      voiceFetchAbortRef.current?.abort();
+      voiceFetchAbortRef.current = null;
       whisperFallbackAttemptedRef.current = false;
     }
   }, [isOpen, stopListening, stopWhisperRecording]);

@@ -1,7 +1,7 @@
 "use client";
 
 import { format, parseISO, subDays } from "date-fns";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useDailyPlanExecutionForRange } from "@/hooks/useDailyPlanExecutionForRange";
 import {
@@ -31,7 +31,7 @@ export type WeeklyRecapState = {
 };
 
 export function useWeeklyRecap(endDate: string): WeeklyRecapState {
-  const userId = useAuthStore((s) => s.user?.id);
+  const authInitialized = useAuthStore((s) => s.initialized);
   const tasksRecord = useTaskStore((s) => s.tasks);
   const microRecord = useTaskStore((s) => s.microtopics);
 
@@ -69,39 +69,43 @@ export function useWeeklyRecap(endDate: string): WeeklyRecapState {
   const [secondsByDay, setSecondsByDay] = useState<Record<string, number>>({});
   const [sessionsLoading, setSessionsLoading] = useState(true);
 
-  const loadSessions = useCallback(async () => {
-    setSessionsLoading(true);
-    try {
-      const [exec, study] = await Promise.all([
-        getAllExecutionSessions(),
-        getAllStudySessions(),
-      ]);
-      const map: Record<string, number> = {};
-      for (const p of series) {
-        map[p.date] = sumStudySecondsForCalendarDay(p.date, exec, study);
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSessions() {
+      setSessionsLoading(true);
+      try {
+        const [exec, study] = await Promise.all([
+          getAllExecutionSessions(),
+          getAllStudySessions(),
+        ]);
+        if (!cancelled) {
+          const map: Record<string, number> = {};
+          for (const p of series) {
+            map[p.date] = sumStudySecondsForCalendarDay(p.date, exec, study);
+          }
+          setSecondsByDay(map);
+        }
+      } catch {
+        if (!cancelled) setSecondsByDay({});
+      } finally {
+        if (!cancelled) setSessionsLoading(false);
       }
-      setSecondsByDay(map);
-    } catch {
-      setSecondsByDay({});
-    } finally {
-      setSessionsLoading(false);
     }
-  }, [series]);
 
-  useEffect(() => {
     void loadSessions();
-  }, [loadSessions]);
 
-  useEffect(() => {
     const onExec = () => void loadSessions();
     const onStudy = () => void loadSessions();
     window.addEventListener("kalnehi-execution-log-changed", onExec);
     window.addEventListener("kalnehi-study-sessions-changed", onStudy);
+
     return () => {
+      cancelled = true;
       window.removeEventListener("kalnehi-execution-log-changed", onExec);
       window.removeEventListener("kalnehi-study-sessions-changed", onStudy);
     };
-  }, [loadSessions]);
+  }, [series]);
 
   const days: WeeklyRecapDay[] = useMemo(
     () =>
@@ -127,7 +131,10 @@ export function useWeeklyRecap(endDate: string): WeeklyRecapState {
     return `${a.slice(5)} → ${b.slice(5)}`;
   }, [days]);
 
-  const loading = !userId || sessionsLoading;
+  // Loading is true while auth hasn't resolved yet, OR while sessions are fetching.
+  // Once auth is resolved and userId is absent, we are NOT loading — local execution
+  // series data is still valid and can be displayed.
+  const loading = !authInitialized || sessionsLoading;
 
   return {
     loading,

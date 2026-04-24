@@ -22,11 +22,18 @@ export function updateLiveTargetBaseline(
   }
   try {
     const raw = localStorage.getItem(LIVE_TARGET_BAR_STORAGE_KEY);
-    const parsed = raw
-      ? (JSON.parse(raw) as LiveTargetBarPersisted)
+    const maybeRaw: unknown = raw ? JSON.parse(raw) : null;
+    const isValid =
+      maybeRaw !== null &&
+      typeof maybeRaw === "object" &&
+      typeof (maybeRaw as Record<string, unknown>).date === "string" &&
+      typeof (maybeRaw as Record<string, unknown>).startOfDayMastered === "number" &&
+      typeof (maybeRaw as Record<string, unknown>).lastMastered === "number";
+    const parsed: LiveTargetBarPersisted | null = isValid
+      ? (maybeRaw as LiveTargetBarPersisted)
       : null;
 
-    if (!parsed || typeof parsed.date !== "string") {
+    if (!parsed) {
       const init: LiveTargetBarPersisted = {
         date: today,
         startOfDayMastered: currentMastered,

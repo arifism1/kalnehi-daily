@@ -574,7 +574,7 @@ export function PrepBrainChat() {
         <div className="space-y-3 pb-1">
           {messages.map((m, i) => (
             <div
-              key={`${i}-${m.role}-${m.content.slice(0, 24)}`}
+              key={i}
               className={
                 m.role === "user"
                   ? "flex justify-end"

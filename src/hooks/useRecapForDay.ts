@@ -1,7 +1,7 @@
 "use client";
 
 import { format, parseISO, subDays } from "date-fns";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useDailyPlanExecutionForRange } from "@/hooks/useDailyPlanExecutionForRange";
 import {
@@ -26,7 +26,7 @@ export type RecapForDayState = {
 };
 
 export function useRecapForDay(calendarDate: string): RecapForDayState {
-  const userId = useAuthStore((s) => s.user?.id);
+  const authInitialized = useAuthStore((s) => s.initialized);
   const tasksRecord = useTaskStore((s) => s.tasks);
   const microRecord = useTaskStore((s) => s.microtopics);
 
@@ -68,39 +68,44 @@ export function useRecapForDay(calendarDate: string): RecapForDayState {
   const [studySeconds, setStudySeconds] = useState(0);
   const [sessionsLoading, setSessionsLoading] = useState(true);
 
-  const loadSessions = useCallback(async () => {
-    setSessionsLoading(true);
-    try {
-      const [exec, study] = await Promise.all([
-        getAllExecutionSessions(),
-        getAllStudySessions(),
-      ]);
-      setStudySeconds(
-        sumStudySecondsForCalendarDay(calendarDate, exec, study),
-      );
-    } catch {
-      setStudySeconds(0);
-    } finally {
-      setSessionsLoading(false);
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSessions() {
+      setSessionsLoading(true);
+      try {
+        const [exec, study] = await Promise.all([
+          getAllExecutionSessions(),
+          getAllStudySessions(),
+        ]);
+        if (!cancelled) {
+          setStudySeconds(sumStudySecondsForCalendarDay(calendarDate, exec, study));
+        }
+      } catch {
+        if (!cancelled) setStudySeconds(0);
+      } finally {
+        if (!cancelled) setSessionsLoading(false);
+      }
     }
-  }, [calendarDate]);
 
-  useEffect(() => {
     void loadSessions();
-  }, [loadSessions]);
 
-  useEffect(() => {
     const onExec = () => void loadSessions();
     const onStudy = () => void loadSessions();
     window.addEventListener("kalnehi-execution-log-changed", onExec);
     window.addEventListener("kalnehi-study-sessions-changed", onStudy);
+
     return () => {
+      cancelled = true;
       window.removeEventListener("kalnehi-execution-log-changed", onExec);
       window.removeEventListener("kalnehi-study-sessions-changed", onStudy);
     };
-  }, [loadSessions]);
+  }, [calendarDate]);
 
-  const loading = !userId || sessionsLoading;
+  // Loading is true while auth hasn't resolved yet, OR while sessions are fetching.
+  // Once auth is resolved and userId is absent, we are NOT loading — we just have
+  // no server sessions, so we fall back to local-only data.
+  const loading = !authInitialized || sessionsLoading;
 
   return {
     loading,

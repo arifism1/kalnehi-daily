@@ -2,7 +2,7 @@
 
 import clsx from "clsx";
 import { CheckCircle2, Loader2, Mic, MicOff, PenLine, SkipForward, Target } from "lucide-react";
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { VoiceListeningHint } from "@/components/voice/VoiceListeningHint";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
@@ -71,7 +71,7 @@ export function DailyReflectionClient() {
   const [isEditing, setIsEditing] = useState(false);
   const [loadingInit, setLoadingInit] = useState(true);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [isSaving, setIsSaving] = useState(false);
   const [activeVoiceField, setActiveVoiceField] = useState<Field | null>(null);
   const [voicePreview, setVoicePreview] = useState("");
 
@@ -131,8 +131,16 @@ export function DailyReflectionClient() {
       },
     });
 
+  // Clear active voice field if the mic fails to start.
+  useEffect(() => {
+    if (voiceError) {
+      setActiveVoiceField(null);
+      setVoicePreview("");
+    }
+  }, [voiceError]);
+
   const toggleVoice = useCallback(
-    (field: Field) => {
+    async (field: Field) => {
       if (isListening) {
         stopListening();
         setActiveVoiceField(null);
@@ -140,15 +148,16 @@ export function DailyReflectionClient() {
       } else {
         clearVoiceError();
         setActiveVoiceField(field);
-        startListening();
+        await startListening();
       }
     },
     [isListening, startListening, stopListening, clearVoiceError],
   );
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     setSaveError(null);
-    startTransition(async () => {
+    setIsSaving(true);
+    try {
       const result = await upsertDailyReflection({
         reflectionDate: today,
         finishedToday: draft.finished_today.trim() || undefined,
@@ -161,7 +170,6 @@ export function DailyReflectionClient() {
       }
       setSavedToday(result.data);
       setIsEditing(false);
-      // Refresh history
       const histResult = await getRecentReflections(8);
       if (histResult.ok) {
         setRecentHistory(
@@ -170,7 +178,9 @@ export function DailyReflectionClient() {
             .sort((a, b) => b.reflection_date.localeCompare(a.reflection_date)),
         );
       }
-    });
+    } finally {
+      setIsSaving(false);
+    }
   }, [draft, today]);
 
   if (loadingInit) {
@@ -287,11 +297,11 @@ export function DailyReflectionClient() {
               </button>
             )}
             <button
-              onClick={handleSave}
-              disabled={isPending}
+              onClick={() => void handleSave()}
+              disabled={isSaving}
               className="flex items-center gap-2 rounded-xl bg-kal-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-kal-accent/90 disabled:opacity-60 transition-colors"
             >
-              {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
               Save reflection
             </button>
           </div>

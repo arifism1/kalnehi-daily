@@ -18,14 +18,18 @@ export function EndOfDayRecapClient() {
   const recap = useRecapForDay(today);
   const cardRef = useRef<HTMLDivElement>(null);
   const [busy, setBusy] = useState(false);
+  const [shareError, setShareError] = useState<string | null>(null);
 
   const onShare = useCallback(async () => {
     const el = cardRef.current;
     if (!el) return;
     setBusy(true);
+    setShareError(null);
     try {
       const blob = await exportShareablePng(el, { pixelRatio: 2 });
       await shareOrDownloadPng(blob, `kalnehi-recap-${today}.png`);
+    } catch {
+      setShareError("Could not share the image. Try again.");
     } finally {
       setBusy(false);
     }
@@ -148,6 +152,9 @@ export function EndOfDayRecapClient() {
               Weekly magazine
             </Link>
           </div>
+          {shareError && (
+            <p className="text-center text-sm text-red-500">{shareError}</p>
+          )}
         </>
       )}
     </div>

@@ -30,6 +30,12 @@ export function useMediaRecorderVoice({
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => { isMountedRef.current = false; };
+  }, []);
+
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
   const mimeRef = useRef<string>("audio/webm");
@@ -54,7 +60,9 @@ export function useMediaRecorderVoice({
     // isTranscribing is already set to true in stopRecording before this is called.
     try {
       const fd = new FormData();
-      fd.set("audio", new File([blob], "voice-command.webm", { type: blob.type || "audio/webm" }));
+      const mimeType = blob.type || "audio/webm";
+      const ext = mimeType.includes("mp4") ? "m4a" : "webm";
+      fd.set("audio", new File([blob], `voice-command.${ext}`, { type: mimeType }));
 
       const res = await fetch("/api/voice-transcribe", { method: "POST", body: fd });
       const data = (await res.json()) as {
@@ -65,7 +73,7 @@ export function useMediaRecorderVoice({
       };
 
       if (!data.ok || !data.transcript) {
-        setError(data.error ?? "Transcription failed. Please try again.");
+        if (isMountedRef.current) setError(data.error ?? "Transcription failed. Please try again.");
         return;
       }
 
@@ -75,15 +83,17 @@ export function useMediaRecorderVoice({
           ? data.durationSeconds
           : Math.max(1, Math.round((Date.now() - recordingStartMs) / 1000));
 
-      onTranscriptRef.current({
-        transcript: data.transcript,
-        occurredAt: new Date().toISOString(),
-        durationSeconds,
-      });
+      if (isMountedRef.current) {
+        onTranscriptRef.current({
+          transcript: data.transcript,
+          occurredAt: new Date().toISOString(),
+          durationSeconds,
+        });
+      }
     } catch {
-      setError("Network error during transcription. Check your connection and try again.");
+      if (isMountedRef.current) setError("Network error during transcription. Check your connection and try again.");
     } finally {
-      setIsTranscribing(false);
+      if (isMountedRef.current) setIsTranscribing(false);
     }
   }, []);
 

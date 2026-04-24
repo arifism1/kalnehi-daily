@@ -217,6 +217,7 @@ export function DoubtTracker() {
   const editFileInputRef = useRef<HTMLInputElement>(null);
 
   const [dragOver, setDragOver] = useState<DoubtStatus | null>(null);
+  const dragCountRef = useRef<Partial<Record<DoubtStatus, number>>>({});
   const [lightbox, setLightbox] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
@@ -306,14 +307,19 @@ export function DoubtTracker() {
     ? doubts.find((d) => d.id === editingId)
     : undefined;
 
+  // Key off `editingId` (primitive) so this only re-fires when the selected
+  // item changes, not on every store update that creates a new object reference.
   useEffect(() => {
-    if (editing) {
-      setEditTitle(editing.title);
-      setEditDesc(editing.description);
-      setEditSubject(normalizeStoredDoubtSubject(editing.subject) ?? "");
-      setEditTopic(normalizeStoredDoubtTopic(editing.topic) ?? "");
+    if (!editingId) return;
+    const found = doubts.find((d) => d.id === editingId);
+    if (found) {
+      setEditTitle(found.title);
+      setEditDesc(found.description);
+      setEditSubject(normalizeStoredDoubtSubject(found.subject) ?? "");
+      setEditTopic(normalizeStoredDoubtTopic(found.topic) ?? "");
     }
-  }, [editing]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editingId]);
 
   useEffect(() => {
     if (!editing) return;
@@ -654,14 +660,25 @@ export function DoubtTracker() {
               dragOver === col.status &&
                 "ring-2 ring-kal-accent/50 ring-offset-2 ring-offset-kal-page",
             )}
+            onDragEnter={() => {
+              dragCountRef.current[col.status] = (dragCountRef.current[col.status] ?? 0) + 1;
+              setDragOver(col.status);
+            }}
             onDragOver={(e) => {
               e.preventDefault();
               e.dataTransfer.dropEffect = "move";
-              setDragOver(col.status);
             }}
-            onDragLeave={() => setDragOver(null)}
+            onDragLeave={() => {
+              const count = (dragCountRef.current[col.status] ?? 1) - 1;
+              dragCountRef.current[col.status] = count;
+              if (count <= 0) {
+                dragCountRef.current[col.status] = 0;
+                setDragOver(null);
+              }
+            }}
             onDrop={(e) => {
               e.preventDefault();
+              dragCountRef.current[col.status] = 0;
               setDragOver(null);
               const id = e.dataTransfer.getData("text/doubt-id");
               if (id) void setDoubtStatus(id, col.status);

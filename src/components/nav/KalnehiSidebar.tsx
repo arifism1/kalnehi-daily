@@ -90,12 +90,15 @@ const SIDEBAR_LINK_BY_ID: Record<string, SidebarItem> = {
 const SIDEBAR_CATEGORIES: SidebarCategory[] = FEATURE_CATEGORIES.map((cat) => ({
   title: cat.title,
   dotColor: cat.dotColor,
-  items: cat.featureIds.map((id) => {
+  items: cat.featureIds.flatMap((id) => {
     const item = SIDEBAR_LINK_BY_ID[id];
     if (!item) {
-      throw new Error(`KalnehiSidebar: missing SIDEBAR_LINK_BY_ID[${id}]`);
+      if (process.env.NODE_ENV !== "production") {
+        console.error(`KalnehiSidebar: missing SIDEBAR_LINK_BY_ID["${id}"] — skipping entry`);
+      }
+      return [];
     }
-    return item;
+    return [item];
   }),
 }));
 

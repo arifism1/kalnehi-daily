@@ -105,9 +105,7 @@ export function useLiveTargetBar(): LiveTargetBarModel {
       if (avg != null) return avg;
     }
     if (syllabusRows.length > 0) {
-      return isUpscMainsUi
-        ? syllabusRollup.totalMarksMastered
-        : syllabusRollup.totalMarksMastered;
+      return syllabusRollup.totalMarksMastered;
     }
     if (syllabusLoading) return 0;
     return computeWeightedMarksTotals(realityTasks, microtopicById).mastered;
@@ -119,7 +117,6 @@ export function useLiveTargetBar(): LiveTargetBarModel {
     syllabusRows.length,
     neetYearProjections,
     syllabusRollup.totalMarksMastered,
-    isUpscMainsUi,
     syllabusLoading,
   ]);
 

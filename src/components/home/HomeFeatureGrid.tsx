@@ -259,12 +259,15 @@ const FEATURE_ITEM_BY_ID: Record<string, FeatureItem> = {
 const CATEGORIES: Category[] = FEATURE_CATEGORIES.map((cat) => ({
   title: cat.title,
   dotColor: cat.dotColor,
-  items: cat.featureIds.map((id) => {
+  items: cat.featureIds.flatMap((id) => {
     const item = FEATURE_ITEM_BY_ID[id];
     if (!item) {
-      throw new Error(`HomeFeatureGrid: missing FEATURE_ITEM_BY_ID[${id}]`);
+      if (process.env.NODE_ENV !== "production") {
+        console.error(`HomeFeatureGrid: missing FEATURE_ITEM_BY_ID["${id}"] — skipping entry`);
+      }
+      return [];
     }
-    return item;
+    return [item];
   }),
 }));
 

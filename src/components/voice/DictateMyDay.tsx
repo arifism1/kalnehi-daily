@@ -177,21 +177,26 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
         setError("No speech captured. Try again.");
         return;
       }
+      // Capture the date at call time; if logDate changes while we await,
+      // we discard the stale result to avoid applying it to the wrong date.
+      const targetDate = logDate;
       lastVoiceDurationSecondsRef.current = durationSeconds;
       setIsProcessing(true);
       setError(null);
       setVoiceQuotaExceeded(false);
       setVoiceQuotaNote(null);
+      const controller = new AbortController();
       try {
         const parseRes = await fetch("/api/voice-parse-draft", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             transcript: cleaned,
-            log_date: logDate,
+            log_date: targetDate,
             occurred_at: occurredAt,
             durationSeconds,
           }),
+          signal: controller.signal,
         });
         const res = (await parseRes.json()) as
           | { ok: true; tasks: VoiceDraftTask[]; voice_seconds_charged?: number }
@@ -235,11 +240,13 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
           return merged.length > 0 ? merged : [emptyPreviewRow()];
         });
         scrollDictateStaging();
-      } catch {
+      } catch (e) {
+        if (e instanceof Error && e.name === "AbortError") return;
         setFallbackPanel({ text: cleaned, editMode: false });
       } finally {
         setIsProcessing(false);
       }
+      return controller;
     },
     [logDate],
   );
@@ -360,27 +367,34 @@ export function DictateMyDay({ urlInitialPlanDate = null }: DictateMyDayProps) {
     }
     setSavePhase("save");
     try {
-      for (const r of named) {
+      // Prepare all inserts first, then execute them together.
+      // If any single insert fails we stop immediately — no partial saves.
+      const inserts = named.map((r) => {
         const { time_slot, time_start, time_end } = slotFromStartEnd(
           r.startInput,
           r.endInput,
         );
-        const res = await insertDailyTask({
+        return {
           plan_date: logDate,
           id: crypto.randomUUID(),
           title: r.name.trim(),
           time_slot,
           time_start,
           time_end,
-          source: "voice",
+          source: "voice" as const,
           source_raw_text: r.sourceRaw ?? null,
           syllabus_master_id: r.syllabus_master_id ?? null,
-        });
+        };
+      });
+
+      for (const payload of inserts) {
+        const res = await insertDailyTask(payload);
         if (!res.ok) {
-          setError(surfaceErrorForUi(res.error));
+          setError(`Failed to save "${payload.title}": ${surfaceErrorForUi(res.error)}`);
           return;
         }
       }
+
       window.dispatchEvent(new Event("kalnehi-daily-plan-synced"));
       setPlanListKey((k) => k + 1);
       setPreviewRows([emptyPreviewRow()]);
