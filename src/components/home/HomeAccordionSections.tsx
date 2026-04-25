@@ -226,6 +226,12 @@ export function HomeAccordionSections() {
           >
             Weekly magazine
           </a>
+          <a
+            href="/recap/monthly"
+            className="ml-3 text-sm font-semibold text-kal-accent underline-offset-2 hover:underline"
+          >
+            Monthly magazine
+          </a>
         </div>
       ),
     },
