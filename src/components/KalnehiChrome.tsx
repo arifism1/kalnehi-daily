@@ -105,7 +105,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
   if (pathname.startsWith("/welcome/")) {
     return (
       <div className="flex min-h-full min-h-dvh w-full justify-center overflow-x-hidden">
-        <div className="relative min-h-dvh w-full max-w-[390px] flex-1">
+        <div className="relative min-h-dvh min-h-0 w-full max-w-[390px] flex-1">
           {children}
         </div>
       </div>
@@ -125,7 +125,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
             >
               <KalnehiMark
                 aria-hidden
-                className="h-8 w-auto max-w-[min(100%,7.5rem)] object-contain object-left sm:h-9 sm:max-w-[8.5rem]"
+                className="h-8 w-auto max-w-[4.9rem] object-contain object-left sm:h-9 sm:max-w-[5.4rem]"
               />
             </Link>
             <button
@@ -169,7 +169,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
           >
             <KalnehiMark
               aria-hidden
-              className="h-7 w-auto max-w-[min(100%,6.5rem)] object-contain object-left sm:h-8"
+              className="h-8 w-auto max-w-[4.9rem] object-contain object-left sm:h-9"
             />
           </Link>
 

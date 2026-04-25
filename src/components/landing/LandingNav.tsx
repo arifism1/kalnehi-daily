@@ -156,7 +156,7 @@ export function LandingNav() {
           >
             <KalnehiMark
               aria-hidden
-              className="h-8 w-auto max-w-[7.5rem] object-contain object-left sm:h-9"
+              className="h-8 w-auto max-w-[4.9rem] object-contain object-left sm:h-9 sm:max-w-[5.4rem]"
             />
           </Link>
 

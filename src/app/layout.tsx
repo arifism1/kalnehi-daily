@@ -157,9 +157,9 @@ export default function RootLayout({
     <html
       lang="en-IN"
       data-scroll-behavior="smooth"
-      className={`${dmSans.variable} ${dmSerifDisplay.variable} ${syne.variable} h-full min-h-dvh antialiased`}
+      className={`${dmSans.variable} ${dmSerifDisplay.variable} ${syne.variable} h-full min-h-dvh min-h-[-webkit-fill-available] antialiased`}
     >
-      <body className="flex min-h-dvh flex-col bg-kal-page font-sans text-kal-text">
+      <body className="flex min-h-dvh min-h-[-webkit-fill-available] flex-col bg-kal-page font-sans text-kal-text">
         <JsonLd />
         <OrganicEntryCapture />
         <ReferralCapture />

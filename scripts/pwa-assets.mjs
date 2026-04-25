@@ -1,9 +1,10 @@
 /**
- * Text-free PWA assets: brand mark (solid orange circle) on cream (icons) and navy (splashes).
+ * PWA launcher icons: wordmark (transparent on white) from public/brand/launcher-source.png.
+ * Splashes: navy + orange brand dot (separate from app icon look).
  * Run: node scripts/rebuild-pwa-assets.mjs
  *   or: node scripts/rebuild-pwa-assets.mjs --icons  (icons + source only, no splashes)
  */
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -12,15 +13,17 @@ import sharp from "sharp";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "..");
 const SRC = join(ROOT, "public/app-icon-source.png");
+/** Master 1024× design — edit this file, then re-run the script. */
+const LAUNCHER_SOURCE = join(ROOT, "public/brand/launcher-source.png");
 
 const BRAND_HEX = "#FF7A00";
 const NAVY_HEX = "#0f172a";
 
-/** theme background for launcher tiles — matches src/app/manifest.ts */
-const BG = { r: 250, g: 247, b: 242, alpha: 1 };
+/** Launcher tile — white, matches the wordmark reference. */
+const BG = { r: 255, g: 255, b: 255, alpha: 1 };
 
-/** Icon mark fits the ~80% maskable safe circle (see web.dev/maskable-icon). */
-const CONTENT_SCALE = 0.56;
+/** How large the (square) mark is inside each output tile. ~0.8 keeps clear of maskable safe zone. */
+const CONTENT_SCALE = 0.84;
 
 /**
  * Strips a near-opaque "plate" (RGB ≥ 249) so a transparent + mark source composites cleanly.
@@ -47,19 +50,20 @@ async function stripNearWhitePlatePng(buf, { minRgb = 249 } = {}) {
     .toBuffer();
 }
 
-/** Master mark: 1024×1024, transparent, orange circle (no text). */
-async function createAppIconSourcePng() {
-  const size = 1024;
-  const r = Math.round(size * 0.2);
-  const c = size / 2;
-  const svg = `<svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg"><circle cx="${c}" cy="${c}" r="${r}" fill="${BRAND_HEX}"/></svg>`;
-  return sharp(Buffer.from(svg)).png({ compressionLevel: 9 }).toBuffer();
+/** Normalize master to 1024×1024 square PNG. */
+async function loadLauncherSourcePng() {
+  const buf = readFileSync(LAUNCHER_SOURCE);
+  return sharp(buf)
+    .resize(1024, 1024, { fit: "contain", background: { r: 255, g: 255, b: 255, alpha: 1 } })
+    .ensureAlpha()
+    .png({ compressionLevel: 9 })
+    .toBuffer();
 }
 
 async function paddedSquare(size, markBuf) {
   const inner = Math.max(1, Math.round(size * CONTENT_SCALE));
   const resized = await sharp(markBuf)
-    .resize(inner, inner, { fit: "fill" })
+    .resize(inner, inner, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
     .ensureAlpha()
     .toBuffer();
 
@@ -109,7 +113,7 @@ async function writeSplashPng(w, h) {
 }
 
 export async function buildIcons() {
-  const markRaw = await createAppIconSourcePng();
+  const markRaw = await loadLauncherSourcePng();
   writeFileSync(SRC, markRaw);
 
   const toUse = await stripNearWhitePlatePng(markRaw);
