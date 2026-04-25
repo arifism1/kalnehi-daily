@@ -240,47 +240,14 @@ function isProxyAuthExempt(pathname: string): boolean {
 }
 
 /**
- * When NEXT_PUBLIC_SITE_URL is apex (e.g. kalnehi.com), requests to www.kalnehi.com
- * used to 308 to apex. That cross-host HTTP redirect makes iOS drop "Add to Home Screen"
- * standalone mode and open the site in Safari with the URL bar. A server-side rewrite
- * keeps the browser URL on www while still serving the deployment — standalone PWAs work.
- * Sitemaps/robots stay on the requested host for GSC property alignment.
- */
-function wwwToApexRewriteTarget(request: NextRequest): URL | null {
-  const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-  if (!raw) return null;
-  let canonicalHost: string;
-  try {
-    const u = new URL(raw.startsWith("http") ? raw : `https://${raw}`);
-    canonicalHost = u.hostname;
-  } catch {
-    return null;
-  }
-  const path = request.nextUrl.pathname;
-  if (
-    path === "/sitemap.xml" ||
-    path === "/robots.txt" ||
-    /^\/sitemap-[^/]+\.xml$/.test(path)
-  ) {
-    return null;
-  }
-
-  const host = request.headers.get("host")?.split(":")[0] ?? "";
-  if (!host || host === "localhost" || host.startsWith("127.")) return null;
-  if (host === `www.${canonicalHost}`) {
-    const url = request.nextUrl.clone();
-    url.hostname = canonicalHost;
-    url.protocol = "https:";
-    return url;
-  }
-  return null;
-}
-
-/**
  * Refreshes the auth session cookie on each navigation so server actions and
  * Route Handlers see the same user as the browser.
  *
  * Next.js 16+: `proxy` replaces the deprecated `middleware` file convention.
+ *
+ * Canonical host is www.kalnehi.com. Apex (kalnehi.com) requests are handled
+ * by the permanent redirect in next.config.ts before reaching this proxy, so
+ * no host-rewriting logic is needed here.
  *
  * Refreshes the session on each request; redirects unauthenticated document traffic away
  * from app routes (defense in depth — RLS + getUser() in APIs remains authoritative).
@@ -289,10 +256,7 @@ export async function proxy(request: NextRequest) {
   const rateLimited = applyRateLimit(request);
   if (rateLimited) return rateLimited;
 
-  const rewriteTarget = wwwToApexRewriteTarget(request);
-  const baseResponse = rewriteTarget
-    ? NextResponse.rewrite(rewriteTarget)
-    : NextResponse.next({ request });
+  const baseResponse = NextResponse.next({ request });
 
   const { url, anonKey } = getSupabaseConfig();
 
