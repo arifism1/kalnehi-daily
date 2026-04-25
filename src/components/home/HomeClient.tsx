@@ -102,7 +102,6 @@ export function HomeClient() {
     const run = () => {
       if (cancelled) return;
       router.prefetch("/syllabus");
-      router.prefetch("/plan-my-day");
       router.prefetch("/daily-plan");
     };
     if (typeof requestIdleCallback !== "undefined") {

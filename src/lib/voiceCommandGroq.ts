@@ -31,7 +31,6 @@ const VALID_NAV_PATHS = new Set([
   "/daily-log",
   "/daily-engine",
   "/dictate-day",
-  "/plan-my-day",
   "/saved-plans",
   "/missed-tasks",
   "/calendar",
@@ -106,7 +105,7 @@ Parse the user voice command and return ONLY a valid JSON object — no markdown
 {"intent":"navigate","path":"<valid path>","response_text":"..."}
 Valid paths:
   Core: /home, /profile, /settings, /notifications, /my-subscription, /feedback
-  Planning: /daily-plan, /daily-log, /daily-engine, /dictate-day, /plan-my-day, /saved-plans, /missed-tasks, /calendar, /timer, /study-sessions, /study-camera, /paste-handwritten
+  Planning: /daily-plan, /daily-log, /daily-engine, /dictate-day, /saved-plans, /missed-tasks, /calendar, /timer, /study-sessions, /study-camera, /paste-handwritten
   Planner: /planner, /planner/habits, /planner/schedule, /planner/weekly, /planner/todos, /planner/routine, /planner/productivity
   Track: /progress, /consistency-tracker, /heatmap, /marks-engine, /my-target, /target-score-blueprint
   Revise: /revision-reminders, /syllabus, /doubts, /prepbrain, /helpyji
@@ -125,7 +124,7 @@ Valid paths:
 - "Open daily engine" → {"intent":"navigate","path":"/daily-engine","response_text":"Opening the daily engine."}
 - "Open study camera" → {"intent":"navigate","path":"/study-camera","response_text":"Opening study camera."}
 - "Open Helpyji" → {"intent":"navigate","path":"/helpyji","response_text":"Opening Helpyji."}
-- "Plan my day" → {"intent":"navigate","path":"/plan-my-day","response_text":"Opening AI day planner."}
+- "Plan my day" → {"intent":"navigate","path":"/daily-plan","response_text":"Opening your daily plan."}
 - "Open PrepBrain" → {"intent":"navigate","path":"/prepbrain","response_text":"Opening PrepBrain."}
 - "Go to revision reminders" → {"intent":"navigate","path":"/revision-reminders","response_text":"Opening Revision Reminders."}
 

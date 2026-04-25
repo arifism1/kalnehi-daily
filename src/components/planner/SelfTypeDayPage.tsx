@@ -129,10 +129,6 @@ export function SelfTypeDayPage() {
         <Link href="/" className="font-semibold text-kal-accent hover:text-kal-accent-hover">
           Home
         </Link>
-        <span>·</span>
-        <Link href="/plan-my-day" className="font-semibold text-kal-accent hover:text-kal-accent-hover">
-          Plan hub
-        </Link>
       </div>
     </div>
   );

@@ -18,7 +18,6 @@ import {
   MessageSquare,
   Mic,
   NotebookPen,
-  Sparkles,
   Target,
   TestTube2,
   TrendingUp,
@@ -73,14 +72,6 @@ const FEATURE_ITEM_BY_ID: Record<string, FeatureItem> = {
     icon: ListTodo,
     liveHint: (d) => (d.todayTaskCount > 0 ? `${d.todayTaskCount} tasks today` : null),
     fallback: "No plan yet",
-  },
-  "plan-my-day": {
-    id: "plan-my-day",
-    href: "/plan-my-day",
-    label: "Plan My Day",
-    icon: Sparkles,
-    staticHint: "AI-powered planning",
-    fallback: "AI-powered planning",
   },
   "dictate-my-day": {
     id: "dictate-my-day",

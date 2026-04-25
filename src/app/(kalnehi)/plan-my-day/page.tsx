@@ -1,5 +1,5 @@
-import PlanMyDayRouteLazy from "./PlanMyDayRouteLazy";
+import { redirect } from "next/navigation";
 
-export default function PlanMyDayRoutePage() {
-  return <PlanMyDayRouteLazy />;
+export default function PlanMyDayRedirectPage() {
+  redirect("/daily-plan");
 }

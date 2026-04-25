@@ -7,7 +7,6 @@ export type SubscriptionTier = "pro";
 export type FeatureAccess = "allowed" | "limited" | "blocked";
 
 export type FeatureKey =
-  | "plan_my_day"
   | "dictate_day"
   | "handwritten_scanner"
   | "self_type_day"
@@ -31,7 +30,6 @@ export type FeatureKey =
   | "mistake_log";
 
 const PRO_ACCESS: Record<FeatureKey, FeatureAccess> = {
-  plan_my_day: "allowed",
   dictate_day: "allowed",
   handwritten_scanner: "allowed",
   self_type_day: "allowed",
@@ -57,7 +55,6 @@ const PRO_ACCESS: Record<FeatureKey, FeatureAccess> = {
 
 /** Human-readable upgrade prompt per blocked feature. */
 export const FEATURE_LABELS: Record<FeatureKey, { name: string; upgradeHint: string }> = {
-  plan_my_day: { name: "Plan My Day", upgradeHint: "Upgrade to Smart Plan (₹399/month) for full access." },
   dictate_day: { name: "Dictate My Day", upgradeHint: "Upgrade to Smart Plan (₹399/month) for voice-based daily planning." },
   handwritten_scanner: {
     name: "Plan My Day",

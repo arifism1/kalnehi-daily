@@ -34,7 +34,6 @@ const REVAL_PATHS = [
   "/daily-plan",
   "/dictate-day",
   "/self-type-day",
-  "/plan-my-day",
   "/saved-plans",
   "/",
 ] as const;
