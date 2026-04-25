@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { CheckCircle2, LineChart, ListTodo } from "lucide-react";
+import { LineChart, ListTodo } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
@@ -33,21 +33,6 @@ function SkeletonCard() {
       className="h-[72px] w-[140px] shrink-0 animate-pulse rounded-[10px] bg-kal-border/30"
       aria-hidden
     />
-  );
-}
-
-function AllCaughtUp() {
-  return (
-    <div
-      role="listitem"
-      className="flex w-full items-center gap-3 rounded-[10px] px-4 py-3"
-      style={{ background: "#EAF3DE" }}
-    >
-      <CheckCircle2 className="h-5 w-5 shrink-0" style={{ color: "#3B6D11" }} aria-hidden />
-      <p className="text-sm font-medium" style={{ color: "#3B6D11" }}>
-        You&apos;re all caught up today
-      </p>
-    </div>
   );
 }
 
@@ -157,6 +142,10 @@ export function HomePriorityStrip() {
     return result;
   }, [todayTasks.length, missedTasks.length, missedRevCount]);
 
+  if (tasksHydrated && cards.length === 0) {
+    return null;
+  }
+
   return (
     <section aria-label="Needs attention" className="space-y-2">
       <p className="text-[12px] font-medium uppercase tracking-[0.07em] text-kal-muted">
@@ -169,10 +158,6 @@ export function HomePriorityStrip() {
           <SkeletonCard />
           <SkeletonCard />
         </div>
-      ) : cards.length === 0 ? (
-        <ul role="list">
-          <AllCaughtUp />
-        </ul>
       ) : (
         <ul
           role="list"

@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { DM_Sans, DM_Serif_Display } from "next/font/google";
+import { DM_Sans, DM_Serif_Display, Syne } from "next/font/google";
 
 import { AppShell } from "@/components/AppShell";
 import { AuthProvider } from "@/components/AuthProvider";
@@ -31,6 +31,13 @@ const dmSerifDisplay = DM_Serif_Display({
   subsets: ["latin"],
   weight: ["400"],
   variable: "--font-dm-serif",
+  display: "swap",
+});
+
+const syne = Syne({
+  subsets: ["latin"],
+  weight: ["600", "700"],
+  variable: "--font-syne",
   display: "swap",
 });
 
@@ -144,7 +151,7 @@ export default function RootLayout({
     <html
       lang="en-IN"
       data-scroll-behavior="smooth"
-      className={`${dmSans.variable} ${dmSerifDisplay.variable} h-full antialiased`}
+      className={`${dmSans.variable} ${dmSerifDisplay.variable} ${syne.variable} h-full antialiased`}
     >
       <body className="flex min-h-full min-h-dvh flex-col bg-kal-page font-sans text-kal-text">
         <JsonLd />

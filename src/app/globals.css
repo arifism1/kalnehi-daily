@@ -131,6 +131,8 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  /** Display headings: Kalnehi “Win Daily” welcome screens (Syne from next/font). */
+  --font-kal-heading: var(--font-syne), var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-dm-serif), Georgia, "Times New Roman", serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --color-kal-page: var(--kal-page);
@@ -801,13 +803,48 @@ body {
   animation: kalFadeInFast 0.25s ease both;
 }
 
+/* Kalnehi welcome / shutdown full-screen scenes */
+@keyframes kalWelcomeSunRise {
+  from {
+    transform: translate3d(0, 65%, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes kalWelcomeStarTwinkle {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.kal-welcome-sun-rise {
+  animation: kalWelcomeSunRise 2.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.kal-welcome-star {
+  animation: kalWelcomeStarTwinkle var(--twinkle-dur, 1.4s) ease-in-out infinite;
+  animation-delay: var(--twinkle-delay, 0s);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .kal-voice-bar,
   .kal-check-draw,
   .kal-shimmer-sweep,
   .kal-voice-modal-in,
   .kal-voice-modal-out,
-  .kal-fade-in-fast {
+  .kal-fade-in-fast,
+  .kal-welcome-sun-rise,
+  .kal-welcome-star {
     animation: none;
+  }
+
+  .kal-welcome-sun-rise {
+    transform: none;
   }
 }
