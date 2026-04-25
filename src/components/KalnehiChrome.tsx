@@ -125,7 +125,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
             >
               <KalnehiMark
                 aria-hidden
-                className="h-8 w-auto max-w-[4.9rem] object-contain object-left sm:h-9 sm:max-w-[5.4rem]"
+                className="h-8 w-auto max-w-[min(100%,7.5rem)] object-contain object-left sm:h-9 sm:max-w-[8.5rem]"
               />
             </Link>
             <button
@@ -169,7 +169,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
           >
             <KalnehiMark
               aria-hidden
-              className="h-8 w-auto max-w-[4.9rem] object-contain object-left sm:h-9"
+              className="h-7 w-auto max-w-[min(100%,6.5rem)] object-contain object-left sm:h-8"
             />
           </Link>
 
