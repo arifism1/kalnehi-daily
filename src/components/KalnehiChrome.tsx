@@ -31,7 +31,6 @@ import { TimerVisibilityBridge } from "@/components/task/TimerVisibilityBridge";
 import { BottomTabBar } from "@/components/nav/BottomTabBar";
 import { KalnehiSidebar } from "@/components/nav/KalnehiSidebar";
 import { MainNavigationMenu } from "@/components/MainNavigationMenu";
-import { PwaStandaloneStatusRow } from "@/components/PwaStandaloneStatusRow";
 
 class QuietSavedToastBoundary extends Component<
   { children: ReactNode },
@@ -128,7 +127,6 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex min-h-full min-h-dvh flex-col bg-kal-page text-kal-text">
         <header className="kal-glass-header sticky top-0 z-40 pt-[env(safe-area-inset-top)]">
-          <PwaStandaloneStatusRow />
           <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between gap-3 px-3 sm:h-[3.5rem] sm:gap-4 sm:px-6 xl:px-8">
             <Link
               href="/home"
@@ -171,7 +169,6 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
     <div className="kal-chrome-root flex min-h-full min-h-dvh flex-col bg-kal-page text-kal-text">
       {/* ── Top bar ────────────────────────────────────────────────────── */}
       <header className="kal-glass-header sticky top-0 z-40 shrink-0 pt-[env(safe-area-inset-top)]">
-        <PwaStandaloneStatusRow />
         <div className="flex h-[52px] w-full items-center justify-between gap-2 px-3 sm:h-[52px] sm:px-5">
           {/* Logo */}
           <Link

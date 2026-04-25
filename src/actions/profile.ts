@@ -186,7 +186,7 @@ export async function completeOnboarding(fields: {
   phone_number: string;
   class_studying: string;
   primary_exam: string;
-  target_exam_date: string;
+  target_exam_date?: string | null;
   upsc_optional_subject?: string | null;
 }): Promise<UpsertProfileResult> {
   try {
@@ -203,14 +203,14 @@ export async function completeOnboarding(fields: {
     const phone = fields.phone_number.trim();
     const cls = fields.class_studying.trim();
     const exam = fields.primary_exam.trim();
-    const examDate = fields.target_exam_date.trim();
+    const examDate = fields.target_exam_date?.trim() || null;
 
     if (!name) return { ok: false, error: "Please enter your name." };
     if (!phone || !/^\d{10}$/.test(phone))
       return { ok: false, error: "Please enter a valid 10-digit phone number." };
     if (!cls) return { ok: false, error: "Please select your class." };
     if (!exam) return { ok: false, error: "Please select your target exam." };
-    if (!examDate || !/^\d{4}-\d{2}-\d{2}$/.test(examDate))
+    if (examDate && !/^\d{4}-\d{2}-\d{2}$/.test(examDate))
       return { ok: false, error: "Please enter a valid exam date." };
 
     const now = new Date().toISOString();

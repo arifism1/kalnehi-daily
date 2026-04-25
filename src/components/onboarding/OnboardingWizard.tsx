@@ -128,10 +128,6 @@ export function OnboardingWizard() {
   }, [primaryExam, goNext]);
 
   const submitProfile = useCallback(async () => {
-    if (!examDate.trim()) {
-      setError("Set your D-day — the exam doesn't wait.");
-      return;
-    }
     setBusy(true);
     setError(null);
     try {
@@ -140,7 +136,7 @@ export function OnboardingWizard() {
         phone_number: phone.trim(),
         class_studying: classStudying,
         primary_exam: primaryExam.trim(),
-        target_exam_date: examDate.trim(),
+        target_exam_date: examDate.trim() || null,
         upsc_optional_subject: isUpscCseMainsExam(primaryExam)
           ? (upscOptionalSubject || null)
           : null,
@@ -384,7 +380,8 @@ export function OnboardingWizard() {
                 Expected exam date
               </h1>
               <p className="text-sm leading-relaxed text-kal-text-secondary">
-                Set your target date to personalise your dashboard.
+                Optional — set a target date to personalise your dashboard. Add an
+                approximate date if you can, even when the official date is not out yet.
               </p>
             </div>
           </div>
