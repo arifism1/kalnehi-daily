@@ -15,6 +15,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { completeOnboarding } from "@/actions/profile";
 import { ensureFreeTrialStarted } from "@/actions/subscription";
+import { writeProductTourPending } from "@/components/onboarding/ProductTour";
 import { GroupedExamSelect } from "@/components/profile/GroupedExamSelect";
 import { UpscOptionalSubjectPick } from "@/components/profile/UpscOptionalSubjectPick";
 import {
@@ -169,6 +170,7 @@ export function OnboardingWizard() {
         window.location.assign("/waitlist/position");
         return;
       }
+      writeProductTourPending();
       window.location.assign("/home");
     } catch (e) {
       setError(toUserFacingMessage(e));
