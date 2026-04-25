@@ -23,6 +23,7 @@ export const OG_IMAGE_HEIGHT = 630;
 export type KalnehiPageSeoKey =
   | "home"
   | "prepbrain"
+  | "mastermind"
   | "studySessions"
   | "planner"
   | "pricing"

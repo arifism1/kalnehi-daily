@@ -16,6 +16,7 @@ import { GlobalVoiceSheet } from "@/components/voice/GlobalVoiceSheet";
 import { Day3Paywall } from "@/components/paywall/Day3Paywall";
 import { useVoiceCommandStore } from "@/store/useVoiceCommandStore";
 
+import { WelcomeMorningHost } from "@/components/welcome/WelcomeMorningHost";
 import { KalnehiMark } from "@/components/KalnehiMark";
 import { PwaInstallPromptDeferred } from "@/components/PwaInstallPromptDeferred";
 import { FreeTrialWelcomeBanner } from "@/components/subscription/FreeTrialWelcomeBanner";
@@ -96,6 +97,16 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
         className="flex min-h-full min-h-dvh flex-col bg-kal-page text-kal-text pt-[env(safe-area-inset-top)] pb-[max(1rem,env(safe-area-inset-bottom))] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]"
       >
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
+      </div>
+    );
+  }
+
+  if (pathname.startsWith("/welcome/")) {
+    return (
+      <div className="flex min-h-full min-h-dvh w-full justify-center overflow-x-hidden">
+        <div className="relative min-h-dvh w-full max-w-[390px] flex-1">
+          {children}
+        </div>
       </div>
     );
   }
@@ -224,6 +235,8 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
           </main>
         </div>
       </div>
+
+      <WelcomeMorningHost />
 
       {/* ── Mobile bottom tab bar — hidden at lg+ ───────────────────────── */}
       <BottomTabBar />
