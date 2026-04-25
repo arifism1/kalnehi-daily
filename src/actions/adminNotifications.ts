@@ -74,6 +74,9 @@ export async function listAdminAppUpdates(
   limit = 100,
 ): Promise<{ ok: true; updates: AdminAppUpdate[] } | { ok: false; error: string }> {
   try {
+    const auth = await requireAdmin();
+    if (!auth.ok) return auth;
+
     const serviceRole = getSupabaseServiceRoleClient();
     if (!serviceRole) return { ok: false, error: "Service role unavailable." };
 
