@@ -5,7 +5,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 type PositionData = {
   position: number;
-  batchNumber: number;
   opensAt: string | null;
   aheadCount: number;
 };
@@ -50,15 +49,6 @@ function formatDate(iso: string | null): string {
   });
 }
 
-function formatTime(iso: string | null): string {
-  if (!iso) return "";
-  return new Date(iso).toLocaleTimeString("en-IN", {
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "Asia/Kolkata",
-    hour12: true,
-  }).toUpperCase();
-}
 
 export function WaitlistPositionClient() {
   const [data, setData] = useState<PositionData | null>(null);
@@ -160,9 +150,9 @@ export function WaitlistPositionClient() {
     return (
       <div className="flex min-h-screen items-center justify-center px-6">
         <div className="max-w-sm text-center">
-          <p className="text-lg font-semibold text-kal-text">No waitlist position found.</p>
+          <p className="text-lg font-semibold text-kal-text">No position found.</p>
           <p className="mt-2 text-sm text-kal-text-secondary">
-            Please <a href="/waitlist" className="text-kal-accent underline">join the waitlist</a> first.
+            Please <a href="/auth" className="text-kal-accent underline">sign up</a> first.
           </p>
         </div>
       </div>
@@ -171,7 +161,6 @@ export function WaitlistPositionClient() {
 
   const waitState = getWaitState(data.opensAt);
   const accessDate = formatDate(data.opensAt);
-  const accessTime = formatTime(data.opensAt);
   const countdownStr = formatCountdown(countdown);
   const aheadCount = Math.max(0, data.aheadCount);
 
@@ -200,9 +189,9 @@ export function WaitlistPositionClient() {
 
           {/* Header */}
           <p className="mb-2 text-xs font-bold uppercase tracking-widest text-kal-muted">
-            Kalnehi Daily · Batch {data.batchNumber}
+            Kalnehi Daily
           </p>
-          <p className="text-base font-medium text-kal-text">Your spot is locked.</p>
+          <p className="text-base font-medium text-kal-text">Today&apos;s free trial slots are full.</p>
 
           {/* Position number */}
           <div className="mt-10">
@@ -217,16 +206,16 @@ export function WaitlistPositionClient() {
             </p>
             {aheadCount > 0 && (
               <p className="mt-2 text-base text-kal-text-secondary">
-                {aheadCount.toLocaleString("en-IN")} students ahead of you
+                {aheadCount.toLocaleString("en-IN")} students got in today before you
               </p>
             )}
           </div>
 
-          {/* Access date */}
+          {/* Trial start date */}
           {data.opensAt && (
             <div className="mt-12">
               <p className="text-sm font-semibold uppercase tracking-wider text-kal-muted">
-                Access opens
+                Your trial begins
               </p>
               <p
                 className="mt-2 text-4xl font-normal text-kal-accent sm:text-5xl"
@@ -234,11 +223,13 @@ export function WaitlistPositionClient() {
               >
                 {accessDate}
               </p>
-              {accessTime && (
-                <p className="mt-1 text-lg font-medium text-kal-text-secondary">
-                  at {accessTime} IST
-                </p>
-              )}
+              <p className="mt-1 text-lg font-medium text-kal-text-secondary">
+                at 12:00 AM IST
+              </p>
+              <p className="mt-3 text-sm leading-relaxed text-kal-text-secondary">
+                We open 2,000 spots a day so the app stays fast for everyone.
+                Yours unlocks at midnight — sign in then and your 3 days start immediately.
+              </p>
 
               {/* Countdown */}
               {countdown > 0 && (
@@ -256,31 +247,32 @@ export function WaitlistPositionClient() {
               )}
               {countdown === 0 && data.opensAt && new Date(data.opensAt) < new Date() && (
                 <p className="mt-4 text-base font-semibold text-emerald-500">
-                  Your batch is now open — check your email!
+                  Your trial is now live — sign in to begin!
                 </p>
               )}
             </div>
           )}
 
-          {/* CTA section — hierarchy changes with wait state */}
+          {/* CTA section */}
           <div className="mt-12 space-y-4">
+            {skipError && <p className="text-sm text-red-500">{skipError}</p>}
 
             {waitState === "short" && (
               <>
                 <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/[0.07] px-4 py-3">
                   <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-                    ✓ You&apos;re in — your spot is safe.
+                    ✓ Your spot is locked.
                   </p>
                 </div>
                 <p className="text-xs text-kal-muted">
-                  Don&apos;t want to wait?{" "}
+                  Don&apos;t want to wait until midnight?{" "}
                   <button
                     type="button"
                     onClick={handleSkip}
                     disabled={skipBusy}
                     className="font-semibold text-kal-accent hover:underline disabled:opacity-50"
                   >
-                    {skipBusy ? "Processing…" : "₹19 gets you in right now →"}
+                    {skipBusy ? "Processing…" : "₹19 starts you right now →"}
                   </button>
                 </p>
               </>
@@ -290,7 +282,7 @@ export function WaitlistPositionClient() {
               <>
                 <div className="rounded-xl border border-kal-border bg-kal-card/50 px-4 py-3">
                   <p className="text-sm font-semibold text-kal-text">
-                    ✓ You&apos;re in line — your spot is safe.
+                    ✓ Your spot is locked.
                   </p>
                 </div>
                 <p className="text-sm text-kal-muted">
@@ -300,7 +292,7 @@ export function WaitlistPositionClient() {
                     disabled={skipBusy}
                     className="font-semibold text-kal-accent hover:underline disabled:opacity-50"
                   >
-                    {skipBusy ? "Processing…" : "Skip the queue for ₹19 →"}
+                    {skipBusy ? "Processing…" : "Skip the wait for ₹19 →"}
                   </button>
                 </p>
               </>
@@ -308,18 +300,17 @@ export function WaitlistPositionClient() {
 
             {waitState === "long" && (
               <>
-                {skipError && <p className="text-sm text-red-500">{skipError}</p>}
                 <button
                   type="button"
                   onClick={handleSkip}
                   disabled={skipBusy}
                   className="w-full min-h-[52px] rounded-full bg-kal-accent px-6 text-base font-bold text-white shadow-[0_4px_16px_rgba(255,122,0,0.32)] transition hover:brightness-105 active:scale-[0.98] disabled:opacity-60"
                 >
-                  {skipBusy ? "Processing…" : "Skip the queue for ₹19 →"}
+                  {skipBusy ? "Processing…" : "Skip the wait for ₹19 →"}
                 </button>
                 <p className="text-sm text-kal-muted">
                   Or wait — your spot is safe.{" "}
-                  {accessDate && <span>Access opens {accessDate}.</span>}
+                  {accessDate && <span>Trial begins {accessDate}.</span>}
                 </p>
               </>
             )}
@@ -327,9 +318,9 @@ export function WaitlistPositionClient() {
 
           {/* Footer */}
           <div className="mt-16 space-y-2 border-t border-kal-border pt-8">
-            <p className="text-sm text-kal-muted">Your data is ready when you are.</p>
+            <p className="text-sm text-kal-muted">Your account is set up and ready to go.</p>
             <p className="text-xs text-kal-muted/70">
-              We&apos;ll send you a push + email the day before Batch {data.batchNumber} opens.
+              After midnight, just sign in — your trial picks up right where you left off.
             </p>
           </div>
         </div>
