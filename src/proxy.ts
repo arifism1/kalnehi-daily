@@ -239,7 +239,14 @@ function isProxyAuthExempt(pathname: string): boolean {
   return false;
 }
 
-function tryWwwToApexRedirect(request: NextRequest): NextResponse | null {
+/**
+ * When NEXT_PUBLIC_SITE_URL is apex (e.g. kalnehi.com), requests to www.kalnehi.com
+ * used to 308 to apex. That cross-host HTTP redirect makes iOS drop "Add to Home Screen"
+ * standalone mode and open the site in Safari with the URL bar. A server-side rewrite
+ * keeps the browser URL on www while still serving the deployment — standalone PWAs work.
+ * Sitemaps/robots stay on the requested host for GSC property alignment.
+ */
+function wwwToApexRewriteTarget(request: NextRequest): URL | null {
   const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim();
   if (!raw) return null;
   let canonicalHost: string;
@@ -264,7 +271,7 @@ function tryWwwToApexRedirect(request: NextRequest): NextResponse | null {
     const url = request.nextUrl.clone();
     url.hostname = canonicalHost;
     url.protocol = "https:";
-    return NextResponse.redirect(url, 308);
+    return url;
   }
   return null;
 }
@@ -279,13 +286,14 @@ function tryWwwToApexRedirect(request: NextRequest): NextResponse | null {
  * from app routes (defense in depth — RLS + getUser() in APIs remains authoritative).
  */
 export async function proxy(request: NextRequest) {
-  const apex = tryWwwToApexRedirect(request);
-  if (apex) return apex;
-
   const rateLimited = applyRateLimit(request);
   if (rateLimited) return rateLimited;
 
-  const supabaseResponse = NextResponse.next({ request });
+  const rewriteTarget = wwwToApexRewriteTarget(request);
+  const baseResponse = rewriteTarget
+    ? NextResponse.rewrite(rewriteTarget)
+    : NextResponse.next({ request });
+
   const { url, anonKey } = getSupabaseConfig();
 
   const supabase = createServerClient(url, anonKey, {
@@ -295,7 +303,7 @@ export async function proxy(request: NextRequest) {
       },
       setAll(cookiesToSet) {
         cookiesToSet.forEach(({ name, value, options }) =>
-          supabaseResponse.cookies.set(name, value, options),
+          baseResponse.cookies.set(name, value, options),
         );
       },
     },
@@ -353,12 +361,12 @@ export async function proxy(request: NextRequest) {
     redirectUrl.pathname = "/auth";
     redirectUrl.search = "";
     const redirectResponse = NextResponse.redirect(redirectUrl);
-    const refreshed = supabaseResponse.headers.getSetCookie?.() ?? [];
+    const refreshed = baseResponse.headers.getSetCookie?.() ?? [];
     for (const cookie of refreshed) {
       redirectResponse.headers.append("Set-Cookie", cookie);
     }
     if (refreshed.length === 0) {
-      supabaseResponse.headers.forEach((value, key) => {
+      baseResponse.headers.forEach((value, key) => {
         if (key.toLowerCase() === "set-cookie") {
           redirectResponse.headers.append("Set-Cookie", value);
         }
@@ -367,7 +375,7 @@ export async function proxy(request: NextRequest) {
     return redirectResponse;
   }
 
-  return supabaseResponse;
+  return baseResponse;
 }
 
 export const config = {

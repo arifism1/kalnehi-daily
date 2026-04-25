@@ -15,7 +15,11 @@ import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { StoragePersistenceInit } from "@/components/StoragePersistenceInit";
 import { ThemeSync } from "@/components/ThemeSync";
 import { UiPrefsRemoteSync } from "@/components/UiPrefsRemoteSync";
-import { defaultSiteMetadata, SITE_NAME } from "@/lib/seo-metadata";
+import {
+  defaultSiteMetadata,
+  PWA_STANDALONE_DISPLAY_NAME,
+  SITE_NAME,
+} from "@/lib/seo-metadata";
 import { KillSwitchGuard } from "@/components/KillSwitchGuard";
 
 import "./globals.css";
@@ -104,7 +108,7 @@ export const metadata: Metadata = {
     : {}),
   appleWebApp: {
     capable: true,
-    title: SITE_NAME,
+    title: PWA_STANDALONE_DISPLAY_NAME,
     statusBarStyle: "black-translucent",
     startupImage: [...appleStartupImages],
   },
@@ -124,7 +128,9 @@ export const metadata: Metadata = {
     // PWA / TWA chrome signals
     "mobile-web-app-capable": "yes",
     "apple-mobile-web-app-capable": "yes",
-    "apple-mobile-web-app-title": SITE_NAME,
+    "apple-mobile-web-app-title": PWA_STANDALONE_DISPLAY_NAME,
+    /** Stabilizes iOS home-screen launch URL (same-origin path). */
+    "apple-mobile-web-app-start-url": "/",
     // Disable tap highlight flash inside the TWA chrome shell
     "msapplication-tap-highlight": "no",
     // Tile colour for Windows/Edge "pin to start"
@@ -151,9 +157,9 @@ export default function RootLayout({
     <html
       lang="en-IN"
       data-scroll-behavior="smooth"
-      className={`${dmSans.variable} ${dmSerifDisplay.variable} ${syne.variable} h-full antialiased`}
+      className={`${dmSans.variable} ${dmSerifDisplay.variable} ${syne.variable} h-full min-h-dvh antialiased`}
     >
-      <body className="flex min-h-full min-h-dvh flex-col bg-kal-page font-sans text-kal-text">
+      <body className="flex min-h-dvh flex-col bg-kal-page font-sans text-kal-text">
         <JsonLd />
         <OrganicEntryCapture />
         <ReferralCapture />

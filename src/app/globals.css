@@ -8,6 +8,12 @@
  * Design language: calm, sophisticated, premium — like a high-end wellness/lifestyle app.
  */
 :root {
+  /* Safe areas — mirror env() for use in calc / JS-free layouts (fallback 0px). */
+  --kal-safe-top: env(safe-area-inset-top, 0px);
+  --kal-safe-right: env(safe-area-inset-right, 0px);
+  --kal-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --kal-safe-left: env(safe-area-inset-left, 0px);
+
   /* ── Surfaces ─────────────────────────────────────────────────────── */
   --kal-page: #FAF7F2;
   --kal-page-end: #F5EFE6;
@@ -548,6 +554,14 @@ body {
 
 /* ── Base overflow & accessibility guards ─────────────────────────────── */
 @layer base {
+  /*
+   * PWA / iOS standalone: fill the dynamic viewport; safe-area padding is applied
+   * on app chrome (KalnehiChrome, tab bar), not here, so marketing pages keep normal document scroll.
+   */
+  html {
+    min-height: 100dvh;
+  }
+
   html, body {
     max-width: 100%;
     overflow-x: hidden;

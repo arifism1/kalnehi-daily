@@ -171,7 +171,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   if (gateTarget === "error") {
     return (
-      <main className="flex min-h-0 min-h-dvh flex-1 flex-col">
+      <main className="flex min-h-0 min-h-dvh flex-1 flex-col pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
         <ProfileErrorScreen onRetry={refetch} />
       </main>
     );
@@ -179,14 +179,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   if (gateTarget !== "render" && gateTarget !== "paywallRender") {
     return (
-      <main className="flex min-h-0 min-h-dvh flex-1 flex-col">
+      <main className="flex min-h-0 min-h-dvh flex-1 flex-col pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
         <LoadingScreen />
       </main>
     );
   }
 
   return (
-    <main id="kalnehi-main" className="flex min-h-0 min-h-dvh flex-1 flex-col">
+    <main
+      id="kalnehi-main"
+      className="flex min-h-0 min-h-dvh flex-1 flex-col pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]"
+    >
       {gateTarget === "paywallRender" ? (
         <>
           <div
