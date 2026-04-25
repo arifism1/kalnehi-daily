@@ -17,7 +17,7 @@ export function MarketingPublicShell({ children }: { children: React.ReactNode }
           >
             <KalnehiMark
               aria-hidden
-              className="h-8 w-auto max-w-[min(100%,7.5rem)] object-contain object-left sm:h-9 sm:max-w-[8.5rem]"
+              className="h-8 w-auto max-w-[4.9rem] object-contain object-left sm:h-9 sm:max-w-[5.4rem]"
             />
             <span className="min-w-0 truncate text-left text-[11px] font-semibold leading-snug sm:max-w-[min(100%,22rem)] sm:whitespace-normal sm:text-balance sm:text-xs md:max-w-md md:text-sm lg:max-w-lg">
               {SITE_NAME}

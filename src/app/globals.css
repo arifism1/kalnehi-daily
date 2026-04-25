@@ -555,11 +555,18 @@ body {
 /* ── Base overflow & accessibility guards ─────────────────────────────── */
 @layer base {
   /*
-   * PWA / iOS standalone: fill the dynamic viewport; safe-area padding is applied
-   * on app chrome (KalnehiChrome, tab bar), not here, so marketing pages keep normal document scroll.
+   * PWA / iOS standalone: fill the visible viewport. `100dvh` for modern engines;
+   * `-webkit-fill-available` after it helps WebKit/PWA stand-alone avoid short layout.
+   * Safe-area padding is applied on app chrome, not on the root, so full-bleed background works.
    */
   html {
     min-height: 100dvh;
+    min-height: -webkit-fill-available;
+  }
+
+  body {
+    min-height: 100dvh;
+    min-height: -webkit-fill-available;
   }
 
   html, body {

@@ -84,7 +84,7 @@ export function LandingFooter() {
           <div className="flex items-center gap-3">
             <KalnehiMark
               aria-hidden
-              className="h-7 w-auto max-w-[6.5rem] object-contain object-left opacity-80"
+              className="h-7 w-auto max-w-[4.3rem] object-contain object-left opacity-80 sm:h-8 sm:max-w-[4.9rem]"
             />
             <span className="text-xs text-kal-muted">
               Made in Bengaluru for aspirants in India and worldwide
