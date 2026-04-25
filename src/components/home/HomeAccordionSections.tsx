@@ -272,7 +272,7 @@ export function HomeAccordionSections() {
     },
     {
       id: "prepbrain-ai",
-      title: "PrepBrain AI",
+      title: "Mastermind",
       icon: Brain,
       content: <PrepBrainChatLazy />,
     },

@@ -10,13 +10,13 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 export const metadata = marketingPageMetadata({
   path: "/ssc-chsl",
   title: `Daily Planner for SSC CHSL Preparation | ${SITE_NAME}`,
-  description: `SSC CHSL is the entry point to Central Government clerical jobs. Kalnehi tracks your 4-section daily practice, logs mock scores, and uses PrepBrain AI to identify what to fix before the next test.`,
+  description: `SSC CHSL is the entry point to Central Government clerical jobs. Kalnehi tracks your 4-section daily practice, logs mock scores, and uses Mastermind to identify what to fix before the next test.`,
 });
 
 const FAQS = [
   { question: "What is the SSC CHSL exam structure?", answer: "SSC CHSL Tier 1: 4 sections × 25 questions (100 marks, 60 minutes). Same sections as CGL — QA, Reasoning, English, General Awareness. Tier 2: Descriptive paper (100 marks, 60 minutes) — essay writing and letter writing. Tier 3: Skill Test / Typing Test." },
   { question: "Is SSC CHSL easier than SSC CGL?", answer: "SSC CHSL's Tier 1 is similar in pattern to CGL Tier 1. The key difference is the level of questions (CHSL tends to be slightly easier) and that CHSL has a descriptive Tier 2 instead of a Tier 2 objective paper. Preparation for both overlaps significantly." },
-  { question: "How does Kalnehi help SSC CHSL aspirants?", answer: "Track your daily mock test completion, section-wise practice hours, and GA revision as a daily habit. PrepBrain AI analyses your mock scores and tells you which section needs the most work before your CHSL exam date." },
+  { question: "How does Kalnehi help SSC CHSL aspirants?", answer: "Track your daily mock test completion, section-wise practice hours, and GA revision as a daily habit. Mastermind analyses your mock scores and tells you which section needs the most work before your CHSL exam date." },
   { question: "How much time does SSC CHSL preparation take?", answer: "Candidates typically need 4-6 months of focused preparation. Many SSC CHSL aspirants prepare simultaneously for CGL and CHSL — the overlap in syllabus is significant and Kalnehi tracks both in one place." },
 ];
 
@@ -40,7 +40,7 @@ export default function SscChslPage() {
           <h2 id="chsl-how" className="text-xl font-bold text-kal-text">How Kalnehi helps SSC CHSL preparation</h2>
           <ul className="space-y-3 text-sm">
             {[
-              { t: "Daily mock test tracking", d: "Log your Tier 1 mock scores section-wise. PrepBrain tracks your accuracy trend across mocks and tells you which section is most improvable in the time you have left." },
+              { t: "Daily mock test tracking", d: "Log your Tier 1 mock scores section-wise. Mastermind tracks your accuracy trend across mocks and tells you which section is most improvable in the time you have left." },
               { t: "General Awareness daily habit", d: "GA is the section most students ignore until the last month. Set up a daily GA revision habit in Kalnehi — 20 minutes of static GK + current affairs — and track the streak." },
               { t: "Descriptive writing practice (Tier 2)", d: "SSC CHSL Tier 2 requires essay and letter writing. Log your daily writing practice sessions and track how many essays you've written this week." },
             ].map(({ t, d }) => (
@@ -61,7 +61,7 @@ export default function SscChslPage() {
         </section>
 
         <FAQBlock items={FAQS} />
-        <CTABanner headline="Build your SSC CHSL prep system" subtext="3 days free. PrepBrain AI. No credit card." />
+        <CTABanner headline="Build your SSC CHSL prep system" subtext="3 days free. Mastermind. No credit card." />
       </article>
     </>
   );

@@ -12,7 +12,7 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 export const metadata = marketingPageMetadata({
   path: "/jee",
   title: `Daily Planner for JEE Preparation | ${SITE_NAME}`,
-  description: `Track every PCM topic, plan your day with voice, and let PrepBrain AI show exactly where your next 3 study hours should go. Built for JEE Main & Advanced aspirants. Start free.`,
+  description: `Track every PCM topic, plan your day with voice, and let Mastermind show exactly where your next 3 study hours should go. Built for JEE Main & Advanced aspirants. Start free.`,
   ogImage: ogImageExam("JEE Preparation"),
 });
 
@@ -52,7 +52,7 @@ const FAQS = [
   {
     question: "How does Kalnehi help JEE aspirants specifically?",
     answer:
-      "Kalnehi maps your daily tasks directly to JEE chapters — Physics, Chemistry, Maths. You track topic-level mastery, mark chapters as done/needs revision/in progress, and PrepBrain AI reads that data to tell you which chapters to prioritise today based on weightage and your gaps.",
+      "Kalnehi maps your daily tasks directly to JEE chapters — Physics, Chemistry, Maths. You track topic-level mastery, mark chapters as done/needs revision/in progress, and Mastermind reads that data to tell you which chapters to prioritise today based on weightage and your gaps.",
   },
   {
     question: "Can I use Kalnehi for both JEE Main and JEE Advanced prep?",
@@ -72,7 +72,7 @@ const FAQS = [
   {
     question: "How much does it cost for a JEE aspirant?",
     answer:
-      "Start completely free for 3 days with full access including PrepBrain AI (60,000 tokens) and 5 minutes of voice — no card required. After your trial, Smart Plan is ₹399/month with 2 million tokens and 100 minutes of voice per month.",
+      "Start completely free for 3 days with full access including Mastermind (60,000 tokens) and 5 minutes of voice — no card required. After your trial, Smart Plan is ₹399/month with 2 million tokens and 100 minutes of voice per month.",
   },
 ];
 
@@ -87,7 +87,7 @@ export default function JeePage() {
         faqs={FAQS}
         webPage={{
           name: `Daily Planner for JEE Preparation | ${SITE_NAME}`,
-          description: `Track every PCM topic, plan your day with voice, and let PrepBrain AI show exactly where your next 3 study hours should go. Built for JEE Main & Advanced aspirants.`,
+          description: `Track every PCM topic, plan your day with voice, and let Mastermind show exactly where your next 3 study hours should go. Built for JEE Main & Advanced aspirants.`,
         }}
       />
 
@@ -140,35 +140,35 @@ export default function JeePage() {
           <p className="text-sm text-kal-text-secondary">
             Mark each chapter as{" "}
             <strong className="text-kal-text">Not started → In progress → Done → Needs revision</strong>.
-            PrepBrain AI reads your completion map and tells you which chapters to prioritise this week
+            Mastermind reads your completion map and tells you which chapters to prioritise this week
             based on JEE weightage data and your gaps.
           </p>
         </section>
 
-        {/* Section 3 — PrepBrain */}
+        {/* Section 3 — Mastermind */}
         <section className="space-y-4" aria-labelledby="jee-prepbrain">
           <h2 id="jee-prepbrain" className="text-xl font-bold text-kal-text">
-            How PrepBrain AI helps JEE aspirants
+            How Mastermind helps JEE aspirants
           </h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <FeatureBlock
               title="Syllabus-weighted strategy"
-              description="PrepBrain reads your chapter completion and cross-references JEE historical weightage. It tells you exactly which Physics chapters are worth the next 6 hours of your time — not a generic list."
+              description="Mastermind reads your chapter completion and cross-references JEE historical weightage. It tells you exactly which Physics chapters are worth the next 6 hours of your time — not a generic list."
               tag="AI Strategy"
             />
             <FeatureBlock
               title="Mock score analysis"
-              description="Log your JEE mock scores and PrepBrain identifies your weak areas across PCM — broken down by chapter and subtopic — so you fix the right things before the next mock."
+              description="Log your JEE mock scores and Mastermind identifies your weak areas across PCM — broken down by chapter and subtopic — so you fix the right things before the next mock."
               tag="Mock Analysis"
             />
             <FeatureBlock
               title="Revision prioritisation"
-              description="As your JEE date approaches, PrepBrain shifts its focus from new chapters to revision windows — telling you which chapters need a second pass based on how long ago you studied them."
+              description="As your JEE date approaches, Mastermind shifts its focus from new chapters to revision windows — telling you which chapters need a second pass based on how long ago you studied them."
               tag="Revision reminders"
             />
             <FeatureBlock
               title="Daily study load optimisation"
-              description="Tell PrepBrain how many hours you have today. It'll suggest what to cover across Physics, Chemistry and Maths so you stay balanced and don't spend 4 hours on one subject every day."
+              description="Tell Mastermind how many hours you have today. It'll suggest what to cover across Physics, Chemistry and Maths so you stay balanced and don't spend 4 hours on one subject every day."
               tag="Today's Plan"
             />
           </div>
@@ -196,7 +196,7 @@ export default function JeePage() {
               },
               {
                 cmd: "Hey Boss, what should I study for the next 2 hours?",
-                result: "PrepBrain answers based on your current completion and JEE date",
+                result: "Mastermind answers based on your current completion and JEE date",
               },
             ].map(({ cmd, result }) => (
               <div key={cmd} className="kal-glass-card rounded-xl p-4 space-y-1">

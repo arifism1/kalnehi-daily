@@ -75,7 +75,7 @@ const ALL_FEATURES = [
   },
   {
     emoji: "🤖",
-    title: "PrepBrain AI",
+    title: "Mastermind",
     tagline: "A tutor who knows your syllabus, your weak spots, and your plan.",
     detail: "Ask questions in context of your actual prep. Answers tied to your syllabus coverage.",
   },

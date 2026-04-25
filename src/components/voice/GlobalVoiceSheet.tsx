@@ -509,7 +509,7 @@ export function GlobalVoiceSheet() {
         if (typeof window !== "undefined") {
           sessionStorage.setItem("prepbrain_prefill", intent.query);
         }
-        router.push("/prepbrain");
+        router.push("/mastermind");
         break;
       }
 

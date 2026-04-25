@@ -10,12 +10,12 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 export const metadata = marketingPageMetadata({
   path: "/ca-intermediate",
   title: `Daily Planner for CA Intermediate Preparation | ${SITE_NAME}`,
-  description: `CA Intermediate has 8 papers across 2 groups. PrepBrain AI tracks your ICAI mock scores and tells you which Accounts topics are pulling your aggregate down. Start free.`,
+  description: `CA Intermediate has 8 papers across 2 groups. Mastermind tracks your ICAI mock scores and tells you which Accounts topics are pulling your aggregate down. Start free.`,
 });
 
 const FAQS = [
-  { question: "Should I attempt CA Intermediate Group 1 and Group 2 together or separately?", answer: "Both strategies work, but doing both groups together requires more preparation bandwidth. Kalnehi helps you track 8 paper syllabuses simultaneously and PrepBrain tells you if you're stretching too thin across groups — a data-driven answer to this common question." },
-  { question: "How does PrepBrain AI help CA Intermediate students?", answer: "PrepBrain tracks your ICAI mock scores paper by paper and identifies which subjects are consistently pulling your aggregate below 50%. It tells you how many focused hours each weak paper needs to recover before your group exam date." },
+  { question: "Should I attempt CA Intermediate Group 1 and Group 2 together or separately?", answer: "Both strategies work, but doing both groups together requires more preparation bandwidth. Kalnehi helps you track 8 paper syllabuses simultaneously and Mastermind tells you if you're stretching too thin across groups — a data-driven answer to this common question." },
+  { question: "How does Mastermind help CA Intermediate students?", answer: "Mastermind tracks your ICAI mock scores paper by paper and identifies which subjects are consistently pulling your aggregate below 50%. It tells you how many focused hours each weak paper needs to recover before your group exam date." },
   { question: "What is the CA Intermediate exam structure?", answer: "CA Intermediate has 8 papers in 2 groups of 4. Group 1: Accounting, Corporate Laws, Cost and Management Accounting, Taxation. Group 2: Advanced Accounting, Auditing, EIS & SM, Financial Management & Economics for Finance. Each paper is 100 marks." },
   { question: "How many hours per day should a CA Intermediate student study?", answer: "8-10 hours per day during an articleship-free preparation period. If you're in articleship, 4-6 focused hours daily is realistic. The consistency of those hours matters more than occasional 14-hour marathon days." },
 ];
@@ -53,8 +53,8 @@ export default function CaIntermediatePage() {
         </section>
 
         <section className="space-y-3" aria-labelledby="caint-prepbrain">
-          <h2 id="caint-prepbrain" className="text-xl font-bold text-kal-text">PrepBrain AI for CA Intermediate</h2>
-          <p className="text-sm text-kal-text-secondary leading-relaxed">PrepBrain tracks your ICAI mock scores paper by paper and tells you which Accounting or Audit topics are pulling your aggregate down. It also monitors whether you're spending proportional time across both groups — the #1 mistake that causes Group 2 failures among students who focused all attention on Group 1.</p>
+          <h2 id="caint-prepbrain" className="text-xl font-bold text-kal-text">Mastermind for CA Intermediate</h2>
+          <p className="text-sm text-kal-text-secondary leading-relaxed">Mastermind tracks your ICAI mock scores paper by paper and tells you which Accounting or Audit topics are pulling your aggregate down. It also monitors whether you're spending proportional time across both groups — the #1 mistake that causes Group 2 failures among students who focused all attention on Group 1.</p>
         </section>
 
         <section className="space-y-2">
@@ -67,7 +67,7 @@ export default function CaIntermediatePage() {
         </section>
 
         <FAQBlock items={FAQS} />
-        <CTABanner headline="Track all 8 CA Intermediate papers in one place" subtext="3 days free. PrepBrain AI. No credit card." />
+        <CTABanner headline="Track all 8 CA Intermediate papers in one place" subtext="3 days free. Mastermind. No credit card." />
       </article>
     </>
   );

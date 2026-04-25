@@ -18,7 +18,7 @@ export function DataAndThisDeviceSection() {
         <ul className="list-disc space-y-2 pl-4">
           <li>
             <strong className="text-kal-text">Account &amp; study data</strong>{" "}
-            (tasks, plans, habits, profile, PrepBrain history, and similar) is
+            (tasks, plans, habits, profile, Mastermind history, and similar) is
             stored in your Kalnehi account on our database. It is not removed when
             you only clear image/file cache. Preferences under Settings (theme,
             sounds, study camera options, etc.) are mirrored to your account when

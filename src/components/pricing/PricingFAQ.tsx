@@ -6,7 +6,7 @@ import { ChevronDown } from "lucide-react";
 const FAQS = [
   {
     q: "What is included in the 3-day free trial?",
-    a: "Everything. Your free trial unlocks the full Kalnehi Daily system — Daily planner, Syllabus tracker, Focus timer, Study camera, Streak heatmap, Doubt tracker, Marks engine, Rank prediction, Revision reminders, Daily log, and PrepBrain AI coach. You also get 60,000 PrepBrain AI tokens and 5 minutes of voice control for those 3 days.",
+    a: "Everything. Your free trial unlocks the full Kalnehi Daily system — Daily planner, Syllabus tracker, Focus timer, Study camera, Streak heatmap, Doubt tracker, Marks engine, Rank prediction, Revision reminders, Daily log, and Mastermind AI coach. You also get 60,000 Mastermind tokens and 5 minutes of voice control for those 3 days.",
   },
   {
     q: "What happens after the 3-day free trial ends?",
@@ -21,8 +21,8 @@ const FAQS = [
     a: "Yes, absolutely. You can subscribe to Smart Plan at any point during your trial — or even before it starts. Your remaining trial time transitions immediately to your Smart Plan subscription.",
   },
   {
-    q: "What does PrepBrain AI actually do?",
-    a: "PrepBrain is your personalized AI prep coach built around your prep — not a generic chatbot. Ask it to explain a concept in depth, quiz you on any topic, identify your weakest areas from your marks data, or suggest exactly what to revise today. It knows your syllabus, your progress, and your patterns. Smart Plan gives you 2 million tokens per month.",
+    q: "What does Mastermind actually do?",
+    a: "Mastermind is your personalized AI prep coach built around your prep — not a generic chatbot. Ask it to explain a concept in depth, quiz you on any topic, identify your weakest areas from your marks data, or suggest exactly what to revise today. It knows your syllabus, your progress, and your patterns. Smart Plan gives you 2 million tokens per month.",
   },
   {
     q: "What can I do with voice control?",

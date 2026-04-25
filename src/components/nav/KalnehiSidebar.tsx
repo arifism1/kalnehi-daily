@@ -75,7 +75,7 @@ const SIDEBAR_LINK_BY_ID: Record<string, SidebarItem> = {
     icon: Target,
   },
   "my-target": { href: "/my-target", label: "My Target", icon: Bookmark },
-  "prepbrain-ai": { href: "/prepbrain", label: "PrepBrain AI", icon: Brain },
+  "prepbrain-ai": { href: "/mastermind", label: "Mastermind", icon: Brain },
   "revision-reminders": { href: "/revision-reminders", label: "Revision Reminders", icon: AlarmClock },
   "doubt-tracker": { href: "/doubts", label: "Doubt Tracker", icon: HelpCircle },
   "mistake-log": { href: "/mistake-log", label: "Mistake Log", icon: ClipboardList },

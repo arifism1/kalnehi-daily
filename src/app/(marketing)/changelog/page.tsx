@@ -41,10 +41,10 @@ const RELEASES: Release[] = [
   {
     version: "2.4",
     date: "April 2026",
-    summary: "PrepBrain AI context improvements, CUET and NDA syllabus added to Syllabus Tracker, mobile revision scheduling improvements.",
+    summary: "Mastermind context improvements, CUET and NDA syllabus added to Syllabus Tracker, mobile revision scheduling improvements.",
     changes: [
       { version: "2.4", date: "April 2026", type: "feature", title: "CUET and NDA syllabus added", description: "Syllabus Tracker now includes complete syllabi for CUET UG/PG and NDA (Maths + GAT). Select your exam during onboarding or from Settings → Exam." },
-      { version: "2.4", date: "April 2026", type: "improvement", title: "PrepBrain AI context awareness", description: "PrepBrain now considers your revision history alongside coverage — giving advice that accounts for topics you studied long ago and haven't revisited." },
+      { version: "2.4", date: "April 2026", type: "improvement", title: "Mastermind context awareness", description: "Mastermind now considers your revision history alongside coverage — giving advice that accounts for topics you studied long ago and haven't revisited." },
       { version: "2.4", date: "April 2026", type: "improvement", title: "Mobile revision reminders", description: "Revision Reminders is easier to use on mobile: sort by due date, reschedule, and mark items done in fewer taps." },
       { version: "2.4", date: "April 2026", type: "fix", title: "Voice log persistence on Safari iOS", description: "Fixed an issue where voice-logged doubts were not saving correctly on Safari (iOS 17+). All voice input now persists correctly." },
     ],
@@ -63,10 +63,10 @@ const RELEASES: Release[] = [
   {
     version: "2.2",
     date: "February 2026",
-    summary: "Daily Log redesign, PrepBrain voice commands expansion, performance improvements across the app.",
+    summary: "Daily Log redesign, Mastermind voice commands expansion, performance improvements across the app.",
     changes: [
       { version: "2.2", date: "February 2026", type: "improvement", title: "Daily Log redesign", description: "The Daily Log now shows a weekly view alongside the daily entry, making weekly patterns visible without switching screens." },
-      { version: "2.2", date: "February 2026", type: "improvement", title: "PrepBrain voice commands expanded", description: "PrepBrain now responds to 20+ new natural language commands. Examples: 'What should I revise today?', 'How many topics left in Organic Chemistry?', 'Show me my weakest subjects'." },
+      { version: "2.2", date: "February 2026", type: "improvement", title: "Mastermind voice commands expanded", description: "Mastermind now responds to 20+ new natural language commands. Examples: 'What should I revise today?', 'How many topics left in Organic Chemistry?', 'Show me my weakest subjects'." },
       { version: "2.2", date: "February 2026", type: "improvement", title: "App performance — 40% faster loading", description: "Significant client-side performance improvements. Cold start time reduced by ~40%. Revision schedule calculations are now instant on all devices." },
       { version: "2.2", date: "February 2026", type: "fix", title: "Streak calculation edge case", description: "Fixed a bug where studying past midnight (e.g. 12:30 AM) was incorrectly attributed to the next day, breaking streak continuity." },
     ],
@@ -77,17 +77,17 @@ const RELEASES: Release[] = [
     summary: "Habit Maker launched, multi-exam support (switch between exams), GRE and SAT syllabi.",
     changes: [
       { version: "2.1", date: "January 2026", type: "feature", title: "Habit Maker", description: "Build study habits alongside your daily planning. Define habits (e.g. '30-min revision every morning'), track completion, and see streaks independently of your main study log." },
-      { version: "2.1", date: "January 2026", type: "feature", title: "Multi-exam support", description: "You can now prepare for up to 2 exams simultaneously. Switch between exam contexts in the sidebar. PrepBrain, Syllabus Tracker, and Marks Engine are all exam-specific." },
+      { version: "2.1", date: "January 2026", type: "feature", title: "Multi-exam support", description: "You can now prepare for up to 2 exams simultaneously. Switch between exam contexts in the sidebar. Mastermind, Syllabus Tracker, and Marks Engine are all exam-specific." },
       { version: "2.1", date: "January 2026", type: "feature", title: "GRE and SAT syllabi", description: "Syllabus Tracker now supports GRE (Verbal, Quant, AWA) and SAT (Math, EBRW) with section-wise topic tracking." },
-      { version: "2.1", date: "January 2026", type: "fix", title: "PrepBrain response formatting", description: "Fixed markdown rendering in PrepBrain responses. Lists, bold text, and code blocks now display correctly across all browsers." },
+      { version: "2.1", date: "January 2026", type: "fix", title: "Mastermind response formatting", description: "Fixed markdown rendering in Mastermind responses. Lists, bold text, and code blocks now display correctly across all browsers." },
     ],
   },
   {
     version: "2.0",
     date: "December 2025",
-    summary: "Major update: PrepBrain AI, Spaced Revision Engine, and On-Camera Study mode (alpha). New design system.",
+    summary: "Major update: Mastermind, Spaced Revision Engine, and On-Camera Study mode (alpha). New design system.",
     changes: [
-      { version: "2.0", date: "December 2025", type: "feature", title: "PrepBrain AI — General availability", description: "PrepBrain AI is out of alpha. Context-aware exam preparation AI trained with knowledge of JEE, NEET, UPSC, CAT, GATE, CA, and 20+ Indian competitive exams. Available on all paid plans." },
+      { version: "2.0", date: "December 2025", type: "feature", title: "Mastermind — General availability", description: "Mastermind is out of alpha. Context-aware exam preparation AI trained with knowledge of JEE, NEET, UPSC, CAT, GATE, CA, and 20+ Indian competitive exams. Available on all paid plans." },
       { version: "2.0", date: "December 2025", type: "feature", title: "Spaced Revision Engine — General availability", description: "Automated revision scheduling based on forgetting curve intervals (Day 1, 3, 7, 14, 30, 60, 90). Works across all subjects and exams." },
       { version: "2.0", date: "December 2025", type: "feature", title: "New design system", description: "Complete redesign with improved contrast, better mobile layout, and reduced visual clutter. Dark mode improvements. DM Sans body font, DM Serif Display for headings." },
       { version: "2.0", date: "December 2025", type: "improvement", title: "Syllabus Tracker — granularity", description: "Topics can now be marked as Not Started / In Progress / Done / Needs Revision — more nuance than the previous binary complete/incomplete." },

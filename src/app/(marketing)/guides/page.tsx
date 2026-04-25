@@ -29,7 +29,7 @@ const guides = [
     href: "/",
     title: `${SITE_NAME} — full product overview`,
     blurb:
-      "The public landing page: daily plan, syllabus & marks, revision reminders, focus timer, PrepBrain AI, pricing, and FAQs — the same story Google indexes for the home URL.",
+      "The public landing page: daily plan, syllabus & marks, revision reminders, focus timer, Mastermind, pricing, and FAQs — the same story Google indexes for the home URL.",
     icon: Home,
   },
   {
@@ -109,7 +109,7 @@ export default function GuidesHubPage() {
           {
             question: `What is ${SITE_NAME}?`,
             answer:
-              `${SITE_NAME} is a web app and installable PWA for Indian exam aspirants: planner, syllabus tracking, study sessions, habits, and optional PrepBrain AI coaching.`,
+              `${SITE_NAME} is a web app and installable PWA for Indian exam aspirants: planner, syllabus tracking, study sessions, habits, and optional Mastermind coaching.`,
           },
           {
             question: "Do I need to pay to read these guides?",

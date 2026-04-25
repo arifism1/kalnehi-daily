@@ -311,7 +311,7 @@ export async function GET(req: NextRequest) {
 
       const p = prof as { target_exam?: string | null; welcome_ai_tokens_used?: number } | null;
       const exam = p?.target_exam ?? "your exam";
-      const insight = `Your ${exam} preparation was interrupted. Based on your study sessions and PrepBrain usage, your consistency was building — and that momentum is still recoverable.`;
+      const insight = `Your ${exam} preparation was interrupted. Based on your study sessions and Mastermind usage, your consistency was building — and that momentum is still recoverable.`;
 
       await sendRetargetingD14({ email, insight });
       d14Sent++;

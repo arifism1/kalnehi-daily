@@ -222,7 +222,7 @@ function UserCard({
 
       <div className="grid gap-3 md:grid-cols-2 text-sm">
         <div>
-          <p className="text-[10px] font-bold uppercase text-kal-muted">PrepBrain threads</p>
+          <p className="text-[10px] font-bold uppercase text-kal-muted">Mastermind threads</p>
           <p>{u.prepbrainConversations}</p>
         </div>
         <div>

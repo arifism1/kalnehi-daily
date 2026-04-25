@@ -82,7 +82,7 @@ export default function StudyHoursCalculatorPage() {
 
         <CTABanner
           headline="Track your actual progress daily with Kalnehi"
-          subtext="This calculator tells you what you need. Kalnehi helps you execute it — syllabus tracker, PrepBrain AI, daily planner."
+          subtext="This calculator tells you what you need. Kalnehi helps you execute it — syllabus tracker, Mastermind, daily planner."
         />
       </div>
     </>

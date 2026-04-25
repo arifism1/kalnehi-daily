@@ -54,9 +54,9 @@ const FAQS = [
       "Most CAT aspirants prepare with 2-3 hours per day alongside a job or college schedule. Kalnehi's daily planner lets you plan exactly what to cover in those hours — which Quant topic, how many RC passages, which DILR set — and track completion daily without a separate notebook.",
   },
   {
-    question: "How does PrepBrain AI help CAT preparation?",
+    question: "How does Mastermind help CAT preparation?",
     answer:
-      "PrepBrain analyses your mock test data and identifies which section is pulling your percentile down. It tells you if you're spending too much time on Quant while VARC accuracy is tanking, and gives you a rebalancing strategy based on your target percentile.",
+      "Mastermind analyses your mock test data and identifies which section is pulling your percentile down. It tells you if you're spending too much time on Quant while VARC accuracy is tanking, and gives you a rebalancing strategy based on your target percentile.",
   },
   {
     question: "CAT changes format every year — does Kalnehi account for that?",
@@ -66,12 +66,12 @@ const FAQS = [
   {
     question: "Can I track mock test performance in Kalnehi?",
     answer:
-      "Yes. Use the Marks Engine to log your sectional and overall scores from AIMCAT, IMS and SimCAT mocks. PrepBrain reads this data and tells you your performance trend across the last 5-10 mocks.",
+      "Yes. Use the Marks Engine to log your sectional and overall scores from AIMCAT, IMS and SimCAT mocks. Mastermind reads this data and tells you your performance trend across the last 5-10 mocks.",
   },
   {
     question: "Is there a specific plan for CAT beginners starting from zero?",
     answer:
-      "Absolutely. PrepBrain will ask about your current skill level and design a phase-wise plan — foundation (3 months), mock-based improvement (2 months), intensive revision (1 month). You just execute each day.",
+      "Absolutely. Mastermind will ask about your current skill level and design a phase-wise plan — foundation (3 months), mock-based improvement (2 months), intensive revision (1 month). You just execute each day.",
   },
 ];
 
@@ -130,26 +130,26 @@ export default function CatPage() {
         </section>
 
         <section className="space-y-4" aria-labelledby="cat-prepbrain">
-          <h2 id="cat-prepbrain" className="text-xl font-bold text-kal-text">How PrepBrain AI helps CAT aspirants</h2>
+          <h2 id="cat-prepbrain" className="text-xl font-bold text-kal-text">How Mastermind helps CAT aspirants</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <FeatureBlock
               title="Sectional balance analysis"
-              description="PrepBrain monitors how much time you're allocating to VARC, DILR and Quant. If your mock data shows DILR is your weakest section, it'll tell you to shift 40% of prep time there for the next 3 weeks."
+              description="Mastermind monitors how much time you're allocating to VARC, DILR and Quant. If your mock data shows DILR is your weakest section, it'll tell you to shift 40% of prep time there for the next 3 weeks."
               tag="AI Strategy"
             />
             <FeatureBlock
               title="Mock review planning"
-              description="After each CAT mock, the most important session is the review — not the test itself. PrepBrain helps you schedule dedicated mock review sessions so you extract learning from every test you write."
+              description="After each CAT mock, the most important session is the review — not the test itself. Mastermind helps you schedule dedicated mock review sessions so you extract learning from every test you write."
               tag="Mock Review"
             />
             <FeatureBlock
               title="Reading habit tracker"
-              description="VARC is the hardest section to improve quickly. PrepBrain tracks your daily reading practice — editorials, long-form articles — and monitors reading speed improvement over weeks."
+              description="VARC is the hardest section to improve quickly. Mastermind tracks your daily reading practice — editorials, long-form articles — and monitors reading speed improvement over weeks."
               tag="VARC Prep"
             />
             <FeatureBlock
               title="Target percentile roadmap"
-              description="Tell PrepBrain your target IIM and percentile cutoff. It back-calculates what accuracy and speed you need in each section and maps your current mock performance against that target."
+              description="Tell Mastermind your target IIM and percentile cutoff. It back-calculates what accuracy and speed you need in each section and maps your current mock performance against that target."
               tag="Goal Mapping"
             />
           </div>

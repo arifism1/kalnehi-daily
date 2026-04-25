@@ -37,9 +37,9 @@ export default function NeetPgStudyPlannerPage() {
               "Yes. Sign in on Chrome for Android, then add to home screen for a full-screen PWA with offline-friendly caching of pages you have opened.",
           },
           {
-            question: "Is PrepBrain AI required?",
+            question: "Is Mastermind required?",
             answer:
-              "No. PrepBrain is optional on paid tiers for quick clarifications. Your textbooks, notes, and question banks still drive rank.",
+              "No. Mastermind is optional on paid tiers for quick clarifications. Your textbooks, notes, and question banks still drive rank.",
           },
         ]}
       />

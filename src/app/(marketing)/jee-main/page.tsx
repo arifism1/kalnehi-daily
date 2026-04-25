@@ -10,7 +10,7 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 export const metadata = marketingPageMetadata({
   path: "/jee-main",
   title: `Daily Planner for JEE Main Preparation | ${SITE_NAME}`,
-  description: `JEE Main is the qualifier for Advanced and the gateway to top NITs. Kalnehi helps you track PCM chapter-by-chapter, build daily consistency, and use PrepBrain AI to prioritise what moves the needle.`,
+  description: `JEE Main is the qualifier for Advanced and the gateway to top NITs. Kalnehi helps you track PCM chapter-by-chapter, build daily consistency, and use Mastermind to prioritise what moves the needle.`,
 });
 
 const FAQS = [
@@ -42,7 +42,7 @@ export default function JeeMainPage() {
             <li className="kal-glass-card rounded-xl p-4"><strong className="text-kal-text block mb-1">Complete PCM syllabus tracking</strong>Mark every Physics, Chemistry and Maths chapter — from Kinematics to Coordination Compounds to Integration. See your completion percentage per subject at a glance.</li>
             <li className="kal-glass-card rounded-xl p-4"><strong className="text-kal-text block mb-1">Revision reminders</strong>JEE Main demands you remember chapters studied months ago. Use revision reminders to set due dates and a clear queue — link syllabus microtopics, reschedule when needed, and push reviews into your daily plan.</li>
             <li className="kal-glass-card rounded-xl p-4"><strong className="text-kal-text block mb-1">Dual-session planning (Jan + April)</strong>If you plan to attempt both JEE Main sessions, Kalnehi helps you plan a structured improvement cycle between the two attempts — identifying what went wrong in January and what to fix for April.</li>
-            <li className="kal-glass-card rounded-xl p-4"><strong className="text-kal-text block mb-1">PrepBrain AI strategy</strong>PrepBrain reads your completion data and tells you which topics carry maximum JEE Main weightage that you haven't fully covered. It also recommends the number of practice problems per chapter based on your current accuracy.</li>
+            <li className="kal-glass-card rounded-xl p-4"><strong className="text-kal-text block mb-1">Mastermind strategy</strong>Mastermind reads your completion data and tells you which topics carry maximum JEE Main weightage that you haven't fully covered. It also recommends the number of practice problems per chapter based on your current accuracy.</li>
           </ul>
         </section>
 
@@ -56,7 +56,7 @@ export default function JeeMainPage() {
         </section>
 
         <FAQBlock items={FAQS} />
-        <CTABanner headline="Start your JEE Main prep system" subtext="3 days free. Full PrepBrain AI access. No card needed." />
+        <CTABanner headline="Start your JEE Main prep system" subtext="3 days free. Full Mastermind access. No card needed." />
       </article>
     </>
   );

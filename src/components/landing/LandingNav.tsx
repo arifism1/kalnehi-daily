@@ -19,7 +19,7 @@ const EXAM_LINKS = [
 ] as const;
 
 const FEATURE_LINKS = [
-  { href: "/features/prepbrain-ai", label: "PrepBrain AI" },
+  { href: "/features/prepbrain-ai", label: "Mastermind" },
   { href: "/features/syllabus-tracker", label: "Syllabus Tracker" },
   { href: "/features/spaced-revision", label: "Revision reminders" },
   { href: "/features/voice-control", label: "Voice Control" },

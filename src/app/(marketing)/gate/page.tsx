@@ -13,7 +13,7 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 export const metadata = marketingPageMetadata({
   path: "/gate",
   title: `Daily Planner for GATE Preparation | ${SITE_NAME}`,
-  description: `GATE covers 10+ technical subjects across 6 months. Kalnehi tracks your subject-wise progress, helps you plan revision before the exam, and lets PrepBrain AI identify your biggest score gaps.`,
+  description: `GATE covers 10+ technical subjects across 6 months. Kalnehi tracks your subject-wise progress, helps you plan revision before the exam, and lets Mastermind identify your biggest score gaps.`,
   ogImage: ogImageExam("GATE Preparation"),
 });
 
@@ -34,12 +34,12 @@ const FAQS = [
   {
     question: "GATE has 10 subjects — how does Kalnehi help me not fall behind?",
     answer:
-      "Kalnehi's syllabus tracker lets you map all 10 GATE subjects and their individual topics. You can see your overall completion percentage and identify which subjects are lagging. PrepBrain AI then tells you how to redistribute your study time to close the gap before your exam date.",
+      "Kalnehi's syllabus tracker lets you map all 10 GATE subjects and their individual topics. You can see your overall completion percentage and identify which subjects are lagging. Mastermind then tells you how to redistribute your study time to close the gap before your exam date.",
   },
   {
-    question: "How does PrepBrain AI help GATE preparation?",
+    question: "How does Mastermind help GATE preparation?",
     answer:
-      "PrepBrain identifies which GATE subjects carry the most marks weight and cross-references that with your current completion. It tells you if spending more time on TOC is worth it vs improving your Programming & DS accuracy which could recover more marks faster.",
+      "Mastermind identifies which GATE subjects carry the most marks weight and cross-references that with your current completion. It tells you if spending more time on TOC is worth it vs improving your Programming & DS accuracy which could recover more marks faster.",
   },
   {
     question: "Can I prepare for GATE while working a job?",
@@ -69,7 +69,7 @@ export default function GatePage() {
         faqs={FAQS}
         webPage={{
           name: `Daily Planner for GATE Preparation | ${SITE_NAME}`,
-          description: `GATE covers 10+ technical subjects. Kalnehi tracks your subject-wise progress and helps PrepBrain AI identify your biggest score gaps.`,
+          description: `GATE covers 10+ technical subjects. Kalnehi tracks your subject-wise progress and helps Mastermind identify your biggest score gaps.`,
         }}
       />
 
@@ -116,26 +116,26 @@ export default function GatePage() {
         </section>
 
         <section className="space-y-4" aria-labelledby="gate-prepbrain">
-          <h2 id="gate-prepbrain" className="text-xl font-bold text-kal-text">How PrepBrain AI helps GATE aspirants</h2>
+          <h2 id="gate-prepbrain" className="text-xl font-bold text-kal-text">How Mastermind helps GATE aspirants</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <FeatureBlock
               title="Subject weight vs completion analysis"
-              description="PrepBrain cross-references GATE subject marks distribution with your syllabus completion. It tells you which subjects are highest leverage right now — not which ones you feel comfortable studying."
+              description="Mastermind cross-references GATE subject marks distribution with your syllabus completion. It tells you which subjects are highest leverage right now — not which ones you feel comfortable studying."
               tag="AI Strategy"
             />
             <FeatureBlock
               title="Previous year question pattern analysis"
-              description="PrepBrain tracks which GATE topics you've practiced PYQs for and which you haven't. Previous year questions are the single best GATE practice resource — PrepBrain makes sure you don't skip them."
+              description="Mastermind tracks which GATE topics you've practiced PYQs for and which you haven't. Previous year questions are the single best GATE practice resource — Mastermind makes sure you don't skip them."
               tag="PYQ Tracking"
             />
             <FeatureBlock
               title="Mock gate score analysis"
-              description="Log your GATE mock scores subject-wise. PrepBrain identifies your score trend across subjects and tells you which ones have the most improvement potential left."
+              description="Log your GATE mock scores subject-wise. Mastermind identifies your score trend across subjects and tells you which ones have the most improvement potential left."
               tag="Score Analysis"
             />
             <FeatureBlock
               title="Final 30-day revision plan"
-              description="In the last 30 days before GATE, PrepBrain shifts to revision mode — it tells you which subjects to touch again and which to trust, so you don't waste time rereading what you already know."
+              description="In the last 30 days before GATE, Mastermind shifts to revision mode — it tells you which subjects to touch again and which to trust, so you don't waste time rereading what you already know."
               tag="Final Revision"
             />
           </div>

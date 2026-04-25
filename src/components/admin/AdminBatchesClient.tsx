@@ -691,7 +691,7 @@ export function AdminBatchesClient({
             {[
               { label: "Study sessions", value: engagement.totalStudySessions, sub: "all time" },
               { label: "Total study hours", value: `${engagement.totalStudyHours}h`, sub: "approx." },
-              { label: "AI conversations", value: engagement.totalAIConversations, sub: "PrepBrain" },
+              { label: "AI conversations", value: engagement.totalAIConversations, sub: "Mastermind" },
               { label: "Voice logs", value: engagement.totalVoiceLogs, sub: "timeline entries" },
               { label: "Avg session", value: `${engagement.avgSessionMinutes}m`, sub: "per study session" },
             ].map(({ label, value, sub }) => (

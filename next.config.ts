@@ -114,6 +114,11 @@ const nextConfig: NextConfig = {
         destination: "/planner",
         permanent: true,
       },
+      {
+        source: "/prepbrain",
+        destination: "/mastermind",
+        permanent: true,
+      },
     ];
   },
 

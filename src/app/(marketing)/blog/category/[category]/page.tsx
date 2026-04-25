@@ -74,7 +74,7 @@ export default async function CategoryPage({ params }: Props) {
 
         <CTABanner
           headline="Apply what you read — start free for 3 days"
-          subtext="Full PrepBrain AI, syllabus tracker, daily planner. No credit card."
+          subtext="Full Mastermind, syllabus tracker, daily planner. No credit card."
         />
       </div>
     </>

@@ -56,7 +56,7 @@ const UNIVERSAL_FEATURES = [
   "Revision engine (fullest when microtopic syllabus is loaded for your exam)",
   "Consistency heatmap & habit tracker",
   "Brain Yoga / meditation resets",
-  "PrepBrain AI coach",
+  "Mastermind AI coach",
   "Doubt tracker",
   "Daily log",
   "Push notifications & reminders",
@@ -120,7 +120,7 @@ export function ExamTabsSection() {
                 className="mb-3 text-2xl font-normal leading-tight text-kal-text"
                 style={{ fontFamily: "var(--font-display)" }}
               >
-                Planning, timer, habits, doubts, log, Brain Yoga & PrepBrain — for every exam you choose.
+                Planning, timer, habits, doubts, log, Brain Yoga & Mastermind — for every exam you choose.
               </h3>
               <p className="text-sm leading-relaxed text-kal-text-secondary">
                 Marks and revision features are most powerful where we have full syllabus weighting and chapter data (today: JEE Main, NEET UG, Boards). For CAT, UPSC, CA, and the rest, you still run the same disciplined loop while we expand exam-specific graphs.

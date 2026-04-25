@@ -59,12 +59,12 @@ const FEATURES: Feature[] = [
     illustration: <FocusTimerIllustration />,
   },
   {
-    tag: "PrepBrain AI",
+    tag: "Mastermind",
     headline: "A tutor who knows your syllabus, your weak spots, and your plan — not just the textbook.",
     bullets: [
       "Ask questions in the context of what you're actually preparing for, not generically.",
       "Answers connected to your syllabus coverage, so advice is specific, not generic.",
-      "Smart Plan includes 2 million PrepBrain AI tokens and 100 minutes of voice per month. 3-day free trial included with every new account.",
+      "Smart Plan includes 2 million Mastermind tokens and 100 minutes of voice per month. 3-day free trial included with every new account.",
     ],
     illustration: <PrepBrainIllustration />,
   },
@@ -406,7 +406,7 @@ function FocusTimerIllustration() {
 function PrepBrainIllustration() {
   return (
     <div className="p-6 select-none">
-      <p className="mb-4 text-[9px] font-bold uppercase tracking-[0.14em] text-kal-muted">PrepBrain AI</p>
+      <p className="mb-4 text-[9px] font-bold uppercase tracking-[0.14em] text-kal-muted">Mastermind</p>
 
       {/* User message */}
         <div className="mb-3 flex items-start justify-end gap-2">

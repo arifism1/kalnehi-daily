@@ -266,7 +266,7 @@ export function PrepBrainChat() {
       <div
         className="shrink-0 border-b border-kal-border/45 bg-kal-accent-soft/35 px-2.5 py-1.5 text-center sm:px-4 sm:py-2"
         role="region"
-        aria-label="How to use PrepBrain"
+        aria-label="How to use Mastermind"
       >
         <p className="mx-auto max-w-2xl text-[10px] leading-snug text-kal-text sm:text-[11px] sm:leading-snug">
           {PREPBRAIN_TOP_NOTICE}
@@ -290,7 +290,7 @@ export function PrepBrainChat() {
               <Brain className="h-4 w-4 sm:h-[18px] sm:w-[18px]" strokeWidth={2} aria-hidden />
             </span>
             <h2 className="kal-section-heading">
-              PrepBrain AI
+              Mastermind
             </h2>
           </div>
           <p className="mt-0.5 text-[11px] font-medium leading-tight text-kal-text-secondary/90 sm:mt-1.5 sm:text-[13px] sm:leading-snug">
@@ -320,11 +320,11 @@ export function PrepBrainChat() {
               className="absolute inset-y-0 left-0 z-30 flex max-h-full w-[min(100%,20rem)] max-w-[90vw] flex-col border-r border-white/50 bg-[rgba(255,252,248,0.94)] shadow-[8px_0_40px_rgba(60,40,20,0.12)] backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/92 sm:w-80"
               role="dialog"
               aria-modal="true"
-              aria-label="PrepBrain menu"
+              aria-label="Mastermind menu"
             >
               <div className="flex shrink-0 items-center justify-between gap-2 border-b border-kal-border/40 px-4 py-3.5">
                 <span className="text-[15px] font-semibold tracking-tight text-kal-text">
-                  PrepBrain
+                  Mastermind
                 </span>
                 <button
                   type="button"
@@ -339,7 +339,7 @@ export function PrepBrainChat() {
               <div className="shrink-0 px-4 pt-2">
                 <div className="kal-glass-card rounded-2xl p-3.5 shadow-sm">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-kal-text-secondary">
-                    PrepBrain usage
+                    Mastermind usage
                   </p>
                   {usageLoading ? (
                     <p className="mt-2 text-xs text-kal-text-secondary">Loading…</p>
@@ -372,7 +372,7 @@ export function PrepBrainChat() {
                         aria-valuenow={Math.round(usagePct)}
                         aria-valuemin={0}
                         aria-valuemax={100}
-                        aria-label={`PrepBrain tokens used: ${usage.used} of ${usage.limit}`}
+                        aria-label={`Mastermind tokens used: ${usage.used} of ${usage.limit}`}
                       >
                         <div
                           className={`h-full rounded-full transition-[width] duration-300 ${
@@ -444,7 +444,7 @@ export function PrepBrainChat() {
                           )}
                         >
                           <span className="line-clamp-2 text-[13px] font-medium leading-snug text-kal-text">
-                            {c.title?.trim() || "PrepBrain chat"}
+                            {c.title?.trim() || "Mastermind chat"}
                           </span>
                           <span className="mt-1 block text-[10px] text-kal-text-secondary">
                             {format(new Date(c.updated_at), "d MMM yyyy, h:mm a")}
@@ -490,7 +490,7 @@ export function PrepBrainChat() {
                   <Brain className="h-4 w-4 text-kal-accent" aria-hidden />
                 </span>
                 <span className="text-[13px] font-semibold tracking-tight text-kal-text sm:text-sm">
-                  PrepBrain – Your Strategy Coach
+                  Mastermind – Your Strategy Coach
                 </span>
               </div>
 
@@ -499,7 +499,7 @@ export function PrepBrainChat() {
                 {/* What it's for */}
                 <div>
                   <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-kal-text-secondary/70 sm:text-[11px]">
-                    Use PrepBrain for
+                    Use Mastermind for
                   </p>
                   <ul className="space-y-1.5">
                     {[
@@ -627,7 +627,7 @@ export function PrepBrainChat() {
             <div className="flex justify-start">
               <div className="flex items-center gap-2 rounded-2xl rounded-bl-md border border-kal-border/50 bg-kal-card/85 px-3.5 py-3 text-[15px] leading-snug text-kal-text-secondary backdrop-blur-md sm:text-base">
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-                PrepBrain is preparing a reply from your latest prep data…
+                Mastermind is preparing a reply from your latest prep data…
               </div>
             </div>
           )}
@@ -666,7 +666,7 @@ export function PrepBrainChat() {
                   }
                 }
               }}
-              placeholder="Message PrepBrain…"
+              placeholder="Message Mastermind…"
               rows={1}
               disabled={isSending || atTokenLimit}
               enterKeyHint="send"

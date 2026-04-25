@@ -10,7 +10,7 @@ export default function manifest(): MetadataRoute.Manifest {
     // "Kalnehi" fits Play Store's 12-char short-name limit and looks clean on the home screen.
     short_name: "Kalnehi",
     description:
-      "Voice-controlled study planner for JEE, NEET, UPSC & all competitive exams. Daily Plan, Syllabus Tracker, Brain Yoga, PrepBrain AI, push reminders, and progress analytics — offline-ready PWA.",
+      "Voice-controlled study planner for JEE, NEET, UPSC & all competitive exams. Daily Plan, Syllabus Tracker, Brain Yoga, Mastermind AI, push reminders, and progress analytics — offline-ready PWA.",
     start_url: "/",
     scope: "/",
     display: "standalone",
@@ -74,7 +74,7 @@ export default function manifest(): MetadataRoute.Manifest {
         sizes: "1920x1080",
         type: "image/png",
         form_factor: "wide",
-        label: "PrepBrain AI coaching on tablet",
+        label: "Mastermind AI coaching on tablet",
         platform: "play",
       },
     ],

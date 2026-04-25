@@ -33,8 +33,8 @@ const TIMELINE = [
   },
   {
     time: "11:30",
-    feature: "PrepBrain AI",
-    caption: "Ask PrepBrain about that doubt. Get a precise answer.",
+    feature: "Mastermind",
+    caption: "Ask Mastermind about that doubt. Get a precise answer.",
     detail: "\"Based on where I am in Physics — explain this doubt in context.\" Not a Google result. An answer that knows your syllabus.",
     icon: "🧠",
     accent: true,

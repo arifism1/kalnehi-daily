@@ -115,7 +115,7 @@ The answers to these questions are your actual problem statement for the drop ye
 - Weekly full-length mocks
 - Deep post-mock analysis (pattern in wrong answers)
 - Revision-dominant study (80% revision, 20% new practice)
-- PrepBrain or mentor analysis: which chapters still have gaps?
+- Mastermind or mentor analysis: which chapters still have gaps?
 
 **December (Month 9): Pre-exam stabilisation**
 - No new learning — only revision

@@ -20,9 +20,9 @@ const FEATURES: { name: string; trial: FeatureValue; smart: FeatureValue }[] = [
   { name: "Marks engine + rank prediction", trial: true, smart: true },
   { name: "Revision reminders", trial: true, smart: true },
   { name: "Daily log & prep insights", trial: true, smart: true },
-  { name: "PrepBrain AI coach", trial: true, smart: true },
+  { name: "Mastermind AI coach", trial: true, smart: true },
   { name: "Voice control", trial: "5 min total", smart: "100 min/month" },
-  { name: "PrepBrain tokens", trial: "60,000 total", smart: "20,00,000/month" },
+  { name: "Mastermind tokens", trial: "60,000 total", smart: "20,00,000/month" },
 ];
 
 /* ─────────────────────────────── Helpers ───────────────────────────── */
@@ -339,9 +339,9 @@ function PlanCardsSection({ capStatus }: { capStatus: DailyCapStatus }) {
         "Doubt tracker",
         "Marks engine + rank prediction",
         "Revision reminders + daily log",
-        "PrepBrain AI coach",
+        "Mastermind AI coach",
         "Voice control — 5 minutes total",
-        "PrepBrain AI tokens — 60,000 total",
+        "Mastermind tokens — 60,000 total",
       ],
     },
     {
@@ -357,10 +357,10 @@ function PlanCardsSection({ capStatus }: { capStatus: DailyCapStatus }) {
       ctaHref: "#subscribe",
       ctaClass:
         "bg-kal-accent text-white shadow-[0_4px_16px_rgba(255,122,0,0.28)] hover:brightness-105",
-      intro: "The full system, every month. 20 lakh PrepBrain tokens. 100 minutes of voice.",
+      intro: "The full system, every month. 20 lakh Mastermind tokens. 100 minutes of voice.",
       bullets: [
         "Everything in the free trial, every month",
-        "PrepBrain AI — 20 lakh tokens/month",
+        "Mastermind — 20 lakh tokens/month",
         "Voice control — 100 minutes/month",
         "Marks engine + rank prediction",
         "Revision reminders + daily log + prep insights",
@@ -386,7 +386,7 @@ function PlanCardsSection({ capStatus }: { capStatus: DailyCapStatus }) {
     bullets: [
       "Immediate access — no queue",
       "Same 3-day free trial as batch users",
-      "60,000 PrepBrain tokens included",
+      "60,000 Mastermind tokens included",
       "5 minutes voice included",
       "One-time payment, no recurring charge",
     ],

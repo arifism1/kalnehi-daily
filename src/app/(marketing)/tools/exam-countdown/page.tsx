@@ -71,7 +71,7 @@ export default function ExamCountdownPage() {
 
         <CTABanner
           headline="Track what you do with those days in Kalnehi"
-          subtext="Syllabus tracker, daily planner, PrepBrain AI. Start free for 3 days."
+          subtext="Syllabus tracker, daily planner, Mastermind. Start free for 3 days."
         />
       </div>
     </>

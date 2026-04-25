@@ -235,7 +235,7 @@ export function usePrepBrainAI() {
                       setError(
                         surfaceOptionalString(
                           payload.error,
-                          "Could not reach PrepBrain. Try again.",
+                          "Could not reach Mastermind. Try again.",
                         ),
                       );
                     }
@@ -285,7 +285,7 @@ export function usePrepBrainAI() {
               setError(
                 surfaceOptionalString(
                   data.error,
-                  "Could not reach PrepBrain. Try again.",
+                  "Could not reach Mastermind. Try again.",
                 ),
               );
             }

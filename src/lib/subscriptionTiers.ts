@@ -83,8 +83,8 @@ export const FEATURE_LABELS: Record<FeatureKey, { name: string; upgradeHint: str
   },
   ai_voice: { name: "AI Voice Dictation", upgradeHint: "Upgrade to Smart Plan (₹399/month) for AI voice dictation — 100 minutes/month." },
   prepbrain_ai: {
-    name: "PrepBrain AI",
-    upgradeHint: "Upgrade to Smart Plan (₹399/month) for PrepBrain AI — 2 million tokens per month.",
+    name: "Mastermind",
+    upgradeHint: "Upgrade to Smart Plan (₹399/month) for Mastermind — 2 million tokens per month.",
   },
   mock_tests: { name: "Mock Test Tracker", upgradeHint: "Upgrade to Smart Plan (₹399/month) to track mock tests and score trends." },
   mistake_log: { name: "Mistake Log", upgradeHint: "Upgrade to Smart Plan (₹399/month) to log and analyse your mistake patterns." },
@@ -130,9 +130,9 @@ export const TIERS: Record<SubscriptionTier, TierConfig> = {
       "Marks engine + rank prediction",
       "Revision reminders & due list",
       "Daily log & prep insights",
-      "PrepBrain AI coach",
+      "Mastermind coach",
       "Voice control — 100 minutes/month",
-      "20,00,000 PrepBrain tokens/month",
+      "20,00,000 Mastermind tokens/month",
     ],
   },
 };
@@ -262,7 +262,7 @@ export const EXTRA_CREDIT_PACKS: ExtraCreditPack[] = [
   },
   {
     id: "ai_tokens_1m",
-    label: "+10 lakh PrepBrain AI tokens",
+    label: "+10 lakh Mastermind tokens",
     amount: 1_000_000,
     pricePaise: 9900,
     priceDisplay: "₹99",

@@ -183,11 +183,11 @@ const FEATURE_ITEM_BY_ID: Record<string, FeatureItem> = {
   },
   "prepbrain-ai": {
     id: "prepbrain-ai",
-    href: "/prepbrain",
-    label: "PrepBrain AI",
+    href: "/mastermind",
+    label: "Mastermind",
     icon: Brain,
-    staticHint: "Ask anything",
-    fallback: "Ask anything",
+    staticHint: "Build strategy here",
+    fallback: "Build strategy here",
   },
   "revision-reminders": {
     id: "revision-reminders",

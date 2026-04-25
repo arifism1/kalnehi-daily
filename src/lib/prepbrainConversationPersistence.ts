@@ -50,7 +50,7 @@ export async function prepbrainAssertRoomBeforeTurn(
 function truncateTitle(text: string): string {
   const line = text.trim().split(/\r?\n/)[0] ?? "";
   const t = line.slice(0, PREPBRAIN_TITLE_MAX_CHARS).trim();
-  return t || "PrepBrain chat";
+  return t || "Mastermind chat";
 }
 
 /**

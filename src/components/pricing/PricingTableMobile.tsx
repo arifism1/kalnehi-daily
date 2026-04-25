@@ -15,9 +15,9 @@ const FEATURES: { name: string; trial: FeatureValue; smart: FeatureValue }[] = [
   { name: "Marks engine + rank prediction", trial: true, smart: true },
   { name: "Revision reminders", trial: true, smart: true },
   { name: "Daily log & prep insights", trial: true, smart: true },
-  { name: "PrepBrain AI coach", trial: true, smart: true },
+  { name: "Mastermind AI coach", trial: true, smart: true },
   { name: "Voice control", trial: "5 min total", smart: "100 min/month" },
-  { name: "PrepBrain tokens", trial: "60,000 total", smart: "20,00,000/month" },
+  { name: "Mastermind tokens", trial: "60,000 total", smart: "20,00,000/month" },
 ];
 
 type PlanKey = "trial" | "smart";

@@ -39,7 +39,7 @@ export default function UpscStudyPlannerPage() {
           {
             question: "Is there AI for UPSC?",
             answer:
-              "PrepBrain AI may be available on paid tiers depending on your plan. Treat it as a supplement to standard books and tests — not a single source of truth.",
+              "Mastermind may be available on paid tiers depending on your plan. Treat it as a supplement to standard books and tests — not a single source of truth.",
           },
         ]}
       />

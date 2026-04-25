@@ -56,12 +56,12 @@ const FAQS = [
   {
     question: "How does Kalnehi help working professionals preparing for UPSC?",
     answer:
-      "Working professionals typically have 3-4 hours per day at most. Kalnehi's daily planner helps you extract maximum output from those hours — logging what you actually covered, tracking GS topics, and using PrepBrain AI to tell you which paper is most behind schedule.",
+      "Working professionals typically have 3-4 hours per day at most. Kalnehi's daily planner helps you extract maximum output from those hours — logging what you actually covered, tracking GS topics, and using Mastermind to tell you which paper is most behind schedule.",
   },
   {
-    question: "How does PrepBrain AI help UPSC preparation?",
+    question: "How does Mastermind help UPSC preparation?",
     answer:
-      "PrepBrain reads your GS completion, your Optional progress, and your daily logs. It tells you if you're spending disproportionate time on GS1 while GS4 (Ethics) is neglected. For UPSC, topic balance matters as much as depth.",
+      "Mastermind reads your GS completion, your Optional progress, and your daily logs. It tells you if you're spending disproportionate time on GS1 while GS4 (Ethics) is neglected. For UPSC, topic balance matters as much as depth.",
   },
   {
     question: "Can Kalnehi help me track Current Affairs for UPSC?",
@@ -71,7 +71,7 @@ const FAQS = [
   {
     question: "Does Kalnehi work for UPSC Optional subjects?",
     answer:
-      "Yes. The syllabus tracker is flexible — you can add your Optional subject's syllabus (say, History or Public Administration) and track topics just like GS subjects. PrepBrain will also account for Optional when giving strategy advice.",
+      "Yes. The syllabus tracker is flexible — you can add your Optional subject's syllabus (say, History or Public Administration) and track topics just like GS subjects. Mastermind will also account for Optional when giving strategy advice.",
   },
 ];
 
@@ -131,30 +131,30 @@ export default function UpscPage() {
           </div>
         </section>
 
-        {/* Section 3 — PrepBrain */}
+        {/* Section 3 — Mastermind */}
         <section className="space-y-4" aria-labelledby="upsc-prepbrain">
           <h2 id="upsc-prepbrain" className="text-xl font-bold text-kal-text">
-            How PrepBrain AI helps UPSC aspirants
+            How Mastermind helps UPSC aspirants
           </h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <FeatureBlock
               title="GS paper balance monitoring"
-              description="PrepBrain tracks your coverage across GS1, GS2, GS3, GS4 and Essay. It flags when one paper is significantly behind and tells you how many focused hours are needed to close the gap before your Prelims date."
+              description="Mastermind tracks your coverage across GS1, GS2, GS3, GS4 and Essay. It flags when one paper is significantly behind and tells you how many focused hours are needed to close the gap before your Prelims date."
               tag="Study Balance"
             />
             <FeatureBlock
               title="Optional subject tracking"
-              description="Whatever Optional you've chosen — History, Geography, PSIR, Sociology — PrepBrain tracks your syllabus coverage and factors it into your weekly planning alongside GS."
+              description="Whatever Optional you've chosen — History, Geography, PSIR, Sociology — Mastermind tracks your syllabus coverage and factors it into your weekly planning alongside GS."
               tag="Optional Tracking"
             />
             <FeatureBlock
               title="Current affairs integration"
-              description="Log your daily newspaper reading and PIB coverage as habits. PrepBrain monitors the streak and alerts you when you've missed days — because for UPSC, current affairs gaps compound quickly."
+              description="Log your daily newspaper reading and PIB coverage as habits. Mastermind monitors the streak and alerts you when you've missed days — because for UPSC, current affairs gaps compound quickly."
               tag="Current Affairs"
             />
             <FeatureBlock
               title="Long-haul consistency support"
-              description="UPSC prep takes 12-18 months. PrepBrain analyses your weekly output trends and tells you when your consistency is slipping — before you realise you've wasted three weeks."
+              description="UPSC prep takes 12-18 months. Mastermind analyses your weekly output trends and tells you when your consistency is slipping — before you realise you've wasted three weeks."
               tag="Consistency"
             />
           </div>

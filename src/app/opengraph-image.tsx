@@ -51,7 +51,7 @@ export default function OpenGraphImage() {
             lineHeight: 1.35,
           }}
         >
-          Exam prep planner, syllabus tracking, study sessions, and optional PrepBrain AI —
+          Exam prep planner, syllabus tracking, study sessions, and optional Mastermind AI —
           installable PWA for JEE, NEET, UPSC & Boards.
         </div>
       </div>

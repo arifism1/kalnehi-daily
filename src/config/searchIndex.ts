@@ -19,12 +19,12 @@ const examSet = new Set(EXAM_SITEMAP_PATHS);
 /** Optional richer copy for exam landings; falls back to generic line. */
 const EXAM_OVERRIDES: Partial<Record<string, { title: string; description: string }>> = {
   "/jee": {
-    title: "JEE Preparation — daily planner with syllabus & PrepBrain AI",
+    title: "JEE Preparation — daily planner with syllabus & Mastermind",
     description: "JEE Main & Advanced: PCM tracking, daily plans, voice, and AI strategy for serious aspirants.",
   },
   "/neet": {
     title: "NEET Preparation — Biology-first syllabus tracking & study OS",
-    description: "NEET UG: track PCB chapters, build consistency, and get PrepBrain guidance for weightage and mocks.",
+    description: "NEET UG: track PCB chapters, build consistency, and get Mastermind guidance for weightage and mocks.",
   },
   "/upsc": {
     title: "UPSC CSE — daily execution system for prelims & mains",
@@ -53,7 +53,7 @@ function examEntries(): SearchIndexEntry[] {
 const PAGE_OVERRIDES: Record<string, { title: string; description: string; type: SearchResultType }> = {
   "/": {
     title: "Kalnehi Daily — Win Daily",
-    description: "Privacy-first study OS: planning, PrepBrain AI, voice, syllabus, revision.",
+    description: "Privacy-first study OS: planning, Mastermind, voice, syllabus, revision.",
     type: "page",
   },
   "/pricing": {
