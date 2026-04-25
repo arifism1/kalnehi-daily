@@ -17,7 +17,7 @@ const FAQS = [
   { question: "What makes JEE Advanced different from JEE Main?", answer: "JEE Advanced tests deeper conceptual understanding, multi-concept problems, and application under pressure. The same PCM topics appear, but at significantly higher difficulty. You can't get away with NCERT-level understanding alone — you need JEE Advanced-specific problem practice." },
   { question: "How many hours should I study for JEE Advanced?", answer: "Most IIT toppers report 8-12 focused hours per day in the peak phase. But quantity alone doesn't decide rank — the quality of problem-solving practice and revision consistency is what separates 99 percentile from rank 1-500. Kalnehi helps you track both hours and quality." },
   { question: "Can Kalnehi help me track both Main and Advanced preparation at once?", answer: "Yes. Set up your JEE Main date and JEE Advanced date separately. Kalnehi will help you plan the Main phase first, then shift automatically to Advanced-specific depth and problem sets." },
-  { question: "How does PrepBrain AI help for JEE Advanced?", answer: "PrepBrain identifies which advanced-level topics you haven't solved problems for. It tracks which problem types from previous Advanced papers you've covered and which need more practice. For JEE Advanced, problem coverage matters as much as chapter completion." },
+  { question: "How does Mastermind help for JEE Advanced?", answer: "Mastermind identifies which advanced-level topics you haven't solved problems for. It tracks which problem types from previous Advanced papers you've covered and which need more practice. For JEE Advanced, problem coverage matters as much as chapter completion." },
 ];
 
 export default function JeeAdvancedPage() {
@@ -45,7 +45,7 @@ export default function JeeAdvancedPage() {
             </div>
             <div className="kal-glass-card rounded-xl p-4">
               <strong className="text-kal-text block mb-1">Multi-concept problem tracking</strong>
-              <p className="text-kal-text-secondary">Advanced questions combine 2-3 concepts. PrepBrain helps you identify which concept combinations you're weakest on — and builds your doubt tracker around them.</p>
+              <p className="text-kal-text-secondary">Advanced questions combine 2-3 concepts. Mastermind helps you identify which concept combinations you're weakest on — and builds your doubt tracker around them.</p>
             </div>
             <div className="kal-glass-card rounded-xl p-4">
               <strong className="text-kal-text block mb-1">Mock test review discipline</strong>
@@ -64,7 +64,7 @@ export default function JeeAdvancedPage() {
         </section>
 
         <FAQBlock items={FAQS} />
-        <CTABanner headline="Build your JEE Advanced execution system" subtext="3 days free. PrepBrain AI. No credit card." />
+        <CTABanner headline="Build your JEE Advanced execution system" subtext="3 days free. Mastermind. No credit card." />
       </article>
     </>
   );

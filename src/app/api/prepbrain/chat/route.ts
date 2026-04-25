@@ -435,7 +435,7 @@ export async function POST(request: Request) {
 
   if (!profile) {
     return NextResponse.json(
-      { ok: false, error: "PrepBrain AI requires a Kalnehi account." },
+      { ok: false, error: "Mastermind requires a Kalnehi account." },
       { status: 403 },
     );
   }
@@ -467,7 +467,7 @@ export async function POST(request: Request) {
       {
         ok: false,
         error:
-          "PrepBrain AI is available during your 3-day free trial and with an active Smart Plan subscription.",
+          "Mastermind is available during your 3-day free trial and with an active Smart Plan subscription.",
       },
       { status: 403 },
     );
@@ -663,7 +663,7 @@ export async function POST(request: Request) {
         error:
           reserve.code === "insufficient_ai_tokens"
             ? prepbrainLimitReachedMessageForUi(phase)
-            : "PrepBrain AI is unavailable for your account.",
+            : "Mastermind is unavailable for your account.",
         usage: buildPrepbrainUsageDisplayPayload(
           phase,
           tokenRow,

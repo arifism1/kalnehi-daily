@@ -58,9 +58,15 @@ const PAGE_SEO: Record<
   },
   prepbrain: {
     path: "/prepbrain",
-    title: `PrepBrain AI — syllabus-aware study coach | ${SITE_NAME}`,
+    title: `Mastermind — syllabus-aware AI study coach | ${SITE_NAME}`,
     description:
-      `Ask syllabus-aware questions, get structured help, and stay aligned with your planner. PrepBrain AI in ${SITE_NAME} uses your tracked syllabus, schedule, and study rhythm so answers stay concrete.`,
+      `Ask syllabus-aware questions, get structured help, and stay aligned with your planner. Mastermind in ${SITE_NAME} uses your tracked syllabus, schedule, and study rhythm so answers stay concrete.`,
+  },
+  mastermind: {
+    path: "/mastermind",
+    title: `Mastermind — syllabus-aware AI study coach | ${SITE_NAME}`,
+    description:
+      `Ask syllabus-aware questions, get structured help, and stay aligned with your planner. Mastermind in ${SITE_NAME} uses your tracked syllabus, schedule, and study rhythm so answers stay concrete.`,
   },
   studySessions: {
     path: "/study-sessions",
@@ -78,7 +84,7 @@ const PAGE_SEO: Record<
     path: "/pricing",
     title: `Pricing — 3-Day Free Trial & Smart Plan | ${SITE_NAME}`,
     description:
-      `Start with a 3-day free trial — every feature, no card required. Then ₹399/month with Smart Plan: 2 million PrepBrain AI tokens, 100 minutes voice, marks engine, and rank prediction.`,
+      `Start with a 3-day free trial — every feature, no card required. Then ₹399/month with Smart Plan: 2 million Mastermind tokens, 100 minutes voice, marks engine, and rank prediction.`,
   },
   about: {
     path: "/about",

@@ -86,7 +86,7 @@ There's a companion power to voice planning: voice logging.
 
 After a study session, speak what you completed: "Done — 2 hours of Electrostatics, finished Coulomb's Law and Electric Field sections. Gauss's Law felt hard — needs more problems tomorrow."
 
-This log becomes data. A week from now, PrepBrain or any tracking system can tell you: "You've spent 8 hours on Electrostatics this week. Your difficulty notes mention Gauss's Law twice. Add a targeted problem set."
+This log becomes data. A week from now, Mastermind or any tracking system can tell you: "You've spent 8 hours on Electrostatics this week. Your difficulty notes mention Gauss's Law twice. Add a targeted problem set."
 
 Voice logging reduces the friction of tracking to near zero. The friction of a traditional tracker (open app, navigate, update status, save) is enough that most aspirants do it inconsistently. Speaking 2 sentences at the end of a session is not.
 
@@ -100,7 +100,7 @@ That's voice planning. It took you 20 seconds.
 
 Do it every morning for a week before you wake up your phone. Your day will be structured before the first notification arrives. Your plan will be honest because you spoke it in real-time, not written it aspirationally.
 
-For aspirants who use tools like Kalnehi, voice planning connects to everything — your sylllabus tracker, your daily tasks, your PrepBrain AI recommendations. Say "Hey Boss, plan my day" and speak. The system does the rest.
+For aspirants who use tools like Kalnehi, voice planning connects to everything — your sylllabus tracker, your daily tasks, your Mastermind recommendations. Say "Hey Boss, plan my day" and speak. The system does the rest.
 
 For those without tools: just speak. The habit is the foundation. The tools make it more powerful.`,
 };

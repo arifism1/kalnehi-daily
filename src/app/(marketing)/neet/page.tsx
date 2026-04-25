@@ -12,7 +12,7 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 export const metadata = marketingPageMetadata({
   path: "/neet",
   title: `Daily Planner for NEET Preparation | ${SITE_NAME}`,
-  description: `Track Biology, Physics and Chemistry at the chapter level. PrepBrain AI identifies which NEET topics have the highest weightage vs your current completion. Start free for 3 days.`,
+  description: `Track Biology, Physics and Chemistry at the chapter level. Mastermind identifies which NEET topics have the highest weightage vs your current completion. Start free for 3 days.`,
   ogImage: ogImageExam("NEET Preparation"),
 });
 
@@ -55,12 +55,12 @@ const FAQS = [
   {
     question: "How does Kalnehi help NEET aspirants track their syllabus?",
     answer:
-      "Kalnehi lets you mark every NEET chapter in Biology, Physics and Chemistry at the microtopic level — Not started, In progress, Done, or Needs revision. PrepBrain AI then cross-references your completion with NEET historical question patterns and tells you which chapters to prioritise next.",
+      "Kalnehi lets you mark every NEET chapter in Biology, Physics and Chemistry at the microtopic level — Not started, In progress, Done, or Needs revision. Mastermind then cross-references your completion with NEET historical question patterns and tells you which chapters to prioritise next.",
   },
   {
     question: "Biology is 90 marks in NEET — how does Kalnehi help me prioritise it?",
     answer:
-      "PrepBrain AI knows which Biology chapters appear most in NEET question papers (Genetics, Human Physiology, Ecology consistently dominate). It reads your syllabus completion and flags the high-weightage chapters you haven't finished yet — so you get maximum marks per hour of study.",
+      "Mastermind knows which Biology chapters appear most in NEET question papers (Genetics, Human Physiology, Ecology consistently dominate). It reads your syllabus completion and flags the high-weightage chapters you haven't finished yet — so you get maximum marks per hour of study.",
   },
   {
     question: "Can I use Kalnehi for both NEET UG and NEET PG?",
@@ -90,7 +90,7 @@ export default function NeetPage() {
         faqs={FAQS}
         webPage={{
           name: `Daily Planner for NEET Preparation | ${SITE_NAME}`,
-          description: `Track Biology, Physics and Chemistry at the chapter level. PrepBrain AI identifies which NEET topics have the highest weightage vs your current completion.`,
+          description: `Track Biology, Physics and Chemistry at the chapter level. Mastermind identifies which NEET topics have the highest weightage vs your current completion.`,
         }}
       />
 
@@ -143,30 +143,30 @@ export default function NeetPage() {
           </p>
         </section>
 
-        {/* Section 3 — PrepBrain */}
+        {/* Section 3 — Mastermind */}
         <section className="space-y-4" aria-labelledby="neet-prepbrain">
           <h2 id="neet-prepbrain" className="text-xl font-bold text-kal-text">
-            How PrepBrain AI helps NEET aspirants
+            How Mastermind helps NEET aspirants
           </h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <FeatureBlock
               title="Weightage vs completion gap analysis"
-              description="PrepBrain identifies which Biology chapters have the highest historical NEET weightage vs your current completion — and tells you where to spend your next 3 study hours to maximise marks."
+              description="Mastermind identifies which Biology chapters have the highest historical NEET weightage vs your current completion — and tells you where to spend your next 3 study hours to maximise marks."
               tag="AI Strategy"
             />
             <FeatureBlock
               title="NCERT-first approach"
-              description="PrepBrain keeps you honest: it flags when you're spending too much time on reference books before NCERT is fully covered. For NEET, NCERT is the bible — PrepBrain knows that."
+              description="Mastermind keeps you honest: it flags when you're spending too much time on reference books before NCERT is fully covered. For NEET, NCERT is the bible — Mastermind knows that."
               tag="Study Strategy"
             />
             <FeatureBlock
               title="Mock score pattern recognition"
-              description="Log your NEET mock scores and PrepBrain spots the pattern — which subject is consistently pulling your aggregate down, which chapters keep appearing, and what to revise before the next mock."
+              description="Log your NEET mock scores and Mastermind spots the pattern — which subject is consistently pulling your aggregate down, which chapters keep appearing, and what to revise before the next mock."
               tag="Mock Analysis"
             />
             <FeatureBlock
               title="Revision windows before NEET"
-              description="In the final 60 days before NEET, PrepBrain shifts strategy from learning new chapters to revision windows — it tells you which chapters need a second pass and which are solid."
+              description="In the final 60 days before NEET, Mastermind shifts strategy from learning new chapters to revision windows — it tells you which chapters need a second pass and which are solid."
               tag="Final Stretch"
             />
           </div>
@@ -189,11 +189,11 @@ export default function NeetPage() {
               },
               {
                 cmd: "Hey Boss, mark Genetics as needs revision",
-                result: "Chapter status updated — PrepBrain schedules a revision window",
+                result: "Chapter status updated — Mastermind schedules a revision window",
               },
               {
                 cmd: "Hey Boss, how much Biology is left to cover?",
-                result: "PrepBrain reads your syllabus tracker and reports completion percentage",
+                result: "Mastermind reads your syllabus tracker and reports completion percentage",
               },
             ].map(({ cmd, result }) => (
               <div key={cmd} className="kal-glass-card rounded-xl p-4 space-y-1">
@@ -210,7 +210,7 @@ export default function NeetPage() {
 
         <CTABanner
           headline="Start your NEET prep system today"
-          subtext="3 days free. Full access including PrepBrain AI. No credit card."
+          subtext="3 days free. Full access including Mastermind. No credit card."
         />
       </article>
     </>

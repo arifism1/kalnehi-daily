@@ -25,7 +25,7 @@ export function AdminActivationClient({ data }: { data: ActivationSnapshot }) {
           value={`${data.targetExamPct.toFixed(0)}%`}
           sub={`${data.withTargetExam} users`}
         />
-        <AdminKpiCard label="PrepBrain (events, users)" value={data.prepbrainUserCount} />
+        <AdminKpiCard label="Mastermind (events, users)" value={data.prepbrainUserCount} />
         <AdminKpiCard label="Voice (events, users)" value={data.voiceUserCount} />
       </div>
 

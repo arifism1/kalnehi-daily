@@ -6,7 +6,7 @@
 export const SITE_ALTERNATE_NAME = "Kalnehi" as const;
 
 export const ORGANIZATION_DESCRIPTION =
-  "Privacy-first daily study operating system for Indian competitive exam aspirants. Daily planning, PrepBrain AI, voice control, syllabus tracking, and spaced revision — built to win daily." as const;
+  "Privacy-first daily study operating system for Indian competitive exam aspirants. Daily planning, Mastermind, voice control, syllabus tracking, and spaced revision — built to win daily." as const;
 
 export const SOFTWARE_APP_DESCRIPTION =
   "Voice-controlled exam prep tracker for JEE, NEET, UPSC, CAT, GATE, CA and all major Indian competitive exams." as const;
@@ -35,13 +35,13 @@ export const PRICING_OFFERS = [
     name: "3-Day Free Trial",
     price: "0",
     priceCurrency: "INR",
-    description: "3 days full access — every feature, 60k PrepBrain tokens, 5 min voice. No card required.",
+    description: "3 days full access — every feature, 60k Mastermind tokens, 5 min voice. No card required.",
   },
   {
     name: "Smart Plan",
     price: "399",
     priceCurrency: "INR",
-    description: "Full monthly plan with 2 million PrepBrain AI tokens and 100 minutes voice per month",
+    description: "Full monthly plan with 2 million Mastermind tokens and 100 minutes voice per month",
     unitCode: "MON" as const,
   },
 ] as const;

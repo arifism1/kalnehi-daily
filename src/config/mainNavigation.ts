@@ -141,9 +141,9 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
     title: "STUDY TOOLS",
     items: [
       {
-        href: "/prepbrain",
-        label: "PrepBrain AI",
-        shortLabel: "PrepBrain",
+        href: "/mastermind",
+        label: "Mastermind",
+        shortLabel: "Mastermind",
         Icon: Brain,
         featureId: "prepbrain-ai",
       },
@@ -240,7 +240,7 @@ const QUICK_NAV_HREF_ORDER: readonly string[] = [
   "/syllabus",
   "/target-score-blueprint",
   "/my-target",
-  "/prepbrain",
+  "/mastermind",
   "/doubts",
   "/mistake-log",
   "/study-sessions",

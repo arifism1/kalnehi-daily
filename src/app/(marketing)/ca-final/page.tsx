@@ -16,7 +16,7 @@ export const metadata = marketingPageMetadata({
 const FAQS = [
   { question: "What are the 8 papers in CA Final?", answer: "Group 1: Financial Reporting, Strategic Financial Management, Advanced Auditing & Professional Ethics, Corporate & Economic Laws. Group 2: Strategic Cost Management, Elective Paper (one of 6 options), Direct Tax Laws, International Taxation, Indirect Tax Laws." },
   { question: "How does Kalnehi help CA Final students during articleship?", answer: "CA Final is unique because most students prepare during a 3-year articleship with limited daily study time. Kalnehi helps you extract maximum output from 3-4 hours per day — planning exactly which paper and which chapter to cover each day, and tracking progress so nothing slips for months at a time." },
-  { question: "How does PrepBrain AI help CA Final preparation?", answer: "PrepBrain monitors your 8-paper coverage and identifies which subject is most underprepared relative to your CA Final date. It accounts for which papers you're writing in Group 1 vs Group 2 and builds a balanced study strategy." },
+  { question: "How does Mastermind help CA Final preparation?", answer: "Mastermind monitors your 8-paper coverage and identifies which subject is most underprepared relative to your CA Final date. It accounts for which papers you're writing in Group 1 vs Group 2 and builds a balanced study strategy." },
   { question: "What is the CA Final pass rate?", answer: "CA Final both groups pass rate is around 10-15%. Single group pass rates are higher (20-25%). The exam is genuinely hard — but most failures are due to preparation imbalances across 8 papers, not intelligence. Kalnehi's syllabus tracker prevents that." },
 ];
 
@@ -41,9 +41,9 @@ export default function CaFinalPage() {
           <ul className="space-y-3 text-sm">
             {[
               { t: "8-paper syllabus tracker", d: "Track every chapter in Financial Reporting, SFM, Audit, Corporate Laws, SCM, Direct Tax and Indirect Tax. See completion percentage per paper at a glance." },
-              { t: "Daily log with session type", d: "Log whether you're doing first reading, problem practice, revision, or mock test review. PrepBrain uses this to analyse your study pattern and quality — not just hours." },
-              { t: "Mock test score tracking", d: "Log ICAI mock, coaching mock and self-test scores paper by paper. PrepBrain tracks your improvement curve and tells you which paper needs more practice time before the exam." },
-              { t: "Elective paper strategy", d: "CA Final's elective paper (Risk Management, International Taxation, etc.) is often underprepared. PrepBrain ensures you're giving it equal priority alongside the other 7 papers." },
+              { t: "Daily log with session type", d: "Log whether you're doing first reading, problem practice, revision, or mock test review. Mastermind uses this to analyse your study pattern and quality — not just hours." },
+              { t: "Mock test score tracking", d: "Log ICAI mock, coaching mock and self-test scores paper by paper. Mastermind tracks your improvement curve and tells you which paper needs more practice time before the exam." },
+              { t: "Elective paper strategy", d: "CA Final's elective paper (Risk Management, International Taxation, etc.) is often underprepared. Mastermind ensures you're giving it equal priority alongside the other 7 papers." },
             ].map(({ t, d }) => (
               <div key={t} className="kal-glass-card rounded-xl p-4">
                 <strong className="text-kal-text block mb-1">{t}</strong>
@@ -62,7 +62,7 @@ export default function CaFinalPage() {
         </section>
 
         <FAQBlock items={FAQS} />
-        <CTABanner headline="Track your CA Final prep — all 8 papers" subtext="3 days free. PrepBrain AI. No credit card." />
+        <CTABanner headline="Track your CA Final prep — all 8 papers" subtext="3 days free. Mastermind. No credit card." />
       </article>
     </>
   );

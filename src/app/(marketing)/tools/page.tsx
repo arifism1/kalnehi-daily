@@ -79,7 +79,7 @@ export default function ToolsPage() {
         <div className="kal-glass-card rounded-2xl p-6 space-y-3">
           <h2 className="text-base font-semibold text-kal-text">Want full daily planning inside one app?</h2>
           <p className="text-sm text-kal-text-secondary">
-            These free tools answer point-in-time questions. Kalnehi is your ongoing daily operating system — syllabus tracker, PrepBrain AI, voice control, consistency heatmap, and everything else that makes exam prep sustainable for months.
+            These free tools answer point-in-time questions. Kalnehi is your ongoing daily operating system — syllabus tracker, Mastermind, voice control, consistency heatmap, and everything else that makes exam prep sustainable for months.
           </p>
           <Link
             href="/auth"
@@ -91,7 +91,7 @@ export default function ToolsPage() {
 
         <CTABanner
           headline="These tools are free. The full system is better."
-          subtext="Start free for 3 days — PrepBrain AI, syllabus tracker, voice control, and everything else."
+          subtext="Start free for 3 days — Mastermind, syllabus tracker, voice control, and everything else."
         />
       </div>
     </>

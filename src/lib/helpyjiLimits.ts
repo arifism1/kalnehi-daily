@@ -13,7 +13,7 @@ export function helpyjiUtcDayString(d = new Date()): string {
 
 export function helpyjiDailyLimitReachedMessage(hasAccount: boolean): string {
   if (hasAccount) {
-    return "You've used today's HelpyJi messages. Come back tomorrow—or upgrade for full PrepBrain coaching inside the app.";
+    return "You've used today's HelpyJi messages. Come back tomorrow—or upgrade for full Mastermind coaching inside the app.";
   }
   return "You've used today's free HelpyJi messages. Come back tomorrow, or sign in for more daily messages and a personalized pitch.";
 }

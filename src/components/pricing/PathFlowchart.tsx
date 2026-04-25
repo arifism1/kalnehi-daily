@@ -171,7 +171,7 @@ export function PathFlowchart() {
         <div className="mt-3 space-y-1.5 text-left">
           {[
             "Every feature fully unlocked",
-            "PrepBrain AI — 60,000 tokens",
+            "Mastermind — 60,000 tokens",
             "Voice control — 5 minutes",
           ].map((f) => (
             <div key={f} className="flex items-center gap-1.5">
@@ -217,7 +217,7 @@ export function PathFlowchart() {
         <div className="mt-3 space-y-1.5 text-left">
           {[
             "Everything in the trial, every month",
-            "PrepBrain AI — 20 lakh tokens/month",
+            "Mastermind — 20 lakh tokens/month",
             "Voice control — 100 minutes/month",
             "AutoPay — cancel anytime",
           ].map((line) => (

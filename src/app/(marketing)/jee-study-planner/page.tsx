@@ -37,9 +37,9 @@ export default function JeeStudyPlannerPage() {
               "Yes. After signing in with Chrome, add to home screen for standalone mode, offline-friendly caching of visited pages, and fewer distracting tabs.",
           },
           {
-            question: "Is PrepBrain AI required for JEE prep?",
+            question: "Is Mastermind required for JEE prep?",
             answer:
-              "No. PrepBrain AI is optional on paid plans for syllabus-aware Q&A — your NCERT, coaching, and mocks still come first.",
+              "No. Mastermind is optional on paid plans for syllabus-aware Q&A — your NCERT, coaching, and mocks still come first.",
           },
         ]}
       />

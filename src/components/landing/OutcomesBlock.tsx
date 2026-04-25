@@ -12,7 +12,7 @@ const FACTS = [
   {
     value: "₹399",
     label: "per month, full access",
-    detail: "2 million PrepBrain tokens and 100 minutes of voice every month. Everything, always.",
+    detail: "2 million Mastermind tokens and 100 minutes of voice every month. Everything, always.",
   },
   {
     value: "27",
@@ -71,7 +71,7 @@ export function OutcomesBlock() {
                 <p className="mt-1 text-sm font-bold text-white">
                   {voice} voice
                 </p>
-                <p className="text-xs text-white/40">{tokens} PrepBrain AI</p>
+                <p className="text-xs text-white/40">{tokens} Mastermind</p>
               </div>
             ))}
           </div>

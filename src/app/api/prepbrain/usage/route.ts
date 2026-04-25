@@ -114,7 +114,7 @@ export async function GET() {
 
   if (phase === "none") {
     return NextResponse.json(
-      { ok: false, error: "PrepBrain usage is available during your free trial or with Pro." },
+      { ok: false, error: "Mastermind usage is available during your free trial or with Pro." },
       { status: 403 },
     );
   }

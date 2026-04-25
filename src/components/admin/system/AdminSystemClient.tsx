@@ -26,7 +26,7 @@ function minutesAgo(ts: string | null): number | null {
 }
 
 const FEATURE_LABELS: Record<string, string> = {
-  prepbrain_ai: "PrepBrain AI coach",
+  prepbrain_ai: "Mastermind coach",
   voice_control: "Voice commands & dictation",
   marks_engine: "Marks engine & rank prediction",
   spaced_revision: "Revision reminders",

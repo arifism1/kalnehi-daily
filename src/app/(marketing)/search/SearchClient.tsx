@@ -32,7 +32,7 @@ const POPULAR: { title: string; url: string }[] = [
   { title: "JEE preparation", url: "/jee" },
   { title: "NEET preparation", url: "/neet" },
   { title: "UPSC preparation", url: "/upsc" },
-  { title: "PrepBrain AI", url: "/features/prepbrain-ai" },
+  { title: "Mastermind", url: "/features/prepbrain-ai" },
   { title: "Pricing", url: "/pricing" },
   { title: "Blog", url: "/blog" },
 ];

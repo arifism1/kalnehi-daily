@@ -15,9 +15,9 @@ export const metadata = marketingPageMetadata({
 
 const FAQS = [
   { question: "How many papers are in UPSC Mains?", answer: "UPSC Mains has 9 papers: Essay, GS1, GS2, GS3, GS4, Optional Paper I, Optional Paper II, and two qualifying language papers (English + an Indian language). Only 7 papers are merit-based (Essay + GS1-4 + Optional I & II). Total merit marks: 1750." },
-  { question: "How should I balance GS and Optional preparation for Mains?", answer: "Most aspirants give 40-50% of their prep time to Optional because it's 500 out of 1750 marks and typically separates toppers from average scorers. PrepBrain monitors this balance and alerts you if GS is getting disproportionately less time." },
-  { question: "How does Kalnehi help with UPSC Mains answer writing practice?", answer: "Track your daily answer writing as a habit in Kalnehi. Log the number of answers written per day, which paper you practised, and your self-assessed quality. PrepBrain monitors your writing consistency and tells you when you've gone 3+ days without practice." },
-  { question: "GS Paper IV (Ethics) is often neglected — how does Kalnehi help?", answer: "GS4 (Ethics, Integrity, Aptitude) requires case study practice and conceptual clarity — two things you can't cram in the last week. Kalnehi lets you track GS4 topic coverage separately and PrepBrain monitors how much time you're allocating to it vs GS1-3." },
+  { question: "How should I balance GS and Optional preparation for Mains?", answer: "Most aspirants give 40-50% of their prep time to Optional because it's 500 out of 1750 marks and typically separates toppers from average scorers. Mastermind monitors this balance and alerts you if GS is getting disproportionately less time." },
+  { question: "How does Kalnehi help with UPSC Mains answer writing practice?", answer: "Track your daily answer writing as a habit in Kalnehi. Log the number of answers written per day, which paper you practised, and your self-assessed quality. Mastermind monitors your writing consistency and tells you when you've gone 3+ days without practice." },
+  { question: "GS Paper IV (Ethics) is often neglected — how does Kalnehi help?", answer: "GS4 (Ethics, Integrity, Aptitude) requires case study practice and conceptual clarity — two things you can't cram in the last week. Kalnehi lets you track GS4 topic coverage separately and Mastermind monitors how much time you're allocating to it vs GS1-3." },
 ];
 
 export default function UpscMainsPage() {
@@ -62,7 +62,7 @@ export default function UpscMainsPage() {
         </section>
 
         <FAQBlock items={FAQS} />
-        <CTABanner headline="Build your UPSC Mains system" subtext="3 days free. PrepBrain AI. No credit card." />
+        <CTABanner headline="Build your UPSC Mains system" subtext="3 days free. Mastermind. No credit card." />
       </article>
     </>
   );

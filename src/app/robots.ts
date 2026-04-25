@@ -75,7 +75,7 @@ export default function robots(): MetadataRoute.Robots {
           "/daily-plan",
           "/planner",
           "/syllabus",
-          "/prepbrain",
+          "/mastermind",
           "/marks-engine",
           "/study-sessions",
           "/habits",

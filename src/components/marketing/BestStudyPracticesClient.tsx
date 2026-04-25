@@ -242,16 +242,16 @@ const RESEARCH_SECTIONS: ResearchSection[] = [
   {
     id: "prepbrain",
     emoji: "🤖",
-    title: "PrepBrain AI — Your Personal Study Companion",
+    title: "Mastermind — Your Personal Study Companion",
     researchHook: "One-to-one tutoring produces learning gains 2× better than classroom instruction. The problem was always scale.",
     researchDetail:
-      "Bloom's 2 Sigma study at University of Chicago is one of the most cited findings in education research: personal tutoring produces outcomes two standard deviations above classroom averages. The catch was that you can't give every student a personal tutor. PrepBrain is the closest thing to that at scale — it knows your syllabus, your weak spots, and what you're working on today. Not a generic chatbot. A contextual one.",
+      "Bloom's 2 Sigma study at University of Chicago is one of the most cited findings in education research: personal tutoring produces outcomes two standard deviations above classroom averages. The catch was that you can't give every student a personal tutor. Mastermind is the closest thing to that at scale — it knows your syllabus, your weak spots, and what you're working on today. Not a generic chatbot. A contextual one.",
     citations: [
       "Bloom, B. S. (1984). The 2 Sigma Problem: The search for methods as effective as one-to-one tutoring. Educational Researcher, 13(6), 4–16.",
       "VanLehn, K. (2011). The relative effectiveness of human tutoring, intelligent tutoring systems, and other tutoring systems. Educational Psychologist, 46(4), 197–221.",
     ],
     kalnehiConnection:
-      "Ask PrepBrain something and you get an answer in the context of what you're actually studying right now — not a generic explainer, a relevant one.",
+      "Ask Mastermind something and you get an answer in the context of what you're actually studying right now — not a generic explainer, a relevant one.",
     accent: "from-indigo-400/20 via-white/40 to-blue-400/15",
     badgeColor: "bg-indigo-500/15 text-indigo-700 dark:text-indigo-400",
   },

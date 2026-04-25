@@ -81,7 +81,7 @@ After researching your doubt: close all references and solve 3 problems from tha
 
 After 1-2 months, review your resolved doubts. If you see 15 doubts in "Organic Chemistry mechanisms" — this is a systematic gap, not 15 individual questions. You likely need a full chapter re-study, not just question-by-question resolution.
 
-PrepBrain or any analytical system that reads your doubt tracker can surface these patterns automatically: "You have 12 doubts in Genetics and 9 in Molecular Biology. These are systematic gaps, not isolated questions."
+Mastermind or any analytical system that reads your doubt tracker can surface these patterns automatically: "You have 12 doubts in Genetics and 9 in Molecular Biology. These are systematic gaps, not isolated questions."
 
 ## How to Structure Your Doubt Log
 

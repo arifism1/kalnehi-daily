@@ -258,7 +258,7 @@ export async function POST(request: Request) {
       {
         ok: false,
         error:
-          "HelpyJi on this page helps visitors compare plans. Active Pro subscribers can use PrepBrain inside the app.",
+          "HelpyJi on this page helps visitors compare plans. Active Pro subscribers can use Mastermind inside the app.",
       },
       { status: 403 },
     );

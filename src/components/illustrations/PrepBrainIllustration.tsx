@@ -55,7 +55,7 @@ export function PrepBrainIllustration({ className }: { className?: string }) {
       <rect x="166" y="42" width="64" height="42" rx="10" fill="#FF7A00" />
       <path d="M166 68 L156 74 L172 68" fill="#FF7A00" />
       <text x="198" y="60" textAnchor="middle" fontSize="8" fill="white" fontWeight="600">Hello!</text>
-      <text x="198" y="72" textAnchor="middle" fontSize="7" fill="white" opacity="0.9">I'm PrepBrain</text>
+      <text x="198" y="72" textAnchor="middle" fontSize="7" fill="white" opacity="0.9">I'm Mastermind</text>
       <text x="198" y="80" textAnchor="middle" fontSize="7" fill="white" opacity="0.8">your AI coach</text>
 
       {/* Floating sparkles */}

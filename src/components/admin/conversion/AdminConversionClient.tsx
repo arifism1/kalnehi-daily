@@ -23,7 +23,7 @@ export function AdminConversionClient({ data }: { data: ConversionSnapshot }) {
         <AdminKpiCard label="Plan upgrades (30d)" value={data.planUpgrades30d} />
         <AdminKpiCard label="Annual (30d)" value={data.annualPlans30d} />
         <AdminKpiCard label="Paywall views (events)" value={data.paywallViews} />
-        <AdminKpiCard label="Payers w/ PrepBrain touch" value={data.conversionsWithPrepbrainTouch} />
+        <AdminKpiCard label="Payers w/ Mastermind touch" value={data.conversionsWithPrepbrainTouch} />
       </div>
 
       <div className="overflow-x-auto rounded-2xl border border-kal-border">

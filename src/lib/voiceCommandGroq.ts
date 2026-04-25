@@ -57,7 +57,7 @@ const VALID_NAV_PATHS = new Set([
   "/revision-reminders",
   "/syllabus",
   "/doubts",
-  "/prepbrain",
+  "/mastermind",
   "/helpyji",
   // Wellbeing
   "/habits",
@@ -87,7 +87,7 @@ Parse the user voice command and return ONLY a valid JSON object — no markdown
 
 ### ask_prepbrain — ask the AI study coach a question
 {"intent":"ask_prepbrain","query":"<the question>","response_text":"..."}
-- "Ask PrepBrain which chapters I should focus on" → {"intent":"ask_prepbrain","query":"Which chapters should I focus on?","response_text":"Opening PrepBrain with your question."}
+- "Ask Mastermind which chapters I should focus on" → {"intent":"ask_prepbrain","query":"Which chapters should I focus on?","response_text":"Opening Mastermind with your question."}
 
 ### schedule_revision — schedule a revision reminder for a topic
 {"intent":"schedule_revision","subject":"<topic name>","days":<number>,"response_text":"..."}
@@ -108,7 +108,7 @@ Valid paths:
   Planning: /daily-plan, /daily-log, /daily-engine, /dictate-day, /saved-plans, /missed-tasks, /calendar, /timer, /study-sessions, /study-camera, /paste-handwritten
   Planner: /planner, /planner/habits, /planner/schedule, /planner/weekly, /planner/todos, /planner/routine, /planner/productivity
   Track: /progress, /consistency-tracker, /heatmap, /marks-engine, /my-target, /target-score-blueprint
-  Revise: /revision-reminders, /syllabus, /doubts, /prepbrain, /helpyji
+  Revise: /revision-reminders, /syllabus, /doubts, /mastermind, /helpyji
   Wellbeing: /habits, /meditation, /meditation/consistency, /motivation
 - "Go to home" → {"intent":"navigate","path":"/home","response_text":"Going home."}
 - "Go to daily plan" → {"intent":"navigate","path":"/daily-plan","response_text":"Going to your daily plan."}
@@ -125,7 +125,7 @@ Valid paths:
 - "Open study camera" → {"intent":"navigate","path":"/study-camera","response_text":"Opening study camera."}
 - "Open Helpyji" → {"intent":"navigate","path":"/helpyji","response_text":"Opening Helpyji."}
 - "Plan my day" → {"intent":"navigate","path":"/daily-plan","response_text":"Opening your daily plan."}
-- "Open PrepBrain" → {"intent":"navigate","path":"/prepbrain","response_text":"Opening PrepBrain."}
+- "Open Mastermind" → {"intent":"navigate","path":"/mastermind","response_text":"Opening Mastermind."}
 - "Go to revision reminders" → {"intent":"navigate","path":"/revision-reminders","response_text":"Opening Revision Reminders."}
 
 ### query_plan — ask about today's plan
@@ -280,7 +280,7 @@ async function callGroq(
       ok: true,
       intent: { intent: "unknown", clarification: "Unrecognized intent." },
       response_text:
-        "I wasn't sure what you meant. Try saying something like 'Add maths to today's plan' or 'Go to PrepBrain'.",
+        "I wasn't sure what you meant. Try saying something like 'Add maths to today's plan' or 'Go to Mastermind'.",
       inputTokens,
       outputTokens,
       model: modelUsed,

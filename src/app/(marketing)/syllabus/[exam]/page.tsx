@@ -130,7 +130,7 @@ export default async function SyllabusPage({ params }: Props) {
         <section className="rounded-2xl border border-kal-accent/20 bg-kal-accent/5 p-5 space-y-3">
           <h2 className="text-base font-semibold text-kal-text">Track this syllabus in Kalnehi</h2>
           <p className="text-sm text-kal-text-secondary leading-relaxed">
-            Kalnehi's Syllabus Tracker has {data.exam} pre-loaded. Mark topics as done, see your coverage percentage, and get PrepBrain AI to tell you what to focus on next — based on your actual progress.
+            Kalnehi's Syllabus Tracker has {data.exam} pre-loaded. Mark topics as done, see your coverage percentage, and get Mastermind to tell you what to focus on next — based on your actual progress.
           </p>
           <div className="flex flex-col gap-2 sm:flex-row">
             <Link
@@ -167,7 +167,7 @@ export default async function SyllabusPage({ params }: Props) {
 
         <CTABanner
           headline={`Track your ${data.exam} syllabus coverage in Kalnehi`}
-          subtext="PrepBrain AI, revision reminders, and daily planning — all around your exam syllabus."
+          subtext="Mastermind, revision reminders, and daily planning — all around your exam syllabus."
         />
       </div>
     </>

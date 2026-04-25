@@ -22,10 +22,10 @@ const notion: ComparisonData = {
   competitorName: "Notion",
   headline: "Kalnehi vs Notion for Exam Preparation",
   subheadline: "Notion is a powerful general-purpose tool. Kalnehi is built specifically for competitive exam aspirants who need to win every day.",
-  intro: "Thousands of students have tried to turn Notion into a study planner. Most spend more time designing their system than actually studying. Kalnehi is purpose-built for the exam preparation workflow — from syllabus tracking to PrepBrain AI voice commands. Here's an honest comparison.",
+  intro: "Thousands of students have tried to turn Notion into a study planner. Most spend more time designing their system than actually studying. Kalnehi is purpose-built for the exam preparation workflow — from syllabus tracking to Mastermind voice commands. Here's an honest comparison.",
   rows: [
     { feature: "Built for competitive exams", kalnehi: "yes", competitor: "no" },
-    { feature: "PrepBrain AI for exam queries", kalnehi: "yes", competitor: "no" },
+    { feature: "Mastermind for exam queries", kalnehi: "yes", competitor: "no" },
     { feature: "Voice-controlled planning", kalnehi: "yes", competitor: "no" },
     { feature: "Syllabus tracker (JEE/NEET/UPSC pre-loaded)", kalnehi: "yes", competitor: "no" },
     { feature: "Revision reminders & due list", kalnehi: "yes", competitor: "no" },
@@ -42,9 +42,9 @@ const notion: ComparisonData = {
   ],
   whyKalnehi: [
     "Notion requires you to build your study system from scratch — templates, databases, views, properties. Most students spend 3-4 hours just setting up, then maintain the setup instead of studying.",
-    "Kalnehi has the exam workflow built in. Your JEE/NEET/UPSC syllabus is already there. Revision Reminders keeps your next review dates in one place. PrepBrain AI understands your syllabus context.",
+    "Kalnehi has the exam workflow built in. Your JEE/NEET/UPSC syllabus is already there. Revision Reminders keeps your next review dates in one place. Mastermind understands your syllabus context.",
     "Voice control in Kalnehi means you can log study sessions, add doubts, and plan tomorrow's study without leaving your study mode. Notion's voice features are limited to dictation.",
-    "Kalnehi's Marks Engine tracks actual performance — mock scores, topic-wise accuracy, weak areas — and feeds that into your PrepBrain recommendations. Notion has no concept of this.",
+    "Kalnehi's Marks Engine tracks actual performance — mock scores, topic-wise accuracy, weak areas — and feeds that into your Mastermind recommendations. Notion has no concept of this.",
   ],
   limitations: "Kalnehi is not a replacement for Notion if you need general note-taking, project management for a team, or a custom database solution. If you use Notion for things beyond exam preparation, you can use both — Kalnehi for your daily study system, Notion for everything else.",
   faqs: [
@@ -65,7 +65,7 @@ const googleCalendar: ComparisonData = {
   rows: [
     { feature: "Daily study planner", kalnehi: "yes", competitor: "yes" },
     { feature: "Syllabus tracking", kalnehi: "yes", competitor: "no" },
-    { feature: "PrepBrain AI assistance", kalnehi: "yes", competitor: "no" },
+    { feature: "Mastermind assistance", kalnehi: "yes", competitor: "no" },
     { feature: "Revision due-date reminders", kalnehi: "yes", competitor: "no" },
     { feature: "Mock test performance tracking", kalnehi: "yes", competitor: "no" },
     { feature: "Study streak / consistency tracking", kalnehi: "yes", competitor: "no" },
@@ -80,7 +80,7 @@ const googleCalendar: ComparisonData = {
   whyKalnehi: [
     "Google Calendar can tell you when to study. It cannot tell you what to study, whether you've covered enough, or how to improve your mock test score. Kalnehi does all three.",
     "Revision scheduling in Google Calendar is manual — you have to create repeat events for every topic. Kalnehi's Revision Reminders gives you a single due list with dates you control, next to your syllabus and daily plan.",
-    "PrepBrain AI in Kalnehi understands your entire preparation — syllabus coverage, weak subjects, remaining time — and gives advice that Google Calendar never could.",
+    "Mastermind in Kalnehi understands your entire preparation — syllabus coverage, weak subjects, remaining time — and gives advice that Google Calendar never could.",
     "Consistency tracking in Kalnehi shows actual study hours logged, not just meetings scheduled. Most students over-schedule and under-study. Kalnehi shows the truth.",
   ],
   limitations: "If your primary need is scheduling fixed coaching classes, online classes, and fixed commitments into a calendar view, Google Calendar does this better. Kalnehi focuses on the planning and tracking around what happens between those fixed commitments.",
@@ -113,7 +113,7 @@ const physicalTimetable: ComparisonData = {
   whyKalnehi: [
     "A physical timetable doesn't know you missed three sessions last week. Kalnehi does — and it adjusts your plan accordingly, prioritizing what's most urgent.",
     "Spaced revision across 100+ topics needs a system, not memory. Kalnehi's Revision Reminders keeps every topic's next due date in one sortable list.",
-    "PrepBrain AI in Kalnehi can tell you 'you've studied Physics for 40 hours but only 12 of Inorganic Chemistry — shift focus now.' No timetable can do this.",
+    "Mastermind in Kalnehi can tell you 'you've studied Physics for 40 hours but only 12 of Inorganic Chemistry — shift focus now.' No timetable can do this.",
     "The Consistency Tracker shows you real data: actual hours studied, topics covered, revision done. A timetable shows you what you planned. The gap between those two numbers is what determines your result.",
   ],
   limitations: "Physical timetables work well for students who want zero screen time, study in locations without connectivity, or prefer handwritten planning as a ritual. Many Kalnehi users also keep a paper notepad for detailed day-level planning while using Kalnehi for tracking and AI guidance.",
@@ -134,7 +134,7 @@ const excelStudyPlanner: ComparisonData = {
   rows: [
     { feature: "Tracks syllabus coverage", kalnehi: "yes", competitor: "partial" },
     { feature: "Revision reminders tied to syllabus", kalnehi: "yes", competitor: "no" },
-    { feature: "PrepBrain AI for exam advice", kalnehi: "yes", competitor: "no" },
+    { feature: "Mastermind for exam advice", kalnehi: "yes", competitor: "no" },
     { feature: "Voice control", kalnehi: "yes", competitor: "no" },
     { feature: "Performance analytics and charts", kalnehi: "yes", competitor: "partial" },
     { feature: "Study streak and habit tracking", kalnehi: "yes", competitor: "partial" },
@@ -149,7 +149,7 @@ const excelStudyPlanner: ComparisonData = {
   ],
   whyKalnehi: [
     "Setting up a comprehensive study tracking spreadsheet takes 2-4 hours. Maintaining it takes another 30-60 minutes weekly. Kalnehi requires no setup — pick your exam and start.",
-    "No spreadsheet can say 'You've been avoiding Organic Chemistry for two weeks — let's address that today.' PrepBrain AI can, because it understands your full preparation context.",
+    "No spreadsheet can say 'You've been avoiding Organic Chemistry for two weeks — let's address that today.' Mastermind can, because it understands your full preparation context.",
     "Revision scheduling in a spreadsheet is either manual or requires complex formulas. Kalnehi's Revision Reminders gives you a first-class due list without building a grid yourself.",
     "Data quality in spreadsheets degrades when motivation drops — you stop logging. Kalnehi's daily log is quick enough (voice or 2-3 taps) that students actually maintain it through difficult periods.",
   ],
@@ -173,7 +173,7 @@ const todoist: ComparisonData = {
     { feature: "Daily planning", kalnehi: "yes", competitor: "yes" },
     { feature: "Recurring tasks", kalnehi: "yes", competitor: "yes" },
     { feature: "Exam syllabus tracking", kalnehi: "yes", competitor: "no" },
-    { feature: "PrepBrain AI for exam advice", kalnehi: "yes", competitor: "no" },
+    { feature: "Mastermind for exam advice", kalnehi: "yes", competitor: "no" },
     { feature: "Revision due-date queue", kalnehi: "yes", competitor: "no" },
     { feature: "Marks and performance tracking", kalnehi: "yes", competitor: "no" },
     { feature: "Study timer integration", kalnehi: "yes", competitor: "no" },
@@ -186,9 +186,9 @@ const todoist: ComparisonData = {
   ],
   whyKalnehi: [
     "Todoist is great for listing what to study. It has no idea whether you're spending the right time on the right subjects given your exam date and current syllabus coverage.",
-    "PrepBrain AI in Kalnehi understands your exam-specific context — JEE paper patterns, UPSC current affairs weight, NEET chapter-wise difficulty. Todoist's AI is a general task assistant.",
+    "Mastermind in Kalnehi understands your exam-specific context — JEE paper patterns, UPSC current affairs weight, NEET chapter-wise difficulty. Todoist's AI is a general task assistant.",
     "Spaced revision cannot be managed via recurring Todoist tasks alone — you'd need to manually create, track, and reschedule hundreds of tasks. Kalnehi's Revision Reminders is built for that workload in one list.",
-    "Study performance in Kalnehi feeds back into your planning. If your mock scores show Physics is weak, PrepBrain surfaces this. Todoist treats all tasks as equal — completing a topic and completing a major revision are both just 'tasks done'.",
+    "Study performance in Kalnehi feeds back into your planning. If your mock scores show Physics is weak, Mastermind surfaces this. Todoist treats all tasks as equal — completing a topic and completing a major revision are both just 'tasks done'.",
   ],
   limitations: "If you need deep task management with project hierarchies, inbox capture, and third-party integrations (calendar, email, Slack), Todoist is more powerful. Many students use Todoist for general life tasks and Kalnehi specifically for exam preparation.",
   faqs: [

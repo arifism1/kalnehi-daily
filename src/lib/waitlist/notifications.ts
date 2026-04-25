@@ -136,10 +136,10 @@ function retargetingD7Html(params: { streakDays: number }): { subject: string; h
 function retargetingD14Html(params: {
   insight: string;
 }): { subject: string; html: string } {
-  const subject = "One thing PrepBrain found in your data";
+  const subject = "One thing Mastermind found in your data";
   const html = `
 <div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
-  <h2 style="font-size:22px;font-weight:600">When you were on Kalnehi, PrepBrain noticed:</h2>
+  <h2 style="font-size:22px;font-weight:600">When you were on Kalnehi, Mastermind noticed:</h2>
   <blockquote style="border-left:3px solid #ff7a00;padding-left:16px;color:#444;font-style:italic">
     ${params.insight}
   </blockquote>
@@ -347,8 +347,8 @@ export async function sendDay2Nudge(params: {
   const title = "24 hours left in your trial";
   const body = params.hasUsedPrepbrain
     ? `You have 24 hours left. Your ${params.streakDays}-day streak is building.`
-    : "Have you asked PrepBrain what to focus on this week?";
-  await sendPush(params.userId, title, body, params.hasUsedPrepbrain ? "/" : "/prepbrain");
+    : "Have you asked Mastermind what to focus on this week?";
+  await sendPush(params.userId, title, body, params.hasUsedPrepbrain ? "/" : "/mastermind");
 }
 
 export async function sendDay3Morning(params: {

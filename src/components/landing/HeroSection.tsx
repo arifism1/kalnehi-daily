@@ -107,7 +107,7 @@ export function HeroSection() {
                   🤖
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold text-indigo-700 dark:text-indigo-300">PrepBrain AI</p>
+                  <p className="text-[10px] font-bold text-indigo-700 dark:text-indigo-300">Mastermind</p>
                   <p className="mt-0.5 text-[10px] leading-snug text-kal-muted">
                     "Your Physics coverage is 61% — focus on Optics this week."
                   </p>

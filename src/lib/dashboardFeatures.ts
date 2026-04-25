@@ -173,7 +173,7 @@ export const DASHBOARD_FEATURES: DashboardFeature[] = [
   },
   {
     id: "prepbrain-ai",
-    title: "PrepBrain AI",
+    title: "Mastermind",
     icon: Brain,
     description: "Your AI-powered personal prep coach, available 24/7.",
   },

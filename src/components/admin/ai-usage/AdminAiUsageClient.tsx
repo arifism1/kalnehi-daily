@@ -14,7 +14,7 @@ export function AdminAiUsageClient({ data }: { data: AiUsageSnapshot }) {
       <div>
         <h1 className="text-2xl font-semibold text-kal-text">AI usage &amp; cost</h1>
         <p className="mt-1 text-sm text-kal-muted">
-          Tokens from finalized PrepBrain reservations. Cost uses ADMIN_INR_PER_MILLION_AI_TOKENS (default 50).
+          Tokens from finalized Mastermind reservations. Cost uses ADMIN_INR_PER_MILLION_AI_TOKENS (default 50).
         </p>
       </div>
 

@@ -37,7 +37,7 @@ export default function DailyExamPrepSystemGuidePage() {
           {
             question: `How does ${SITE_NAME} fit in?`,
             answer:
-              "It's the execution layer: planner, syllabus tracking, study sessions, habits, and optional PrepBrain AI coaching — installable as a PWA after you sign in.",
+              "It's the execution layer: planner, syllabus tracking, study sessions, habits, and optional Mastermind coaching — installable as a PWA after you sign in.",
           },
         ]}
       />

@@ -10,14 +10,14 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 export const metadata = marketingPageMetadata({
   path: "/ssc-cgl",
   title: `Daily Planner for SSC CGL Preparation | ${SITE_NAME}`,
-  description: `SSC CGL has 4 sections — Quantitative Aptitude, English, General Awareness and Reasoning. Kalnehi tracks your daily practice, mock scores and uses PrepBrain AI to identify your weakest area.`,
+  description: `SSC CGL has 4 sections — Quantitative Aptitude, English, General Awareness and Reasoning. Kalnehi tracks your daily practice, mock scores and uses Mastermind to identify your weakest area.`,
 });
 
 const FAQS = [
   { question: "What are the 4 sections in SSC CGL Tier 1?", answer: "SSC CGL Tier 1 has 4 sections of 25 questions each (100 marks total, 60 minutes): Quantitative Aptitude, General Intelligence & Reasoning, General Awareness, and English Comprehension. There's 0.5 mark negative marking per wrong answer." },
   { question: "How long does SSC CGL preparation take?", answer: "For serious candidates with a good academic background, 6-8 months of dedicated preparation is standard. Candidates starting from a weak Maths base may need 10-12 months. Kalnehi helps you plan a realistic timeline based on your current level." },
   { question: "What is the difference between SSC CGL Tier 1 and Tier 2?", answer: "Tier 1 is a screening test (all sections). Tier 2 is the main exam with separate papers: Paper I (Maths & Reasoning), Paper II (English), and Paper III (for specific posts like JSO). Kalnehi tracks your preparation for both tiers separately." },
-  { question: "How does PrepBrain AI help SSC CGL aspirants?", answer: "PrepBrain reads your mock test scores across all 4 sections and identifies which one is bringing your overall score down. For most SSC CGL aspirants, Quantitative Aptitude and General Awareness need the most structured practice — PrepBrain tells you specifically which sub-topics within each section to target." },
+  { question: "How does Mastermind help SSC CGL aspirants?", answer: "Mastermind reads your mock test scores across all 4 sections and identifies which one is bringing your overall score down. For most SSC CGL aspirants, Quantitative Aptitude and General Awareness need the most structured practice — Mastermind tells you specifically which sub-topics within each section to target." },
 ];
 
 export default function SscCglPage() {
@@ -62,7 +62,7 @@ export default function SscCglPage() {
         </section>
 
         <FAQBlock items={FAQS} />
-        <CTABanner headline="Build your SSC CGL prep system" subtext="3 days free. PrepBrain AI. No credit card." />
+        <CTABanner headline="Build your SSC CGL prep system" subtext="3 days free. Mastermind. No credit card." />
       </article>
     </>
   );

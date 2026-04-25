@@ -17,7 +17,7 @@ const FAQS = [
   { question: "What is the GRE exam structure?", answer: "The GRE General Test has three sections: Verbal Reasoning (2 sections × 27 questions, 170 scale), Quantitative Reasoning (2 sections × 27 questions, 170 scale), and Analytical Writing Assessment (2 essays — Issue + Argument, 0-6 scale). The test adapts based on your first section performance in each area." },
   { question: "What GRE score is needed for top US MS programs?", answer: "Top programs (MIT, Stanford, Carnegie Mellon) typically want 165+ in Quant, 155+ in Verbal. Many admits have 320-330+ total. For mid-tier programs, 310-320 is competitive. Kalnehi's marks engine helps you target specific score benchmarks per section." },
   { question: "How long does GRE preparation take for Indian students?", answer: "For engineering graduates with strong Quant foundations, 6-8 weeks of focused preparation (3-4 hours daily) is sufficient to get 165+ in Quant. Verbal takes longer — building vocabulary and reading speed requires 2-3 months of daily practice." },
-  { question: "How does Kalnehi help GRE preparation?", answer: "Kalnehi tracks your daily Verbal vocab building (word lists, flashcards), Quant topic completion, and AWA essay practice. PrepBrain monitors your ETS practice test scores and tells you which section needs the most hours before your test date." },
+  { question: "How does Kalnehi help GRE preparation?", answer: "Kalnehi tracks your daily Verbal vocab building (word lists, flashcards), Quant topic completion, and AWA essay practice. Mastermind monitors your ETS practice test scores and tells you which section needs the most hours before your test date." },
 ];
 
 export default function GrePage() {
@@ -61,7 +61,7 @@ export default function GrePage() {
         </section>
 
         <FAQBlock items={FAQS} />
-        <CTABanner headline="Build your GRE prep system" subtext="3 days free. PrepBrain AI. No credit card." />
+        <CTABanner headline="Build your GRE prep system" subtext="3 days free. Mastermind. No credit card." />
       </article>
     </>
   );

@@ -37,7 +37,7 @@ export default function NeetStudyPlannerPage() {
               "Yes. Sign in on Chrome for Android, then install the PWA for a full-screen experience and offline-friendly caching of pages you have opened.",
           },
           {
-            question: "What is PrepBrain AI?",
+            question: "What is Mastermind?",
             answer:
               "An optional syllabus-aware assistant on paid tiers — for quick clarifications, not a substitute for NCERT and coaching.",
           },

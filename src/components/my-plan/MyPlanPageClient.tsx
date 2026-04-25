@@ -505,7 +505,7 @@ export function MyPlanPageClient() {
                   </p>
                 ) : null}
                 <p className="mt-1 text-xs text-kal-text-secondary">
-                  Voice (5 min) and PrepBrain tokens (60,000) are for the entire 3-day trial — use them within this window. After the trial ends, subscribe to Smart Plan ({TIERS.pro.monthlyPriceDisplay}/month) for 100 minutes of voice and 2 million tokens every month.
+                  Voice (5 min) and Mastermind tokens (60,000) are for the entire 3-day trial — use them within this window. After the trial ends, subscribe to Smart Plan ({TIERS.pro.monthlyPriceDisplay}/month) for 100 minutes of voice and 2 million tokens every month.
                 </p>
               </div>
               <UsageBar
@@ -517,7 +517,7 @@ export function MyPlanPageClient() {
               {prepbrainUsage?.phase === "welcome" ? (
                 <TokenUsageBar
                   icon={<Brain className="h-4 w-4" />}
-                  label="PrepBrain AI tokens (welcome)"
+                  label="Mastermind tokens (welcome)"
                   used={prepbrainUsage.used}
                   limit={prepbrainUsage.limit}
                 />
@@ -531,7 +531,7 @@ export function MyPlanPageClient() {
               <p className="mt-2 text-sm text-kal-text-secondary">
                 You&apos;re on your 3-day free trial. Subscribe now to keep full access after your trial —{" "}
                 <span className="font-semibold text-kal-text">{TIERS.pro.monthlyPriceDisplay}/month</span>{" "}
-                for 2 million PrepBrain tokens and 100 minutes of voice per month.
+                for 2 million Mastermind tokens and 100 minutes of voice per month.
               </p>
               <div className="mt-3 space-y-2">
                 <p className="text-xs font-medium text-kal-text-secondary">AutoPay months:</p>
@@ -578,7 +578,7 @@ export function MyPlanPageClient() {
               <p className="mt-2 text-sm text-kal-text-secondary">
                 Subscribe to Smart Plan to continue —{" "}
                 <span className="font-semibold text-kal-text">{TIERS.pro.monthlyPriceDisplay}/month</span>{" "}
-                for 2 million PrepBrain tokens and 100 minutes of voice per month. Cancel anytime.
+                for 2 million Mastermind tokens and 100 minutes of voice per month. Cancel anytime.
               </p>
               <button
                 type="button"
@@ -619,7 +619,7 @@ export function MyPlanPageClient() {
                 </h2>
                 <p className="mt-1 text-sm text-kal-text-secondary">
                   {onWelcomeTrial
-                    ? "You're on your 3-day free trial with 60,000 PrepBrain tokens and 5 minutes of voice. Subscribe to Smart Plan anytime for the full monthly quota."
+                    ? "You're on your 3-day free trial with 60,000 Mastermind tokens and 5 minutes of voice. Subscribe to Smart Plan anytime for the full monthly quota."
                     : noActivePlan
                       ? `Choose a plan to unlock ${SITE_NAME}.`
                       : tierConfig.tagline}
@@ -704,7 +704,7 @@ export function MyPlanPageClient() {
                 prepbrainUsage.phase === "monthly" ? (
                   <TokenUsageBar
                     icon={<Brain className="h-4 w-4" />}
-                    label="PrepBrain tokens (this month)"
+                    label="Mastermind tokens (this month)"
                     used={prepbrainUsage.used}
                     limit={prepbrainUsage.limit}
                   />
@@ -727,7 +727,7 @@ export function MyPlanPageClient() {
                     ) : null}
                     {subscriptionUsage.bonusAiTokens > 0 ? (
                       <p className="text-xs text-kal-text-secondary">
-                        <span className="font-medium text-kal-text">PrepBrain AI tokens: </span>
+                        <span className="font-medium text-kal-text">Mastermind tokens: </span>
                         {subscriptionUsage.bonusAiTokens.toLocaleString("en-IN")} remaining
                         {subscriptionUsage.bonusAiTokensNextExpiry ? (
                           <> · expires {formatDate(subscriptionUsage.bonusAiTokensNextExpiry)}</>

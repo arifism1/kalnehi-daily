@@ -18,7 +18,7 @@ const FOOTER_LINKS = {
   ],
   Features: [
     { href: "/features", label: "All Features" },
-    { href: "/features/prepbrain-ai", label: "PrepBrain AI" },
+    { href: "/features/prepbrain-ai", label: "Mastermind" },
     { href: "/features/voice-control", label: "Voice Control" },
     { href: "/features/syllabus-tracker", label: "Syllabus Tracker" },
     { href: "/features/spaced-revision", label: "Revision reminders" },

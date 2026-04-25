@@ -15,7 +15,7 @@ export function AdminEngagementClient({ data }: { data: EngagementSnapshot }) {
         <AdminKpiCard label="Trial users (approx.)" value={data.trialUsersApprox} />
         <AdminKpiCard label="Study sessions (7d)" value={data.studySessionsLast7d} />
         <AdminKpiCard label="Voice entries (7d)" value={data.voiceEntriesLast7d} />
-        <AdminKpiCard label="PrepBrain conv. (7d)" value={data.prepbrainConversationsLast7d} />
+        <AdminKpiCard label="Mastermind conv. (7d)" value={data.prepbrainConversationsLast7d} />
         <AdminKpiCard
           label="Token cap hit rate (trial)"
           value={`${data.tokenHitRateTrialPct.toFixed(0)}%`}
