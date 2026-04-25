@@ -1,5 +1,5 @@
 /**
- * Rebuilds text-free PWA splashes, launcher icons, and app-icon-source.
+ * Rebuilds PWA splashes, launcher icons (from public/brand/launcher-source.png), and app-icon-source.
  * Usage:
  *   node scripts/rebuild-pwa-assets.mjs           — full (icons + splashes)
  *   node scripts/rebuild-pwa-assets.mjs --icons   — icons + source only

@@ -1,10 +1,9 @@
 /**
- * PWA launcher icons: wordmark (transparent on white) from public/brand/launcher-source.png.
- * Splashes: navy + orange brand dot (separate from app icon look).
+ * PWA launcher icons: wordmark from `public/brand/launcher-source.png` on cream; navy splashes.
  * Run: node scripts/rebuild-pwa-assets.mjs
  *   or: node scripts/rebuild-pwa-assets.mjs --icons  (icons + source only, no splashes)
  */
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -12,18 +11,25 @@ import sharp from "sharp";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "..");
+/** Square master (white or near-white plate); upscaled to 1024 for crisp 192/512 exports. */
+const BRAND_SOURCE = join(ROOT, "public/brand/launcher-source.png");
+/** Written on each `generate:icons` run — 1024×1024, matches pipeline input. */
 const SRC = join(ROOT, "public/app-icon-source.png");
-/** Master 1024× design — edit this file, then re-run the script. */
-const LAUNCHER_SOURCE = join(ROOT, "public/brand/launcher-source.png");
 
 const BRAND_HEX = "#FF7A00";
 const NAVY_HEX = "#0f172a";
 
-/** Launcher tile — white, matches the wordmark reference. */
-const BG = { r: 255, g: 255, b: 255, alpha: 1 };
+/** theme background for launcher tiles — matches src/app/manifest.ts */
+const BG = { r: 250, g: 247, b: 242, alpha: 1 };
 
-/** How large the (square) mark is inside each output tile. ~0.8 keeps clear of maskable safe zone. */
-const CONTENT_SCALE = 0.84;
+const MASTER_SIZE = 1024;
+
+/**
+ * Fraction of the output square occupied by the wordmark (max side of contained bitmap).
+ * Keep below ~0.65 so edge-to-edge source art still clears maskable / adaptive “safe”
+ * zones (roughly the central 80% circle) on circle and squircle launchers — not zoomed in.
+ */
+const CONTENT_SCALE = 0.62;
 
 /**
  * Strips a near-opaque "plate" (RGB ≥ 249) so a transparent + mark source composites cleanly.
@@ -50,12 +56,20 @@ async function stripNearWhitePlatePng(buf, { minRgb = 249 } = {}) {
     .toBuffer();
 }
 
-/** Normalize master to 1024×1024 square PNG. */
-async function loadLauncherSourcePng() {
-  const buf = readFileSync(LAUNCHER_SOURCE);
+/** 1024×1024 PNG from the brand file — aspect preserved (no stretch), then Lanczos. */
+async function readBrandMasterPng() {
+  if (!existsSync(BRAND_SOURCE)) {
+    throw new Error(
+      `Missing ${BRAND_SOURCE}. Add a square PNG (white or near-white background) for the PWA wordmark.`
+    );
+  }
+  const buf = readFileSync(BRAND_SOURCE);
   return sharp(buf)
-    .resize(1024, 1024, { fit: "contain", background: { r: 255, g: 255, b: 255, alpha: 1 } })
-    .ensureAlpha()
+    .resize(MASTER_SIZE, MASTER_SIZE, {
+      fit: "contain",
+      background: BG,
+      kernel: sharp.kernel.lanczos3,
+    })
     .png({ compressionLevel: 9 })
     .toBuffer();
 }
@@ -63,7 +77,11 @@ async function loadLauncherSourcePng() {
 async function paddedSquare(size, markBuf) {
   const inner = Math.max(1, Math.round(size * CONTENT_SCALE));
   const resized = await sharp(markBuf)
-    .resize(inner, inner, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .resize(inner, inner, {
+      fit: "contain",
+      background: { ...BG, alpha: 0 },
+      kernel: sharp.kernel.lanczos3,
+    })
     .ensureAlpha()
     .toBuffer();
 
@@ -113,7 +131,7 @@ async function writeSplashPng(w, h) {
 }
 
 export async function buildIcons() {
-  const markRaw = await loadLauncherSourcePng();
+  const markRaw = await readBrandMasterPng();
   writeFileSync(SRC, markRaw);
 
   const toUse = await stripNearWhitePlatePng(markRaw);
@@ -144,7 +162,7 @@ export async function runPwaAssetBuild({ splashes = true } = {}) {
     await buildSplashes();
   }
   console.log("PWA assets OK:", {
-    icons: "public/app-icon-source.png + icon-*.png + apple-touch-icon.png",
+    icons: "public/brand/launcher-source.png → app-icon-source.png + icon-*.png + apple-touch-icon.png",
     splashes: splashes ? "public/splash/apple-*.png" : "skipped",
   });
 }
