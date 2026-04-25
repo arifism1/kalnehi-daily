@@ -28,7 +28,7 @@ export function dailyPlanLiveHeading(planDate: string, today: string): string {
   return `${format(parseISO(planDate), "EEE d MMM")} · plan (live)`;
 }
 
-/** Page hero line for `/daily-plan` (without the smaller “(live)” span). */
+/** Page hero line for `/today-plan` (without the smaller “(live)” span). */
 export function dailyPlanPageHeroTitle(planDate: string, today: string): string {
   if (planDate === today) return "Today's plan";
   const tomorrow = format(addDays(parseISO(today), 1), "yyyy-MM-dd");
