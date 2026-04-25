@@ -176,6 +176,53 @@ export function compareExecutionWeekOverWeek(
   };
 }
 
+/** Trailing 30 days vs the prior 30 days (mean % on days with a plan). */
+export type MonthOverMonthExecution = {
+  thisWindowAvg: number | null;
+  priorWindowAvg: number | null;
+  /** Positive = higher avg execution this window (percentage points) */
+  deltaPoints: number | null;
+};
+
+/** Rolling window length for monthly recap share card (days). */
+export const MONTHLY_RECAP_WINDOW_DAYS = 30;
+
+export function compareExecutionMonthOverMonth(
+  allTasks: Task[],
+  microtopicById: Record<string, Microtopic>,
+  today: string,
+  dailyPlanOverlay?: DailyPlanProgressMap | null,
+): MonthOverMonthExecution {
+  const thisWindow = buildDailyExecutionSeries(
+    allTasks,
+    microtopicById,
+    today,
+    MONTHLY_RECAP_WINDOW_DAYS,
+    dailyPlanOverlay,
+  );
+  const endPrior = format(
+    subDays(parseISO(today), MONTHLY_RECAP_WINDOW_DAYS),
+    "yyyy-MM-dd",
+  );
+  const priorWindow = buildDailyExecutionSeries(
+    allTasks,
+    microtopicById,
+    endPrior,
+    MONTHLY_RECAP_WINDOW_DAYS,
+    dailyPlanOverlay,
+  );
+  const thisWindowAvg = averagePercentWherePlanned(thisWindow);
+  const priorWindowAvg = averagePercentWherePlanned(priorWindow);
+  if (thisWindowAvg == null || priorWindowAvg == null) {
+    return { thisWindowAvg, priorWindowAvg, deltaPoints: null };
+  }
+  return {
+    thisWindowAvg,
+    priorWindowAvg,
+    deltaPoints: Math.round((thisWindowAvg - priorWindowAvg) * 10) / 10,
+  };
+}
+
 export function formatMinutesShort(totalMinutes: number): string {
   const m = Math.max(0, Math.round(totalMinutes));
   if (m === 0) return "0m";
