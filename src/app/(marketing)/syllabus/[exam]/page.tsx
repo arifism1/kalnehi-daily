@@ -4,6 +4,7 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
 import { SITE_NAME } from "@/lib/seo-metadata";
+import { absoluteUrl } from "@/lib/site";
 import { getAllSyllabi, getSyllabusBySlug, getSyllabusSlugs } from "@/content/syllabus";
 import PrintSyllabusButton from "./PrintSyllabusButton";
 import Link from "next/link";
@@ -36,9 +37,9 @@ export default async function SyllabusPage({ params }: Props) {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: "https://kalnehi.com" },
-      { "@type": "ListItem", position: 2, name: "Syllabus", item: "https://kalnehi.com/syllabus" },
-      { "@type": "ListItem", position: 3, name: `${data.exam} Syllabus`, item: `https://kalnehi.com/syllabus/${exam}` },
+      { "@type": "ListItem", position: 1, name: "Home", item: absoluteUrl("/") },
+      { "@type": "ListItem", position: 2, name: "Syllabus", item: absoluteUrl("/syllabus") },
+      { "@type": "ListItem", position: 3, name: `${data.exam} Syllabus`, item: absoluteUrl(`/syllabus/${exam}`) },
     ],
   };
 

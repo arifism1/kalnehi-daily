@@ -3,7 +3,7 @@
 import { format, parseISO } from "date-fns";
 import { Loader2, Share2 } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useRecapForDay } from "@/hooks/useRecapForDay";
@@ -21,6 +21,15 @@ export function EndOfDayRecapClient() {
   const cardRef = useRef<HTMLDivElement>(null);
   const [busy, setBusy] = useState(false);
   const [shareError, setShareError] = useState<string | null>(null);
+  const [isStandalone, setIsStandalone] = useState(false);
+
+  useEffect(() => {
+    const nav = window.navigator as Navigator & { standalone?: boolean };
+    setIsStandalone(
+      nav.standalone === true ||
+        window.matchMedia("(display-mode: standalone)").matches,
+    );
+  }, []);
 
   const onShare = useCallback(async () => {
     const el = cardRef.current;
@@ -195,7 +204,7 @@ export function EndOfDayRecapClient() {
                 </div>
 
                 <p className="mt-3 text-center text-[9px] uppercase tracking-[0.22em] text-slate-500">
-                  kalnehi.com
+                  {isStandalone ? "Kalnehi" : "kalnehi.com"}
                 </p>
               </div>
             </div>

@@ -7,6 +7,7 @@ import { Resend } from "resend";
 
 import { tryGetFirebaseMessaging } from "@/lib/fcm/admin";
 import { sendFcmToUserTokens } from "@/lib/fcm/sendNotifications";
+import { SITE_URL } from "@/lib/site";
 
 function getResend(): Resend | null {
   const key = process.env.RESEND_API_KEY?.trim();
@@ -38,7 +39,7 @@ function waitlistConfirmHtml(params: {
   <p style="color:#666;margin:0 0 16px">Your access date: <strong>${date}</strong><br>
   ${aheadCount.toLocaleString("en-IN")} students are ahead of you.</p>
   <p>If you don't want to wait — skip the queue for ₹19:</p>
-  <a href="${process.env.NEXT_PUBLIC_APP_URL ?? "https://kalnehi.com"}/waitlist/position"
+  <a href="${process.env.NEXT_PUBLIC_APP_URL ?? SITE_URL}/waitlist/position"
      style="display:inline-block;background:#ff7a00;color:#fff;padding:12px 24px;border-radius:99px;text-decoration:none;font-weight:700;margin:8px 0">
     Start immediately →
   </a>
@@ -66,7 +67,7 @@ function batchTomorrowHtml(params: {
   <p>Be ready. Spots fill fast.</p>
   <p style="color:#888;font-size:14px;margin-top:20px">
     Can't wait until tomorrow? ₹19 gets you in right now.<br>
-    <a href="${process.env.NEXT_PUBLIC_APP_URL ?? "https://kalnehi.com"}/waitlist/position"
+    <a href="${process.env.NEXT_PUBLIC_APP_URL ?? SITE_URL}/waitlist/position"
        style="color:#ff7a00">Skip the wait →</a>
   </p>
 </div>`;
@@ -80,7 +81,7 @@ function batchOpenHtml(params: { batchNumber: number }): { subject: string; html
 <div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
   <h2 style="font-size:22px;font-weight:600">You're in. Batch ${batchNumber} is live.</h2>
   <p>Your 3-day free trial starts now.</p>
-  <a href="${process.env.NEXT_PUBLIC_APP_URL ?? "https://kalnehi.com"}"
+  <a href="${process.env.NEXT_PUBLIC_APP_URL ?? SITE_URL}"
      style="display:inline-block;background:#ff7a00;color:#fff;padding:12px 24px;border-radius:99px;text-decoration:none;font-weight:700;margin:8px 0">
     Start Kalnehi →
   </a>
@@ -107,7 +108,7 @@ function pausedHtml(params: {
     <li>${prepbrainConversations} PrepBrain conversations</li>
   </ul>
   <p>None of it is gone. It's just paused.</p>
-  <a href="${process.env.NEXT_PUBLIC_APP_URL ?? "https://kalnehi.com"}/pricing"
+  <a href="${process.env.NEXT_PUBLIC_APP_URL ?? SITE_URL}/pricing"
      style="display:inline-block;background:#ff7a00;color:#fff;padding:12px 24px;border-radius:99px;text-decoration:none;font-weight:700;margin:8px 0">
     Resume your preparation →
   </a>
@@ -125,7 +126,7 @@ function retargetingD7Html(params: { streakDays: number }): { subject: string; h
   <h2 style="font-size:22px;font-weight:600">It's been 7 days since your Kalnehi trial ended.</h2>
   <p>Your streak is still paused at <strong>${params.streakDays} days</strong>.</p>
   <p>The students who converted are now further ahead on their syllabus.</p>
-  <a href="${process.env.NEXT_PUBLIC_APP_URL ?? "https://kalnehi.com"}/pricing"
+  <a href="${process.env.NEXT_PUBLIC_APP_URL ?? SITE_URL}/pricing"
      style="display:inline-block;background:#ff7a00;color:#fff;padding:12px 24px;border-radius:99px;text-decoration:none;font-weight:700;margin:8px 0">
     Resume →
   </a>
@@ -144,7 +145,7 @@ function retargetingD14Html(params: {
     ${params.insight}
   </blockquote>
   <p>That gap is still there.</p>
-  <a href="${process.env.NEXT_PUBLIC_APP_URL ?? "https://kalnehi.com"}/pricing"
+  <a href="${process.env.NEXT_PUBLIC_APP_URL ?? SITE_URL}/pricing"
      style="display:inline-block;background:#ff7a00;color:#fff;padding:12px 24px;border-radius:99px;text-decoration:none;font-weight:700;margin:8px 0">
     Continue →
   </a>
@@ -164,7 +165,7 @@ function day3MorningHtml(params: {
   <p>Your ${params.streakDays}-day streak, ${params.syllabusPercent}% syllabus progress, and
   ${params.prepbrainConversations} PrepBrain conversations are all saved.</p>
   <p>They'll be here when you upgrade.</p>
-  <a href="${process.env.NEXT_PUBLIC_APP_URL ?? "https://kalnehi.com"}/pricing"
+  <a href="${process.env.NEXT_PUBLIC_APP_URL ?? SITE_URL}/pricing"
      style="display:inline-block;background:#ff7a00;color:#fff;padding:12px 24px;border-radius:99px;text-decoration:none;font-weight:700;margin:8px 0">
     See Smart Plan options →
   </a>
@@ -181,15 +182,15 @@ function trialActivationHtml(): { subject: string; html: string } {
     You were on our list for a free spot — it just opened. You now have <strong>3 days of full access</strong>
     to every feature on Kalnehi Daily.
   </p>
-  <a href="${process.env.NEXT_PUBLIC_APP_URL ?? "https://kalnehi.com"}"
+  <a href="${process.env.NEXT_PUBLIC_APP_URL ?? SITE_URL}"
      style="display:inline-block;background:#ff7a00;color:#fff;padding:12px 24px;border-radius:99px;text-decoration:none;font-weight:700;margin:8px 0">
     Start now →
   </a>
   <p style="color:#888;font-size:14px;margin-top:24px">
     Your 3-day timer starts from the moment you open the app.<br>
     If you haven't already, you can also skip the queue and start instantly for ₹19 at
-    <a href="${process.env.NEXT_PUBLIC_APP_URL ?? "https://kalnehi.com"}/waitlist/position"
-       style="color:#ff7a00">kalnehi.com/waitlist/position</a>.
+    <a href="${process.env.NEXT_PUBLIC_APP_URL ?? SITE_URL}/waitlist/position"
+       style="color:#ff7a00">www.kalnehi.com/waitlist/position</a>.
   </p>
 </div>`;
   return { subject, html };
@@ -200,7 +201,7 @@ function trialQueuedHtml(params: {
   position: number;
 }): { subject: string; html: string } {
   const { trialStartsAt, position } = params;
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://kalnehi.com";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? SITE_URL;
   const date = new Date(trialStartsAt).toLocaleDateString("en-IN", {
     weekday: "long", day: "numeric", month: "long", year: "numeric",
     timeZone: "Asia/Kolkata",

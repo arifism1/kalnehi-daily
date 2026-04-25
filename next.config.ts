@@ -94,6 +94,15 @@ const nextConfig: NextConfig = {
 
   async redirects() {
     return [
+      // Apex → www: any request to kalnehi.com (with or without a path) is
+      // permanently redirected to www.kalnehi.com. This makes www the single
+      // canonical origin for SEO, PWA install scope, and TWA asset-links.
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "kalnehi.com" }],
+        destination: "https://www.kalnehi.com/:path*",
+        permanent: true,
+      },
       {
         source: "/revision-engine",
         destination: "/revision-reminders",

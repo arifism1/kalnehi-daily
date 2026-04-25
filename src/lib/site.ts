@@ -1,47 +1,6 @@
 /**
- * Default apex origin (JSON-LD on some tool pages, legacy absolute URLs).
- * Prefer `getSiteUrl()` for metadata; use `absoluteSitemapUrl()` for sitemap `loc` values.
- */
-export const SITE_URL = "https://kalnehi.com";
-
-/** GSC is registered on the www host; sitemap `loc` entries must match that property. */
-const DEFAULT_SITEMAP_BASE_URL = "https://www.kalnehi.com";
-
-/**
- * Base URL for all sitemap `loc` entries and the sitemap index. Override in production
- * with `SITEMAP_BASE_URL` or `NEXT_PUBLIC_SITEMAP_BASE_URL` if the canonical host changes.
- */
-export function getSitemapBaseUrl(): string {
-  const fromEnv =
-    process.env.SITEMAP_BASE_URL?.trim() ||
-    process.env.NEXT_PUBLIC_SITEMAP_BASE_URL?.trim();
-  if (fromEnv) return fromEnv.replace(/\/+$/, "");
-  return DEFAULT_SITEMAP_BASE_URL;
-}
-
-/**
- * Absolute URL for sitemaps only (always the Search Console property host, default www).
- */
-export function absoluteSitemapUrl(path: string): string {
-  const base = getSitemapBaseUrl();
-  if (!path || path === "/") return base;
-  const p = path.startsWith("/") ? path : `/${path}`;
-  return `${base}${p}`;
-}
-
-/**
- * Absolute URL on a fixed non-preview host (tool page JSON-LD, RSS); uses apex `SITE_URL`.
- */
-export function absoluteProductionUrl(path: string): string {
-  const base = SITE_URL.replace(/\/+$/, "");
-  if (!path || path === "/") return base;
-  const p = path.startsWith("/") ? path : `/${path}`;
-  return `${base}${p}`;
-}
-
-/**
- * Canonical site origin for metadata, JSON-LD, and OG URLs.
- * Set `NEXT_PUBLIC_SITE_URL` in production (e.g. https://kalnehi.com).
+ * Canonical site origin for metadata, JSON-LD, OG URLs, sitemaps, and redirects.
+ * Set `NEXT_PUBLIC_SITE_URL` in production to `https://www.kalnehi.com`.
  *
  * SEO-related optional env vars:
  * - `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` — content value for the Google Search Console meta tag.
@@ -56,6 +15,47 @@ export function getSiteUrl(): string {
     return `https://${host}`;
   }
   return "http://localhost:3000";
+}
+
+/**
+ * Single canonical origin for production URLs (e.g. JSON-LD breadcrumbs, RSS links).
+ * Falls back to `getSiteUrl()` so it always tracks the configured host.
+ */
+export const SITE_URL = "https://www.kalnehi.com";
+
+/**
+ * Base URL for all sitemap `loc` entries and the sitemap index.
+ * Defaults to `getSiteUrl()` so canonical and sitemap hosts are always in sync.
+ * Override with `SITEMAP_BASE_URL` / `NEXT_PUBLIC_SITEMAP_BASE_URL` only if you need
+ * a diverging GSC property URL (not recommended — keep them the same).
+ */
+export function getSitemapBaseUrl(): string {
+  const fromEnv =
+    process.env.SITEMAP_BASE_URL?.trim() ||
+    process.env.NEXT_PUBLIC_SITEMAP_BASE_URL?.trim();
+  if (fromEnv) return fromEnv.replace(/\/+$/, "");
+  return getSiteUrl();
+}
+
+/**
+ * Absolute URL for sitemaps (uses the same host as all other canonical URLs).
+ */
+export function absoluteSitemapUrl(path: string): string {
+  const base = getSitemapBaseUrl();
+  if (!path || path === "/") return base;
+  const p = path.startsWith("/") ? path : `/${path}`;
+  return `${base}${p}`;
+}
+
+/**
+ * Absolute URL for production-only contexts (JSON-LD, RSS) — always follows
+ * the configured canonical host rather than a hardcoded constant.
+ */
+export function absoluteProductionUrl(path: string): string {
+  const base = getSiteUrl().replace(/\/+$/, "");
+  if (!path || path === "/") return base;
+  const p = path.startsWith("/") ? path : `/${path}`;
+  return `${base}${p}`;
 }
 
 export function getMetadataBase(): URL {
