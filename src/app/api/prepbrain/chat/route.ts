@@ -3,13 +3,16 @@ import { after, NextResponse } from "next/server";
 import type { Tables } from "@/types/supabase";
 
 import { serializePrepBrainToolData } from "@/lib/prepBrainDataSerializer";
-import { buildPrepBrainSystemPrompt } from "@/lib/prepBrainPrompts";
+import { PREPBRAIN_SYSTEM_PROMPT } from "@/lib/prepBrainPrompts";
 import {
   fetchSyllabusSubjectCompletion,
   getHabitStreakSummary,
+  getLatestMockScores,
   getMarksIntelligence,
   getMeditationConsistency,
+  getMissedTasksContext,
   getRecentStudyCameraData,
+  getRevisionQueueSnapshot,
   getSyllabusOverview,
   getTargetScoreBlueprint,
   getTodayPlan,
@@ -27,8 +30,10 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 import { resolvePrepbrainGroqModels } from "@/lib/groqPrepbrainModel";
 import {
+  callChatCompletion,
   callStreamingChatCompletion,
   type AiChatMessage,
+  type ModelCandidate,
 } from "@/lib/aiChatClient";
 import { USER_ERROR } from "@/lib/userFacingErrors";
 import {
@@ -52,6 +57,7 @@ import {
   prepbrainAssertRoomBeforeTurn,
 } from "@/lib/prepbrainConversationPersistence";
 import {
+  detectConversationThread,
   detectPrepBrainIntent,
   selectToolsForIntent,
   type PrepBrainIntent,
@@ -86,8 +92,8 @@ function toolCacheSet(userId: string, tool: string, result: unknown): void {
 }
 
 const MAX_BODY_BYTES = 512_000;
-/** Sent to Groq only — keeps prompt cost bounded; full thread may be longer in UI/DB. */
-const MAX_CHAT_MESSAGES = 4;
+// We send last 7 messages + conversation summary for better continuity on 8B model
+const MAX_CHAT_MESSAGES = 7;
 /** Max messages the client may send in one request (trimmed to the most recent). */
 const MAX_MESSAGES_IN_REQUEST = 200;
 const MAX_MESSAGE_CHARS = 2_500;
@@ -95,9 +101,8 @@ const MAX_MESSAGE_CHARS = 2_500;
 const MIN_MS_BETWEEN_REQUESTS = 1_200;
 
 /**
- * Groq completion ceiling per reply. A flat low cap truncates mid-sentence (broken Markdown).
+ * Model completion ceiling per reply.
  * Higher caps for strategy-heavy intents; tighter for narrow tool-focused intents.
- * Pair with output-efficiency rules in prepBrainPrompts.ts so average completion stays lean.
  */
 function maxCompletionTokensForIntent(
   intent: Exclude<PrepBrainIntent, "small_talk">,
@@ -109,6 +114,8 @@ function maxCompletionTokensForIntent(
     case "today_plan":
     case "target_score":
     case "weak_vs_strong":
+    case "revision":
+    case "mock_test":
       return 1150;
     case "syllabus_progress":
     case "habits_or_meditation":
@@ -247,10 +254,74 @@ async function runToolByName(
       return getRecentStudyCameraData(admin, userId);
     case "getTargetScoreBlueprint":
       return getTargetScoreBlueprint(admin, userId);
+    case "getMissedTasksContext":
+      return getMissedTasksContext(admin, userId);
+    case "getRevisionQueueSnapshot":
+      return getRevisionQueueSnapshot(admin, userId);
+    case "getLatestMockScores":
+      return getLatestMockScores(admin, userId);
     default:
       return null;
   }
 }
+
+/**
+ * Generates a compact conversation summary for messages beyond the 7-message model window.
+ * Runs in parallel with tool fetching; failures are non-fatal (returns "").
+ *
+ * @param messages - Full conversation history from the client.
+ * @param models - Model candidates (DeepInfra primary → Groq fallback).
+ * @returns Formatted summary block, or "" if conversation is short or summarisation fails.
+ */
+async function createConversationSummary(
+  messages: IncomingMessage[],
+  models: ModelCandidate[],
+): Promise<string> {
+  // No history beyond the model window — nothing to summarise.
+  if (messages.length <= 7) return "";
+
+  const recent = messages.slice(-15);
+  const transcript = recent
+    .map((m) => `${m.role}: ${m.content.substring(0, 240)}...`)
+    .join("\n");
+
+  const summaryPrompt =
+    `Summarise the conversation history in 6-8 high-value bullet points. Focus especially on:\n` +
+    `- Specific syllabus chapters, subjects, or microtopics mentioned (weak/strong)\n` +
+    `- Target scores, score gaps, desired rank, or blueprint discussions\n` +
+    `- Revision plans, daily plans, focus areas, or prioritization\n` +
+    `- User emotional state or concerns (burnout, anxiety, overwhelm, motivation, confidence)\n` +
+    `- Any decisions, requests, or commitments made\n` +
+    `- Key numbers or percentages discussed\n\n` +
+    `Be precise, factual, and actionable for future coaching.\n\n` +
+    transcript;
+
+  try {
+    const result = await callChatCompletion(
+      models,
+      [{ role: "user", content: summaryPrompt }],
+      { temperature: 0.3, max_tokens: 220 },
+    );
+
+    const summaryText = result.text?.trim();
+    if (!summaryText || summaryText.length < 30) return "";
+
+    return (
+      "=== RECENT CONVERSATION SUMMARY ===\n" +
+      summaryText +
+      "\n=== END SUMMARY ===\n\n"
+    );
+  } catch (err) {
+    // Non-fatal — the main reply proceeds without the summary.
+    console.warn("[prepbrain/chat] conversation summary failed (non-fatal):", err);
+    return "";
+  }
+}
+
+/**
+ * Derives a short "Recent Trends" summary from already-fetched tool data.
+ * No DB call — pure in-memory derivation from whatever was loaded for this intent.
+ */
 
 type ChatProfileRow = Pick<
   Tables<"user_profiles">,
@@ -271,7 +342,7 @@ type ChatProfileRow = Pick<
 /**
  * POST /api/prepbrain/chat
  * Body: { messages: { role, content }[], conversationId?: string }.
- * Only the last few messages are sent to the model; the full array may be longer for UI history.
+ * Only the last few messages are sent to the model; the full array is used for summarisation.
  */
 export async function POST(request: Request) {
   const supabase = await createSupabaseServerClient();
@@ -430,6 +501,18 @@ export async function POST(request: Request) {
 
   const intent = detectPrepBrainIntent(last.content);
 
+  // Analyse conversation history to detect a deepening topic thread.
+  // Used to inherit the prior topic when the latest message is ambiguous
+  // (e.g. "tell me more", "go deeper", "what about that specifically?").
+  const { threadIntent, depth, focusSubject } = detectConversationThread(fullMessages);
+  const AMBIGUOUS_INTENTS: PrepBrainIntent[] = ["general", "weak_vs_strong"];
+  const effectiveIntent: Exclude<PrepBrainIntent, "small_talk"> =
+    intent !== "small_talk" &&
+    AMBIGUOUS_INTENTS.includes(intent) &&
+    threadIntent !== null
+      ? (threadIntent as Exclude<PrepBrainIntent, "small_talk">)
+      : (intent as Exclude<PrepBrainIntent, "small_talk">);
+
   // Token Guardian — return instantly for small talk without spending any model tokens.
   if (intent === "small_talk") {
     await touchPrepbrainCooldown(admin, user.id);
@@ -471,9 +554,9 @@ export async function POST(request: Request) {
     });
   }
 
-  const selectedTools = selectToolsForIntent(intent);
-
-  const marksLimit = 10;
+  const selectedTools = selectToolsForIntent(effectiveIntent);
+  // Deeper conversations get more chapter rows so the model can drill into specifics.
+  const marksLimit = depth >= 3 ? 25 : depth === 2 ? 15 : 10;
 
   // Prefetched profile — passed to tool queries to eliminate redundant DB calls.
   const profileAny = profile as Record<string, unknown>;
@@ -484,7 +567,11 @@ export async function POST(request: Request) {
     upsc_optional_subjects: profileAny.upsc_optional_subjects ?? null,
   };
 
-  const [toolPack, reserve] = await Promise.all([
+  // Resolve model candidates once — reused for both the summary call and the main call.
+  const models = resolvePrepbrainGroqModels({ request, user });
+
+  // Run tool fetching, conversation summarisation, and token reservation in parallel.
+  const [toolPack, conversationSummary, reserve] = await Promise.all([
     (async () => {
       if (selectedTools.length === 0) {
         return {
@@ -564,6 +651,8 @@ export async function POST(request: Request) {
       const toolDataEstTokens = Math.ceil(toolDataChars / 4);
       return { toolData, toolDataMarkdown, toolDataChars, toolDataEstTokens, toolCacheSources };
     })(),
+    // Conversation summary: gives the model memory beyond the 4-message window.
+    createConversationSummary(fullMessages, models),
     prepbrainAiTokenReserve(admin, user.id),
   ]);
 
@@ -589,11 +678,27 @@ export async function POST(request: Request) {
   const reservationId = reserve.reservationId;
   const { toolDataChars, toolDataEstTokens, toolCacheSources } = toolPack;
 
-  const systemPrompt = buildPrepBrainSystemPrompt(intent);
-  const systemContent =
-    selectedTools.length === 0
-      ? systemPrompt
-      : `${systemPrompt}\n\n--- USER PREP DATA ---\n${toolPack.toolDataMarkdown}\n--- END USER PREP DATA ---`;
+  // Assemble the full system prompt:
+  // intent prefix → depth/focus tags → core rules → summary → USER PREP DATA → last N messages.
+  // USER PREP DATA sits immediately before the conversation so the model grounds
+  // its answer in current data right before reading the user's question.
+  const depthTag = depth > 1
+    ? ` [DEPTH: ${depth}]${focusSubject ? ` [FOCUS: ${focusSubject}]` : ""}`
+    : "";
+  const systemContent = `[INTENT: ${effectiveIntent}]${depthTag}
+
+${PREPBRAIN_SYSTEM_PROMPT}
+
+${conversationSummary}
+--- USER PREP DATA ---
+${toolPack.toolDataMarkdown}
+--- END USER PREP DATA ---
+
+--- LAST ${MAX_CHAT_MESSAGES} MESSAGES ---
+${fullMessages
+  .slice(-MAX_CHAT_MESSAGES)
+  .map((m) => `${m.role}: ${m.content}`)
+  .join("\n\n")}`.trim();
 
   const modelMessages = messagesForModel(fullMessages);
   const aiMessages: AiChatMessage[] = [
@@ -601,8 +706,7 @@ export async function POST(request: Request) {
     ...modelMessages.map((m) => ({ role: m.role, content: m.content } as AiChatMessage)),
   ];
 
-  const models = resolvePrepbrainGroqModels({ request, user });
-  const maxCompletionTokens = maxCompletionTokensForIntent(intent);
+  const maxCompletionTokens = maxCompletionTokensForIntent(effectiveIntent);
 
   let textStream: ReadableStream<string>;
   let usagePromise: Promise<import("@/lib/aiChatClient").StreamingChatUsage>;
@@ -717,9 +821,10 @@ export async function POST(request: Request) {
           : conversationIdIn;
 
         console.log(
-          "[prepbrain/chat] model=%s intent=%s max_completion_tokens=%d tools=%s cache=%s redis=%s prompt_tokens=%d completion_tokens=%d total_tokens=%d tool_chars=%d tool_est_tokens=%d",
+          "[prepbrain/chat] model=%s intent=%s depth=%d max_completion_tokens=%d tools=%s cache=%s redis=%s prompt_tokens=%d completion_tokens=%d total_tokens=%d tool_chars=%d tool_est_tokens=%d summary=%s",
           u.modelUsed,
-          intent,
+          effectiveIntent,
+          depth,
           maxCompletionTokens,
           selectedTools.join(","),
           selectedTools.map((t) => toolCacheSources[t] ?? "?").join(","),
@@ -729,6 +834,7 @@ export async function POST(request: Request) {
           groqTotalTokens,
           toolDataChars,
           toolDataEstTokens,
+          conversationSummary ? "yes" : "no",
         );
 
         const donePayload: Record<string, unknown> = {
@@ -738,7 +844,7 @@ export async function POST(request: Request) {
           conversation_id: conversationOut,
           usage: usageAfter,
           groq_model: u.modelUsed,
-          intent,
+          intent: effectiveIntent,
           tools_used: selectedTools,
           cache_sources: toolCacheSources,
           prompt_size: {

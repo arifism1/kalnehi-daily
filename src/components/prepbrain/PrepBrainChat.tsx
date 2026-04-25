@@ -572,30 +572,57 @@ export function PrepBrainChat() {
         )}
 
         <div className="space-y-3 pb-1">
-          {messages.map((m, i) => (
-            <div
-              key={i}
-              className={
-                m.role === "user"
-                  ? "flex justify-end"
-                  : "flex justify-start"
-              }
-            >
-              <div
-                className={
-                  m.role === "user"
-                    ? "max-w-[min(100%,20rem)] rounded-2xl rounded-br-md border border-kal-accent/30 bg-kal-accent-soft/85 px-3.5 py-2.5 text-sm font-medium text-kal-text shadow-sm backdrop-blur-sm sm:max-w-[min(100%,28rem)]"
-                    : "w-full max-w-full rounded-2xl rounded-bl-md border border-kal-border/50 bg-kal-card/90 px-3.5 py-3 text-[15px] leading-[1.55] text-kal-text shadow-sm backdrop-blur-md sm:w-auto sm:max-w-[min(100%,36rem)] sm:px-4 sm:py-3.5 sm:text-base"
-                }
-              >
-                {m.role === "user" ? (
-                  <p className="break-words whitespace-pre-wrap">{m.content}</p>
-                ) : (
-                  <PrepBrainAssistantMarkdown content={m.content} />
+          {messages.map((m, i) => {
+            const isLastAssistant =
+              m.role === "assistant" &&
+              i === messages.length - 1 &&
+              !isSending;
+            return (
+              <div key={i}>
+                <div
+                  className={
+                    m.role === "user"
+                      ? "flex justify-end"
+                      : "flex justify-start"
+                  }
+                >
+                  <div
+                    className={
+                      m.role === "user"
+                        ? "max-w-[min(100%,20rem)] rounded-2xl rounded-br-md border border-kal-accent/30 bg-kal-accent-soft/85 px-3.5 py-2.5 text-sm font-medium text-kal-text shadow-sm backdrop-blur-sm sm:max-w-[min(100%,28rem)]"
+                        : "w-full max-w-full rounded-2xl rounded-bl-md border border-kal-border/50 bg-kal-card/90 px-3.5 py-3 text-[15px] leading-[1.55] text-kal-text shadow-sm backdrop-blur-md sm:w-auto sm:max-w-[min(100%,36rem)] sm:px-4 sm:py-3.5 sm:text-base"
+                    }
+                  >
+                    {m.role === "user" ? (
+                      <p className="break-words whitespace-pre-wrap">{m.content}</p>
+                    ) : (
+                      <PrepBrainAssistantMarkdown content={m.content} />
+                    )}
+                  </div>
+                </div>
+                {isLastAssistant && !atTokenLimit && (
+                  <div className="mt-2 flex flex-wrap gap-1.5 pl-0.5">
+                    {[
+                      "What are my weakest chapters?",
+                      "How many more marks can I gain?",
+                      "What should I revise this week?",
+                    ].map((suggestion) => (
+                      <button
+                        key={suggestion}
+                        type="button"
+                        onClick={() => {
+                          void sendMessage(suggestion);
+                        }}
+                        className="touch-manipulation rounded-full border border-kal-border/60 bg-kal-card/80 px-3 py-1 text-[11px] font-medium text-kal-text-secondary shadow-sm backdrop-blur-sm transition-colors hover:border-kal-accent/40 hover:bg-kal-accent-soft/60 hover:text-kal-text active:scale-[0.97] sm:text-xs"
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
-            </div>
-          ))}
+            );
+          })}
           {isSending && (
             <div className="flex justify-start">
               <div className="flex items-center gap-2 rounded-2xl rounded-bl-md border border-kal-border/50 bg-kal-card/85 px-3.5 py-3 text-[15px] leading-snug text-kal-text-secondary backdrop-blur-md sm:text-base">
