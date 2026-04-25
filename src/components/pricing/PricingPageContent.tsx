@@ -80,7 +80,7 @@ function HeroSection({ capStatus }: { capStatus: DailyCapStatus }) {
           className="text-4xl font-normal leading-[1.1] tracking-tight text-kal-text sm:text-5xl lg:text-6xl"
           style={{ fontFamily: "var(--font-display)" }}
         >
-          One system for serious exam prep.
+          The voice-controlled exam prep tracker for serious aspirants.
         </h1>
 
         <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-kal-text-secondary sm:text-xl">

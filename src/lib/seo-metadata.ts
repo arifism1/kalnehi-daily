@@ -12,7 +12,7 @@ export const SITE_BRAND = "Kalnehi Daily";
 export const SUPPORT_EMAIL = "curioversitylearning@gmail.com";
 export const SUPPORT_MAILTO_HREF = `mailto:${SUPPORT_EMAIL}`;
 
-export const SITE_TAGLINE = "Win Daily — Smart Exam Prep";
+export const SITE_TAGLINE = "Win Daily — Voice Controlled Smart Exam Prep";
 
 /** Served by [`src/app/opengraph-image.tsx`](src/app/opengraph-image.tsx) (1200×630). */
 export const OG_IMAGE_PATH = "/opengraph-image";
@@ -46,13 +46,15 @@ export type KalnehiPageSeoKey =
 
 const PAGE_SEO: Record<
   KalnehiPageSeoKey,
-  { title: string; description: string; path: string }
+  { title: string; description: string; path: string; ogDescription?: string }
 > = {
   home: {
     path: "/",
-    title: `${SITE_NAME} — Smart Exam Prep planner & study app`,
+    title: `${SITE_NAME} — Voice Controlled Exam Prep Tracker & study app`,
     description:
-      `${SITE_BRAND} helps you execute every day for JEE, NEET, and Boards: daily plan, syllabus tracker, push notifications, Brain Yoga, habits, PrepBrain AI, and progress insights. Install the PWA and study anywhere.`,
+      `Kalnehi is the voice-controlled exam prep tracker for Indian competitive exam aspirants. Dictate your study plan, track your syllabus, and build daily discipline — all in one place.`,
+    ogDescription:
+      `The only exam prep tracker where you can plan your entire day by speaking. Built for JEE, NEET, UPSC & all major exams. Win daily. Rank higher.`,
   },
   prepbrain: {
     path: "/prepbrain",
@@ -199,7 +201,7 @@ export function kalnehiPageMetadata(key: KalnehiPageSeoKey): Metadata {
       type: "website",
       url,
       title: page.title,
-      description: page.description,
+      description: page.ogDescription ?? page.description,
       siteName: SITE_NAME,
       locale: "en_IN",
       images: [
@@ -214,7 +216,7 @@ export function kalnehiPageMetadata(key: KalnehiPageSeoKey): Metadata {
     twitter: {
       card: "summary_large_image",
       title: page.title,
-      description: page.description,
+      description: page.ogDescription ?? page.description,
       images: [ogImage],
     },
     robots: {
@@ -242,6 +244,9 @@ export function defaultSiteMetadata(): Pick<
     applicationName: SITE_NAME,
     authors: [{ name: SITE_NAME }],
     keywords: [
+      "voice controlled exam prep",
+      "voice study planner",
+      "dictate study plan",
       "Smart Exam Prep planner",
       "Smart Exam Prep study app",
       "exam prep PWA",

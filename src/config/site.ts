@@ -9,7 +9,7 @@ export const ORGANIZATION_DESCRIPTION =
   "Privacy-first daily study operating system for Indian competitive exam aspirants. Daily planning, PrepBrain AI, voice control, syllabus tracking, and spaced revision — built to win daily." as const;
 
 export const SOFTWARE_APP_DESCRIPTION =
-  "Daily study OS for JEE, NEET, UPSC, CAT, GATE, CA and all major Indian competitive exams." as const;
+  "Voice-controlled exam prep tracker for JEE, NEET, UPSC, CAT, GATE, CA and all major Indian competitive exams." as const;
 
 export const AGGREGATE_RATING = {
   ratingValue: "4.8",

@@ -258,7 +258,7 @@ export function WhatCanKalnehiDoClient() {
             What Can Kalnehi Do?
           </h1>
           <p className="mx-auto max-w-xl text-pretty text-base font-medium leading-relaxed text-kal-text-secondary sm:text-lg">
-            Your complete daily exam prep companion
+            Your voice-controlled exam prep companion
           </p>
           <p className="mx-auto max-w-2xl text-pretty text-sm leading-relaxed text-kal-text-secondary sm:text-[0.95rem]">
             Every feature, built for one thing — helping you show up, stay sharp, and actually finish what you started. Tap a card to see what it does.

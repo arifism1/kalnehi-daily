@@ -10,7 +10,7 @@ export default function manifest(): MetadataRoute.Manifest {
     // "Kalnehi" fits Play Store's 12-char short-name limit and looks clean on the home screen.
     short_name: "Kalnehi",
     description:
-      "Kalnehi Daily - Voice Controlled Exam Prep Tracker: execution planner for Smart Exam Prep. Daily Plan with live task tracking, Syllabus Tracker, Brain Yoga focus resets, PrepBrain AI coaching, Notifications & push reminders, study sessions, habits, and progress analytics — start with a 3-day free trial, then Smart Plan (₹399/month). All in one offline-ready PWA.",
+      "Voice-controlled study planner for JEE, NEET, UPSC & all competitive exams. Daily Plan, Syllabus Tracker, Brain Yoga, PrepBrain AI, push reminders, and progress analytics — offline-ready PWA.",
     start_url: "/",
     scope: "/",
     display: "standalone",

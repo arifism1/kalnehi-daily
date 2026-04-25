@@ -44,8 +44,9 @@ export function HeroSection() {
           </h1>
 
           <p className="mb-8 max-w-lg text-lg leading-relaxed text-kal-text-secondary">
-            Your daily plan, syllabus tracker, focus timer, revision reminders and AI prep
-            coach — all in one app. Built for aspirants who show up every day.
+            Kalnehi is the voice-controlled exam prep tracker for JEE, NEET, UPSC &amp; all
+            competitive exams. Dictate tasks, track syllabus progress, and build the discipline
+            that ranks you higher.
           </p>
 
           <div className="flex flex-col gap-3 sm:flex-row">
