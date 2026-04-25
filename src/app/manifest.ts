@@ -14,7 +14,8 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/",
     scope: "/",
     display: "standalone",
-    display_override: ["standalone", "minimal-ui"],
+    /** Avoid minimal-ui fallback so installed surfaces stay chrome-free where supported. */
+    display_override: ["standalone"],
     orientation: "portrait-primary",
     // Premium glassmorphic theme: warm cream background, Kalnehi warm orange accent.
     background_color: "#FAF7F2",

@@ -8,6 +8,12 @@ export const SITE_NAME = "Kalnehi Daily - Voice Controlled Exam Prep Tracker";
 /** Short brand for tight UI and conversational copy where the full name is heavy. */
 export const SITE_BRAND = "Kalnehi Daily";
 
+/**
+ * Short label for installed PWA / iOS `apple-mobile-web-app-title` (avoids a long name under
+ * the status bar). Matches manifest `short_name` intent.
+ */
+export const PWA_STANDALONE_DISPLAY_NAME = "Kalnehi";
+
 /** Official support inbox (legal pages, plain email contact). */
 export const SUPPORT_EMAIL = "curioversitylearning@gmail.com";
 export const SUPPORT_MAILTO_HREF = `mailto:${SUPPORT_EMAIL}`;
