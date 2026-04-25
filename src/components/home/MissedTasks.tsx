@@ -38,6 +38,7 @@ import {
 } from "@/lib/userPlannerTextClient";
 import { getUserPlannerTextBundleCached } from "@/lib/userPlannerTextLocal";
 import type { RevisionQueueEntry } from "@/lib/userPlannerTextTypes";
+import { addAcademicTaskToUnifiedDailyPlan } from "@/lib/addAcademicTaskToUnifiedDailyPlan";
 import { resolveMicrotopicForTask } from "@/lib/resolveMicrotopicForTask";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useTaskStore, type Task } from "@/store/useTaskStore";
@@ -222,12 +223,29 @@ export function MissedTasks() {
         { assigned_date: next },
         userId,
       );
-      if (!res.ok)
+      if (!res.ok) {
         setActionNotice(
           surfaceOptionalString(res.error, USER_ERROR.tryAgain),
         );
+        return;
+      }
+      if (next === today) {
+        const planRes = await addAcademicTaskToUnifiedDailyPlan(
+          { ...t, assigned_date: next },
+          today,
+          syllabusById,
+        );
+        if (!planRes.ok) {
+          setActionNotice(
+            surfaceOptionalString(
+              planRes.error,
+              "Date updated. Couldn't add to Today's Plan — try opening Daily Plan.",
+            ),
+          );
+        }
+      }
     },
-    [userId],
+    [userId, today, syllabusById],
   );
 
   const onMoveToToday = useCallback(
@@ -238,12 +256,27 @@ export function MissedTasks() {
         { assigned_date: today },
         userId,
       );
-      if (!res.ok)
+      if (!res.ok) {
         setActionNotice(
           surfaceOptionalString(res.error, USER_ERROR.tryAgain),
         );
+        return;
+      }
+      const planRes = await addAcademicTaskToUnifiedDailyPlan(
+        { ...t, assigned_date: today },
+        today,
+        syllabusById,
+      );
+      if (!planRes.ok) {
+        setActionNotice(
+          surfaceOptionalString(
+            planRes.error,
+            "Date updated. Couldn't add to Today's Plan — try opening Daily Plan.",
+          ),
+        );
+      }
     },
-    [userId, today],
+    [userId, today, syllabusById],
   );
 
   const onRevisionDone = useCallback(
