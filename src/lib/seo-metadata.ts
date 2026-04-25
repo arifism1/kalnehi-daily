@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { absoluteUrl, getSiteUrl } from "@/lib/site";
 
 /** Full official product name (SEO, manifest, browser tab, install UI). */
-export const SITE_NAME = "Kalnehi Daily - Exam Prep Tracker";
+export const SITE_NAME = "Kalnehi Daily - Voice Controlled Exam Prep Tracker";
 
 /** Short brand for tight UI and conversational copy where the full name is heavy. */
 export const SITE_BRAND = "Kalnehi Daily";

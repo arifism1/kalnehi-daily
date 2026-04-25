@@ -113,7 +113,7 @@ try {
       const title =
         payload.notification && payload.notification.title
           ? payload.notification.title
-          : "Kalnehi Daily - Exam Prep Tracker";
+          : "Kalnehi Daily - Voice Controlled Exam Prep Tracker";
       const body =
         payload.notification && payload.notification.body
           ? payload.notification.body
