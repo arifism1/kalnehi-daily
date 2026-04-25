@@ -20,7 +20,6 @@ import {
   MessageSquare,
   Mic,
   NotebookPen,
-  Sparkles,
   Target,
   TestTube2,
   TrendingUp,
@@ -116,11 +115,6 @@ const MyTargetClientLazy = dynamic(
     import("@/components/myTarget/MyTargetClient").then((m) => ({ default: m.MyTargetClient })),
   { ssr: false },
 );
-const PlanMyDayPageLazy = dynamic(
-  () =>
-    import("@/components/planner/PlanMyDayPage").then((m) => ({ default: m.PlanMyDayPage })),
-  { ssr: false },
-);
 const TimerEngineClientLazy = dynamic(
   () =>
     import("@/components/engine/TimerEngineClient").then((m) => ({
@@ -173,12 +167,6 @@ export function HomeAccordionSections() {
           className="kal-glass-subtle rounded-2xl border-kal-border/60 p-4"
         />
       ),
-    },
-    {
-      id: "plan-my-day",
-      title: "Plan My Day",
-      icon: Sparkles,
-      content: <PlanMyDayPageLazy />,
     },
     {
       id: "dictate-my-day",

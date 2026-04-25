@@ -16,7 +16,6 @@ import {
   MessageSquare,
   Mic,
   NotebookPen,
-  Sparkles,
   Target,
   TestTube2,
   TrendingUp,
@@ -48,7 +47,6 @@ export const FEATURE_CATEGORIES: FeatureCategoryDef[] = [
     dotColor: "#EF9F27",
     featureIds: [
       "daily-planner",
-      "plan-my-day",
       "dictate-my-day",
       "timer",
       "missed-tasks",
@@ -100,12 +98,6 @@ export const DASHBOARD_FEATURES: DashboardFeature[] = [
     title: "Today's Plan",
     icon: ListTodo,
     description: "Plan and execute today's study tasks in one place.",
-  },
-  {
-    id: "plan-my-day",
-    title: "Plan My Day",
-    icon: Sparkles,
-    description: "AI-assisted daily planning to make every hour count.",
   },
   {
     id: "dictate-my-day",

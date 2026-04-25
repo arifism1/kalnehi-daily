@@ -22,7 +22,6 @@ import {
   NotebookPen,
   Settings,
   Shield,
-  Sparkles,
   Target,
   TestTube2,
   TrendingUp,
@@ -85,7 +84,6 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
         Icon: Calendar,
         featureId: "daily-planner",
       },
-      { href: "/plan-my-day", label: "Plan My Day", Icon: Sparkles, featureId: "plan-my-day" },
       { href: "/timer", label: "Timer", Icon: Clock, featureId: "timer" },
       { href: "/missed-tasks", label: "Missed Tasks", Icon: LineChart, featureId: "missed-tasks" },
       {
@@ -232,7 +230,6 @@ export function filterNavByEnabledFeatures(
 const QUICK_NAV_HREF_ORDER: readonly string[] = [
   "/",
   "/daily-plan",
-  "/plan-my-day",
   "/timer",
   "/missed-tasks",
   "/daily-log",
