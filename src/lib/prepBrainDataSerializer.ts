@@ -36,6 +36,50 @@ function computeAvgMarks(r: MarksIntelligenceRow): number {
   return validMarks.reduce((a, b) => a + b, 0) / validMarks.length;
 }
 
+/**
+ * Authoritative exam ceilings.
+ * Summing catalog-chapter averages over-counts because the catalog includes more
+ * chapters than can appear in a single sitting (not every chapter appears every year).
+ * If the exam is known here, this value is the hard ceiling shown to the model.
+ * If unknown, we omit the ceiling line entirely rather than show a wrong number.
+ */
+const KNOWN_EXAM_CEILINGS: Record<string, number> = {
+  "CAT": 198,
+  "NEET UG": 720,
+  "NEET PG": 800,
+  "JEE Main": 300,
+  "JEE Main 2023": 300,
+  "JEE Main 2024": 300,
+  "JEE Main 2025": 300,
+  "JEE Advanced": 360,
+  "GATE": 100,
+  "CLAT UG": 150,
+  "NDA": 900,
+  "SAT": 1600,
+  "GRE": 340,
+  "UPSC CSE Prelims": 400,
+  "UPSC CSE Mains": 1750,
+  "SSC CGL": 200,
+  "SSC CHSL": 200,
+  "SBI PO": 200,
+  "IBPS PO": 200,
+  "IPMAT Indore": 360,
+  "IPMAT Rohtak": 300,
+  "JIPMAT": 400,
+  "INI-CET": 200,
+  "CBSE Class 12": 500,
+};
+
+function getKnownExamCeiling(exam: string): number | null {
+  // Direct lookup first
+  if (KNOWN_EXAM_CEILINGS[exam] !== undefined) return KNOWN_EXAM_CEILINGS[exam];
+  // Partial match for year-suffixed variants like "JEE Main 2025"
+  for (const [key, val] of Object.entries(KNOWN_EXAM_CEILINGS)) {
+    if (exam.toLowerCase().startsWith(key.toLowerCase())) return val;
+  }
+  return null;
+}
+
 /** Structured marks from RPC (`marks_rows`). Shows estimated available marks per chapter. */
 export function formatMarksIntelligenceMarkdown(data: unknown): string {
   const missingMsg =
@@ -52,17 +96,21 @@ export function formatMarksIntelligenceMarkdown(data: unknown): string {
   if (Array.isArray(rowsRaw) && rowsRaw.length > 0) {
     const rows = rowsRaw as MarksIntelligenceRow[];
 
-    // Compute exam ceiling = sum of per-chapter averages across all chapters
-    const examCeiling = Math.round(
-      rows.reduce((sum, r) => sum + computeAvgMarks(r), 0),
-    );
+    // Derive ceiling from most-recent year's actual exam marks.
+    // sum(marks_2025) = total marks in that year's paper → accurate for any exam.
+    // Falls back to 2024 → 2023 → hardcoded map → omit (rather than show a wrong number).
+    const sum2025 = rows.reduce((s, r) => s + (r.marks_2025 ?? 0), 0);
+    const sum2024 = rows.reduce((s, r) => s + (r.marks_2024 ?? 0), 0);
+    const sum2023 = rows.reduce((s, r) => s + (r.marks_2023 ?? 0), 0);
+    const derivedCeiling = sum2025 > 0 ? sum2025 : sum2024 > 0 ? sum2024 : sum2023 > 0 ? sum2023 : null;
+    const ceiling = derivedCeiling ?? getKnownExamCeiling(exam);
 
     const bySubj = groupMarksBySubject(rows);
-    const lines: string[] = [
-      `### Marks intelligence (${exam})`,
-      `Exam marks ceiling (est): ~${examCeiling} marks total`,
-      "",
-    ];
+    const lines: string[] = [`### Marks intelligence (${exam})`];
+    if (ceiling !== null) {
+      lines.push(`Exam marks ceiling: ${Math.round(ceiling)} marks total`);
+    }
+    lines.push("");
     for (const [subject, chRows] of bySubj) {
       lines.push(`**${subject}**`);
       for (const r of chRows) {
