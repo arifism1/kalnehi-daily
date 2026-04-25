@@ -1,5 +1,79 @@
 import type { PrepbrainToolName } from "@/lib/prepbrainToolQueries";
 
+type ConversationMessage = { role: string; content: string };
+
+export type ConversationThread = {
+  /** The dominant intent from prior turns; null if no clear thread. */
+  threadIntent: PrepBrainIntent | null;
+  /** 1 = first message on this topic, 2 = second consecutive turn, 3-4 = drilling deep. */
+  depth: number;
+  /** Subject name mentioned repeatedly (e.g. "VARC", "DILR"), or null. */
+  focusSubject: string | null;
+};
+
+/**
+ * Analyses the recent conversation history to detect whether the student is
+ * drilling deeper into a specific topic. Returns the dominant prior intent,
+ * a depth counter (capped at 4), and an optional focus subject extracted from
+ * repeated subject-name mentions.
+ *
+ * Intended to be called alongside `detectPrepBrainIntent` so the route can
+ * inherit the thread intent when the latest message is ambiguous (e.g. "tell
+ * me more", "go deeper", "what about that specifically?").
+ */
+export function detectConversationThread(
+  messages: ConversationMessage[],
+): ConversationThread {
+  const recentUser = messages.filter((m) => m.role === "user").slice(-6);
+  if (recentUser.length <= 1) return { threadIntent: null, depth: 1, focusSubject: null };
+
+  // Intents worth inheriting — excludes ambiguous catch-alls.
+  const STICKY_INTENTS: PrepBrainIntent[] = [
+    "marks_score",
+    "target_score",
+    "weak_vs_strong",
+    "syllabus_progress",
+    "revision",
+    "mock_test",
+    "today_plan",
+    "habits_or_meditation",
+    "study_camera",
+  ];
+
+  // Map prior messages (all except the most recent) to intents.
+  const priorIntents = recentUser
+    .slice(0, -1)
+    .map((m) => detectPrepBrainIntent(m.content))
+    .filter((i) => (STICKY_INTENTS as string[]).includes(i));
+
+  if (priorIntents.length === 0) return { threadIntent: null, depth: 1, focusSubject: null };
+
+  // Most frequent prior intent becomes the thread intent.
+  const counts = priorIntents.reduce<Record<string, number>>((acc, i) => {
+    acc[i] = (acc[i] ?? 0) + 1;
+    return acc;
+  }, {});
+  const threadIntent = Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0] as PrepBrainIntent;
+  const depth = Math.min(priorIntents.filter((i) => i === threadIntent).length + 1, 4);
+
+  // Extract a focus subject if the same subject name appears across multiple messages.
+  const subjectPattern =
+    /\b(varc|dilr|qa|quant|lrdi|verbal|reading comprehension|physics|chemistry|biology|history|geography|polity|economy|maths|mathematics|english)\b/i;
+  const subjectMentions: Record<string, number> = {};
+  for (const m of recentUser) {
+    const match = m.content.match(subjectPattern);
+    if (match) {
+      const s = match[1].toUpperCase();
+      subjectMentions[s] = (subjectMentions[s] ?? 0) + 1;
+    }
+  }
+  const topSubject = Object.entries(subjectMentions).sort((a, b) => b[1] - a[1])[0];
+  // Only treat it as a focus subject if it was mentioned in at least 2 messages.
+  const focusSubject = topSubject && topSubject[1] >= 2 ? topSubject[0] : null;
+
+  return { threadIntent, depth, focusSubject };
+}
+
 export type PrepBrainIntent =
   | "today_plan"
   | "syllabus_progress"
@@ -8,6 +82,8 @@ export type PrepBrainIntent =
   | "habits_or_meditation"
   | "study_camera"
   | "target_score"
+  | "revision"
+  | "mock_test"
   | "small_talk"
   | "no_data"
   | "general";
@@ -190,6 +266,32 @@ export function detectPrepBrainIntent(lastUserMessage: string): PrepBrainIntent 
   if (t.includes("target") || t.includes("score blueprint") || t.includes("blueprint")) {
     return "target_score";
   }
+  if (
+    t.includes("mock test") ||
+    t.includes("mock score") ||
+    t.includes("test result") ||
+    t.includes("test score") ||
+    t.includes("last test") ||
+    t.includes("previous test") ||
+    t.includes("my test") ||
+    /\bhow did i do\b.*\btest\b/.test(t) ||
+    /\btest\b.*\bhow did i do\b/.test(t)
+  ) {
+    return "mock_test";
+  }
+  if (
+    t.includes("revise") ||
+    t.includes("revision") ||
+    t.includes("what to revise") ||
+    t.includes("revision plan") ||
+    t.includes("revision queue") ||
+    t.includes("spaced repetition") ||
+    t.includes("revision backlog") ||
+    /\bwhat should i revise\b/.test(t) ||
+    /\bwhat should i review\b/.test(t)
+  ) {
+    return "revision";
+  }
   return "general";
 }
 
@@ -197,10 +299,11 @@ export function selectToolsForIntent(
   intent: Exclude<PrepBrainIntent, "small_talk">,
 ): PrepbrainToolName[] {
   switch (intent) {
+    // Generic strategy questions — no personal data needed; model uses general knowledge.
     case "no_data":
-      return ["getSyllabusOverview", "getWeakStrongSubjects"];
+      return [];
     case "today_plan":
-      return ["getTodayPlan", "getWeakStrongSubjects"];
+      return ["getTodayPlan", "getMissedTasksContext", "getWeakStrongSubjects"];
     case "marks_score":
       return ["getMarksIntelligence", "getWeakStrongSubjects"];
     case "syllabus_progress":
@@ -210,16 +313,16 @@ export function selectToolsForIntent(
     case "habits_or_meditation":
       return ["getHabitStreakSummary", "getMeditationConsistency"];
     case "study_camera":
-      return ["getRecentStudyCameraData", "getTodayPlan"];
+      return ["getRecentStudyCameraData", "getMissedTasksContext"];
     case "target_score":
-      return ["getTargetScoreBlueprint", "getSyllabusOverview"];
+      return ["getTargetScoreBlueprint", "getSyllabusOverview", "getMarksIntelligence"];
+    case "revision":
+      return ["getRevisionQueueSnapshot", "getWeakStrongSubjects", "getMissedTasksContext"];
+    case "mock_test":
+      return ["getLatestMockScores", "getWeakStrongSubjects"];
+    // General: omit getTodayPlan — reduces token cost for non-today queries.
     case "general":
-      return [
-        "getTodayPlan",
-        "getSyllabusOverview",
-        "getWeakStrongSubjects",
-        "getMarksIntelligence",
-      ];
+      return ["getSyllabusOverview", "getWeakStrongSubjects", "getMarksIntelligence"];
     default: {
       const _exhaustive: never = intent;
       return _exhaustive;

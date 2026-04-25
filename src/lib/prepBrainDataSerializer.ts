@@ -27,27 +27,16 @@ function groupMarksBySubject(rows: MarksIntelligenceRow[]): Map<string, MarksInt
   return m;
 }
 
-/**
- * Relative priority label vs dataset mean — strictly binary, no marks numbers.
- * Sending raw mark counts to the LLM causes hallucination (the model echoes and
- * extrapolates numbers that are catalog estimates, not ground truth).
- */
-function getYieldBadge(r: MarksIntelligenceRow, examAverage: number): string {
+/** Average marks from available years (0 if no data). */
+function computeAvgMarks(r: MarksIntelligenceRow): number {
   const validMarks = [r.marks_2023, r.marks_2024, r.marks_2025].filter(
     (m) => m != null && m > 0,
   );
-  if (validMarks.length === 0) return "";
-
-  const avg = validMarks.reduce((a, b) => a + b, 0) / validMarks.length;
-
-  if (examAverage > 0) {
-    if (avg >= examAverage * 1.5) return "(High Priority)";
-    if (avg >= examAverage * 0.8) return "(Medium Priority)";
-  }
-  return "";
+  if (validMarks.length === 0) return 0;
+  return validMarks.reduce((a, b) => a + b, 0) / validMarks.length;
 }
 
-/** Structured marks from RPC (`marks_rows`). */
+/** Structured marks from RPC (`marks_rows`). Shows estimated available marks per chapter. */
 export function formatMarksIntelligenceMarkdown(data: unknown): string {
   const missingMsg =
     "*No marks intelligence rows returned (exam or catalog data may be missing).*";
@@ -63,33 +52,28 @@ export function formatMarksIntelligenceMarkdown(data: unknown): string {
   if (Array.isArray(rowsRaw) && rowsRaw.length > 0) {
     const rows = rowsRaw as MarksIntelligenceRow[];
 
-    let totalMarks = 0;
-    let validChaptersCount = 0;
-    for (const r of rows) {
-      const validMarks = [r.marks_2023, r.marks_2024, r.marks_2025].filter(
-        (m) => m != null && m > 0,
-      );
-      if (validMarks.length > 0) {
-        totalMarks += validMarks.reduce((a, b) => a + b, 0) / validMarks.length;
-        validChaptersCount++;
-      }
-    }
-    const examAverage = validChaptersCount > 0 ? totalMarks / validChaptersCount : 0;
+    // Compute exam ceiling = sum of per-chapter averages across all chapters
+    const examCeiling = Math.round(
+      rows.reduce((sum, r) => sum + computeAvgMarks(r), 0),
+    );
 
     const bySubj = groupMarksBySubject(rows);
     const lines: string[] = [
       `### Marks intelligence (${exam})`,
+      `Exam marks ceiling (est): ~${examCeiling} marks total`,
       "",
     ];
     for (const [subject, chRows] of bySubj) {
-      lines.push(`### ${subject}`);
+      lines.push(`**${subject}**`);
       for (const r of chRows) {
         const ch = r.chapter?.trim() || "Chapter";
-        const yieldBadge = getYieldBadge(r, examAverage);
-        const badgeStr = yieldBadge ? ` ${yieldBadge}` : "";
+        const avgMarks = computeAvgMarks(r);
+        // Available = uncovered fraction of avg marks
+        const available = Math.round(avgMarks * (1 - r.completion_pct / 100));
+        const topicsLeft = r.total_topics - r.done_topics;
 
         lines.push(
-          `- **${subject} — ${ch}**${badgeStr}: ${fmtNum(r.completion_pct)}% done (${fmtNum(r.done_topics)}/${fmtNum(r.total_topics)} topics).`,
+          `- ${ch}: ~${available} marks available (${fmtNum(r.completion_pct)}% done, ${topicsLeft} of ${fmtNum(r.total_topics)} topics remaining)`,
         );
       }
       lines.push("");
@@ -169,31 +153,105 @@ export function formatWeakStrongMarkdown(data: unknown): string {
   if ("error" in data && data.error === "unavailable") {
     return "*Weak/strong subjects unavailable.*";
   }
+
+  function fmtSubjectRow(row: unknown): string {
+    if (!isRecord(row) || typeof row.subject !== "string") return "";
+    const pct = fmtNum(row.completion_percent);
+    const rem =
+      typeof row.topics_remaining === "number" && row.topics_remaining > 0
+        ? `, ${row.topics_remaining} topics left`
+        : "";
+    return `${row.subject} (${pct}%${rem})`;
+  }
+
   const weak = data.weak_top_3;
   const strong = data.strong_top_3;
   const weakStr =
     Array.isArray(weak) && weak.length > 0
-      ? weak
-          .map((row) =>
-            isRecord(row) && typeof row.subject === "string"
-              ? `${row.subject} (${fmtNum(row.completion_percent)}%)`
-              : "",
-          )
-          .filter(Boolean)
-          .join(", ")
+      ? weak.map(fmtSubjectRow).filter(Boolean).join("; ")
       : "none listed";
   const strongStr =
     Array.isArray(strong) && strong.length > 0
-      ? strong
-          .map((row) =>
-            isRecord(row) && typeof row.subject === "string"
-              ? `${row.subject} (${fmtNum(row.completion_percent)}%)`
-              : "",
-          )
-          .filter(Boolean)
-          .join(", ")
+      ? strong.map(fmtSubjectRow).filter(Boolean).join("; ")
       : "none listed";
-  return `### Strong vs weak (by subject completion)\nWeakest subjects: ${weakStr}. Strongest: ${strongStr}.`;
+  return `### Strong vs weak (by subject completion)\nWeakest: ${weakStr}.\nStrongest: ${strongStr}.`;
+}
+
+export function formatMissedTasksMarkdown(data: unknown): string {
+  if (data === null || data === undefined) return "";
+  if (!isRecord(data)) return "";
+  if ("error" in data && data.error === "unavailable") return "";
+  const missed =
+    typeof data.missed_tasks_last_7d === "number" ? data.missed_tasks_last_7d : 0;
+  const total =
+    typeof data.total_tasks_last_7d === "number" ? data.total_tasks_last_7d : 0;
+  const rate =
+    typeof data.execution_rate_percent === "number" ? data.execution_rate_percent : 0;
+  if (total === 0) return "### Execution (7d)\nNo past tasks in last 7 days.";
+  return `### Execution (7d)\n${missed} missed / ${total} planned tasks — ${rate}% execution rate.`;
+}
+
+export function formatRevisionQueueMarkdown(data: unknown): string {
+  if (data === null || data === undefined) return "";
+  if (!isRecord(data)) return "";
+  if ("error" in data && data.error === "unavailable") return "";
+  const total =
+    typeof data.total_pending === "number" ? data.total_pending : 0;
+  const overdue =
+    typeof data.overdue_count === "number" ? data.overdue_count : 0;
+  const dueToday =
+    typeof data.due_today === "number" ? data.due_today : 0;
+  if (total === 0)
+    return "### Revision queue\nNo pending revision items.";
+  return `### Revision queue\n${total} pending items — ${overdue} overdue, ${dueToday} due today.`;
+}
+
+export function formatMockScoresMarkdown(data: unknown): string {
+  if (data === null || data === undefined)
+    return "### Mock tests\n_No mock tests recorded yet._";
+  if (!isRecord(data)) return "";
+  if ("error" in data && data.error === "unavailable")
+    return "*Mock test data unavailable.*";
+  const tests = data.recent_tests;
+  if (!Array.isArray(tests) || tests.length === 0)
+    return "### Mock tests\n_No mock tests recorded yet._";
+  const lines = ["### Mock tests (recent)"];
+  for (const t of tests) {
+    if (!isRecord(t)) continue;
+    const name = typeof t.test_name === "string" ? t.test_name : "Test";
+    const date = typeof t.test_date === "string" ? t.test_date : "?";
+    const score =
+      typeof t.total_score === "number" ? t.total_score : null;
+    const max = typeof t.max_score === "number" ? t.max_score : null;
+    const rating =
+      typeof t.self_rating === "string" && t.self_rating
+        ? ` (self: ${t.self_rating})`
+        : "";
+    const scoreStr =
+      score !== null && max !== null
+        ? `${score}/${max}`
+        : score !== null
+          ? String(score)
+          : "—";
+    lines.push(`**${name}** (${date}): ${scoreStr}${rating}`);
+    const subjectScores = t.subject_scores;
+    if (Array.isArray(subjectScores) && subjectScores.length > 0) {
+      for (const s of subjectScores) {
+        if (!isRecord(s)) continue;
+        const subj = typeof s.subject === "string" ? s.subject : "?";
+        const ss = typeof s.score === "number" ? s.score : null;
+        const sm = typeof s.max_score === "number" ? s.max_score : null;
+        const ssStr =
+          ss !== null && sm !== null
+            ? `${ss}/${sm}`
+            : ss !== null
+              ? String(ss)
+              : "—";
+        lines.push(`  - ${subj}: ${ssStr}`);
+      }
+    }
+  }
+  return lines.join("\n");
 }
 
 export function formatWellnessOneLine(habits: unknown, meditation: unknown): string {
@@ -286,6 +344,12 @@ function formatToolSection(name: PrepbrainToolName, payload: unknown): string {
       return formatStudyCameraMarkdown(payload);
     case "getTargetScoreBlueprint":
       return formatTargetBlueprintMarkdown(payload);
+    case "getMissedTasksContext":
+      return formatMissedTasksMarkdown(payload);
+    case "getRevisionQueueSnapshot":
+      return formatRevisionQueueMarkdown(payload);
+    case "getLatestMockScores":
+      return formatMockScoresMarkdown(payload);
     default:
       return "";
   }
@@ -294,9 +358,12 @@ function formatToolSection(name: PrepbrainToolName, payload: unknown): string {
 /** Stable section order for the final report. */
 const TOOL_ORDER: PrepbrainToolName[] = [
   "getTodayPlan",
+  "getMissedTasksContext",
   "getSyllabusOverview",
   "getWeakStrongSubjects",
   "getMarksIntelligence",
+  "getRevisionQueueSnapshot",
+  "getLatestMockScores",
   "getHabitStreakSummary",
   "getMeditationConsistency",
   "getRecentStudyCameraData",

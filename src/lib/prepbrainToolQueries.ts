@@ -214,6 +214,7 @@ export async function getWeakStrongSubjects(
   const strong = stats.by_subject.slice(0, 3).map((s) => ({
     subject: s.subject,
     completion_percent: s.completion_percent,
+    topics_remaining: s.total - s.done,
   }));
   const weak = [...stats.by_subject]
     .sort((a, b) => a.completion_percent - b.completion_percent)
@@ -221,8 +222,94 @@ export async function getWeakStrongSubjects(
     .map((s) => ({
       subject: s.subject,
       completion_percent: s.completion_percent,
+      topics_remaining: s.total - s.done,
     }));
   return { weak_top_3: weak, strong_top_3: strong };
+}
+
+export async function getMissedTasksContext(admin: AdminClient, userId: string) {
+  const today = new Date().toISOString().slice(0, 10);
+  const since = ymdDaysAgo(6);
+  const { data, error } = await admin
+    .from("tasks")
+    .select("status, assigned_date")
+    .eq("user_id", userId)
+    .lt("assigned_date", today)
+    .gte("assigned_date", since)
+    .limit(300);
+  if (error) throw error;
+  const rows = data ?? [];
+  const total = rows.length;
+  const completed = rows.filter((r) => r.status === "completed").length;
+  const missed = total - completed;
+  const execution_rate_percent =
+    total > 0 ? Math.round((completed / total) * 1000) / 10 : 0;
+  return {
+    missed_tasks_last_7d: missed,
+    completed_tasks_last_7d: completed,
+    total_tasks_last_7d: total,
+    execution_rate_percent,
+  };
+}
+
+export async function getRevisionQueueSnapshot(admin: AdminClient, userId: string) {
+  const today = new Date().toISOString().slice(0, 10);
+  const { data, error } = await admin
+    .from("user_revision_queue_items")
+    .select("next_due, status")
+    .eq("user_id", userId)
+    .eq("status", "pending")
+    .limit(200);
+  if (error) throw error;
+  const rows = data ?? [];
+  const overdue_count = rows.filter((r) => r.next_due < today).length;
+  const due_today = rows.filter((r) => r.next_due === today).length;
+  return {
+    total_pending: rows.length,
+    overdue_count,
+    due_today,
+  };
+}
+
+export async function getLatestMockScores(admin: AdminClient, userId: string) {
+  const { data: tests, error: testErr } = await admin
+    .from("mock_tests")
+    .select("id, test_name, test_date, exam_name, total_score, max_score, self_rating")
+    .eq("user_id", userId)
+    .order("test_date", { ascending: false })
+    .limit(3);
+  if (testErr) throw testErr;
+  const testRows = tests ?? [];
+  if (testRows.length === 0) return null;
+
+  const testIds = testRows.map((t) => t.id);
+  const { data: scoresData, error: scoresErr } = await admin
+    .from("mock_test_subject_scores")
+    .select("mock_test_id, subject, score, max_score")
+    .in("mock_test_id", testIds);
+  if (scoresErr) throw scoresErr;
+
+  const scoresMap = new Map<
+    string,
+    Array<{ subject: string; score: number | null; max_score: number | null }>
+  >();
+  for (const s of scoresData ?? []) {
+    const arr = scoresMap.get(s.mock_test_id) ?? [];
+    arr.push({ subject: s.subject, score: s.score, max_score: s.max_score });
+    scoresMap.set(s.mock_test_id, arr);
+  }
+
+  return {
+    recent_tests: testRows.map((t) => ({
+      test_name: t.test_name,
+      test_date: t.test_date,
+      exam_name: t.exam_name,
+      total_score: t.total_score,
+      max_score: t.max_score,
+      self_rating: t.self_rating,
+      subject_scores: scoresMap.get(t.id) ?? [],
+    })),
+  };
 }
 
 export async function getHabitStreakSummary(admin: AdminClient, userId: string) {
@@ -363,5 +450,8 @@ export type PrepbrainToolName =
   | "getMeditationConsistency"
   | "getRecentStudyCameraData"
   | "getTargetScoreBlueprint"
-  | "getMarksIntelligence";
+  | "getMarksIntelligence"
+  | "getMissedTasksContext"
+  | "getRevisionQueueSnapshot"
+  | "getLatestMockScores";
 
