@@ -939,7 +939,7 @@ async function logReferralTrialStartedIfNeeded(
 export async function ensureFreeTrialStarted(): Promise<
   | { ok: true; started: boolean }
   | { ok: false; error: string }
-  | { ok: false; error: "daily_cap_reached"; queued: boolean; queuedFor: string; resetsAt: string; hoursUntilReset: number }
+  | { ok: false; error: "daily_cap_reached"; queued: boolean; queuedFor: string; resetsAt: string; hoursUntilReset: number; position: number; opensAt: string }
 > {
   const userId = await getAuthedUserId();
   if (!userId) return { ok: false, error: "Please sign in." };
@@ -1001,17 +1001,45 @@ export async function ensureFreeTrialStarted(): Promise<
           if (e) console.warn("[ensureFreeTrialStarted] feature_events insert:", e.message);
         });
 
-      // Enqueue for tomorrow's free-trial slot (idempotent — safe to call multiple times).
+      // Enqueue for the next available free-trial slot (idempotent — safe to call multiple times).
       let queuedFor: string = resetsAt.toISOString().slice(0, 10); // fallback: tomorrow ISO date
+      let position = 1;
+      let newlyInserted = false;
       try {
         const { data: queueResult } = await admin.rpc(
           "join_trial_queue" as never,
           { p_user_id: userId } as never,
         );
-        const qr = queueResult as { ok: boolean; queued_for?: string } | null;
-        if (qr?.ok && qr.queued_for) queuedFor = qr.queued_for;
+        const qr = queueResult as {
+          ok: boolean;
+          queued_for?: string;
+          position?: number;
+          newly_inserted?: boolean;
+        } | null;
+        if (qr?.ok) {
+          if (qr.queued_for) queuedFor = qr.queued_for;
+          if (typeof qr.position === "number") position = qr.position;
+          newlyInserted = qr.newly_inserted ?? false;
+        }
       } catch (e) {
         console.warn("[ensureFreeTrialStarted] join_trial_queue failed (non-fatal):", e);
+      }
+
+      // opensAt = midnight IST on the queued_for date (cron fires at 18:30 UTC = 00:00 IST).
+      const opensAt = `${queuedFor}T00:00:00+05:30`;
+
+      // Send a one-time confirmation email with the exact trial start date.
+      if (newlyInserted) {
+        try {
+          const { sendTrialQueuedEmail } = await import("@/lib/waitlist/notifications");
+          const { data: authUser } = await admin.auth.admin.getUserById(userId);
+          const email = authUser?.user?.email ?? null;
+          if (email) {
+            void sendTrialQueuedEmail({ email, trialStartsAt: opensAt, position });
+          }
+        } catch (e) {
+          console.warn("[ensureFreeTrialStarted] queued email failed (non-fatal):", e);
+        }
       }
 
       return {
@@ -1021,6 +1049,8 @@ export async function ensureFreeTrialStarted(): Promise<
         queuedFor,
         resetsAt: resetsAt.toISOString(),
         hoursUntilReset,
+        position,
+        opensAt,
       };
     }
 

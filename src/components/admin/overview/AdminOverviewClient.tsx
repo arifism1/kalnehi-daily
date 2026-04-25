@@ -52,6 +52,7 @@ export function AdminOverviewClient({ data }: { data: OverviewSnapshot }) {
           value={`₹${data.aiCostTodayInr.toFixed(0)}`}
         />
         <AdminKpiCard label="Waitlist depth" value={data.waitlistDepth} sub={`waiting: ${data.waitlistWaiting}`} />
+        <AdminKpiCard label="Trial queue pending" value={data.trialQueuePending} sub="activates at midnight IST" />
         <AdminKpiCard
           label="Batch system"
           value={data.batchSystemActive ? "On" : "Off"}

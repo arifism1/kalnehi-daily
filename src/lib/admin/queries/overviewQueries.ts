@@ -31,6 +31,7 @@ export type OverviewSnapshot = {
   } | null;
   waitlistDepth: number;
   waitlistWaiting: number;
+  trialQueuePending: number;
   alerts: OverviewAlert[];
 };
 
@@ -55,7 +56,7 @@ export async function getOverviewSnapshot(): Promise<OverviewSnapshot | null> {
   const admin = getSupabaseServiceRoleClient();
   if (!admin) return null;
 
-  const [pricing, authUsers, profilesRes, batchesRes, waitRes, waitWaitingRes, paymentsRes, tokenRes] =
+  const [pricing, authUsers, profilesRes, batchesRes, waitRes, waitWaitingRes, trialQueueRes, paymentsRes, tokenRes] =
     await Promise.all([
       loadAdminPricingInr(),
       listAllAuthUsers(admin),
@@ -70,6 +71,10 @@ export async function getOverviewSnapshot(): Promise<OverviewSnapshot | null> {
         .from("waitlist_entries")
         .select("id", { count: "exact", head: true })
         .eq("status", "waiting"),
+      admin
+        .from("trial_queue_entries" as never)
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending"),
       admin
         .from("razorpay_processed_payments")
         .select("kind, created_at, user_id")
@@ -209,6 +214,7 @@ export async function getOverviewSnapshot(): Promise<OverviewSnapshot | null> {
 
   const waitlistDepth = waitRes.count ?? 0;
   const waitlistWaiting = waitWaitingRes.count ?? 0;
+  const trialQueuePending = (trialQueueRes as { count?: number | null }).count ?? 0;
 
   const alerts: OverviewAlert[] = [];
   const graceUsers = profiles.filter(
@@ -254,6 +260,7 @@ export async function getOverviewSnapshot(): Promise<OverviewSnapshot | null> {
     activeBatch,
     waitlistDepth,
     waitlistWaiting,
+    trialQueuePending,
     alerts,
   };
 }

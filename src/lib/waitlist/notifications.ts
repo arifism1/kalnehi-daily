@@ -195,6 +195,43 @@ function trialActivationHtml(): { subject: string; html: string } {
   return { subject, html };
 }
 
+function trialQueuedHtml(params: {
+  trialStartsAt: string;
+  position: number;
+}): { subject: string; html: string } {
+  const { trialStartsAt, position } = params;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://kalnehi.com";
+  const date = new Date(trialStartsAt).toLocaleDateString("en-IN", {
+    weekday: "long", day: "numeric", month: "long", year: "numeric",
+    timeZone: "Asia/Kolkata",
+  });
+  const subject = `Your Kalnehi trial begins ${date} at 12:00 AM — you're #${position.toLocaleString("en-IN")}`;
+  const html = `
+<div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
+  <h2 style="font-size:22px;font-weight:600;margin-bottom:8px">You're in — your spot is locked.</h2>
+  <p style="color:#666;margin:0 0 6px">
+    Today's free trial slots are full. That's the only reason you're waiting.
+  </p>
+  <p style="color:#666;margin:0 0 20px">
+    Your 3-day trial begins on <strong>${date}</strong> at <strong>12:00 AM IST</strong>.<br>
+    No action needed — just sign in at midnight and you're good to go.
+  </p>
+  <p style="font-size:14px;color:#888;margin:0 0 20px">
+    You're <strong>#${position.toLocaleString("en-IN")}</strong> in today's queue.
+    We open 2,000 spots each day so the app stays fast for everyone.
+  </p>
+  <p style="font-size:15px;font-weight:600;margin:0 0 8px">Don't want to wait until midnight?</p>
+  <a href="${appUrl}/waitlist/position"
+     style="display:inline-block;background:#ff7a00;color:#fff;padding:12px 24px;border-radius:99px;text-decoration:none;font-weight:700;margin:0 0 20px">
+    Start right now for ₹19 →
+  </a>
+  <p style="color:#aaa;font-size:13px;margin:0">
+    Same 3 days. Instant access. Your profile and exam goals are all saved.
+  </p>
+</div>`;
+  return { subject, html };
+}
+
 /* ─────────────────────────────── Send helpers ───────────────────────── */
 
 export async function sendEmail(to: string, subject: string, html: string): Promise<void> {
@@ -374,5 +411,17 @@ export async function sendRetargetingD14(params: {
 
 export async function sendTrialActivationEmail(params: { email: string }): Promise<void> {
   const { subject, html } = trialActivationHtml();
+  await sendEmail(params.email, subject, html);
+}
+
+export async function sendTrialQueuedEmail(params: {
+  email: string;
+  trialStartsAt: string;
+  position: number;
+}): Promise<void> {
+  const { subject, html } = trialQueuedHtml({
+    trialStartsAt: params.trialStartsAt,
+    position: params.position,
+  });
   await sendEmail(params.email, subject, html);
 }

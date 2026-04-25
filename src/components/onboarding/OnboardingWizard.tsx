@@ -14,6 +14,7 @@ import { OnboardingStepIllustration } from "@/components/illustrations/Onboardin
 import { useCallback, useEffect, useState } from "react";
 
 import { completeOnboarding } from "@/actions/profile";
+import { ensureFreeTrialStarted } from "@/actions/subscription";
 import { GroupedExamSelect } from "@/components/profile/GroupedExamSelect";
 import { UpscOptionalSubjectPick } from "@/components/profile/UpscOptionalSubjectPick";
 import {
@@ -145,6 +146,29 @@ export function OnboardingWizard() {
       });
       if (!res.ok) throw new Error(res.error);
       setLocalCompleted(true);
+
+      // Start the free trial immediately — if the daily cap is hit, redirect
+      // straight to the position page with no intermediate screen.
+      const trial = await ensureFreeTrialStarted();
+      if (!trial.ok && trial.error === "daily_cap_reached") {
+        const capResult = trial as {
+          ok: false;
+          error: "daily_cap_reached";
+          position: number;
+          opensAt: string;
+          queuedFor: string;
+        };
+        sessionStorage.setItem(
+          "wl_position",
+          JSON.stringify({
+            position: capResult.position,
+            opensAt: capResult.opensAt,
+            aheadCount: Math.max(0, capResult.position - 1),
+          }),
+        );
+        window.location.assign("/waitlist/position");
+        return;
+      }
       window.location.assign("/home");
     } catch (e) {
       setError(toUserFacingMessage(e));

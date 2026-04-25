@@ -185,7 +185,7 @@ export function AdminDailyCapSection({ initialConfig, initialHistory }: Props) {
           <p className="text-sm font-semibold text-kal-text">Daily cap enabled</p>
           <p className="mt-0.5 text-xs text-kal-text-secondary">
             {capEnabled
-              ? `Active — users beyond ${dailyCap.toLocaleString("en-IN")}/day are told spots are full.`
+              ? `Active — users beyond ${dailyCap.toLocaleString("en-IN")}/day are auto-queued and redirected to their trial start date.`
               : "Off — all eligible users can start a trial instantly."}
           </p>
         </div>
