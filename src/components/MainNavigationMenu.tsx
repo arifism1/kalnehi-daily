@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { Fragment, useCallback, useEffect, useState } from "react";
 
 import { PwaIosInstallModal } from "@/components/PwaIosInstallModal";
+import { PwaUpdateCallout } from "@/components/pwa/PwaUpdateCallout";
 import { ContactSupportSuccessToast } from "@/components/support/ContactSupportSuccessToast";
 import { useContactSupport } from "@/components/support/ContactSupportProvider";
 import { filterNavByEnabledFeatures, MAIN_NAV_SECTIONS, navActive } from "@/config/mainNavigation";
@@ -182,7 +183,8 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
               </p>
             </div>
           </div>
-          <div className="px-3 pb-3 sm:px-4">
+          <div className="space-y-2 px-3 pb-3 sm:px-4">
+            <PwaUpdateCallout variant="drawer" />
             <button
               type="button"
               disabled={installed}

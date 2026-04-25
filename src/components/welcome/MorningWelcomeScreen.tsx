@@ -1,6 +1,5 @@
 "use client";
 
-import { format } from "date-fns";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 
@@ -133,21 +132,12 @@ export function MorningWelcomeScreen({
                   initial="initial"
                   animate="animate"
                   variants={block}
-                  className="text-center text-sm text-[#1A1209]/75"
-                >
-                  {format(new Date(), "EEEE, d MMMM yyyy")}
-                </motion.p>
-                <motion.p
-                  custom={2}
-                  initial="initial"
-                  animate="animate"
-                  variants={block}
                   className="text-center text-[0.95rem] font-medium leading-snug text-[#1A1209] font-[family-name:var(--font-kal-heading)]"
                 >
                   {examCountdownText}
                 </motion.p>
                 <motion.p
-                  custom={3}
+                  custom={2}
                   initial="initial"
                   animate="animate"
                   variants={block}
@@ -156,7 +146,7 @@ export function MorningWelcomeScreen({
                   {dailyQuote}
                 </motion.p>
                 <motion.div
-                  custom={4}
+                  custom={3}
                   initial="initial"
                   animate="animate"
                   variants={block}

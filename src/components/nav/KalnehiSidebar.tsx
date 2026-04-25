@@ -31,6 +31,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { PwaUpdateCallout } from "@/components/pwa/PwaUpdateCallout";
 import { FEATURE_CATEGORIES } from "@/lib/dashboardFeatures";
 
 type SidebarItem = {
@@ -111,6 +112,8 @@ export function KalnehiSidebar() {
       className="hidden w-[220px] shrink-0 overflow-y-auto border-r border-kal-border/60 bg-[#FAF8F4] pt-4 pb-10 dark:bg-zinc-950/80 lg:flex lg:flex-col"
       style={{ borderColor: "var(--kal-border)" }}
     >
+      {/* Same PWA update prompt as nav drawer + bottom toast (desktop large layout). */}
+      <PwaUpdateCallout variant="sidebar" />
       {/* Home — always first, standalone */}
       <ul className="mb-2 mt-1">
         <li>

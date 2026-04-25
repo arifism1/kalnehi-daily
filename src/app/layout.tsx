@@ -11,6 +11,7 @@ import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { OrganicEntryCapture } from "@/components/OrganicEntryCapture";
 import { ReferralCapture } from "@/components/ReferralCapture";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { PwaServiceWorkerUpdateProvider } from "@/components/pwa/PwaServiceWorkerUpdateProvider";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { StoragePersistenceInit } from "@/components/StoragePersistenceInit";
 import { ThemeSync } from "@/components/ThemeSync";
@@ -160,24 +161,26 @@ export default function RootLayout({
       className={`${dmSans.variable} ${dmSerifDisplay.variable} ${syne.variable} h-full min-h-dvh min-h-[-webkit-fill-available] antialiased`}
     >
       <body className="flex min-h-dvh min-h-[-webkit-fill-available] flex-col bg-kal-page font-sans text-kal-text">
-        <JsonLd />
-        <OrganicEntryCapture />
-        <ReferralCapture />
-        <GoogleAnalytics />
-        <ThemeSync />
-        <ServiceWorkerRegister />
-        <KillSwitchGuard>
-          <AuthProvider>
-            <SubscriptionAccessProvider>
-              <UiPrefsRemoteSync />
-              <StoragePersistenceInit />
-              <FcmForegroundListener />
-              <AppShell>{children}</AppShell>
-            </SubscriptionAccessProvider>
-          </AuthProvider>
-        </KillSwitchGuard>
-        <Analytics />
-        <SpeedInsights sampleRate={0.5} />
+        <PwaServiceWorkerUpdateProvider>
+          <JsonLd />
+          <OrganicEntryCapture />
+          <ReferralCapture />
+          <GoogleAnalytics />
+          <ThemeSync />
+          <ServiceWorkerRegister />
+          <KillSwitchGuard>
+            <AuthProvider>
+              <SubscriptionAccessProvider>
+                <UiPrefsRemoteSync />
+                <StoragePersistenceInit />
+                <FcmForegroundListener />
+                <AppShell>{children}</AppShell>
+              </SubscriptionAccessProvider>
+            </AuthProvider>
+          </KillSwitchGuard>
+          <Analytics />
+          <SpeedInsights sampleRate={0.5} />
+        </PwaServiceWorkerUpdateProvider>
       </body>
     </html>
   );
