@@ -4,6 +4,66 @@ import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 
 import type { Json } from "@/types/supabase";
 
+export type UserListRow = {
+  userId: string;
+  fullName: string | null;
+  phone: string | null;
+  trialStartedAt: string | null;
+  subscriptionStatus: string | null;
+  subscriptionPlan: string | null;
+  hasHadTrial: boolean;
+};
+
+export async function listUsersForAdmin(
+  page: number,
+  perPage = 50,
+): Promise<{ rows: UserListRow[]; total: number }> {
+  const admin = getSupabaseServiceRoleClient();
+  if (!admin) return { rows: [], total: 0 };
+
+  const { data: adminRows } = await admin.from("admin_users").select("user_id");
+  const adminIds = ((adminRows ?? []) as { user_id: string }[])
+    .map((r) => r.user_id)
+    .filter(Boolean);
+
+  const from = (page - 1) * perPage;
+  let query = admin
+    .from("user_profiles")
+    .select(
+      "user_id, full_name, phone_number, trial_started_at, subscription_status, subscription_plan, has_had_trial",
+      { count: "exact" },
+    )
+    .not("user_id", "is", null);
+
+  if (adminIds.length > 0) {
+    query = query.not("user_id", "in", `(${adminIds.join(",")})`);
+  }
+
+  const { data, count } = await query
+    .order("updated_at", { ascending: false })
+    .range(from, from + perPage - 1);
+  return {
+    rows: ((data ?? []) as {
+      user_id: string;
+      full_name: string | null;
+      phone_number: string | null;
+      trial_started_at: string | null;
+      subscription_status: string | null;
+      subscription_plan: string | null;
+      has_had_trial: boolean | null;
+    }[]).map((r) => ({
+      userId: r.user_id,
+      fullName: r.full_name ?? null,
+      phone: r.phone_number ?? null,
+      trialStartedAt: r.trial_started_at ?? null,
+      subscriptionStatus: r.subscription_status ?? null,
+      subscriptionPlan: r.subscription_plan ?? null,
+      hasHadTrial: r.has_had_trial ?? false,
+    })),
+    total: count ?? 0,
+  };
+}
+
 export type UserLookupBundle = {
   userId: string;
   email: string | null;
@@ -32,12 +92,23 @@ async function findAuthUserIdByEmail(
   return null;
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function searchUsersForAdmin(q: string): Promise<UserLookupBundle[]> {
   const admin = getSupabaseServiceRoleClient();
   if (!admin || q.trim().length < 2) return [];
 
   const needle = q.trim();
   const bundles: UserLookupBundle[] = [];
+
+  if (UUID_RE.test(needle)) {
+    const { data: u } = await admin.auth.admin.getUserById(needle);
+    if (u.user) {
+      const b = await loadBundleForUserId(admin, needle, u.user);
+      if (b) return [b];
+    }
+    return [];
+  }
 
   if (needle.includes("@")) {
     const authUser = await findAuthUserIdByEmail(admin, needle);
