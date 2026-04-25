@@ -107,6 +107,7 @@ export function KalnehiSidebar() {
     <nav
       role="navigation"
       aria-label="Feature navigation"
+      data-tour="sidebar"
       className="hidden w-[220px] shrink-0 overflow-y-auto border-r border-kal-border/60 bg-[#FAF8F4] pt-4 pb-10 dark:bg-zinc-950/80 lg:flex lg:flex-col"
       style={{ borderColor: "var(--kal-border)" }}
     >

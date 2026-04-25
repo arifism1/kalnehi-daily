@@ -28,6 +28,7 @@ export function BottomTabBar() {
     <nav
       role="navigation"
       aria-label="Main navigation"
+      data-tour="bottom-tabs"
       className="fixed bottom-0 left-0 right-0 z-50 border-t border-kal-border/60 bg-white pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] dark:bg-zinc-950 lg:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >

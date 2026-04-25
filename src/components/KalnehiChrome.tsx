@@ -14,6 +14,10 @@ import {
 
 import { GlobalVoiceSheet } from "@/components/voice/GlobalVoiceSheet";
 import { Day3Paywall } from "@/components/paywall/Day3Paywall";
+import {
+  ProductTour,
+  readProductTourPending,
+} from "@/components/onboarding/ProductTour";
 import { useVoiceCommandStore } from "@/store/useVoiceCommandStore";
 
 import { WelcomeMorningHost } from "@/components/welcome/WelcomeMorningHost";
@@ -66,7 +70,15 @@ const MINIMAL_CHROME_PATHS = new Set([
 export function KalnehiChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showTour, setShowTour] = useState(false);
   const { open: openVoice, close: closeVoice, isOpen: voiceOpen } = useVoiceCommandStore();
+
+  // Show product tour on first /home visit after onboarding completes
+  useEffect(() => {
+    if (pathname === "/home" && readProductTourPending()) {
+      setShowTour(true);
+    }
+  }, [pathname]);
   const onboarding = pathname === "/onboarding";
   const minimalChrome = MINIMAL_CHROME_PATHS.has(pathname);
 
@@ -180,6 +192,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
               onClick={openVoice}
               aria-label="Voice command"
               aria-pressed={voiceOpen}
+              data-tour="voice"
               className={clsx(
                 "flex h-8 w-8 min-h-[32px] min-w-[32px] items-center justify-center rounded-xl border backdrop-blur-md transition-colors active:scale-[0.98]",
                 voiceOpen
@@ -209,6 +222,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
               className="flex h-8 w-8 min-h-[32px] min-w-[32px] items-center justify-center rounded-xl border border-white/25 bg-white/40 text-kal-text-secondary backdrop-blur-md transition-colors hover:border-white/40 hover:bg-white/55 active:scale-[0.98] dark:border-white/12 dark:bg-zinc-900/50"
               aria-expanded={menuOpen}
               aria-label="Open navigation menu"
+              data-tour="menu"
             >
               <Menu className="h-5 w-5" strokeWidth={2} />
             </button>
@@ -229,7 +243,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
               "max-w-[960px]",
               "md:px-8 xl:py-10",
               // Extra bottom padding on mobile for fixed tab bar
-              "pb-[calc(56px+max(1rem,env(safe-area-inset-bottom)))] lg:pb-10",
+              "pb-[calc(56px+env(safe-area-inset-bottom))] lg:pb-10",
             )}
           >
             <SyncStatusBanner />
@@ -255,6 +269,9 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
       <PwaInstallPromptDeferred />
       <GlobalVoiceSheet />
       <Day3Paywall />
+      {showTour && (
+        <ProductTour onComplete={() => setShowTour(false)} />
+      )}
     </div>
   );
 }
