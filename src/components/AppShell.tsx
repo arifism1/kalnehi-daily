@@ -86,15 +86,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     onboardingDone,
     hasPaidAccess,
     freeTrialActive,
-    welcomeTrialEligibleUnstarted,
     welcomeTrialExpiredNoPay,
     refetch,
   } = useSubscriptionAccess();
 
   const authed = !!session;
 
-  const allowAppWithoutPaid =
-    hasPaidAccess || freeTrialActive || welcomeTrialEligibleUnstarted;
+  const allowAppWithoutPaid = hasPaidAccess || freeTrialActive;
 
   const gateTarget = useMemo(() => {
     if (!initialized) return "wait";
