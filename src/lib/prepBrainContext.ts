@@ -114,6 +114,25 @@ export type PrepBrainContext = {
     session_count: number;
     distinct_days_with_a_session: number;
   };
+  /**
+   * When the user is enrolled in more than one exam, this lists a lightweight
+   * rollup for every non-primary exam so the AI can give multi-exam coaching.
+   * Absent for single-exam users (older context payloads).
+   */
+  all_enrolled_exams?: Array<{
+    exam_label: string;
+    exam_display_name: string;
+    overall_weighted_completion_percent: number;
+    total_marks_secured: number;
+    total_marks_pool: number;
+    max_score_scale: number;
+    subject_summaries: Array<{
+      subject: string;
+      completion_percent: number;
+      marks_secured: number;
+      marks_pool: number;
+    }>;
+  }>;
 };
 
 export type PrepBrainCompactContext = {

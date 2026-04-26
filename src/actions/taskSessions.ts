@@ -41,6 +41,7 @@ export async function createTaskSession(
     });
     if (error) throw error;
     revalidatePath("/");
+    revalidatePath("/daily-debrief");
     revalidatePath("/daily-log");
     return { ok: true };
   } catch (e) {

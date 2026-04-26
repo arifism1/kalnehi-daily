@@ -66,6 +66,7 @@ export async function updateVoiceTimelineEntry(
       .eq("user_id", user.id);
     if (error) throw error;
     revalidatePath("/dictate-day");
+    revalidatePath("/daily-debrief");
     revalidatePath("/daily-log");
     return { ok: true };
   } catch (e) {
@@ -89,6 +90,7 @@ export async function deleteVoiceTimelineEntry(
       .eq("user_id", user.id);
     if (error) throw error;
     revalidatePath("/dictate-day");
+    revalidatePath("/daily-debrief");
     revalidatePath("/daily-log");
     return { ok: true };
   } catch (e) {

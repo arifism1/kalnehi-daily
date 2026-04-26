@@ -50,7 +50,7 @@ export function AdminRetentionClient({ data }: { data: RetentionSnapshot }) {
 
       <div className="grid gap-6 md:grid-cols-2">
         <div className="rounded-2xl border border-kal-border bg-kal-card/40 p-4">
-          <h2 className="text-sm font-semibold text-kal-text mb-2">Churn by exam (30d)</h2>
+          <h2 className="text-sm font-semibold text-kal-text mb-2">Churn by track / exam (30d)</h2>
           <ul className="space-y-1 text-sm">
             {data.churnByExam.slice(0, 12).map((r) => (
               <li key={r.exam} className="flex justify-between gap-2">

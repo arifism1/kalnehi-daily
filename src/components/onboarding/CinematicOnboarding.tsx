@@ -31,8 +31,8 @@ const SLIDES = [
   },
   {
     kicker: "Your mission",
-    title: "One exam. One life. No pretending.",
-    body: "We’re not here to motivate you for five minutes. We’re here to keep you honest until the paper ends.",
+    title: "One track. One straight line. No pretending.",
+    body: "JEE, NEET, UPSC, GATE — your track can include more than one paper. We’re not here to motivate you for five minutes. We’re here to keep you honest until the work is done.",
   },
   {
     kicker: "What you’ll feel",

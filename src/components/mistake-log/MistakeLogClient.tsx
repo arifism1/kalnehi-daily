@@ -20,6 +20,7 @@ import {
 import { AddMistakeSheet } from "@/components/mistake-log/AddMistakeSheet";
 import { MISTAKE_TYPES } from "@/components/mistake-log/MistakeTypeButton";
 import { useDoubtSyllabusSubjects } from "@/hooks/useDoubtSyllabusSubjects";
+import { useAllExamScopes } from "@/hooks/useAllExamScopes";
 
 const RANGE_OPTIONS = [
   { label: "Last 7 days", value: 7 },
@@ -81,6 +82,7 @@ export function MistakeLogClient() {
   const [deleting, setDeleting] = useState<string | null>(null);
 
   const { subjects } = useDoubtSyllabusSubjects();
+  const { examScopes } = useAllExamScopes();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -256,6 +258,7 @@ export function MistakeLogClient() {
         onClose={() => setAddOpen(false)}
         onSaved={() => void load()}
         syllabusSubjects={subjects}
+        examScopes={examScopes}
       />
     </div>
   );

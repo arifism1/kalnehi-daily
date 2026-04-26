@@ -1,6 +1,7 @@
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 
 import { loadAdminPricingInr } from "@/lib/admin/pricing";
+import { adminSegmentLabelFromProfile } from "@/lib/profileTrackSegment";
 
 export type ExamSegmentRow = {
   exam: string;
@@ -15,13 +16,6 @@ export type ExamSegmentRow = {
 export type ExamSegmentsSnapshot = {
   rows: ExamSegmentRow[];
 };
-
-function examOf(p: {
-  target_exam: string | null;
-  primary_exam: string | null;
-}): string {
-  return (p.target_exam || p.primary_exam || "Unknown").trim() || "Unknown";
-}
 
 function isPaying(p: {
   subscription_status: string | null;
@@ -41,7 +35,7 @@ export async function getExamSegmentsSnapshot(): Promise<ExamSegmentsSnapshot | 
   const { data } = await admin
     .from("user_profiles")
     .select(
-      "subscription_status, subscription_end_date, subscription_plan, target_exam, primary_exam, has_used_free_trial, has_had_trial, trial_started_at, subscription_cancelled_at",
+      "subscription_status, subscription_end_date, subscription_plan, target_exam, primary_exam, selected_track, has_used_free_trial, has_had_trial, trial_started_at, subscription_cancelled_at",
     );
 
   const profiles = (data ?? []) as {
@@ -50,6 +44,7 @@ export async function getExamSegmentsSnapshot(): Promise<ExamSegmentsSnapshot | 
     subscription_plan: string | null;
     target_exam: string | null;
     primary_exam: string | null;
+    selected_track: string | null;
     has_used_free_trial: boolean | null;
     has_had_trial: boolean | null;
     trial_started_at: string | null;
@@ -64,7 +59,7 @@ export async function getExamSegmentsSnapshot(): Promise<ExamSegmentsSnapshot | 
   >();
 
   for (const p of profiles) {
-    const ex = examOf(p);
+    const ex = adminSegmentLabelFromProfile(p);
     const slot = byExam.get(ex) ?? { users: 0, paying: 0, trial: 0, churned: 0 };
     slot.users++;
     if (isPaying(p)) {
@@ -82,7 +77,7 @@ export async function getExamSegmentsSnapshot(): Promise<ExamSegmentsSnapshot | 
     const conversionPct = s.users > 0 ? (s.paying / s.users) * 100 : 0;
     let mrr = 0;
     for (const p of profiles) {
-      if (examOf(p) !== exam || !isPaying(p)) continue;
+      if (adminSegmentLabelFromProfile(p) !== exam || !isPaying(p)) continue;
       if (p.subscription_plan === "monthly") mrr += pricing.smartMonthlyInr;
       else if (p.subscription_plan === "annual") mrr += pricing.smartAnnualInr / 12;
     }

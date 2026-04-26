@@ -3,6 +3,7 @@ import type { Json } from "@/types/supabase";
 import { listAllAuthUsers } from "@/lib/admin/authUsers";
 import { dateKeyIST } from "@/lib/admin/istDates";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
+import { adminSegmentLabelFromProfile } from "@/lib/profileTrackSegment";
 
 export type AcquisitionSnapshot = {
   signupsBySource: { source: string; count: number }[];
@@ -46,13 +47,18 @@ export async function getAcquisitionSnapshot(): Promise<AcquisitionSnapshot | nu
 
   const [authUsers, { data: profs }] = await Promise.all([
     listAllAuthUsers(admin),
-    admin.from("user_profiles").select("signup_attribution, target_exam, primary_exam, user_id, referral_source" as "signup_attribution, target_exam, primary_exam, user_id" as never),
+    admin
+      .from("user_profiles")
+      .select(
+        "signup_attribution, target_exam, primary_exam, selected_track, user_id, referral_source" as never,
+      ),
   ]);
 
   const profiles = ((profs as unknown) ?? []) as {
     signup_attribution: Json | null;
     target_exam: string | null;
     primary_exam: string | null;
+    selected_track: string | null;
     user_id: string | null;
     referral_source?: string | null;
   }[];
@@ -73,7 +79,7 @@ export async function getAcquisitionSnapshot(): Promise<AcquisitionSnapshot | nu
     byDay.set(day, (byDay.get(day) ?? 0) + 1);
 
     const p = uidToProfile.get(u.id);
-    const exam = (p?.target_exam || p?.primary_exam || "Unknown").trim() || "Unknown";
+    const exam = p ? adminSegmentLabelFromProfile(p) : "Unknown";
     byExam.set(exam, (byExam.get(exam) ?? 0) + 1);
 
     if (p?.signup_attribution) withAttr++;

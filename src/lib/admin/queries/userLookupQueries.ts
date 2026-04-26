@@ -1,6 +1,7 @@
 import type { User } from "@supabase/supabase-js";
 
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
+import { adminSegmentLabelFromProfile } from "@/lib/profileTrackSegment";
 
 import type { Json } from "@/types/supabase";
 
@@ -12,6 +13,8 @@ export type UserListRow = {
   subscriptionStatus: string | null;
   subscriptionPlan: string | null;
   hasHadTrial: boolean;
+  /** Exam track (when set) or legacy primary target exam label. */
+  trackOrExam: string;
 };
 
 export async function listUsersForAdmin(
@@ -30,7 +33,7 @@ export async function listUsersForAdmin(
   let query = admin
     .from("user_profiles")
     .select(
-      "user_id, full_name, phone_number, trial_started_at, subscription_status, subscription_plan, has_had_trial",
+      "user_id, full_name, phone_number, trial_started_at, subscription_status, subscription_plan, has_had_trial, selected_track, target_exam, primary_exam",
       { count: "exact" },
     )
     .not("user_id", "is", null);
@@ -51,14 +54,18 @@ export async function listUsersForAdmin(
       subscription_status: string | null;
       subscription_plan: string | null;
       has_had_trial: boolean | null;
-    }[]).map((r) => ({
-      userId: r.user_id,
-      fullName: r.full_name ?? null,
-      phone: r.phone_number ?? null,
-      trialStartedAt: r.trial_started_at ?? null,
-      subscriptionStatus: r.subscription_status ?? null,
-      subscriptionPlan: r.subscription_plan ?? null,
-      hasHadTrial: r.has_had_trial ?? false,
+      selected_track: string | null;
+      target_exam: string | null;
+      primary_exam: string | null;
+    }[]).map((row) => ({
+      userId: row.user_id,
+      fullName: row.full_name ?? null,
+      phone: row.phone_number ?? null,
+      trialStartedAt: row.trial_started_at ?? null,
+      subscriptionStatus: row.subscription_status ?? null,
+      subscriptionPlan: row.subscription_plan ?? null,
+      hasHadTrial: row.has_had_trial ?? false,
+      trackOrExam: adminSegmentLabelFromProfile(row),
     })),
     total: count ?? 0,
   };

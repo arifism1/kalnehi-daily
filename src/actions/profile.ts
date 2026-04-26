@@ -204,7 +204,11 @@ export async function completeOnboarding(fields: {
   selected_track: string;
   /** Ordered exam_name keys the user enabled in their track. */
   enabled_exams_in_track: string[];
-  target_exam_date?: string | null;
+  /**
+   * Per-exam target dates; only exam keys the user filled are included.
+   * Omitted or empty for every exam is allowed.
+   */
+  exam_dates?: Record<string, string> | null;
 }): Promise<UpsertProfileResult> {
   try {
     const supabase = await createSupabaseServerClient();
@@ -221,7 +225,12 @@ export async function completeOnboarding(fields: {
     const cls = fields.class_studying.trim();
     const track = fields.selected_track.trim();
     const enabledExams = fields.enabled_exams_in_track.filter((e) => e.trim());
-    const examDate = fields.target_exam_date?.trim() || null;
+    const rawMap =
+      fields.exam_dates &&
+      typeof fields.exam_dates === "object" &&
+      !Array.isArray(fields.exam_dates)
+        ? (fields.exam_dates as Record<string, string>)
+        : {};
 
     if (!name) return { ok: false, error: "Please enter your name." };
     if (!phone || !/^\d{10}$/.test(phone))
@@ -230,12 +239,27 @@ export async function completeOnboarding(fields: {
     if (!track) return { ok: false, error: "Please choose a track." };
     if (enabledExams.length === 0)
       return { ok: false, error: "Please select at least one exam in your track." };
-    if (examDate && !/^\d{4}-\d{2}-\d{2}$/.test(examDate))
-      return { ok: false, error: "Please enter a valid exam date." };
+
+    const examDatesNormalized: Record<string, string> = {};
+    for (const key of enabledExams) {
+      const v = rawMap[key]?.trim();
+      if (!v) continue;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) {
+        return { ok: false, error: "Please enter a valid date for each exam, or clear the field." };
+      }
+      examDatesNormalized[key] = v;
+    }
+
+    // Legacy single date: first non-empty in track order (same as profile home countdown fallback).
+    const firstDateInOrder =
+      enabledExams.map((k) => examDatesNormalized[k]).find((d) => d) ?? null;
 
     // Derive primary_exam from the first enabled exam for backward compatibility
     // with all consumers that still read user_profiles.primary_exam / target_exam.
     const primaryExam = enabledExams[0]!;
+
+    const examDatesPayload =
+      Object.keys(examDatesNormalized).length > 0 ? examDatesNormalized : null;
 
     const now = new Date().toISOString();
     const patch = {
@@ -246,7 +270,8 @@ export async function completeOnboarding(fields: {
       enabled_exams_in_track: enabledExams,
       primary_exam: primaryExam,
       target_exam: primaryExam,
-      target_exam_date: examDate,
+      target_exam_date: firstDateInOrder,
+      exam_dates: examDatesPayload,
       cuet_domain_subjects: [] as string[],
       upsc_optional_subjects: null,
       mandatory_onboarding_completed_at: now,

@@ -1,5 +1,7 @@
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 
+import { adminSegmentLabelFromProfile } from "@/lib/profileTrackSegment";
+
 export type CohortRow = {
   cohortMonth: string;
   trialStarted: number;
@@ -38,7 +40,7 @@ export async function getRetentionSnapshot(): Promise<RetentionSnapshot | null> 
   const { data } = await admin
     .from("user_profiles")
     .select(
-      "trial_started_at, subscription_status, subscription_end_date, subscription_cancelled_at, subscription_start_date, subscription_plan, target_exam, primary_exam",
+      "trial_started_at, subscription_status, subscription_end_date, subscription_cancelled_at, subscription_start_date, subscription_plan, target_exam, primary_exam, selected_track",
     );
 
   const profiles = (data ?? []) as {
@@ -50,6 +52,7 @@ export async function getRetentionSnapshot(): Promise<RetentionSnapshot | null> 
     subscription_plan: string | null;
     target_exam: string | null;
     primary_exam: string | null;
+    selected_track: string | null;
   }[];
 
   const cohortMap = new Map<string, { total: number; paying: number }>();
@@ -97,14 +100,11 @@ export async function getRetentionSnapshot(): Promise<RetentionSnapshot | null> 
 
   const examKeys = new Set<string>();
   for (const p of profiles) {
-    examKeys.add((p.target_exam || p.primary_exam || "Unknown").trim() || "Unknown");
+    examKeys.add(adminSegmentLabelFromProfile(p));
   }
 
   const churnByExam = [...examKeys].map((exam) => {
-    const subset = profiles.filter((p) => {
-      const e = (p.target_exam || p.primary_exam || "Unknown").trim() || "Unknown";
-      return e === exam;
-    });
+    const subset = profiles.filter((p) => adminSegmentLabelFromProfile(p) === exam);
     const paying = subset.filter(isPaying).length;
     const cancelled = subset.filter(
       (p) =>

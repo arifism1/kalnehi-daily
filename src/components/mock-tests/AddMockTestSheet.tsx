@@ -11,6 +11,7 @@ import {
   mockTestPersistExamName,
   type MockScoreType,
 } from "@/lib/mockTestExamPresets";
+import type { ExamScope } from "@/hooks/useAllExamScopes";
 
 type SelfRating = "strong" | "average" | "weak";
 
@@ -18,24 +19,51 @@ type Props = {
   open: boolean;
   onClose: () => void;
   onSaved: () => void;
-  /** `target_exam` / `primary_exam` from profile — used to load exam-specific defaults. */
-  examName: string;
-  syllabusSubjects: string[];
+  /** All exam scopes from the user's track — drives exam picker and subject list. */
+  examScopes: ExamScope[];
 };
 
 function todayYmd(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+/** Unique subjects from exam rows in stable order. */
+function subjectsFromScope(scope: ExamScope): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const r of scope.rows) {
+    const s = r.subject?.trim();
+    if (s && !seen.has(s)) {
+      seen.add(s);
+      out.push(s);
+    }
+  }
+  return out;
+}
+
 export function AddMockTestSheet({
   open,
   onClose,
   onSaved,
-  examName,
-  syllabusSubjects,
+  examScopes,
 }: Props) {
   const baseId = useId();
   const [step, setStep] = useState<1 | 2>(1);
+
+  // Which exam is selected for this mock test
+  const [selectedExamLabel, setSelectedExamLabel] = useState<string>(
+    () => examScopes[0]?.examLabel ?? "",
+  );
+
+  const selectedScope = useMemo(
+    () => examScopes.find((s) => s.examLabel === selectedExamLabel) ?? examScopes[0],
+    [examScopes, selectedExamLabel],
+  );
+
+  const syllabusSubjects = useMemo(
+    () => (selectedScope ? subjectsFromScope(selectedScope) : []),
+    [selectedScope],
+  );
 
   // Step 1 fields
   const [testName, setTestName] = useState("");
@@ -55,12 +83,15 @@ export function AddMockTestSheet({
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const examPreset = useMemo(() => getMockTestUiPreset(examName || null), [examName]);
+  const examPreset = useMemo(
+    () => getMockTestUiPreset(selectedScope?.examLabel ?? null),
+    [selectedScope],
+  );
 
-  /** Re-seed when the sheet opens or the user’s exam / subject list changes. */
+  /** Re-seed when the sheet opens or the selected exam changes. */
   useEffect(() => {
     if (!open) return;
-    const p = getMockTestUiPreset(examName || null);
+    const p = getMockTestUiPreset(selectedScope?.examLabel ?? null);
     setStep(1);
     setTestName("");
     setTestDate(todayYmd());
@@ -83,19 +114,20 @@ export function AddMockTestSheet({
             max:
               p.defaultScoreType === "percentile"
                 ? ""
-                : getSuggestedSubjectMaxMarks(examName || null, s),
+                : getSuggestedSubjectMaxMarks(selectedScope?.examLabel ?? null, s),
             score: "",
           },
         ]),
       ),
     );
-  }, [open, examName, syllabusSubjects]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, selectedExamLabel]);
 
   const reset = useCallback(() => {
     setStep(1);
     setTestName("");
     setTestDate(todayYmd());
-    const p = getMockTestUiPreset(examName || null);
+    const p = getMockTestUiPreset(selectedScope?.examLabel ?? null);
     setScoreType(p.defaultScoreType);
     setMaxScore(
       p.defaultMaxTotal != null && p.defaultScoreType !== "percentile" ? String(p.defaultMaxTotal) : "",
@@ -106,6 +138,7 @@ export function AddMockTestSheet({
     );
     setSelfRating("");
     setNotes("");
+    setSaveError(null);
     setSubjectScores(
       Object.fromEntries(
         syllabusSubjects.map((s) => [
@@ -114,14 +147,13 @@ export function AddMockTestSheet({
             max:
               p.defaultScoreType === "percentile"
                 ? ""
-                : getSuggestedSubjectMaxMarks(examName || null, s),
+                : getSuggestedSubjectMaxMarks(selectedScope?.examLabel ?? null, s),
             score: "",
           },
         ]),
       ),
     );
-    setSaveError(null);
-  }, [syllabusSubjects, examName]);
+  }, [selectedScope, syllabusSubjects]);
 
   const handleClose = useCallback(() => {
     reset();
@@ -144,7 +176,7 @@ export function AddMockTestSheet({
       const result = await upsertMockTest({
         testDate,
         testName: testName.trim(),
-        examName: mockTestPersistExamName(examName || null),
+        examName: mockTestPersistExamName(selectedScope?.examLabel ?? null),
         scoreType,
         maxScore: maxScore ? Number(maxScore) : null,
         totalScore: totalScore ? Number(totalScore) : null,
@@ -165,7 +197,7 @@ export function AddMockTestSheet({
   }, [
     testDate,
     testName,
-    examName,
+    selectedScope,
     scoreType,
     maxScore,
     totalScore,
@@ -185,6 +217,8 @@ export function AddMockTestSheet({
     "text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-800 dark:text-zinc-200";
   const fieldInput =
     "w-full rounded-xl border border-zinc-300/95 dark:border-zinc-600 bg-[var(--kal-input-bg)] px-3 py-2.5 text-sm text-zinc-950 dark:text-zinc-100 placeholder:text-zinc-500 dark:placeholder:text-zinc-400 outline-none focus:ring-2 focus:ring-kal-accent/50 focus:border-kal-accent/50";
+
+  const isMultiExam = examScopes.length > 1;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
@@ -237,6 +271,27 @@ export function AddMockTestSheet({
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-4 pb-2 [-webkit-overflow-scrolling:touch]">
           {step === 1 ? (
             <>
+              {/* Exam picker — only shown when user has multiple exams in track */}
+              {isMultiExam && (
+                <div className="space-y-1.5">
+                  <label htmlFor={`${baseId}-exam`} className={fieldLabel}>
+                    Exam *
+                  </label>
+                  <select
+                    id={`${baseId}-exam`}
+                    value={selectedExamLabel}
+                    onChange={(e) => setSelectedExamLabel(e.target.value)}
+                    className={clsx(fieldInput, "cursor-pointer")}
+                  >
+                    {examScopes.map((scope) => (
+                      <option key={scope.examLabel} value={scope.examLabel}>
+                        {scope.displayName || scope.examLabel}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               {/* Test Name */}
               <div className="space-y-1.5">
                 <label htmlFor={`${baseId}-name`} className={fieldLabel}>

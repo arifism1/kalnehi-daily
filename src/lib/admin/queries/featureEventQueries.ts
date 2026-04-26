@@ -1,5 +1,7 @@
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 
+import { profileHasExamGoalSet } from "@/lib/profileTrackSegment";
+
 export type FeatureEventRow = {
   feature: string;
   event: string;
@@ -75,7 +77,9 @@ export async function getActivationSnapshot(): Promise<ActivationSnapshot | null
   const since = new Date(Date.now() - 14 * 24 * 3600 * 1000).toISOString();
 
   const [{ data: profiles }, events] = await Promise.all([
-    admin.from("user_profiles").select("mandatory_onboarding_completed_at, target_exam, primary_exam, user_id"),
+    admin
+      .from("user_profiles")
+      .select("mandatory_onboarding_completed_at, target_exam, primary_exam, selected_track, user_id"),
     fetchFeatureEventsSince(since),
   ]);
 
@@ -83,12 +87,13 @@ export async function getActivationSnapshot(): Promise<ActivationSnapshot | null
     mandatory_onboarding_completed_at: string | null;
     target_exam: string | null;
     primary_exam: string | null;
+    selected_track: string | null;
     user_id: string | null;
   }[];
 
   const n = profs.length;
   const onboardingCompleted = profs.filter((p) => p.mandatory_onboarding_completed_at).length;
-  const withTargetExam = profs.filter((p) => p.target_exam || p.primary_exam).length;
+  const withTargetExam = profs.filter((p) => profileHasExamGoalSet(p)).length;
 
   const prepbrainUserCount = new Set(events.filter((e) => e.feature === "prepbrain").map((e) => e.user_id)).size;
   const voiceUserCount = new Set(events.filter((e) => e.feature === "voice").map((e) => e.user_id)).size;

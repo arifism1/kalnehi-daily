@@ -58,6 +58,7 @@ export async function createStudySession(
       throw error;
     }
     revalidatePath("/study-sessions");
+    revalidatePath("/daily-debrief");
     revalidatePath("/daily-log");
     revalidatePath("/progress");
     revalidatePath("/daily-plan");

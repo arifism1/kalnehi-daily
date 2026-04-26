@@ -203,10 +203,10 @@ export function WaitlistJoinClient({ batchNumber, opensAt: _opensAt, opensAtForm
                 </div>
               </div>
 
-              {/* Exam */}
+              {/* Exam / track goal (waitlist still stores a single catalog exam for ops) */}
               <div>
                 <label className="mb-1 block text-xs font-semibold text-kal-text-secondary" htmlFor="wl-exam">
-                  Exam you&apos;re preparing for <span className="text-kal-accent">*</span>
+                  Primary goal (exam or track focus) <span className="text-kal-accent">*</span>
                 </label>
                 <select
                   id="wl-exam"
@@ -215,7 +215,7 @@ export function WaitlistJoinClient({ batchNumber, opensAt: _opensAt, opensAtForm
                   required
                   className="w-full rounded-xl border border-kal-border bg-kal-card px-3.5 py-2.5 text-sm text-kal-text focus:border-kal-accent/50 focus:outline-none focus:ring-1 focus:ring-kal-accent/30"
                 >
-                  <option value="">Select your exam</option>
+                  <option value="">Select your goal</option>
                   {EXAM_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>{o.label}</option>
                   ))}

@@ -49,7 +49,7 @@ export function AdminAcquisitionClient({ data }: { data: AcquisitionSnapshot }) 
       </div>
 
       <div className="rounded-2xl border border-kal-border bg-kal-card/40 p-4">
-        <h2 className="text-sm font-semibold text-kal-text mb-2">Top exams (from profile)</h2>
+        <h2 className="text-sm font-semibold text-kal-text mb-2">Top tracks / exams (from profile)</h2>
         <AdminChart height={280}>
           <BarChart data={data.signupsByExam.slice(0, 12)}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--kal-border)" />
@@ -73,7 +73,7 @@ export function AdminAcquisitionClient({ data }: { data: AcquisitionSnapshot }) 
           <div className="rounded-2xl border border-kal-border bg-kal-card/40 p-4">
             <h2 className="mb-1 text-sm font-semibold text-kal-text">Exams by acquisition source</h2>
             <p className="mb-3 text-xs text-kal-muted">
-              Top exams per source. <span className="font-medium text-kal-accent">instagram_referral</span> = users who arrived via a referral code.
+              Top tracks or exams per source. <span className="font-medium text-kal-accent">instagram_referral</span> = users who arrived via a referral code.
             </p>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {[...grouped.entries()].map(([source, exams]) => {

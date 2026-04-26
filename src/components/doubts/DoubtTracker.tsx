@@ -175,7 +175,7 @@ const VOICE_LANGS: { value: string; label: string }[] = [
 export function DoubtTracker() {
   const baseId = useId();
   const user = useAuthStore((s) => s.user);
-  const { subjects: syllabusSubjects } = useDoubtSyllabusSubjects();
+  const { subjects: syllabusSubjects, subjectsByExam } = useDoubtSyllabusSubjects();
   const { linesForSubject } = useDoubtSyllabusTopicOptions();
   const { buildContextSnapshot } = usePrepBrainContextSnapshot();
   const {
@@ -1062,6 +1062,7 @@ export function DoubtTracker() {
         open={addSheetOpen}
         onClose={() => setAddSheetOpen(false)}
         syllabusSubjects={syllabusSubjects}
+        subjectsByExam={subjectsByExam}
       />
 
       {lightbox && (

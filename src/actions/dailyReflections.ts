@@ -41,6 +41,7 @@ export async function upsertDailyReflection(
 
     if (error) return { ok: false, error: error.message };
 
+    revalidatePath("/daily-debrief");
     revalidatePath("/daily-log");
     return { ok: true, data: data as DailyReflectionRow };
   } catch (err) {

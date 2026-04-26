@@ -99,7 +99,7 @@ const FEATURE_ITEM_BY_ID: Record<string, FeatureItem> = {
   },
   "daily-debrief": {
     id: "daily-debrief",
-    href: "/daily-log",
+    href: "/daily-debrief",
     label: "Daily Debrief",
     icon: NotebookPen,
     staticHint: "3 quick questions",

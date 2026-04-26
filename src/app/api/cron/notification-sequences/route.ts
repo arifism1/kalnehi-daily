@@ -9,6 +9,7 @@
  */
 import { type NextRequest, NextResponse } from "next/server";
 
+import { yourPreparationSubjectPhrase } from "@/lib/profileTrackSegment";
 import { verifyCronSecret } from "@/lib/verifyCronSecret";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 import { checkExpiredTrials } from "@/lib/waitlist/batchEngine";
@@ -307,13 +308,22 @@ export async function GET(req: NextRequest) {
       // Build a personal insight from their prepbrain conversations.
       const { data: prof } = await admin
         .from("user_profiles")
-        .select("target_exam, welcome_ai_tokens_used")
+        .select("target_exam, primary_exam, selected_track, welcome_ai_tokens_used")
         .eq("user_id", uid)
         .maybeSingle();
 
-      const p = prof as { target_exam?: string | null; welcome_ai_tokens_used?: number } | null;
-      const exam = p?.target_exam ?? "your exam";
-      const insight = `Your ${exam} preparation was interrupted. Based on your study sessions and Mastermind usage, your consistency was building — and that momentum is still recoverable.`;
+      const p = prof as {
+        target_exam?: string | null;
+        primary_exam?: string | null;
+        selected_track?: string | null;
+        welcome_ai_tokens_used?: number;
+      } | null;
+      const head = yourPreparationSubjectPhrase({
+        selected_track: p?.selected_track,
+        target_exam: p?.target_exam,
+        primary_exam: p?.primary_exam,
+      });
+      const insight = `${head} was interrupted. Based on your study sessions and Mastermind usage, your consistency was building — and that momentum is still recoverable.`;
 
       await sendRetargetingD14({ email, insight });
       d14Sent++;

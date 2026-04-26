@@ -24,6 +24,8 @@ import {
   type DailyReflectionRow,
 } from "@/actions/dailyReflections";
 
+import { ReflectionHistoryList } from "./ReflectionHistoryList";
+
 type Field = "finished_today" | "skipped_today" | "tomorrow_priority";
 
 const QUESTIONS: {
@@ -70,11 +72,14 @@ function formatDate(dateStr: string): string {
 export type DailyReflectionClientProps = {
   collapsible?: boolean;
   defaultExpanded?: boolean;
+  /** When false, skip inline "Recent reflections" (e.g. full Daily Debrief page has its own section). */
+  showInlineRecentHistory?: boolean;
 };
 
 export function DailyReflectionClient({
   collapsible = false,
   defaultExpanded,
+  showInlineRecentHistory = true,
 }: DailyReflectionClientProps) {
   const today = useCalendarDate();
   const [panelOpen, setPanelOpen] = useState(
@@ -95,14 +100,11 @@ export function DailyReflectionClient({
   const [activeVoiceField, setActiveVoiceField] = useState<Field | null>(null);
   const [voicePreview, setVoicePreview] = useState("");
 
-  // Load today's reflection + recent history
+  // Load today's reflection + optional recent history
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      const [todayResult, historyResult] = await Promise.all([
-        getTodayReflection(today),
-        getRecentReflections(8),
-      ]);
+      const todayResult = await getTodayReflection(today);
       if (cancelled) return;
       if (todayResult.ok && todayResult.data) {
         setSavedToday(todayResult.data);
@@ -115,19 +117,25 @@ export function DailyReflectionClient({
       } else {
         setIsEditing(true);
       }
-      if (historyResult.ok) {
-        setRecentHistory(
-          historyResult.data
-            .filter((r) => r.reflection_date !== today)
-            .sort((a, b) => b.reflection_date.localeCompare(a.reflection_date)),
-        );
+      if (showInlineRecentHistory) {
+        const historyResult = await getRecentReflections(8);
+        if (cancelled) return;
+        if (historyResult.ok) {
+          setRecentHistory(
+            historyResult.data
+              .filter((r) => r.reflection_date !== today)
+              .sort((a, b) => b.reflection_date.localeCompare(a.reflection_date)),
+          );
+        }
+      } else {
+        setRecentHistory([]);
       }
       setLoadingInit(false);
     }
     setLoadingInit(true);
-    load();
+    void load();
     return () => { cancelled = true; };
-  }, [today]);
+  }, [today, showInlineRecentHistory]);
 
   const voiceRef = useRef<Field | null>(null);
   voiceRef.current = activeVoiceField;
@@ -190,18 +198,23 @@ export function DailyReflectionClient({
       }
       setSavedToday(result.data);
       setIsEditing(false);
-      const histResult = await getRecentReflections(8);
-      if (histResult.ok) {
-        setRecentHistory(
-          histResult.data
-            .filter((r) => r.reflection_date !== today)
-            .sort((a, b) => b.reflection_date.localeCompare(a.reflection_date)),
-        );
+      if (showInlineRecentHistory) {
+        const histResult = await getRecentReflections(8);
+        if (histResult.ok) {
+          setRecentHistory(
+            histResult.data
+              .filter((r) => r.reflection_date !== today)
+              .sort((a, b) => b.reflection_date.localeCompare(a.reflection_date)),
+          );
+        }
+      }
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("kalnehi-daily-reflection-updated"));
       }
     } finally {
       setIsSaving(false);
     }
-  }, [draft, today]);
+  }, [draft, today, showInlineRecentHistory]);
 
   if (loadingInit) {
     return (
@@ -345,38 +358,10 @@ export function DailyReflectionClient({
   );
 
   const historySection =
-    recentHistory.length > 0 ? (
+    showInlineRecentHistory && recentHistory.length > 0 ? (
       <section className="space-y-3">
         <h2 className="kal-section-heading text-sm">Recent reflections</h2>
-        <ul className="space-y-2">
-          {recentHistory.map((r) => (
-            <li key={r.id} className="kal-glass-subtle space-y-2 rounded-xl p-4">
-              <p className="text-xs font-semibold text-kal-text-secondary">
-                {formatDate(r.reflection_date)}
-              </p>
-              <div className="grid gap-1">
-                {r.finished_today && (
-                  <p className="text-sm text-kal-text">
-                    <span className="font-medium text-emerald-600 dark:text-emerald-400">Finished: </span>
-                    {r.finished_today}
-                  </p>
-                )}
-                {r.skipped_today && (
-                  <p className="text-sm text-kal-text">
-                    <span className="font-medium text-amber-600 dark:text-amber-400">Skipped: </span>
-                    {r.skipped_today}
-                  </p>
-                )}
-                {r.tomorrow_priority && (
-                  <p className="text-sm text-kal-text">
-                    <span className="font-medium text-violet-600 dark:text-violet-400">Planned: </span>
-                    {r.tomorrow_priority}
-                  </p>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
+        <ReflectionHistoryList rows={recentHistory} />
       </section>
     ) : null;
 

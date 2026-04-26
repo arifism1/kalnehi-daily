@@ -28,6 +28,7 @@ const VALID_NAV_PATHS = new Set([
   "/feedback",
   // Planning & execution
   "/daily-plan",
+  "/daily-debrief",
   "/daily-log",
   "/daily-engine",
   "/dictate-day",
@@ -104,7 +105,7 @@ Parse the user voice command and return ONLY a valid JSON object — no markdown
 {"intent":"navigate","path":"<valid path>","response_text":"..."}
 Valid paths:
   Core: /home, /profile, /settings, /notifications, /my-subscription, /feedback
-  Planning: /daily-plan, /daily-log, /daily-engine, /dictate-day, /saved-plans, /missed-tasks, /calendar, /timer, /study-sessions, /study-camera, /paste-handwritten
+  Planning: /daily-plan, /daily-debrief (canonical; /daily-log redirects), /daily-engine, /dictate-day, /saved-plans, /missed-tasks, /calendar, /timer, /study-sessions, /study-camera, /paste-handwritten
   Planner: /planner, /planner/habits, /planner/schedule, /planner/weekly, /planner/todos, /planner/routine, /planner/productivity
   Track: /progress, /consistency-tracker, /heatmap, /marks-engine, /my-target, /target-score-blueprint
   Revise: /revision-reminders, /syllabus, /doubts, /mastermind

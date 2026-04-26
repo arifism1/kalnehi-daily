@@ -1,7 +1,5 @@
 "use server";
 
-import { randomUUID } from "node:crypto";
-
 import { revalidatePath } from "next/cache";
 
 import { formatSupabaseError } from "@/lib/supabase";
@@ -197,7 +195,6 @@ export async function addCustomSyllabusItem(fields: {
       return { ok: false, error: USER_ERROR.tryAgain };
     }
 
-    const customRowId = randomUUID();
     const now = new Date().toISOString();
 
     const { error } = await supabase.from("user_syllabus_customizations").insert({

@@ -16,13 +16,10 @@ import { useCallback, useMemo, useRef, useState } from "react";
 
 import { SyllabusComingSoon } from "@/components/syllabus/SyllabusComingSoon";
 import { TransientNotice } from "@/components/ui/TransientNotice";
-import { useSyllabusTracker } from "@/hooks/useSyllabusTracker";
-import { useTargetExamDisplay } from "@/hooks/useTargetExamDisplay";
+import { useAllExamScopes, type ExamScope } from "@/hooks/useAllExamScopes";
 import { shouldShowSyllabusComingSoon } from "@/lib/examProfile";
 import { chapterKey } from "@/lib/syllabusGrouping";
-import {
-  syllabusHasCatalogMarksData,
-} from "@/lib/syllabusRollup";
+import { syllabusHasCatalogMarksData } from "@/lib/syllabusRollup";
 import type { TargetBoostRecommendation } from "@/lib/targetScoreEngine";
 import {
   estimateExamMarksLinear,
@@ -45,40 +42,20 @@ const DISCLAIMER =
 
 type TabId = "gain" | "reach";
 
-export function TargetScoreBlueprintClient() {
+// ---------------------------------------------------------------------------
+// Per-exam panel — contains all state / logic for one exam scope
+// ---------------------------------------------------------------------------
+
+function BlueprintExamPanel({ scope }: { scope: ExamScope }) {
   const router = useRouter();
-  const user = useAuthStore((s) => s.user);
   const targetInputRef = useRef<HTMLDivElement | null>(null);
   const [activeTab, setActiveTab] = useState<TabId>("gain");
-  /** After user clicks Recommend on Reach tab, show score band, mode, and table. */
   const [reachSessionActive, setReachSessionActive] = useState(false);
   const [showReachMyTargetSuccess, setShowReachMyTargetSuccess] = useState(false);
-  const { examDisplayName, examLabelLoading } = useTargetExamDisplay();
 
-  const {
-    rows,
-    rollup,
-    maxScore,
-    loading,
-    error,
-    targetExamLabel,
-    catalogExamKey,
-    cuetAwaitingDomainSelection,
-  } = useSyllabusTracker();
+  const { rows, rollup, maxScore, catalogExamKey, cuetDomainSubjects } = scope;
 
-  const syllabusComingSoon = shouldShowSyllabusComingSoon({
-    examLabel: targetExamLabel,
-    examLabelLoading,
-    syllabusLoading: loading,
-    syllabusError: error,
-    syllabusRowCount: rows.length,
-    cuetAwaitingDomainSelection,
-  });
-
-  const hasMarksData = useMemo(
-    () => syllabusHasCatalogMarksData(rows),
-    [rows],
-  );
+  const hasMarksData = useMemo(() => syllabusHasCatalogMarksData(rows), [rows]);
 
   const [targetStr, setTargetStr] = useState("");
   const [boostTargetStr, setBoostTargetStr] = useState("");
@@ -89,9 +66,7 @@ export function TargetScoreBlueprintClient() {
   const [savingBoostToMyTarget, setSavingBoostToMyTarget] = useState(false);
   const [boostRecommendation, setBoostRecommendation] =
     useState<TargetBoostRecommendation | null>(null);
-  /** True after user saves this boost run to recommendation history (until a new run). */
   const [boostSavedToMyTarget, setBoostSavedToMyTarget] = useState(false);
-  /** Calm follow-up strip: View My Targets. */
   const [showBoostMyTargetSuccess, setShowBoostMyTargetSuccess] = useState(false);
 
   const parsedTarget = useMemo(() => {
@@ -241,7 +216,7 @@ export function TargetScoreBlueprintClient() {
     }
 
     setBoostRecommendation(res.recommendation);
-    setNotice("Here are your best chapters to focus on. Save to My Target when you’re ready.");
+    setNotice("Here are your best chapters to focus on. Save to My Target when you're ready.");
   }, [catalogExamKey, parsedBoostTarget, rollup.chapters]);
 
   const onSaveBoostToMyTarget = useCallback(async () => {
@@ -275,57 +250,8 @@ export function TargetScoreBlueprintClient() {
     router.prefetch("/my-target");
   }, [catalogExamKey, boostRecommendation, estimate.estimatedExamMarks, maxScore, router]);
 
-  if (!user) {
-    return (
-      <p className="mx-auto max-w-lg rounded-xl border border-kal-warn-border bg-kal-warn-soft px-4 py-3 text-sm text-kal-warn-text">
-        Sign in to use Target Score Blueprint.
-      </p>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center gap-2 text-kal-muted">
-        <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
-        Loading your syllabus…
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <p className="rounded-xl border border-kal-accent/40 bg-kal-accent-soft/40 px-4 py-3 text-sm text-kal-text">
-        {error}
-      </p>
-    );
-  }
-
-  if (!loading && !error && cuetAwaitingDomainSelection) {
-    return (
-      <div className="mx-auto max-w-lg rounded-2xl border border-kal-warn-border bg-kal-warn-soft px-6 py-8 text-center dark:border-amber-500/25 dark:bg-amber-950/20">
-        <BookMarked
-          className="mx-auto h-10 w-10 text-kal-warn-text dark:text-amber-400/90"
-          aria-hidden
-        />
-        <h2 className="kal-section-heading mt-4">
-          Choose your CUET domain subjects
-        </h2>
-        <p className="mt-2 text-sm leading-relaxed text-kal-muted">
-          Select domain subjects in Profile to load your CUET syllabus — then
-          Target Score Blueprint can use chapter weights.
-        </p>
-      </div>
-    );
-  }
-
-  if (syllabusComingSoon && targetExamLabel) {
-    return (
-      <SyllabusComingSoon
-        examLabel={examDisplayName || targetExamLabel}
-        className="pb-8 pt-2"
-      />
-    );
-  }
+  const showBlueprintTable = reachSessionActive && mode != null && blueprint != null;
+  const saveSuccessVisible = showBoostMyTargetSuccess || showReachMyTargetSuccess;
 
   if (!hasMarksData) {
     return (
@@ -334,59 +260,17 @@ export function TargetScoreBlueprintClient() {
         <p className="text-sm leading-relaxed text-kal-text">
           Marks distribution data is not yet available for this exam. Feature will be enabled soon.
         </p>
-        {targetExamLabel ? (
-          <p className="mt-3 text-xs text-kal-muted">
-            Target exam:{" "}
-            <span className="font-semibold text-kal-text">
-              {examDisplayName || targetExamLabel}
-            </span>
-          </p>
-        ) : null}
+        <p className="mt-3 text-xs text-kal-muted">
+          Exam:{" "}
+          <span className="font-semibold text-kal-text">{scope.displayName || scope.examLabel}</span>
+        </p>
       </div>
     );
   }
 
-  const examTitle = examDisplayName || targetExamLabel || "Your exam";
-  const showBlueprintTable =
-    reachSessionActive && mode != null && blueprint != null;
-  const saveSuccessVisible = showBoostMyTargetSuccess || showReachMyTargetSuccess;
-
   return (
-    <div className="mx-auto max-w-2xl space-y-8 pb-20 pt-2 sm:pt-6 sm:pb-24">
-      <Link
-        href="/"
-        className="inline-flex items-center gap-2 text-sm font-medium text-kal-muted transition-colors hover:text-kal-accent"
-      >
-        <ArrowLeft className="h-4 w-4" aria-hidden />
-        Home
-      </Link>
-
-      <header className="space-y-3 text-center sm:text-left">
-        <h1 className="kal-feature-title">
-          Target score blueprint
-        </h1>
-        <p className="text-sm leading-relaxed text-kal-muted">
-          A calm plan for{" "}
-          <span className="font-medium text-kal-text">{examTitle}</span>
-          {maxScore > 0 ? (
-            <>
-              {" "}
-              (out of <span className="tabular-nums font-medium text-kal-text">{maxScore}</span>{" "}
-              marks)
-            </>
-          ) : null}
-          . Choose a path below, then see your next best chapters to study.
-        </p>
-        <p>
-          <Link
-            href="/my-target"
-            className="text-sm font-semibold text-kal-accent underline-offset-4 hover:underline"
-          >
-            View my targets
-          </Link>
-        </p>
-      </header>
-
+    <div className="space-y-8">
+      {/* Inner tab bar: Gain / Reach */}
       <div
         className="flex flex-col gap-1 rounded-2xl border border-kal-border/70 bg-kal-card/30 p-1.5 shadow-sm backdrop-blur-md sm:flex-row"
         role="tablist"
@@ -406,7 +290,7 @@ export function TargetScoreBlueprintClient() {
               : "text-kal-muted hover:bg-kal-card/50 hover:text-kal-text"
           }`}
         >
-          <          LayoutGrid className="h-4 w-4 shrink-0" aria-hidden />
+          <LayoutGrid className="h-4 w-4 shrink-0" aria-hidden />
           Gain Extra Marks
         </button>
         <button
@@ -472,9 +356,7 @@ export function TargetScoreBlueprintClient() {
         >
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 space-y-2">
-              <h2 className="kal-section-heading">
-                Gain Extra Marks
-              </h2>
+              <h2 className="kal-section-heading">Gain Extra Marks</h2>
               <p className="text-sm leading-relaxed text-kal-muted">
                 Tell me how many extra marks you want. I&apos;ll rank chapters by return on effort
                 after your current chapter progress — high-weight topics you still need to finish
@@ -488,11 +370,11 @@ export function TargetScoreBlueprintClient() {
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-4">
             <div className="w-full min-w-0 sm:max-w-[14rem]">
-              <label htmlFor="boost-target" className="text-xs font-medium text-kal-muted">
+              <label htmlFor={`boost-target-${scope.examLabel}`} className="text-xs font-medium text-kal-muted">
                 How many extra marks are you aiming for?
               </label>
               <input
-                id="boost-target"
+                id={`boost-target-${scope.examLabel}`}
                 type="number"
                 min={1}
                 step={1}
@@ -645,9 +527,7 @@ export function TargetScoreBlueprintClient() {
             className="kal-glass-panel space-y-6 rounded-3xl border border-kal-border/80 bg-kal-card/40 p-6 shadow-sm backdrop-blur-md sm:p-8"
           >
             <div className="space-y-2">
-              <h2 className="kal-section-heading">
-                Reach My Target Score
-              </h2>
+              <h2 className="kal-section-heading">Reach My Target Score</h2>
               <p className="text-sm leading-relaxed text-kal-muted">
                 Tell me your total target score
                 {maxScore > 0
@@ -660,12 +540,12 @@ export function TargetScoreBlueprintClient() {
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-4">
               <div className="w-full min-w-0 sm:max-w-[14rem]">
-                <label htmlFor="target-marks" className="text-xs font-medium text-kal-muted">
+                <label htmlFor={`target-marks-${scope.examLabel}`} className="text-xs font-medium text-kal-muted">
                   Target score
                 </label>
                 <div className="mt-2 flex flex-wrap items-end gap-2 sm:gap-3">
                   <input
-                    id="target-marks"
+                    id={`target-marks-${scope.examLabel}`}
                     type="number"
                     min={0}
                     max={maxScore}
@@ -772,7 +652,7 @@ export function TargetScoreBlueprintClient() {
                 {blueprint.selected.length === 0 ? (
                   <p className="px-4 py-10 text-center text-sm text-kal-muted sm:px-6">
                     {(thresholdBudget ?? 0) <= 0
-                      ? "It looks like you are already in range for the lower part of that goal. Try a higher number, or pick “total target” to see the heaviest chapters in one list."
+                      ? "It looks like you are already in range for the lower part of that goal. Try a higher number, or pick \u201ctotal target\u201d to see the heaviest chapters in one list."
                       : "No chapters to show for this run."}
                   </p>
                 ) : (
@@ -885,6 +765,166 @@ export function TargetScoreBlueprintClient() {
             </>
           ) : null}
         </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Outer shell — handles loading, exam-level tabs, and per-exam panel routing
+// ---------------------------------------------------------------------------
+
+export function TargetScoreBlueprintClient() {
+  const user = useAuthStore((s) => s.user);
+  const { examScopes, loading, error, isMultiExam } = useAllExamScopes();
+  const [activeExamIdx, setActiveExamIdx] = useState(0);
+
+  // Clamp index in case track changes
+  const safeIdx = Math.min(activeExamIdx, Math.max(0, examScopes.length - 1));
+  const activeScope = examScopes[safeIdx] as ExamScope | undefined;
+
+  if (!user) {
+    return (
+      <p className="mx-auto max-w-lg rounded-xl border border-kal-warn-border bg-kal-warn-soft px-4 py-3 text-sm text-kal-warn-text">
+        Sign in to use Target Score Blueprint.
+      </p>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 text-kal-muted">
+        <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+        Loading your syllabus…
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <p className="rounded-xl border border-kal-accent/40 bg-kal-accent-soft/40 px-4 py-3 text-sm text-kal-text">
+        {error}
+      </p>
+    );
+  }
+
+  // Check CUET domain selection for the active scope
+  const cuetAwaiting =
+    activeScope &&
+    activeScope.examLabel?.toLowerCase().includes("cuet") &&
+    activeScope.cuetDomainSubjects.length === 0;
+
+  if (cuetAwaiting) {
+    return (
+      <div className="mx-auto max-w-lg rounded-2xl border border-kal-warn-border bg-kal-warn-soft px-6 py-8 text-center dark:border-amber-500/25 dark:bg-amber-950/20">
+        <BookMarked
+          className="mx-auto h-10 w-10 text-kal-warn-text dark:text-amber-400/90"
+          aria-hidden
+        />
+        <h2 className="kal-section-heading mt-4">Choose your CUET domain subjects</h2>
+        <p className="mt-2 text-sm leading-relaxed text-kal-muted">
+          Select domain subjects in Profile to load your CUET syllabus — then Target Score Blueprint
+          can use chapter weights.
+        </p>
+      </div>
+    );
+  }
+
+  // Check "coming soon" for the active scope
+  if (
+    activeScope &&
+    shouldShowSyllabusComingSoon({
+      examLabel: activeScope.examLabel,
+      examLabelLoading: false,
+      syllabusLoading: false,
+      syllabusError: null,
+      syllabusRowCount: activeScope.rows.length,
+      cuetAwaitingDomainSelection: false,
+    })
+  ) {
+    return (
+      <SyllabusComingSoon
+        examLabel={activeScope.displayName || activeScope.examLabel}
+        className="pb-8 pt-2"
+      />
+    );
+  }
+
+  const titleExam =
+    isMultiExam
+      ? examScopes.map((s) => s.displayName || s.examLabel).join(" · ")
+      : (activeScope?.displayName || activeScope?.examLabel || "Your exam");
+
+  const titleMaxScore = isMultiExam ? null : (activeScope?.maxScore ?? 0);
+
+  return (
+    <div className="mx-auto max-w-2xl space-y-8 pb-20 pt-2 sm:pt-6 sm:pb-24">
+      <Link
+        href="/"
+        className="inline-flex items-center gap-2 text-sm font-medium text-kal-muted transition-colors hover:text-kal-accent"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden />
+        Home
+      </Link>
+
+      <header className="space-y-3 text-center sm:text-left">
+        <h1 className="kal-feature-title">Target score blueprint</h1>
+        <p className="text-sm leading-relaxed text-kal-muted">
+          A calm plan for{" "}
+          <span className="font-medium text-kal-text">{titleExam}</span>
+          {!isMultiExam && titleMaxScore && titleMaxScore > 0 ? (
+            <>
+              {" "}(out of{" "}
+              <span className="tabular-nums font-medium text-kal-text">{titleMaxScore}</span>{" "}
+              marks)
+            </>
+          ) : null}
+          . Choose a path below, then see your next best chapters to study.
+        </p>
+        <p>
+          <Link
+            href="/my-target"
+            className="text-sm font-semibold text-kal-accent underline-offset-4 hover:underline"
+          >
+            View my targets
+          </Link>
+        </p>
+      </header>
+
+      {/* Exam-level tab bar — only shown for multi-exam users */}
+      {isMultiExam ? (
+        <div
+          className="flex flex-wrap gap-2"
+          role="tablist"
+          aria-label="Select exam"
+        >
+          {examScopes.map((scope, idx) => (
+            <button
+              key={scope.examLabel}
+              type="button"
+              role="tab"
+              aria-selected={idx === safeIdx}
+              onClick={() => setActiveExamIdx(idx)}
+              className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
+                idx === safeIdx
+                  ? "border-kal-accent bg-kal-accent text-kal-accent-foreground shadow-sm"
+                  : "border-kal-border bg-kal-card/40 text-kal-muted hover:border-kal-accent/50 hover:text-kal-text"
+              }`}
+            >
+              {scope.displayName || scope.examLabel}
+              {scope.maxScore > 0 ? (
+                <span className="ml-1.5 text-xs opacity-70">/{scope.maxScore}</span>
+              ) : null}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
+      {/* Per-exam panel — key ensures state resets when user switches exam */}
+      {activeScope ? (
+        <BlueprintExamPanel key={activeScope.examLabel} scope={activeScope} />
+      ) : (
+        <p className="text-sm text-kal-muted">No exam data available. Set up your exam in Profile.</p>
       )}
     </div>
   );

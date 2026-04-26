@@ -125,6 +125,7 @@ export async function runVoiceDictationPipeline(
   }
 
   revalidatePath("/dictate-day");
+  revalidatePath("/daily-debrief");
   revalidatePath("/daily-log");
 
   return { ok: true, mode: "parsed", entryIds, preview };
@@ -183,6 +184,7 @@ export async function saveRawVoiceNote(
   }
 
   revalidatePath("/dictate-day");
+  revalidatePath("/daily-debrief");
   revalidatePath("/daily-log");
 
   return {
@@ -313,6 +315,7 @@ export async function saveVoiceDraftToTimeline(
   }
 
   revalidatePath("/dictate-day");
+  revalidatePath("/daily-debrief");
   revalidatePath("/daily-log");
   return { ok: true, entryIds };
 }

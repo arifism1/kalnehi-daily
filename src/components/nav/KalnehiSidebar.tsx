@@ -63,7 +63,7 @@ const SIDEBAR_LINK_BY_ID: Record<string, SidebarItem> = {
   "dictate-my-day": { href: "/daily-plan?open=dictate", label: "Dictate My Day", icon: Mic },
   timer: { href: "/timer", label: "Timer", icon: Clock },
   "missed-tasks": { href: "/missed-tasks", label: "Missed Tasks", icon: LineChart },
-  "daily-debrief": { href: "/daily-log", label: "Daily Debrief", icon: NotebookPen },
+  "daily-debrief": { href: "/daily-debrief", label: "Daily Debrief", icon: NotebookPen },
   "shareable-recap": { href: "/recap", label: "Today's Recap", icon: Clapperboard },
   "saved-daily-plans": { href: "/saved-plans", label: "Saved Daily Plans", icon: CalendarDays },
   "consistency-tracker": { href: "/consistency-tracker", label: "Consistency Tracker", icon: BarChart3 },

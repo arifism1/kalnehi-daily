@@ -9,7 +9,7 @@ import {
   Star,
   Trash2,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   getMockTests,
@@ -17,8 +17,7 @@ import {
   type MockTestWithScores,
 } from "@/actions/mockTests";
 import { AddMockTestSheet } from "@/components/mock-tests/AddMockTestSheet";
-import { useDoubtSyllabusSubjects } from "@/hooks/useDoubtSyllabusSubjects";
-import { usePrimaryExamLabel } from "@/hooks/usePrimaryExamLabel";
+import { useAllExamScopes } from "@/hooks/useAllExamScopes";
 
 const SELF_RATING_META = {
   strong: { label: "Strong", class: "text-emerald-600 dark:text-emerald-400" },
@@ -50,9 +49,10 @@ type TestCardProps = {
   test: MockTestWithScores;
   onDelete: (id: string) => Promise<void>;
   deleting: boolean;
+  showExamBadge: boolean;
 };
 
-function TestCard({ test, onDelete, deleting }: TestCardProps) {
+function TestCard({ test, onDelete, deleting, showExamBadge }: TestCardProps) {
   const [expanded, setExpanded] = useState(false);
   const rating = test.self_rating as keyof typeof SELF_RATING_META | null;
 
@@ -64,7 +64,14 @@ function TestCard({ test, onDelete, deleting }: TestCardProps) {
             <p className="font-semibold text-kal-text text-sm truncate">
               {test.test_name || "Untitled Test"}
             </p>
-            <p className="text-xs text-kal-text-secondary mt-0.5">{formatDate(test.test_date)}</p>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
+              <p className="text-xs text-kal-text-secondary">{formatDate(test.test_date)}</p>
+              {showExamBadge && test.exam_name ? (
+                <span className="inline-block rounded-full border border-kal-accent/35 bg-kal-accent/10 px-2 py-0.5 text-[0.62rem] font-semibold text-kal-accent leading-none">
+                  {test.exam_name}
+                </span>
+              ) : null}
+            </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {rating && (
@@ -147,9 +154,9 @@ export function MockTestsClient() {
   const [tests, setTests] = useState<MockTestWithScores[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [filterExam, setFilterExam] = useState<string>("all");
 
-  const { subjects } = useDoubtSyllabusSubjects();
-  const { examLabel } = usePrimaryExamLabel();
+  const { examScopes, isMultiExam } = useAllExamScopes();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -167,10 +174,15 @@ export function MockTestsClient() {
     void load();
   }, [load]);
 
-  // Build a simple trend insight
-  const trendInsight = (() => {
-    if (tests.length < 2) return null;
-    const recent = tests.slice(0, Math.min(5, tests.length));
+  const filteredTests = useMemo(() => {
+    if (filterExam === "all") return tests;
+    return tests.filter((t) => t.exam_name === filterExam);
+  }, [tests, filterExam]);
+
+  // Build a simple trend insight (only show for single-exam filter)
+  const trendInsight = useMemo(() => {
+    if (filteredTests.length < 2 || filterExam === "all") return null;
+    const recent = filteredTests.slice(0, Math.min(5, filteredTests.length));
     const scores = recent
       .map((t) => {
         if (t.total_score === null) return null;
@@ -186,7 +198,10 @@ export function MockTestsClient() {
     return diff > 0
       ? `Up ${Math.round(diff)} points/% over your last ${scores.length} tests.`
       : `Down ${Math.round(Math.abs(diff))} points/% over your last ${scores.length} tests. Review error patterns.`;
-  })();
+  }, [filteredTests, filterExam]);
+
+  // Subtitle: all exam display names joined
+  const examSubtitle = examScopes.map((s) => s.displayName || s.examLabel).join(" · ");
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -195,7 +210,7 @@ export function MockTestsClient() {
         <div>
           <h1 className="kal-hero-heading">Mock Test Tracker</h1>
           <p className="text-sm text-kal-text-secondary mt-0.5">
-            {examLabel || "Your exam"} · score trends by subject
+            {examSubtitle || "Your exam"} · score trends by subject
           </p>
         </div>
         <button
@@ -206,6 +221,37 @@ export function MockTestsClient() {
           Log test
         </button>
       </div>
+
+      {/* Exam filter chips — only shown for multi-exam users */}
+      {isMultiExam && (
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by exam">
+          <button
+            onClick={() => setFilterExam("all")}
+            className={clsx(
+              "rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
+              filterExam === "all"
+                ? "border-kal-accent bg-kal-accent text-white"
+                : "border-kal-border bg-kal-card/40 text-kal-muted hover:border-kal-accent/50 hover:text-kal-text",
+            )}
+          >
+            All
+          </button>
+          {examScopes.map((scope) => (
+            <button
+              key={scope.examLabel}
+              onClick={() => setFilterExam(scope.examLabel)}
+              className={clsx(
+                "rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                filterExam === scope.examLabel
+                  ? "border-kal-accent bg-kal-accent text-white"
+                  : "border-kal-border bg-kal-card/40 text-kal-muted hover:border-kal-accent/50 hover:text-kal-text",
+              )}
+            >
+              {scope.displayName || scope.examLabel}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Trend insight */}
       {trendInsight && (
@@ -220,20 +266,23 @@ export function MockTestsClient() {
         <div className="flex min-h-[200px] items-center justify-center">
           <Loader2 className="h-6 w-6 animate-spin text-kal-accent/60" />
         </div>
-      ) : tests.length === 0 ? (
+      ) : filteredTests.length === 0 ? (
         <div className="py-12 text-center space-y-2">
           <p className="text-sm text-kal-text-secondary">
-            No tests logged yet. Tap "Log test" to add your first mock.
+            {filterExam === "all"
+              ? "No tests logged yet. Tap \u201cLog test\u201d to add your first mock."
+              : "No tests logged for this exam yet."}
           </p>
         </div>
       ) : (
         <ul className="space-y-3">
-          {tests.map((test) => (
+          {filteredTests.map((test) => (
             <TestCard
               key={test.id}
               test={test}
               onDelete={handleDelete}
               deleting={deleting === test.id}
+              showExamBadge={isMultiExam}
             />
           ))}
         </ul>
@@ -243,8 +292,7 @@ export function MockTestsClient() {
         open={addOpen}
         onClose={() => setAddOpen(false)}
         onSaved={() => void load()}
-        examName={examLabel || ""}
-        syllabusSubjects={subjects}
+        examScopes={examScopes}
       />
     </div>
   );
