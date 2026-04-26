@@ -85,7 +85,7 @@ export function MorningWelcomeScreen({
           role="dialog"
           aria-modal
           aria-labelledby={labelId}
-          className="fixed inset-0 z-[200] flex cursor-default justify-center overflow-x-hidden overflow-y-auto bg-[#FAF6F1]"
+          className="fixed inset-0 z-[200] flex cursor-default justify-center overflow-x-hidden overflow-y-auto bg-[#FAF6F1] sm:items-center sm:bg-black/50 sm:backdrop-blur-sm"
           style={{ color: DARK }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -95,7 +95,7 @@ export function MorningWelcomeScreen({
             close();
           }}
         >
-          <div className="flex min-h-dvh w-full max-w-[390px] flex-col">
+          <div className="flex min-h-dvh w-full max-w-[390px] flex-col sm:min-h-0 sm:rounded-3xl sm:overflow-hidden sm:bg-[#FAF6F1] sm:shadow-2xl sm:my-8">
             <div className="flex items-start justify-end px-4 pt-[max(0.75rem,env(safe-area-inset-top))]">
               <button
                 type="button"

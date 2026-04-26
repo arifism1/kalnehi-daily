@@ -7,7 +7,7 @@ import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { MorningWelcomeScreen } from "@/components/welcome/MorningWelcomeScreen";
 import { useMorningWelcomeData } from "@/components/welcome/hooks/useWelcomeScreenData";
-import { useWelcomeScreenStore } from "@/store/useWelcomeScreenStore";
+import { isMorningTimeWindow, useWelcomeScreenStore } from "@/store/useWelcomeScreenStore";
 
 export function MorningWelcomeRouteClient() {
   const router = useRouter();
@@ -24,7 +24,7 @@ export function MorningWelcomeRouteClient() {
 
   useEffect(() => {
     if (subscriptionLoading) return;
-    if (!welcomeEligible) {
+    if (!welcomeEligible || !isMorningTimeWindow()) {
       router.replace("/home");
     }
   }, [subscriptionLoading, welcomeEligible, router]);

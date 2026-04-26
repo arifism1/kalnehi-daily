@@ -570,10 +570,35 @@ export function ProfileForm() {
               if (e.target === e.currentTarget) setChangeTrackOpen(false);
             }}
           >
-            <div className="w-full max-w-lg overflow-y-auto rounded-2xl border border-kal-border bg-kal-bg-elevated p-5 shadow-xl sm:max-h-[80vh]">
-              <h2 className="mb-4 text-base font-semibold text-kal-text">
-                Change Track
-              </h2>
+            <div className="w-full max-w-lg overflow-y-auto rounded-2xl border border-kal-border bg-kal-bg-elevated p-5 shadow-xl max-h-[85vh]">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <h2 className="text-base font-semibold text-kal-text">
+                  Change Track
+                </h2>
+                <div className="flex shrink-0 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setChangeTrackOpen(false);
+                      setPendingNewTrack(null);
+                    }}
+                    className="rounded-xl border border-kal-border px-3 py-1.5 text-sm font-medium text-kal-text-secondary hover:text-kal-text"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!pendingNewTrack || pendingNewTrack.id === selectedTrack?.id}
+                    onClick={() => {
+                      setChangeTrackOpen(false);
+                      setChangeTrackConfirmOpen(true);
+                    }}
+                    className="rounded-xl bg-kal-accent px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-40"
+                  >
+                    Select
+                  </button>
+                </div>
+              </div>
               <p className="mb-4 text-sm text-kal-text-secondary">
                 Changing your track will reset your exam selection. This cannot be
                 easily undone.
@@ -584,29 +609,6 @@ export function ProfileForm() {
                 catalog={examRows}
                 disabled={saving}
               />
-              <div className="mt-4 flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setChangeTrackOpen(false);
-                    setPendingNewTrack(null);
-                  }}
-                  className="flex-1 rounded-xl border border-kal-border py-2.5 text-sm font-medium text-kal-text-secondary hover:text-kal-text"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  disabled={!pendingNewTrack || pendingNewTrack.id === selectedTrack?.id}
-                  onClick={() => {
-                    setChangeTrackOpen(false);
-                    setChangeTrackConfirmOpen(true);
-                  }}
-                  className="flex-1 rounded-xl bg-kal-accent py-2.5 text-sm font-semibold text-white disabled:opacity-40"
-                >
-                  Select Track
-                </button>
-              </div>
             </div>
           </div>
         )}

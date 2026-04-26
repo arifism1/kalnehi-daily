@@ -9,6 +9,7 @@ import { MorningWelcomeScreen } from "@/components/welcome/MorningWelcomeScreen"
 import { useMorningWelcomeData } from "@/components/welcome/hooks/useWelcomeScreenData";
 import { useAuthStore } from "@/store/useAuthStore";
 import {
+  isMorningTimeWindow,
   shouldShowMorningForDate,
   useWelcomeScreenStore,
 } from "@/store/useWelcomeScreenStore";
@@ -48,7 +49,7 @@ export function WelcomeMorningHost() {
   if (pathname !== "/home" || !initialized || !user) return null;
   if (subscriptionLoading || loading) return null;
   if (!welcomeEligible) return null;
-  if (!shouldShow) return null;
+  if (!shouldShow || !isMorningTimeWindow()) return null;
 
   return (
     <MorningWelcomeScreen
