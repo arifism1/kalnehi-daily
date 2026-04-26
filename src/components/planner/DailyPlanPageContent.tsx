@@ -6,8 +6,11 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 
+import { ShareYourDayCard } from "@/components/daily/ShareYourDayCard";
 import { TaskInputModal, type TaskInputMode } from "@/components/planner/TaskInputModal";
 import { UnifiedDailyPlanList } from "@/components/planner/UnifiedDailyPlanList";
+import { DailyReflectionClient } from "@/components/reflection/DailyReflectionClient";
+import { FeatureGate } from "@/components/subscription/FeatureGate";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { usePlannerDateMidnightRollover } from "@/hooks/usePlannerDateMidnightRollover";
 import {
@@ -138,6 +141,13 @@ export function DailyPlanPageContent() {
         title={listTitle}
         showScheduleRevision
       />
+
+      <FeatureGate feature="daily_log">
+        <div className="mt-6 space-y-4 sm:space-y-6">
+          <ShareYourDayCard />
+          {logDate === today ? <DailyReflectionClient collapsible /> : null}
+        </div>
+      </FeatureGate>
 
       <TaskInputModal
         mode={modalMode}
