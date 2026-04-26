@@ -1,5 +1,5 @@
 const TRUST_SIGNALS = [
-  { icon: "🔒", text: "On-device only — nothing uploaded" },
+  { icon: "🔒", text: "Study Camera — on-device, not uploaded" },
   { icon: "📲", text: "PWA — installs like a native app" },
   { icon: "📶", text: "Works offline" },
   { icon: "💳", text: "UPI & cards accepted" },

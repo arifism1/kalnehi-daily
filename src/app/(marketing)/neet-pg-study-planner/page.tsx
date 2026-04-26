@@ -39,7 +39,7 @@ export default function NeetPgStudyPlannerPage() {
           {
             question: "Is Mastermind required?",
             answer:
-              "No. Mastermind is optional on paid tiers for quick clarifications. Your textbooks, notes, and question banks still drive rank.",
+              "No. Mastermind is included in Smart Plan for quick clarifications. Your textbooks, notes, and question banks still drive rank.",
           },
         ]}
       />

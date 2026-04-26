@@ -39,7 +39,7 @@ export default function NeetStudyPlannerPage() {
           {
             question: "What is Mastermind?",
             answer:
-              "An optional syllabus-aware assistant on paid tiers — for quick clarifications, not a substitute for NCERT and coaching.",
+              "An optional syllabus-aware assistant included in Smart Plan — for quick clarifications, not a substitute for NCERT and coaching.",
           },
         ]}
       />

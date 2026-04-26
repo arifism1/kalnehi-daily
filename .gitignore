@@ -44,3 +44,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local scripts and one-off exports
+/scripts/export-exam-analysis.mjs
+/exam-analysis-export.xlsx
+
+# local/one-off migrations (not for production)
+/supabase/migrations/20260426120000_exam_full_analysis_view.sql
