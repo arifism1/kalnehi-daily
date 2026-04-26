@@ -10,7 +10,7 @@ const TIMELINE = [
   {
     time: "06:10",
     feature: "Dictate My Day",
-    caption: "Speak your plan. Done in 60 seconds.",
+    caption: "Speak your plan. Done in 90 seconds.",
     detail: "\"Physics Optics, then Electro, maybe Probability in the evening.\" Kalnehi parses it into a real task list. Breakfast first.",
     icon: "🎙",
     accent: true,

@@ -2,7 +2,7 @@ const BEATS = [
   {
     num: "01",
     label: "Plan",
-    headline: "Speak your day, or type it. Done in 60 seconds.",
+    headline: "Speak your day, or type it. Done in 90 seconds.",
     body: "Open the app. Talk out your plan and AI structures it into tasks. Or use Self Type if you prefer keys over voice. Either way — your day is set before you sit down to study.",
     mockup: <PlanMockup />,
   },
