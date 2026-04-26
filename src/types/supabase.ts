@@ -1990,6 +1990,7 @@ export type Database = {
           subscription_status: string | null
           subscription_tier: string | null
           system_push_notifications: boolean
+          exam_dates: Json | null
           target_exam: string | null
           target_exam_date: string | null
           trial_access_type: string | null
@@ -2056,6 +2057,7 @@ export type Database = {
           subscription_cancelled_at?: string | null
           subscription_end_date?: string | null
           subscription_plan?: string | null
+          exam_dates?: Json | null
           subscription_start_date?: string | null
           subscription_status?: string | null
           subscription_tier?: string | null
@@ -2126,6 +2128,7 @@ export type Database = {
           subscription_cancelled_at?: string | null
           subscription_end_date?: string | null
           subscription_plan?: string | null
+          exam_dates?: Json | null
           subscription_start_date?: string | null
           subscription_status?: string | null
           subscription_tier?: string | null

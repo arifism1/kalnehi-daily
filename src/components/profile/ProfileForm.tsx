@@ -23,6 +23,7 @@ import { UpscOptionalSubjectPick } from "@/components/profile/UpscOptionalSubjec
 import { InstallPWA } from "@/components/InstallPWA";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
+  displayNameForExamCatalog,
   EXAMS_CATALOG_FALLBACK,
   fetchExamsCatalog,
   mergeOrphanExamOption,
@@ -97,7 +98,7 @@ export function ProfileForm() {
 
   const [fullName, setFullName] = useState("");
   const [targetExam, setTargetExam] = useState("");
-  const [examDate, setExamDate] = useState("");
+  const [examDates, setExamDates] = useState<Record<string, string>>({});
   const [prevAttempted, setPrevAttempted] = useState(false);
   const [scoreRows, setScoreRows] = useState<ScoreRow[]>([]);
   const [cuetDomainSubjects, setCuetDomainSubjects] = useState<string[]>([]);
@@ -143,7 +144,7 @@ export function ProfileForm() {
           supabase
             .from("user_profiles")
             .select(
-              "full_name, target_exam_date, primary_exam, target_exam, prev_exam_attempted, prev_score, prev_score_entries, cuet_domain_subjects, upsc_optional_subjects, selected_track, enabled_exams_in_track",
+              "full_name, target_exam_date, exam_dates, primary_exam, target_exam, prev_exam_attempted, prev_score, prev_score_entries, cuet_domain_subjects, upsc_optional_subjects, selected_track, enabled_exams_in_track",
             )
             .eq("user_id", user.id)
             .maybeSingle(),
@@ -173,12 +174,24 @@ export function ProfileForm() {
         setEnabledExamsInTrack(dbEnabled.length > 0 ? dbEnabled : (track?.examNames ?? []));
 
         setFullName(data?.full_name?.trim() ?? "");
-        setExamDate(
-          data?.target_exam_date &&
-            /^\d{4}-\d{2}-\d{2}$/.test(data.target_exam_date)
+        // Hydrate per-exam dates. Fall back to target_exam_date for legacy users
+        // who have not yet saved an exam_dates map.
+        const dbExamDates =
+          data?.exam_dates && typeof data.exam_dates === "object" && !Array.isArray(data.exam_dates)
+            ? (data.exam_dates as Record<string, string>)
+            : {};
+        const legacyDate =
+          data?.target_exam_date && /^\d{4}-\d{2}-\d{2}$/.test(data.target_exam_date)
             ? data.target_exam_date
-            : "",
-        );
+            : null;
+        const primaryKey = (data?.target_exam?.trim() || data?.primary_exam?.trim()) ?? "";
+        if (Object.keys(dbExamDates).length > 0) {
+          setExamDates(dbExamDates);
+        } else if (legacyDate && primaryKey) {
+          setExamDates({ [primaryKey]: legacyDate });
+        } else {
+          setExamDates({});
+        }
         const attempted = Boolean(data?.prev_exam_attempted);
         setPrevAttempted(attempted);
         const parsed = parsePrevScoreEntries(data?.prev_score_entries);
@@ -280,9 +293,16 @@ export function ProfileForm() {
       // primary_exam = first enabled exam (track order is preserved by TrackExamToggles)
       const primaryExamName = enabledExamsInTrack[0]!;
       const fullNameValue = fullNameInputRef.current?.value ?? fullName;
+      // target_exam_date = first exam's date for backward compat
+      const primaryDateRaw = examDates[primaryExamName]?.trim() || null;
+      const filteredExamDates: Record<string, string> = {};
+      for (const [k, v] of Object.entries(examDates)) {
+        if (v?.trim()) filteredExamDates[k] = v.trim();
+      }
       const res = await upsertUserProfile({
         full_name: fullNameValue.trim() || null,
-        target_exam_date: examDate.trim() || null,
+        target_exam_date: primaryDateRaw,
+        exam_dates: Object.keys(filteredExamDates).length > 0 ? filteredExamDates : null,
         primary_exam: primaryExamName,
         target_exam: primaryExamName,
         prev_exam_attempted: prevAttempted,
@@ -310,7 +330,7 @@ export function ProfileForm() {
   }, [
     user?.id,
     fullName,
-    examDate,
+    examDates,
     selectedTrack,
     enabledExamsInTrack,
     prevAttempted,
@@ -471,22 +491,31 @@ export function ProfileForm() {
             </div>
           )}
 
-          {/* Exam date */}
-          <Row>
-            <label
-              htmlFor="exam-date"
-              className="w-28 shrink-0 text-[15px] font-medium text-kal-text-secondary"
-            >
-              Exam date
-            </label>
-            <input
-              id="exam-date"
-              type="date"
-              value={examDate}
-              onChange={(e) => setExamDate(e.target.value)}
-              className="min-w-0 flex-1 rounded-lg border-0 bg-transparent py-1 text-base text-kal-text [color-scheme:light] focus:outline-none focus:ring-0 dark:[color-scheme:dark]"
-            />
-          </Row>
+          {/* Exam date(s) — one picker per enabled exam */}
+          {enabledExamsInTrack.map((exam) => {
+            const examDisplayLabel =
+              displayNameForExamCatalog(exam, examRows) || exam;
+            const inputId = `exam-date-${exam}`;
+            return (
+              <Row key={exam}>
+                <label
+                  htmlFor={inputId}
+                  className="w-28 shrink-0 text-[15px] font-medium text-kal-text-secondary"
+                >
+                  {enabledExamsInTrack.length > 1 ? examDisplayLabel : "Exam"} date
+                </label>
+                <input
+                  id={inputId}
+                  type="date"
+                  value={examDates[exam] ?? ""}
+                  onChange={(e) =>
+                    setExamDates((prev) => ({ ...prev, [exam]: e.target.value }))
+                  }
+                  className="min-w-0 flex-1 rounded-lg border-0 bg-transparent py-1 text-base text-kal-text [color-scheme:light] focus:outline-none focus:ring-0 dark:[color-scheme:dark]"
+                />
+              </Row>
+            );
+          })}
           {deferredTargetExam && isCuetExam(deferredTargetExam) ? (
             <div className="border-t border-kal-border px-4 py-4">
               <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">

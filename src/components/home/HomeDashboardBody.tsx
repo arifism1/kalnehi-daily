@@ -5,9 +5,12 @@ import { useEffect, useMemo, useRef } from "react";
 
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useDailyPlanHomeExecution } from "@/hooks/useDailyPlanHomeExecution";
+import { useExamsCatalogRows } from "@/hooks/useExamsCatalogRows";
 import { useSyllabusTracker } from "@/hooks/useSyllabusTracker";
+import { useTargetExamDate } from "@/hooks/useTargetExamDate";
 import { useTargetExamDisplay } from "@/hooks/useTargetExamDisplay";
 import { shouldShowSyllabusComingSoon } from "@/lib/examProfile";
+import { displayNameForExamCatalog } from "@/lib/examsCatalog";
 import {
   averageProjectedOutOfMax,
   buildSyllabusMultiYearCapture,
@@ -55,6 +58,7 @@ export function HomeDashboardBody({
     examDisplayName,
     examLabelLoading,
   } = useTargetExamDisplay();
+  const { examDates } = useTargetExamDate();
   const tasksRecord = useTaskStore((s) => s.tasks);
   const microtopicById = useTaskStore((s) => s.microtopics);
   const {
@@ -68,7 +72,20 @@ export function HomeDashboardBody({
     cuetAwaitingDomainSelection,
     loading: syllabusLoading,
     error: syllabusError,
+    examResults,
+    examRollups,
   } = useSyllabusTracker();
+
+  const { rows: catalogRows } = useExamsCatalogRows();
+
+  const allExamsDisplayName = useMemo(() => {
+    if (examResults.length > 1) {
+      return examResults
+        .map((er) => displayNameForExamCatalog(er.examLabel, catalogRows) || er.examLabel)
+        .join(" · ");
+    }
+    return examDisplayName;
+  }, [examResults, catalogRows, examDisplayName]);
 
   const isUpscMainsUi = isUpscCseMainsExam(catalogExamKey);
 
@@ -295,7 +312,9 @@ export function HomeDashboardBody({
         projectedScoreCaption={projectedScoreCaption}
         todayPercent={effectiveTodayPercent}
         todayTaskCount={effectiveTodayTotal}
-        examDisplayName={examDisplayName}
+        examDisplayName={allExamsDisplayName}
+        examRollups={examRollups ?? undefined}
+        examDates={examDates}
       />
 
       {/* Section B — Daily motivational line */}
