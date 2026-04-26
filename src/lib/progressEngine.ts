@@ -179,7 +179,7 @@ export function sumPlannedMarksWeight(
 export function sumEstimatedMinutes(tasks: Task[]): number {
   let s = 0;
   for (const t of tasks) {
-    s += t.estimated_minutes ?? t.estimated_time_minutes ?? 0;
+    s += t.estimated_time_minutes ?? 0;
   }
   return Math.round(s);
 }

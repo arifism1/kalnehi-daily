@@ -162,8 +162,8 @@ export async function updateMicrotopicStatus(
       ok: true,
       row: {
         syllabus_master_id: normalizeSyllabusMasterId(data.syllabus_master_id),
-        status: data.status,
-        last_updated: data.last_updated,
+        status,
+        last_updated: lastUpdated,
       },
     };
   } catch (e) {
@@ -205,10 +205,9 @@ export async function addCustomSyllabusItem(fields: {
       exam_name: examName,
       action_type: "add",
       target_type: "microtopic",
-      custom_row_id: customRowId,
       subject,
       chapter,
-      microtopic,
+      custom_microtopic: microtopic,
       updated_at: now,
     });
 
@@ -264,7 +263,7 @@ export async function editCustomSyllabusItem(
         .update({
           subject: payload.subject.trim(),
           chapter: payload.chapter.trim(),
-          microtopic: payload.microtopic.trim(),
+          custom_microtopic: payload.microtopic.trim(),
           updated_at: now,
         })
         .eq("id", payload.customizationId)
@@ -304,9 +303,9 @@ export async function editCustomSyllabusItem(
         action_type: "edit",
         target_type: "microtopic",
         syllabus_master_id: sid,
-        subject_override: s || null,
-        chapter_override: c || null,
-        microtopic_override: m || null,
+        custom_subject: s || null,
+        custom_chapter: c || null,
+        custom_microtopic: m || null,
         updated_at: now,
       });
       if (error) throw error;
@@ -338,7 +337,7 @@ export async function editCustomSyllabusItem(
       target_type: "chapter",
       subject,
       chapter: chapterOld,
-      chapter_override: chapterNew,
+      custom_chapter: chapterNew,
       updated_at: now,
     });
     if (error) throw error;

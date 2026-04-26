@@ -32,9 +32,7 @@ function taskIsDiscardableDraft(t: Task): boolean {
   const hasLink = !!(t.microtopic_id && String(t.microtopic_id).trim());
   const hasTime = !!(t.start_time || t.end_time);
   const hasMarks = t.marks_value != null && Number.isFinite(Number(t.marks_value));
-  const hasEst =
-    (t.estimated_minutes != null && t.estimated_minutes > 0) ||
-    (t.estimated_time_minutes != null && t.estimated_time_minutes > 0);
+  const hasEst = t.estimated_time_minutes != null && t.estimated_time_minutes > 0;
   return (
     !hasName &&
     !hasLink &&
@@ -200,8 +198,8 @@ export function AddEditTaskSheet({
     setFromTime(dbTimeToInputValue(task.start_time));
     setToTime(dbTimeToInputValue(task.end_time));
     setEstimatedMinutes(
-      task.estimated_minutes != null && task.estimated_minutes > 0
-        ? String(task.estimated_minutes)
+      task.estimated_time_minutes != null && task.estimated_time_minutes > 0
+        ? String(task.estimated_time_minutes)
         : "",
     );
     setMarks(task.marks_value != null ? String(task.marks_value) : "");
@@ -294,7 +292,7 @@ export function AddEditTaskSheet({
       status: f.status,
       start_time: startDb,
       end_time: endDb,
-      estimated_minutes: Number.isFinite(estNum) ? Math.round(estNum) : null,
+      estimated_time_minutes: Number.isFinite(estNum) ? Math.round(estNum) : null,
       marks_value: Number.isFinite(marksNum) ? marksNum : null,
     };
 

@@ -18,7 +18,8 @@ export function resolveMicrotopicForTask(
     marks_2023: null,
     marks_2024: null,
     marks_2025: null,
-    estimated_minutes: null,
     relative_effort_score: null,
+    section: null,
+    weightage_tag: null,
   };
 }

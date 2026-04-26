@@ -71,7 +71,7 @@ export function groupExamRowsForSelect(rows: ExamCatalogRow[]): GroupedExamRows[
   for (const label of EXAM_GROUP_ORDER) {
     const bucket = byGroup.get(label) ?? [];
     if (bucket.length === 0) continue;
-    bucket.sort((a, b) => a.sort_order - b.sort_order);
+    bucket.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
     out.push({ group: label, rows: bucket });
   }
   return out;

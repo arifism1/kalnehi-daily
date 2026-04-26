@@ -24,10 +24,10 @@ export async function quickCreateEmptyTask(
       assigned_date: assignedDate,
       status: "pending",
       name: null,
+      source: null,
       microtopic_id: null,
       created_at: now,
       updated_at: now,
-      estimated_minutes: null,
       estimated_time_minutes: null,
       end_time: null,
       start_time: null,
@@ -80,10 +80,10 @@ export async function quickCreatePlannedTask(
       assigned_date: assignedDate,
       status: "pending",
       name,
+      source: null,
       microtopic_id: null,
       created_at: now,
       updated_at: now,
-      estimated_minutes: null,
       estimated_time_minutes: null,
       end_time,
       start_time: options.start_time,
@@ -150,10 +150,10 @@ export async function bulkAddSyllabusMicrotopicsToDailyPlan(
         assigned_date: assignedDate,
         status: "pending",
         name: label,
+        source: null,
         microtopic_id: mid,
         created_at: now,
         updated_at: now,
-        estimated_minutes: row.estimated_minutes ?? null,
         estimated_time_minutes: null,
         end_time: null,
         start_time: null,
@@ -169,7 +169,6 @@ export async function bulkAddSyllabusMicrotopicsToDailyPlan(
         name: label,
         microtopic_id: mid,
         id,
-        estimated_minutes: row.estimated_minutes ?? null,
       };
       const r = await applyOptimisticTaskCreate(insertRow, userId, fullTask);
       if (!r.ok) return r;
@@ -222,10 +221,10 @@ export async function addSelectedSyllabusRowsToDailyPlan(
         assigned_date: assignedDate,
         status: "pending",
         name: label,
+        source: null,
         microtopic_id: mid,
         created_at: now,
         updated_at: now,
-        estimated_minutes: row.estimated_minutes ?? null,
         estimated_time_minutes: null,
         end_time: null,
         start_time: null,
@@ -241,7 +240,6 @@ export async function addSelectedSyllabusRowsToDailyPlan(
         name: label,
         microtopic_id: mid,
         id,
-        estimated_minutes: row.estimated_minutes ?? null,
       };
       const r = await applyOptimisticTaskCreate(insertRow, userId, fullTask);
       if (!r.ok) return r;

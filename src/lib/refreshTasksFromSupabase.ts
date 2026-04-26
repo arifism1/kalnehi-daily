@@ -59,11 +59,8 @@ function normalizeTaskRow(row: Record<string, unknown>): Task {
     status,
     assigned_date,
     name: (row as { name?: string | null }).name ?? null,
-    estimated_minutes:
-      (row as { estimated_minutes?: number | null }).estimated_minutes ??
-      (row as { estimated_time_minutes?: number | null })
-        .estimated_time_minutes ??
-      null,
+    estimated_time_minutes:
+      (row as { estimated_time_minutes?: number | null }).estimated_time_minutes ?? null,
     marks_weight:
       (row as { marks_weight?: number | null }).marks_weight ?? null,
   } as Task;

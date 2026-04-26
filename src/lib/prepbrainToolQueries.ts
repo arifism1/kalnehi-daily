@@ -157,7 +157,7 @@ export async function getTodayPlan(admin: AdminClient, userId: string) {
   const today = new Date().toISOString().slice(0, 10);
   const { data, error } = await admin
     .from("tasks")
-    .select("status, name, estimated_minutes, estimated_time_minutes, marks_weight")
+    .select("status, name, estimated_time_minutes, marks_weight")
     .eq("user_id", userId)
     .eq("assigned_date", today)
     .limit(300);
@@ -167,11 +167,11 @@ export async function getTodayPlan(admin: AdminClient, userId: string) {
   const completed = rows.filter((r) => r.status === "completed").length;
   const completion_percent = total > 0 ? Math.round((completed / total) * 1000) / 10 : 0;
   const planned_minutes = rows.reduce(
-    (sum, r) => sum + Math.max(0, r.estimated_minutes ?? r.estimated_time_minutes ?? 0),
+    (sum, r) => sum + Math.max(0, r.estimated_time_minutes ?? 0),
     0,
   );
   const task_items = rows.map((r) => {
-    const est = Math.max(0, r.estimated_minutes ?? r.estimated_time_minutes ?? 0);
+    const est = Math.max(0, r.estimated_time_minutes ?? 0);
     const name = r.name?.trim() || "Task";
     return {
       status: r.status,

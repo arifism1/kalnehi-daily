@@ -8,7 +8,7 @@ import { useTargetExamDate } from "@/hooks/useTargetExamDate";
 import { displayNameForExamCatalog } from "@/lib/examsCatalog";
 
 type ExamRollupEntry = {
-  examLabel: string;
+  examLabel: string | null;
   rollup: {
     overallPercent: number;
     totalMarksMastered: number;
@@ -151,7 +151,7 @@ export function HomeHeroCard({
                   displayNameForExamCatalog(er.examLabel, catalogRows) ||
                   er.examLabel;
                 const days =
-                  examDates?.[er.examLabel]
+                  er.examLabel && examDates?.[er.examLabel]
                     ? computeDaysToExam(examDates[er.examLabel])
                     : null;
                 return (

@@ -55,7 +55,6 @@ export function sumEstimatedTimeForDate(tasks: Task[], calendarDate: string): nu
   let s = 0;
   for (const t of tasks) {
     if (t.assigned_date !== calendarDate) continue;
-    s += t.estimated_minutes ?? 0;
     s += t.estimated_time_minutes ?? 0;
   }
   return s;

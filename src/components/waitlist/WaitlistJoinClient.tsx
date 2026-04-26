@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { EXAMS_CATALOG_FALLBACK } from "@/lib/examsCatalog";
 
 const EXAM_OPTIONS = EXAMS_CATALOG_FALLBACK
-  .sort((a, b) => a.sort_order - b.sort_order)
+  .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
   .map((e) => ({ value: e.exam_name, label: e.display_name }));
 
 type Props = {

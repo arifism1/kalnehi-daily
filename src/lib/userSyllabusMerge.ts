@@ -59,10 +59,10 @@ export function mergeSyllabusWithUserCustomizations(
       c.target_type === "chapter" &&
       c.subject &&
       c.chapter &&
-      c.chapter_override
+      c.custom_chapter
     ) {
       chapterRenames.set(normKey(c.subject, c.chapter), {
-        newChapter: c.chapter_override.trim(),
+        newChapter: c.custom_chapter.trim(),
         customizationId: c.id,
       });
     } else if (
@@ -73,17 +73,16 @@ export function mergeSyllabusWithUserCustomizations(
       const id = normalizeSyllabusMasterId(c.syllabus_master_id);
       microEdits.set(id, {
         customizationId: c.id,
-        subject: c.subject_override?.trim() || undefined,
-        chapter: c.chapter_override?.trim() || undefined,
-        microtopic: c.microtopic_override?.trim() || undefined,
+        subject: c.custom_subject?.trim() || undefined,
+        chapter: c.custom_chapter?.trim() || undefined,
+        microtopic: c.custom_microtopic?.trim() || undefined,
       });
     } else if (
       c.action_type === "add" &&
       c.target_type === "microtopic" &&
-      c.custom_row_id &&
       c.subject &&
       c.chapter &&
-      c.microtopic
+      c.custom_microtopic
     ) {
       adds.push(c);
     }
@@ -137,19 +136,20 @@ export function mergeSyllabusWithUserCustomizations(
   });
 
   for (const c of adds) {
-    const id = c.custom_row_id!;
     const sub = c.subject!.trim();
     const ch = c.chapter!.trim();
     merged.push({
-      id,
+      id: c.id,
       exam_name: examNameKey,
       subject: sub,
       chapter: ch,
-      microtopic: c.microtopic!.trim(),
+      microtopic: c.custom_microtopic!.trim(),
       marks_2023: null,
       marks_2024: null,
       marks_2025: 1,
-      estimated_minutes: null,
+      relative_effort_score: null,
+      section: null,
+      weightage_tag: null,
       created_at: c.created_at,
       originSubject: sub,
       originChapter: ch,

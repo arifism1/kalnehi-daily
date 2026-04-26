@@ -319,7 +319,7 @@ export function buildPrepBrainContext(input: PrepBrainContextInput): PrepBrainCo
     task_status: t.status,
     title: taskTitle(t, microtopicById),
     marks_weight: Math.round(resolveTaskMarksWeight(t, microtopicById) * 10) / 10,
-    estimated_minutes: t.estimated_minutes ?? t.estimated_time_minutes ?? 0,
+    estimated_minutes: t.estimated_time_minutes ?? 0,
   }));
 
   let execCount = 0;

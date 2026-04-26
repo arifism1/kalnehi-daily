@@ -7,7 +7,11 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/types/supabase";
 
-export type ExamCatalogRow = Tables<"exams">;
+export type ExamCatalogRow = Omit<Tables<"exams">, "is_multi_subject" | "scoring_type"> & {
+  id?: string;
+  is_multi_subject?: boolean | null;
+  scoring_type?: string | null;
+};
 
 /**
  * One row per `display_name` (e.g. single "JEE Main" option even if the DB had
@@ -35,14 +39,14 @@ export function dedupeExamsCatalogForUi(rows: ExamCatalogRow[]): ExamCatalogRow[
       continue;
     }
     const sorted = [...group].sort((a, b) => {
-      if (a.sort_order !== b.sort_order) return a.sort_order - b.sort_order;
+      if (a.sort_order !== b.sort_order) return (a.sort_order ?? 0) - (b.sort_order ?? 0);
       const sa = syllabusCatalogExamName(a.exam_name) ?? a.exam_name;
       const sb = syllabusCatalogExamName(b.exam_name) ?? b.exam_name;
       return sb.length - sa.length;
     });
     out.push(sorted[0]);
   }
-  out.sort((a, b) => a.sort_order - b.sort_order);
+  out.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
   return out;
 }
 

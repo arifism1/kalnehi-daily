@@ -152,8 +152,8 @@ function SyllabusMicrotopicRow({
   const st = resolveStatus(row.id, statusBySyllabusMasterId);
   const sid = normalizeSyllabusMasterId(row.id);
   const est =
-    row.estimated_minutes != null && row.estimated_minutes > 0
-      ? `${row.estimated_minutes} min`
+    row.relative_effort_score != null && row.relative_effort_score > 0
+      ? `${row.relative_effort_score} min`
       : "—";
 
   const existingPendingManual = useMemo(() => {
@@ -817,7 +817,7 @@ export function SyllabusTracker() {
                   </div>
                 ) : (
                   <p className="mt-2 text-[11px] text-kal-muted">
-                    {er.rollup.completedCount} / {er.rollup.totalCount} microtopics complete
+                    {er.rollup.chapters.reduce((s, ch) => s + ch.completedCount, 0)} / {er.rollup.chapters.reduce((s, ch) => s + ch.totalCount, 0)} microtopics complete
                   </p>
                 )}
               </section>

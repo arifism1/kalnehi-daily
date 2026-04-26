@@ -161,7 +161,8 @@ export async function GET(req: NextRequest) {
           .from("study_sessions")
           .select("id", { count: "exact", head: true })
           .eq("user_id", uid);
-        const { count: doubtsCount } = await admin
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { count: doubtsCount } = await (admin as any)
           .from("doubts")
           .select("id", { count: "exact", head: true })
           .eq("user_id", uid);
@@ -236,7 +237,8 @@ export async function GET(req: NextRequest) {
         .from("study_sessions")
         .select("id", { count: "exact", head: true })
         .eq("user_id", uid);
-      const { count: doubtsCount } = await admin
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { count: doubtsCount } = await (admin as any)
         .from("doubts")
         .select("id", { count: "exact", head: true })
         .eq("user_id", uid);

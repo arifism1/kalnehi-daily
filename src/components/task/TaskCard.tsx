@@ -377,8 +377,8 @@ export function TaskCard({
     (Boolean(microtopic.subject?.trim()) || Boolean(microtopic.chapter?.trim()));
   const timeRange = formatTaskTimeRange(task.start_time, task.end_time);
   const est =
-    task.estimated_minutes != null && task.estimated_minutes > 0
-      ? `${task.estimated_minutes} min`
+    task.estimated_time_minutes != null && task.estimated_time_minutes > 0
+      ? `${task.estimated_time_minutes} min`
       : null;
 
   const scheduleMeta = [timeRange, est].filter(Boolean).join(" · ");

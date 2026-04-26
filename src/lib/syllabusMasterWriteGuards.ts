@@ -145,16 +145,16 @@ export async function resolveAllowedSyllabusMasterIdsForUser(
       const chunk = stillNeed.slice(i, i + ID_CHUNK);
       const { data: adds, error: addErr } = await supabase
         .from("user_syllabus_customizations")
-        .select("custom_row_id")
+        .select("id")
         .eq("user_id", userId)
         .eq("exam_name", examKey)
         .eq("action_type", "add")
         .eq("target_type", "microtopic")
-        .in("custom_row_id", chunk);
+        .in("id", chunk);
       if (addErr) continue;
       for (const r of adds ?? []) {
-        if (r.custom_row_id) {
-          allowed.add(normalizeSyllabusMasterId(String(r.custom_row_id)));
+        if (r.id) {
+          allowed.add(normalizeSyllabusMasterId(String(r.id)));
         }
       }
     }

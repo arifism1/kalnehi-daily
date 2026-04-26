@@ -35,7 +35,7 @@ export async function fetchSyllabusMasterRowsForExam(
 ): Promise<SyllabusRow[]> {
   if (isUpscCseMainsExam(examKey)) {
     const { data, error } = await supabase.rpc("upsc_cse_mains_syllabus_rows", {
-      p_optional: upscOptionalSubject ?? null,
+      p_optional: upscOptionalSubject ?? undefined,
     });
     if (error) throw error;
     return (data ?? []) as SyllabusRow[];
