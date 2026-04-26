@@ -521,6 +521,8 @@ export function SyllabusTracker() {
     setMicrotopicStatus,
     undoMicrotopicToStatus,
     setChapterCompleted,
+    examResults,
+    examRollups,
   } = useSyllabusTracker();
 
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -581,6 +583,23 @@ export function SyllabusTracker() {
     () => [...grouped.keys()].sort(sortSubjects),
     [grouped],
   );
+
+  /**
+   * When multiple exams are enabled in the user's track, compute per-exam
+   * subject groupings so each exam renders as a headed section.
+   */
+  const examSections = useMemo(() => {
+    if (examResults.length <= 1) return null;
+    return examResults.map((er) => {
+      const g = groupBySubjectAndChapter(er.rows);
+      return {
+        examLabel: er.examLabel,
+        catalogExamKey: er.catalogExamKey,
+        grouped: g,
+        subjects: [...g.keys()].sort(sortSubjects),
+      };
+    });
+  }, [examResults]);
 
   const chapterRollupMap = useMemo(() => {
     const m = new Map<string, ChapterRollup>();
@@ -747,124 +766,185 @@ export function SyllabusTracker() {
         ) : null}
       </header>
 
-      <section className="kal-glass-panel overflow-hidden rounded-2xl border-kal-accent/35 p-6 shadow-lg">
-        <div className="flex flex-wrap items-end justify-between gap-6">
-          <div>
-            <p className="kal-category-label text-kal-accent">
-              {cuetScoringRollup ? "Overall CUET progress" : "Syllabus progress"}
-            </p>
-            {!cuetScoringRollup && !showMarksUi ? (
-              <p className="mt-1 text-[13px] font-medium leading-snug text-kal-muted">
-                Track your completion %
-              </p>
-            ) : null}
-            <p
-              className="mt-1 font-serif text-4xl font-normal tabular-nums tracking-tight text-[#BA7517]"
-              aria-live="polite"
-            >
-              {syllabusHeaderPercent}%
-            </p>
-            <p className="mt-1 text-[11px] text-kal-muted">
-              {cuetScoringRollup
-                ? "Microtopic completion across selected domains"
-                : showMarksUi
-                  ? isUpscMainsUi
-                    ? `Full Mains written scale (${UPSC_CSE_MAINS_UI_TOTAL_MARKS} max, marks_${primaryMarksYear} weights)`
-                    : `Overall marks_${primaryMarksYear} chapter pool`
-                  : `Overall progress: ${rollup.overallPercent % 1 === 0 ? rollup.overallPercent.toFixed(0) : rollup.overallPercent.toFixed(1)}%`}
-            </p>
-          </div>
-          <div className="flex flex-col gap-3 text-right sm:min-w-[12rem]">
-            {cuetScoringRollup ? (
-              <div>
-                <p className="text-xs text-kal-muted">Projected total</p>
-                <p className="text-lg font-semibold tabular-nums text-orange-600 dark:text-orange-300">
-                  {cuetScoringRollup.totalProjected}
-                  <span className="text-kal-muted">
-                    {" "}
-                    / {cuetScoringRollup.totalMax}
-                  </span>
+      {examRollups ? (
+        /* Multi-exam track: one compact card per exam */
+        <div className="grid gap-4 sm:grid-cols-2">
+          {examRollups.map((er) => {
+            const erHasMarks = syllabusHasCatalogMarksData(
+              examResults.find((x) => x.examLabel === er.examLabel)?.rows ?? [],
+            );
+            const erShowMarks = erHasMarks;
+            const erDisplayName =
+              displayNameForExamCatalog(er.examLabel, examCatalogRows) || er.examLabel;
+            const topProjection = er.projections[0] ?? null;
+            return (
+              <section
+                key={er.examLabel}
+                className="kal-glass-panel overflow-hidden rounded-2xl border-kal-accent/35 p-5 shadow-lg"
+              >
+                <p className="kal-category-label text-kal-accent">{erDisplayName}</p>
+                <p
+                  className="mt-1 font-serif text-3xl font-normal tabular-nums tracking-tight text-[#BA7517]"
+                  aria-live="polite"
+                >
+                  {er.rollup.overallPercent % 1 === 0
+                    ? er.rollup.overallPercent.toFixed(0)
+                    : er.rollup.overallPercent.toFixed(1)}%
                 </p>
-                <ul className="mt-2 space-y-1 text-left text-[10px] text-kal-muted sm:text-right">
-                  {cuetScoringRollup.subjects.map((s) => (
-                    <li key={s.subject}>
-                      <span className="text-kal-muted">{s.subject}</span>{" "}
-                      <span className="tabular-nums text-kal-accent">
-                        {s.projectedMarks}/{s.maxPerSubject}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : showMarksUi && neetYearProjections.length > 0 ? (
-              <>
-                {(showAllYears ? neetYearProjections : neetYearProjections.slice(0, 1)).map((p) => (
-                  <div key={p.year}>
-                    <p className="text-[10px] font-semibold uppercase text-kal-muted">
-                      {displayExam} {p.year}
-                    </p>
-                    <p className="mt-0.5 text-xl font-bold tabular-nums" style={{ color: "#BA7517" }}>
-                      {isUpscMainsUi
-                        ? rollup.totalMarksMastered.toFixed(0)
-                        : p.projectedOutOf720}
-                      <span className="text-base font-semibold text-kal-muted">
-                        {" "}
-                        /{" "}
-                        {isUpscMainsUi
-                          ? UPSC_CSE_MAINS_UI_TOTAL_MARKS
-                          : maxScore}
-                      </span>
-                    </p>
-                    <p className="mt-0.5 text-[10px] leading-snug text-kal-muted">
-                      Based on {p.year} pattern
-                    </p>
+                <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-kal-card-muted">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-kal-accent via-orange-600 to-orange-700 transition-[width] duration-500"
+                    style={{ width: `${Math.min(100, er.rollup.overallPercent)}%` }}
+                  />
+                </div>
+                {erShowMarks && topProjection ? (
+                  <div className="mt-3 flex items-baseline gap-1">
+                    <span className="text-lg font-bold tabular-nums" style={{ color: "#BA7517" }}>
+                      {topProjection.projectedOutOf720}
+                    </span>
+                    <span className="text-sm font-medium text-kal-muted">
+                      / {er.maxScore} · {topProjection.year} pattern
+                    </span>
                   </div>
-                ))}
-                {neetYearProjections.length > 1 && !showAllYears && (
-                  <button
-                    type="button"
-                    onClick={() => setShowAllYears(true)}
-                    className="mt-1 text-[11px] font-medium"
-                    style={{ color: "#BA7517" }}
-                  >
-                    See all years ↓
-                  </button>
+                ) : erShowMarks ? (
+                  <div className="mt-3 flex items-baseline gap-1">
+                    <span className="text-lg font-bold tabular-nums text-orange-600 dark:text-orange-300">
+                      {er.rollup.totalMarksMastered.toFixed(0)}
+                    </span>
+                    <span className="text-sm font-medium text-kal-muted">
+                      / {er.rollup.totalMarksPool.toFixed(0)} marks
+                    </span>
+                  </div>
+                ) : (
+                  <p className="mt-2 text-[11px] text-kal-muted">
+                    {er.rollup.completedCount} / {er.rollup.totalCount} microtopics complete
+                  </p>
                 )}
-              </>
-            ) : showMarksUi ? (
-              <div>
-                <p className="text-xs text-kal-muted">Marks secured</p>
-                <p className="text-lg font-semibold tabular-nums text-orange-600 dark:text-orange-300">
-                  {rollup.totalMarksMastered.toFixed(0)}
-                  <span className="text-kal-muted">
-                    {" "}
-                    /{" "}
-                    {isUpscMainsUi
-                      ? UPSC_CSE_MAINS_UI_TOTAL_MARKS
-                      : rollup.totalMarksPool.toFixed(0)}
-                  </span>
+              </section>
+            );
+          })}
+        </div>
+      ) : (
+        /* Single-exam: existing card unchanged */
+        <section className="kal-glass-panel overflow-hidden rounded-2xl border-kal-accent/35 p-6 shadow-lg">
+          <div className="flex flex-wrap items-end justify-between gap-6">
+            <div>
+              <p className="kal-category-label text-kal-accent">
+                {cuetScoringRollup ? "Overall CUET progress" : "Syllabus progress"}
+              </p>
+              {!cuetScoringRollup && !showMarksUi ? (
+                <p className="mt-1 text-[13px] font-medium leading-snug text-kal-muted">
+                  Track your completion %
                 </p>
-              </div>
-            ) : (
-              <div className="text-left sm:text-right">
-                <p className="text-xs text-kal-muted">Snapshot</p>
-                <p className="mt-0.5 text-sm text-kal-muted">
-                  Weighted projections appear when chapter marks are set for this
-                  exam.
-                </p>
-              </div>
-            )}
+              ) : null}
+              <p
+                className="mt-1 font-serif text-4xl font-normal tabular-nums tracking-tight text-[#BA7517]"
+                aria-live="polite"
+              >
+                {syllabusHeaderPercent}%
+              </p>
+              <p className="mt-1 text-[11px] text-kal-muted">
+                {cuetScoringRollup
+                  ? "Microtopic completion across selected domains"
+                  : showMarksUi
+                    ? isUpscMainsUi
+                      ? `Full Mains written scale (${UPSC_CSE_MAINS_UI_TOTAL_MARKS} max, marks_${primaryMarksYear} weights)`
+                      : `Overall marks_${primaryMarksYear} chapter pool`
+                    : `Overall progress: ${rollup.overallPercent % 1 === 0 ? rollup.overallPercent.toFixed(0) : rollup.overallPercent.toFixed(1)}%`}
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 text-right sm:min-w-[12rem]">
+              {cuetScoringRollup ? (
+                <div>
+                  <p className="text-xs text-kal-muted">Projected total</p>
+                  <p className="text-lg font-semibold tabular-nums text-orange-600 dark:text-orange-300">
+                    {cuetScoringRollup.totalProjected}
+                    <span className="text-kal-muted">
+                      {" "}
+                      / {cuetScoringRollup.totalMax}
+                    </span>
+                  </p>
+                  <ul className="mt-2 space-y-1 text-left text-[10px] text-kal-muted sm:text-right">
+                    {cuetScoringRollup.subjects.map((s) => (
+                      <li key={s.subject}>
+                        <span className="text-kal-muted">{s.subject}</span>{" "}
+                        <span className="tabular-nums text-kal-accent">
+                          {s.projectedMarks}/{s.maxPerSubject}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : showMarksUi && neetYearProjections.length > 0 ? (
+                <>
+                  {(showAllYears ? neetYearProjections : neetYearProjections.slice(0, 1)).map((p) => (
+                    <div key={p.year}>
+                      <p className="text-[10px] font-semibold uppercase text-kal-muted">
+                        {displayExam} {p.year}
+                      </p>
+                      <p className="mt-0.5 text-xl font-bold tabular-nums" style={{ color: "#BA7517" }}>
+                        {isUpscMainsUi
+                          ? rollup.totalMarksMastered.toFixed(0)
+                          : p.projectedOutOf720}
+                        <span className="text-base font-semibold text-kal-muted">
+                          {" "}
+                          /{" "}
+                          {isUpscMainsUi
+                            ? UPSC_CSE_MAINS_UI_TOTAL_MARKS
+                            : maxScore}
+                        </span>
+                      </p>
+                      <p className="mt-0.5 text-[10px] leading-snug text-kal-muted">
+                        Based on {p.year} pattern
+                      </p>
+                    </div>
+                  ))}
+                  {neetYearProjections.length > 1 && !showAllYears && (
+                    <button
+                      type="button"
+                      onClick={() => setShowAllYears(true)}
+                      className="mt-1 text-[11px] font-medium"
+                      style={{ color: "#BA7517" }}
+                    >
+                      See all years ↓
+                    </button>
+                  )}
+                </>
+              ) : showMarksUi ? (
+                <div>
+                  <p className="text-xs text-kal-muted">Marks secured</p>
+                  <p className="text-lg font-semibold tabular-nums text-orange-600 dark:text-orange-300">
+                    {rollup.totalMarksMastered.toFixed(0)}
+                    <span className="text-kal-muted">
+                      {" "}
+                      /{" "}
+                      {isUpscMainsUi
+                        ? UPSC_CSE_MAINS_UI_TOTAL_MARKS
+                        : rollup.totalMarksPool.toFixed(0)}
+                    </span>
+                  </p>
+                </div>
+              ) : (
+                <div className="text-left sm:text-right">
+                  <p className="text-xs text-kal-muted">Snapshot</p>
+                  <p className="mt-0.5 text-sm text-kal-muted">
+                    Weighted projections appear when chapter marks are set for this
+                    exam.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-        <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-kal-card-muted">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-kal-accent via-orange-600 to-orange-700 transition-[width] duration-500"
-            style={{
-              width: `${Math.min(100, syllabusHeaderPercent)}%`,
-            }}
-          />
-        </div>
-      </section>
+          <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-kal-card-muted">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-kal-accent via-orange-600 to-orange-700 transition-[width] duration-500"
+              style={{
+                width: `${Math.min(100, syllabusHeaderPercent)}%`,
+              }}
+            />
+          </div>
+        </section>
+      )}
 
       <TransientNotice
         message={updateError}
@@ -893,6 +973,275 @@ export function SyllabusTracker() {
           </p>
         </div>
       )}
+
+      {/* For multi-exam tracks: render each exam's subjects in a headed section */}
+      {examSections ? (
+        <div className="space-y-8">
+          {examSections.map((section) => {
+            const sectionDisplayName =
+              displayNameForExamCatalog(section.examLabel ?? null, examCatalogRows) ||
+              section.examLabel;
+            return (
+              <div key={section.catalogExamKey ?? section.examLabel} className="space-y-4">
+                <h2 className="flex items-center gap-2 border-b border-kal-border pb-2 text-sm font-semibold uppercase tracking-widest text-kal-accent">
+                  {sectionDisplayName}
+                </h2>
+                {section.subjects.length === 0 ? (
+                  <p className="text-sm text-kal-muted">
+                    No syllabus loaded yet for this exam.
+                  </p>
+                ) : (
+                  section.subjects.map((subject) => {
+                    const chapters = section.grouped.get(subject)!;
+                    const chapterNames = sortChapterNameList([...chapters.keys()]);
+                    const subRoll = subjectMicrotopicMap.get(subject) ?? { completed: 0, total: 0, percent: 0 };
+                    const subjectIsOpen = openSubject === subject;
+                    const sectionExamKey = section.catalogExamKey ?? catalogExamKey;
+                    return (
+                      <div
+                        key={`${section.catalogExamKey}-${subject}`}
+                        className={clsx(
+                          "kal-glass-panel overflow-hidden rounded-2xl dark:border-white/12",
+                          subjectIsOpen && "shadow-md",
+                        )}
+                      >
+                        <div
+                          className="cursor-pointer list-none px-5 py-4 text-base font-semibold text-kal-text outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-kal-card"
+                          role="button"
+                          tabIndex={0}
+                          aria-expanded={subjectIsOpen}
+                          onClick={() => setOpenSubject((prev) => (prev === subject ? null : subject))}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setOpenSubject((prev) => (prev === subject ? null : subject));
+                            }
+                          }}
+                        >
+                          <div className="flex min-h-[48px] items-start justify-between gap-2 sm:items-center">
+                            <span className="flex min-w-0 items-start gap-2 sm:items-center">
+                              <BookMarked className="h-5 w-5 shrink-0 text-kal-accent" aria-hidden />
+                              <span className="min-w-0 break-words text-left leading-snug">{subject}</span>
+                            </span>
+                            <ChevronDown
+                              className={clsx(
+                                "h-5 w-5 shrink-0 text-kal-muted transition-transform duration-200",
+                                subjectIsOpen && "rotate-180",
+                              )}
+                              aria-hidden
+                            />
+                          </div>
+                          <p className="mt-2 text-[11px] tabular-nums text-kal-muted" aria-hidden>
+                            {subRoll.completed}/{subRoll.total} microtopics done · {subRoll.percent}%
+                          </p>
+                          <ChapterBar
+                            size="subject"
+                            percent={subRoll.percent}
+                            progressAriaLabel={`${subject}: ${subRoll.completed} of ${subRoll.total} microtopics complete, ${subRoll.percent} percent`}
+                          />
+                        </div>
+                        {subjectIsOpen ? (
+                          <div className="border-t border-kal-border">
+                            {chapterNames.map((chapter, chapterIdx) => {
+                              const list = chapters.get(chapter)!;
+                              const firstRow = list[0] as MergedSyllabusRow;
+                              const originSubject = firstRow.originSubject ?? firstRow.subject;
+                              const originChapter = firstRow.originChapter ?? firstRow.chapter;
+                              const cr = chapterRollupMap.get(chapterKey(subject, chapter));
+                              const pct = cr?.microtopicProgressPercent ?? 0;
+                              const marksLine = showMarksUi && cr != null
+                                ? `${cr.chapterMarksAwarded.toFixed(0)} / ${cr.chapterMarksTotal.toFixed(0)} chapter marks`
+                                : null;
+                              const ck = chapterKey(subject, chapter);
+                              const chapterIsOpen = !syllabusLimited && openChapterId === ck;
+                              return (
+                                <div key={chapter} className="mb-5 border-b border-kal-border pb-5 last:mb-0 last:border-b-0 last:pb-0">
+                                  <div className="kal-glass-card overflow-hidden rounded-xl border border-kal-border/90 shadow-sm ring-1 ring-black/[0.03] dark:ring-white/[0.04]">
+                                    <div className="flex flex-col gap-3.5 border-l-[4px] border-l-kal-accent">
+                                      <div
+                                        className={clsx(
+                                          "py-4 pl-4 pr-3 sm:py-5 sm:pl-5 sm:pr-4",
+                                          !syllabusLimited && "cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-kal-card",
+                                        )}
+                                        role={syllabusLimited ? undefined : "button"}
+                                        tabIndex={syllabusLimited ? -1 : 0}
+                                        aria-expanded={chapterIsOpen}
+                                        onClick={syllabusLimited ? undefined : () => setOpenChapterId((prev) => (prev === ck ? null : ck))}
+                                        onKeyDown={syllabusLimited ? undefined : (e) => {
+                                          if (e.key === "Enter" || e.key === " ") {
+                                            e.preventDefault();
+                                            setOpenChapterId((prev) => (prev === ck ? null : ck));
+                                          }
+                                        }}
+                                      >
+                                        <div className="flex items-start justify-between gap-3">
+                                          <span className="flex min-w-0 items-start gap-2.5">
+                                            <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-kal-card shadow-sm ring-1 ring-kal-border/50">
+                                              <Layers className="h-[1.15rem] w-[1.15rem] text-kal-accent" aria-hidden />
+                                            </span>
+                                            <span className="min-w-0 pt-0.5">
+                                              <span className="kal-category-label block text-kal-accent">Chapter</span>
+                                              <span className="mt-1 flex min-w-0 items-start gap-2.5 sm:gap-3">
+                                                <span className="shrink-0 border-r border-kal-border/55 pr-2.5 text-xl font-bold tabular-nums leading-none tracking-tight text-kal-text sm:pr-3 sm:text-2xl">
+                                                  {chapterIdx + 1}.
+                                                </span>
+                                                <span className="min-w-0 flex-1 break-words text-base font-bold leading-snug tracking-tight text-kal-text sm:text-lg">
+                                                  {chapter}
+                                                </span>
+                                              </span>
+                                            </span>
+                                          </span>
+                                          {!syllabusLimited && (
+                                            <ChevronDown
+                                              className={clsx(
+                                                "mt-1 h-5 w-5 shrink-0 text-kal-muted transition-transform duration-200",
+                                                chapterIsOpen && "rotate-180",
+                                              )}
+                                              aria-hidden
+                                            />
+                                          )}
+                                        </div>
+                                        <div className="mt-3 flex items-center gap-3">
+                                          <ChapterBar size="chapter" percent={pct} progressAriaLabel={`${chapter}: ${Math.round(pct)}% complete`} />
+                                          {marksLine && <span className="shrink-0 text-[11px] tabular-nums text-kal-muted">{marksLine}</span>}
+                                        </div>
+                                      </div>
+                                      {chapterIsOpen ? (
+                                        <ul className="kal-glass-subtle mt-3 space-y-0 rounded-xl border border-kal-border/60 py-1 pl-2 pr-1 shadow-inner sm:mt-4 sm:pl-3 sm:pr-2">
+                                          {list.map((row, rowIdx) => (
+                                            <SyllabusMicrotopicRow
+                                              key={row.id}
+                                              row={row as MergedSyllabusRow}
+                                              rowIdx={rowIdx}
+                                              statusBySyllabusMasterId={statusBySyllabusMasterId}
+                                              setMicrotopicStatus={setMicrotopicStatus}
+                                              undoMicrotopicToStatus={undoMicrotopicToStatus}
+                                              canCustomize={Boolean(sectionExamKey)}
+                                              catalogExamKey={sectionExamKey}
+                                              openSheet={openSheet}
+                                              setConfirmState={setConfirmState}
+                                              userId={userId}
+                                              revisionBundle={revisionBundle}
+                                              setRevisionBundle={setRevisionBundle}
+                                            />
+                                          ))}
+                                        </ul>
+                                      ) : null}
+                                      <div className="flex flex-nowrap items-center gap-2 overflow-hidden border-t border-kal-border/50 px-4 pb-4 pl-4 pr-3 pt-3.5 sm:pl-5 sm:pr-4">
+                                        {Boolean(sectionExamKey) ? (
+                                          <>
+                                            <button
+                                              type="button"
+                                              title="Add microtopic here"
+                                              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-kal-accent/30 text-kal-accent hover:bg-kal-accent-soft dark:border-orange-500/25 dark:text-orange-400 dark:hover:bg-orange-950/50"
+                                              onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                openSheet({
+                                                  kind: "add_microtopic",
+                                                  examName: sectionExamKey!,
+                                                  defaultSubject: subject,
+                                                  defaultChapter: chapter,
+                                                });
+                                              }}
+                                            >
+                                              <Plus className="h-4 w-4" aria-hidden />
+                                            </button>
+                                            <button
+                                              type="button"
+                                              title="Rename chapter"
+                                              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-kal-border text-kal-muted hover:bg-kal-card-muted"
+                                              onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                openSheet({
+                                                  kind: "rename_chapter",
+                                                  examName: sectionExamKey!,
+                                                  subject: originSubject,
+                                                  chapterOld: originChapter,
+                                                  chapterCurrentLabel: chapter,
+                                                });
+                                              }}
+                                            >
+                                              <Pencil className="h-4 w-4" aria-hidden />
+                                            </button>
+                                            <button
+                                              type="button"
+                                              title="Hide chapter (for you)"
+                                              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-orange-500/25 text-orange-400/90 hover:bg-orange-950/30"
+                                              onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                setConfirmState({
+                                                  title: "Hide this chapter?",
+                                                  description:
+                                                    "This removes every microtopic in the chapter from your syllabus only. The shared catalog does not change.",
+                                                  run: async () => {
+                                                    const res = await deleteCustomSyllabusItem({
+                                                      examName: sectionExamKey!,
+                                                      mode: "chapter",
+                                                      originSubject,
+                                                      originChapter,
+                                                    });
+                                                    if (!res.ok) throw new Error(res.error);
+                                                  },
+                                                });
+                                              }}
+                                            >
+                                              <Trash2 className="h-4 w-4" aria-hidden />
+                                            </button>
+                                          </>
+                                        ) : null}
+                                        <div className="ml-auto flex w-40 shrink-0 items-center gap-2">
+                                          <ChapterToggle
+                                            checked={cr?.isChapterMastered ?? false}
+                                            onChange={(on) =>
+                                              void setChapterCompleted(
+                                                list.map((r) => r.id),
+                                                on,
+                                              )
+                                            }
+                                          />
+                                          <span className="min-w-0 truncate text-xs font-medium text-kal-muted" aria-label={cr?.isChapterMastered ? "Completed" : "Mark chapter as complete"}>
+                                            {cr?.isChapterMastered ? "Completed" : "Mark complete"}
+                                          </span>
+                                        </div>
+                                        {sectionExamKey ? (
+                                          <button
+                                            type="button"
+                                            title="Chapter marks (your weights)"
+                                            className="inline-flex h-9 min-w-[2.5rem] shrink-0 items-center justify-center gap-1 rounded-lg border border-amber-500/40 bg-amber-950/25 px-2 text-[11px] font-semibold text-amber-100/95 shadow-sm shadow-amber-950/20 hover:bg-amber-950/45 sm:px-3"
+                                            onClick={(e) => {
+                                              e.preventDefault();
+                                              e.stopPropagation();
+                                              setMarksSheetChapter({
+                                                subject,
+                                                chapter,
+                                                rows: list as MergedSyllabusRow[],
+                                              });
+                                            }}
+                                          >
+                                            <SlidersHorizontal className="h-4 w-4 shrink-0" aria-hidden />
+                                            <span className="hidden sm:inline">Marks</span>
+                                          </button>
+                                        ) : null}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : null}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
 
       <div className="space-y-4">
         {subjects.map((subject) => {
@@ -1262,6 +1611,8 @@ export function SyllabusTracker() {
           );
         })}
       </div>
+
+      )} {/* end single-exam subjects div */}
 
       <ChapterMarksSheet
         open={marksSheetChapter != null && Boolean(catalogExamKey)}

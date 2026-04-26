@@ -12,7 +12,11 @@ import {
   isCuetExam,
   primaryMarksYearFromTargetExam,
 } from "@/lib/examProfile";
-import { loadSyllabusDataForUser } from "@/lib/syllabusDataForUser";
+import type { ExamTrack } from "@/lib/examTracks";
+import {
+  loadMultiExamSyllabusDataForUser,
+  type SyllabusDataForUserResult,
+} from "@/lib/syllabusDataForUser";
 import type { MergedSyllabusRow } from "@/lib/userSyllabusMerge";
 import type { MicrotopicProgressStatus } from "@/lib/syllabusConstants";
 import { normalizeSyllabusMasterId } from "@/lib/syllabusIds";
@@ -36,6 +40,8 @@ type SyllabusTrackerCache = {
   cuetDomainSubjects: string[];
   upscOptionalSubject: string | null;
   catalogExamKey: string | null;
+  selectedTrack: ExamTrack | null;
+  examResults: SyllabusDataForUserResult[];
   /** Epoch ms when the cache was last written. Used for TTL-gated silent refreshes. */
   loadedAt: number;
 };
@@ -60,6 +66,8 @@ export function useSyllabusTracker() {
   const [cuetDomainSubjects, setCuetDomainSubjects] = useState<string[]>([]);
   const [catalogExamKey, setCatalogExamKey] = useState<string | null>(null);
   const [upscOptionalSubject, setUpscOptionalSubject] = useState<string | null>(null);
+  const [selectedTrack, setSelectedTrack] = useState<ExamTrack | null>(null);
+  const [examResults, setExamResults] = useState<SyllabusDataForUserResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updateError, setUpdateError] = useState<string | null>(null);
@@ -92,6 +100,8 @@ export function useSyllabusTracker() {
         setCuetDomainSubjects([]);
         setUpscOptionalSubject(null);
         setCatalogExamKey(null);
+        setSelectedTrack(null);
+        setExamResults([]);
         setLoading(false);
         return;
       }
@@ -101,39 +111,51 @@ export function useSyllabusTracker() {
       }
       try {
         const supabase = getSupabaseBrowserClient();
-        const loaded = await loadSyllabusDataForUser(supabase, userId);
+        const { track, examResults: loaded } =
+          await loadMultiExamSyllabusDataForUser(supabase, userId);
 
-        setTargetExamLabel(loaded.examLabel);
-        setCuetDomainSubjects(loaded.cuetDomainSubjects);
-        setUpscOptionalSubject(loaded.upscOptionalSubject);
+        if (myId !== loadSeqRef.current) return;
 
-        if (!loaded.examLabel?.trim() || !loaded.catalogExamKey) {
-          if (myId !== loadSeqRef.current) return;
+        // Primary exam = first result (for backward compat consumers)
+        const primary = loaded[0] ?? null;
+        setTargetExamLabel(primary?.examLabel ?? null);
+        setCuetDomainSubjects(primary?.cuetDomainSubjects ?? []);
+        setUpscOptionalSubject(primary?.upscOptionalSubject ?? null);
+        setCatalogExamKey(primary?.catalogExamKey ?? null);
+        setSelectedTrack(track);
+        setExamResults(loaded);
+
+        // Merge rows + status maps across all enabled exams
+        const allRows = loaded.flatMap((r) => r.rows);
+        const mergedStatus = loaded.reduce<Record<string, string>>(
+          (acc, r) => ({ ...acc, ...r.statusBySyllabusMasterId }),
+          {},
+        );
+
+        if (allRows.length === 0) {
           setRows([]);
           setStatusBySyllabusMasterId({});
-          setCatalogExamKey(null);
           setError(null);
           return;
         }
 
-        setCatalogExamKey(loaded.catalogExamKey);
-
-        if (myId !== loadSeqRef.current) return;
         const pending = pendingStatusRef.current;
         const finalMap =
           Object.keys(pending).length > 0
-            ? { ...loaded.statusBySyllabusMasterId, ...pending }
-            : loaded.statusBySyllabusMasterId;
-        setRows(loaded.rows);
+            ? { ...mergedStatus, ...pending }
+            : mergedStatus;
+        setRows(allRows);
         setStatusBySyllabusMasterId(finalMap);
         trackerCache = {
           userId,
-          rows: loaded.rows,
+          rows: allRows,
           statusBySyllabusMasterId: finalMap,
-          targetExamLabel: loaded.examLabel,
-          cuetDomainSubjects: loaded.cuetDomainSubjects,
-          upscOptionalSubject: loaded.upscOptionalSubject,
-          catalogExamKey: loaded.catalogExamKey,
+          targetExamLabel: primary?.examLabel ?? null,
+          cuetDomainSubjects: primary?.cuetDomainSubjects ?? [],
+          upscOptionalSubject: primary?.upscOptionalSubject ?? null,
+          catalogExamKey: primary?.catalogExamKey ?? null,
+          selectedTrack: track,
+          examResults: loaded,
           loadedAt: Date.now(),
         };
         if (silent) setError(null);
@@ -168,6 +190,8 @@ export function useSyllabusTracker() {
       setCuetDomainSubjects(cached.cuetDomainSubjects);
       setUpscOptionalSubject(cached.upscOptionalSubject);
       setCatalogExamKey(cached.catalogExamKey);
+      setSelectedTrack(cached.selectedTrack);
+      setExamResults(cached.examResults);
       setLoading(false);
       setError(null);
       // Only trigger a background refresh when the cache is actually stale.
@@ -232,6 +256,42 @@ export function useSyllabusTracker() {
       maxScore,
     );
   }, [rows, statusBySyllabusMasterId, maxScore]);
+
+  /**
+   * Per-exam rollups for multi-exam tracks. When the user has more than one
+   * exam enabled, each exam gets its own rollup + year projections so the UI
+   * can render a separate progress card per exam. Returns null for single-exam
+   * users to avoid any behavioural change on the existing code path.
+   */
+  const examRollups = useMemo(() => {
+    if (examResults.length <= 1) return null;
+    return examResults.map((er) => {
+      const erMaxScore = examScoreMax(er.examLabel);
+      // Use the shared statusBySyllabusMasterId (kept live with optimistic updates)
+      // rather than er.statusBySyllabusMasterId (a stale server snapshot).
+      // The shared map is the merge of all per-exam maps, so it contains every
+      // key; passing it with er.rows (already scoped to this exam) gives the
+      // correct per-exam rollup.
+      const erRollup = computeSyllabusRollup(
+        er.rows,
+        statusBySyllabusMasterId,
+        er.primaryMarksYear,
+      );
+      const erProjections = computeNeetYearProjections(
+        er.rows,
+        statusBySyllabusMasterId,
+        erMaxScore,
+      );
+      return {
+        examLabel: er.examLabel,
+        catalogExamKey: er.catalogExamKey,
+        rollup: erRollup,
+        projections: erProjections,
+        maxScore: erMaxScore,
+        primaryMarksYear: er.primaryMarksYear,
+      };
+    });
+  }, [examResults, statusBySyllabusMasterId]);
 
   const setMicrotopicStatus = useCallback(
     async (
@@ -397,5 +457,11 @@ export function useSyllabusTracker() {
     setMicrotopicStatus,
     undoMicrotopicToStatus,
     setChapterCompleted,
+    /** All enabled exams in track order, each with their own rows + status map. */
+    examResults,
+    /** The user's selected exam track, or null for legacy users. */
+    selectedTrack,
+    /** Per-exam rollups for multi-exam tracks; null when only one exam is active. */
+    examRollups,
   };
 }

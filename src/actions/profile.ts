@@ -26,6 +26,10 @@ export async function upsertUserProfile(fields: {
   cuet_domain_subjects?: string[] | null;
   /** UPSC CSE Mains optional subject base name; null for non-mains exams. */
   upsc_optional_subject?: string | null;
+  /** Track system: the track ID chosen at onboarding. */
+  selected_track?: string | null;
+  /** Track system: ordered exam_name keys the user has enabled within their track. */
+  enabled_exams_in_track?: string[] | null;
 }): Promise<UpsertProfileResult> {
   try {
     const supabase = await createSupabaseServerClient();
@@ -70,6 +74,12 @@ export async function upsertUserProfile(fields: {
       target_exam: targetExam,
       cuet_domain_subjects: cuetDomains,
       upsc_optional_subjects: upscOptional ? [upscOptional] : null,
+      ...(fields.selected_track !== undefined
+        ? { selected_track: fields.selected_track }
+        : {}),
+      ...(fields.enabled_exams_in_track !== undefined
+        ? { enabled_exams_in_track: fields.enabled_exams_in_track }
+        : {}),
       updated_at: new Date().toISOString(),
     };
     const examHistoryPatch =
@@ -185,9 +195,11 @@ export async function completeOnboarding(fields: {
   full_name: string;
   phone_number: string;
   class_studying: string;
-  primary_exam: string;
+  /** Track ID, e.g. "jee". */
+  selected_track: string;
+  /** Ordered exam_name keys the user enabled in their track. */
+  enabled_exams_in_track: string[];
   target_exam_date?: string | null;
-  upsc_optional_subject?: string | null;
 }): Promise<UpsertProfileResult> {
   try {
     const supabase = await createSupabaseServerClient();
@@ -202,29 +214,36 @@ export async function completeOnboarding(fields: {
     const name = fields.full_name.trim();
     const phone = fields.phone_number.trim();
     const cls = fields.class_studying.trim();
-    const exam = fields.primary_exam.trim();
+    const track = fields.selected_track.trim();
+    const enabledExams = fields.enabled_exams_in_track.filter((e) => e.trim());
     const examDate = fields.target_exam_date?.trim() || null;
 
     if (!name) return { ok: false, error: "Please enter your name." };
     if (!phone || !/^\d{10}$/.test(phone))
       return { ok: false, error: "Please enter a valid 10-digit phone number." };
     if (!cls) return { ok: false, error: "Please select your class." };
-    if (!exam) return { ok: false, error: "Please select your target exam." };
+    if (!track) return { ok: false, error: "Please choose a track." };
+    if (enabledExams.length === 0)
+      return { ok: false, error: "Please select at least one exam in your track." };
     if (examDate && !/^\d{4}-\d{2}-\d{2}$/.test(examDate))
       return { ok: false, error: "Please enter a valid exam date." };
+
+    // Derive primary_exam from the first enabled exam for backward compatibility
+    // with all consumers that still read user_profiles.primary_exam / target_exam.
+    const primaryExam = enabledExams[0]!;
 
     const now = new Date().toISOString();
     const patch = {
       full_name: name,
       phone_number: phone,
       class_studying: cls,
-      primary_exam: exam,
-      target_exam: exam,
+      selected_track: track,
+      enabled_exams_in_track: enabledExams,
+      primary_exam: primaryExam,
+      target_exam: primaryExam,
       target_exam_date: examDate,
       cuet_domain_subjects: [] as string[],
-      upsc_optional_subjects: isUpscCseMainsExam(exam) && fields.upsc_optional_subject?.trim()
-        ? [fields.upsc_optional_subject.trim()]
-        : null,
+      upsc_optional_subjects: null,
       mandatory_onboarding_completed_at: now,
       updated_at: now,
     };
@@ -255,4 +274,59 @@ export async function completeOnboarding(fields: {
     console.error("[profile.completeOnboarding] failed", e);
     return { ok: false, error: formatSupabaseError(e) };
   }
+}
+
+/**
+ * Saves the user's enabled exam subset within their track. Also updates
+ * `primary_exam` / `target_exam` to the first enabled exam so other
+ * consumers (countdown, leaderboard cohort) keep working.
+ */
+export async function saveEnabledExamsInTrack(fields: {
+  selected_track: string;
+  enabled_exams_in_track: string[];
+}): Promise<UpsertProfileResult> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+      error: authErr,
+    } = await supabase.auth.getUser();
+    if (authErr || !user) return { ok: false, error: USER_ERROR.session };
+
+    const enabledExams = fields.enabled_exams_in_track.filter((e) => e.trim());
+    if (enabledExams.length === 0) {
+      return { ok: false, error: "Please enable at least one exam." };
+    }
+    const primaryExam = enabledExams[0]!;
+
+    const { error } = await supabase
+      .from("user_profiles")
+      .update({
+        selected_track: fields.selected_track,
+        enabled_exams_in_track: enabledExams,
+        primary_exam: primaryExam,
+        target_exam: primaryExam,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", user.id);
+
+    if (error) throw error;
+    revalidatePath("/");
+    revalidatePath("/profile");
+    return { ok: true };
+  } catch (e) {
+    console.error("[profile.saveEnabledExamsInTrack] failed", e);
+    return { ok: false, error: formatSupabaseError(e) };
+  }
+}
+
+/**
+ * Changes the user's track entirely (with full reset of enabled exams).
+ * Used by the "Change Track" flow in Profile — requires explicit user confirmation.
+ */
+export async function changeTrack(fields: {
+  selected_track: string;
+  enabled_exams_in_track: string[];
+}): Promise<UpsertProfileResult> {
+  return saveEnabledExamsInTrack(fields);
 }

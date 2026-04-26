@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { Loader2, LogOut, Plus, Trash2, UserCircle } from "lucide-react";
+import { Layers, Loader2, LogOut, Plus, Trash2, UserCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -14,10 +14,11 @@ import {
   useState,
 } from "react";
 
-import { upsertUserProfile } from "@/actions/profile";
+import { saveEnabledExamsInTrack, upsertUserProfile } from "@/actions/profile";
 import { CuetDomainSubjectPick } from "@/components/profile/CuetDomainSubjectPick";
-import { GroupedExamSelect } from "@/components/profile/GroupedExamSelect";
 import { LoginMethodsSection } from "@/components/profile/LoginMethodsSection";
+import { TrackExamToggles } from "@/components/profile/TrackExamToggles";
+import { TrackPicker } from "@/components/onboarding/TrackPicker";
 import { UpscOptionalSubjectPick } from "@/components/profile/UpscOptionalSubjectPick";
 import { InstallPWA } from "@/components/InstallPWA";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -29,6 +30,8 @@ import {
 } from "@/lib/examsCatalog";
 import { isCuetExam } from "@/lib/examProfile";
 import { parseCuetDomainSubjectsJson } from "@/lib/cuetDomainSubjects";
+import type { ExamTrack } from "@/lib/examTracks";
+import { trackById, trackForExamName } from "@/lib/examTracks";
 import {
   isUpscCseMainsExam,
 } from "@/lib/upscMainsOptionalSubjects";
@@ -112,6 +115,13 @@ export function ProfileForm() {
   const [signOutConfirmOpen, setSignOutConfirmOpen] = useState(false);
   const fullNameInputRef = useRef<HTMLInputElement | null>(null);
 
+  // Track system state
+  const [selectedTrack, setSelectedTrack] = useState<ExamTrack | null>(null);
+  const [enabledExamsInTrack, setEnabledExamsInTrack] = useState<string[]>([]);
+  const [changeTrackOpen, setChangeTrackOpen] = useState(false);
+  const [changeTrackConfirmOpen, setChangeTrackConfirmOpen] = useState(false);
+  const [pendingNewTrack, setPendingNewTrack] = useState<ExamTrack | null>(null);
+
   const examSelectOptions = useMemo(
     () => mergeOrphanExamOption(examRows, initialExamRaw),
     [examRows, initialExamRaw],
@@ -133,7 +143,7 @@ export function ProfileForm() {
           supabase
             .from("user_profiles")
             .select(
-              "full_name, target_exam_date, primary_exam, target_exam, prev_exam_attempted, prev_score, prev_score_entries, cuet_domain_subjects, upsc_optional_subjects",
+              "full_name, target_exam_date, primary_exam, target_exam, prev_exam_attempted, prev_score, prev_score_entries, cuet_domain_subjects, upsc_optional_subjects, selected_track, enabled_exams_in_track",
             )
             .eq("user_id", user.id)
             .maybeSingle(),
@@ -150,6 +160,17 @@ export function ProfileForm() {
 
         const merged = mergeOrphanExamOption(catalog, teRaw || null);
         setTargetExam(resolveInitialTargetExamName(teRaw, merged));
+
+        // Resolve track from DB or infer from primary_exam
+        const dbTrackId = data?.selected_track?.trim();
+        const track = dbTrackId
+          ? (trackById(dbTrackId) ?? trackForExamName(teRaw))
+          : trackForExamName(teRaw);
+        setSelectedTrack(track);
+        const dbEnabled = Array.isArray(data?.enabled_exams_in_track)
+          ? (data.enabled_exams_in_track as string[]).filter((e) => e?.trim())
+          : track?.examNames ?? [];
+        setEnabledExamsInTrack(dbEnabled.length > 0 ? dbEnabled : (track?.examNames ?? []));
 
         setFullName(data?.full_name?.trim() ?? "");
         setExamDate(
@@ -252,24 +273,26 @@ export function ProfileForm() {
           return;
         }
       }
-      /** Option `value` is `exams.exam_name` (e.g. `JEE Main 2025`, `NEET UG`). */
-      const examName = targetExam.trim() ? targetExam.trim() : null;
-      if (!examName) {
-        setError("Select your target exam before saving.");
+      if (!selectedTrack || enabledExamsInTrack.length === 0) {
+        setError("Please select a track with at least one exam enabled.");
         return;
       }
+      // primary_exam = first enabled exam (track order is preserved by TrackExamToggles)
+      const primaryExamName = enabledExamsInTrack[0]!;
       const fullNameValue = fullNameInputRef.current?.value ?? fullName;
       const res = await upsertUserProfile({
         full_name: fullNameValue.trim() || null,
         target_exam_date: examDate.trim() || null,
-        primary_exam: examName,
-        target_exam: examName,
+        primary_exam: primaryExamName,
+        target_exam: primaryExamName,
         prev_exam_attempted: prevAttempted,
         prev_score_entries: prevAttempted ? prevEntries : [],
         cuet_domain_subjects:
-          examName && isCuetExam(examName) ? cuetDomainSubjects : [],
+          isCuetExam(primaryExamName) ? cuetDomainSubjects : [],
         upsc_optional_subject:
-          examName && isUpscCseMainsExam(examName) ? (upscOptionalSubject || null) : null,
+          isUpscCseMainsExam(primaryExamName) ? (upscOptionalSubject || null) : null,
+        selected_track: selectedTrack.id,
+        enabled_exams_in_track: enabledExamsInTrack,
       });
       if (!res.ok) {
         setError(surfaceErrorForUi(res.error));
@@ -288,7 +311,8 @@ export function ProfileForm() {
     user?.id,
     fullName,
     examDate,
-    targetExam,
+    selectedTrack,
+    enabledExamsInTrack,
     prevAttempted,
     scoreRows,
     cuetDomainSubjects,
@@ -408,20 +432,46 @@ export function ProfileForm() {
 
         <Section
           title="Exam goals"
-          footer="Target exam powers labels and your home countdown date."
+          footer="Your track controls which exams appear in the Syllabus Tracker."
         >
+          {/* Track display row */}
           <Row className="flex-col items-stretch gap-2 sm:flex-row sm:items-center">
-            <span className="w-28 shrink-0 text-[15px] font-medium text-kal-text-secondary">
-              Target exam
+            <span className="flex items-center gap-1.5 w-28 shrink-0 text-[15px] font-medium text-kal-text-secondary">
+              <Layers className="h-4 w-4" />
+              Track
             </span>
-            <GroupedExamSelect
-              id="target-exam"
-              value={targetExam}
-              onChange={setTargetExam}
-              options={examSelectOptions}
-              placeholder
-            />
+            <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
+              <span className="text-[15px] font-medium text-kal-text">
+                {selectedTrack?.name ?? "No track selected"}
+              </span>
+              <button
+                type="button"
+                onClick={() => setChangeTrackOpen(true)}
+                disabled={saving}
+                className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium text-kal-accent hover:text-kal-accent/80 disabled:pointer-events-none disabled:opacity-40"
+              >
+                Change Track
+              </button>
+            </div>
           </Row>
+
+          {/* Enabled exams within track */}
+          {selectedTrack && (
+            <div className="border-t border-kal-border px-4 py-3">
+              <p className="mb-1 text-xs font-semibold text-kal-text-secondary">
+                Exams to show in Syllabus Tracker
+              </p>
+              <TrackExamToggles
+                track={selectedTrack}
+                enabledExams={enabledExamsInTrack}
+                onChange={setEnabledExamsInTrack}
+                catalog={examRows}
+                disabled={saving}
+              />
+            </div>
+          )}
+
+          {/* Exam date */}
           <Row>
             <label
               htmlFor="exam-date"
@@ -482,6 +532,89 @@ export function ProfileForm() {
             </div>
           ) : null}
         </Section>
+
+        {/* Change Track modal — picker phase */}
+        {changeTrackOpen && (
+          <div
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setChangeTrackOpen(false);
+            }}
+          >
+            <div className="w-full max-w-lg overflow-y-auto rounded-2xl border border-kal-border bg-kal-bg-elevated p-5 shadow-xl sm:max-h-[80vh]">
+              <h2 className="mb-4 text-base font-semibold text-kal-text">
+                Change Track
+              </h2>
+              <p className="mb-4 text-sm text-kal-text-secondary">
+                Changing your track will reset your exam selection. This cannot be
+                easily undone.
+              </p>
+              <TrackPicker
+                selected={pendingNewTrack ?? selectedTrack}
+                onSelect={(track) => setPendingNewTrack(track)}
+                catalog={examRows}
+                disabled={saving}
+              />
+              <div className="mt-4 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setChangeTrackOpen(false);
+                    setPendingNewTrack(null);
+                  }}
+                  className="flex-1 rounded-xl border border-kal-border py-2.5 text-sm font-medium text-kal-text-secondary hover:text-kal-text"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={!pendingNewTrack || pendingNewTrack.id === selectedTrack?.id}
+                  onClick={() => {
+                    setChangeTrackOpen(false);
+                    setChangeTrackConfirmOpen(true);
+                  }}
+                  className="flex-1 rounded-xl bg-kal-accent py-2.5 text-sm font-semibold text-white disabled:opacity-40"
+                >
+                  Select Track
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Change Track — confirmation dialog */}
+        <ConfirmDialog
+          open={changeTrackConfirmOpen}
+          title="Change track?"
+          description={
+            pendingNewTrack
+              ? `You are switching to "${pendingNewTrack.name}". Your current exam selection will be replaced with all exams in the new track.`
+              : ""
+          }
+          confirmLabel="Change Track"
+          cancelLabel="Keep Current"
+          danger
+          onCancel={() => {
+            setChangeTrackConfirmOpen(false);
+            setPendingNewTrack(null);
+          }}
+          onConfirm={() => {
+            if (!pendingNewTrack) return;
+            setSelectedTrack(pendingNewTrack);
+            setEnabledExamsInTrack(pendingNewTrack.examNames);
+            setChangeTrackConfirmOpen(false);
+            setPendingNewTrack(null);
+            void saveEnabledExamsInTrack({
+              selected_track: pendingNewTrack.id,
+              enabled_exams_in_track: pendingNewTrack.examNames,
+            }).then((res) => {
+              if (res.ok) {
+                window.dispatchEvent(new Event(KALNEHI_PROFILE_UPDATED_EVENT));
+                router.refresh();
+              }
+            });
+          }}
+        />
 
         <Section
           title="Exam history"

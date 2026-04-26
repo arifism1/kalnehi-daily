@@ -100,7 +100,7 @@ export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects }: Pr
         aria-hidden
       />
       <div
-        className="relative z-10 flex min-h-0 w-full max-w-lg max-h-[92dvh] flex-col overflow-hidden rounded-t-2xl border border-zinc-200/95 bg-kal-bg shadow-2xl ring-1 ring-zinc-950/10 dark:border-zinc-600 sm:rounded-2xl dark:ring-white/10"
+        className="relative z-10 flex min-h-0 w-full max-w-lg max-h-[92dvh] flex-col overflow-hidden rounded-t-2xl border border-zinc-200/95 bg-kal-bg-elevated shadow-2xl ring-1 ring-zinc-950/10 dark:border-zinc-600 sm:rounded-2xl dark:ring-white/10"
         role="dialog"
         aria-modal="true"
         aria-labelledby={`${baseId}-dialog-title`}
@@ -244,7 +244,7 @@ export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects }: Pr
           </label>
         </div>
 
-        <div className="shrink-0 border-t border-zinc-200/90 bg-kal-bg p-4 pt-3 dark:border-zinc-600/80 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div className="shrink-0 border-t border-zinc-200/90 bg-kal-bg-elevated p-4 pt-3 dark:border-zinc-600/80 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           {saveError && (
             <p className="mb-3 text-sm font-medium text-red-700 dark:text-red-300">{saveError}</p>
           )}

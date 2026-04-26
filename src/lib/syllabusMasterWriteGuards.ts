@@ -28,35 +28,67 @@ export type UserCatalogExamContext = {
 };
 
 /**
- * Resolves the user's syllabus catalog key from `user_profiles` (`target_exam` then `primary_exam`).
+ * Returns all enabled exam keys for the user (from their track's
+ * `enabled_exams_in_track`, falling back to their single `target_exam`).
+ * These are canonical `syllabus_master.exam_name` values.
  */
-export async function getUserCatalogExamContext(
+export async function getUserEnabledExamKeys(
   supabase: Client,
   userId: string,
-): Promise<UserCatalogExamContext | null> {
+): Promise<{ examKeys: string[]; upscOptionalSubject: string | null }> {
   const { data: profile, error } = await supabase
     .from("user_profiles")
-    .select("target_exam, primary_exam, upsc_optional_subjects")
+    .select("target_exam, primary_exam, enabled_exams_in_track, upsc_optional_subjects")
     .eq("user_id", userId)
     .maybeSingle();
 
-  if (error || !profile) return null;
-
-  const examLabel = resolveSyllabusExam(profile);
-  const examKey = examLabel?.trim() ? syllabusCatalogExamName(examLabel) : null;
-  if (!examKey) return null;
+  if (error || !profile) return { examKeys: [], upscOptionalSubject: null };
 
   const upscOptionalSubject = Array.isArray(profile.upsc_optional_subjects)
     ? (profile.upsc_optional_subjects[0]?.trim() || null)
     : null;
 
-  return { examKey, examLabel: examLabel ?? null, upscOptionalSubject };
+  const enabledRaw = Array.isArray(profile.enabled_exams_in_track)
+    ? (profile.enabled_exams_in_track as string[]).filter((e) => e?.trim())
+    : [];
+
+  if (enabledRaw.length > 0) {
+    const examKeys = enabledRaw
+      .map((name) => syllabusCatalogExamName(name))
+      .filter((k): k is string => Boolean(k));
+    return { examKeys, upscOptionalSubject };
+  }
+
+  // Legacy path: single exam from profile
+  const examLabel = resolveSyllabusExam(profile);
+  const examKey = examLabel?.trim() ? syllabusCatalogExamName(examLabel) : null;
+  return { examKeys: examKey ? [examKey] : [], upscOptionalSubject };
+}
+
+/**
+ * Resolves the user's primary syllabus catalog key from `user_profiles`
+ * (`target_exam` then `primary_exam`). Kept for backward compat.
+ */
+export async function getUserCatalogExamContext(
+  supabase: Client,
+  userId: string,
+): Promise<UserCatalogExamContext | null> {
+  const { examKeys, upscOptionalSubject } = await getUserEnabledExamKeys(
+    supabase,
+    userId,
+  );
+  if (examKeys.length === 0) return null;
+  return {
+    examKey: examKeys[0]!,
+    examLabel: examKeys[0]!,
+    upscOptionalSubject,
+  };
 }
 
 /**
  * Among `candidateIds`, returns normalized ids that are allowed for this user:
- * catalog `syllabus_master` rows for their `examKey` (with UPSC optional visibility),
- * or user-added microtopics (`custom_row_id`) for that exam.
+ * catalog `syllabus_master` rows for ANY of their enabled exam keys (with UPSC
+ * optional visibility), or user-added microtopics (`custom_row_id`) for those exams.
  */
 export async function resolveAllowedSyllabusMasterIdsForUser(
   supabase: Client,
@@ -73,51 +105,57 @@ export async function resolveAllowedSyllabusMasterIdsForUser(
   const allowed = new Set<string>();
   if (normalized.length === 0) return allowed;
 
-  const ctx = await getUserCatalogExamContext(supabase, userId);
-  if (!ctx) return allowed;
+  const { examKeys, upscOptionalSubject } = await getUserEnabledExamKeys(
+    supabase,
+    userId,
+  );
+  if (examKeys.length === 0) return allowed;
 
-  const { examKey, upscOptionalSubject } = ctx;
-
-  for (let i = 0; i < normalized.length; i += ID_CHUNK) {
-    const chunk = normalized.slice(i, i + ID_CHUNK);
-    const { data: smRows, error: smErr } = await supabase
-      .from("syllabus_master")
-      .select("id, subject")
-      .eq("exam_name", examKey)
-      .in("id", chunk);
-    if (smErr) continue;
-    for (const row of smRows ?? []) {
-      const sid = normalizeSyllabusMasterId(String(row.id));
-      if (isUpscCseMainsExam(examKey)) {
-        if (
-          shouldKeepUpscMainsRow({
-            subject: row.subject ?? "",
-            selectedOptional: upscOptionalSubject,
-          })
-        ) {
+  // Check against each enabled exam key
+  for (const examKey of examKeys) {
+    for (let i = 0; i < normalized.length; i += ID_CHUNK) {
+      const chunk = normalized.slice(i, i + ID_CHUNK);
+      const { data: smRows, error: smErr } = await supabase
+        .from("syllabus_master")
+        .select("id, subject")
+        .eq("exam_name", examKey)
+        .in("id", chunk);
+      if (smErr) continue;
+      for (const row of smRows ?? []) {
+        const sid = normalizeSyllabusMasterId(String(row.id));
+        if (isUpscCseMainsExam(examKey)) {
+          if (
+            shouldKeepUpscMainsRow({
+              subject: row.subject ?? "",
+              selectedOptional: upscOptionalSubject,
+            })
+          ) {
+            allowed.add(sid);
+          }
+        } else {
           allowed.add(sid);
         }
-      } else {
-        allowed.add(sid);
       }
     }
   }
 
   const stillNeed = normalized.filter((id) => !allowed.has(id));
-  for (let i = 0; i < stillNeed.length; i += ID_CHUNK) {
-    const chunk = stillNeed.slice(i, i + ID_CHUNK);
-    const { data: adds, error: addErr } = await supabase
-      .from("user_syllabus_customizations")
-      .select("custom_row_id")
-      .eq("user_id", userId)
-      .eq("exam_name", examKey)
-      .eq("action_type", "add")
-      .eq("target_type", "microtopic")
-      .in("custom_row_id", chunk);
-    if (addErr) continue;
-    for (const r of adds ?? []) {
-      if (r.custom_row_id) {
-        allowed.add(normalizeSyllabusMasterId(String(r.custom_row_id)));
+  for (const examKey of examKeys) {
+    for (let i = 0; i < stillNeed.length; i += ID_CHUNK) {
+      const chunk = stillNeed.slice(i, i + ID_CHUNK);
+      const { data: adds, error: addErr } = await supabase
+        .from("user_syllabus_customizations")
+        .select("custom_row_id")
+        .eq("user_id", userId)
+        .eq("exam_name", examKey)
+        .eq("action_type", "add")
+        .eq("target_type", "microtopic")
+        .in("custom_row_id", chunk);
+      if (addErr) continue;
+      for (const r of adds ?? []) {
+        if (r.custom_row_id) {
+          allowed.add(normalizeSyllabusMasterId(String(r.custom_row_id)));
+        }
       }
     }
   }

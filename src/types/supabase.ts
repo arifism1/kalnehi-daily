@@ -1953,6 +1953,7 @@ export type Database = {
           bonus_voice_minutes_ledger_at_cancel: Json | null
           class_studying: string | null
           cuet_domain_subjects: Json | null
+          enabled_exams_in_track: string[] | null
           enabled_features: string[] | null
           full_name: string | null
           has_had_trial: boolean
@@ -1979,6 +1980,7 @@ export type Database = {
           referral_medium: string | null
           referral_source: string | null
           referral_url: string | null
+          selected_track: string | null
           signup_attribution: Json | null
           subscription_autopay_months_total: number | null
           subscription_cancelled_at: string | null
@@ -2021,6 +2023,7 @@ export type Database = {
           bonus_voice_minutes_ledger_at_cancel?: Json | null
           class_studying?: string | null
           cuet_domain_subjects?: Json | null
+          enabled_exams_in_track?: string[] | null
           enabled_features?: string[] | null
           full_name?: string | null
           has_had_trial?: boolean
@@ -2047,6 +2050,7 @@ export type Database = {
           referral_medium?: string | null
           referral_source?: string | null
           referral_url?: string | null
+          selected_track?: string | null
           signup_attribution?: Json | null
           subscription_autopay_months_total?: number | null
           subscription_cancelled_at?: string | null
@@ -2089,6 +2093,7 @@ export type Database = {
           bonus_voice_minutes_ledger_at_cancel?: Json | null
           class_studying?: string | null
           cuet_domain_subjects?: Json | null
+          enabled_exams_in_track?: string[] | null
           enabled_features?: string[] | null
           full_name?: string | null
           has_had_trial?: boolean
@@ -2115,6 +2120,7 @@ export type Database = {
           referral_medium?: string | null
           referral_source?: string | null
           referral_url?: string | null
+          selected_track?: string | null
           signup_attribution?: Json | null
           subscription_autopay_months_total?: number | null
           subscription_cancelled_at?: string | null
