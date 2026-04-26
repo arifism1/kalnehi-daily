@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   Loader2,
   Menu,
-  Send,
   SquarePen,
   Trash2,
   X,
@@ -20,7 +19,7 @@ import remarkGfm from "remark-gfm";
 
 import { usePrepBrainAI } from "@/hooks/usePrepBrainAI";
 import { useAllExamScopes } from "@/hooks/useAllExamScopes";
-import { PREPBRAIN_TOP_NOTICE, PREPBRAIN_UI_DISCLAIMER } from "@/lib/prepBrainPrompts";
+import { PREPBRAIN_UI_DISCLAIMER } from "@/lib/prepBrainPrompts";
 import {
   PREPBRAIN_USAGE_WARN_RATIO,
   type AiUsagePhase,
@@ -28,6 +27,82 @@ import {
 import { AiTokenLimitLinks } from "@/components/subscription/LimitExceededLinks";
 import { PrepBrainIllustration } from "@/components/illustrations/PrepBrainIllustration";
 
+
+function RobotSendIcon({ sending }: { sending: boolean }) {
+  return (
+    <svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" aria-hidden>
+      {/* Antenna stem */}
+      <line x1="22" y1="5" x2="22" y2="11" stroke="white" strokeWidth="2" strokeLinecap="round" />
+      {/* Antenna tip — heart shape */}
+      <path d="M22 3 C22 3 19 1 19 3.5 C19 5 22 7 22 7 C22 7 25 5 25 3.5 C25 1 22 3 22 3Z" fill="white">
+        <animateTransform attributeName="transform" type="scale" values="1,1;1.25,1.25;1,1" dur="1.6s" additive="sum" repeatCount="indefinite" begin="0s" />
+      </path>
+
+      {/* Head — very round */}
+      <rect x="7" y="11" width="30" height="26" rx="10" fill="white" opacity="0.95" />
+
+      {/* Ear nubs */}
+      <rect x="4" y="18" width="5" height="9" rx="2.5" fill="white" opacity="0.75" />
+      <rect x="35" y="18" width="5" height="9" rx="2.5" fill="white" opacity="0.75" />
+
+      {/* Blush cheeks */}
+      <ellipse cx="12.5" cy="29" rx="3.5" ry="2" fill="#FFB366" opacity="0.55" />
+      <ellipse cx="31.5" cy="29" rx="3.5" ry="2" fill="#FFB366" opacity="0.55" />
+
+      {/* Eyes */}
+      {sending ? (
+        /* Spinning swirl eyes while sending */
+        <>
+          <circle cx="16" cy="22" r="4" fill="#FF7A00" opacity="0.15" />
+          <path d="M16 19 A3 3 0 0 1 19 22" stroke="#FF7A00" strokeWidth="2" strokeLinecap="round" fill="none">
+            <animateTransform attributeName="transform" type="rotate" from="0 16 22" to="360 16 22" dur="0.7s" repeatCount="indefinite" />
+          </path>
+          <circle cx="28" cy="22" r="4" fill="#FF7A00" opacity="0.15" />
+          <path d="M28 19 A3 3 0 0 1 31 22" stroke="#FF7A00" strokeWidth="2" strokeLinecap="round" fill="none">
+            <animateTransform attributeName="transform" type="rotate" from="0 28 22" to="360 28 22" dur="0.7s" repeatCount="indefinite" />
+          </path>
+        </>
+      ) : (
+        /* Big sparkly blinking eyes */
+        <>
+          <circle cx="16" cy="22" r="4.5" fill="#FF7A00" />
+          <circle cx="17.5" cy="20.5" r="1.5" fill="white" opacity="0.85" />
+          <circle cx="14.5" cy="24" r="0.8" fill="white" opacity="0.5" />
+          <ellipse cx="16" cy="22" rx="4.5" ry="4.5" fill="none">
+            <animate attributeName="ry" values="4.5;0.3;4.5" dur="3.2s" begin="1s" repeatCount="indefinite" />
+          </ellipse>
+
+          <circle cx="28" cy="22" r="4.5" fill="#FF7A00" />
+          <circle cx="29.5" cy="20.5" r="1.5" fill="white" opacity="0.85" />
+          <circle cx="26.5" cy="24" r="0.8" fill="white" opacity="0.5" />
+          <ellipse cx="28" cy="22" rx="4.5" ry="4.5" fill="none">
+            <animate attributeName="ry" values="4.5;0.3;4.5" dur="3.2s" begin="1s" repeatCount="indefinite" />
+          </ellipse>
+
+          {/* Blink overlay — white rectangles that grow/shrink */}
+          <rect x="11.5" y="17.5" width="9" height="9" rx="4.5" fill="white" opacity="0">
+            <animate attributeName="opacity" values="0;0;1;0;0" dur="3.2s" begin="1s" repeatCount="indefinite" />
+            <animate attributeName="height" values="0;0;9;0;0" dur="3.2s" begin="1s" repeatCount="indefinite" />
+          </rect>
+          <rect x="23.5" y="17.5" width="9" height="9" rx="4.5" fill="white" opacity="0">
+            <animate attributeName="opacity" values="0;0;1;0;0" dur="3.2s" begin="1s" repeatCount="indefinite" />
+            <animate attributeName="height" values="0;0;9;0;0" dur="3.2s" begin="1s" repeatCount="indefinite" />
+          </rect>
+        </>
+      )}
+
+      {/* Mouth */}
+      {sending ? (
+        <path d="M15 32 Q22 28 29 32" stroke="#FF7A00" strokeWidth="2" strokeLinecap="round" fill="none">
+          <animate attributeName="d" values="M15 32 Q22 28 29 32;M15 30 Q22 34 29 30;M15 32 Q22 28 29 32" dur="0.9s" repeatCount="indefinite" />
+        </path>
+      ) : (
+        /* Big UwU smile */
+        <path d="M14 31 Q22 37 30 31" stroke="#FF7A00" strokeWidth="2.2" strokeLinecap="round" fill="none" />
+      )}
+    </svg>
+  );
+}
 
 function prepbrainUsagePeriodLabel(phase: AiUsagePhase): string {
   switch (phase) {
@@ -266,15 +341,6 @@ export function PrepBrainChat() {
         "sm:h-auto sm:min-h-[min(76vh,640px)] sm:max-h-none",
       ].join(" ")}
     >
-      <div
-        className="shrink-0 border-b border-kal-border/45 bg-kal-accent-soft/35 px-2.5 py-1.5 text-center sm:px-4 sm:py-2"
-        role="region"
-        aria-label="How to use Mastermind"
-      >
-        <p className="mx-auto max-w-2xl text-[10px] leading-snug text-kal-text sm:text-[11px] sm:leading-snug">
-          {PREPBRAIN_TOP_NOTICE}
-        </p>
-      </div>
       {/* Minimal header — calm hierarchy; usage lives in sidebar */}
       <header className="flex shrink-0 items-start gap-2.5 border-b border-kal-border/40 bg-gradient-to-b from-white/50 to-transparent px-3 py-2.5 backdrop-blur-md sm:gap-4 sm:px-6 sm:py-4">
         <button
@@ -296,21 +362,6 @@ export function PrepBrainChat() {
               Mastermind
             </h2>
           </div>
-          <p className="mt-0.5 text-[11px] font-medium leading-tight text-kal-text-secondary/90 sm:mt-1.5 sm:text-[13px] sm:leading-snug">
-            Your personal exam strategist
-          </p>
-          {isMultiExam && examScopes.length > 0 && (
-            <div className="mt-1 flex flex-wrap gap-1.5">
-              {examScopes.map((scope) => (
-                <span
-                  key={scope.examLabel}
-                  className="inline-block rounded-full border border-kal-accent/25 bg-kal-accent/8 px-2 py-0.5 text-[10px] font-semibold text-kal-accent leading-none"
-                >
-                  {scope.displayName || scope.examLabel}
-                </span>
-              ))}
-            </div>
-          )}
         </div>
       </header>
 
@@ -337,25 +388,21 @@ export function PrepBrainChat() {
               aria-modal="true"
               aria-label="Mastermind menu"
             >
-              <div className="flex shrink-0 items-center justify-between gap-2 border-b border-kal-border/40 px-4 py-3.5">
-                <span className="text-[15px] font-semibold tracking-tight text-kal-text">
-                  Mastermind
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setHistoryOpen(false)}
-                  className="touch-manipulation flex h-10 w-10 items-center justify-center rounded-xl text-kal-text-secondary transition-colors hover:bg-white/60 hover:text-kal-text dark:hover:bg-white/10"
-                  aria-label="Close menu"
-                >
-                  <X className="h-5 w-5" aria-hidden />
-                </button>
-              </div>
-
-              <div className="shrink-0 px-4 pt-2">
+              <div className="shrink-0 px-4 pt-3">
                 <div className="kal-glass-card rounded-2xl p-3.5 shadow-sm">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-kal-text-secondary">
-                    Mastermind usage
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-kal-text-secondary">
+                      Mastermind usage
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setHistoryOpen(false)}
+                      className="touch-manipulation -mr-1 -mt-1 flex h-7 w-7 items-center justify-center rounded-lg text-kal-text-secondary transition-colors hover:bg-white/60 hover:text-kal-text dark:hover:bg-white/10"
+                      aria-label="Close menu"
+                    >
+                      <X className="h-4 w-4" aria-hidden />
+                    </button>
+                  </div>
                   {usageLoading ? (
                     <p className="mt-2 text-xs text-kal-text-secondary">Loading…</p>
                   ) : usage && usage.limit > 0 ? (
@@ -496,19 +543,9 @@ export function PrepBrainChat() {
           <div className="h-full min-h-0 overflow-y-auto overscroll-contain px-3 py-3 [-webkit-overflow-scrolling:touch] sm:px-8 sm:py-8">
         {messages.length === 0 && !isSending && (
           <div className="mx-auto flex max-w-2xl flex-col items-center gap-4 text-center sm:gap-8">
-            <PrepBrainIllustration className="w-full max-w-[160px] sm:max-w-[200px]" />
+            <PrepBrainIllustration className="w-full max-w-[90px] sm:max-w-[110px]" />
             {/* Instruction box */}
             <div className="kal-glass-card w-full rounded-2xl p-4 text-left sm:p-5">
-              {/* Title */}
-              <div className="mb-3 flex items-center gap-2 sm:mb-4">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-kal-accent-soft ring-1 ring-kal-accent/25">
-                  <Brain className="h-4 w-4 text-kal-accent" aria-hidden />
-                </span>
-                <span className="text-[13px] font-semibold tracking-tight text-kal-text sm:text-sm">
-                  Mastermind – Your Strategy Coach
-                </span>
-              </div>
-
               {/* For / Not For columns */}
               <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
                 {/* What it's for */}
@@ -558,27 +595,6 @@ export function PrepBrainChat() {
                       </li>
                     ))}
                   </ul>
-
-                  {/* Example prompts */}
-                  <div className="mt-4">
-                    <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-kal-text-secondary/70 sm:text-[11px]">
-                      Example prompts
-                    </p>
-                    <ul className="space-y-1.5">
-                      {[
-                        "I need about 20 more marks — what should I focus on first?",
-                        "I'm not meditating regularly. What should I do this week?",
-                        "Based on my data, am I executing my daily plan well enough?",
-                      ].map((prompt) => (
-                        <li
-                          key={prompt}
-                          className="kal-glass-subtle rounded-lg px-2.5 py-1.5 text-[11px] italic leading-snug text-kal-text-secondary sm:text-[12px]"
-                        >
-                          "{prompt}"
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
                 </div>
               </div>
             </div>
@@ -695,11 +711,7 @@ export function PrepBrainChat() {
             className="touch-manipulation inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-kal-accent text-kal-accent-foreground shadow-[0_6px_20px_rgba(255,122,0,0.32)] transition-transform hover:opacity-95 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 sm:h-[52px] sm:w-[52px] sm:rounded-2xl"
             aria-label="Send"
           >
-            {isSending ? (
-              <Loader2 className="h-5 w-5 animate-spin sm:h-6 sm:w-6" aria-hidden />
-            ) : (
-              <Send className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden />
-            )}
+            <RobotSendIcon sending={isSending} />
           </button>
         </div>
         {/* Mobile: one-line control; full disclaimer inside expandable panel */}

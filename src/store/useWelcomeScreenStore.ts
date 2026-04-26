@@ -35,3 +35,11 @@ export function shouldShowMorningForDate(
   if (!todayYmd) return false;
   return lastMorningYmd !== todayYmd;
 }
+
+/**
+ * Returns true only between 4:00 AM and 11:59 AM (local time).
+ */
+export function isMorningTimeWindow(): boolean {
+  const h = new Date().getHours();
+  return h >= 4 && h < 12;
+}
