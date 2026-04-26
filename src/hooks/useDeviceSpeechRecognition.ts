@@ -147,6 +147,8 @@ export function useDeviceSpeechRecognition({
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const speechStartedAtMsRef = useRef<number | null>(null);
   const finalTranscriptRef = useRef("");
+  /** Last `combined` (final+interim) from onresult; onend can run before a final is committed, so this preserves what the user saw. */
+  const lastCombinedPreviewRef = useRef("");
   const silenceTimerRef = useRef<number | null>(null);
   const sessionTimerRef = useRef<number | null>(null);
   const suppressSubmitRef = useRef(false);
@@ -223,7 +225,10 @@ export function useDeviceSpeechRecognition({
     setStatus("idle");
     setMicBusy(false);
 
-    const transcript = finalTranscriptRef.current.trim();
+    const fromPreview = lastCombinedPreviewRef.current.trim();
+    const fromFinal = finalTranscriptRef.current.trim();
+    const transcript = (fromPreview || fromFinal).trim();
+    lastCombinedPreviewRef.current = "";
     finalTranscriptRef.current = "";
 
     const suppressSubmit = suppressSubmitRef.current;
@@ -242,7 +247,6 @@ export function useDeviceSpeechRecognition({
       return;
     }
 
-    onPreviewTranscriptRef.current?.("");
     const startedMs = speechStartedAtMsRef.current;
     speechStartedAtMsRef.current = null;
     const durationSeconds =
@@ -252,6 +256,7 @@ export function useDeviceSpeechRecognition({
       occurredAt: new Date().toISOString(),
       durationSeconds,
     });
+    onPreviewTranscriptRef.current?.("");
   }, [clearTimers, onTranscript, setMicBusy]);
 
   const requestMicPermission = useCallback(async (): Promise<string | null> => {
@@ -302,6 +307,7 @@ export function useDeviceSpeechRecognition({
     }
 
     finalTranscriptRef.current = "";
+    lastCombinedPreviewRef.current = "";
     speechStartedAtMsRef.current = null;
     suppressSubmitRef.current = false;
     ignoreAbortErrorRef.current = false;
@@ -357,6 +363,7 @@ export function useDeviceSpeechRecognition({
           .filter(Boolean)
           .join(" ")
           .trim();
+        lastCombinedPreviewRef.current = combined;
         onPreviewTranscriptRef.current?.(combined);
       }
       if (heardSpeech && silenceMs != null && silenceMs > 0) scheduleSilenceStop();

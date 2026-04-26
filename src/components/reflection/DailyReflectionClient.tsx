@@ -1,7 +1,16 @@
 "use client";
 
 import clsx from "clsx";
-import { CheckCircle2, Loader2, Mic, MicOff, PenLine, SkipForward, Target } from "lucide-react";
+import {
+  CheckCircle2,
+  ChevronDown,
+  Loader2,
+  Mic,
+  MicOff,
+  PenLine,
+  SkipForward,
+  Target,
+} from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { VoiceListeningHint } from "@/components/voice/VoiceListeningHint";
@@ -58,8 +67,19 @@ function formatDate(dateStr: string): string {
   return d.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" });
 }
 
-export function DailyReflectionClient() {
+export type DailyReflectionClientProps = {
+  collapsible?: boolean;
+  defaultExpanded?: boolean;
+};
+
+export function DailyReflectionClient({
+  collapsible = false,
+  defaultExpanded,
+}: DailyReflectionClientProps) {
   const today = useCalendarDate();
+  const [panelOpen, setPanelOpen] = useState(
+    !collapsible ? true : defaultExpanded ?? false,
+  );
 
   const [draft, setDraft] = useState<DraftState>({
     finished_today: "",
@@ -193,31 +213,25 @@ export function DailyReflectionClient() {
 
   const showForm = isEditing || !savedToday;
 
-  return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      {/* Header */}
-      <header className="space-y-1">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="kal-hero-heading">Daily Debrief</h1>
-            <p className="text-sm text-kal-text-secondary">
-              {formatDate(today)} · 60-second end-of-day check-in
-            </p>
-          </div>
-          {savedToday && !isEditing && (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-kal-text-secondary hover:bg-kal-surface/60 hover:text-kal-text transition-colors"
-            >
-              <PenLine className="h-3.5 w-3.5" />
-              Edit
-            </button>
-          )}
-        </div>
-      </header>
+  const subtitle = (
+    <p className="text-sm text-kal-text-secondary">
+      {formatDate(today)} · 60-second end-of-day check-in
+    </p>
+  );
 
-      {/* Form / read-only view */}
-      {showForm ? (
+  const editButton =
+    savedToday && !isEditing ? (
+      <button
+        type="button"
+        onClick={() => setIsEditing(true)}
+        className="flex shrink-0 items-center gap-1.5 self-start rounded-lg px-3 py-1.5 text-sm font-medium text-kal-text-secondary transition-colors hover:bg-kal-surface/60 hover:text-kal-text"
+      >
+        <PenLine className="h-3.5 w-3.5" />
+        Edit
+      </button>
+    ) : null;
+
+  const formSection = showForm ? (
         <div className="space-y-4">
           {QUESTIONS.map(({ field, icon: Icon, question, placeholder, accentClass, borderClass }) => {
             const isActive = activeVoiceField === field;
@@ -283,6 +297,7 @@ export function DailyReflectionClient() {
           <div className="flex items-center justify-end gap-3">
             {savedToday && isEditing && (
               <button
+                type="button"
                 onClick={() => {
                   setIsEditing(false);
                   setDraft({
@@ -291,12 +306,13 @@ export function DailyReflectionClient() {
                     tomorrow_priority: savedToday.tomorrow_priority ?? "",
                   });
                 }}
-                className="rounded-xl px-4 py-2.5 text-sm font-medium text-kal-text-secondary hover:bg-kal-surface/60 transition-colors"
+                className="rounded-xl px-4 py-2.5 text-sm font-medium text-kal-text-secondary transition-colors hover:bg-kal-surface/60"
               >
                 Cancel
               </button>
             )}
             <button
+              type="button"
               onClick={() => void handleSave()}
               disabled={isSaving}
               className="flex items-center gap-2 rounded-xl bg-kal-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-kal-accent/90 disabled:opacity-60 transition-colors"
@@ -306,61 +322,126 @@ export function DailyReflectionClient() {
             </button>
           </div>
         </div>
-      ) : (
-        <div className="space-y-4">
-          {QUESTIONS.map(({ field, icon: Icon, question, accentClass, borderClass }) => {
-            const value = savedToday?.[field];
-            return (
-              <div
-                key={field}
-                className={clsx("kal-glass-card rounded-2xl border p-4 space-y-1.5", borderClass)}
-              >
-                <p className={clsx("flex items-center gap-2 text-xs font-semibold uppercase tracking-wide", accentClass)}>
-                  <Icon className="h-3.5 w-3.5" aria-hidden />
-                  {question}
-                </p>
-                <p className="text-sm text-kal-text leading-relaxed">
-                  {value || <span className="text-kal-text-secondary/60 italic">Not answered</span>}
+  ) : (
+    <div className="space-y-4">
+      {QUESTIONS.map(({ field, icon: Icon, question, accentClass, borderClass }) => {
+        const value = savedToday?.[field];
+        return (
+          <div
+            key={field}
+            className={clsx("kal-glass-card rounded-2xl border p-4 space-y-1.5", borderClass)}
+          >
+            <p className={clsx("flex items-center gap-2 text-xs font-semibold uppercase tracking-wide", accentClass)}>
+              <Icon className="h-3.5 w-3.5" aria-hidden />
+              {question}
+            </p>
+            <p className="text-sm text-kal-text leading-relaxed">
+              {value || <span className="text-kal-text-secondary/60 italic">Not answered</span>}
+            </p>
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  const historySection =
+    recentHistory.length > 0 ? (
+      <section className="space-y-3">
+        <h2 className="kal-section-heading text-sm">Recent reflections</h2>
+        <ul className="space-y-2">
+          {recentHistory.map((r) => (
+            <li key={r.id} className="kal-glass-subtle space-y-2 rounded-xl p-4">
+              <p className="text-xs font-semibold text-kal-text-secondary">
+                {formatDate(r.reflection_date)}
+              </p>
+              <div className="grid gap-1">
+                {r.finished_today && (
+                  <p className="text-sm text-kal-text">
+                    <span className="font-medium text-emerald-600 dark:text-emerald-400">Finished: </span>
+                    {r.finished_today}
+                  </p>
+                )}
+                {r.skipped_today && (
+                  <p className="text-sm text-kal-text">
+                    <span className="font-medium text-amber-600 dark:text-amber-400">Skipped: </span>
+                    {r.skipped_today}
+                  </p>
+                )}
+                {r.tomorrow_priority && (
+                  <p className="text-sm text-kal-text">
+                    <span className="font-medium text-violet-600 dark:text-violet-400">Planned: </span>
+                    {r.tomorrow_priority}
+                  </p>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ) : null;
+
+  if (collapsible) {
+    return (
+      <div className="mx-auto max-w-2xl space-y-3">
+        <header className="space-y-0.5">
+          <div className="flex items-start justify-between gap-2">
+            <button
+              type="button"
+              onClick={() => setPanelOpen((o) => !o)}
+              className="hover:bg-kal-surface/50 -mx-1 flex min-w-0 flex-1 items-start gap-1.5 rounded-lg px-1 py-0.5 text-left transition sm:gap-2 sm:rounded-xl"
+              aria-expanded={panelOpen}
+              aria-controls="daily-debrief-panel"
+            >
+              <ChevronDown
+                className={clsx(
+                  "mt-0.5 h-4 w-4 shrink-0 text-kal-text-secondary transition-transform duration-200 sm:mt-1",
+                  panelOpen && "rotate-180",
+                )}
+                aria-hidden
+              />
+              <div className="min-w-0">
+                <h2
+                  className="font-sans text-[15px] font-semibold leading-snug tracking-tight text-kal-text sm:text-base"
+                  id="daily-debrief-heading"
+                >
+                  Daily Debrief
+                </h2>
+                <p className="text-[11px] leading-relaxed text-kal-text-secondary sm:text-xs">
+                  {formatDate(today)} · 60-second end-of-day check-in
                 </p>
               </div>
-            );
-          })}
-        </div>
-      )}
+            </button>
+            {editButton}
+          </div>
+        </header>
+        {panelOpen ? (
+          <div
+            id="daily-debrief-panel"
+            className="space-y-4 sm:space-y-6"
+            role="region"
+            aria-labelledby="daily-debrief-heading"
+          >
+            {formSection}
+            {historySection}
+          </div>
+        ) : null}
+      </div>
+    );
+  }
 
-      {/* 7-day history */}
-      {recentHistory.length > 0 && (
-        <section className="space-y-3">
-          <h2 className="kal-section-heading text-sm">Recent reflections</h2>
-          <ul className="space-y-2">
-            {recentHistory.map((r) => (
-              <li key={r.id} className="kal-glass-subtle rounded-xl p-4 space-y-2">
-                <p className="text-xs font-semibold text-kal-text-secondary">{formatDate(r.reflection_date)}</p>
-                <div className="grid gap-1">
-                  {r.finished_today && (
-                    <p className="text-sm text-kal-text">
-                      <span className="text-emerald-600 dark:text-emerald-400 font-medium">Finished: </span>
-                      {r.finished_today}
-                    </p>
-                  )}
-                  {r.skipped_today && (
-                    <p className="text-sm text-kal-text">
-                      <span className="text-amber-600 dark:text-amber-400 font-medium">Skipped: </span>
-                      {r.skipped_today}
-                    </p>
-                  )}
-                  {r.tomorrow_priority && (
-                    <p className="text-sm text-kal-text">
-                      <span className="text-violet-600 dark:text-violet-400 font-medium">Planned: </span>
-                      {r.tomorrow_priority}
-                    </p>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+  return (
+    <div className="mx-auto max-w-2xl space-y-6">
+      <header className="space-y-1">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="kal-hero-heading">Daily Debrief</h1>
+            {subtitle}
+          </div>
+          {editButton}
+        </div>
+      </header>
+      {formSection}
+      {historySection}
     </div>
   );
 }
