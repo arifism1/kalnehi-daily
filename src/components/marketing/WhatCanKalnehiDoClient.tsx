@@ -58,7 +58,7 @@ const FEATURES: FeatureCard[] = [
     bullets: [
       "Dictate your plan out loud and the app parses it into tasks. Takes 90 seconds.",
       "Prefer typing? Self Type puts you in full control.",
-      "Both flow into the same daily list — Pro unlocks voice dictation alongside Self Type.",
+      "Both flow into the same daily list — Smart Plan unlocks voice dictation alongside Self Type.",
     ],
     accent: "from-violet-400/20 via-white/40 to-pink-400/20",
   },

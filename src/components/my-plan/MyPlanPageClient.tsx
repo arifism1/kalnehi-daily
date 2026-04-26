@@ -676,7 +676,7 @@ export function MyPlanPageClient() {
               <div className="border-t border-kal-border">
                 <div className="border-b border-kal-border px-4 py-3">
                   <h3 className="text-xs font-semibold uppercase tracking-widest text-kal-muted">
-                    AI usage {status === "trial" ? "(Smart Plan trial)" : "(monthly)"}
+                    AI usage {status === "trial" ? "(Smart Plan trial)" : "(resets monthly)"}
                   </h3>
                 </div>
 
@@ -685,7 +685,7 @@ export function MyPlanPageClient() {
                     <span className="font-medium text-kal-text">
                       {TIERS.pro.voiceMinutesPerMonth} voice minutes per month
                     </span>{" "}
-                    after your first monthly charge — during this 2-day trial you have{" "}
+                    after your first monthly charge — during this 3-day trial you have{" "}
                     <span className="font-medium text-kal-text">
                       {TIERS.pro.trialVoiceMinutesLimit} minutes
                     </span>{" "}

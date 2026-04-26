@@ -22,7 +22,7 @@ export function UpgradePrompt() {
       <p className="text-sm font-semibold text-kal-text">
         {welcomeTrialExpiredNoPay
           ? "You've used your free trial."
-          : "You've used your free AI credits."}
+          : "You've used your free Mastermind tokens."}
       </p>
       <p className="mt-0.5 text-xs text-kal-text-secondary">
         Smart Plan gives you 20 lakh tokens every month.
@@ -39,7 +39,7 @@ export function UpgradePrompt() {
             href="/waitlist/position"
             className="inline-flex min-h-[36px] items-center text-sm font-semibold text-kal-accent hover:underline"
           >
-            Or try 3 more days for ₹19 →
+            Or skip the waitlist for ₹19 →
           </Link>
         )}
       </div>

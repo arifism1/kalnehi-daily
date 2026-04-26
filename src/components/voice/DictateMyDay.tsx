@@ -431,7 +431,7 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
         <>
           <header>
             <p className="kal-category-label text-kal-accent">
-              Pro · Voice
+              Smart Plan · Voice
             </p>
             {hasAiAccess && canDoVoiceSession && (() => {
               const countdown =

@@ -12,6 +12,12 @@ import { autopayMonthsFromNotes } from "@/lib/autopayMonths";
 import { RAZORPAY_PAYMENT_OR_SUB_ID_RE } from "@/lib/razorpayIds";
 import { firstOfCurrentMonthDateString } from "@/lib/subscriptionUsage";
 import type { Database } from "@/types/supabase";
+import {
+  sendMonthlyWelcomeEmail,
+  sendPaymentRetryingEmail,
+  sendSubscriptionHaltedEmail,
+  sendSubscriptionCompletedEmail,
+} from "@/lib/waitlist/notifications";
 
 export const runtime = "nodejs";
 
@@ -228,20 +234,34 @@ export async function POST(request: Request) {
     };
 
     let priorStatus: string | null = null;
+    let priorPlan: string | null = null;
     if (subscriptionId) {
       const { data: row } = await supabase
         .from("user_profiles")
-        .select("subscription_status")
+        .select("subscription_status, subscription_plan")
         .eq("razorpay_subscription_id", subscriptionId)
         .maybeSingle();
       priorStatus = row?.subscription_status ?? null;
+      priorPlan = row?.subscription_plan ?? null;
     } else if (userIdFromNotes) {
       const { data: row } = await supabase
         .from("user_profiles")
-        .select("subscription_status")
+        .select("subscription_status, subscription_plan")
         .eq("user_id", userIdFromNotes)
         .maybeSingle();
       priorStatus = row?.subscription_status ?? null;
+      priorPlan = row?.subscription_plan ?? null;
+    }
+
+    // Guard: never let a monthly subscription webhook overwrite an upfront plan.
+    // This covers the race window where the webhook arrives just after the user
+    // upgraded to annual/six_month (before razorpay_subscription_id was cleared).
+    if (priorPlan === "annual" || priorPlan === "six_month") {
+      console.info("[webhook] subscription.charged: skipped — user is on upfront plan", {
+        priorPlan,
+        subscriptionId: subscriptionId?.slice(0, 14) ?? "unknown",
+      });
+      return okResponse({ ignored: true, reason: "upfront_plan" });
     }
 
     if (priorStatus === "trial") {
@@ -287,12 +307,45 @@ export async function POST(request: Request) {
           })
           .eq("user_id", chargeUid);
       }
+
+      // Send a branded welcome email on the first real payment (trial → active transition).
+      if (priorStatus === "trial") {
+        const { data: authUser } = await supabase.auth.admin.getUserById(chargeUid);
+        const email = authUser?.user?.email;
+        if (email) {
+          void sendMonthlyWelcomeEmail({
+            email,
+            autopayMonthsTotal: autopayFromNotes,
+          }).catch((e) =>
+            console.warn("[webhook] subscription.charged: welcome email failed", e instanceof Error ? e.message : e),
+          );
+        }
+      }
     }
 
     return okResponse({ updated });
   }
 
   if (event === "subscription.cancelled") {
+    // Guard: if the user has already moved to an upfront plan, the cancellation
+    // is for the old monthly sub that was cancelled as part of the upgrade —
+    // do not overwrite their active annual/six_month status.
+    if (subscriptionId) {
+      const { data: guardRow } = await supabase
+        .from("user_profiles")
+        .select("subscription_plan")
+        .eq("razorpay_subscription_id", subscriptionId)
+        .maybeSingle();
+      const guardPlan = guardRow?.subscription_plan ?? null;
+      if (guardPlan === "annual" || guardPlan === "six_month") {
+        console.info("[webhook] subscription.cancelled: skipped — user is on upfront plan", {
+          guardPlan,
+          subscriptionId: subscriptionId.slice(0, 14),
+        });
+        return okResponse({ ignored: true, reason: "upfront_plan" });
+      }
+    }
+
     const patch: Record<string, unknown> = {
       subscription_status: "cancelled",
     };
@@ -314,6 +367,7 @@ export async function POST(request: Request) {
       currentEnd && currentEnd > 0
         ? new Date(currentEnd * 1000).toISOString()
         : new Date().toISOString();
+    const totalCountFromNotes = autopayMonthsFromNotes(sub?.notes);
     const patch: Record<string, unknown> = {
       subscription_status: "expired",
       subscription_end_date: endIso,
@@ -326,6 +380,27 @@ export async function POST(request: Request) {
     if (!updated && userIdFromNotes) {
       updated = await applyByUserId(supabase, userIdFromNotes, patch);
     }
+
+    // Notify the user that all autopay months are used up and when their access ends.
+    const completedUserId = userIdFromNotes;
+    if (completedUserId) {
+      void (async () => {
+        try {
+          const { data: authData } = await supabase.auth.admin.getUserById(completedUserId);
+          const email = authData?.user?.email;
+          if (email) {
+            await sendSubscriptionCompletedEmail({
+              email,
+              accessUntil: endIso,
+              totalMonths: totalCountFromNotes,
+            });
+          }
+        } catch (e) {
+          console.warn("[webhook] subscription.completed: completed email failed", e instanceof Error ? e.message : e);
+        }
+      })();
+    }
+
     return okResponse({ updated });
   }
 
@@ -343,6 +418,22 @@ export async function POST(request: Request) {
     console.info("[webhook] subscription.pending: grace period set until", graceUntil, {
       subscriptionId: subscriptionId?.slice(0, 14) ?? "unknown",
     });
+
+    // Notify the user that their payment is retrying and access is safe for now.
+    if (userIdFromNotes) {
+      void (async () => {
+        try {
+          const { data: authData } = await supabase.auth.admin.getUserById(userIdFromNotes);
+          const email = authData?.user?.email;
+          if (email) {
+            await sendPaymentRetryingEmail({ email, graceUntil });
+          }
+        } catch (e) {
+          console.warn("[webhook] subscription.pending: retry email failed", e instanceof Error ? e.message : e);
+        }
+      })();
+    }
+
     return okResponse({ graceUntil });
   }
 
@@ -350,6 +441,27 @@ export async function POST(request: Request) {
     // All retry attempts exhausted — this includes the case where the customer revoked
     // the UPI autopay mandate from their bank app. Cancel without wiping end_date so the
     // user retains access through the end of their already-paid billing period.
+
+    // Fetch subscription_end_date before patching, so we can include it in the email.
+    let haltedAccessUntil: string | null = null;
+    let haltedUserId: string | null = userIdFromNotes ?? null;
+    if (subscriptionId) {
+      const { data: haltedRow } = await supabase
+        .from("user_profiles")
+        .select("subscription_end_date, user_id")
+        .eq("razorpay_subscription_id", subscriptionId)
+        .maybeSingle();
+      haltedAccessUntil = haltedRow?.subscription_end_date ?? null;
+      if (haltedRow?.user_id) haltedUserId = haltedRow.user_id;
+    } else if (userIdFromNotes) {
+      const { data: haltedRow } = await supabase
+        .from("user_profiles")
+        .select("subscription_end_date")
+        .eq("user_id", userIdFromNotes)
+        .maybeSingle();
+      haltedAccessUntil = haltedRow?.subscription_end_date ?? null;
+    }
+
     const patch: Record<string, unknown> = {
       subscription_status: "cancelled",
     };
@@ -361,6 +473,22 @@ export async function POST(request: Request) {
     if (!updated && userIdFromNotes) {
       updated = await applyByUserId(supabase, userIdFromNotes, patch);
     }
+
+    // Notify the user that payment failed permanently and when their access ends.
+    if (haltedUserId && haltedAccessUntil) {
+      void (async () => {
+        try {
+          const { data: authData } = await supabase.auth.admin.getUserById(haltedUserId!);
+          const email = authData?.user?.email;
+          if (email) {
+            await sendSubscriptionHaltedEmail({ email, accessUntil: haltedAccessUntil! });
+          }
+        } catch (e) {
+          console.warn("[webhook] subscription.halted: halted email failed", e instanceof Error ? e.message : e);
+        }
+      })();
+    }
+
     return okResponse({ updated });
   }
 

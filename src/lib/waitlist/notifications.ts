@@ -105,16 +105,13 @@ function pausedHtml(params: {
     <li>${streakDays}-day streak</li>
     <li>${syllabusPercent}% syllabus complete</li>
     <li>${doubtsLogged} doubts logged</li>
-    <li>${prepbrainConversations} PrepBrain conversations</li>
+    <li>${prepbrainConversations} Mastermind conversations</li>
   </ul>
   <p>None of it is gone. It's just paused.</p>
   <a href="${process.env.NEXT_PUBLIC_APP_URL ?? SITE_URL}/pricing"
      style="display:inline-block;background:#ff7a00;color:#fff;padding:12px 24px;border-radius:99px;text-decoration:none;font-weight:700;margin:8px 0">
     Resume your preparation →
   </a>
-  <p style="color:#888;font-size:14px;margin-top:20px">
-    Still not sure? Try 3 more days for ₹19 →
-  </p>
 </div>`;
   return { subject, html };
 }
@@ -163,7 +160,7 @@ function day3MorningHtml(params: {
 <div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
   <h2 style="font-size:22px;font-weight:600">Your trial ends tonight.</h2>
   <p>Your ${params.streakDays}-day streak, ${params.syllabusPercent}% syllabus progress, and
-  ${params.prepbrainConversations} PrepBrain conversations are all saved.</p>
+  ${params.prepbrainConversations} Mastermind conversations are all saved.</p>
   <p>They'll be here when you upgrade.</p>
   <a href="${process.env.NEXT_PUBLIC_APP_URL ?? SITE_URL}/pricing"
      style="display:inline-block;background:#ff7a00;color:#fff;padding:12px 24px;border-radius:99px;text-decoration:none;font-weight:700;margin:8px 0">
@@ -187,10 +184,81 @@ function trialActivationHtml(): { subject: string; html: string } {
     Start now →
   </a>
   <p style="color:#888;font-size:14px;margin-top:24px">
-    Your 3-day timer starts from the moment you open the app.<br>
-    If you haven't already, you can also skip the queue and start instantly for ₹19 at
-    <a href="${process.env.NEXT_PUBLIC_APP_URL ?? SITE_URL}/waitlist/position"
-       style="color:#ff7a00">www.kalnehi.com/waitlist/position</a>.
+    Your 3-day timer starts from the moment you open the app.
+  </p>
+</div>`;
+  return { subject, html };
+}
+
+function annualPlanActivatedHtml(params: {
+  endsAt: string;
+  autopayWasCancelled: boolean;
+}): { subject: string; html: string } {
+  const { endsAt, autopayWasCancelled } = params;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? SITE_URL;
+  const formattedEnd = new Date(endsAt).toLocaleDateString("en-IN", {
+    day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Kolkata",
+  });
+  const subject = `Your annual Smart Plan is active — access until ${formattedEnd}`;
+  const autopayLine = autopayWasCancelled
+    ? `<p style="background:#fef3c7;border-left:3px solid #f59e0b;padding:10px 14px;border-radius:4px;color:#78350f;font-size:14px;margin:16px 0">
+        <strong>Your monthly AutoPay has been cancelled.</strong><br>
+        You will not be charged monthly going forward. Your ₹3,591 covers the full year.
+       </p>`
+    : "";
+  const html = `
+<div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
+  <h2 style="font-size:22px;font-weight:600;margin-bottom:8px">Your annual Smart Plan is live.</h2>
+  <p style="color:#444;margin:0 0 6px">
+    You've paid <strong>₹3,591</strong> for <strong>12 months of full access</strong> to Kalnehi Daily.
+  </p>
+  <p style="color:#444;margin:0 0 16px">
+    Your plan runs until <strong>${formattedEnd}</strong>. No recurring charge — this was a one-time payment.
+  </p>
+  ${autopayLine}
+  <a href="${appUrl}/my-subscription"
+     style="display:inline-block;background:#ff7a00;color:#fff;padding:12px 24px;border-radius:99px;text-decoration:none;font-weight:700;margin:8px 0">
+    View My Subscription →
+  </a>
+  <p style="color:#888;font-size:13px;margin-top:24px">
+    Questions? Reply to this email or visit <a href="${appUrl}/pricing" style="color:#ff7a00">kalnehi.com/pricing</a>.
+  </p>
+</div>`;
+  return { subject, html };
+}
+
+function sixMonthPlanActivatedHtml(params: {
+  endsAt: string;
+  autopayWasCancelled: boolean;
+}): { subject: string; html: string } {
+  const { endsAt, autopayWasCancelled } = params;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? SITE_URL;
+  const formattedEnd = new Date(endsAt).toLocaleDateString("en-IN", {
+    day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Kolkata",
+  });
+  const subject = `Your 6-month Smart Plan is active — access until ${formattedEnd}`;
+  const autopayLine = autopayWasCancelled
+    ? `<p style="background:#fef3c7;border-left:3px solid #f59e0b;padding:10px 14px;border-radius:4px;color:#78350f;font-size:14px;margin:16px 0">
+        <strong>Your monthly AutoPay has been cancelled.</strong><br>
+        You will not be charged monthly going forward. Your ₹2,154 covers the full 6 months.
+       </p>`
+    : "";
+  const html = `
+<div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
+  <h2 style="font-size:22px;font-weight:600;margin-bottom:8px">Your 6-month Smart Plan is live.</h2>
+  <p style="color:#444;margin:0 0 6px">
+    You've paid <strong>₹2,154</strong> for <strong>6 months of full access</strong> to Kalnehi Daily.
+  </p>
+  <p style="color:#444;margin:0 0 16px">
+    Your plan runs until <strong>${formattedEnd}</strong>. No recurring charge — this was a one-time payment.
+  </p>
+  ${autopayLine}
+  <a href="${appUrl}/my-subscription"
+     style="display:inline-block;background:#ff7a00;color:#fff;padding:12px 24px;border-radius:99px;text-decoration:none;font-weight:700;margin:8px 0">
+    View My Subscription →
+  </a>
+  <p style="color:#888;font-size:13px;margin-top:24px">
+    Questions? Reply to this email or visit <a href="${appUrl}/pricing" style="color:#ff7a00">kalnehi.com/pricing</a>.
   </p>
 </div>`;
   return { subject, html };
@@ -199,8 +267,9 @@ function trialActivationHtml(): { subject: string; html: string } {
 function trialQueuedHtml(params: {
   trialStartsAt: string;
   position: number;
+  dailyCap: number;
 }): { subject: string; html: string } {
-  const { trialStartsAt, position } = params;
+  const { trialStartsAt, position, dailyCap } = params;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? SITE_URL;
   const date = new Date(trialStartsAt).toLocaleDateString("en-IN", {
     weekday: "long", day: "numeric", month: "long", year: "numeric",
@@ -219,7 +288,7 @@ function trialQueuedHtml(params: {
   </p>
   <p style="font-size:14px;color:#888;margin:0 0 20px">
     You're <strong>#${position.toLocaleString("en-IN")}</strong> in today's queue.
-    We open 2,000 spots each day so the app stays fast for everyone.
+    We open ${dailyCap.toLocaleString("en-IN")} spots each day so the app stays fast for everyone.
   </p>
   <p style="font-size:15px;font-weight:600;margin:0 0 8px">Don't want to wait until midnight?</p>
   <a href="${appUrl}/waitlist/position"
@@ -419,10 +488,277 @@ export async function sendTrialQueuedEmail(params: {
   email: string;
   trialStartsAt: string;
   position: number;
+  dailyCap: number;
 }): Promise<void> {
   const { subject, html } = trialQueuedHtml({
     trialStartsAt: params.trialStartsAt,
     position: params.position,
+    dailyCap: params.dailyCap,
   });
+  await sendEmail(params.email, subject, html);
+}
+
+export async function sendAnnualPlanActivatedEmail(params: {
+  email: string;
+  endsAt: string;
+  autopayWasCancelled: boolean;
+}): Promise<void> {
+  const { subject, html } = annualPlanActivatedHtml({
+    endsAt: params.endsAt,
+    autopayWasCancelled: params.autopayWasCancelled,
+  });
+  await sendEmail(params.email, subject, html);
+}
+
+export async function sendSixMonthPlanActivatedEmail(params: {
+  email: string;
+  endsAt: string;
+  autopayWasCancelled: boolean;
+}): Promise<void> {
+  const { subject, html } = sixMonthPlanActivatedHtml({
+    endsAt: params.endsAt,
+    autopayWasCancelled: params.autopayWasCancelled,
+  });
+  await sendEmail(params.email, subject, html);
+}
+
+/* ─────────────────────── Subscription lifecycle emails ─────────────── */
+
+function monthlyWelcomeHtml(params: {
+  autopayMonthsTotal: number | null;
+}): { subject: string; html: string } {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? SITE_URL;
+  const autopayLine =
+    params.autopayMonthsTotal !== null
+      ? `<p style="color:#444;margin:0 0 16px">
+          Your AutoPay is set for up to <strong>${params.autopayMonthsTotal} monthly charge${params.autopayMonthsTotal === 1 ? "" : "s"}</strong>.
+          After that, renewals stop automatically — no action needed.
+         </p>`
+      : "";
+  const subject = "Your Smart Plan is now active";
+  const html = `
+<div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
+  <h2 style="font-size:22px;font-weight:600;margin-bottom:8px">Welcome to Smart Plan.</h2>
+  <p style="color:#444;margin:0 0 16px">
+    You're now on the <strong>Smart Plan</strong> at <strong>₹399/month</strong>. You have full access to every feature on Kalnehi Daily — 2 million Mastermind tokens and 100 minutes of voice every month.
+  </p>
+  ${autopayLine}
+  <a href="${appUrl}/my-subscription"
+     style="display:inline-block;background:#ff7a00;color:#fff;padding:12px 24px;border-radius:99px;text-decoration:none;font-weight:700;margin:8px 0">
+    View My Subscription →
+  </a>
+  <p style="color:#888;font-size:13px;margin-top:24px">
+    You can cancel anytime from My Subscription. Questions? Reply to this email.
+  </p>
+</div>`;
+  return { subject, html };
+}
+
+function paymentRetryingHtml(params: {
+  graceUntil: string;
+}): { subject: string; html: string } {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? SITE_URL;
+  const formattedGrace = new Date(params.graceUntil).toLocaleDateString("en-IN", {
+    day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Kolkata",
+  });
+  const subject = "Action needed — your payment is retrying";
+  const html = `
+<div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
+  <h2 style="font-size:22px;font-weight:600;margin-bottom:8px">Your payment could not be collected.</h2>
+  <p style="color:#444;margin:0 0 16px">
+    This month's subscription charge failed. Razorpay will automatically retry the payment over the next few days.
+  </p>
+  <p style="background:#fef3c7;border-left:3px solid #f59e0b;padding:10px 14px;border-radius:4px;color:#78350f;font-size:14px;margin:0 0 16px">
+    <strong>Your access continues until ${formattedGrace}</strong> while retries are in progress.
+  </p>
+  <p style="color:#444;margin:0 0 8px"><strong>To avoid losing access:</strong></p>
+  <ul style="color:#444;line-height:1.8;margin:0 0 16px;padding-left:20px">
+    <li>If you pay via UPI AutoPay, check that your mandate is active in your bank/UPI app.</li>
+    <li>If you pay via card, ensure the card has sufficient balance.</li>
+    <li>Razorpay will retry automatically — no action is needed unless your payment method has changed.</li>
+  </ul>
+  <a href="${appUrl}/my-subscription"
+     style="display:inline-block;background:#ff7a00;color:#fff;padding:12px 24px;border-radius:99px;text-decoration:none;font-weight:700;margin:8px 0">
+    View My Subscription →
+  </a>
+  <p style="color:#888;font-size:13px;margin-top:24px">
+    If payment continues to fail you will receive another email. Reply here if you need help.
+  </p>
+</div>`;
+  return { subject, html };
+}
+
+function subscriptionHaltedHtml(params: {
+  accessUntil: string;
+}): { subject: string; html: string } {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? SITE_URL;
+  const formattedEnd = new Date(params.accessUntil).toLocaleDateString("en-IN", {
+    day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Kolkata",
+  });
+  const subject = `Your Smart Plan has been paused — access until ${formattedEnd}`;
+  const html = `
+<div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
+  <h2 style="font-size:22px;font-weight:600;margin-bottom:8px">Payment could not be collected.</h2>
+  <p style="color:#444;margin:0 0 16px">
+    After multiple retry attempts, this month's payment was not successful. Your Smart Plan subscription has been paused.
+  </p>
+  <p style="background:#fef3c7;border-left:3px solid #f59e0b;padding:10px 14px;border-radius:4px;color:#78350f;font-size:14px;margin:0 0 16px">
+    <strong>Your access continues until ${formattedEnd}</strong> — the period you already paid for is protected.
+  </p>
+  <p style="color:#444;margin:0 0 16px">
+    After that date, you will need to re-subscribe to continue using Kalnehi Daily. All your progress, streaks, and data are saved.
+  </p>
+  <a href="${appUrl}/pricing"
+     style="display:inline-block;background:#ff7a00;color:#fff;padding:12px 24px;border-radius:99px;text-decoration:none;font-weight:700;margin:8px 0">
+    Re-subscribe →
+  </a>
+  <p style="color:#888;font-size:13px;margin-top:24px">
+    Questions? Reply to this email and we'll help sort it out.
+  </p>
+</div>`;
+  return { subject, html };
+}
+
+function cancelledConfirmationHtml(params: {
+  accessUntil: string;
+}): { subject: string; html: string } {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? SITE_URL;
+  const formattedEnd = new Date(params.accessUntil).toLocaleDateString("en-IN", {
+    day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Kolkata",
+  });
+  const subject = `Smart Plan cancelled — you keep access until ${formattedEnd}`;
+  const html = `
+<div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
+  <h2 style="font-size:22px;font-weight:600;margin-bottom:8px">Your subscription has been cancelled.</h2>
+  <p style="color:#444;margin:0 0 16px">
+    You will not be charged again. Your AutoPay has been stopped.
+  </p>
+  <p style="background:#d1fae5;border-left:3px solid #10b981;padding:10px 14px;border-radius:4px;color:#065f46;font-size:14px;margin:0 0 16px">
+    <strong>Your full access continues until ${formattedEnd}</strong> — the remainder of your current paid period.
+  </p>
+  <p style="color:#444;margin:0 0 16px">
+    After that date, you can re-subscribe anytime from the pricing page. Your progress, streaks, and data will be waiting.
+  </p>
+  <a href="${appUrl}/pricing"
+     style="display:inline-block;background:#ff7a00;color:#fff;padding:12px 24px;border-radius:99px;text-decoration:none;font-weight:700;margin:8px 0">
+    View plans →
+  </a>
+  <p style="color:#888;font-size:13px;margin-top:24px">
+    Changed your mind? You can re-subscribe before ${formattedEnd} and continue without any interruption.
+  </p>
+</div>`;
+  return { subject, html };
+}
+
+function subscriptionCompletedHtml(params: {
+  accessUntil: string;
+  totalMonths: number | null;
+}): { subject: string; html: string } {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? SITE_URL;
+  const formattedEnd = new Date(params.accessUntil).toLocaleDateString("en-IN", {
+    day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Kolkata",
+  });
+  const monthsLine = params.totalMonths
+    ? `<p style="color:#444;margin:0 0 16px">All <strong>${params.totalMonths} monthly payment${params.totalMonths === 1 ? "" : "s"}</strong> in your AutoPay plan have been collected.</p>`
+    : `<p style="color:#444;margin:0 0 16px">Your AutoPay plan has reached its final charge.</p>`;
+  const subject = `Your Smart Plan has completed — access until ${formattedEnd}`;
+  const html = `
+<div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
+  <h2 style="font-size:22px;font-weight:600;margin-bottom:8px">Your Smart Plan is complete.</h2>
+  ${monthsLine}
+  <p style="background:#d1fae5;border-left:3px solid #10b981;padding:10px 14px;border-radius:4px;color:#065f46;font-size:14px;margin:0 0 16px">
+    <strong>Your access continues until ${formattedEnd}.</strong> No further charges will be made.
+  </p>
+  <p style="color:#444;margin:0 0 16px">
+    To continue after that date, subscribe again — all your progress is saved.
+  </p>
+  <a href="${appUrl}/pricing"
+     style="display:inline-block;background:#ff7a00;color:#fff;padding:12px 24px;border-radius:99px;text-decoration:none;font-weight:700;margin:8px 0">
+    Renew Smart Plan →
+  </a>
+  <p style="color:#888;font-size:13px;margin-top:24px">
+    Questions? Reply to this email or visit <a href="${appUrl}/my-subscription" style="color:#ff7a00">My Subscription</a>.
+  </p>
+</div>`;
+  return { subject, html };
+}
+
+function waitlistSkipTrialStartedHtml(): { subject: string; html: string } {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? SITE_URL;
+  const subject = "You're in — your 3-day trial has started";
+  const html = `
+<div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
+  <h2 style="font-size:22px;font-weight:600;margin-bottom:8px">Waitlist skipped. Your free trial is live.</h2>
+  <p style="color:#444;margin:0 0 16px">
+    Your ₹19 waitlist skip is confirmed. Your <strong>3-day free trial</strong> has started — every feature, no restrictions.
+  </p>
+  <ul style="color:#444;line-height:1.8;margin:0 0 16px;padding-left:20px">
+    <li><strong>5 minutes</strong> of voice dictation for the trial</li>
+    <li><strong>60,000 Mastermind tokens</strong> for the 3-day trial</li>
+    <li><strong>5 photo scans</strong> for the trial</li>
+    <li>Full syllabus, planner, and habit tracker access</li>
+  </ul>
+  <p style="color:#666;font-size:14px;margin:0 0 16px">
+    Your 3-day timer started the moment you skipped the queue. Make the most of it.
+  </p>
+  <a href="${appUrl}"
+     style="display:inline-block;background:#ff7a00;color:#fff;padding:12px 24px;border-radius:99px;text-decoration:none;font-weight:700;margin:8px 0">
+    Start now →
+  </a>
+  <p style="color:#888;font-size:13px;margin-top:24px">
+    After your trial, subscribe to Smart Plan for ₹399/month — get 100 minutes of voice and 2 million Mastermind tokens every month.
+  </p>
+</div>`;
+  return { subject, html };
+}
+
+export async function sendMonthlyWelcomeEmail(params: {
+  email: string;
+  autopayMonthsTotal: number | null;
+}): Promise<void> {
+  const { subject, html } = monthlyWelcomeHtml({ autopayMonthsTotal: params.autopayMonthsTotal });
+  await sendEmail(params.email, subject, html);
+}
+
+export async function sendPaymentRetryingEmail(params: {
+  email: string;
+  graceUntil: string;
+}): Promise<void> {
+  const { subject, html } = paymentRetryingHtml({ graceUntil: params.graceUntil });
+  await sendEmail(params.email, subject, html);
+}
+
+export async function sendSubscriptionHaltedEmail(params: {
+  email: string;
+  accessUntil: string;
+}): Promise<void> {
+  const { subject, html } = subscriptionHaltedHtml({ accessUntil: params.accessUntil });
+  await sendEmail(params.email, subject, html);
+}
+
+export async function sendCancelledConfirmationEmail(params: {
+  email: string;
+  accessUntil: string;
+}): Promise<void> {
+  const { subject, html } = cancelledConfirmationHtml({ accessUntil: params.accessUntil });
+  await sendEmail(params.email, subject, html);
+}
+
+export async function sendSubscriptionCompletedEmail(params: {
+  email: string;
+  accessUntil: string;
+  totalMonths: number | null;
+}): Promise<void> {
+  const { subject, html } = subscriptionCompletedHtml({
+    accessUntil: params.accessUntil,
+    totalMonths: params.totalMonths,
+  });
+  await sendEmail(params.email, subject, html);
+}
+
+export async function sendWaitlistSkipTrialStartedEmail(params: {
+  email: string;
+}): Promise<void> {
+  const { subject, html } = waitlistSkipTrialStartedHtml();
   await sendEmail(params.email, subject, html);
 }

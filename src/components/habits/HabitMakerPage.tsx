@@ -772,7 +772,7 @@ export function HabitMakerPage() {
                       </div>
                     ) : (
                       <span className="rounded-full bg-kal-card-muted px-2.5 py-1 text-[10px] font-semibold text-kal-muted">
-                        Streaks in Pro
+                        Streaks on Smart Plan
                       </span>
                     )}
                   </div>
@@ -930,7 +930,7 @@ export function HabitMakerPage() {
                     </div>
                     {habitsLimited ? (
                       <span className="shrink-0 rounded-full bg-kal-card-muted px-3 py-1 text-[10px] font-semibold text-kal-muted">
-                        Streaks in Pro
+                        Streaks on Smart Plan
                       </span>
                     ) : (
                       <div className="flex shrink-0 flex-col items-end gap-1 text-right">

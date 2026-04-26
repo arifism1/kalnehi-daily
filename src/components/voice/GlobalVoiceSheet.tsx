@@ -25,7 +25,7 @@ const COMMAND_HINTS = [
   "Mark completed: morning study",
   "Schedule revision for Physics",
   "Go to progress",
-  "Ask prepbrain: explain Newton's laws",
+  "Ask Mastermind: explain Newton's laws",
   "Go to notifications",
   "Add task: evening exercise",
   "Go to syllabus",

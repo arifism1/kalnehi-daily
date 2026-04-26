@@ -4,7 +4,7 @@ export const FREE_TRIAL_MS = 3 * 24 * 60 * 60 * 1000;
 export const FREE_TRIAL_VOICE_CAP_SECONDS = 5 * 60;
 export const FREE_TRIAL_VOICE_CAP_MINUTES = 5;
 /** Photo scans are fully accessible during the 3-day trial. */
-export const FREE_TRIAL_PHOTO_CAP = 999;
+export const FREE_TRIAL_PHOTO_CAP = 5;
 
 export function isFreeTrialWindowActive(
   trialStartedAt: string | null | undefined,

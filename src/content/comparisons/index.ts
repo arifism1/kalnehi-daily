@@ -38,7 +38,7 @@ const notion: ComparisonData = {
     { feature: "Team collaboration", kalnehi: "partial", competitor: "yes" },
     { feature: "No setup required to start studying", kalnehi: "yes", competitor: "no" },
     { feature: "Works offline", kalnehi: "partial", competitor: "partial" },
-    { feature: "Free tier available", kalnehi: "yes", competitor: "yes" },
+    { feature: "Free / trial access", kalnehi: "3-day trial", competitor: "yes" },
   ],
   whyKalnehi: [
     "Notion requires you to build your study system from scratch — templates, databases, views, properties. Most students spend 3-4 hours just setting up, then maintain the setup instead of studying.",

@@ -18,7 +18,6 @@ import {
 } from "@/lib/autopayMonths";
 
 const AUTOPAY_PRESET_MONTHS = [1, 2, 3, 6, 12] as const;
-const SKIP_PRICE_PAISE = 1900;
 
 type RazorpayCheckoutResponse = {
   razorpay_payment_id: string;
@@ -38,19 +37,6 @@ declare global {
   }
 }
 
-type DataSummary = {
-  streakDays: number;
-  syllabusPercent: number;
-  doubtsLogged: number;
-  prepbrainConversations: number;
-};
-
-function useTrialDataSummary(): DataSummary {
-  // In a real implementation these would be pulled from Supabase.
-  // For now return minimal cached data from subscription context.
-  return { streakDays: 0, syllabusPercent: 0, doubtsLogged: 0, prepbrainConversations: 0 };
-}
-
 export function Day3Paywall() {
   const { welcomeTrialExpiredNoPay, hasHadTrial, refetch, loading } = useSubscriptionAccess();
   const user = useAuthStore((s) => s.user);
@@ -59,7 +45,6 @@ export function Day3Paywall() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [skipBusy, setSkipBusy] = useState(false);
   const [skipError, setSkipError] = useState<string | null>(null);
-  const dataSummary = useTrialDataSummary();
 
   const showSkipOption = !hasHadTrial;
 
@@ -188,27 +173,11 @@ export function Day3Paywall() {
               </p>
             </div>
 
-            {/* Preserved data summary */}
-            <div className="mb-6 rounded-xl border border-kal-border bg-kal-card/40 p-4">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-kal-muted">
-                Still waiting for you
+            {/* Data assurance */}
+            <div className="mb-6 rounded-xl border border-kal-border bg-kal-card/40 px-4 py-3">
+              <p className="text-xs text-kal-text-secondary">
+                Your streak, syllabus progress, doubts, and study data are all saved — subscribe to pick up exactly where you left off.
               </p>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { label: "Streak", value: `${dataSummary.streakDays} days` },
-                  { label: "Syllabus", value: `${dataSummary.syllabusPercent}% done` },
-                  { label: "Doubts logged", value: String(dataSummary.doubtsLogged) },
-                  { label: "AI conversations", value: String(dataSummary.prepbrainConversations) },
-                ].map(({ label, value }) => (
-                  <div key={label} className="flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-kal-accent/70" aria-hidden />
-                    <span className="text-xs text-kal-text-secondary">
-                      <span className="font-medium text-kal-text">{label}:</span>{" "}
-                      {value}
-                    </span>
-                  </div>
-                ))}
-              </div>
             </div>
 
             {/* Smart Plan card with autopay picker */}
@@ -303,7 +272,7 @@ export function Day3Paywall() {
                   disabled={skipBusy}
                   className="text-sm font-semibold text-kal-accent hover:underline disabled:opacity-60"
                 >
-                  {skipBusy ? "Processing…" : "Try 3 more days for ₹19 →"}
+                  {skipBusy ? "Processing…" : "Skip the waitlist for ₹19 →"}
                 </button>
               </div>
             )}

@@ -39,6 +39,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { formatSupabaseError } from "@/lib/supabase";
 import { surfaceErrorForUi } from "@/lib/userFacingErrors";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 
 const Section = memo(function Section({
   title,
@@ -328,6 +329,14 @@ export function ProfileForm() {
       { id: crypto.randomUUID(), label: "", score: "" },
     ]);
   }, []);
+
+  const {
+    status: subStatus,
+    plan: subPlan,
+    endDate: subEndDate,
+    autopayMonthsTotal,
+    hasPaidAccess,
+  } = useSubscriptionAccess();
 
   const meta = user?.user_metadata as Record<string, unknown> | undefined;
   const avatarUrl =
@@ -654,6 +663,63 @@ export function ProfileForm() {
           </div>
         </Row>
         <div className="border-t border-kal-border px-4 py-3">
+          {subStatus ? (
+            <div className="mb-3 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3">
+              <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
+                Current plan
+              </p>
+              <p className="mt-1 text-sm font-medium text-kal-text">
+                {subPlan === "annual"
+                  ? "Annual Smart Plan"
+                  : subPlan === "six_month"
+                    ? "6-Month Smart Plan"
+                    : subPlan === "monthly" || subPlan === "trial"
+                      ? "Monthly Smart Plan"
+                      : "Smart Plan"}
+                {" · "}
+                <span
+                  className={
+                    subStatus === "active" || subStatus === "trial"
+                      ? "text-emerald-700 dark:text-emerald-400"
+                      : subStatus === "cancelled"
+                        ? "text-amber-700 dark:text-amber-400"
+                        : "text-kal-text-secondary"
+                  }
+                >
+                  {subStatus === "active"
+                    ? "Active"
+                    : subStatus === "trial"
+                      ? "Trial"
+                      : subStatus === "cancelled"
+                        ? hasPaidAccess
+                          ? "Cancelled (access continues)"
+                          : "Cancelled"
+                        : subStatus === "expired"
+                          ? "Expired"
+                          : subStatus}
+                </span>
+              </p>
+              {subEndDate ? (
+                <p className="mt-0.5 text-xs text-kal-text-secondary">
+                  {subPlan === "annual" || subPlan === "six_month"
+                    ? "Plan runs until"
+                    : subStatus === "cancelled"
+                      ? "Access until"
+                      : "Month ends"}{" "}
+                  {new Date(subEndDate).toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                  {(subPlan === "monthly" || subPlan === "trial") &&
+                    autopayMonthsTotal !== null &&
+                    subStatus !== "cancelled" && (
+                      <> · AutoPay up to {autopayMonthsTotal} month{autopayMonthsTotal === 1 ? "" : "s"}</>
+                    )}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
           <Link
             href="/my-subscription"
             className="kal-glass-subtle mb-3 flex w-full min-h-[48px] items-center justify-center rounded-xl py-3 text-[15px] font-semibold text-kal-text transition-colors hover:opacity-95 active:opacity-90"

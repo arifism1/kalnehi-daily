@@ -245,7 +245,7 @@ export async function POST(request: Request) {
       {
         ok: false,
         error:
-          "HelpyJi is available during your welcome trial or with an active Pro subscription.",
+          "HelpyJi is available during your welcome trial or with an active Smart Plan subscription.",
       },
       { status: 403 },
     );
@@ -258,7 +258,7 @@ export async function POST(request: Request) {
       {
         ok: false,
         error:
-          "HelpyJi on this page helps visitors compare plans. Active Pro subscribers can use Mastermind inside the app.",
+          "HelpyJi on this page helps visitors compare plans. Active Smart Plan subscribers can use Mastermind inside the app.",
       },
       { status: 403 },
     );

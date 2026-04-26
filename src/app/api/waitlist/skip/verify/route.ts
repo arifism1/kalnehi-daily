@@ -173,6 +173,14 @@ export async function POST(req: NextRequest) {
     // Invalidate daily cap cache so pricing page reflects latest state.
     revalidateTag(DAILY_CAP_STATUS_TAG, { expire: 0 });
 
+    // Send trial started confirmation email (best-effort, non-fatal).
+    if (user.email) {
+      const { sendWaitlistSkipTrialStartedEmail } = await import("@/lib/waitlist/notifications");
+      void sendWaitlistSkipTrialStartedEmail({ email: user.email }).catch((e) =>
+        console.warn("[waitlist/skip/verify] trial started email failed", e instanceof Error ? e.message : e),
+      );
+    }
+
     return NextResponse.json({
       ok: true,
       trialStartedAt: result.trial_started_at,

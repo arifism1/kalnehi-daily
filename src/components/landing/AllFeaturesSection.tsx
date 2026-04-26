@@ -161,7 +161,7 @@ export function AllFeaturesSection() {
         </div>
 
         <div className="mt-12 flex flex-col items-center gap-4 text-center">
-          <p className="text-sm text-kal-muted">All 18 features included in Pro. One price. No tiers.</p>
+          <p className="text-sm text-kal-muted">All 18 features included in Smart Plan. One price. No tiers.</p>
           <Link
             href="/auth"
             className="inline-flex min-h-[48px] items-center justify-center rounded-full bg-kal-accent px-8 text-sm font-bold text-white shadow-[0_4px_16px_rgba(255,122,0,0.28)] transition hover:brightness-105"
