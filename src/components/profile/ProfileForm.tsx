@@ -1,15 +1,23 @@
 "use client";
 
 import clsx from "clsx";
-import { Layers, Loader2, LogOut, Plus, Trash2, UserCircle } from "lucide-react";
+import {
+  ChevronDown,
+  Layers,
+  Loader2,
+  LogOut,
+  Plus,
+  Trash2,
+  UserCircle,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   memo,
   useCallback,
-  useDeferredValue,
   useEffect,
   useMemo,
+  useId,
   useRef,
   useState,
 } from "react";
@@ -26,8 +34,6 @@ import {
   displayNameForExamCatalog,
   EXAMS_CATALOG_FALLBACK,
   fetchExamsCatalog,
-  mergeOrphanExamOption,
-  resolveInitialTargetExamName,
 } from "@/lib/examsCatalog";
 import { isCuetExam } from "@/lib/examProfile";
 import { parseCuetDomainSubjectsJson } from "@/lib/cuetDomainSubjects";
@@ -97,7 +103,6 @@ export function ProfileForm() {
   const user = useAuthStore((s) => s.user);
 
   const [fullName, setFullName] = useState("");
-  const [targetExam, setTargetExam] = useState("");
   const [examDates, setExamDates] = useState<Record<string, string>>({});
   const [prevAttempted, setPrevAttempted] = useState(false);
   const [scoreRows, setScoreRows] = useState<ScoreRow[]>([]);
@@ -108,12 +113,15 @@ export function ProfileForm() {
   >([]);
   const [loadingUpscOptionals, setLoadingUpscOptionals] = useState(false);
   const [examRows, setExamRows] = useState(EXAMS_CATALOG_FALLBACK);
-  const [initialExamRaw, setInitialExamRaw] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [signOutConfirmOpen, setSignOutConfirmOpen] = useState(false);
+  const [examHistoryOpen, setExamHistoryOpen] = useState(false);
+  const examHistoryDisclosureId = useId();
+  const examHistoryTriggerId = `profile-exam-history-trigger${examHistoryDisclosureId}`;
+  const examHistoryPanelId = `profile-exam-history-panel${examHistoryDisclosureId}`;
   const fullNameInputRef = useRef<HTMLInputElement | null>(null);
 
   // Track system state
@@ -123,11 +131,11 @@ export function ProfileForm() {
   const [changeTrackConfirmOpen, setChangeTrackConfirmOpen] = useState(false);
   const [pendingNewTrack, setPendingNewTrack] = useState<ExamTrack | null>(null);
 
-  const examSelectOptions = useMemo(
-    () => mergeOrphanExamOption(examRows, initialExamRaw),
-    [examRows, initialExamRaw],
+  // Mirrors save logic: primary_exam = first enabled exam in the current track selection.
+  const formPrimaryExam = useMemo(
+    () => enabledExamsInTrack[0] ?? "",
+    [enabledExamsInTrack],
   );
-  const deferredTargetExam = useDeferredValue(targetExam);
 
   useEffect(() => {
     if (!user?.id) {
@@ -157,10 +165,6 @@ export function ProfileForm() {
 
         const teRaw =
           data?.target_exam?.trim() || data?.primary_exam?.trim() || "";
-        setInitialExamRaw(teRaw || null);
-
-        const merged = mergeOrphanExamOption(catalog, teRaw || null);
-        setTargetExam(resolveInitialTargetExamName(teRaw, merged));
 
         // Resolve track from DB or infer from primary_exam
         const dbTrackId = data?.selected_track?.trim();
@@ -229,7 +233,7 @@ export function ProfileForm() {
   }, [user?.id]);
 
   useEffect(() => {
-    if (!isUpscCseMainsExam(targetExam)) {
+    if (!isUpscCseMainsExam(formPrimaryExam)) {
       setUpscOptionalSubject("");
       return;
     }
@@ -254,7 +258,7 @@ export function ProfileForm() {
     return () => {
       cancelled = true;
     };
-  }, [targetExam]);
+  }, [formPrimaryExam]);
 
   const submit = useCallback(async () => {
     if (!user?.id) return;
@@ -516,7 +520,7 @@ export function ProfileForm() {
               </Row>
             );
           })}
-          {deferredTargetExam && isCuetExam(deferredTargetExam) ? (
+          {formPrimaryExam && isCuetExam(formPrimaryExam) ? (
             <div className="border-t border-kal-border px-4 py-4">
               <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
                 CUET domain subjects
@@ -535,7 +539,7 @@ export function ProfileForm() {
               </div>
             </div>
           ) : null}
-          {deferredTargetExam && isUpscCseMainsExam(deferredTargetExam) ? (
+          {formPrimaryExam && isUpscCseMainsExam(formPrimaryExam) ? (
             <div className="border-t border-kal-border px-4 py-4">
               <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
                 Optional Subject (if any)
@@ -647,131 +651,177 @@ export function ProfileForm() {
           }}
         />
 
-        <Section
-          title="Exam history"
-          footer="Add each past attempt with a short label and marks. If you tried more than once, note the year or attempt number in the label."
-        >
-          <Row>
-            <span className="min-w-0 flex-1 text-[15px] font-medium text-kal-text-secondary">
-              Attempted before?
-            </span>
+        <section className="transition-opacity duration-300">
+          <h2 className="px-3 pb-2">
             <button
+              id={examHistoryTriggerId}
               type="button"
-              role="switch"
-              aria-checked={prevAttempted}
-              onClick={togglePrevAttempted}
-              className={clsx(
-                "relative h-8 w-[52px] shrink-0 rounded-full transition-colors duration-300",
-                prevAttempted ? "bg-kal-accent" : "bg-kal-border",
-              )}
+              aria-expanded={examHistoryOpen}
+              aria-controls={examHistoryPanelId}
+              onClick={() => setExamHistoryOpen((o) => !o)}
+              className="flex w-full min-h-[44px] items-center justify-between gap-2 rounded-lg py-0.5 pr-0.5 text-left transition-colors hover:bg-kal-accent/5"
             >
-              <span
+              <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
+                Exam history
+              </span>
+              <ChevronDown
                 className={clsx(
-                  "absolute top-1 left-1 h-6 w-6 rounded-full bg-white shadow transition-transform duration-300",
-                  prevAttempted ? "translate-x-5" : "translate-x-0",
+                  "h-4 w-4 shrink-0 text-kal-muted transition-transform duration-300",
+                  examHistoryOpen && "rotate-180",
                 )}
+                aria-hidden
               />
             </button>
-            <span className="w-10 text-right text-sm font-medium text-kal-text-secondary">
-              {prevAttempted ? "Yes" : "No"}
-            </span>
-          </Row>
+          </h2>
           <div
+            id={examHistoryPanelId}
+            role="region"
+            aria-labelledby={examHistoryTriggerId}
             className={clsx(
               "grid transition-[grid-template-rows] duration-300 ease-out",
-              prevAttempted ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+              examHistoryOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
             )}
           >
-            <div className="overflow-hidden">
-              <div className="space-y-3 border-t border-kal-border px-4 py-4">
-                <p className="text-xs text-kal-text-secondary">
-                  Label the attempt, then enter marks. Use &quot;Add another
-                  score&quot; for more tries.
-                </p>
-                <ul className="space-y-3">
-                  {scoreRows.map((row, index) => (
-                    <li
-                      key={row.id}
-                      className="kal-glass-subtle flex flex-col gap-2 rounded-xl p-3 sm:flex-row sm:items-end sm:gap-3"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <label
-                          htmlFor={`prev-label-${row.id}`}
-                          className="text-[11px] font-medium text-kal-text-secondary"
-                        >
-                          Attempt label
-                        </label>
-                        <input
-                          id={`prev-label-${row.id}`}
-                          type="text"
-                          value={row.label}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            setScoreRows((rows) =>
-                              rows.map((r) =>
-                                r.id === row.id ? { ...r, label: v } : r,
-                              ),
-                            );
-                          }}
-                          placeholder="e.g. 2025 — first attempt"
-                          autoComplete="off"
-                          className="mt-1 w-full rounded-lg border border-kal-border bg-kal-card px-3 py-2 text-base text-kal-text placeholder:text-kal-muted focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
-                        />
-                      </div>
-                      <div className="w-full shrink-0 sm:w-28">
-                        <label
-                          htmlFor={`prev-marks-${row.id}`}
-                          className="text-[11px] font-medium text-kal-text-secondary"
-                        >
-                          Marks
-                        </label>
-                        <input
-                          id={`prev-marks-${row.id}`}
-                          type="number"
-                          inputMode="numeric"
-                          min={0}
-                          value={row.score}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            setScoreRows((rows) =>
-                              rows.map((r) =>
-                                r.id === row.id ? { ...r, score: v } : r,
-                              ),
-                            );
-                          }}
-                          placeholder="e.g. 412"
-                          className="mt-1 w-full rounded-lg border border-kal-border bg-kal-card px-3 py-2 text-base text-kal-text placeholder:text-kal-muted focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
-                        />
-                      </div>
+            <div className="min-h-0 overflow-hidden">
+              <div className="kal-glass-panel overflow-hidden rounded-[1rem] transition-colors duration-200">
+                <Row>
+                  <span className="min-w-0 flex-1 text-[15px] font-medium text-kal-text-secondary">
+                    Attempted before?
+                  </span>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={prevAttempted}
+                    onClick={togglePrevAttempted}
+                    className={clsx(
+                      "relative h-8 w-[52px] shrink-0 rounded-full transition-colors duration-300",
+                      prevAttempted ? "bg-kal-accent" : "bg-kal-border",
+                    )}
+                  >
+                    <span
+                      className={clsx(
+                        "absolute top-1 left-1 h-6 w-6 rounded-full bg-white shadow transition-transform duration-300",
+                        prevAttempted ? "translate-x-5" : "translate-x-0",
+                      )}
+                    />
+                  </button>
+                  <span className="w-10 text-right text-sm font-medium text-kal-text-secondary">
+                    {prevAttempted ? "Yes" : "No"}
+                  </span>
+                </Row>
+                <div
+                  className={clsx(
+                    "grid transition-[grid-template-rows] duration-300 ease-out",
+                    prevAttempted ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+                  )}
+                >
+                  <div className="overflow-hidden">
+                    <div className="space-y-3 border-t border-kal-border px-4 py-4">
+                      <p className="text-xs text-kal-text-secondary">
+                        Label the attempt, then enter marks. Use &quot;Add
+                        another score&quot; for more tries.
+                      </p>
+                      <ul className="space-y-3">
+                        {scoreRows.map((row, index) => (
+                          <li
+                            key={row.id}
+                            className="kal-glass-subtle flex flex-col gap-2 rounded-xl p-3 sm:flex-row sm:items-end sm:gap-3"
+                          >
+                            <div className="min-w-0 flex-1">
+                              <label
+                                htmlFor={`prev-label-${row.id}`}
+                                className="text-[11px] font-medium text-kal-text-secondary"
+                              >
+                                Attempt label
+                              </label>
+                              <input
+                                id={`prev-label-${row.id}`}
+                                type="text"
+                                value={row.label}
+                                onChange={(e) => {
+                                  const v = e.target.value;
+                                  setScoreRows((rows) =>
+                                    rows.map((r) =>
+                                      r.id === row.id
+                                        ? { ...r, label: v }
+                                        : r,
+                                    ),
+                                  );
+                                }}
+                                placeholder="e.g. 2025 — first attempt"
+                                autoComplete="off"
+                                className="mt-1 w-full rounded-lg border border-kal-border bg-kal-card px-3 py-2 text-base text-kal-text placeholder:text-kal-muted focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
+                              />
+                            </div>
+                            <div className="w-full shrink-0 sm:w-28">
+                              <label
+                                htmlFor={`prev-marks-${row.id}`}
+                                className="text-[11px] font-medium text-kal-text-secondary"
+                              >
+                                Marks
+                              </label>
+                              <input
+                                id={`prev-marks-${row.id}`}
+                                type="number"
+                                inputMode="numeric"
+                                min={0}
+                                value={row.score}
+                                onChange={(e) => {
+                                  const v = e.target.value;
+                                  setScoreRows((rows) =>
+                                    rows.map((r) =>
+                                      r.id === row.id
+                                        ? { ...r, score: v }
+                                        : r,
+                                    ),
+                                  );
+                                }}
+                                placeholder="e.g. 412"
+                                className="mt-1 w-full rounded-lg border border-kal-border bg-kal-card px-3 py-2 text-base text-kal-text placeholder:text-kal-muted focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setScoreRows((rows) =>
+                                  rows.filter((r) => r.id !== row.id),
+                                )
+                              }
+                              disabled={scoreRows.length <= 1}
+                              className="flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 rounded-lg border border-kal-border bg-kal-card px-3 py-2 text-xs font-semibold text-kal-text-secondary transition-colors hover:border-[var(--kal-danger-border)] hover:bg-[var(--kal-danger-soft)] hover:text-[var(--kal-danger-text)] disabled:pointer-events-none disabled:opacity-40"
+                              aria-label={`Remove score row ${index + 1}`}
+                            >
+                              <Trash2 className="h-4 w-4" aria-hidden />
+                              Remove
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
                       <button
                         type="button"
-                        onClick={() =>
-                          setScoreRows((rows) =>
-                            rows.filter((r) => r.id !== row.id),
-                          )
-                        }
-                        disabled={scoreRows.length <= 1}
-                        className="flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 rounded-lg border border-kal-border bg-kal-card px-3 py-2 text-xs font-semibold text-kal-text-secondary transition-colors hover:border-[var(--kal-danger-border)] hover:bg-[var(--kal-danger-soft)] hover:text-[var(--kal-danger-text)] disabled:pointer-events-none disabled:opacity-40"
-                        aria-label={`Remove score row ${index + 1}`}
+                        onClick={addScoreRow}
+                        className="kal-glass-subtle flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl border border-dashed border-white/35 py-2.5 text-sm font-semibold text-kal-accent transition-colors hover:border-kal-accent/35 hover:bg-kal-accent-soft/50 dark:border-white/15"
                       >
-                        <Trash2 className="h-4 w-4" aria-hidden />
-                        Remove
+                        <Plus
+                          className="h-4 w-4"
+                          strokeWidth={2.5}
+                          aria-hidden
+                        />
+                        Add another score
                       </button>
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  type="button"
-                  onClick={addScoreRow}
-                  className="kal-glass-subtle flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl border border-dashed border-white/35 py-2.5 text-sm font-semibold text-kal-accent transition-colors hover:border-kal-accent/35 hover:bg-kal-accent-soft/50 dark:border-white/15"
-                >
-                  <Plus className="h-4 w-4" strokeWidth={2.5} aria-hidden />
-                  Add another score
-                </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </Section>
+          {examHistoryOpen ? (
+            <p className="mt-2 px-3 text-[11px] leading-relaxed text-kal-text-secondary">
+              Add each past attempt with a short label and marks. If you tried
+              more than once, note the year or attempt number in the label.
+            </p>
+          ) : null}
+        </section>
 
         {error && (
           <p className="rounded-2xl border border-[var(--kal-danger-border)] bg-[var(--kal-danger-soft)] px-4 py-3 text-sm text-[var(--kal-danger-text)]">

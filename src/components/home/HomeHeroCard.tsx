@@ -5,6 +5,7 @@ import { useMemo } from "react";
 
 import { useExamsCatalogRows } from "@/hooks/useExamsCatalogRows";
 import { useTargetExamDate } from "@/hooks/useTargetExamDate";
+import { examHasPrevYearMarks } from "@/lib/examProfile";
 import { displayNameForExamCatalog } from "@/lib/examsCatalog";
 
 type ExamRollupEntry = {
@@ -39,6 +40,11 @@ export type HomeHeroCardProps = {
   examRollups?: ExamRollupEntry[] | null;
   /** Per-exam dates map from useTargetExamDate */
   examDates?: Record<string, string>;
+  /**
+   * When false, the "Proj. score" middle cell is hidden entirely.
+   * Defaults to true for backward compatibility.
+   */
+  showProjScore?: boolean;
 };
 
 function computeDaysToExam(dateStr: string): number | null {
@@ -80,11 +86,21 @@ export function HomeHeroCard({
   projectedScoreCaption,
   examRollups,
   examDates,
+  showProjScore = true,
 }: HomeHeroCardProps) {
   const { examDate } = useTargetExamDate();
   const { rows: catalogRows } = useExamsCatalogRows();
 
   const isMultiExam = examRollups != null && examRollups.length > 1;
+
+  // For multi-exam: only show proj score rows for exams with verified mark weights
+  const projScoreRollups = isMultiExam
+    ? (examRollups ?? []).filter((er) => examHasPrevYearMarks(er.examLabel))
+    : null;
+
+  // Final flag: honour the prop, but also suppress if multi-exam has zero supported exams
+  const shouldShowProjScore =
+    showProjScore && (!isMultiExam || (projScoreRollups?.length ?? 0) > 0);
 
   const daysToExam = useMemo(() => {
     if (!examDate) return null;
@@ -236,59 +252,61 @@ export function HomeHeroCard({
             />
           )}
 
-          {divider}
+          {shouldShowProjScore && divider}
 
-          {/* Proj. score cell */}
-          {isMultiExam ? (
-            <div className="flex flex-1 flex-col items-center gap-1.5 px-1 py-3 text-center">
-              {examRollups!.map((er) => {
-                const name =
-                  displayNameForExamCatalog(er.examLabel, catalogRows) ||
-                  er.examLabel;
-                const proj = er.projections[0];
-                const scoreStr = proj
-                  ? `${proj.projectedOutOf720}/${er.maxScore}`
-                  : er.rollup.totalMarksPool > 0
-                    ? `${er.rollup.totalMarksMastered.toFixed(0)}/${er.rollup.totalMarksPool.toFixed(0)}`
-                    : "—";
-                return (
-                  <div key={er.examLabel} className="flex flex-col items-center gap-0">
-                    <span className="text-sm font-bold tabular-nums leading-tight text-kal-text">
-                      {scoreStr}
-                    </span>
-                    <span className="text-[9px] leading-tight text-kal-muted">
-                      {name}
-                    </span>
-                  </div>
-                );
-              })}
-              <span className="mt-0.5 text-[10px] leading-tight text-kal-muted">
-                Proj. score
-              </span>
-            </div>
-          ) : (
-            <div className="flex flex-1 flex-col items-center gap-0.5 px-2 py-3 text-center">
-              <span
-                className="kal-home-stat-value"
-                aria-label={
-                  marksTotal > 0
-                    ? `Projected score ${Math.round(marksMastered)} out of ${Math.round(marksTotal)}${
-                        projectedScoreCaption ? `. ${projectedScoreCaption}` : ""
-                      }`
-                    : "Projected score unavailable"
-                }
-              >
-                {projScoreDisplay}
-              </span>
-              <span className="text-[10px] leading-tight text-kal-muted">
-                Proj. score
-              </span>
-              {projectedScoreCaption ? (
-                <span className="min-w-0 max-w-full px-0.5 text-[9px] leading-snug text-kal-muted sm:whitespace-nowrap sm:px-1">
-                  {projectedScoreCaption}
+          {/* Proj. score cell — hidden for exams without verified prev-year marks data */}
+          {shouldShowProjScore && (
+            isMultiExam ? (
+              <div className="flex flex-1 flex-col items-center gap-1.5 px-1 py-3 text-center">
+                {(projScoreRollups ?? []).map((er) => {
+                  const name =
+                    displayNameForExamCatalog(er.examLabel, catalogRows) ||
+                    er.examLabel;
+                  const proj = er.projections[0];
+                  const scoreStr = proj
+                    ? `${proj.projectedOutOf720}/${er.maxScore}`
+                    : er.rollup.totalMarksPool > 0
+                      ? `${er.rollup.totalMarksMastered.toFixed(0)}/${er.rollup.totalMarksPool.toFixed(0)}`
+                      : "—";
+                  return (
+                    <div key={er.examLabel} className="flex flex-col items-center gap-0">
+                      <span className="text-sm font-bold tabular-nums leading-tight text-kal-text">
+                        {scoreStr}
+                      </span>
+                      <span className="text-[9px] leading-tight text-kal-muted">
+                        {name}
+                      </span>
+                    </div>
+                  );
+                })}
+                <span className="mt-0.5 text-[10px] leading-tight text-kal-muted">
+                  Proj. score
                 </span>
-              ) : null}
-            </div>
+              </div>
+            ) : (
+              <div className="flex flex-1 flex-col items-center gap-0.5 px-2 py-3 text-center">
+                <span
+                  className="kal-home-stat-value"
+                  aria-label={
+                    marksTotal > 0
+                      ? `Projected score ${Math.round(marksMastered)} out of ${Math.round(marksTotal)}${
+                          projectedScoreCaption ? `. ${projectedScoreCaption}` : ""
+                        }`
+                      : "Projected score unavailable"
+                  }
+                >
+                  {projScoreDisplay}
+                </span>
+                <span className="text-[10px] leading-tight text-kal-muted">
+                  Proj. score
+                </span>
+                {projectedScoreCaption ? (
+                  <span className="min-w-0 max-w-full px-0.5 text-[9px] leading-snug text-kal-muted sm:whitespace-nowrap sm:px-1">
+                    {projectedScoreCaption}
+                  </span>
+                ) : null}
+              </div>
+            )
           )}
 
           {divider}

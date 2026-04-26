@@ -80,7 +80,7 @@ export function AuthAppNavPreviewMenu() {
             open ? "translate-x-0" : "translate-x-full",
           )}
         >
-          <div className="flex shrink-0 items-center gap-2.5 border-b border-white/20 px-3 py-2.5 backdrop-blur-sm sm:px-4 dark:border-white/10">
+          <div className="flex shrink-0 items-center gap-2.5 border-b border-white/20 px-3 pb-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] backdrop-blur-sm sm:px-4 dark:border-white/10">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-kal-accent-soft text-kal-accent">
               <Menu className="h-5 w-5" strokeWidth={2.25} aria-hidden />
             </div>

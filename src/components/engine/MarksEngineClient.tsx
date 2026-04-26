@@ -7,7 +7,7 @@ import { usePrimaryExamLabel } from "@/hooks/usePrimaryExamLabel";
 import { useRefreshTasksOnHomeFocus } from "@/hooks/useRefreshTasksOnHomeFocus";
 import { useSyllabusTracker } from "@/hooks/useSyllabusTracker";
 import { SyllabusComingSoon } from "@/components/syllabus/SyllabusComingSoon";
-import { shouldShowSyllabusComingSoon } from "@/lib/examProfile";
+import { examHasPrevYearMarks, shouldShowSyllabusComingSoon } from "@/lib/examProfile";
 import { buildMarksEngineSnapshot } from "@/lib/engine/marksEngineStats";
 import {
   isUpscCseMainsExam,
@@ -35,6 +35,8 @@ export function MarksEngineClient() {
     error: syllabusError,
     maxScore,
   } = useSyllabusTracker();
+
+  const hasPrevYearMarks = examHasPrevYearMarks(catalogExamKey ?? examLabel);
 
   const syllabusSoon = shouldShowSyllabusComingSoon({
     examLabel,
@@ -120,7 +122,12 @@ export function MarksEngineClient() {
       </div>
 
       <EngineCard title="Year projections · chapter weights">
-        {syllabusSoon ? (
+        {!hasPrevYearMarks ? (
+          <p className="text-sm text-kal-muted">
+            Year-by-year projections are not available for this exam yet. Marks
+            data is being verified and will be added soon.
+          </p>
+        ) : syllabusSoon ? (
           <p className="text-sm text-kal-muted">
             Year-by-year projections appear when your target exam has a syllabus
             catalog loaded.
