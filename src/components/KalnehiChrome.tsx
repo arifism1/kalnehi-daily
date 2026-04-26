@@ -166,7 +166,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="kal-chrome-root flex min-h-full min-h-dvh flex-col bg-kal-page text-kal-text">
+    <div className="kal-chrome-root flex h-dvh flex-col overflow-hidden bg-kal-page text-kal-text">
       {/* ── Top bar ────────────────────────────────────────────────────── */}
       <header className="kal-glass-header sticky top-0 z-40 shrink-0 pt-[env(safe-area-inset-top)]">
         <div className="flex h-[52px] w-full items-center justify-between gap-2 px-3 sm:h-[52px] sm:px-5">
@@ -228,19 +228,20 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
       </header>
 
       {/* ── Body: sidebar + content ─────────────────────────────────────── */}
-      <div className="kal-chrome-body flex min-w-0 flex-1">
+      <div className="kal-chrome-body flex min-w-0 flex-1 overflow-hidden">
         {/* Desktop sidebar — hidden below lg (900px) */}
         <KalnehiSidebar />
 
-        {/* Main content area */}
-        <div className="kal-chrome-main-scroll flex min-w-0 flex-1 flex-col">
+        {/* Main content area — scrolls inside fixed-height container so no gap on iOS */}
+        <div className="kal-chrome-main-scroll flex min-w-0 flex-1 flex-col overflow-y-auto">
           <main
             className={clsx(
-              "mx-auto w-full flex-1 px-4 py-6 sm:px-6 sm:py-8",
+              "mx-auto w-full flex-1 px-4 pt-6 sm:px-6 sm:pt-8",
               "max-w-[960px]",
-              "md:px-8 xl:py-10",
-              // Extra bottom padding on mobile for fixed tab bar
-              "pb-[calc(56px+env(safe-area-inset-bottom))] lg:pb-10",
+              "md:px-8 xl:pt-10",
+              // Reserve space below content for the fixed tab bar on mobile,
+              // and use simple padding on desktop where the bar is hidden.
+              "pb-[calc(3.5rem+var(--kal-safe-bottom))] lg:pb-10",
             )}
           >
             <SyncStatusBanner />
