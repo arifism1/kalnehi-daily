@@ -17,6 +17,10 @@ import {
 import { dedupeMergedSyllabusRowsByPlacement } from "@/lib/syllabusDedupe";
 import { fetchSyllabusMasterRowsForExam } from "@/lib/syllabusMasterQuery";
 import {
+  fetchChapterMarks,
+  injectChapterMarksIntoRows,
+} from "@/lib/fetchChapterMarks";
+import {
   mergeSyllabusWithUserCustomizations,
   type MergedSyllabusRow,
   type UserSyllabusCustomizationRow,
@@ -96,7 +100,7 @@ async function refreshTasksFromSupabaseImpl(userId: string): Promise<void> {
     "yyyy-MM-dd",
   );
 
-  const [tasksRes, syllabusRows, customRes, marksRes] = await Promise.all([
+  const [tasksRes, syllabusRows, customRes, marksRes, chapterMarksMap] = await Promise.all([
     supabase
       .from("tasks")
       .select("*")
@@ -119,6 +123,9 @@ async function refreshTasksFromSupabaseImpl(userId: string): Promise<void> {
           .eq("user_id", userId)
           .eq("exam_name", examKey)
       : Promise.resolve({ data: [] as Record<string, unknown>[], error: null }),
+    examKey
+      ? fetchChapterMarks(supabase, examKey)
+      : Promise.resolve(new Map()),
   ]);
 
   const { data: taskRows, error: tErr } = tasksRes;
@@ -147,8 +154,9 @@ async function refreshTasksFromSupabaseImpl(userId: string): Promise<void> {
     } else if (examKey === "CUET") {
       merged = [];
     }
+    const withChapterMarks = injectChapterMarksIntoRows(merged, chapterMarksMap);
     merged = applyMarksOverridesToRows(
-      merged,
+      withChapterMarks,
       (marksRows ?? []) as SyllabusMarksOverrideRow[],
     );
     merged = dedupeMergedSyllabusRowsByPlacement(merged).rows;
