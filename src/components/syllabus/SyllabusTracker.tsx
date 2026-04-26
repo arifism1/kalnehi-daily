@@ -61,6 +61,7 @@ import { usePrimaryExamLabel } from "@/hooks/usePrimaryExamLabel";
 import { useSyllabusTracker } from "@/hooks/useSyllabusTracker";
 import { displayNameForExamCatalog } from "@/lib/examsCatalog";
 import {
+  examHasPrevYearMarks,
   shouldShowSyllabusComingSoon,
 } from "@/lib/examProfile";
 import {
@@ -628,8 +629,11 @@ export function SyllabusTracker() {
     return out;
   }, [rollup.chapters]);
 
+  const hasPrevYearMarks = examHasPrevYearMarks(targetExamLabel);
   /** CUET uses domain scoring; other exams need real marks_* (or overrides), not legacy 1× fallbacks. */
-  const showMarksUi = Boolean(cuetScoringRollup) || syllabusHasCatalogMarksData(rows);
+  const showMarksUi =
+    Boolean(cuetScoringRollup) ||
+    (hasPrevYearMarks && syllabusHasCatalogMarksData(rows));
 
   /**
    * UPSC CSE Mains total = 2350 (1750 merit + 600 qualifying). Qualifying marks are included.
@@ -770,7 +774,7 @@ export function SyllabusTracker() {
             const erHasMarks = syllabusHasCatalogMarksData(
               examResults.find((x) => x.examLabel === er.examLabel)?.rows ?? [],
             );
-            const erShowMarks = erHasMarks;
+            const erShowMarks = examHasPrevYearMarks(er.examLabel) && erHasMarks;
             const erDisplayName =
               displayNameForExamCatalog(er.examLabel, examCatalogRows) || er.examLabel;
             const topProjection = er.projections[0] ?? null;
@@ -824,8 +828,15 @@ export function SyllabusTracker() {
       ) : (
         /* Single-exam: existing card unchanged */
         <section className="kal-glass-panel overflow-hidden rounded-2xl border-kal-accent/35 p-6 shadow-lg">
-          <div className="flex flex-wrap items-end justify-between gap-6">
-            <div>
+          <div
+            className={clsx(
+              "flex gap-6",
+              cuetScoringRollup
+                ? "flex-col items-stretch sm:flex-row sm:flex-wrap sm:items-end sm:justify-between"
+                : "flex-wrap items-end justify-between",
+            )}
+          >
+            <div className="min-w-0">
               <p className="kal-category-label text-kal-accent">
                 {cuetScoringRollup ? "Overall CUET progress" : "Syllabus progress"}
               </p>
@@ -850,88 +861,90 @@ export function SyllabusTracker() {
                     : `Overall progress: ${rollup.overallPercent % 1 === 0 ? rollup.overallPercent.toFixed(0) : rollup.overallPercent.toFixed(1)}%`}
               </p>
             </div>
-            <div className="flex flex-col gap-3 text-right sm:min-w-[12rem]">
-              {cuetScoringRollup ? (
-                <div>
-                  <p className="text-xs text-kal-muted">Projected total</p>
-                  <p className="text-lg font-semibold tabular-nums text-orange-600 dark:text-orange-300">
-                    {cuetScoringRollup.totalProjected}
-                    <span className="text-kal-muted">
-                      {" "}
-                      / {cuetScoringRollup.totalMax}
-                    </span>
-                  </p>
-                  <ul className="mt-2 space-y-1 text-left text-[10px] text-kal-muted sm:text-right">
-                    {cuetScoringRollup.subjects.map((s) => (
-                      <li key={s.subject}>
-                        <span className="text-kal-muted">{s.subject}</span>{" "}
-                        <span className="tabular-nums text-kal-accent">
-                          {s.projectedMarks}/{s.maxPerSubject}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : showMarksUi && neetYearProjections.length > 0 ? (
-                <>
-                  {(showAllYears ? neetYearProjections : neetYearProjections.slice(0, 1)).map((p) => (
-                    <div key={p.year}>
-                      <p className="text-[10px] font-semibold uppercase text-kal-muted">
-                        {displayExam} {p.year}
-                      </p>
-                      <p className="mt-0.5 text-xl font-bold tabular-nums" style={{ color: "#BA7517" }}>
-                        {isUpscMainsUi
-                          ? rollup.totalMarksMastered.toFixed(0)
-                          : p.projectedOutOf720}
-                        <span className="text-base font-semibold text-kal-muted">
-                          {" "}
-                          /{" "}
+            {cuetScoringRollup || showMarksUi ? (
+              <div className="flex min-w-0 w-full flex-col gap-3 text-left sm:w-auto sm:min-w-[12rem] sm:text-right">
+                {cuetScoringRollup ? (
+                  <div className="w-full">
+                    <p className="text-xs text-kal-muted">Projected total</p>
+                    <p className="text-lg font-semibold tabular-nums text-orange-600 dark:text-orange-300">
+                      {cuetScoringRollup.totalProjected}
+                      <span className="text-kal-muted">
+                        {" "}
+                        / {cuetScoringRollup.totalMax}
+                      </span>
+                    </p>
+                    <ul className="mt-3 space-y-1.5 border-t border-kal-border/60 pt-3 text-[10px] text-kal-muted sm:border-0 sm:pt-0">
+                      {cuetScoringRollup.subjects.map((s) => (
+                        <li
+                          key={s.subject}
+                          className="flex items-baseline justify-between gap-3"
+                        >
+                          <span className="min-w-0 flex-1 text-kal-muted">{s.subject}</span>
+                          <span className="shrink-0 tabular-nums text-kal-accent">
+                            {s.projectedMarks}/{s.maxPerSubject}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : showMarksUi && neetYearProjections.length > 0 ? (
+                  <>
+                    {(showAllYears ? neetYearProjections : neetYearProjections.slice(0, 1)).map((p) => (
+                      <div key={p.year}>
+                        <p className="text-[10px] font-semibold uppercase text-kal-muted">
+                          {displayExam} {p.year}
+                        </p>
+                        <p className="mt-0.5 text-xl font-bold tabular-nums" style={{ color: "#BA7517" }}>
                           {isUpscMainsUi
-                            ? UPSC_CSE_MAINS_UI_TOTAL_MARKS
-                            : maxScore}
-                        </span>
-                      </p>
-                      <p className="mt-0.5 text-[10px] leading-snug text-kal-muted">
-                        Based on {p.year} pattern
-                      </p>
-                    </div>
-                  ))}
-                  {neetYearProjections.length > 1 && !showAllYears && (
-                    <button
-                      type="button"
-                      onClick={() => setShowAllYears(true)}
-                      className="mt-1 text-[11px] font-medium"
-                      style={{ color: "#BA7517" }}
-                    >
-                      See all years ↓
-                    </button>
-                  )}
-                </>
-              ) : showMarksUi ? (
-                <div>
-                  <p className="text-xs text-kal-muted">Marks secured</p>
-                  <p className="text-lg font-semibold tabular-nums text-orange-600 dark:text-orange-300">
-                    {rollup.totalMarksMastered.toFixed(0)}
-                    <span className="text-kal-muted">
-                      {" "}
-                      /{" "}
-                      {isUpscMainsUi
-                        ? UPSC_CSE_MAINS_UI_TOTAL_MARKS
-                        : rollup.totalMarksPool.toFixed(0)}
-                    </span>
-                  </p>
-                </div>
-              ) : (
-                <div className="text-left sm:text-right">
-                  <p className="text-xs text-kal-muted">Snapshot</p>
-                  <p className="mt-0.5 text-sm text-kal-muted">
-                    Weighted projections appear when chapter marks are set for this
-                    exam.
-                  </p>
-                </div>
-              )}
-            </div>
+                            ? rollup.totalMarksMastered.toFixed(0)
+                            : p.projectedOutOf720}
+                          <span className="text-base font-semibold text-kal-muted">
+                            {" "}
+                            /{" "}
+                            {isUpscMainsUi
+                              ? UPSC_CSE_MAINS_UI_TOTAL_MARKS
+                              : maxScore}
+                          </span>
+                        </p>
+                        <p className="mt-0.5 text-[10px] leading-snug text-kal-muted">
+                          Based on {p.year} pattern
+                        </p>
+                      </div>
+                    ))}
+                    {neetYearProjections.length > 1 && !showAllYears && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAllYears(true)}
+                        className="mt-1 text-[11px] font-medium"
+                        style={{ color: "#BA7517" }}
+                      >
+                        See all years ↓
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <div>
+                    <p className="text-xs text-kal-muted">Marks secured</p>
+                    <p className="text-lg font-semibold tabular-nums text-orange-600 dark:text-orange-300">
+                      {rollup.totalMarksMastered.toFixed(0)}
+                      <span className="text-kal-muted">
+                        {" "}
+                        /{" "}
+                        {isUpscMainsUi
+                          ? UPSC_CSE_MAINS_UI_TOTAL_MARKS
+                          : rollup.totalMarksPool.toFixed(0)}
+                      </span>
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : null}
           </div>
+          {!cuetScoringRollup && !showMarksUi ? (
+            <p className="mt-3 max-w-prose text-[13px] leading-snug text-kal-muted">
+              Weighted projections appear when chapter marks are set for this exam.
+            </p>
+          ) : null}
           <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-kal-card-muted">
             <div
               className="h-full rounded-full bg-gradient-to-r from-kal-accent via-orange-600 to-orange-700 transition-[width] duration-500"
@@ -1203,7 +1216,7 @@ export function SyllabusTracker() {
                                             {cr?.isChapterMastered ? "Completed" : "Mark complete"}
                                           </span>
                                         </div>
-                                        {sectionExamKey ? (
+                                        {sectionExamKey && examHasPrevYearMarks(section.examLabel) ? (
                                           <button
                                             type="button"
                                             title="Chapter marks (your weights)"
@@ -1553,7 +1566,7 @@ export function SyllabusTracker() {
                                   : "Mark complete"}
                               </span>
                             </div>
-                            {catalogExamKey ? (
+                            {catalogExamKey && showMarksUi ? (
                               <button
                                 type="button"
                                 title="Chapter marks (your weights)"

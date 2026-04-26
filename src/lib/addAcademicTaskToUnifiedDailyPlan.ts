@@ -45,7 +45,7 @@ export async function addAcademicTaskToUnifiedDailyPlan(
     time_end,
     priority: "normal",
     status,
-    source: "typed",
+    source: "moved",
     source_raw_text: null,
     syllabus_master_id: t.microtopic_id?.trim() || null,
   });

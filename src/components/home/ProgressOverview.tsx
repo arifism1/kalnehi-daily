@@ -5,7 +5,7 @@ import { useId, useMemo } from "react";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useSyllabusTracker } from "@/hooks/useSyllabusTracker";
 import { useTargetExamDisplay } from "@/hooks/useTargetExamDisplay";
-import { shouldShowSyllabusComingSoon } from "@/lib/examProfile";
+import { examHasPrevYearMarks, shouldShowSyllabusComingSoon } from "@/lib/examProfile";
 import {
   isUpscCseMainsExam,
   UPSC_CSE_MAINS_UI_TOTAL_MARKS,
@@ -128,6 +128,7 @@ export function ProgressOverview() {
   const { secured, denom, marksPercent } = useMemo(() => {
     const microtopicById = microRecord;
     const fallbackMax = syllabusScoreMax > 0 ? syllabusScoreMax : 720;
+    const hasPrevYearMarks = examHasPrevYearMarks(catalogExamKey);
 
     let secured = 0;
     let denom = fallbackMax;
@@ -137,7 +138,7 @@ export function ProgressOverview() {
       marksPercent = cuetScoringRollup.overallPercent;
       secured = 0;
       denom = 0;
-    } else if (!advancedMarksProjectionEnabled && syllabusRows.length > 0) {
+    } else if (!advancedMarksProjectionEnabled && syllabusRows.length > 0 && hasPrevYearMarks) {
       if (isUpscMainsUi) {
         marksPercent = upscMainsSyllabusUiPercent(
           syllabusRollup.totalMarksMastered,
@@ -157,7 +158,7 @@ export function ProgressOverview() {
       marksPercent = syllabusMultiYear.ringPercent;
       secured = syllabusMultiYear.ringProjected;
       denom = syllabusMultiYear.ringOutOf;
-    } else if (syllabusRows.length > 0) {
+    } else if (syllabusRows.length > 0 && hasPrevYearMarks) {
       secured = Math.round(syllabusRollup.totalMarksMastered);
       if (isUpscMainsUi) {
         denom = UPSC_CSE_MAINS_UI_TOTAL_MARKS;
@@ -185,6 +186,7 @@ export function ProgressOverview() {
   }, [
     microRecord,
     syllabusScoreMax,
+    catalogExamKey,
     advancedMarksProjectionEnabled,
     cuetScoringRollup,
     syllabusMultiYear,

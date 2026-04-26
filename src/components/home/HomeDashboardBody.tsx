@@ -9,7 +9,7 @@ import { useExamsCatalogRows } from "@/hooks/useExamsCatalogRows";
 import { useSyllabusTracker } from "@/hooks/useSyllabusTracker";
 import { useTargetExamDate } from "@/hooks/useTargetExamDate";
 import { useTargetExamDisplay } from "@/hooks/useTargetExamDisplay";
-import { shouldShowSyllabusComingSoon } from "@/lib/examProfile";
+import { examHasPrevYearMarks, shouldShowSyllabusComingSoon } from "@/lib/examProfile";
 import { displayNameForExamCatalog } from "@/lib/examsCatalog";
 import {
   averageProjectedOutOfMax,
@@ -272,6 +272,17 @@ export function HomeDashboardBody({
     isUpscMainsUi,
   ]);
 
+  const showProjScore = useMemo(() => {
+    // CUET has its own verified scoring mechanism — always show
+    if (cuetScoringRollup) return true;
+    // Multi-exam: show if at least one exam in the track has verified marks
+    if (examRollups && examRollups.length > 1) {
+      return examRollups.some((er) => examHasPrevYearMarks(er.examLabel));
+    }
+    // Single exam
+    return examHasPrevYearMarks(examLabel);
+  }, [cuetScoringRollup, examRollups, examLabel]);
+
   // Kept for downstream use — not rendered on home page but preserves hook call
   const syllabusMultiYear = useMemo(() => {
     if (!advancedMarksProjectionEnabled) return null;
@@ -315,6 +326,7 @@ export function HomeDashboardBody({
         examDisplayName={allExamsDisplayName}
         examRollups={examRollups ?? undefined}
         examDates={examDates}
+        showProjScore={showProjScore}
       />
 
       {/* Section B — Daily motivational line */}

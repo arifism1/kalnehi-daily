@@ -192,6 +192,20 @@ export function isNeetUgExam(exam: string | null | undefined): boolean {
   return normalizeExamLabel(exam) === "neet ug";
 }
 
+/**
+ * Returns true only for exams with verified prev-year mark weights.
+ * Other exams have marks data that is being corrected — hide the
+ * "Proj. score" cell entirely until data is ready.
+ */
+export function examHasPrevYearMarks(exam: string | null | undefined): boolean {
+  if (!exam) return false;
+  return (
+    isJeeMainsExam(exam) ||
+    normalizeExamLabel(exam) === "jee advanced" ||
+    isNeetUgExam(exam)
+  );
+}
+
 /** Matches CUET (Common University Entrance Test). */
 export function isCuetExam(exam: string | null | undefined): boolean {
   if (!exam) return false;

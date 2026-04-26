@@ -169,7 +169,7 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
           open ? "translate-x-0" : "translate-x-full",
         )}
       >
-        <div className="shrink-0 border-b backdrop-blur-sm" style={{ borderColor: "var(--kal-border)" }}>
+        <div className="shrink-0 border-b pt-[env(safe-area-inset-top)] backdrop-blur-sm" style={{ borderColor: "var(--kal-border)" }}>
           <div className="flex items-start gap-2.5 px-3 py-2.5 sm:px-4">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-kal-accent-soft text-kal-accent">
               <Menu className="h-5 w-5" strokeWidth={2.25} />

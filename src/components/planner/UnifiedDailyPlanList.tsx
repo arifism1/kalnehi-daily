@@ -2,6 +2,7 @@
 
 import {
   AlarmClock,
+  CalendarCheck,
   CalendarDays,
   Check,
   Link2,
@@ -51,14 +52,24 @@ import { surfaceErrorForUi } from "@/lib/userFacingErrors";
 
 function SourceBadge({ source }: { source: string }) {
   const isLegacyPlanImport = source === "handwritten";
-  const label =
-    source === "voice" ? "Voice" : isLegacyPlanImport ? "Added from plan" : "Typed";
-  const Icon = source === "voice" ? Mic : Type;
+  const isMoved = source === "moved";
+  const label = source === "voice"
+    ? "Voice"
+    : isLegacyPlanImport
+      ? "Added from plan"
+      : isMoved
+        ? "Moved Here"
+        : "Typed";
+  const Icon = source === "voice" ? Mic : isMoved ? CalendarCheck : Type;
   return (
     <span
       title={isLegacyPlanImport ? "Added from plan" : undefined}
-      className={`inline-flex max-w-[11rem] items-center gap-1 rounded-full border border-white/30 bg-white/55 px-2 py-0.5 text-[10px] font-bold text-kal-muted backdrop-blur-sm dark:border-white/12 dark:bg-zinc-900/55 ${
-        isLegacyPlanImport ? "normal-case tracking-tight" : "uppercase tracking-wide"
+      className={`inline-flex max-w-[11rem] items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold backdrop-blur-sm ${
+        isMoved
+          ? "border-kal-accent/35 bg-kal-accent/10 text-kal-accent dark:border-kal-accent/25 dark:bg-kal-accent/10 normal-case tracking-tight"
+          : isLegacyPlanImport
+            ? "border-white/30 bg-white/55 text-kal-muted dark:border-white/12 dark:bg-zinc-900/55 normal-case tracking-tight"
+            : "border-white/30 bg-white/55 text-kal-muted dark:border-white/12 dark:bg-zinc-900/55 uppercase tracking-wide"
       }`}
     >
       <Icon className="h-3 w-3 shrink-0 text-kal-accent" aria-hidden />
@@ -680,7 +691,7 @@ export function UnifiedDailyPlanList({
     dispatchDailyPlanSynced();
 
     const src = snapshot.source;
-    if (src !== "typed" && src !== "voice" && src !== "handwritten") {
+    if (src !== "typed" && src !== "voice" && src !== "handwritten" && src !== "moved") {
       return;
     }
 
