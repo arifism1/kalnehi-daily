@@ -47,7 +47,7 @@ export type KalnehiPageSeoKey =
   | "mySubscription"
   | "waitlist"
   | "waitlist-position"
-  | "daily-log"
+  | "daily-debrief"
   | "mock-tests"
   | "mistake-log";
 
@@ -177,8 +177,8 @@ const PAGE_SEO: Record<
     description:
       `Track your position in the Kalnehi Daily waitlist. See exactly when your batch opens and skip the queue instantly for ₹19.`,
   },
-  "daily-log": {
-    path: "/daily-log",
+  "daily-debrief": {
+    path: "/daily-debrief",
     title: `Daily Debrief — end-of-day reflection | ${SITE_NAME}`,
     description:
       `60-second end-of-day check-in: log what you finished, what you skipped, and tomorrow's top priority. ${SITE_NAME} surfaces patterns over time.`,

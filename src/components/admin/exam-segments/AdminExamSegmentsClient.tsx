@@ -9,18 +9,20 @@ export function AdminExamSegmentsClient({ data }: { data: ExamSegmentsSnapshot }
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold text-kal-text">Exam segment intelligence</h1>
-        <p className="mt-1 text-sm text-kal-muted">Grouped by target_exam / primary_exam on user_profiles.</p>
+        <p className="mt-1 text-sm text-kal-muted">
+          Grouped by exam track (selected_track) when set; otherwise legacy target exam from profile.
+        </p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <AdminKpiCard label="Distinct exams" value={data.rows.length} />
+        <AdminKpiCard label="Distinct tracks / segments" value={data.rows.length} />
       </div>
 
       <div className="overflow-x-auto rounded-2xl border border-kal-border">
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="border-b border-kal-border bg-kal-card/70">
-              {["Exam", "Users", "Paying", "Trials", "Conversion %", "Churn 30d", "ARPU ₹"].map((h) => (
+              {["Track / exam", "Users", "Paying", "Trials", "Conversion %", "Churn 30d", "ARPU ₹"].map((h) => (
                 <th key={h} className="px-3 py-3 text-left text-[10px] font-bold uppercase text-kal-muted">
                   {h}
                 </th>

@@ -151,10 +151,7 @@ function SyllabusMicrotopicRow({
   const mr = row as MergedSyllabusRow;
   const st = resolveStatus(row.id, statusBySyllabusMasterId);
   const sid = normalizeSyllabusMasterId(row.id);
-  const est =
-    row.relative_effort_score != null && row.relative_effort_score > 0
-      ? `${row.relative_effort_score} min`
-      : "—";
+  const est = "—";
 
   const existingPendingManual = useMemo(() => {
     if (!revisionBundle) return null;

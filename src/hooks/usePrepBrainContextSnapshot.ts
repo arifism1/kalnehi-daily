@@ -24,6 +24,8 @@ import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useSyllabusTracker } from "@/hooks/useSyllabusTracker";
 import { useTargetExamDate } from "@/hooks/useTargetExamDate";
 import { useTargetExamDisplay } from "@/hooks/useTargetExamDisplay";
+import { useAllExamScopes } from "@/hooks/useAllExamScopes";
+import { aggregateRollupBySubject } from "@/lib/syllabusRollup";
 
 async function fetchMeditation30d(userId: string): Promise<{
   sessionCount: number;
@@ -65,6 +67,7 @@ export function usePrepBrainContextSnapshot() {
     primaryMarksYear,
     catalogExamKey,
   } = useSyllabusTracker();
+  const { examScopes, isMultiExam } = useAllExamScopes();
 
   const buildContextSnapshot = useCallback(async (): Promise<PrepBrainContext> => {
     const tasks = Object.values(tasksRecord);
@@ -100,7 +103,7 @@ export function usePrepBrainContextSnapshot() {
           }
         : null;
 
-    return buildPrepBrainContext({
+    const ctx = buildPrepBrainContext({
       nowIso,
       calendarToday,
       examLabel,
@@ -122,6 +125,28 @@ export function usePrepBrainContextSnapshot() {
       incompleteDailyTasksFromPastDays,
       dailyPlanExecutionLagDays,
     });
+
+    if (isMultiExam && examScopes.length > 0) {
+      ctx.all_enrolled_exams = examScopes.map((scope) => {
+        const subjectSummaries = aggregateRollupBySubject(scope.rollup).map((s) => ({
+          subject: s.subject,
+          completion_percent: s.overallPercent,
+          marks_secured: s.totalMarksMastered,
+          marks_pool: s.totalMarksPool,
+        }));
+        return {
+          exam_label: scope.examLabel,
+          exam_display_name: scope.displayName,
+          overall_weighted_completion_percent: scope.rollup.overallPercent,
+          total_marks_secured: scope.rollup.totalMarksMastered,
+          total_marks_pool: scope.rollup.totalMarksPool,
+          max_score_scale: scope.maxScore,
+          subject_summaries: subjectSummaries,
+        };
+      });
+    }
+
+    return ctx;
   }, [
     tasksRecord,
     microtopics,
@@ -136,7 +161,9 @@ export function usePrepBrainContextSnapshot() {
     cuetScoringRollup,
     user,
     catalogExamKey,
+    isMultiExam,
+    examScopes,
   ]);
 
-  return { buildContextSnapshot };
+  return { buildContextSnapshot, examScopes, isMultiExam };
 }

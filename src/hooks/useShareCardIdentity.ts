@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { useTargetExamDisplay } from "@/hooks/useTargetExamDisplay";
+import { useAllExamScopes } from "@/hooks/useAllExamScopes";
 import { KALNEHI_PROFILE_UPDATED_EVENT } from "@/lib/profileEvents";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -34,7 +34,7 @@ export function useShareCardIdentity(): {
 } {
   const user = useAuthStore((s) => s.user);
   const authInitialized = useAuthStore((s) => s.initialized);
-  const { examLabel, examDisplayName } = useTargetExamDisplay();
+  const { examScopes } = useAllExamScopes();
 
   const [profileName, setProfileName] = useState<string | null>(null);
   const [profileFetched, setProfileFetched] = useState(false);
@@ -80,7 +80,10 @@ export function useShareCardIdentity(): {
     return displayNameFromUser(user);
   }, [profileName, user]);
 
-  const examLine = (examDisplayName || examLabel || "").trim();
+  const examLine = examScopes
+    .map((s) => (s.displayName || s.examLabel).trim())
+    .filter(Boolean)
+    .join(" · ");
 
   /** True until auth resolved and (if signed in) profile name fetch finished. */
   const loading = !authInitialized || !profileFetched;

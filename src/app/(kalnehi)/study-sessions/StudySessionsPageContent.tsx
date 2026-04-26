@@ -81,7 +81,7 @@ export default function StudySessionsPageContent() {
             All sessions
           </h2>
           <Link
-            href="/daily-log#study-sessions-log"
+            href="/daily-debrief#study-sessions-log"
             className="text-[11px] font-semibold uppercase tracking-wide text-kal-accent hover:text-kal-accent-hover"
           >
             Daily log →

@@ -34,6 +34,7 @@ export function MyTargetClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [activeExamTab, setActiveExamTab] = useState<string>("__all__");
 
   const load = useCallback(async () => {
     if (!user?.id) {
@@ -97,6 +98,28 @@ export function MyTargetClient() {
     [],
   );
 
+  // Distinct exam names present in the user's saved blueprints
+  const examTabOptions = useMemo(() => {
+    const seen = new Set<string>();
+    const out: { examName: string; displayName: string }[] = [];
+    for (const row of list) {
+      if (!row.exam_name || seen.has(row.exam_name)) continue;
+      seen.add(row.exam_name);
+      out.push({
+        examName: row.exam_name,
+        displayName: displayNameForExamCatalog(row.exam_name, catalogRows) || row.exam_name,
+      });
+    }
+    return out;
+  }, [list, catalogRows]);
+
+  const isMultiExam = examTabOptions.length > 1;
+
+  const visibleList = useMemo(() => {
+    if (!isMultiExam || activeExamTab === "__all__") return list;
+    return list.filter((r) => r.exam_name === activeExamTab);
+  }, [list, isMultiExam, activeExamTab]);
+
   if (!user) {
     return (
       <p className="mx-auto max-w-lg rounded-xl border border-kal-warn-border bg-kal-warn-soft px-4 py-3 text-sm text-kal-warn-text">
@@ -139,18 +162,53 @@ export function MyTargetClient() {
         </p>
       ) : null}
 
+      {/* Exam tabs — only shown when blueprints exist for 2+ exams */}
+      {!loading && isMultiExam && (
+        <div className="flex flex-wrap gap-2" role="tablist" aria-label="Filter by exam">
+          <button
+            role="tab"
+            aria-selected={activeExamTab === "__all__"}
+            onClick={() => setActiveExamTab("__all__")}
+            className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition-colors ${
+              activeExamTab === "__all__"
+                ? "border-kal-accent bg-kal-accent text-kal-accent-foreground shadow-sm"
+                : "border-kal-border bg-kal-card/40 text-kal-muted hover:border-kal-accent/50 hover:text-kal-text"
+            }`}
+          >
+            All exams
+          </button>
+          {examTabOptions.map((opt) => (
+            <button
+              key={opt.examName}
+              role="tab"
+              aria-selected={activeExamTab === opt.examName}
+              onClick={() => setActiveExamTab(opt.examName)}
+              className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition-colors ${
+                activeExamTab === opt.examName
+                  ? "border-kal-accent bg-kal-accent text-kal-accent-foreground shadow-sm"
+                  : "border-kal-border bg-kal-card/40 text-kal-muted hover:border-kal-accent/50 hover:text-kal-text"
+              }`}
+            >
+              {opt.displayName}
+            </button>
+          ))}
+        </div>
+      )}
+
       {loading ? (
         <div className="flex items-center gap-2 text-kal-muted">
           <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
           Loading…
         </div>
-      ) : list.length === 0 ? (
+      ) : visibleList.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-kal-border bg-kal-card-muted/40 px-6 py-10 text-center text-sm text-kal-muted">
-          {emptyMessage}
+          {activeExamTab === "__all__"
+            ? emptyMessage
+            : "No blueprints saved for this exam yet."}
         </p>
       ) : (
         <ul className="space-y-6">
-          {list.map((row) => {
+          {visibleList.map((row) => {
             const chapters = parseChapters(row.chapters);
             const dateAdded = (() => {
               try {

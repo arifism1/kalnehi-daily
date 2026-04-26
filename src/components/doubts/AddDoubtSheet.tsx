@@ -5,6 +5,7 @@ import {
   useCallback,
   useEffect,
   useId,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -26,19 +27,38 @@ function revokeAll(pending: PendingPhoto[]) {
 export type AddDoubtSheetProps = {
   open: boolean;
   onClose: () => void;
-  /** Distinct subjects for the user's exam + General (from syllabus_master). */
+  /** Flat labeled subject list (all exams merged) for the subject select. */
   syllabusSubjects: string[];
+  /**
+   * Per-exam subject breakdown. When provided and length > 1, an exam picker
+   * is shown that filters the subject list to that exam.
+   */
+  subjectsByExam?: { examLabel: string; examDisplay: string; subjects: string[] }[];
 };
 
 export function AddDoubtSheet({
   open,
   onClose,
   syllabusSubjects,
+  subjectsByExam,
 }: AddDoubtSheetProps) {
   const baseId = useId();
   const createDoubt = useDoubtStore((s) => s.createDoubt);
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isMultiExam = (subjectsByExam?.length ?? 0) > 1;
+
+  const [selectedExamLabel, setSelectedExamLabel] = useState<string>("__all__");
+
+  const activeSubjects = useMemo(() => {
+    if (!isMultiExam || selectedExamLabel === "__all__") return syllabusSubjects;
+    const entry = subjectsByExam?.find((e) => e.examLabel === selectedExamLabel);
+    if (!entry) return syllabusSubjects;
+    const out = [...entry.subjects];
+    if (!out.includes("General")) out.push("General");
+    return out;
+  }, [isMultiExam, selectedExamLabel, subjectsByExam, syllabusSubjects]);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -52,6 +72,7 @@ export function AddDoubtSheet({
     setTitle("");
     setDescription("");
     setSubject("");
+    setSelectedExamLabel("__all__");
     setShowPhotoPrivacy(false);
     setError(null);
     setSaving(false);
@@ -113,11 +134,15 @@ export function AddDoubtSheet({
     setSaving(true);
     setError(null);
     try {
+      const resolvedExamKey = isMultiExam && selectedExamLabel !== "__all__"
+        ? selectedExamLabel
+        : null;
       await createDoubt({
         title: title.trim(),
         description: description.trim(),
         initialFiles: pending.map((p) => p.file),
         subject: subject.trim() === "" ? null : subject.trim(),
+        examKey: resolvedExamKey,
       });
       reset();
       onClose();
@@ -129,6 +154,8 @@ export function AddDoubtSheet({
   }, [
     canSave,
     saving,
+    isMultiExam,
+    selectedExamLabel,
     createDoubt,
     title,
     description,
@@ -197,12 +224,47 @@ export function AddDoubtSheet({
             />
           </label>
 
+          {isMultiExam && subjectsByExam && (
+            <div className="mt-4">
+              <label className="block text-[11px] font-medium uppercase tracking-wide text-kal-muted mb-1.5">
+                Exam (optional)
+              </label>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setSelectedExamLabel("__all__"); setSubject(""); }}
+                  className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                    selectedExamLabel === "__all__"
+                      ? "border-kal-accent bg-kal-accent text-kal-accent-foreground"
+                      : "border-kal-border bg-kal-card/40 text-kal-muted hover:border-kal-accent/50 hover:text-kal-text"
+                  }`}
+                >
+                  All exams
+                </button>
+                {subjectsByExam.map((e) => (
+                  <button
+                    key={e.examLabel}
+                    type="button"
+                    onClick={() => { setSelectedExamLabel(e.examLabel); setSubject(""); }}
+                    className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                      selectedExamLabel === e.examLabel
+                        ? "border-kal-accent bg-kal-accent text-kal-accent-foreground"
+                        : "border-kal-border bg-kal-card/40 text-kal-muted hover:border-kal-accent/50 hover:text-kal-text"
+                    }`}
+                  >
+                    {e.examDisplay}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <DoubtSubjectSelect
             id={`${baseId}-subject`}
             className="mt-4"
             value={subject}
             onChange={setSubject}
-            options={syllabusSubjects}
+            options={activeSubjects}
             disabled={saving}
           />
 

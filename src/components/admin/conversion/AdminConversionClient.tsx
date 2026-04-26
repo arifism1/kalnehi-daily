@@ -30,7 +30,7 @@ export function AdminConversionClient({ data }: { data: ConversionSnapshot }) {
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="border-b border-kal-border bg-kal-card/70">
-              {["Exam", "Trials", "Paid", "Conv %"].map((h) => (
+              {["Track / exam", "Trials", "Paid", "Conv %"].map((h) => (
                 <th key={h} className="px-3 py-3 text-left text-[10px] font-bold uppercase text-kal-muted">
                   {h}
                 </th>

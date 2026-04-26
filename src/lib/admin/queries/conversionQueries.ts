@@ -1,6 +1,7 @@
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 
 import { fetchFeatureEventsSince } from "@/lib/admin/queries/featureEventQueries";
+import { adminSegmentLabelFromProfile } from "@/lib/profileTrackSegment";
 
 export type ConversionSnapshot = {
   trialLikeCount: number;
@@ -14,10 +15,6 @@ export type ConversionSnapshot = {
   conversionsWithPrepbrainTouch: number;
   byExam: { exam: string; trials: number; paid: number; pct: number }[];
 };
-
-function examOf(p: { target_exam: string | null; primary_exam: string | null }): string {
-  return (p.target_exam || p.primary_exam || "Unknown").trim() || "Unknown";
-}
 
 function isPaying(p: {
   subscription_status: string | null;
@@ -38,7 +35,7 @@ export async function getConversionSnapshot(): Promise<ConversionSnapshot | null
     admin
       .from("user_profiles")
       .select(
-        "user_id, subscription_status, subscription_end_date, target_exam, primary_exam, has_used_free_trial, has_had_trial, trial_started_at",
+        "user_id, subscription_status, subscription_end_date, target_exam, primary_exam, selected_track, has_used_free_trial, has_had_trial, trial_started_at",
       ),
     admin.from("razorpay_processed_payments").select("kind, user_id, created_at").gte("created_at", since),
     fetchFeatureEventsSince(since),
@@ -50,6 +47,7 @@ export async function getConversionSnapshot(): Promise<ConversionSnapshot | null
     subscription_end_date: string | null;
     target_exam: string | null;
     primary_exam: string | null;
+    selected_track: string | null;
     has_used_free_trial: boolean | null;
     has_had_trial: boolean | null;
     trial_started_at: string | null;
@@ -82,7 +80,7 @@ export async function getConversionSnapshot(): Promise<ConversionSnapshot | null
 
   const byExamMap = new Map<string, { trials: number; paid: number }>();
   for (const p of profs) {
-    const ex = examOf(p);
+    const ex = adminSegmentLabelFromProfile(p);
     const slot = byExamMap.get(ex) ?? { trials: 0, paid: 0 };
     if (p.has_used_free_trial || p.has_had_trial || p.trial_started_at) slot.trials++;
     if (isPaying(p)) slot.paid++;

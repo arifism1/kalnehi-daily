@@ -1,5 +1,7 @@
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 
+import { adminSegmentLabelFromProfile } from "@/lib/profileTrackSegment";
+
 export type ReferralCodeRow = {
   id: string;
   code: string;
@@ -50,7 +52,7 @@ export async function getReferralSnapshot(): Promise<ReferralSnapshot | null> {
       .gte("created_at" as never, since),
     admin
       .from("user_profiles")
-      .select("referral_source, target_exam, primary_exam" as "user_id")
+      .select("referral_source, target_exam, primary_exam, selected_track, user_id")
       .not("referral_source" as never, "is", null),
   ]);
 
@@ -115,6 +117,7 @@ export async function getReferralSnapshot(): Promise<ReferralSnapshot | null> {
     referral_source: string | null;
     target_exam: string | null;
     primary_exam: string | null;
+    selected_track: string | null;
   }[];
 
   const examTotals = new Map<string, number>();
@@ -123,7 +126,7 @@ export async function getReferralSnapshot(): Promise<ReferralSnapshot | null> {
 
   for (const p of profiles) {
     const code = p.referral_source ?? "__unknown__";
-    const exam = (p.target_exam || p.primary_exam || "Unknown").trim() || "Unknown";
+    const exam = adminSegmentLabelFromProfile(p);
 
     examTotals.set(exam, (examTotals.get(exam) ?? 0) + 1);
 

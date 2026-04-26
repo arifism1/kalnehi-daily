@@ -7,8 +7,8 @@ import { openDB, type DBSchema } from "idb";
 import { compressImageFileToDataUrl } from "@/lib/purposeStorage";
 
 const DB_NAME = "kalnehi-doubts";
-/** v2: optional `topic` on {@link DoubtMeta} (chapter — microtopic). */
-const DB_VERSION = 2;
+/** v3: optional `examKey` on {@link DoubtMeta} for multi-exam doubt tagging. */
+const DB_VERSION = 3;
 const DOUBTS_STORE = "doubts" as const;
 const DOUBT_PHOTOS_STORE = "doubt_photos" as const;
 
@@ -23,6 +23,8 @@ export type DoubtMeta = {
   subject?: string;
   /** Optional syllabus chapter/microtopic line (`chapter — microtopic`). */
   topic?: string;
+  /** Optional exam key (e.g. "NEET UG", "UPSC CSE Prelims") for multi-exam tagging. */
+  examKey?: string;
   photoIds: string[];
   createdAt: number;
   updatedAt: number;

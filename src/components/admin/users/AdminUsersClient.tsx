@@ -4,8 +4,23 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import type { UserListRow, UserLookupBundle } from "@/lib/admin/queries/userLookupQueries";
+import { adminSegmentLabelFromProfile } from "@/lib/profileTrackSegment";
 
 const PER_PAGE = 50;
+
+function profileTrackSummary(profile: Record<string, unknown> | null): string {
+  if (!profile) return "—";
+  const label = adminSegmentLabelFromProfile({
+    selected_track: typeof profile.selected_track === "string" ? profile.selected_track : null,
+    target_exam: typeof profile.target_exam === "string" ? profile.target_exam : null,
+    primary_exam: typeof profile.primary_exam === "string" ? profile.primary_exam : null,
+  });
+  const enabled = profile.enabled_exams_in_track;
+  if (Array.isArray(enabled) && enabled.length > 1) {
+    return `${label} · ${enabled.length} exams in track`;
+  }
+  return label;
+}
 
 export function AdminUsersClient({
   initial,
@@ -114,6 +129,7 @@ export function AdminUsersClient({
               <thead>
                 <tr className="border-b border-kal-border bg-kal-card/60 text-left text-[11px] uppercase tracking-wide text-kal-muted">
                   <th className="px-4 py-2.5">Name</th>
+                  <th className="px-4 py-2.5">Track / exam</th>
                   <th className="px-4 py-2.5">Phone</th>
                   <th className="px-4 py-2.5">Trial started</th>
                   <th className="px-4 py-2.5">Trial</th>
@@ -124,7 +140,7 @@ export function AdminUsersClient({
               <tbody>
                 {listData.rows.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-6 text-center text-sm text-kal-muted">No users found.</td>
+                    <td colSpan={7} className="px-4 py-6 text-center text-sm text-kal-muted">No users found.</td>
                   </tr>
                 )}
                 {listData.rows.map((row) => (
@@ -132,6 +148,9 @@ export function AdminUsersClient({
                     <td className="px-4 py-2.5">
                       <p className="font-medium text-kal-text">{row.fullName ?? <span className="text-kal-muted italic">—</span>}</p>
                       <p className="text-[10px] font-mono text-kal-muted">{row.userId.slice(0, 8)}…</p>
+                    </td>
+                    <td className="px-4 py-2.5 text-xs text-kal-text-secondary max-w-[9rem] truncate" title={row.trackOrExam}>
+                      {row.trackOrExam}
                     </td>
                     <td className="px-4 py-2.5 text-kal-muted">{row.phone ?? "—"}</td>
                     <td className="px-4 py-2.5 text-kal-muted whitespace-nowrap">
@@ -218,6 +237,13 @@ function UserCard({
           <div>Created: {u.createdAt ?? "—"}</div>
           <div>Last sign-in: {u.lastSignIn ?? "—"}</div>
         </div>
+      </div>
+
+      <div className="rounded-lg border border-kal-border/60 bg-kal-card/30 px-3 py-2.5 text-sm">
+        <p className="text-[10px] font-bold uppercase text-kal-muted">Exam track / goal</p>
+        <p className="mt-0.5 font-medium text-kal-text">
+          {profileTrackSummary(u.profile)}
+        </p>
       </div>
 
       <div className="grid gap-3 md:grid-cols-2 text-sm">

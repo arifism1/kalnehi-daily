@@ -88,7 +88,7 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
       { href: "/timer", label: "Timer", Icon: Clock, featureId: "timer" },
       { href: "/missed-tasks", label: "Missed Tasks", Icon: LineChart, featureId: "missed-tasks" },
       {
-        href: "/daily-log",
+        href: "/daily-debrief",
         label: "Daily Debrief",
         shortLabel: "Debrief",
         Icon: NotebookPen,
@@ -240,7 +240,7 @@ const QUICK_NAV_HREF_ORDER: readonly string[] = [
   "/daily-plan",
   "/timer",
   "/missed-tasks",
-  "/daily-log",
+  "/daily-debrief",
   "/saved-plans",
   "/consistency-tracker",
   "/mock-tests",

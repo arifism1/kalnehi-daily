@@ -21,7 +21,7 @@ export function AdminActivationClient({ data }: { data: ActivationSnapshot }) {
           sub={`${data.onboardingCompleted} users`}
         />
         <AdminKpiCard
-          label="Target exam set"
+          label="Track / exam goal set"
           value={`${data.targetExamPct.toFixed(0)}%`}
           sub={`${data.withTargetExam} users`}
         />

@@ -19,6 +19,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { usePrepBrainAI } from "@/hooks/usePrepBrainAI";
+import { useAllExamScopes } from "@/hooks/useAllExamScopes";
 import { PREPBRAIN_TOP_NOTICE, PREPBRAIN_UI_DISCLAIMER } from "@/lib/prepBrainPrompts";
 import {
   PREPBRAIN_USAGE_WARN_RATIO,
@@ -206,6 +207,8 @@ export function PrepBrainChat() {
     tokenLimitMessage,
   } = usePrepBrainAI();
 
+  const { examScopes, isMultiExam } = useAllExamScopes();
+
   const usagePct =
     usage && usage.limit > 0
       ? Math.min(100, (usage.used / usage.limit) * 100)
@@ -296,6 +299,18 @@ export function PrepBrainChat() {
           <p className="mt-0.5 text-[11px] font-medium leading-tight text-kal-text-secondary/90 sm:mt-1.5 sm:text-[13px] sm:leading-snug">
             Your personal exam strategist
           </p>
+          {isMultiExam && examScopes.length > 0 && (
+            <div className="mt-1 flex flex-wrap gap-1.5">
+              {examScopes.map((scope) => (
+                <span
+                  key={scope.examLabel}
+                  className="inline-block rounded-full border border-kal-accent/25 bg-kal-accent/8 px-2 py-0.5 text-[10px] font-semibold text-kal-accent leading-none"
+                >
+                  {scope.displayName || scope.examLabel}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </header>
 

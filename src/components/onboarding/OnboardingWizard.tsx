@@ -21,6 +21,7 @@ import type { ExamTrack } from "@/lib/examTracks";
 import {
   EXAMS_CATALOG_FALLBACK,
   dedupeExamsCatalogForUi,
+  displayNameForExamCatalog,
   fetchExamsCatalog,
   type ExamCatalogRow,
 } from "@/lib/examsCatalog";
@@ -50,7 +51,8 @@ export function OnboardingWizard() {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [classStudying, setClassStudying] = useState("");
-  const [examDate, setExamDate] = useState("");
+  /** Per `exam_name` key — only exams with a non-empty value are sent. */
+  const [examDatesByKey, setExamDatesByKey] = useState<Record<string, string>>({});
   const [catalog, setCatalog] = useState<ExamCatalogRow[]>(() =>
     dedupeExamsCatalogForUi(EXAMS_CATALOG_FALLBACK),
   );
@@ -65,6 +67,20 @@ export function OnboardingWizard() {
       setCatalog(rows);
     })();
   }, []);
+
+  useEffect(() => {
+    if (!selectedTrack) {
+      setExamDatesByKey({});
+      return;
+    }
+    setExamDatesByKey((prev) => {
+      const next: Record<string, string> = {};
+      for (const k of selectedTrack.examNames) {
+        if (prev[k] !== undefined) next[k] = prev[k]!;
+      }
+      return next;
+    });
+  }, [selectedTrack?.id]);
 
   const goNext = useCallback(() => {
     setError(null);
@@ -109,6 +125,18 @@ export function OnboardingWizard() {
       setError("Please choose a track.");
       return;
     }
+    for (const key of selectedTrack.examNames) {
+      const raw = (examDatesByKey[key] ?? "").trim();
+      if (raw && !/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+        setError("Use a valid date for each field you fill in, or leave it blank.");
+        return;
+      }
+    }
+    const exam_dates: Record<string, string> = {};
+    for (const key of selectedTrack.examNames) {
+      const v = (examDatesByKey[key] ?? "").trim();
+      if (v) exam_dates[key] = v;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -118,7 +146,7 @@ export function OnboardingWizard() {
         class_studying: classStudying,
         selected_track: selectedTrack.id,
         enabled_exams_in_track: selectedTrack.examNames,
-        target_exam_date: examDate.trim() || null,
+        exam_dates: Object.keys(exam_dates).length > 0 ? exam_dates : null,
       });
       if (!res.ok) throw new Error(res.error);
       setLocalCompleted(true);
@@ -152,14 +180,7 @@ export function OnboardingWizard() {
     } finally {
       setBusy(false);
     }
-  }, [
-    fullName,
-    phone,
-    classStudying,
-    selectedTrack,
-    examDate,
-    setLocalCompleted,
-  ]);
+  }, [fullName, phone, classStudying, selectedTrack, examDatesByKey, setLocalCompleted]);
 
   const displayStep = step;
   const totalStepsDisplay = STEPS;
@@ -353,31 +374,44 @@ export function OnboardingWizard() {
         </section>
       )}
 
-      {step === 3 && (
+      {step === 3 && selectedTrack && (
         <section className="kal-glass-panel flex flex-1 flex-col gap-6 rounded-2xl p-5 sm:p-6">
           <OnboardingStepIllustration step={3} className="mx-auto w-full max-w-[200px] opacity-90" />
           <div className="flex items-center gap-2">
             <CalendarDays className="h-6 w-6 text-kal-accent" />
             <div>
               <h1 className="kal-feature-title">
-                Expected exam date
+                Target dates for your exams
               </h1>
               <p className="text-sm leading-relaxed text-kal-text-secondary">
-                Optional — set a target date to personalise your dashboard. Add an
-                approximate date if you can, even when the official date is not out yet.
+                All optional — add a date only for the papers you already know, and skip
+                the rest. You can change or add these anytime in Profile.
               </p>
             </div>
           </div>
-          <div className="min-w-0 max-w-full overflow-hidden">
-            <label className="text-xs font-semibold text-kal-text-secondary">
-              Expected exam date
-            </label>
-            <input
-              type="date"
-              value={examDate}
-              onChange={(e) => setExamDate(e.target.value)}
-              className="mt-2 box-border min-h-[48px] w-full min-w-0 max-w-full rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-kal-text transition-colors duration-200 [color-scheme:light] focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20 dark:[color-scheme:dark]"
-            />
+          <div className="min-h-0 max-h-[min(52vh,22rem)] min-w-0 max-w-full space-y-3 overflow-y-auto pr-0.5">
+            {selectedTrack.examNames.map((examKey) => {
+              const label = displayNameForExamCatalog(examKey, catalog) || examKey;
+              return (
+                <div key={examKey} className="min-w-0 max-w-full overflow-hidden">
+                  <label className="text-xs font-semibold text-kal-text-secondary">
+                    {label}
+                    <span className="ml-1.5 font-normal text-kal-text-secondary/80">
+                      (optional)
+                    </span>
+                  </label>
+                  <input
+                    type="date"
+                    value={examDatesByKey[examKey] ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setExamDatesByKey((prev) => ({ ...prev, [examKey]: v }));
+                    }}
+                    className="mt-2 box-border min-h-[48px] w-full min-w-0 max-w-full rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-kal-text transition-colors duration-200 [color-scheme:light] focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20 dark:[color-scheme:dark]"
+                  />
+                </div>
+              );
+            })}
           </div>
           {error && (
             <p className="text-sm font-medium text-kal-accent-dark dark:text-kal-accent">

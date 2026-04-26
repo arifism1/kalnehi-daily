@@ -2,23 +2,47 @@
 
 import clsx from "clsx";
 import { Loader2, Mic, MicOff, X } from "lucide-react";
-import { useCallback, useId, useState, useTransition } from "react";
+import { useCallback, useId, useMemo, useState, useTransition } from "react";
 
 import { createMistakeLog, type MistakeType, type MistakeSource } from "@/actions/mistakeLogs";
 import { MistakeTypeGrid } from "@/components/mistake-log/MistakeTypeButton";
 import { VoiceListeningHint } from "@/components/voice/VoiceListeningHint";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
 import { VOICE_MAX_SESSION_MS, VOICE_SILENCE_AUTO_STOP_MS } from "@/lib/voiceConstants";
+import type { ExamScope } from "@/hooks/useAllExamScopes";
 
 type Props = {
   open: boolean;
   onClose: () => void;
   onSaved: () => void;
+  /** Flat list of (optionally labeled) subjects for the dropdown. */
   syllabusSubjects: string[];
+  /** Full exam scopes for multi-exam exam picker. */
+  examScopes?: ExamScope[];
 };
 
-export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects }: Props) {
+/** Unique sorted subjects from a scope's rows. */
+function subjectsFromScope(scope: ExamScope): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const r of scope.rows) {
+    const s = r.subject?.trim();
+    if (s && !seen.has(s)) { seen.add(s); out.push(s); }
+  }
+  return out.sort((a, b) => a.localeCompare(b));
+}
+
+export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects, examScopes }: Props) {
   const baseId = useId();
+  const isMultiExam = (examScopes?.length ?? 0) > 1;
+  const [selectedExamLabel, setSelectedExamLabel] = useState<string>("__all__");
+
+  const activeSubjects = useMemo(() => {
+    if (!isMultiExam || selectedExamLabel === "__all__" || !examScopes) return syllabusSubjects;
+    const scope = examScopes.find((s) => s.examLabel === selectedExamLabel);
+    return scope ? subjectsFromScope(scope) : syllabusSubjects;
+  }, [isMultiExam, selectedExamLabel, examScopes, syllabusSubjects]);
+
   const [subject, setSubject] = useState("");
   const [topicLabel, setTopicLabel] = useState("");
   const [mistakeType, setMistakeType] = useState<MistakeType | null>(null);
@@ -51,6 +75,7 @@ export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects }: Pr
     setFlagForRevision(false);
     setSaveError(null);
     setVoicePreview("");
+    setSelectedExamLabel("__all__");
     clearError();
   }, [clearError]);
 
@@ -123,6 +148,40 @@ export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects }: Pr
         </div>
 
         <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-y-contain p-4 pb-2 [-webkit-overflow-scrolling:touch]">
+          {/* Exam picker — multi-exam users only */}
+          {isMultiExam && examScopes && (
+            <div className="space-y-1.5">
+              <p className={fieldLabel}>Exam (optional)</p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setSelectedExamLabel("__all__"); setSubject(""); }}
+                  className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                    selectedExamLabel === "__all__"
+                      ? "border-kal-accent bg-kal-accent text-white"
+                      : "border-zinc-300 bg-zinc-100/90 text-zinc-900 hover:bg-zinc-200/80 dark:border-zinc-600 dark:bg-zinc-800/90 dark:text-zinc-100"
+                  }`}
+                >
+                  All exams
+                </button>
+                {examScopes.map((scope) => (
+                  <button
+                    key={scope.examLabel}
+                    type="button"
+                    onClick={() => { setSelectedExamLabel(scope.examLabel); setSubject(""); }}
+                    className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                      selectedExamLabel === scope.examLabel
+                        ? "border-kal-accent bg-kal-accent text-white"
+                        : "border-zinc-300 bg-zinc-100/90 text-zinc-900 hover:bg-zinc-200/80 dark:border-zinc-600 dark:bg-zinc-800/90 dark:text-zinc-100"
+                    }`}
+                  >
+                    {scope.displayName || scope.examLabel}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Subject */}
           <div className="space-y-1.5">
             <label htmlFor={`${baseId}-subject`} className={fieldLabel}>
@@ -135,7 +194,7 @@ export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects }: Pr
               className={fieldSelect}
             >
               <option value="">Select subject…</option>
-              {syllabusSubjects.map((s) => (
+              {activeSubjects.map((s) => (
                 <option key={s} value={s}>{s}</option>
               ))}
             </select>

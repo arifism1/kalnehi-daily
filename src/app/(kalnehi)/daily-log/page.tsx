@@ -1,15 +1,5 @@
-import { Suspense } from "react";
+import { permanentRedirect } from "next/navigation";
 
-import { kalnehiPageMetadata } from "@/lib/seo-metadata";
-import { RoutePageSkeleton } from "@/components/loading/RoutePageSkeleton";
-import DailyLogRouteLazy from "./DailyLogRouteLazy";
-
-export const metadata = kalnehiPageMetadata("daily-log");
-
-export default function DailyLogPage() {
-  return (
-    <Suspense fallback={<RoutePageSkeleton />}>
-      <DailyLogRouteLazy />
-    </Suspense>
-  );
+export default function DailyLogRedirectPage() {
+  permanentRedirect("/daily-debrief");
 }

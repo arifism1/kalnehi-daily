@@ -154,7 +154,7 @@ export function AdminReferralsClient({ data }: { data: ReferralSnapshot }) {
       {/* Top exams from referral users */}
       {data.igExamsSummary.length > 0 && (
         <div className="rounded-2xl border border-kal-border bg-kal-card/40 p-4">
-          <h2 className="mb-1 text-sm font-semibold text-kal-text">Top exams — referral users</h2>
+          <h2 className="mb-1 text-sm font-semibold text-kal-text">Top tracks / exams — referral users</h2>
           <p className="mb-3 text-xs text-kal-muted">
             Exams targeted by users who signed up via any referral code.
           </p>
@@ -204,7 +204,7 @@ export function AdminReferralsClient({ data }: { data: ReferralSnapshot }) {
                   {data.examsByCode.length === 0 && (
                     <tr>
                       <td colSpan={3} className="py-3 text-center text-kal-muted">
-                        No exam data yet.
+                        No track / exam data yet.
                       </td>
                     </tr>
                   )}
