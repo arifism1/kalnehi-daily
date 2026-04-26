@@ -37,7 +37,7 @@ export function SettingsPageClient() {
         <p className="mt-1 text-sm leading-relaxed text-kal-text-secondary">
           Tap a section to expand it and adjust theme, Home, notifications, and
           more. Every option here is optional. Subscription, billing,
-          and AI credits live under{" "}
+          and Mastermind extras live under{" "}
           <Link
             href="/my-subscription"
             className="font-semibold text-kal-accent underline underline-offset-2"

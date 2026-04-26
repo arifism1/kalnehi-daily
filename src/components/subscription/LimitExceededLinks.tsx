@@ -15,7 +15,7 @@ export function AiTokenLimitLinks({ phase }: { phase: AiUsagePhase }) {
           href={MY_SUBSCRIPTION_EXTRA_CREDITS_HREF}
           className="font-semibold text-kal-accent underline underline-offset-2"
         >
-          Buy extra AI credits
+          Buy extra Mastermind tokens
         </Link>
         <span className="text-kal-text-secondary">
           {" "}
@@ -33,7 +33,7 @@ export function AiTokenLimitLinks({ phase }: { phase: AiUsagePhase }) {
         >
           View plans & pricing
         </Link>
-        <span className="text-kal-text-secondary"> to unlock full Pro access.</span>
+        <span className="text-kal-text-secondary"> to unlock full Smart Plan access.</span>
       </p>
     );
   }
@@ -51,7 +51,7 @@ export function VoiceMinuteLimitLink() {
       </Link>
       <span className="text-kal-text-secondary">
         {" "}
-        (same checkout as bonus AI credits).
+        (same checkout as Mastermind token packs).
       </span>
     </p>
   );

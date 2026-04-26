@@ -887,7 +887,7 @@ export function SyllabusTracker() {
           <p className="text-sm text-amber-800 dark:text-amber-200">
             Limited view: subjects &amp; chapters only.{" "}
             <a href="/pricing" className="font-semibold underline">
-              Upgrade to Pro
+              Upgrade to Smart Plan
             </a>{" "}
             for microtopics &amp; predictions.
           </p>
@@ -1076,10 +1076,10 @@ export function SyllabusTracker() {
                               {syllabusLimited ? (
                                 <span
                                   className="inline-flex shrink-0 items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
-                                  title="Upgrade to Pro to expand chapters and see microtopics"
+                                  title="Upgrade to Smart Plan to expand chapters and see microtopics"
                                 >
                                   <Lock className="h-2.5 w-2.5" aria-hidden />
-                                  Pro
+                                  Smart Plan
                                 </span>
                               ) : (
                                 <ChevronDown

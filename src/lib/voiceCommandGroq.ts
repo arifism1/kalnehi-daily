@@ -58,7 +58,6 @@ const VALID_NAV_PATHS = new Set([
   "/syllabus",
   "/doubts",
   "/mastermind",
-  "/helpyji",
   // Wellbeing
   "/habits",
   "/meditation",
@@ -108,7 +107,7 @@ Valid paths:
   Planning: /daily-plan, /daily-log, /daily-engine, /dictate-day, /saved-plans, /missed-tasks, /calendar, /timer, /study-sessions, /study-camera, /paste-handwritten
   Planner: /planner, /planner/habits, /planner/schedule, /planner/weekly, /planner/todos, /planner/routine, /planner/productivity
   Track: /progress, /consistency-tracker, /heatmap, /marks-engine, /my-target, /target-score-blueprint
-  Revise: /revision-reminders, /syllabus, /doubts, /mastermind, /helpyji
+  Revise: /revision-reminders, /syllabus, /doubts, /mastermind
   Wellbeing: /habits, /meditation, /meditation/consistency, /motivation
 - "Go to home" → {"intent":"navigate","path":"/home","response_text":"Going home."}
 - "Go to daily plan" → {"intent":"navigate","path":"/daily-plan","response_text":"Going to your daily plan."}
@@ -123,7 +122,7 @@ Valid paths:
 - "Open profile" → {"intent":"navigate","path":"/profile","response_text":"Opening your profile."}
 - "Open daily engine" → {"intent":"navigate","path":"/daily-engine","response_text":"Opening the daily engine."}
 - "Open study camera" → {"intent":"navigate","path":"/study-camera","response_text":"Opening study camera."}
-- "Open Helpyji" → {"intent":"navigate","path":"/helpyji","response_text":"Opening Helpyji."}
+
 - "Plan my day" → {"intent":"navigate","path":"/daily-plan","response_text":"Opening your daily plan."}
 - "Open Mastermind" → {"intent":"navigate","path":"/mastermind","response_text":"Opening Mastermind."}
 - "Go to revision reminders" → {"intent":"navigate","path":"/revision-reminders","response_text":"Opening Revision Reminders."}

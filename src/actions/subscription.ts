@@ -666,8 +666,11 @@ async function mergeResubscribeBonusesAfterMonthlyActivate(userId: string) {
 export async function cancelSubscription(): Promise<
   { ok: true } | { ok: false; error: string }
 > {
-  const userId = await getAuthedUserId();
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const userId = user?.id ?? null;
   if (!userId) return { ok: false, error: "Please sign in again." };
+  const userEmail = user?.email ?? null;
 
   const config = getRazorpayConfig();
   if (!config) return { ok: false, error: "Payment system is not configured yet." };
@@ -726,6 +729,19 @@ export async function cancelSubscription(): Promise<
 
     console.error("[cancelSubscription] DB update failed:", updateErr);
     return { ok: false, error: "Unable to update cancellation." };
+  }
+
+  // Send cancellation confirmation email (best-effort, non-fatal).
+  const accessUntil = profile?.subscription_end_date;
+  if (userEmail && accessUntil) {
+    void (async () => {
+      try {
+        const { sendCancelledConfirmationEmail } = await import("@/lib/waitlist/notifications");
+        await sendCancelledConfirmationEmail({ email: userEmail, accessUntil });
+      } catch (e) {
+        console.warn("[cancelSubscription] confirmation email failed", e instanceof Error ? e.message : e);
+      }
+    })();
   }
 
   return { ok: true };
@@ -957,6 +973,8 @@ export async function ensureFreeTrialStarted(): Promise<
 
   const capEnabled: boolean =
     (configRow as { daily_cap_enabled: boolean } | null)?.daily_cap_enabled ?? false;
+  const dailyCap: number =
+    (configRow as { daily_trial_cap: number } | null)?.daily_trial_cap ?? 2000;
 
   if (capEnabled) {
     const tz: string =
@@ -1035,7 +1053,7 @@ export async function ensureFreeTrialStarted(): Promise<
           const { data: authUser } = await admin.auth.admin.getUserById(userId);
           const email = authUser?.user?.email ?? null;
           if (email) {
-            void sendTrialQueuedEmail({ email, trialStartsAt: opensAt, position });
+            void sendTrialQueuedEmail({ email, trialStartsAt: opensAt, position, dailyCap });
           }
         } catch (e) {
           console.warn("[ensureFreeTrialStarted] queued email failed (non-fatal):", e);

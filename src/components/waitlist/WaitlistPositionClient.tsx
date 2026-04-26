@@ -227,7 +227,7 @@ export function WaitlistPositionClient() {
                 at 12:00 AM IST
               </p>
               <p className="mt-3 text-sm leading-relaxed text-kal-text-secondary">
-                We open 2,000 spots a day so the app stays fast for everyone.
+                We open a limited number of spots each day so the app stays fast for everyone.
                 Yours unlocks at midnight — sign in then and your 3 days start immediately.
               </p>
 

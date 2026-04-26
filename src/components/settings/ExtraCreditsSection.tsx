@@ -146,10 +146,10 @@ export function ExtraCreditsSection() {
       >
         <div className="border-b border-kal-border px-4 py-3">
           <h3 className="text-xs font-semibold uppercase tracking-widest text-kal-accent">
-            Buy extra credits
+            Buy extra Mastermind tokens
           </h3>
           <p className="mt-1 text-xs text-kal-text-secondary">
-            One-time Razorpay checkout. Bonus voice minutes and AI tokens apply
+            One-time Razorpay checkout. Bonus voice minutes and Mastermind tokens apply
             for 30 days from purchase (used before your monthly quota) and
             expire if unused.
           </p>
@@ -175,7 +175,7 @@ export function ExtraCreditsSection() {
               {payError.text}
             </p>
             <PaymentErrorMailButton
-              flow="My Subscription — extra AI credits"
+              flow="My Subscription — extra Mastermind tokens"
               error={payError.text}
               userEmail={userEmail}
               proof={payError.proof}

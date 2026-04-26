@@ -105,7 +105,7 @@ function PlanMockup() {
           <p className="text-sm font-bold text-kal-text">Dictate My Day</p>
           <p className="text-[10px] text-kal-muted">Speak your plan — AI parses it to tasks</p>
         </div>
-        <span className="ml-auto rounded-full bg-kal-accent/15 px-2 py-0.5 text-[9px] font-bold text-kal-accent">Pro</span>
+        <span className="ml-auto rounded-full bg-kal-accent/15 px-2 py-0.5 text-[9px] font-bold text-kal-accent">Smart Plan</span>
       </button>
 
       {/* Type option */}

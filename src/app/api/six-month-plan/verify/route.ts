@@ -9,6 +9,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
+import { sendSixMonthPlanActivatedEmail } from "@/lib/waitlist/notifications";
 
 export const runtime = "nodejs";
 
@@ -102,6 +103,7 @@ export async function POST(req: NextRequest) {
 
     // Best-effort: cancel existing monthly Razorpay subscription so the user
     // is not double-charged after upgrading. Failure is non-fatal.
+    let autopayWasCancelled = false;
     try {
       const { data: prof } = await admin
         .from("user_profiles")
@@ -112,6 +114,7 @@ export async function POST(req: NextRequest) {
         ?.razorpay_subscription_id?.trim();
       if (subId && /^sub_[a-zA-Z0-9]+$/.test(subId)) {
         await razorpay.subscriptions.cancel(subId, false);
+        autopayWasCancelled = true;
       }
     } catch (cancelErr) {
       console.warn("[six-month-plan/verify] monthly subscription cancel failed (non-fatal)", cancelErr);
@@ -120,18 +123,32 @@ export async function POST(req: NextRequest) {
     const now = new Date();
     const endsAt = new Date(now.getTime() + 183 * 24 * 60 * 60 * 1000).toISOString();
 
+    // Clear razorpay_subscription_id so stale subscription.cancelled / subscription.charged
+    // webhooks from the old monthly sub cannot overwrite this 6-month plan.
     await admin.from("user_profiles").update({
       subscription_status: "active",
       subscription_plan: "six_month",
       subscription_tier: "pro",
       subscription_start_date: now.toISOString(),
       subscription_end_date: endsAt,
+      razorpay_subscription_id: null,
       ai_tokens_used: 0,
       ai_tokens_month: null,
       updated_at: now.toISOString(),
     }).eq("user_id", user.id);
 
-    return NextResponse.json({ ok: true, endsAt });
+    // Send confirmation email (best-effort, non-fatal).
+    if (user.email) {
+      void sendSixMonthPlanActivatedEmail({
+        email: user.email,
+        endsAt,
+        autopayWasCancelled,
+      }).catch((e) =>
+        console.warn("[six-month-plan/verify] confirmation email failed (non-fatal)", e instanceof Error ? e.message : e),
+      );
+    }
+
+    return NextResponse.json({ ok: true, endsAt, autopayWasCancelled });
   } catch (e) {
     console.error("[six-month-plan/verify] error", e instanceof Error ? e.message : e);
     return NextResponse.json({ ok: false, error: "Payment processing failed." }, { status: 500 });
