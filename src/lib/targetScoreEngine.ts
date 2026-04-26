@@ -194,6 +194,9 @@ export function fetchEffortRatingsByChapter(
 /**
  * Fetches all chapters with effort scores for one exam, then computes chapter-level
  * average marks and efficiency.
+ *
+ * Marks come from `chapter_marks` (one authoritative row per chapter).
+ * `relative_effort_score` comes from `syllabus_master` rows averaged per chapter.
  */
 export async function getAllChaptersWithEffortScores(
   examName: string,
@@ -205,18 +208,48 @@ export async function getAllChaptersWithEffortScores(
   }
 
   const client = supabase ?? (await createSupabaseServerClient());
-  const { data, error } = await client
-    .from("syllabus_master")
-    .select(
-      "subject, chapter, marks_2023, marks_2024, marks_2025, relative_effort_score",
-    )
-    .eq("exam_name", normalizedExam)
-    .order("subject")
-    .order("chapter");
 
-  if (error) throw error;
+  const [chapterMarksRes, syllabusRes] = await Promise.all([
+    client
+      .from("chapter_marks")
+      .select("subject, chapter, marks_2023, marks_2024, marks_2025")
+      .eq("exam_name", normalizedExam),
+    client
+      .from("syllabus_master")
+      .select("subject, chapter, relative_effort_score")
+      .eq("exam_name", normalizedExam),
+  ]);
 
-  const ratings = fetchEffortRatingsByChapter(data ?? []);
+  if (chapterMarksRes.error) throw chapterMarksRes.error;
+  if (syllabusRes.error) throw syllabusRes.error;
+
+  // Build a lookup: "subject\0chapter" → marks_*
+  type MarksEntry = { marks_2023: number | null; marks_2024: number | null; marks_2025: number | null };
+  const marksMap = new Map<string, MarksEntry>();
+  for (const cm of chapterMarksRes.data ?? []) {
+    const key = `${cm.subject?.trim() || "Other"}\u0000${cm.chapter?.trim() || "General"}`;
+    marksMap.set(key, {
+      marks_2023: cm.marks_2023 as number | null,
+      marks_2024: cm.marks_2024 as number | null,
+      marks_2025: cm.marks_2025 as number | null,
+    });
+  }
+
+  // Merge: each syllabus row gets chapter marks injected, keeping relative_effort_score
+  const merged = (syllabusRes.data ?? []).map((row) => {
+    const key = `${row.subject?.trim() || "Other"}\u0000${row.chapter?.trim() || "General"}`;
+    const marks = marksMap.get(key) ?? { marks_2023: null, marks_2024: null, marks_2025: null };
+    return {
+      subject: row.subject,
+      chapter: row.chapter,
+      relative_effort_score: row.relative_effort_score,
+      marks_2023: marks.marks_2023,
+      marks_2024: marks.marks_2024,
+      marks_2025: marks.marks_2025,
+    };
+  });
+
+  const ratings = fetchEffortRatingsByChapter(merged);
   return ratings.sort((a, b) => {
     const efficiencyDiff = b.efficiency - a.efficiency;
     if (efficiencyDiff !== 0) return efficiencyDiff;

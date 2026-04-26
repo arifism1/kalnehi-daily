@@ -21,6 +21,10 @@ import { normalizeSyllabusMasterId } from "@/lib/syllabusIds";
 import type { SyllabusRow } from "@/lib/syllabusGrouping";
 import { fetchSyllabusMasterRowsForExam } from "@/lib/syllabusMasterQuery";
 import {
+  fetchChapterMarks,
+  injectChapterMarksIntoRows,
+} from "@/lib/fetchChapterMarks";
+import {
   mergeSyllabusWithUserCustomizations,
   type MergedSyllabusRow,
 } from "@/lib/userSyllabusMerge";
@@ -120,7 +124,7 @@ export async function loadSyllabusDataForUser(
     };
   }
 
-  const [syllabus, customsRes, marksRes] = await Promise.all([
+  const [syllabus, customsRes, marksRes, chapterMarksMap] = await Promise.all([
     fetchSyllabusMasterRowsForExam(
       supabase,
       examKey,
@@ -136,6 +140,7 @@ export async function loadSyllabusDataForUser(
       .select("syllabus_master_id, marks_2025, marks_2024, marks_2023")
       .eq("user_id", userId)
       .eq("exam_name", examKey),
+    fetchChapterMarks(supabase, examKey),
   ]);
 
   const { data: customs, error: cuErr } = customsRes;
@@ -163,8 +168,12 @@ export async function loadSyllabusDataForUser(
       }),
     );
   }
+  // Inject chapter-level marks before applying user overrides.
+  // Each row in a chapter receives the same chapter marks value so the rollup's
+  // chapterMarksPoolForYearRows "all equal → use once" branch fires correctly.
+  const withChapterMarks = injectChapterMarksIntoRows(merged, chapterMarksMap);
   const sorted = applyMarksOverridesToRows(
-    merged,
+    withChapterMarks,
     (marksOverrides ?? []) as SyllabusMarksOverrideRow[],
   );
   const syllabusIdsForProgress = sorted.map((r) =>
