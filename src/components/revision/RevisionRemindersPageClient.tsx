@@ -8,6 +8,7 @@ import {
   Loader2,
   Plus,
   Trash2,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -87,6 +88,7 @@ export function RevisionRemindersPageClient() {
   const [showArchived, setShowArchived] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [donePanelOpen, setDonePanelOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<RevisionQueueEntry | null>(
     null,
   );
@@ -138,55 +140,118 @@ export function RevisionRemindersPageClient() {
     setSelectedDate(null);
   }, [showArchived]);
 
-  const sortedItems = useMemo(() => {
-    const list = items.filter(
-      (r) =>
-        (showArchived || r.status !== "archived") &&
-        isRevisionReminderOnOrAfterDate(r, today),
-    );
-    const rank = (s: string) =>
-      s === "pending" ? 0 : s === "done" ? 1 : 2;
-    return [...list].sort((a, b) => {
-      const d = rank(a.status) - rank(b.status);
-      if (d !== 0) return d;
-      return a.nextDue.localeCompare(b.nextDue);
-    });
-  }, [items, showArchived, today]);
+  const baseFiltered = useMemo(
+    () =>
+      items.filter(
+        (r) =>
+          (showArchived || r.status !== "archived") &&
+          isRevisionReminderOnOrAfterDate(r, today),
+      ),
+    [items, showArchived, today],
+  );
+
+  const activeItems = useMemo(
+    () =>
+      baseFiltered
+        .filter((r) => r.status === "pending")
+        .sort((a, b) => a.nextDue.localeCompare(b.nextDue)),
+    [baseFiltered],
+  );
+
+  const doneItems = useMemo(
+    () =>
+      baseFiltered
+        .filter((r) => r.status === "done")
+        .sort((a, b) => {
+          const la = a.lastReviewed ?? "";
+          const lb = b.lastReviewed ?? "";
+          if (la !== lb) return lb.localeCompare(la);
+          const d = b.nextDue.localeCompare(a.nextDue);
+          if (d !== 0) return d;
+          return b.id.localeCompare(a.id);
+        }),
+    [baseFiltered],
+  );
+
+  const archivedItems = useMemo(
+    () =>
+      baseFiltered
+        .filter((r) => r.status === "archived")
+        .sort((a, b) => a.nextDue.localeCompare(b.nextDue)),
+    [baseFiltered],
+  );
 
   const dateItemCounts = useMemo(() => {
     const m = new Map<string, number>();
-    for (const it of sortedItems) {
+    for (const it of activeItems) {
       m.set(it.nextDue, (m.get(it.nextDue) ?? 0) + 1);
     }
     return m;
-  }, [sortedItems]);
+  }, [activeItems]);
 
-  const dateFilteredItems = useMemo(() => {
-    if (!selectedDate) return sortedItems;
-    return sortedItems.filter((it) => it.nextDue === selectedDate);
-  }, [sortedItems, selectedDate]);
+  const dateFilteredActive = useMemo(() => {
+    if (!selectedDate) return activeItems;
+    return activeItems.filter((it) => it.nextDue === selectedDate);
+  }, [activeItems, selectedDate]);
 
-  const revisionItemsGrouped = useMemo(() => {
+  const dateFilteredArchived = useMemo(() => {
+    if (!selectedDate) return archivedItems;
+    return archivedItems.filter((it) => it.nextDue === selectedDate);
+  }, [archivedItems, selectedDate]);
+
+  const activeGrouped = useMemo(() => {
     if (selectedDate !== null) return null;
     const map = new Map<string, RevisionQueueEntry[]>();
-    for (const it of dateFilteredItems) {
+    for (const it of dateFilteredActive) {
       const list = map.get(it.nextDue) ?? [];
       list.push(it);
       map.set(it.nextDue, list);
     }
     return [...map.entries()]
       .sort(([a], [b]) => b.localeCompare(a))
-      .map(([date, items]) => ({ date, items }));
-  }, [dateFilteredItems, selectedDate]);
+      .map(([date, groupItems]) => ({ date, items: groupItems }));
+  }, [dateFilteredActive, selectedDate]);
+
+  const doneGroupedPanel = useMemo(() => {
+    const map = new Map<string, RevisionQueueEntry[]>();
+    for (const it of doneItems) {
+      const list = map.get(it.nextDue) ?? [];
+      list.push(it);
+      map.set(it.nextDue, list);
+    }
+    return [...map.entries()]
+      .sort(([a], [b]) => b.localeCompare(a))
+      .map(([date, groupItems]) => ({ date, items: groupItems }));
+  }, [doneItems]);
+
+  const archivedGrouped = useMemo(() => {
+    if (selectedDate !== null) return null;
+    const map = new Map<string, RevisionQueueEntry[]>();
+    for (const it of dateFilteredArchived) {
+      const list = map.get(it.nextDue) ?? [];
+      list.push(it);
+      map.set(it.nextDue, list);
+    }
+    return [...map.entries()]
+      .sort(([a], [b]) => b.localeCompare(a))
+      .map(([date, groupItems]) => ({ date, items: groupItems }));
+  }, [dateFilteredArchived, selectedDate]);
 
   const revisionPickerBounds = useMemo(() => {
-    const keys = [...dateItemCounts.keys()].sort((a, b) => a.localeCompare(b));
-    if (keys.length === 0) return null;
+    const keys = new Set<string>();
+    for (const k of dateItemCounts.keys()) keys.add(k);
+    for (const it of doneItems) keys.add(it.nextDue);
+    for (const it of archivedItems) keys.add(it.nextDue);
+    if (keys.size === 0) return null;
+    const sorted = [...keys].sort((a, b) => a.localeCompare(b));
     return {
       min: today,
-      max: keys[keys.length - 1]!,
+      max: sorted[sorted.length - 1]!,
     };
-  }, [dateItemCounts, today]);
+  }, [dateItemCounts, doneItems, archivedItems, today]);
+
+  const hasAnythingForSelectedDate =
+    dateFilteredActive.length > 0 || dateFilteredArchived.length > 0;
 
   const renderRevisionItem = (it: RevisionQueueEntry, metaGrouped: boolean) => (
     <li
@@ -328,10 +393,11 @@ export function RevisionRemindersPageClient() {
           <AlarmClock className="h-7 w-7 shrink-0 text-kal-accent/90" aria-hidden />
           Revision Reminders
         </h1>
-          <p className="kal-feature-lead mt-3 max-w-xl">
+        <p className="kal-feature-lead mt-3 max-w-xl">
           Today and upcoming due dates only — past-due reminders live under Missed
-          Tasks. Your list is what you add; nothing is dropped into your daily
-          plan automatically.
+          Tasks. Tap <span className="font-semibold text-kal-text">Done</span> next
+          to Add to see reminders you&apos;ve completed. Your list is what you add;
+          nothing is dropped into your daily plan automatically.
         </p>
       </header>
 
@@ -355,22 +421,34 @@ export function RevisionRemindersPageClient() {
         >
           {showArchived ? "Hide archived" : "Show archived"}
         </button>
-        <button
-          type="button"
-          onClick={() => setModalOpen(true)}
-          disabled={!userId}
-          className="kal-btn-accent inline-flex min-h-[44px] items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold disabled:pointer-events-none disabled:opacity-50"
-        >
-          <Plus className="h-4 w-4" aria-hidden />
-          Add New Reminder
-        </button>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => setDonePanelOpen(true)}
+            disabled={!userId}
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-kal-border/70 bg-kal-card-muted px-3 py-2.5 text-sm font-semibold text-kal-text hover:bg-kal-accent-soft/40 disabled:pointer-events-none disabled:opacity-50"
+          >
+            <Check className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
+            Done
+            <span className="tabular-nums text-kal-muted">({doneItems.length})</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setModalOpen(true)}
+            disabled={!userId}
+            className="kal-btn-accent inline-flex min-h-[44px] items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold disabled:pointer-events-none disabled:opacity-50"
+          >
+            <Plus className="h-4 w-4" aria-hidden />
+            Add New Reminder
+          </button>
+        </div>
       </div>
 
-      {!loading && sortedItems.length > 0 ? (
+      {!loading && baseFiltered.length > 0 ? (
         <div className="relative mb-4 flex flex-wrap items-center gap-2">
           <RelativeDatePresetChips
             todayYmd={today}
-            totalAll={sortedItems.length}
+            totalAll={activeItems.length}
             countByDate={dateItemCounts}
             selectedDate={selectedDate}
             onSelect={setSelectedDate}
@@ -390,14 +468,14 @@ export function RevisionRemindersPageClient() {
         <div className="flex justify-center py-16">
           <Loader2 className="h-8 w-8 animate-spin text-kal-accent/50" aria-label="Loading" />
         </div>
-      ) : sortedItems.length === 0 ? (
+      ) : baseFiltered.length === 0 ? (
         <div className="kal-glass-card rounded-2xl border border-kal-border/50 p-8 text-center">
           <p className="text-sm text-kal-muted">
             No reminders due today or later. Add one for a future date, or check
             Missed Tasks if something was due before today.
           </p>
         </div>
-      ) : dateFilteredItems.length === 0 && selectedDate != null ? (
+      ) : !hasAnythingForSelectedDate && selectedDate != null ? (
         <div className="kal-glass-card rounded-2xl border border-kal-border/50 p-6 text-center">
           <p className="text-sm text-kal-text-secondary">
             Nothing on this date.{" "}
@@ -410,24 +488,139 @@ export function RevisionRemindersPageClient() {
             </button>
           </p>
         </div>
-      ) : selectedDate === null ? (
-        <div className="space-y-6">
-          {(revisionItemsGrouped ?? []).map(({ date, items }) => (
-            <section key={date} className="space-y-2.5">
-              <h3 className="border-b border-kal-border/50 pb-1.5 text-xs font-bold uppercase tracking-wide text-kal-accent">
-                {format(parseISO(date), "EEEE, MMM d, yyyy")}
-              </h3>
-              <ul className="space-y-2.5">
-                {items.map((it) => renderRevisionItem(it, true))}
-              </ul>
-            </section>
-          ))}
-        </div>
       ) : (
-        <ul className="space-y-2.5">
-          {dateFilteredItems.map((it) => renderRevisionItem(it, false))}
-        </ul>
+        <div className="space-y-10">
+          <div className="space-y-6">
+            {dateFilteredActive.length === 0 &&
+            dateFilteredArchived.length > 0 ? (
+              <p className="text-sm text-kal-muted">
+                {selectedDate != null
+                  ? "No pending reminders on this date."
+                  : "No pending reminders in this view."}
+              </p>
+            ) : dateFilteredActive.length === 0 &&
+              dateFilteredArchived.length === 0 &&
+              doneItems.length > 0 ? (
+              <p className="text-sm text-kal-muted">
+                {selectedDate != null
+                  ? "No pending reminders on this date. Tap Done to see completed reminders."
+                  : "Tap Done to see completed reminders."}
+              </p>
+            ) : null}
+            {selectedDate === null ? (
+              (activeGrouped ?? []).length > 0 ? (
+                <div className="space-y-6">
+                  {(activeGrouped ?? []).map(({ date, items: groupItems }) => (
+                    <section key={date} className="space-y-2.5">
+                      <h3 className="border-b border-kal-border/50 pb-1.5 text-xs font-bold uppercase tracking-wide text-kal-accent">
+                        {format(parseISO(date), "EEEE, MMM d, yyyy")}
+                      </h3>
+                      <ul className="space-y-2.5">
+                        {groupItems.map((it) => renderRevisionItem(it, true))}
+                      </ul>
+                    </section>
+                  ))}
+                </div>
+              ) : null
+            ) : dateFilteredActive.length > 0 ? (
+              <ul className="space-y-2.5">
+                {dateFilteredActive.map((it) => renderRevisionItem(it, false))}
+              </ul>
+            ) : null}
+          </div>
+
+          {dateFilteredArchived.length > 0 ? (
+            <section
+              className="space-y-4"
+              aria-labelledby="revision-archived-heading"
+            >
+              <h2
+                id="revision-archived-heading"
+                className="border-b border-kal-border/50 pb-1.5 text-xs font-bold uppercase tracking-wide text-kal-text-secondary"
+              >
+                Archived
+              </h2>
+              {selectedDate === null ? (
+                <div className="space-y-6">
+                  {(archivedGrouped ?? []).map(({ date, items: groupItems }) => (
+                    <section key={date} className="space-y-2.5">
+                      <h3 className="border-b border-kal-border/50 pb-1.5 text-xs font-bold uppercase tracking-wide text-kal-accent">
+                        {format(parseISO(date), "EEEE, MMM d, yyyy")}
+                      </h3>
+                      <ul className="space-y-2.5">
+                        {groupItems.map((it) => renderRevisionItem(it, true))}
+                      </ul>
+                    </section>
+                  ))}
+                </div>
+              ) : (
+                <ul className="space-y-2.5">
+                  {dateFilteredArchived.map((it) =>
+                    renderRevisionItem(it, false),
+                  )}
+                </ul>
+              )}
+            </section>
+          ) : null}
+        </div>
       )}
+
+      {donePanelOpen ? (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center overflow-y-auto overflow-x-hidden p-4 [padding-bottom:max(1rem,env(safe-area-inset-bottom,0px))] [padding-top:max(1rem,env(safe-area-inset-top,0px))]"
+          role="presentation"
+        >
+          <button
+            type="button"
+            aria-label="Close"
+            className="fixed inset-0 bg-kal-overlay backdrop-blur-sm"
+            onClick={() => setDonePanelOpen(false)}
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="revision-done-panel-title"
+            className="kal-glass-panel relative z-[81] my-auto flex min-h-0 w-full max-w-lg max-h-[min(92dvh,100dvh-2rem)] flex-col overflow-hidden rounded-2xl shadow-lg sm:max-h-[min(90dvh,85dvh)]"
+          >
+            <div className="flex shrink-0 items-start justify-between gap-3 border-b border-kal-border/50 px-5 pb-3 pt-5 sm:px-6 sm:pt-6">
+              <h2
+                id="revision-done-panel-title"
+                className="text-lg font-bold text-kal-text"
+              >
+                Completed reminders
+              </h2>
+              <button
+                type="button"
+                aria-label="Close"
+                onClick={() => setDonePanelOpen(false)}
+                className="rounded-lg p-1 text-kal-muted hover:bg-kal-card-muted hover:text-kal-text"
+              >
+                <X className="h-5 w-5" aria-hidden />
+              </button>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain px-5 py-4 sm:px-6 [-webkit-overflow-scrolling:touch]">
+              {doneItems.length === 0 ? (
+                <p className="text-sm text-kal-muted">
+                  No completed reminders yet.
+                </p>
+              ) : (
+                <div className="space-y-6">
+                  {doneGroupedPanel.map(({ date, items: groupItems }) => (
+                    <section key={date} className="space-y-2.5">
+                      <h3 className="border-b border-kal-border/50 pb-1.5 text-xs font-bold uppercase tracking-wide text-kal-accent">
+                        {format(parseISO(date), "EEEE, MMM d, yyyy")}
+                      </h3>
+                      <ul className="space-y-2.5">
+                        {groupItems.map((it) => renderRevisionItem(it, true))}
+                      </ul>
+                    </section>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <ScheduleRevisionReminderDialog
         open={modalOpen}
