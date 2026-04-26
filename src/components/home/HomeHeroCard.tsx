@@ -3,7 +3,20 @@
 import { differenceInCalendarDays, parseISO, startOfDay } from "date-fns";
 import { useMemo } from "react";
 
+import { useExamsCatalogRows } from "@/hooks/useExamsCatalogRows";
 import { useTargetExamDate } from "@/hooks/useTargetExamDate";
+import { displayNameForExamCatalog } from "@/lib/examsCatalog";
+
+type ExamRollupEntry = {
+  examLabel: string;
+  rollup: {
+    overallPercent: number;
+    totalMarksMastered: number;
+    totalMarksPool: number;
+  };
+  projections: Array<{ projectedOutOf720: number; year: number }>;
+  maxScore: number;
+};
 
 export type HomeHeroCardProps = {
   firstName: string;
@@ -22,7 +35,19 @@ export type HomeHeroCardProps = {
   examDisplayName?: string | null;
   /** Muted line under "Proj. score" when showing multi-year exam-scale average */
   projectedScoreCaption?: string | null;
+  /** Per-exam rollups for multi-exam tracks; undefined/null = single-exam path */
+  examRollups?: ExamRollupEntry[] | null;
+  /** Per-exam dates map from useTargetExamDate */
+  examDates?: Record<string, string>;
 };
+
+function computeDaysToExam(dateStr: string): number | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return null;
+  const today = startOfDay(new Date());
+  const exam = startOfDay(parseISO(dateStr));
+  const diff = differenceInCalendarDays(exam, today);
+  return diff > 0 ? diff : null;
+}
 
 function StatCell({
   value,
@@ -53,15 +78,17 @@ export function HomeHeroCard({
   todayTaskCount,
   examDisplayName,
   projectedScoreCaption,
+  examRollups,
+  examDates,
 }: HomeHeroCardProps) {
   const { examDate } = useTargetExamDate();
+  const { rows: catalogRows } = useExamsCatalogRows();
+
+  const isMultiExam = examRollups != null && examRollups.length > 1;
 
   const daysToExam = useMemo(() => {
     if (!examDate) return null;
-    const today = startOfDay(new Date());
-    const exam = startOfDay(parseISO(examDate));
-    const diff = differenceInCalendarDays(exam, today);
-    return diff > 0 ? diff : null;
+    return computeDaysToExam(examDate);
   }, [examDate]);
 
   const masteryDisplay = useMemo(() => {
@@ -83,6 +110,14 @@ export function HomeHeroCard({
     if (todayTaskCount === 0) return "—";
     return `${Math.round(todayPercent)}%`;
   }, [todayPercent, todayTaskCount]);
+
+  const divider = (
+    <div
+      className="w-px self-stretch"
+      style={{ background: "rgba(186,117,23,0.2)" }}
+      aria-hidden
+    />
+  );
 
   return (
     <section
@@ -107,18 +142,48 @@ export function HomeHeroCard({
           <p className="kal-home-hero-line">
             {greetingLead}, {firstName}
           </p>
-          {(examDisplayName ?? daysToExam != null) && (
+
+          {/* Multi-exam subtitle: per-exam name + countdown */}
+          {isMultiExam ? (
             <p className="mt-0.5 text-[11px] text-kal-text-secondary">
-              {examDisplayName ?? "NEET UG"}
-              {daysToExam != null && (
-                <>
-                  {" · "}
-                  <span className="font-medium text-[#BA7517] dark:text-kal-accent-dark">
-                    {daysToExam} day{daysToExam === 1 ? "" : "s"} to exam
+              {examRollups!.map((er, i) => {
+                const name =
+                  displayNameForExamCatalog(er.examLabel, catalogRows) ||
+                  er.examLabel;
+                const days =
+                  examDates?.[er.examLabel]
+                    ? computeDaysToExam(examDates[er.examLabel])
+                    : null;
+                return (
+                  <span key={er.examLabel}>
+                    {i > 0 && (
+                      <span className="mx-1.5 text-kal-muted">·</span>
+                    )}
+                    {name}
+                    {days != null && (
+                      <span className="ml-1 font-medium text-[#BA7517] dark:text-kal-accent-dark">
+                        {days} day{days === 1 ? "" : "s"}
+                      </span>
+                    )}
                   </span>
-                </>
-              )}
+                );
+              })}
             </p>
+          ) : (
+            /* Single-exam subtitle unchanged */
+            (examDisplayName ?? daysToExam != null) && (
+              <p className="mt-0.5 text-[11px] text-kal-text-secondary">
+                {examDisplayName ?? "NEET UG"}
+                {daysToExam != null && (
+                  <>
+                    {" · "}
+                    <span className="font-medium text-[#BA7517] dark:text-kal-accent-dark">
+                      {daysToExam} day{daysToExam === 1 ? "" : "s"} to exam
+                    </span>
+                  </>
+                )}
+              </p>
+            )
           )}
         </div>
 
@@ -134,47 +199,100 @@ export function HomeHeroCard({
           className="flex divide-x"
           style={{ "--divide-color": "rgba(186,117,23,0.2)" } as React.CSSProperties}
         >
-          <StatCell
-            value={masteryDisplay}
-            label="Syllabus"
-            ariaLabel={
-              syllabusMasteryPercent != null
-                ? `${syllabusMasteryPercent.toFixed(1)} percent of syllabus complete`
-                : "Syllabus data unavailable"
-            }
-          />
-          <div
-            className="w-px self-stretch"
-            style={{ background: "rgba(186,117,23,0.2)" }}
-            aria-hidden
-          />
-          <div className="flex flex-1 flex-col items-center gap-0.5 px-2 py-3 text-center">
-            <span
-              className="kal-home-stat-value"
-              aria-label={
-                marksTotal > 0
-                  ? `Projected score ${Math.round(marksMastered)} out of ${Math.round(marksTotal)}${
-                      projectedScoreCaption ? `. ${projectedScoreCaption}` : ""
-                    }`
-                  : "Projected score unavailable"
-              }
-            >
-              {projScoreDisplay}
-            </span>
-            <span className="text-[10px] leading-tight text-kal-muted">
-              Proj. score
-            </span>
-            {projectedScoreCaption ? (
-              <span className="min-w-0 max-w-full px-0.5 text-[9px] leading-snug text-kal-muted sm:whitespace-nowrap sm:px-1">
-                {projectedScoreCaption}
+          {/* Syllabus cell */}
+          {isMultiExam ? (
+            <div className="flex flex-1 flex-col items-center gap-1.5 px-1 py-3 text-center">
+              {examRollups!.map((er) => {
+                const name =
+                  displayNameForExamCatalog(er.examLabel, catalogRows) ||
+                  er.examLabel;
+                const pct = er.rollup.overallPercent;
+                const display =
+                  pct % 1 === 0 ? pct.toFixed(0) : pct.toFixed(1);
+                return (
+                  <div key={er.examLabel} className="flex flex-col items-center gap-0">
+                    <span className="text-sm font-bold tabular-nums leading-tight text-kal-text">
+                      {display}%
+                    </span>
+                    <span className="text-[9px] leading-tight text-kal-muted">
+                      {name}
+                    </span>
+                  </div>
+                );
+              })}
+              <span className="mt-0.5 text-[10px] leading-tight text-kal-muted">
+                Syllabus
               </span>
-            ) : null}
-          </div>
-          <div
-            className="w-px self-stretch"
-            style={{ background: "rgba(186,117,23,0.2)" }}
-            aria-hidden
-          />
+            </div>
+          ) : (
+            <StatCell
+              value={masteryDisplay}
+              label="Syllabus"
+              ariaLabel={
+                syllabusMasteryPercent != null
+                  ? `${syllabusMasteryPercent.toFixed(1)} percent of syllabus complete`
+                  : "Syllabus data unavailable"
+              }
+            />
+          )}
+
+          {divider}
+
+          {/* Proj. score cell */}
+          {isMultiExam ? (
+            <div className="flex flex-1 flex-col items-center gap-1.5 px-1 py-3 text-center">
+              {examRollups!.map((er) => {
+                const name =
+                  displayNameForExamCatalog(er.examLabel, catalogRows) ||
+                  er.examLabel;
+                const proj = er.projections[0];
+                const scoreStr = proj
+                  ? `${proj.projectedOutOf720}/${er.maxScore}`
+                  : er.rollup.totalMarksPool > 0
+                    ? `${er.rollup.totalMarksMastered.toFixed(0)}/${er.rollup.totalMarksPool.toFixed(0)}`
+                    : "—";
+                return (
+                  <div key={er.examLabel} className="flex flex-col items-center gap-0">
+                    <span className="text-sm font-bold tabular-nums leading-tight text-kal-text">
+                      {scoreStr}
+                    </span>
+                    <span className="text-[9px] leading-tight text-kal-muted">
+                      {name}
+                    </span>
+                  </div>
+                );
+              })}
+              <span className="mt-0.5 text-[10px] leading-tight text-kal-muted">
+                Proj. score
+              </span>
+            </div>
+          ) : (
+            <div className="flex flex-1 flex-col items-center gap-0.5 px-2 py-3 text-center">
+              <span
+                className="kal-home-stat-value"
+                aria-label={
+                  marksTotal > 0
+                    ? `Projected score ${Math.round(marksMastered)} out of ${Math.round(marksTotal)}${
+                        projectedScoreCaption ? `. ${projectedScoreCaption}` : ""
+                      }`
+                    : "Projected score unavailable"
+                }
+              >
+                {projScoreDisplay}
+              </span>
+              <span className="text-[10px] leading-tight text-kal-muted">
+                Proj. score
+              </span>
+              {projectedScoreCaption ? (
+                <span className="min-w-0 max-w-full px-0.5 text-[9px] leading-snug text-kal-muted sm:whitespace-nowrap sm:px-1">
+                  {projectedScoreCaption}
+                </span>
+              ) : null}
+            </div>
+          )}
+
+          {divider}
+
           <StatCell
             value={todayPlanDisplay}
             label="Today's plan"

@@ -30,6 +30,8 @@ export async function upsertUserProfile(fields: {
   selected_track?: string | null;
   /** Track system: ordered exam_name keys the user has enabled within their track. */
   enabled_exams_in_track?: string[] | null;
+  /** Per-exam dates map. Keys are exam labels (as in enabled_exams_in_track). */
+  exam_dates?: Record<string, string> | null;
 }): Promise<UpsertProfileResult> {
   try {
     const supabase = await createSupabaseServerClient();
@@ -79,6 +81,9 @@ export async function upsertUserProfile(fields: {
         : {}),
       ...(fields.enabled_exams_in_track !== undefined
         ? { enabled_exams_in_track: fields.enabled_exams_in_track }
+        : {}),
+      ...(fields.exam_dates !== undefined
+        ? { exam_dates: fields.exam_dates ?? null }
         : {}),
       updated_at: new Date().toISOString(),
     };
