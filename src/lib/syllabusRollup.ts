@@ -486,7 +486,16 @@ export function computeNeetYearProjections(
     });
   }
 
-  return out.sort((a, b) => b.year - a.year);
+  const sorted = out.sort((a, b) => b.year - a.year);
+  if (
+    sorted.length > 1 &&
+    sorted.every(
+      (p) => p.projectedOutOf720 === sorted[0]!.projectedOutOf720,
+    )
+  ) {
+    return [sorted[0]!];
+  }
+  return sorted;
 }
 
 /**

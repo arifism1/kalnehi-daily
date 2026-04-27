@@ -83,9 +83,37 @@ export function ProgressOverview() {
     cuetAwaitingDomainSelection,
     loading: syllabusLoading,
     error: syllabusError,
+    targetExamLabel,
+    examResults,
+    examRollups,
   } = useSyllabusTracker();
 
-  const isUpscMainsUi = isUpscCseMainsExam(catalogExamKey);
+  /** When multiple exams are enabled, avoid merged rollups; use the track primary (first) exam. */
+  const activeExamFromTrack = useMemo(() => {
+    if (!examRollups || examRollups.length <= 1) return null;
+    return (
+      examRollups.find((er) => er.examLabel === targetExamLabel) ??
+      examRollups[0] ??
+      null
+    );
+  }, [examRollups, targetExamLabel]);
+
+  const displayRollup = activeExamFromTrack?.rollup ?? syllabusRollup;
+  const displayProjections = activeExamFromTrack?.projections ?? neetYearProjections;
+  const displayScoreMax = activeExamFromTrack?.maxScore ?? syllabusScoreMax;
+  const displayPrimaryYear = activeExamFromTrack?.primaryMarksYear ?? primaryMarksYear;
+  const displayCatalogKey = activeExamFromTrack?.catalogExamKey ?? catalogExamKey;
+  const displayRowCount = useMemo(() => {
+    if (!activeExamFromTrack?.examLabel) return syllabusRows.length;
+    return (
+      examResults.find((e) => e.examLabel === activeExamFromTrack.examLabel)
+        ?.rows.length ?? syllabusRows.length
+    );
+  }, [activeExamFromTrack, examResults, syllabusRows.length]);
+
+  const isUpscMainsUi = isUpscCseMainsExam(displayCatalogKey);
+  const displayExamLabelForMarks =
+    activeExamFromTrack?.examLabel ?? examLabel;
 
   const advancedMarksProjectionEnabled = useSettingsStore(
     (s) => s.advancedMarksProjectionEnabled,
@@ -107,28 +135,28 @@ export function ProgressOverview() {
 
   const syllabusMultiYear = useMemo(() => {
     if (!advancedMarksProjectionEnabled) return null;
-    if (syllabusRows.length === 0 || neetYearProjections.length === 0) {
+    if (displayRowCount === 0 || displayProjections.length === 0) {
       return null;
     }
     return buildSyllabusMultiYearCapture(
-      neetYearProjections,
-      syllabusScoreMax,
-      primaryMarksYear,
+      displayProjections,
+      displayScoreMax,
+      displayPrimaryYear,
       isUpscMainsUi ? UPSC_CSE_MAINS_UI_TOTAL_MARKS : undefined,
     );
   }, [
     advancedMarksProjectionEnabled,
-    syllabusRows.length,
-    neetYearProjections,
-    syllabusScoreMax,
-    primaryMarksYear,
+    displayRowCount,
+    displayProjections,
+    displayScoreMax,
+    displayPrimaryYear,
     isUpscMainsUi,
   ]);
 
   const { secured, denom, marksPercent } = useMemo(() => {
     const microtopicById = microRecord;
-    const fallbackMax = syllabusScoreMax > 0 ? syllabusScoreMax : 720;
-    const hasPrevYearMarks = examHasPrevYearMarks(catalogExamKey);
+    const fallbackMax = displayScoreMax > 0 ? displayScoreMax : 720;
+    const hasPrevYearMarks = examHasPrevYearMarks(displayExamLabelForMarks);
 
     let secured = 0;
     let denom = fallbackMax;
@@ -138,15 +166,15 @@ export function ProgressOverview() {
       marksPercent = cuetScoringRollup.overallPercent;
       secured = 0;
       denom = 0;
-    } else if (!advancedMarksProjectionEnabled && syllabusRows.length > 0 && hasPrevYearMarks) {
+    } else if (!advancedMarksProjectionEnabled && displayRowCount > 0 && hasPrevYearMarks) {
       if (isUpscMainsUi) {
         marksPercent = upscMainsSyllabusUiPercent(
-          syllabusRollup.totalMarksMastered,
+          displayRollup.totalMarksMastered,
         );
-        secured = Math.round(syllabusRollup.totalMarksMastered);
+        secured = Math.round(displayRollup.totalMarksMastered);
         denom = UPSC_CSE_MAINS_UI_TOTAL_MARKS;
       } else {
-        marksPercent = syllabusRollup.overallPercent;
+        marksPercent = displayRollup.overallPercent;
         secured = 0;
         denom = 0;
       }
@@ -158,14 +186,14 @@ export function ProgressOverview() {
       marksPercent = syllabusMultiYear.ringPercent;
       secured = syllabusMultiYear.ringProjected;
       denom = syllabusMultiYear.ringOutOf;
-    } else if (syllabusRows.length > 0 && hasPrevYearMarks) {
-      secured = Math.round(syllabusRollup.totalMarksMastered);
+    } else if (displayRowCount > 0 && hasPrevYearMarks) {
+      secured = Math.round(displayRollup.totalMarksMastered);
       if (isUpscMainsUi) {
         denom = UPSC_CSE_MAINS_UI_TOTAL_MARKS;
-        marksPercent = upscMainsSyllabusUiPercent(syllabusRollup.totalMarksMastered);
+        marksPercent = upscMainsSyllabusUiPercent(displayRollup.totalMarksMastered);
       } else {
-        marksPercent = syllabusRollup.overallPercent;
-        denom = Math.round(syllabusRollup.totalMarksPool);
+        marksPercent = displayRollup.overallPercent;
+        denom = Math.round(displayRollup.totalMarksPool);
         if (denom <= 0) {
           secured = 0;
           denom = fallbackMax;
@@ -185,15 +213,15 @@ export function ProgressOverview() {
     return { secured, denom, marksPercent };
   }, [
     microRecord,
-    syllabusScoreMax,
-    catalogExamKey,
+    displayScoreMax,
+    displayExamLabelForMarks,
     advancedMarksProjectionEnabled,
     cuetScoringRollup,
     syllabusMultiYear,
-    syllabusRows.length,
-    syllabusRollup.overallPercent,
-    syllabusRollup.totalMarksMastered,
-    syllabusRollup.totalMarksPool,
+    displayRowCount,
+    displayRollup.overallPercent,
+    displayRollup.totalMarksMastered,
+    displayRollup.totalMarksPool,
     realityTasks,
     isUpscMainsUi,
   ]);
@@ -229,7 +257,7 @@ export function ProgressOverview() {
                 overall syllabus completion (CUET domains)
               </span>
             </p>
-          ) : !advancedMarksProjectionEnabled && syllabusRows.length > 0 ? (
+          ) : !advancedMarksProjectionEnabled && displayRowCount > 0 ? (
             <p className="text-kal-text-secondary">
               <span className="font-semibold text-kal-accent dark:text-kal-accent/90 tabular-nums">
                 {marksPercent % 1 === 0
@@ -316,17 +344,17 @@ export function ProgressOverview() {
                 ))}
               </ul>
             </>
-          ) : syllabusRows.length > 0 ? (
+          ) : displayRowCount > 0 ? (
             <p className="text-kal-text-secondary">
               <span className="font-semibold text-kal-accent dark:text-kal-accent/90 tabular-nums">
-                {Math.round(syllabusRollup.totalMarksMastered)}
+                {Math.round(displayRollup.totalMarksMastered)}
               </span>
               <span className="text-kal-muted">
                 {" "}
                 /{" "}
                 {isUpscMainsUi
                   ? UPSC_CSE_MAINS_UI_TOTAL_MARKS
-                  : Math.round(syllabusRollup.totalMarksPool)}{" "}
+                  : Math.round(displayRollup.totalMarksPool)}{" "}
                 {isUpscMainsUi
                   ? "full Mains written (2350)"
                   : "chapter-weight pool"}
@@ -334,7 +362,7 @@ export function ProgressOverview() {
               <span className="mt-1 block text-xs text-kal-muted">
                 {isUpscMainsUi
                   ? "UPSC CSE Mains total = 2350 (1750 merit + 600 qualifying). Qualifying marks are included."
-                  : `Add per-year syllabus weights to see multi-year projections (out of ${syllabusScoreMax}).`}
+                  : `Add per-year syllabus weights to see multi-year projections (out of ${displayScoreMax}).`}
               </span>
             </p>
           ) : (

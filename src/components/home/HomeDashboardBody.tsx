@@ -72,11 +72,33 @@ export function HomeDashboardBody({
     cuetAwaitingDomainSelection,
     loading: syllabusLoading,
     error: syllabusError,
+    targetExamLabel,
     examResults,
     examRollups,
   } = useSyllabusTracker();
 
   const { rows: catalogRows } = useExamsCatalogRows();
+
+  const activeExamFromTrack = useMemo(() => {
+    if (!examRollups || examRollups.length <= 1) return null;
+    return (
+      examRollups.find((er) => er.examLabel === targetExamLabel) ??
+      examRollups[0] ??
+      null
+    );
+  }, [examRollups, targetExamLabel]);
+
+  const displayRollup = activeExamFromTrack?.rollup ?? syllabusRollup;
+  const displayProjections = activeExamFromTrack?.projections ?? neetYearProjections;
+  const displayScoreMax = activeExamFromTrack?.maxScore ?? syllabusScoreMax;
+  const displayCatalogKey = activeExamFromTrack?.catalogExamKey ?? catalogExamKey;
+  const displayRowCount = useMemo(() => {
+    if (!activeExamFromTrack?.examLabel) return syllabusRows.length;
+    return (
+      examResults.find((e) => e.examLabel === activeExamFromTrack.examLabel)
+        ?.rows.length ?? syllabusRows.length
+    );
+  }, [activeExamFromTrack, examResults, syllabusRows.length]);
 
   const allExamsDisplayName = useMemo(() => {
     if (examResults.length > 1) {
@@ -87,7 +109,7 @@ export function HomeDashboardBody({
     return examDisplayName;
   }, [examResults, catalogRows, examDisplayName]);
 
-  const isUpscMainsUi = isUpscCseMainsExam(catalogExamKey);
+  const isUpscMainsUi = isUpscCseMainsExam(displayCatalogKey);
 
   const advancedMarksProjectionEnabled = useSettingsStore(
     (s) => s.advancedMarksProjectionEnabled,
@@ -212,22 +234,22 @@ export function HomeDashboardBody({
         projectedScoreCaption: null as string | null,
       };
     }
-    if (syllabusRows.length > 0 && neetYearProjections.length > 0) {
-      const avg = averageProjectedOutOfMax(neetYearProjections);
+    if (displayRowCount > 0 && displayProjections.length > 0) {
+      const avg = averageProjectedOutOfMax(displayProjections);
       if (avg != null) {
         return {
           mastered: avg,
-          total: syllabusScoreMax,
+          total: displayScoreMax,
           projectedScoreCaption: "Based on past few years' exam patterns",
         };
       }
     }
-    if (syllabusRows.length > 0) {
+    if (displayRowCount > 0) {
       return {
-        mastered: syllabusRollup.totalMarksMastered,
+        mastered: displayRollup.totalMarksMastered,
         total: isUpscMainsUi
           ? UPSC_CSE_MAINS_UI_TOTAL_MARKS
-          : syllabusRollup.totalMarksPool,
+          : displayRollup.totalMarksPool,
         projectedScoreCaption: null as string | null,
       };
     }
@@ -244,11 +266,11 @@ export function HomeDashboardBody({
     };
   }, [
     cuetScoringRollup,
-    syllabusRows.length,
-    neetYearProjections,
-    syllabusScoreMax,
-    syllabusRollup.totalMarksMastered,
-    syllabusRollup.totalMarksPool,
+    displayRowCount,
+    displayProjections,
+    displayScoreMax,
+    displayRollup.totalMarksMastered,
+    displayRollup.totalMarksPool,
     syllabusLoading,
     realityTasks,
     microtopicById,
@@ -257,18 +279,18 @@ export function HomeDashboardBody({
 
   const syllabusMasteryPercent = useMemo(() => {
     if (cuetScoringRollup) return cuetScoringRollup.overallPercent;
-    if (syllabusRows.length > 0) {
+    if (displayRowCount > 0) {
       if (isUpscMainsUi) {
-        return upscMainsSyllabusUiPercent(syllabusRollup.totalMarksMastered);
+        return upscMainsSyllabusUiPercent(displayRollup.totalMarksMastered);
       }
-      return syllabusRollup.overallPercent;
+      return displayRollup.overallPercent;
     }
     return null;
   }, [
     cuetScoringRollup,
-    syllabusRows.length,
-    syllabusRollup.overallPercent,
-    syllabusRollup.totalMarksMastered,
+    displayRowCount,
+    displayRollup.overallPercent,
+    displayRollup.totalMarksMastered,
     isUpscMainsUi,
   ]);
 
@@ -284,23 +306,24 @@ export function HomeDashboardBody({
   }, [cuetScoringRollup, examRollups, examLabel]);
 
   // Kept for downstream use — not rendered on home page but preserves hook call
+  const displayPrimaryYear = activeExamFromTrack?.primaryMarksYear ?? primaryMarksYear;
   const syllabusMultiYear = useMemo(() => {
     if (!advancedMarksProjectionEnabled) return null;
-    if (syllabusRows.length === 0 || neetYearProjections.length === 0) {
+    if (displayRowCount === 0 || displayProjections.length === 0) {
       return null;
     }
     return buildSyllabusMultiYearCapture(
-      neetYearProjections,
-      syllabusScoreMax,
-      primaryMarksYear,
+      displayProjections,
+      displayScoreMax,
+      displayPrimaryYear,
       isUpscMainsUi ? UPSC_CSE_MAINS_UI_TOTAL_MARKS : undefined,
     );
   }, [
     advancedMarksProjectionEnabled,
-    syllabusRows.length,
-    neetYearProjections,
-    syllabusScoreMax,
-    primaryMarksYear,
+    displayRowCount,
+    displayProjections,
+    displayScoreMax,
+    displayPrimaryYear,
     isUpscMainsUi,
   ]);
 

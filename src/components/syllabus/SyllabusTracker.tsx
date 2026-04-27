@@ -564,6 +564,8 @@ export function SyllabusTracker() {
     rows: MergedSyllabusRow[];
     /** When set (e.g. multi-exam), overrides `catalogExamKey` for ChapterMarksSheet saves */
     examName?: string;
+    /** Per-exam primary marks column; falls back to hook `primaryMarksYear` */
+    primaryMarksYear?: 2023 | 2024 | 2025;
   } | null>(null);
   const [showAllYears, setShowAllYears] = useState(false);
   const [openSubject, setOpenSubject] = useState<string | null>(null);
@@ -674,6 +676,7 @@ export function SyllabusTracker() {
       ReturnType<typeof buildRollupMapsFromChapters>
     >();
     for (const er of examRollups) {
+      if (er.examLabel == null) continue;
       m.set(er.examLabel, buildRollupMapsFromChapters(er.rollup.chapters));
     }
     return m;
@@ -1054,9 +1057,9 @@ export function SyllabusTracker() {
                   section.subjects.map((subject) => {
                     const chapters = section.grouped.get(subject)!;
                     const chapterNames = sortChapterNameList([...chapters.keys()]);
-                    const perExam = rollupMapsByExamLabel?.get(
-                      section.examLabel,
-                    );
+                    const perExam = section.examLabel
+                      ? rollupMapsByExamLabel?.get(section.examLabel)
+                      : undefined;
                     const subRoll =
                       perExam?.subjectMicrotopicMap.get(subject) ?? {
                         completed: 0,
@@ -1315,6 +1318,16 @@ export function SyllabusTracker() {
                                                 chapter,
                                                 rows: list as MergedSyllabusRow[],
                                                 examName: sectionExamKey,
+                                                primaryMarksYear: (() => {
+                                                  const y =
+                                                    examResults.find(
+                                                      (x) =>
+                                                        x.examLabel ===
+                                                        section.examLabel,
+                                                    )?.primaryMarksYear ??
+                                                    primaryMarksYear;
+                                                  return y as 2023 | 2024 | 2025;
+                                                })(),
                                               });
                                             }}
                                           >
@@ -1665,6 +1678,11 @@ export function SyllabusTracker() {
                                     subject,
                                     chapter,
                                     rows: list as MergedSyllabusRow[],
+                                    primaryMarksYear: (examResults[0]
+                                      ?.primaryMarksYear ?? primaryMarksYear) as
+                                      | 2023
+                                      | 2024
+                                      | 2025,
                                   });
                                 }}
                               >
@@ -1718,7 +1736,9 @@ export function SyllabusTracker() {
         }
         onClose={() => setMarksSheetChapter(null)}
         examName={marksSheetChapter?.examName ?? catalogExamKey ?? ""}
-        primaryYear={primaryMarksYear}
+        primaryYear={
+          marksSheetChapter?.primaryMarksYear ?? primaryMarksYear
+        }
         chapterTitle={
           marksSheetChapter
             ? `${marksSheetChapter.subject} · ${marksSheetChapter.chapter}`
