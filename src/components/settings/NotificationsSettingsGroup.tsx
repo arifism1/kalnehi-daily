@@ -23,7 +23,7 @@ export function NotificationsSettingsGroup() {
         <SettingsExpandableSection
           sectionId="notifications-root"
           title="Notifications"
-          description="Web push on this device, Kalnehi automations (IST), and custom reminders — up to five automated product pushes per IST calendar day."
+          description="Web push on this device, Kalnehi Daily automations (IST), and custom reminders — up to five automated product pushes per IST calendar day."
           icon={Bell}
         >
           <div className="space-y-3">

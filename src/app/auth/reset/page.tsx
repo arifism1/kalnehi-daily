@@ -58,7 +58,7 @@ export default function AuthResetPage() {
     <div className="kal-page-bg flex min-h-full flex-col items-center justify-center gap-8 px-6 py-16">
       <div className="text-center">
         <p className="text-[0.65rem] font-bold uppercase tracking-widest text-kal-accent-dark">
-          Kalnehi
+          Kalnehi Daily
         </p>
         <h1 className="kal-feature-title mt-2">Set new password</h1>
         <p className="mt-2 text-sm text-kal-muted">

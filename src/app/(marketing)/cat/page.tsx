@@ -13,7 +13,7 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 export const metadata = marketingPageMetadata({
   path: "/cat",
   title: `Daily Planner for CAT Preparation | ${SITE_NAME}`,
-  description: `CAT prep alongside a job or college is brutal without a system. Kalnehi helps you track Quant, VARC and DILR, plan mock review sessions, and build daily consistency that converts to percentile.`,
+  description: `CAT prep alongside a job or college is brutal without a system. Kalnehi Daily helps you track Quant, VARC and DILR, plan mock review sessions, and build daily consistency that converts to percentile.`,
   ogImage: ogImageExam("CAT Preparation"),
 });
 
@@ -49,9 +49,9 @@ const SYLLABUS = [
 
 const FAQS = [
   {
-    question: "How does Kalnehi help CAT aspirants who are working or in college?",
+    question: "How does Kalnehi Daily help CAT aspirants who are working or in college?",
     answer:
-      "Most CAT aspirants prepare with 2-3 hours per day alongside a job or college schedule. Kalnehi's daily planner lets you plan exactly what to cover in those hours — which Quant topic, how many RC passages, which DILR set — and track completion daily without a separate notebook.",
+      "Most CAT aspirants prepare with 2-3 hours per day alongside a job or college schedule. Kalnehi Daily's daily planner lets you plan exactly what to cover in those hours — which Quant topic, how many RC passages, which DILR set — and track completion daily without a separate notebook.",
   },
   {
     question: "How does Mastermind help CAT preparation?",
@@ -59,12 +59,12 @@ const FAQS = [
       "Mastermind analyses your mock test data and identifies which section is pulling your percentile down. It tells you if you're spending too much time on Quant while VARC accuracy is tanking, and gives you a rebalancing strategy based on your target percentile.",
   },
   {
-    question: "CAT changes format every year — does Kalnehi account for that?",
+    question: "CAT changes format every year — does Kalnehi Daily account for that?",
     answer:
-      "The core skills tested in CAT — reading speed, Quant accuracy, LR pattern recognition — don't change. Kalnehi tracks your skill development at the chapter level, which remains relevant regardless of format tweaks in a given year.",
+      "The core skills tested in CAT — reading speed, Quant accuracy, LR pattern recognition — don't change. Kalnehi Daily tracks your skill development at the chapter level, which remains relevant regardless of format tweaks in a given year.",
   },
   {
-    question: "Can I track mock test performance in Kalnehi?",
+    question: "Can I track mock test performance in Kalnehi Daily?",
     answer:
       "Yes. Use the Marks Engine to log your sectional and overall scores from AIMCAT, IMS and SimCAT mocks. Mastermind reads this data and tells you your performance trend across the last 5-10 mocks.",
   },
@@ -99,7 +99,7 @@ export default function CatPage() {
         <ExamHero
           badge="CAT — Common Admission Test"
           headline="CAT Preparation Daily Planner — From 70 Percentile to 99 Is a Consistency Problem, Not a Content Problem"
-          subheadline="Most CAT aspirants know enough Quant, VARC and DILR to score 90+. What separates 90 from 99 percentile is the ability to practice daily without skipping a single week for 6 months. Kalnehi builds that system."
+          subheadline="Most CAT aspirants know enough Quant, VARC and DILR to score 90+. What separates 90 from 99 percentile is the ability to practice daily without skipping a single week for 6 months. Kalnehi Daily builds that system."
           stats={[
             { value: "3 sections", label: "VARC · DILR · Quant" },
             { value: "6 months", label: "typical serious prep window" },
@@ -109,11 +109,11 @@ export default function CatPage() {
 
         <section className="space-y-5" aria-labelledby="cat-syllabus">
           <h2 id="cat-syllabus" className="text-xl font-bold text-kal-text">
-            CAT syllabus mapped in Kalnehi
+            CAT syllabus mapped in Kalnehi Daily
           </h2>
           <p className="text-sm leading-relaxed text-kal-text-secondary">
             CAT has no official syllabus — but the pattern is consistent. These are the areas that
-            appear every year and what Kalnehi helps you track at topic level.
+            appear every year and what Kalnehi Daily helps you track at topic level.
           </p>
           <div className="grid gap-4 sm:grid-cols-3">
             {SYLLABUS.map(({ section, topics }) => (

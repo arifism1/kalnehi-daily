@@ -10,14 +10,14 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 export const metadata = marketingPageMetadata({
   path: "/ibps-po",
   title: `Daily Planner for IBPS PO Preparation | ${SITE_NAME}`,
-  description: `IBPS PO covers Quantitative Aptitude, Reasoning, English, General Awareness and Computer Knowledge. Kalnehi tracks your daily practice and Mastermind tells you where your score is leaking.`,
+  description: `IBPS PO covers Quantitative Aptitude, Reasoning, English, General Awareness and Computer Knowledge. Kalnehi Daily tracks your daily practice and Mastermind tells you where your score is leaking.`,
 });
 
 const FAQS = [
   { question: "What is the IBPS PO exam structure?", answer: "IBPS PO Preliminary: 3 sections (English, Quantitative Aptitude, Reasoning) — 100 questions, 60 minutes. IBPS PO Main: 4 sections (Reasoning + Computer, English, Data Analysis, General Economy & Banking Awareness) + Descriptive paper (Letter + Essay). Interview: 100 marks." },
-  { question: "How does Kalnehi help IBPS PO aspirants?", answer: "Track your preliminary and mains preparation separately in Kalnehi. Log daily mock tests, practise sections, and General Awareness revision. Mastermind identifies your weakest section across 5 areas and tells you how to reallocate study time before your next mock." },
-  { question: "How many months does IBPS PO preparation take?", answer: "Candidates typically prepare for 4-6 months before IBPS PO. Those preparing for multiple bank exams (SBI PO + IBPS PO + RRB PO) benefit from a unified tracker — Kalnehi manages all three in one place." },
-  { question: "What is the difference between IBPS PO and SBI PO?", answer: "SBI PO is slightly more competitive (better pay, brand, and more applicants). The syllabuses are similar but SBI PO has a different descriptive test format. Many aspirants prepare for both simultaneously — Kalnehi tracks both timelines and exam dates." },
+  { question: "How does Kalnehi Daily help IBPS PO aspirants?", answer: "Track your preliminary and mains preparation separately in Kalnehi Daily. Log daily mock tests, practise sections, and General Awareness revision. Mastermind identifies your weakest section across 5 areas and tells you how to reallocate study time before your next mock." },
+  { question: "How many months does IBPS PO preparation take?", answer: "Candidates typically prepare for 4-6 months before IBPS PO. Those preparing for multiple bank exams (SBI PO + IBPS PO + RRB PO) benefit from a unified tracker — Kalnehi Daily manages all three in one place." },
+  { question: "What is the difference between IBPS PO and SBI PO?", answer: "SBI PO is slightly more competitive (better pay, brand, and more applicants). The syllabuses are similar but SBI PO has a different descriptive test format. Many aspirants prepare for both simultaneously — Kalnehi Daily tracks both timelines and exam dates." },
 ];
 
 export default function IbpsPoPage() {
@@ -33,11 +33,11 @@ export default function IbpsPoPage() {
         <ExamHero
           badge="IBPS PO — Probationary Officer"
           headline="IBPS PO Preparation Daily Planner — Consistent Mock Practice Decides Your Final Score"
-          subheadline="IBPS PO is India's largest banking recruitment exam. Your score relative to other candidates matters — which means you need to practise more mocks and analyse them more carefully than everyone else. Kalnehi tracks that process."
+          subheadline="IBPS PO is India's largest banking recruitment exam. Your score relative to other candidates matters — which means you need to practise more mocks and analyse them more carefully than everyone else. Kalnehi Daily tracks that process."
         />
 
         <section className="space-y-4" aria-labelledby="ibps-sections">
-          <h2 id="ibps-sections" className="text-xl font-bold text-kal-text">IBPS PO sections tracked in Kalnehi</h2>
+          <h2 id="ibps-sections" className="text-xl font-bold text-kal-text">IBPS PO sections tracked in Kalnehi Daily</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {[
               { s: "Quantitative Aptitude", topics: ["Simplification, Number Series", "Data Interpretation (Tables, Charts)", "Time-Work, Speed-Distance, Profit-Loss", "Probability, Permutation & Combination"] },

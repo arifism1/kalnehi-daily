@@ -21,9 +21,9 @@ export interface UseCaseData {
 const jeeDroppers: UseCaseData = {
   slug: "jee-droppers",
   audienceLabel: "JEE Droppers",
-  headline: "Kalnehi for JEE Droppers: How to Use a Gap Year to Actually Improve",
+  headline: "Kalnehi Daily for JEE Droppers: How to Use a Gap Year to Actually Improve",
   subheadline: "A drop year is not a second chance — it's a final one. The students who succeed in their drop year don't work harder than they did in Class 12. They work with a system.",
-  intro: "Every year, around 2 lakh JEE aspirants choose to drop and attempt the exam again. Fewer than 10% of them improve their rank significantly. The reason isn't intelligence or effort — it's structure. Without the external discipline of school and coaching, most droppers drift through the year. Kalnehi is built to provide the internal structure a drop year requires.",
+  intro: "Every year, around 2 lakh JEE aspirants choose to drop and attempt the exam again. Fewer than 10% of them improve their rank significantly. The reason isn't intelligence or effort — it's structure. Without the external discipline of school and coaching, most droppers drift through the year. Kalnehi Daily is built to provide the internal structure a drop year requires.",
   challenges: [
     "No external schedule — coaching class is optional or finished, school is gone",
     "Psychological weight of knowing this is the last attempt",
@@ -51,8 +51,8 @@ const jeeDroppers: UseCaseData = {
     { title: "Consistency Tracker", why: "A drop year is won or lost on consistency, not on any single study day. The tracker shows you your true study hours — not planned, actual." },
   ],
   faqs: [
-    { q: "How many hours should a JEE dropper study?", a: "8-10 hours of focused study daily is the standard benchmark for serious droppers. More important than hours is quality — 8 hours of tracked, structured study beats 12 hours of unfocused sitting. Kalnehi tracks actual focused study time, not time at the desk." },
-    { q: "What's the first thing a dropper should do in Kalnehi?", a: "Set up your JEE syllabus in the Syllabus Tracker and log your last JEE rank or mock score in the Marks Engine. This gives Mastermind enough context to give useful advice from day one." },
+    { q: "How many hours should a JEE dropper study?", a: "8-10 hours of focused study daily is the standard benchmark for serious droppers. More important than hours is quality — 8 hours of tracked, structured study beats 12 hours of unfocused sitting. Kalnehi Daily tracks actual focused study time, not time at the desk." },
+    { q: "What's the first thing a dropper should do in Kalnehi Daily?", a: "Set up your JEE syllabus in the Syllabus Tracker and log your last JEE rank or mock score in the Marks Engine. This gives Mastermind enough context to give useful advice from day one." },
     { q: "How should revision be structured in a drop year?", a: "Class 11 topics need at least 2-3 revision cycles before the exam. Class 12 topics need coverage first, then revision. Use Revision Reminders to set the next due date each time you finish a topic or review pass." },
     { q: "How do I stay consistent when there's no external pressure?", a: "Build the daily log habit first. 30 seconds every morning to log yesterday. This single habit, done consistently, creates accountability. The Consistency Tracker then makes your actual hours visible — it's hard to fool yourself when you see the number." },
   ],
@@ -63,7 +63,7 @@ const jeeDroppers: UseCaseData = {
 const neetDroppers: UseCaseData = {
   slug: "neet-droppers",
   audienceLabel: "NEET Droppers",
-  headline: "Kalnehi for NEET Droppers: Building a System for Your Final Attempt",
+  headline: "Kalnehi Daily for NEET Droppers: Building a System for Your Final Attempt",
   subheadline: "Most NEET droppers don't fail because of intelligence. They fail because their preparation system doesn't match the exam's demands.",
   intro: "NEET has become one of the most competitive examinations in India. With 20+ lakh students competing for 1 lakh MBBS seats, the margin between selection and non-selection is razor thin — often just 5-10 marks. In a drop year, the question isn't whether you can work harder. It's whether you can work smarter and more consistently than you did the last time.",
   challenges: [
@@ -102,7 +102,7 @@ const neetDroppers: UseCaseData = {
 const class11Students: UseCaseData = {
   slug: "class-11-students",
   audienceLabel: "Class 11 Students",
-  headline: "Kalnehi for Class 11 Students Preparing for JEE/NEET",
+  headline: "Kalnehi Daily for Class 11 Students Preparing for JEE/NEET",
   subheadline: "Class 11 is where exam preparation is won or lost. Most students realize this too late.",
   intro: "Class 11 is the foundation year for JEE and NEET. The concepts covered — mechanics, thermodynamics, organic chemistry fundamentals, cell biology — form 40-45% of both exams. Students who build strong Class 11 foundations with proper tracking and revision systems dramatically outperform those who treat Class 11 as 'less important' than Class 12.",
   challenges: [
@@ -129,7 +129,7 @@ const class11Students: UseCaseData = {
   faqs: [
     { q: "When should a Class 11 student start serious JEE/NEET preparation?", a: "From the first day of Class 11. The students who treat Class 11 seriously — covering concepts properly, building revision habits — consistently outperform those who 'get serious in Class 12'." },
     { q: "How many hours should a Class 11 student study beyond school and coaching?", a: "2-3 hours of focused self-study daily is a realistic and effective target. Quality matters more than quantity at this stage — building the habit of focused study is as important as the hours." },
-    { q: "Should I use Kalnehi if I go to coaching?", a: "Yes. Coaching covers concepts. Kalnehi tracks whether you've actually studied them, schedules revision, and helps you manage the time between coaching sessions. They serve different purposes." },
+    { q: "Should I use Kalnehi Daily if I go to coaching?", a: "Yes. Coaching covers concepts. Kalnehi Daily tracks whether you've actually studied them, schedules revision, and helps you manage the time between coaching sessions. They serve different purposes." },
   ],
   relatedExams: ["jee", "neet", "jee-main"],
   relatedFeatures: ["syllabus-tracker", "study-timer", "doubt-tracker", "daily-planner", "prepbrain-ai"],
@@ -138,9 +138,9 @@ const class11Students: UseCaseData = {
 const class12Students: UseCaseData = {
   slug: "class-12-students",
   audienceLabel: "Class 12 Students",
-  headline: "Kalnehi for Class 12 Students: Boards + JEE/NEET at the Same Time",
+  headline: "Kalnehi Daily for Class 12 Students: Boards + JEE/NEET at the Same Time",
   subheadline: "Class 12 is the year everything happens simultaneously. The students who survive it with good results in both boards and entrance exams have one thing in common: a system.",
-  intro: "Class 12 is unique in Indian education — students must prepare for board exams, JEE/NEET, and manage coaching, school, and personal life simultaneously. Most students underestimate the complexity until it's too late. Kalnehi is built to handle this multi-front preparation without sacrificing performance on any front.",
+  intro: "Class 12 is unique in Indian education — students must prepare for board exams, JEE/NEET, and manage coaching, school, and personal life simultaneously. Most students underestimate the complexity until it's too late. Kalnehi Daily is built to handle this multi-front preparation without sacrificing performance on any front.",
   challenges: [
     "Boards and entrance exams have overlapping but different syllabi — knowing what to prioritize when",
     "Coaching, school tests, and mock exams compete for the same time",
@@ -174,9 +174,9 @@ const class12Students: UseCaseData = {
 const upscWorkingProfessionals: UseCaseData = {
   slug: "upsc-working-professionals",
   audienceLabel: "UPSC Working Professionals",
-  headline: "Kalnehi for UPSC Aspirants Who Are Still Working",
+  headline: "Kalnehi Daily for UPSC Aspirants Who Are Still Working",
   subheadline: "Preparing for UPSC while employed is one of the hardest things an aspirant can choose to do. It requires every available hour to count.",
-  intro: "A significant portion of UPSC candidates — especially those preparing for Mains and Interview rounds — are working professionals. With 8-10 hours of professional commitments daily and UPSC's enormous syllabus spanning GS 1-4, Optional, and Essay, the margin for wasted time is zero. Kalnehi is designed to maximize the value of limited preparation hours.",
+  intro: "A significant portion of UPSC candidates — especially those preparing for Mains and Interview rounds — are working professionals. With 8-10 hours of professional commitments daily and UPSC's enormous syllabus spanning GS 1-4, Optional, and Essay, the margin for wasted time is zero. Kalnehi Daily is designed to maximize the value of limited preparation hours.",
   challenges: [
     "Limited study hours — typically 3-4 hours on weekdays, 6-8 on weekends",
     "Mental exhaustion after work reducing study effectiveness",
@@ -199,7 +199,7 @@ const upscWorkingProfessionals: UseCaseData = {
     { title: "Consistency Tracker", why: "Long preparation timelines (1-3 years) make consistency the primary variable. The tracker keeps you honest about whether you're actually studying on most days." },
   ],
   faqs: [
-    { q: "How many hours does a UPSC working professional need to study?", a: "Most successful candidates who prepared while working studied 4-6 hours daily on average. The key is actual focused hours, not total time at desk. Kalnehi's Study Timer tracks this precisely." },
+    { q: "How many hours does a UPSC working professional need to study?", a: "Most successful candidates who prepared while working studied 4-6 hours daily on average. The key is actual focused hours, not total time at desk. Kalnehi Daily's Study Timer tracks this precisely." },
     { q: "Should I quit my job to prepare for UPSC?", a: "This is a personal financial and risk decision. Many candidates clear UPSC while working. The advantage of continuing to work is financial stability and not having the pressure of 'I left everything for this'. A strong preparation system makes the dual life manageable." },
     { q: "How do I handle current affairs with limited time?", a: "Daily 30-45 minutes of structured current affairs reading (one good source) is more effective than 2 hours of scattered reading. Mastermind can help you identify the high-priority themes to track." },
     { q: "Can I prepare for UPSC Mains and work simultaneously?", a: "Yes, many candidates do. Mains requires answer writing practice — which can be done in 60-90 minute focused sessions. The key is consistency over months, not marathon sessions." },
@@ -211,7 +211,7 @@ const upscWorkingProfessionals: UseCaseData = {
 const caStudents: UseCaseData = {
   slug: "ca-students",
   audienceLabel: "CA Students",
-  headline: "Kalnehi for CA Foundation, Intermediate and Final Students",
+  headline: "Kalnehi Daily for CA Foundation, Intermediate and Final Students",
   subheadline: "CA examinations have among the lowest pass rates of any professional examination in India. The students who clear them on their first attempt have preparation systems, not just determination.",
   intro: "CA Foundation, CA Intermediate, and CA Final have a combined pass rate below 15% across both groups. The examinations are not just difficult — they're designed to test thorough understanding across Accounting, Law, Finance, and Taxation simultaneously. Preparation without a systematic approach to syllabus coverage and revision leads to failure regardless of hours spent.",
   challenges: [
@@ -237,7 +237,7 @@ const caStudents: UseCaseData = {
   faqs: [
     { q: "How should I manage CA Intermediate preparation during articleship?", a: "Morning sessions (5:30-7:30 AM) for revision of previous day's material, evening sessions (8-11 PM) for new content, and weekend deep dives for harder subjects. Mastermind can help you allocate time across subjects based on which exam group is sooner." },
     { q: "How many revisions does CA Inter need?", a: "Accounts and Law need at least 3-4 thorough revisions before the exam. Track each cycle with Revision Reminders so nothing is skipped. SFM and Taxation need problem-solving practice alongside reading." },
-    { q: "Can Kalnehi track ICAI amendments?", a: "The Syllabus Tracker lets you mark topics as 'current' or 'amended' so you know which sections need refreshing. Mastermind can remind you to check for amendments before exams." },
+    { q: "Can Kalnehi Daily track ICAI amendments?", a: "The Syllabus Tracker lets you mark topics as 'current' or 'amended' so you know which sections need refreshing. Mastermind can remind you to check for amendments before exams." },
   ],
   relatedExams: ["ca-foundation", "ca-intermediate", "ca-final"],
   relatedFeatures: ["syllabus-tracker", "spaced-revision", "prepbrain-ai", "study-timer", "consistency-tracker"],
@@ -246,7 +246,7 @@ const caStudents: UseCaseData = {
 const engineeringStudentsGate: UseCaseData = {
   slug: "engineering-students-gate",
   audienceLabel: "Engineering Students (GATE)",
-  headline: "Kalnehi for Engineering Students Preparing for GATE",
+  headline: "Kalnehi Daily for Engineering Students Preparing for GATE",
   subheadline: "GATE preparation alongside a B.Tech degree is uniquely challenging — you're covering advanced topics for an exam while managing coursework, projects, and placements.",
   intro: "GATE has become one of the most sought-after engineering examinations in India, with applications from IITs, PSUs, and research institutes all requiring strong GATE scores. Preparing for GATE during B.Tech means managing 4th year projects, placements, coursework, and GATE prep simultaneously — a juggling act that requires a system, not just motivation.",
   challenges: [

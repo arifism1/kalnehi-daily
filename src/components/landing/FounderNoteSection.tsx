@@ -25,7 +25,7 @@ export function FounderNoteSection() {
               K
             </div>
             <div>
-              <p className="text-sm font-bold text-kal-text">The Kalnehi Team</p>
+              <p className="text-sm font-bold text-kal-text">The Kalnehi Daily Team</p>
               <p className="text-xs text-kal-muted">Built in Bengaluru · For every aspirant in India</p>
             </div>
           </div>

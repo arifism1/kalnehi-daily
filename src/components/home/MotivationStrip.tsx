@@ -88,7 +88,7 @@ export function MotivationStrip() {
           id="motivation-heading"
           className="text-[0.6rem] font-semibold uppercase tracking-[0.22em] text-kal-accent sm:text-[0.65rem] sm:tracking-[0.28em]"
         >
-          Capture your why
+          My Purpose
         </h2>
       </div>
       {!hasPhotos ? (
@@ -103,11 +103,11 @@ export function MotivationStrip() {
           — master the reason you execute
         </p>
       ) : (
-        <div className="flex justify-center gap-2 overflow-x-auto overflow-y-hidden overscroll-x-contain [touch-action:pan-x] pb-1 sm:gap-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex gap-2 overflow-x-auto overflow-y-hidden overscroll-x-contain [touch-action:pan-x] pb-1 sm:gap-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {rows.map((r) => (
             <figure
               key={r.slot}
-              className="w-[28%] min-w-[88px] shrink-0 overflow-hidden rounded-2xl border border-kal-border bg-kal-card-muted kal-shadow-card"
+              className="w-[30%] min-w-[96px] flex-1 shrink-0 overflow-hidden rounded-2xl border border-kal-border bg-kal-card-muted kal-shadow-card"
             >
               <button
                 type="button"

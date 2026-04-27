@@ -53,19 +53,19 @@ const SYLLABUS = [
 
 const FAQS = [
   {
-    question: "How does Kalnehi help NEET aspirants track their syllabus?",
+    question: "How does Kalnehi Daily help NEET aspirants track their syllabus?",
     answer:
-      "Kalnehi lets you mark every NEET chapter in Biology, Physics and Chemistry at the microtopic level — Not started, In progress, Done, or Needs revision. Mastermind then cross-references your completion with NEET historical question patterns and tells you which chapters to prioritise next.",
+      "Kalnehi Daily lets you mark every NEET chapter in Biology, Physics and Chemistry at the microtopic level — Not started, In progress, Done, or Needs revision. Mastermind then cross-references your completion with NEET historical question patterns and tells you which chapters to prioritise next.",
   },
   {
-    question: "Biology is 90 marks in NEET — how does Kalnehi help me prioritise it?",
+    question: "Biology is 90 marks in NEET — how does Kalnehi Daily help me prioritise it?",
     answer:
       "Mastermind knows which Biology chapters appear most in NEET question papers (Genetics, Human Physiology, Ecology consistently dominate). It reads your syllabus completion and flags the high-weightage chapters you haven't finished yet — so you get maximum marks per hour of study.",
   },
   {
-    question: "Can I use Kalnehi for both NEET UG and NEET PG?",
+    question: "Can I use Kalnehi Daily for both NEET UG and NEET PG?",
     answer:
-      "Yes, Kalnehi supports both. NEET UG is for class 12 graduates targeting MBBS/BDS. NEET PG is for medical graduates targeting MD/MS. Each has a different syllabus and we have separate landing pages for each. You set your exam in the app.",
+      "Yes, Kalnehi Daily supports both. NEET UG is for class 12 graduates targeting MBBS/BDS. NEET PG is for medical graduates targeting MD/MS. Each has a different syllabus and we have separate landing pages for each. You set your exam in the app.",
   },
   {
     question: "Is voice control useful for NEET prep?",
@@ -103,7 +103,7 @@ export default function NeetPage() {
         <ExamHero
           badge="NEET UG"
           headline="NEET Preparation Daily Planner — Track Biology, Physics & Chemistry Without Losing a Single Chapter"
-          subheadline="97 chapters. 180 questions. One exam that decides your medical future. Kalnehi maps NEET's entire syllabus to a daily plan you can actually execute — day after day, month after month."
+          subheadline="97 chapters. 180 questions. One exam that decides your medical future. Kalnehi Daily maps NEET's entire syllabus to a daily plan you can actually execute — day after day, month after month."
           stats={[
             { value: "97", label: "NEET chapters tracked" },
             { value: "3 subjects", label: "Biology · Physics · Chemistry" },
@@ -114,12 +114,12 @@ export default function NeetPage() {
         {/* Section 2 — Syllabus */}
         <section className="space-y-5" aria-labelledby="neet-syllabus">
           <h2 id="neet-syllabus" className="text-xl font-bold text-kal-text">
-            How Kalnehi maps to the NEET syllabus
+            How Kalnehi Daily maps to the NEET syllabus
           </h2>
           <p className="text-sm leading-relaxed text-kal-text-secondary">
             NEET has a well-defined syllabus based on NCERT class 11 and 12 content. The challenge is not
             knowing the syllabus — it's tracking 97 chapters across 3 subjects while also attending
-            coaching, writing mock tests, and revising. Kalnehi gives you that structure.
+            coaching, writing mock tests, and revising. Kalnehi Daily gives you that structure.
           </p>
           <div className="grid gap-4 sm:grid-cols-3">
             {SYLLABUS.map(({ subject, chapters }) => (
@@ -138,7 +138,7 @@ export default function NeetPage() {
             ))}
           </div>
           <p className="text-sm text-kal-text-secondary">
-            Biology is worth 360 marks in NEET — twice the weight of Physics or Chemistry. Kalnehi's
+            Biology is worth 360 marks in NEET — twice the weight of Physics or Chemistry. Kalnehi Daily's
             syllabus tracker helps you ensure you're spending proportional time on what matters most.
           </p>
         </section>

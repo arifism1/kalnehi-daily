@@ -10,7 +10,7 @@ export function DataAndThisDeviceSection() {
     <SettingsExpandableSection
       sectionId="data-device"
       title="Data & this device"
-      description="What lives on your phone or laptop vs. on Kalnehi servers."
+      description="What lives on your phone or laptop vs. on Kalnehi Daily servers."
       icon={Database}
       defaultOpen={false}
     >
@@ -19,7 +19,7 @@ export function DataAndThisDeviceSection() {
           <li>
             <strong className="text-kal-text">Account &amp; study data</strong>{" "}
             (tasks, plans, habits, profile, Mastermind history, and similar) is
-            stored in your Kalnehi account on our database. It is not removed when
+            stored in your Kalnehi Daily account on our database. It is not removed when
             you only clear image/file cache. Preferences under Settings (theme,
             sounds, study camera options, etc.) are mirrored to your account when
             signed in so they can follow you across devices.

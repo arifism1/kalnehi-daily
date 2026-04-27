@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { UnifiedDailyPlanList } from "@/components/planner/UnifiedDailyPlanList";
+import { SavedPlansEmptyIllustration } from "@/components/illustrations/SavedPlansEmptyIllustration";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import {
   getSavedPlansDateWindow,
@@ -235,7 +236,8 @@ export function SavedPlansPageContent() {
       ) : null}
 
       {showEmptyState ? (
-        <div className="kal-glass-panel rounded-3xl border border-dashed border-kal-border px-6 py-12 text-center">
+        <div className="kal-glass-panel rounded-3xl border border-dashed border-kal-border px-6 py-10 text-center">
+          <SavedPlansEmptyIllustration className="mx-auto mb-2 h-auto w-44" />
           <p className="text-base font-semibold text-kal-text">No saved plans in this range yet</p>
           <p className="mt-2 text-sm text-kal-muted">
             Start with today&apos;s planner and your plans will appear here automatically.

@@ -42,7 +42,7 @@ export function KalnehiMark({ className, ...props }: KalnehiMarkProps) {
         fontWeight="700"
         letterSpacing="0.14em"
       >
-        WIN DAILY
+        DAILY
       </text>
     </svg>
   );

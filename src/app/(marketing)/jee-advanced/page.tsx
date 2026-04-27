@@ -10,13 +10,13 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 export const metadata = marketingPageMetadata({
   path: "/jee-advanced",
   title: `Daily Planner for JEE Advanced Preparation | ${SITE_NAME}`,
-  description: `JEE Advanced is one of the toughest undergraduate entrance exams in the world. Kalnehi helps you build the depth, problem-solving volume and daily consistency that Advanced demands.`,
+  description: `JEE Advanced is one of the toughest undergraduate entrance exams in the world. Kalnehi Daily helps you build the depth, problem-solving volume and daily consistency that Advanced demands.`,
 });
 
 const FAQS = [
   { question: "What makes JEE Advanced different from JEE Main?", answer: "JEE Advanced tests deeper conceptual understanding, multi-concept problems, and application under pressure. The same PCM topics appear, but at significantly higher difficulty. You can't get away with NCERT-level understanding alone — you need JEE Advanced-specific problem practice." },
-  { question: "How many hours should I study for JEE Advanced?", answer: "Most IIT toppers report 8-12 focused hours per day in the peak phase. But quantity alone doesn't decide rank — the quality of problem-solving practice and revision consistency is what separates 99 percentile from rank 1-500. Kalnehi helps you track both hours and quality." },
-  { question: "Can Kalnehi help me track both Main and Advanced preparation at once?", answer: "Yes. Set up your JEE Main date and JEE Advanced date separately. Kalnehi will help you plan the Main phase first, then shift automatically to Advanced-specific depth and problem sets." },
+  { question: "How many hours should I study for JEE Advanced?", answer: "Most IIT toppers report 8-12 focused hours per day in the peak phase. But quantity alone doesn't decide rank — the quality of problem-solving practice and revision consistency is what separates 99 percentile from rank 1-500. Kalnehi Daily helps you track both hours and quality." },
+  { question: "Can Kalnehi Daily help me track both Main and Advanced preparation at once?", answer: "Yes. Set up your JEE Main date and JEE Advanced date separately. Kalnehi Daily will help you plan the Main phase first, then shift automatically to Advanced-specific depth and problem sets." },
   { question: "How does Mastermind help for JEE Advanced?", answer: "Mastermind identifies which advanced-level topics you haven't solved problems for. It tracks which problem types from previous Advanced papers you've covered and which need more practice. For JEE Advanced, problem coverage matters as much as chapter completion." },
 ];
 
@@ -49,7 +49,7 @@ export default function JeeAdvancedPage() {
             </div>
             <div className="kal-glass-card rounded-xl p-4">
               <strong className="text-kal-text block mb-1">Mock test review discipline</strong>
-              <p className="text-kal-text-secondary">Every JEE Advanced mock you write should have a 4-hour review session. Kalnehi helps you plan and track mock review as a dedicated study session type — separate from regular prep.</p>
+              <p className="text-kal-text-secondary">Every JEE Advanced mock you write should have a 4-hour review session. Kalnehi Daily helps you plan and track mock review as a dedicated study session type — separate from regular prep.</p>
             </div>
           </div>
         </section>

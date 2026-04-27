@@ -44,7 +44,7 @@ export function HeroSection() {
           </h1>
 
           <p className="mb-8 max-w-lg text-lg leading-relaxed text-kal-text-secondary">
-            Kalnehi is the voice-controlled exam prep tracker for JEE, NEET, UPSC &amp; all
+            Kalnehi Daily is the voice-controlled exam prep tracker for JEE, NEET, UPSC &amp; all
             competitive exams. Dictate tasks, track syllabus progress, and build the discipline
             that ranks you higher.
           </p>

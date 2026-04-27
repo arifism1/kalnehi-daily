@@ -142,7 +142,7 @@ export type OutboxMutation = {
     time_end: string | null;
     priority: string;
     status: string;
-    source: "typed" | "voice" | "handwritten";
+    source: "typed" | "voice" | "handwritten" | "moved" | "revision";
     source_raw_text: string | null;
     syllabus_master_id?: string | null;
   };

@@ -77,7 +77,7 @@ async function BlogIndex({ searchParams }: { searchParams: Promise<BlogSearch> }
         <header className="space-y-4">
           <p className="inline-flex items-center gap-1.5 rounded-full border border-kal-accent/25 bg-kal-accent-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-kal-accent-dark">
             <span className="h-1.5 w-1.5 rounded-full bg-kal-accent" aria-hidden />
-            Kalnehi Blog
+            Kalnehi Daily Blog
           </p>
           <h1 className="kal-feature-title">Study Strategy for Indian Competitive Exams</h1>
           <p className="max-w-2xl text-base text-kal-text-secondary">

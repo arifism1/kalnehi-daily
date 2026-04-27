@@ -6,7 +6,7 @@ import { ContactForm } from "@/components/marketing/ContactForm";
 export const metadata = marketingPageMetadata({
   path: "/contact",
   title: `Contact Kalnehi Daily | ${SITE_NAME}`,
-  description: `Reach the Kalnehi team for support, feedback, feature requests, or billing questions. We read and respond to every message.`,
+  description: `Reach the Kalnehi Daily team for support, feedback, feature requests, or billing questions. We read and respond to every message.`,
 });
 
 export default function ContactPage() {

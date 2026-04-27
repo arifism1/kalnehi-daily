@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Loader2, Lock } from "lucide-react";
+import { Lock } from "lucide-react";
 
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
+import { KalSpinner } from "@/components/loading/KalSpinner";
 import {
   isFeatureBlocked,
   FEATURE_LABELS,
@@ -22,7 +23,7 @@ export function FeatureGate({ feature, children }: Props) {
   if (loading) {
     return (
       <div className="flex min-h-[200px] items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-kal-accent/60" aria-label="Loading…" />
+        <KalSpinner size="md" />
       </div>
     );
   }

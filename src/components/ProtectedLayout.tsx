@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { isLegalPath } from "@/lib/legal-paths";
 import { isPublicMarketingPath } from "@/lib/public-paths";
 import { useAuthStore } from "@/store/useAuthStore";
+import { KalSpinner } from "@/components/loading/KalSpinner";
 
 function isPublicUnauthedPath(pathname: string) {
   return isLegalPath(pathname) || isPublicMarketingPath(pathname);
@@ -32,10 +33,10 @@ export function ProtectedLayout({ children }: { children: React.ReactNode }) {
   if (!initialized) {
     return (
       <div
-        className="flex min-h-[50vh] flex-1 items-center justify-center text-sm text-kal-muted"
+        className="flex min-h-[50vh] flex-1 items-center justify-center"
         aria-busy="true"
       >
-        Loading…
+        <KalSpinner size="lg" />
       </div>
     );
   }

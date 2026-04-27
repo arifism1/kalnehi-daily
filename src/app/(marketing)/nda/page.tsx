@@ -10,14 +10,14 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 export const metadata = marketingPageMetadata({
   path: "/nda",
   title: `Daily Planner for NDA Preparation | ${SITE_NAME}`,
-  description: `NDA has a Maths paper (300 marks) and a General Ability Test (600 marks). Kalnehi tracks your preparation, helps you plan daily study blocks, and ensures Maths and GAT get balanced coverage.`,
+  description: `NDA has a Maths paper (300 marks) and a General Ability Test (600 marks). Kalnehi Daily tracks your preparation, helps you plan daily study blocks, and ensures Maths and GAT get balanced coverage.`,
 });
 
 const FAQS = [
   { question: "What is the NDA exam structure?", answer: "NDA has two written papers. Paper I: Mathematics (120 questions, 300 marks, 2.5 hours). Paper II: General Ability Test — English (200 marks) + General Knowledge (400 marks) covering Physics, Chemistry, General Science, History, Geography, and Current Events. Total: 900 marks written + 900 marks SSB interview." },
-  { question: "Can I prepare for NDA while in Class 12?", answer: "Yes. NDA Maths is largely Class 11-12 level. The GAT covers General Science and Social Studies broadly. Most NDA aspirants start preparation in Class 11. Kalnehi helps you plan NDA prep alongside Board studies." },
-  { question: "How does Kalnehi help NDA aspirants?", answer: "Kalnehi tracks your NDA Maths chapter completion (Algebra, Trigonometry, Calculus, Vectors, Statistics) and your GAT subject coverage (Physics, Chemistry, History, Geography). Mastermind ensures you're not spending all your time on Maths while GAT gets neglected." },
-  { question: "What is the NDA cutoff?", answer: "NDA cutoffs vary by year and category. The written exam cutoff (to qualify for SSB) is typically 300-360/900. The final cutoff after SSB is typically 720-750/1800. Kalnehi's marks engine helps you target the written paper cutoff specifically." },
+  { question: "Can I prepare for NDA while in Class 12?", answer: "Yes. NDA Maths is largely Class 11-12 level. The GAT covers General Science and Social Studies broadly. Most NDA aspirants start preparation in Class 11. Kalnehi Daily helps you plan NDA prep alongside Board studies." },
+  { question: "How does Kalnehi Daily help NDA aspirants?", answer: "Kalnehi Daily tracks your NDA Maths chapter completion (Algebra, Trigonometry, Calculus, Vectors, Statistics) and your GAT subject coverage (Physics, Chemistry, History, Geography). Mastermind ensures you're not spending all your time on Maths while GAT gets neglected." },
+  { question: "What is the NDA cutoff?", answer: "NDA cutoffs vary by year and category. The written exam cutoff (to qualify for SSB) is typically 300-360/900. The final cutoff after SSB is typically 720-750/1800. Kalnehi Daily's marks engine helps you target the written paper cutoff specifically." },
 ];
 
 export default function NdaPage() {
@@ -33,11 +33,11 @@ export default function NdaPage() {
         <ExamHero
           badge="NDA — National Defence Academy"
           headline="NDA Preparation Daily Planner — Maths + GAT Balanced Every Single Day"
-          subheadline="NDA tests mathematical ability and general knowledge simultaneously. The students who clear the written exam don't just know Maths well — they've covered all 6 GAT subjects too. Kalnehi ensures you don't fall behind on either."
+          subheadline="NDA tests mathematical ability and general knowledge simultaneously. The students who clear the written exam don't just know Maths well — they've covered all 6 GAT subjects too. Kalnehi Daily ensures you don't fall behind on either."
         />
 
         <section className="space-y-4" aria-labelledby="nda-syllabus">
-          <h2 id="nda-syllabus" className="text-xl font-bold text-kal-text">NDA syllabus tracked in Kalnehi</h2>
+          <h2 id="nda-syllabus" className="text-xl font-bold text-kal-text">NDA syllabus tracked in Kalnehi Daily</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {[
               { p: "Paper I: Mathematics (300 marks)", topics: ["Algebra, Matrices, Determinants", "Trigonometry", "Analytical Geometry (2D & 3D)", "Differential Calculus & Integral Calculus", "Vector Algebra, Statistics & Probability"] },

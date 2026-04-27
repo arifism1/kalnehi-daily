@@ -75,7 +75,7 @@ export default async function UseCasePage({ params }: Props) {
         </section>
 
         <section className="space-y-4">
-          <h2 className="text-base font-semibold text-kal-text">A day in the life with Kalnehi</h2>
+          <h2 className="text-base font-semibold text-kal-text">A day in the life with Kalnehi Daily</h2>
           <div className="rounded-2xl border border-kal-border overflow-hidden">
             {data.dayInTheLife.map((entry, i) => (
               <div
@@ -96,7 +96,7 @@ export default async function UseCasePage({ params }: Props) {
 
         <section className="space-y-4">
           <h2 className="text-base font-semibold text-kal-text">
-            Key Kalnehi features for {data.audienceLabel.toLowerCase()}
+            Key Kalnehi Daily features for {data.audienceLabel.toLowerCase()}
           </h2>
           <div className="grid gap-4 sm:grid-cols-2">
             {data.features.map((feature) => (
@@ -132,7 +132,7 @@ export default async function UseCasePage({ params }: Props) {
                       href={`/${exam}`}
                       className="rounded-full border border-kal-border px-4 py-1.5 text-sm font-medium text-kal-text-secondary hover:border-kal-accent/40 hover:text-kal-accent-dark transition-colors"
                     >
-                      Kalnehi for /{exam}
+                      Kalnehi Daily for /{exam}
                     </Link>
                   ))}
                 </div>

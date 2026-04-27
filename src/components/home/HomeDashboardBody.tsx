@@ -2,6 +2,7 @@
 
 import { addDays, format, parseISO } from "date-fns";
 import { useEffect, useMemo, useRef } from "react";
+import { motion } from "framer-motion";
 
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useDailyPlanHomeExecution } from "@/hooks/useDailyPlanHomeExecution";
@@ -335,60 +336,90 @@ export function HomeDashboardBody({
   void effectiveTodayDone;
 
   return (
-    <>
-      {/* Section A — Hero card */}
-      <HomeHeroCard
-        firstName={firstName}
-        greetingLead={greetingLead}
-        syllabusMasteryPercent={syllabusMasteryPercent}
-        marksMastered={mastered}
-        marksTotal={total}
-        projectedScoreCaption={projectedScoreCaption}
-        todayPercent={effectiveTodayPercent}
-        todayTaskCount={effectiveTodayTotal}
-        examDisplayName={allExamsDisplayName}
-        examRollups={examRollups ?? undefined}
-        examDates={examDates}
-        showProjScore={showProjScore}
+    <div className="relative">
+      {/* Ambient accent orb — GPU-composited, single layer, very subtle */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-16 right-0 h-72 w-72 rounded-full blur-3xl"
+        style={{
+          background: "radial-gradient(circle, var(--kal-accent-glow) 0%, transparent 70%)",
+          animation: "kal-fade-in 1.2s ease forwards, orb-drift 14s ease-in-out infinite alternate",
+          willChange: "transform",
+          opacity: 0.45,
+        }}
       />
 
-      {/* Section B — Daily motivational line */}
-      {!dailyPhraseLoading && dailyPhrase && (
-        <p
-          className="text-center font-serif text-[15px] font-normal italic leading-relaxed text-kal-muted"
-          aria-label={`Today's line: ${dailyPhrase.phrase}`}
-        >
-          &ldquo;{dailyPhrase.phrase}&rdquo;
-          {dailyPhrase.author && (
-            <span className="mt-0.5 block font-sans text-xs not-italic text-kal-muted">
-              — {dailyPhrase.author}
-            </span>
-          )}
-        </p>
-      )}
+      <motion.div
+        className="flex flex-col gap-6 sm:gap-8"
+        initial="hidden"
+        animate="show"
+        variants={{ show: { transition: { staggerChildren: 0.055 } } }}
+      >
+        {/* Section A — Hero card */}
+        <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transition: { duration: 0.32 } } }}>
+          <HomeHeroCard
+            firstName={firstName}
+            greetingLead={greetingLead}
+            syllabusMasteryPercent={syllabusMasteryPercent}
+            marksMastered={mastered}
+            marksTotal={total}
+            projectedScoreCaption={projectedScoreCaption}
+            todayPercent={effectiveTodayPercent}
+            todayTaskCount={effectiveTodayTotal}
+            examDisplayName={allExamsDisplayName}
+            examRollups={examRollups ?? undefined}
+            examDates={examDates}
+            showProjScore={showProjScore}
+          />
+        </motion.div>
 
-      {/* Section C — Purpose mode strip (conditional on purposeModeEnabled) */}
-      <MotivationStrip />
+        {/* Section B — Daily motivational line */}
+        {!dailyPhraseLoading && dailyPhrase && (
+          <motion.p
+            variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transition: { duration: 0.32 } } }}
+            className="text-center font-serif text-[15px] font-normal italic leading-relaxed text-kal-muted"
+            aria-label={`Today's line: ${dailyPhrase.phrase}`}
+          >
+            &ldquo;{dailyPhrase.phrase}&rdquo;
+            {dailyPhrase.author && (
+              <span className="mt-0.5 block font-sans text-xs not-italic text-kal-muted">
+                — {dailyPhrase.author}
+              </span>
+            )}
+          </motion.p>
+        )}
 
-      {/* Section D — Priority strip */}
-      <HomePriorityStrip />
+        {/* Section C — Purpose mode strip */}
+        <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transition: { duration: 0.32 } } }}>
+          <MotivationStrip />
+        </motion.div>
 
-      {/* Section E — All 18 features grid */}
-      <HomeFeatureGrid
-        syllabusMasteryPercent={syllabusMasteryPercent}
-        marksMastered={mastered}
-        marksTotal={total}
-        todayPercent={effectiveTodayPercent}
-        todayTaskCount={effectiveTodayTotal}
-      />
+        {/* Section D — Priority strip */}
+        <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transition: { duration: 0.32 } } }}>
+          <HomePriorityStrip />
+        </motion.div>
 
-      {/* Section F — 3-day execution */}
-      <ThreeDayStrip
-        yesterdayPercent={yesterdayStripPercent}
-        todayPercent={todayStripPercent}
-        tomorrowTaskCount={dailyExec.tomorrow.taskCount}
-        tomorrowMinutes={dailyExec.tomorrow.totalMinutes}
-      />
-    </>
+        {/* Section E — All features grid */}
+        <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transition: { duration: 0.32 } } }}>
+          <HomeFeatureGrid
+            syllabusMasteryPercent={syllabusMasteryPercent}
+            marksMastered={mastered}
+            marksTotal={total}
+            todayPercent={effectiveTodayPercent}
+            todayTaskCount={effectiveTodayTotal}
+          />
+        </motion.div>
+
+        {/* Section F — 3-day execution */}
+        <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transition: { duration: 0.32 } } }}>
+          <ThreeDayStrip
+            yesterdayPercent={yesterdayStripPercent}
+            todayPercent={todayStripPercent}
+            tomorrowTaskCount={dailyExec.tomorrow.taskCount}
+            tomorrowMinutes={dailyExec.tomorrow.totalMinutes}
+          />
+        </motion.div>
+      </motion.div>
+    </div>
   );
 }

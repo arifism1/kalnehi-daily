@@ -10,14 +10,14 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 export const metadata = marketingPageMetadata({
   path: "/upsc-prelims",
   title: `Daily Planner for UPSC Prelims Preparation | ${SITE_NAME}`,
-  description: `UPSC Prelims (GS Paper I + CSAT) is the first filter in the CSE journey. Kalnehi tracks your GS topics, current affairs habit, and mock scores — and helps you plan each day with Mastermind.`,
+  description: `UPSC Prelims (GS Paper I + CSAT) is the first filter in the CSE journey. Kalnehi Daily tracks your GS topics, current affairs habit, and mock scores — and helps you plan each day with Mastermind.`,
 });
 
 const FAQS = [
   { question: "What is the UPSC Prelims structure?", answer: "UPSC Prelims has two papers — GS Paper I (100 questions, 200 marks, negative marking) covering History, Polity, Geography, Economy, Environment, Science & Technology and Current Affairs; and CSAT Paper II (80 questions, 200 marks, qualifying — 33% required). Only GS Paper I marks are counted for cutoff." },
-  { question: "How many months of preparation is needed for UPSC Prelims?", answer: "Most successful candidates dedicate 6-12 months of focused preparation for Prelims. Current Affairs requires daily engagement throughout this entire period. Kalnehi tracks both your static syllabus completion and your daily current affairs reading habit." },
-  { question: "How does Kalnehi help UPSC Prelims aspirants?", answer: "Kalnehi tracks your GS1 topic completion across History, Polity, Geography, Economy and Environment. It tracks your daily newspaper reading as a habit. Mastermind monitors your mock scores and tells you which GS topics are your weakest areas based on your test performance." },
-  { question: "What is the UPSC Prelims cutoff?", answer: "The Prelims cutoff (GS Paper I) varies each year — typically between 90-110 marks (out of 200) for General category. It fluctuates based on paper difficulty. Kalnehi's mock score tracking helps you gauge your readiness against previous year cutoffs." },
+  { question: "How many months of preparation is needed for UPSC Prelims?", answer: "Most successful candidates dedicate 6-12 months of focused preparation for Prelims. Current Affairs requires daily engagement throughout this entire period. Kalnehi Daily tracks both your static syllabus completion and your daily current affairs reading habit." },
+  { question: "How does Kalnehi Daily help UPSC Prelims aspirants?", answer: "Kalnehi Daily tracks your GS1 topic completion across History, Polity, Geography, Economy and Environment. It tracks your daily newspaper reading as a habit. Mastermind monitors your mock scores and tells you which GS topics are your weakest areas based on your test performance." },
+  { question: "What is the UPSC Prelims cutoff?", answer: "The Prelims cutoff (GS Paper I) varies each year — typically between 90-110 marks (out of 200) for General category. It fluctuates based on paper difficulty. Kalnehi Daily's mock score tracking helps you gauge your readiness against previous year cutoffs." },
 ];
 
 export default function UpscPrelimsPage() {
@@ -37,7 +37,7 @@ export default function UpscPrelimsPage() {
         />
 
         <section className="space-y-4" aria-labelledby="prelims-gs">
-          <h2 id="prelims-gs" className="text-xl font-bold text-kal-text">GS Paper I topics tracked in Kalnehi</h2>
+          <h2 id="prelims-gs" className="text-xl font-bold text-kal-text">GS Paper I topics tracked in Kalnehi Daily</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {[
               { area: "History", topics: ["Ancient India (Indus Valley to Gupta)", "Medieval India (Delhi Sultanate, Mughals)", "Modern India (British Rule, Independence Movement)", "Art & Culture, World History"] },

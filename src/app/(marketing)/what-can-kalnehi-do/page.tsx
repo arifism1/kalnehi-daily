@@ -6,7 +6,7 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 
 export const metadata = marketingPageMetadata({
   path: "/what-can-kalnehi-do",
-  title: `What Can Kalnehi Do? — complete feature tour for JEE, NEET & UPSC | ${SITE_NAME}`,
+  title: `What Can Kalnehi Daily Do? — complete feature tour for JEE, NEET & UPSC | ${SITE_NAME}`,
   description: `Every feature of Kalnehi Daily in one place: Daily Plan, Syllabus Tracker, Execution Planner, Marks Engine, Revision Reminders, Focus Timer, Consistency Heatmap, Habit Maker, Brain Yoga, Mastermind, AI voice dictation, Doubt Tracker, Personal Motivation Vault, Daily Log, push notifications and reminders — built for JEE, NEET, UPSC and Boards. Start with a 3-day free trial, no card required.`,
 });
 
@@ -16,7 +16,7 @@ export default function WhatCanKalnehiDoPage() {
       <MarketingPageJsonLd
         breadcrumbs={[
           { name: "Home", path: "/" },
-          { name: "What Can Kalnehi Do?", path: "/what-can-kalnehi-do" },
+          { name: "What Can Kalnehi Daily Do?", path: "/what-can-kalnehi-do" },
         ]}
         faqs={[
           {
@@ -30,7 +30,7 @@ export default function WhatCanKalnehiDoPage() {
               "New accounts get a 3-day free trial — every feature unlocked, no card required. After 3 days, subscribe to Smart Plan (₹399/month) to continue.",
           },
           {
-            question: "Can I install Kalnehi like an app?",
+            question: "Can I install Kalnehi Daily like an app?",
             answer:
               "Yes. After signing in, install the PWA from your browser for a full-screen study shell and offline-friendly caching.",
           },
@@ -39,7 +39,7 @@ export default function WhatCanKalnehiDoPage() {
 
       <Breadcrumbs items={[
           { name: "Home", path: "/" },
-          { name: "What Can Kalnehi Do?", path: "/what-can-kalnehi-do" },
+          { name: "What Can Kalnehi Daily Do?", path: "/what-can-kalnehi-do" },
         ]} className="mb-2" />
       <WhatCanKalnehiDoClient />
     </>

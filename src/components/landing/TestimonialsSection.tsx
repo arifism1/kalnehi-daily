@@ -3,7 +3,7 @@ const WALKTHROUGH = [
     time: "6:58 AM",
     icon: "🎙",
     title: "Dictate My Day",
-    action: "Speak your plan out loud. Kalnehi parses it into tasks.",
+    action: "Speak your plan out loud. Kalnehi Daily parses it into tasks.",
     detail: "\"Study Thermo chapter 12, revise Optics, do 20 Maths questions\" → 3 tasks, scheduled.",
   },
   {

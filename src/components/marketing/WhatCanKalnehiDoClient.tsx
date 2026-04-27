@@ -255,7 +255,7 @@ export function WhatCanKalnehiDoClient() {
             Quick tour ✨
           </p>
           <h1 className="kal-hero-heading text-balance">
-            What Can Kalnehi Do?
+            What Can Kalnehi Daily Do?
           </h1>
           <p className="mx-auto max-w-xl text-pretty text-base font-medium leading-relaxed text-kal-text-secondary sm:text-lg">
             Your voice-controlled exam prep companion

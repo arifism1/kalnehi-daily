@@ -9,6 +9,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { useTargetExamDate } from "@/hooks/useTargetExamDate";
 import { useSettingsStore } from "@/store/useSettingsStore";
+import { KalSpinner } from "@/components/loading/KalSpinner";
 
 function localStartOfExamDay(yyyyMmDd: string): Date {
   const [y, m, d] = yyyyMmDd.split("-").map(Number);
@@ -85,9 +86,9 @@ export function ExamCountdownHero() {
 
   if (loading) {
     return (
-      <div className="px-4 py-8 text-center sm:px-5 sm:py-12">
-        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-kal-accent/30 border-t-kal-accent" />
-        <p className="mt-4 text-sm text-kal-muted">Syncing exam clock…</p>
+      <div className="flex flex-col items-center gap-3 px-4 py-8 text-center sm:px-5 sm:py-12">
+        <KalSpinner size="sm" />
+        <p className="text-sm text-kal-muted">Syncing exam clock…</p>
       </div>
     );
   }

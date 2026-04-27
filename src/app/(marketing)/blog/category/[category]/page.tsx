@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props) {
   return marketingPageMetadata({
     path: `/blog/category/${category}`,
     title: `${label} Articles | ${SITE_NAME}`,
-    description: `Articles, guides and study strategies for ${label} preparation — from Kalnehi.`,
+    description: `Articles, guides and study strategies for ${label} preparation — from Kalnehi Daily.`,
     noindex: true,
   });
 }

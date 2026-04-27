@@ -119,16 +119,26 @@ export async function POST() {
       });
     }
 
-    const payload = dangerZonePayload();
-    const { sent } = await sendFcmToUserTokens(sdk.messaging, user.id, {
-      title: payload.title,
-      body: payload.body,
-      data: payload.data
-        ? Object.fromEntries(
-            Object.entries(payload.data).map(([k, v]) => [k, String(v)]),
-          )
-        : undefined,
-    });
+    // Budget is now consumed. Any throw below must refund both budget and
+    // dedupe lock so the user's daily quota is not permanently leaked.
+    let sent = 0;
+    try {
+      const payload = dangerZonePayload();
+      const result = await sendFcmToUserTokens(sdk.messaging, user.id, {
+        title: payload.title,
+        body: payload.body,
+        data: payload.data
+          ? Object.fromEntries(
+              Object.entries(payload.data).map(([k, v]) => [k, String(v)]),
+            )
+          : undefined,
+      });
+      sent = result.sent;
+    } catch (sendErr) {
+      await refundAutomatedPushBudget(admin, user.id, dateKey);
+      await releaseSystemPushDedupe(admin, user.id, SYSTEM_PUSH_KIND.danger, dateKey);
+      throw sendErr;
+    }
 
     if (sent === 0) {
       await refundAutomatedPushBudget(admin, user.id, dateKey);

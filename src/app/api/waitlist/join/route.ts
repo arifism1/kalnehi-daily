@@ -80,24 +80,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Service unavailable." }, { status: 503 });
   }
 
-  // Upsert and read back the attempt count atomically.
-  const { data: rlRow, error: rlErr } = await admin
-    .from("waitlist_join_rate_limits" as never)
-    .upsert(
-      { ip_hash: ipHash, window_start: windowStart, attempt_count: 1 } as never,
-      { onConflict: "ip_hash,window_start", ignoreDuplicates: false },
-    )
-    .select("attempt_count")
-    .maybeSingle();
+  // Atomically increment and read back the attempt count.
+  const { data: attemptCount, error: rlErr } = await admin.rpc(
+    "increment_waitlist_join_attempt" as never,
+    { p_ip_hash: ipHash, p_window_start: windowStart } as never,
+  );
 
-  if (!rlErr && rlRow) {
-    const count = (rlRow as { attempt_count: number }).attempt_count;
-    if (count > RATE_LIMIT_MAX) {
-      return NextResponse.json(
-        { ok: false, error: "Too many requests. Please try again later." },
-        { status: 429, headers: { "Retry-After": "600" } },
-      );
-    }
+  if (!rlErr && (attemptCount as number) > RATE_LIMIT_MAX) {
+    return NextResponse.json(
+      { ok: false, error: "Too many requests. Please try again later." },
+      { status: 429, headers: { "Retry-After": "600" } },
+    );
   }
 
   // Try to get session (optional — user may join before auth).

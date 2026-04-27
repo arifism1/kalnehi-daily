@@ -1,6 +1,7 @@
-import { Loader2 } from "lucide-react";
+import { KalShimmerBlock } from "@/components/loading/KalShimmerBlock";
+import { KalSpinner } from "@/components/loading/KalSpinner";
 
-/** Soft card + shimmer + spinner for lazy route loading (light premium theme). */
+/** Shimmer skeleton + orbital spinner for lazy-route loading (30+ routes). */
 export function RoutePageSkeleton() {
   return (
     <div
@@ -9,17 +10,14 @@ export function RoutePageSkeleton() {
       aria-label="Loading page"
     >
       <div className="kal-glass-panel rounded-2xl p-6">
-        <div className="h-3 w-20 animate-pulse rounded-md bg-kal-card-muted" />
-        <div className="mt-4 h-8 w-2/3 max-w-xs animate-pulse rounded-lg bg-kal-card-muted" />
-        <div className="mt-3 h-3 w-full max-w-lg animate-pulse rounded bg-kal-card-muted/90" />
-        <div className="mt-2 h-3 w-4/5 max-w-md animate-pulse rounded bg-kal-card-muted/80" />
-        <div className="mt-6 h-32 w-full animate-pulse rounded-xl bg-kal-card-muted/70" />
+        <KalShimmerBlock className="h-3 w-20 rounded-md" />
+        <KalShimmerBlock className="mt-4 h-8 w-2/3 max-w-xs rounded-lg" />
+        <KalShimmerBlock className="mt-3 h-3 w-full max-w-lg rounded" />
+        <KalShimmerBlock className="mt-2 h-3 w-4/5 max-w-md rounded" />
+        <KalShimmerBlock className="mt-6 h-32 w-full rounded-xl" />
       </div>
       <div className="flex justify-center py-2">
-        <Loader2
-          className="h-6 w-6 animate-spin text-kal-accent/55"
-          aria-hidden
-        />
+        <KalSpinner size="md" />
       </div>
     </div>
   );

@@ -20,7 +20,7 @@ export function CTABanner({
   return (
     <section
       className="rounded-3xl bg-kal-accent/8 border border-kal-accent/20 px-6 py-10 text-center sm:px-10 sm:py-14"
-      aria-label="Get started with Kalnehi"
+      aria-label="Get started with Kalnehi Daily"
     >
       <h2 className="text-xl font-bold text-kal-text sm:text-2xl">{headline}</h2>
       <p className="mt-2 text-sm text-kal-text-secondary">{subtext}</p>

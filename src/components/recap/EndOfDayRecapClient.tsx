@@ -94,7 +94,7 @@ export function EndOfDayRecapClient() {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-violet-200/90">
-                      Kalnehi
+                      Kalnehi Daily
                     </p>
                     <p className="mt-1 text-[9px] font-medium uppercase tracking-[0.12em] text-slate-500">
                       Daily closeout
@@ -204,7 +204,7 @@ export function EndOfDayRecapClient() {
                 </div>
 
                 <p className="mt-3 text-center text-[9px] uppercase tracking-[0.22em] text-slate-500">
-                  {isStandalone ? "Kalnehi" : "kalnehi.com"}
+                  {isStandalone ? "Kalnehi Daily" : "kalnehi.com"}
                 </p>
               </div>
             </div>

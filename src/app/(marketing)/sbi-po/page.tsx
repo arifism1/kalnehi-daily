@@ -10,14 +10,14 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 export const metadata = marketingPageMetadata({
   path: "/sbi-po",
   title: `Daily Planner for SBI PO Preparation | ${SITE_NAME}`,
-  description: `SBI PO is one of India's most coveted banking jobs. Kalnehi tracks your preliminary and mains preparation, logs daily mock scores, and helps Mastermind optimise your sectional strategy.`,
+  description: `SBI PO is one of India's most coveted banking jobs. Kalnehi Daily tracks your preliminary and mains preparation, logs daily mock scores, and helps Mastermind optimise your sectional strategy.`,
 });
 
 const FAQS = [
   { question: "What is the SBI PO exam structure?", answer: "SBI PO Preliminary: 3 sections (English, QA, Reasoning) — 100 questions, 60 minutes. SBI PO Main: 4 sections (Data Analysis & Interpretation, Reasoning & Computer, English, General/Economy/Banking Awareness) + Descriptive Paper (Letter + Essay, 50 marks, 30 minutes). Group Exercise + Interview: 50 marks." },
-  { question: "Why is SBI PO harder than IBPS PO?", answer: "SBI PO has higher competition (25+ lakh applicants for ~2000 seats), more difficult mains paper, a group discussion round, and interview. The cutoffs are also generally higher. However, the preparation strategies are similar and Kalnehi supports both." },
-  { question: "How does Kalnehi help SBI PO aspirants?", answer: "Kalnehi tracks your prelims and mains preparation separately. Log daily mock tests across all sections. Mastermind identifies which section is your weakest based on mock history and tells you how many focused hours that section needs before your exam date." },
-  { question: "Can I prepare for SBI PO and IBPS PO at the same time?", answer: "Yes — and most serious banking aspirants do. The syllabuses overlap significantly. Kalnehi lets you track both exam dates and build a single preparation plan that covers both. Mastermind monitors whether you're ready for the earlier exam date and alerts you if you're not." },
+  { question: "Why is SBI PO harder than IBPS PO?", answer: "SBI PO has higher competition (25+ lakh applicants for ~2000 seats), more difficult mains paper, a group discussion round, and interview. The cutoffs are also generally higher. However, the preparation strategies are similar and Kalnehi Daily supports both." },
+  { question: "How does Kalnehi Daily help SBI PO aspirants?", answer: "Kalnehi Daily tracks your prelims and mains preparation separately. Log daily mock tests across all sections. Mastermind identifies which section is your weakest based on mock history and tells you how many focused hours that section needs before your exam date." },
+  { question: "Can I prepare for SBI PO and IBPS PO at the same time?", answer: "Yes — and most serious banking aspirants do. The syllabuses overlap significantly. Kalnehi Daily lets you track both exam dates and build a single preparation plan that covers both. Mastermind monitors whether you're ready for the earlier exam date and alerts you if you're not." },
 ];
 
 export default function SbiPoPage() {
@@ -37,7 +37,7 @@ export default function SbiPoPage() {
         />
 
         <section className="space-y-3" aria-labelledby="sbipo-system">
-          <h2 id="sbipo-system" className="text-xl font-bold text-kal-text">The SBI PO preparation system in Kalnehi</h2>
+          <h2 id="sbipo-system" className="text-xl font-bold text-kal-text">The SBI PO preparation system in Kalnehi Daily</h2>
           <ul className="space-y-3 text-sm">
             {[
               { t: "Prelims + Mains tracking", d: "Set up separate syllabus trackers for Prelims (QA, Reasoning, English) and Mains (Data Analysis, Reasoning + Computer, English, GA). Mastermind monitors both phases and shifts focus as dates approach." },

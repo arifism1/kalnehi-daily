@@ -27,7 +27,7 @@ const SLIDES = [
   {
     kicker: "This is not another planner.",
     title: "This is the year you don’t drift.",
-    body: "Thousands of hours disappear quietly. Kalnehi makes the cost visible — and the win inevitable.",
+    body: "Thousands of hours disappear quietly. Kalnehi Daily makes the cost visible — and the win inevitable.",
   },
   {
     kicker: "Your mission",

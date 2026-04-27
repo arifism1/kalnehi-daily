@@ -13,7 +13,7 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 export const metadata = marketingPageMetadata({
   path: "/gate",
   title: `Daily Planner for GATE Preparation | ${SITE_NAME}`,
-  description: `GATE covers 10+ technical subjects across 6 months. Kalnehi tracks your subject-wise progress, helps you plan revision before the exam, and lets Mastermind identify your biggest score gaps.`,
+  description: `GATE covers 10+ technical subjects across 6 months. Kalnehi Daily tracks your subject-wise progress, helps you plan revision before the exam, and lets Mastermind identify your biggest score gaps.`,
   ogImage: ogImageExam("GATE Preparation"),
 });
 
@@ -32,9 +32,9 @@ const GATE_CSE_SUBJECTS = [
 
 const FAQS = [
   {
-    question: "GATE has 10 subjects — how does Kalnehi help me not fall behind?",
+    question: "GATE has 10 subjects — how does Kalnehi Daily help me not fall behind?",
     answer:
-      "Kalnehi's syllabus tracker lets you map all 10 GATE subjects and their individual topics. You can see your overall completion percentage and identify which subjects are lagging. Mastermind then tells you how to redistribute your study time to close the gap before your exam date.",
+      "Kalnehi Daily's syllabus tracker lets you map all 10 GATE subjects and their individual topics. You can see your overall completion percentage and identify which subjects are lagging. Mastermind then tells you how to redistribute your study time to close the gap before your exam date.",
   },
   {
     question: "How does Mastermind help GATE preparation?",
@@ -44,10 +44,10 @@ const FAQS = [
   {
     question: "Can I prepare for GATE while working a job?",
     answer:
-      "Yes — and Kalnehi is especially useful for working professionals. With 2-3 hours per day, you need brutal prioritisation. Kalnehi's daily planner helps you plan each night what to cover the next morning, so you don't waste 20 minutes deciding what to study.",
+      "Yes — and Kalnehi Daily is especially useful for working professionals. With 2-3 hours per day, you need brutal prioritisation. Kalnehi Daily's daily planner helps you plan each night what to cover the next morning, so you don't waste 20 minutes deciding what to study.",
   },
   {
-    question: "Does Kalnehi work for GATE ECE, ME, and other branches?",
+    question: "Does Kalnehi Daily work for GATE ECE, ME, and other branches?",
     answer:
       "Yes. While our syllabus page is optimised for GATE CSE and GATE ECE, the tracker works for any branch. You can manually set up your branch's subject list and track topics within each subject.",
   },
@@ -69,7 +69,7 @@ export default function GatePage() {
         faqs={FAQS}
         webPage={{
           name: `Daily Planner for GATE Preparation | ${SITE_NAME}`,
-          description: `GATE covers 10+ technical subjects. Kalnehi tracks your subject-wise progress and helps Mastermind identify your biggest score gaps.`,
+          description: `GATE covers 10+ technical subjects. Kalnehi Daily tracks your subject-wise progress and helps Mastermind identify your biggest score gaps.`,
         }}
       />
 
@@ -91,9 +91,9 @@ export default function GatePage() {
         />
 
         <section className="space-y-5" aria-labelledby="gate-syllabus">
-          <h2 id="gate-syllabus" className="text-xl font-bold text-kal-text">GATE CSE syllabus — tracked in Kalnehi</h2>
+          <h2 id="gate-syllabus" className="text-xl font-bold text-kal-text">GATE CSE syllabus — tracked in Kalnehi Daily</h2>
           <p className="text-sm leading-relaxed text-kal-text-secondary">
-            Every GATE subject can be added to Kalnehi's syllabus tracker. Here's how GATE CSE maps
+            Every GATE subject can be added to Kalnehi Daily's syllabus tracker. Here's how GATE CSE maps
             across subjects — each with individual topics you can mark as done, in progress, or needing
             revision.
           </p>
@@ -110,7 +110,7 @@ export default function GatePage() {
             ))}
           </div>
           <p className="text-sm text-kal-text-secondary">
-            Engineering Mathematics and Algorithms together account for ~25% of GATE marks. Kalnehi
+            Engineering Mathematics and Algorithms together account for ~25% of GATE marks. Kalnehi Daily
             helps you track them as separate subjects and ensure they get proportional prep time.
           </p>
         </section>
@@ -167,7 +167,7 @@ export default function GatePage() {
             </li>
             <li>
               <Link href="/for/engineering-students-gate" className="font-medium text-kal-accent-dark hover:underline">
-                Kalnehi for Engineering Students Preparing GATE
+                Kalnehi Daily for Engineering Students Preparing GATE
               </Link>
             </li>
             <li>

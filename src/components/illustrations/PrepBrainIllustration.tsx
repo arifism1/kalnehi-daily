@@ -15,7 +15,16 @@ export function PrepBrainIllustration({ className }: { className?: string }) {
 
       {/* Antenna */}
       <rect x="118" y="32" width="4" height="22" rx="2" fill="#FF7A00" opacity="0.8" />
-      <circle cx="120" cy="28" r="7" fill="#FF7A00" />
+      {/* Antenna tip — heartbeat pulse */}
+      <circle cx="120" cy="28" r="7" fill="#FF7A00">
+        <animate attributeName="r" values="7;9.5;7" dur="2s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="1;0.65;1" dur="2s" repeatCount="indefinite" />
+      </circle>
+      {/* Outer antenna glow ring */}
+      <circle cx="120" cy="28" r="12" fill="#FF7A00" opacity="0">
+        <animate attributeName="r" values="9;15;9" dur="2s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0.2;0;0.2" dur="2s" repeatCount="indefinite" />
+      </circle>
       <circle cx="120" cy="28" r="4" fill="#FFD4A8" />
 
       {/* Eyes */}
@@ -49,21 +58,30 @@ export function PrepBrainIllustration({ className }: { className?: string }) {
       <path d="M30 116 Q38 112 46 116" stroke="#FFD700" strokeWidth="1" fill="none" />
       <rect x="33" y="124" width="10" height="6" rx="2" fill="#FFD700" />
       {/* Bulb glow */}
-      <ellipse cx="38" cy="100" rx="10" ry="8" fill="#FFD700" opacity="0.3" />
+      <ellipse cx="38" cy="100" rx="10" ry="8" fill="#FFD700" opacity="0.3">
+        <animate attributeName="opacity" values="0.3;0.55;0.3" dur="2.2s" repeatCount="indefinite" />
+        <animate attributeName="ry" values="8;11;8" dur="2.2s" repeatCount="indefinite" />
+      </ellipse>
 
       {/* Chat bubble */}
       <rect x="166" y="42" width="64" height="42" rx="10" fill="#FF7A00" />
       <path d="M166 68 L156 74 L172 68" fill="#FF7A00" />
       <text x="198" y="60" textAnchor="middle" fontSize="8" fill="white" fontWeight="600">Hello!</text>
-      <text x="198" y="72" textAnchor="middle" fontSize="7" fill="white" opacity="0.9">I'm Mastermind</text>
+      <text x="198" y="72" textAnchor="middle" fontSize="7" fill="white" opacity="0.9">I&apos;m Mastermind</text>
       <text x="198" y="80" textAnchor="middle" fontSize="7" fill="white" opacity="0.8">your AI coach</text>
 
-      {/* Floating sparkles */}
-      <path d="M28 62 L30 70 L38 72 L30 74 L28 82 L26 74 L18 72 L26 70Z" fill="#FF7A00" opacity="0.4" />
+      {/* Floating sparkles — independent twinkle */}
+      <path d="M28 62 L30 70 L38 72 L30 74 L28 82 L26 74 L18 72 L26 70Z" fill="#FF7A00" opacity="0.4">
+        <animate attributeName="opacity" values="0.4;0.75;0.4" dur="2.8s" repeatCount="indefinite" />
+      </path>
       <path d="M208 126 L209.5 132 L216 133.5 L209.5 135 L208 141 L206.5 135 L200 133.5 L206.5 132Z"
-        fill="#FFB366" opacity="0.5" />
+        fill="#FFB366" opacity="0.5">
+        <animate attributeName="opacity" values="0.5;0.85;0.5" dur="3.4s" repeatCount="indefinite" />
+      </path>
       <circle cx="52" cy="164" r="3" fill="#FF7A00" opacity="0.3" />
-      <circle cx="192" cy="168" r="2.5" fill="#FFB366" opacity="0.3" />
+      <circle cx="192" cy="168" r="2.5" fill="#FFB366" opacity="0.3">
+        <animate attributeName="opacity" values="0.3;0.6;0.3" dur="2.6s" repeatCount="indefinite" />
+      </circle>
     </svg>
   );
 }

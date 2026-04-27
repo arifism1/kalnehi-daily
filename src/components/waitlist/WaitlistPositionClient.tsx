@@ -174,7 +174,7 @@ export function WaitlistPositionClient() {
           >
             You&apos;re in.
           </p>
-          <p className="mt-3 text-lg text-kal-text">Redirecting to Kalnehi…</p>
+          <p className="mt-3 text-lg text-kal-text">Redirecting to Kalnehi Daily…</p>
         </div>
       </div>
     );

@@ -102,7 +102,7 @@ export function SearchClient({ index }: Props) {
             &quot;jee&quot;, &quot;prepbrain&quot;, or &quot;upsc routine&quot;.
           </p>
           <div>
-            <p className="text-xs font-bold uppercase tracking-wide text-kal-muted">Popular on Kalnehi</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-kal-muted">Popular on Kalnehi Daily</p>
             <ul className="mt-2 grid gap-2 sm:grid-cols-2">
               {POPULAR.map((p) => (
                 <li key={p.url}>

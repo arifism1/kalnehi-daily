@@ -7,6 +7,7 @@ import { useExamsCatalogRows } from "@/hooks/useExamsCatalogRows";
 import { useTargetExamDate } from "@/hooks/useTargetExamDate";
 import { examHasPrevYearMarks } from "@/lib/examProfile";
 import { displayNameForExamCatalog } from "@/lib/examsCatalog";
+import { useCountUp } from "@/hooks/useCountUp";
 
 type ExamRollupEntry = {
   examLabel: string | null;
@@ -107,13 +108,16 @@ export function HomeHeroCard({
     return computeDaysToExam(examDate);
   }, [examDate]);
 
+  const animatedMastery = useCountUp(syllabusMasteryPercent ?? 0, 750, syllabusMasteryPercent != null);
+  const animatedToday = useCountUp(todayPercent, 650, todayTaskCount > 0);
+
   const masteryDisplay = useMemo(() => {
     if (syllabusMasteryPercent != null) {
-      const v = syllabusMasteryPercent;
-      return `${v % 1 === 0 ? v.toFixed(0) : v.toFixed(1)}%`;
+      const v = animatedMastery;
+      return `${v % 1 < 0.05 ? Math.round(v).toFixed(0) : v.toFixed(1)}%`;
     }
     return "—";
-  }, [syllabusMasteryPercent]);
+  }, [syllabusMasteryPercent, animatedMastery]);
 
   const projScoreDisplay = useMemo(() => {
     if (marksTotal > 0) {
@@ -124,8 +128,8 @@ export function HomeHeroCard({
 
   const todayPlanDisplay = useMemo(() => {
     if (todayTaskCount === 0) return "—";
-    return `${Math.round(todayPercent)}%`;
-  }, [todayPercent, todayTaskCount]);
+    return `${Math.round(animatedToday)}%`;
+  }, [todayPercent, todayTaskCount, animatedToday]);
 
   const divider = (
     <div

@@ -10,13 +10,13 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 export const metadata = marketingPageMetadata({
   path: "/clat",
   title: `Daily Planner for CLAT Preparation | ${SITE_NAME}`,
-  description: `CLAT has 5 sections — English, Current Affairs, Legal Reasoning, Logical Reasoning and Quantitative Techniques. Kalnehi tracks your section-wise progress and Mastermind identifies your score gaps.`,
+  description: `CLAT has 5 sections — English, Current Affairs, Legal Reasoning, Logical Reasoning and Quantitative Techniques. Kalnehi Daily tracks your section-wise progress and Mastermind identifies your score gaps.`,
 });
 
 const FAQS = [
   { question: "What are the 5 sections in CLAT?", answer: "CLAT has: English Language (20% weight) — comprehension and vocabulary; Current Affairs including General Knowledge (25%) — legal news, recent developments; Legal Reasoning (25%) — passages with legal scenarios; Logical Reasoning (20%) — critical reasoning; Quantitative Techniques (10%) — data interpretation and maths." },
   { question: "How many hours per day should I study for CLAT?", answer: "For Class 12 students preparing alongside Boards, 3-4 focused hours per day works well. Dedicated drop year candidates can do 6-8 hours. The daily newspaper reading habit for Current Affairs must be non-negotiable regardless of total hours." },
-  { question: "Does Kalnehi help with CLAT reading comprehension practice?", answer: "Kalnehi tracks your daily practice sessions — including RC passages, legal reasoning sets and logical reasoning. Log each day's practice and Mastermind monitors your consistency to ensure you're not skipping any section for weeks." },
+  { question: "Does Kalnehi Daily help with CLAT reading comprehension practice?", answer: "Kalnehi Daily tracks your daily practice sessions — including RC passages, legal reasoning sets and logical reasoning. Log each day's practice and Mastermind monitors your consistency to ensure you're not skipping any section for weeks." },
   { question: "How does Mastermind help CLAT aspirants?", answer: "Mastermind reads your mock test data across all 5 sections and tells you which section is pulling your overall score down the most. It recommends reallocating daily study time to your weakest section until the next mock test." },
 ];
 
@@ -33,16 +33,16 @@ export default function ClatPage() {
         <ExamHero
           badge="CLAT — Common Law Admission Test"
           headline="CLAT Preparation Daily Planner — Read More, Reason Sharper, Score Higher"
-          subheadline="CLAT rewards consistent reading, legal reasoning practice and Current Affairs depth. Students who crack NLSIU and NALSAR do one thing every single day without fail: they read, reason, and practise. Kalnehi builds that habit."
+          subheadline="CLAT rewards consistent reading, legal reasoning practice and Current Affairs depth. Students who crack NLSIU and NALSAR do one thing every single day without fail: they read, reason, and practise. Kalnehi Daily builds that habit."
         />
 
         <section className="space-y-4" aria-labelledby="clat-sections">
-          <h2 id="clat-sections" className="text-xl font-bold text-kal-text">CLAT sections tracked in Kalnehi</h2>
+          <h2 id="clat-sections" className="text-xl font-bold text-kal-text">CLAT sections tracked in Kalnehi Daily</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {[
               { s: "English Language (20%)", tips: "2-3 RC passages daily. Track speed and accuracy separately. Mastermind flags when your reading speed has plateaued." },
-              { s: "Current Affairs + GK (25%)", tips: "Daily newspaper reading is non-negotiable. Track it as a Kalnehi habit. Legal news from The Hindu and Live Law matters most." },
-              { s: "Legal Reasoning (25%)", tips: "CLAT's highest-value section. Practice passage-based legal scenarios. Kalnehi tracks your legal reasoning problem sets completed per week." },
+              { s: "Current Affairs + GK (25%)", tips: "Daily newspaper reading is non-negotiable. Track it as a Kalnehi Daily habit. Legal news from The Hindu and Live Law matters most." },
+              { s: "Legal Reasoning (25%)", tips: "CLAT's highest-value section. Practice passage-based legal scenarios. Kalnehi Daily tracks your legal reasoning problem sets completed per week." },
               { s: "Logical Reasoning (20%)", tips: "Critical reasoning and argument analysis. Daily 20-minute practice is more effective than weekly marathons." },
             ].map(({ s, tips }) => (
               <div key={s} className="kal-glass-card rounded-xl p-4 space-y-1.5">

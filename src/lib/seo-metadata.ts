@@ -59,7 +59,7 @@ const PAGE_SEO: Record<
     path: "/",
     title: `${SITE_NAME} — Voice Controlled Exam Prep Tracker & study app`,
     description:
-      `Kalnehi is the voice-controlled exam prep tracker for Indian competitive exam aspirants. Dictate your study plan, track your syllabus, and build daily discipline — all in one place.`,
+      `Kalnehi Daily is the voice-controlled exam prep tracker for Indian competitive exam aspirants. Dictate your study plan, track your syllabus, and build daily discipline — all in one place.`,
     ogDescription:
       `The only exam prep tracker where you can plan your entire day by speaking. Built for JEE, NEET, UPSC & all major exams. Win daily. Rank higher.`,
   },

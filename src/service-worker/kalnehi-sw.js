@@ -1,7 +1,7 @@
 /* Kalnehi Daily - Voice Controlled Exam Prep Tracker — service worker (static caching + offline shell + sync bridge)
  * FCM block is injected at request time by src/app/sw.js/route.ts (never commit API keys).
  */
-const STATIC_CACHE = "kalnehi-static-v6";
+const STATIC_CACHE = "kalnehi-static-v7";
 const PAGE_CACHE = "kalnehi-pages-v2";
 const SYNC_TAG = "kalnehi-outbox-sync";
 
@@ -10,8 +10,12 @@ const PRECACHE_URLS = [
   "/manifest.webmanifest",
   "/icon-192x192.png",
   "/icon-512x512.png",
+  "/icon-maskable-192.png",
   "/icon-maskable-512.png",
   "/apple-touch-icon.png",
+  "/apple-touch-icon-167.png",
+  "/apple-touch-icon-152.png",
+  "/apple-touch-icon-120.png",
 ];
 
 self.addEventListener("install", (event) => {

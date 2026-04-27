@@ -16,7 +16,7 @@ export function FinalCTASection() {
             href="/auth"
             className="inline-flex min-h-[56px] items-center justify-center rounded-full bg-kal-accent px-10 text-base font-bold text-white shadow-[0_4px_24px_rgba(255,122,0,0.35)] transition hover:brightness-105 active:scale-[0.99]"
           >
-            Try Kalnehi for free
+            Try Kalnehi Daily for free
           </Link>
           <p className="text-sm text-kal-muted">
             3 days fully free · No card needed · Then ₹399/month · Cancel anytime.

@@ -50,22 +50,22 @@ const SYLLABUS = [
 
 const FAQS = [
   {
-    question: "How does Kalnehi help JEE aspirants specifically?",
+    question: "How does Kalnehi Daily help JEE aspirants specifically?",
     answer:
-      "Kalnehi maps your daily tasks directly to JEE chapters — Physics, Chemistry, Maths. You track topic-level mastery, mark chapters as done/needs revision/in progress, and Mastermind reads that data to tell you which chapters to prioritise today based on weightage and your gaps.",
+      "Kalnehi Daily maps your daily tasks directly to JEE chapters — Physics, Chemistry, Maths. You track topic-level mastery, mark chapters as done/needs revision/in progress, and Mastermind reads that data to tell you which chapters to prioritise today based on weightage and your gaps.",
   },
   {
-    question: "Can I use Kalnehi for both JEE Main and JEE Advanced prep?",
+    question: "Can I use Kalnehi Daily for both JEE Main and JEE Advanced prep?",
     answer:
-      "Yes. JEE Main and Advanced share the same PCM syllabus core. You set your exam date, and Kalnehi builds a timeline that covers the full JEE Advanced syllabus — so you're automatically prepared for Main along the way.",
+      "Yes. JEE Main and Advanced share the same PCM syllabus core. You set your exam date, and Kalnehi Daily builds a timeline that covers the full JEE Advanced syllabus — so you're automatically prepared for Main along the way.",
   },
   {
     question: "What is the voice control feature for JEE prep?",
     answer:
-      "Say 'Hey Boss, log 2 hours of Rotational Motion done' or 'Hey Boss, mark Thermodynamics as needs revision' and Kalnehi logs it hands-free. Useful when you're mid-session and don't want to break flow.",
+      "Say 'Hey Boss, log 2 hours of Rotational Motion done' or 'Hey Boss, mark Thermodynamics as needs revision' and Kalnehi Daily logs it hands-free. Useful when you're mid-session and don't want to break flow.",
   },
   {
-    question: "Does Kalnehi work for JEE droppers?",
+    question: "Does Kalnehi Daily work for JEE droppers?",
     answer:
       "Especially for droppers. The consistency heatmap and streak tracker show you exactly which weeks you slipped last year. You build a different system this time — one you can actually sustain for 12 months.",
   },
@@ -103,7 +103,7 @@ export default function JeePage() {
         <ExamHero
           badge="JEE Main & Advanced"
           headline="JEE Preparation Daily Planner — Track, Plan & Win Every Single Day"
-          subheadline="720 topics. 2 years. One system to track all of it. Kalnehi maps your entire PCM syllabus to a daily plan that adapts when life doesn't cooperate."
+          subheadline="720 topics. 2 years. One system to track all of it. Kalnehi Daily maps your entire PCM syllabus to a daily plan that adapts when life doesn't cooperate."
           stats={[
             { value: "720+", label: "JEE topics tracked" },
             { value: "3 exams", label: "Main + Advanced + Boards" },
@@ -114,11 +114,11 @@ export default function JeePage() {
         {/* Section 2 — Syllabus structure */}
         <section className="space-y-5" aria-labelledby="jee-syllabus">
           <h2 id="jee-syllabus" className="text-xl font-bold text-kal-text">
-            How Kalnehi maps to the JEE syllabus
+            How Kalnehi Daily maps to the JEE syllabus
           </h2>
           <p className="text-sm leading-relaxed text-kal-text-secondary">
             The JEE syllabus is fixed — 3 subjects, hundreds of chapters, thousands of subtopics. Most
-            students track it in a notebook or spreadsheet that falls apart by March. Kalnehi gives you a
+            students track it in a notebook or spreadsheet that falls apart by March. Kalnehi Daily gives you a
             microtopic-level tracker built for the exact JEE structure below.
           </p>
           <div className="grid gap-4 sm:grid-cols-3">

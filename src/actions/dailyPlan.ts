@@ -92,7 +92,7 @@ export async function insertDailyTask(
     time_end?: string | null;
     priority?: string;
     status?: string;
-    source: "typed" | "voice" | "handwritten" | "moved";
+    source: "typed" | "voice" | "handwritten" | "moved" | "revision";
     source_raw_text?: string | null;
     syllabus_master_id?: string | null;
     /** Restored on undo; defaults to 0 for new tasks. */
@@ -150,7 +150,12 @@ export async function insertDailyTask(
 
     const { error } = await supabase.from("daily_tasks").insert(row);
     if (error) {
-      if (error.code === "23505") return { ok: true };
+      // Row already exists (duplicate id) — treat as success but still revalidate
+      // so any client relying on Next.js cache picks up the existing row.
+      if (error.code === "23505") {
+        revalidateDailyPlanPaths();
+        return { ok: true };
+      }
       return { ok: false, error: USER_ERROR.tryAgain };
     }
     revalidateDailyPlanPaths();

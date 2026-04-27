@@ -81,8 +81,8 @@ export default function StudyHoursCalculatorPage() {
         <FAQBlock items={FAQS} title="Frequently asked questions" />
 
         <CTABanner
-          headline="Track your actual progress daily with Kalnehi"
-          subtext="This calculator tells you what you need. Kalnehi helps you execute it — syllabus tracker, Mastermind, daily planner."
+          headline="Track your actual progress daily with Kalnehi Daily"
+          subtext="This calculator tells you what you need. Kalnehi Daily helps you execute it — syllabus tracker, Mastermind, daily planner."
         />
       </div>
     </>

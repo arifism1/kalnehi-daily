@@ -36,19 +36,30 @@ export async function addAcademicTaskToUnifiedDailyPlan(
   const title = buildDailyPlanTitle(t, syllabusById);
   const status = t.status === "completed" ? "done" : "pending";
 
-  const res = await insertDailyTask({
+  const basePayload = {
     plan_date: planDate,
     id: crypto.randomUUID(),
     title,
     time_slot,
     time_start,
     time_end,
-    priority: "normal",
+    priority: "normal" as const,
     status,
-    source: "moved",
+    source: "moved" as const,
     source_raw_text: null,
+  };
+
+  let res = await insertDailyTask({
+    ...basePayload,
     syllabus_master_id: t.microtopic_id?.trim() || null,
   });
+
+  // If the insert failed because the syllabus id is outside the user's exam
+  // scope, retry without the link so a row always lands on Today's plan.
+  if (!res.ok && res.error === "Invalid syllabus link.") {
+    res = await insertDailyTask({ ...basePayload, syllabus_master_id: null });
+  }
+
   if (!res.ok) return res;
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event("kalnehi-daily-plan-synced"));

@@ -18,7 +18,7 @@ const FEATURES: FeatureData[] = [
     name: "Mastermind",
     tagline: "Your Personal Exam Strategist",
     headline: "Mastermind — Your Personal Exam Strategist That Reads Your Own Data",
-    description: `Mastermind is not a general chatbot. It's a study coach that reads your specific Kalnehi data — your syllabus completion, your daily logs, your mock scores, your target exam date — and gives you strategy advice that's personalised to exactly where you are right now.
+    description: `Mastermind is not a general chatbot. It's a study coach that reads your specific Kalnehi Daily data — your syllabus completion, your daily logs, your mock scores, your target exam date — and gives you strategy advice that's personalised to exactly where you are right now.
 
 Ask Mastermind "What should I study for the next 3 hours?" and it doesn't give a generic answer. It looks at your JEE or NEET chapter completion, cross-references historical weightage data, checks what you logged yesterday, and tells you the specific chapters that will move your readiness score the most.
 
@@ -26,7 +26,7 @@ Mastermind can analyse your mock test performance and identify which subject or 
 
 This is not AI for the sake of AI. Mastermind exists because the single hardest problem in exam preparation is knowing what to study right now — not in general, but today, at your current level, with your specific exam date. Mastermind answers that question every single day.`,
     scenarios: [
-      "It's Sunday evening. You open Kalnehi and ask Mastermind: 'Plan my week.' It reads your JEE date (89 days away), your syllabus completion (Physics 70%, Chemistry 55%, Maths 80%), and your last 3 mock scores. It gives you a day-by-day plan for the week: which chapters to cover, how many hours per subject, and when to write the next practice test.",
+      "It's Sunday evening. You open Kalnehi Daily and ask Mastermind: 'Plan my week.' It reads your JEE date (89 days away), your syllabus completion (Physics 70%, Chemistry 55%, Maths 80%), and your last 3 mock scores. It gives you a day-by-day plan for the week: which chapters to cover, how many hours per subject, and when to write the next practice test.",
       "You just finished a NEET mock and scored 480. Mastermind reads the score, compares it to your last 5 mocks, and tells you: 'Your Biology accuracy has dropped 12% over the last 3 tests. The weakest area is Genetics and Molecular Biology. You need 4 focused hours on these chapters before the next mock.'",
       "It's 6 AM and you have 2 hours before college. You say 'Hey Boss, what should I study right now?' Mastermind looks at your current completion and exam date, and says: 'Cover Acids and Bases in Chemistry — 2-hour chapter, high weightage in JEE Main, not yet completed in your tracker.'",
       "A month before your UPSC Prelims, you ask Mastermind for a revision strategy. It analyses your GS completion across History, Polity, Geography, Economy and Environment, identifies the 3 weakest areas, and builds a 30-day revision plan that covers each topic at least once.",
@@ -35,8 +35,8 @@ This is not AI for the sake of AI. Mastermind exists because the single hardest 
     relatedFeatures: ["syllabus-tracker", "marks-engine", "voice-control"],
     relatedExams: ["/jee", "/neet", "/upsc", "/cat", "/gate"],
     faqs: [
-      { question: "What data does Mastermind use to give advice?", answer: "Mastermind reads your Kalnehi data — syllabus completion percentages, daily study logs, mock test scores you've entered, your target exam date, and your study session history. It never accesses anything outside Kalnehi." },
-      { question: "Is Mastermind a chatbot or a study planner?", answer: "It's a contextual study coach. You can ask it questions ('What should I study today?') or request analysis ('Why is my Chemistry score not improving?'). It uses your Kalnehi data to answer specifically, not generically." },
+      { question: "What data does Mastermind use to give advice?", answer: "Mastermind reads your Kalnehi Daily data — syllabus completion percentages, daily study logs, mock test scores you've entered, your target exam date, and your study session history. It never accesses anything outside Kalnehi Daily." },
+      { question: "Is Mastermind a chatbot or a study planner?", answer: "It's a contextual study coach. You can ask it questions ('What should I study today?') or request analysis ('Why is my Chemistry score not improving?'). It uses your Kalnehi Daily data to answer specifically, not generically." },
       { question: "How many Mastermind queries do I get?", answer: "Smart Plan includes 20 lakh (2 million) Mastermind tokens per month, which resets every billing cycle. The 3-day free trial includes 60,000 tokens for the entire trial period." },
       { question: "Is Mastermind's advice accurate for all exams?", answer: "Mastermind's strategy advice is based on your own data — completion rates, time invested, test scores. It doesn't hallucinate syllabus details because it's reading your actual tracker. For exam-specific weightage, it uses historical patterns that are updated periodically." },
     ],
@@ -47,13 +47,13 @@ This is not AI for the sake of AI. Mastermind exists because the single hardest 
     name: "Voice Control",
     tagline: "Run Your Entire Prep Without Typing",
     headline: "Voice Control — Run Your Entire Exam Prep Without Typing a Single Word",
-    description: `"Hey Boss" is Kalnehi's global voice command system. It lets you log study sessions, mark chapters complete, set reminders, navigate the app, and ask Mastermind questions — all hands-free, all while your phone sits face-down on the desk.
+    description: `"Hey Boss" is Kalnehi Daily's global voice command system. It lets you log study sessions, mark chapters complete, set reminders, navigate the app, and ask Mastermind questions — all hands-free, all while your phone sits face-down on the desk.
 
 Voice control is designed for the reality of serious exam preparation: you're 3 hours into a Physics problem set, you've just finished the Rotational Motion chapter, and you don't want to pick up your phone to update your tracker. You just say "Hey Boss, mark Rotational Motion done" and keep working.
 
-The voice command vocabulary covers the entire Kalnehi feature set. You can dictate your daily plan for the next 12 hours, log doubts, set alarms for the next morning, ask Mastermind for advice, and check your remaining syllabus — all without touching the screen.
+The voice command vocabulary covers the entire Kalnehi Daily feature set. You can dictate your daily plan for the next 12 hours, log doubts, set alarms for the next morning, ask Mastermind for advice, and check your remaining syllabus — all without touching the screen.
 
-For aspirants who study in deep focus states, voice control preserves that state. For those who study in libraries or quiet environments, voice commands can be whispered. For those using Kalnehi during commutes, voice control makes logging possible while moving.`,
+For aspirants who study in deep focus states, voice control preserves that state. For those who study in libraries or quiet environments, voice commands can be whispered. For those using Kalnehi Daily during commutes, voice control makes logging possible while moving.`,
     scenarios: [
       "It's 6 AM. You just woke up. Instead of opening your phone and typing your day's plan, you say 'Hey Boss, dictate my day' and speak your plan for the next 12 hours: 3 hours Physics, 2 hours Chemistry, coaching at 4 PM, 2 more hours Maths in the evening. Done before breakfast.",
       "You're deep in an Organic Chemistry problem set. You finish the chapter on Carbonyl Compounds. Without breaking your flow, you say 'Hey Boss, mark Carbonyl Compounds as done' and keep going. Your tracker updates automatically.",
@@ -64,8 +64,8 @@ For aspirants who study in deep focus states, voice control preserves that state
     relatedFeatures: ["daily-planner", "doubt-tracker", "prepbrain-ai"],
     relatedExams: ["/jee", "/neet", "/upsc", "/gate"],
     faqs: [
-      { question: "What can I do with Hey Boss voice commands?", answer: "Log study sessions, mark chapters done/needs revision, set reminders and alarms, dictate your daily plan, ask Mastermind questions, log doubts, check syllabus completion, navigate between Kalnehi sections, and record voice affirmations — all without touching the screen." },
-      { question: "Does voice control work offline?", answer: "Voice recognition requires an internet connection for processing. However, Kalnehi caches your recent data so the app remains usable offline — you just can't issue voice commands without connectivity." },
+      { question: "What can I do with Hey Boss voice commands?", answer: "Log study sessions, mark chapters done/needs revision, set reminders and alarms, dictate your daily plan, ask Mastermind questions, log doubts, check syllabus completion, navigate between Kalnehi Daily sections, and record voice affirmations — all without touching the screen." },
+      { question: "Does voice control work offline?", answer: "Voice recognition requires an internet connection for processing. However, Kalnehi Daily caches your recent data so the app remains usable offline — you just can't issue voice commands without connectivity." },
       { question: "How many minutes of voice control do I get?", answer: "Smart Plan includes 100 minutes of voice control per month, which resets on your billing date. The 3-day free trial includes 5 minutes of voice for the entire trial period." },
       { question: "Is Hey Boss always listening?", answer: "No. Voice control only runs when you tap the microphone — there is no continuous or background listening after you close the voice UI." },
     ],
@@ -76,7 +76,7 @@ For aspirants who study in deep focus states, voice control preserves that state
     name: "Syllabus Tracker",
     tagline: "Track Every Chapter. Miss Nothing.",
     headline: "Syllabus Tracker — Track Every Chapter at Microtopic Level, Miss Nothing",
-    description: `The Syllabus Tracker is the backbone of Kalnehi. It lets you track your preparation at the microtopic level — not just "Physics done" but "Rotational Motion — Moment of Inertia — done, Angular Momentum — needs revision."
+    description: `The Syllabus Tracker is the backbone of Kalnehi Daily. It lets you track your preparation at the microtopic level — not just "Physics done" but "Rotational Motion — Moment of Inertia — done, Angular Momentum — needs revision."
 
 For JEE, this means all ~720 topics across Physics, Chemistry and Mathematics. For NEET, all ~97 chapters across Biology, Physics and Chemistry. For UPSC, GS1-4 topics, Optional subject chapters, and Current Affairs coverage. For CA, all papers within Foundation/Intermediate/Final.
 
@@ -96,18 +96,18 @@ The tracker also shows your Target Score Blueprint — which chapters have the h
     relatedExams: ["/jee", "/neet", "/upsc", "/gate", "/ca-intermediate"],
     faqs: [
       { question: "How detailed is the syllabus tracker?", answer: "The tracker works at the microtopic level — you can track individual subtopics within each chapter, not just the chapter itself. For JEE Physics, that means tracking Kinematics, Laws of Motion, Work-Energy Theorem, Circular Motion, and Rotational Motion as separate trackable units." },
-      { question: "Can I add a custom syllabus?", answer: "Yes. While Kalnehi has pre-configured syllabuses for major exams, you can add any exam's syllabus manually. Create subjects, add chapters, and add topics within each chapter." },
+      { question: "Can I add a custom syllabus?", answer: "Yes. While Kalnehi Daily has pre-configured syllabuses for major exams, you can add any exam's syllabus manually. Create subjects, add chapters, and add topics within each chapter." },
       { question: "Does the syllabus tracker sync across devices?", answer: "Yes. Your syllabus data is synced to the cloud and available on all your devices — phone, tablet, desktop — in real time." },
       { question: "How does the tracker connect to Mastermind?", answer: "Mastermind reads your syllabus completion percentages, the specific chapters marked as 'Needs revision,' and when each chapter was last studied. This data powers Mastermind's strategy advice — it's what makes Mastermind give you specific, actionable recommendations rather than generic study tips." },
     ],
-    metaDescription: "Kalnehi's Syllabus Tracker lets you mark every chapter and topic — Done, In Progress, Needs Revision. Pre-built for JEE, NEET, UPSC, CAT, GATE, CA and 20+ Indian competitive exams.",
+    metaDescription: "Kalnehi Daily's Syllabus Tracker lets you mark every chapter and topic — Done, In Progress, Needs Revision. Pre-built for JEE, NEET, UPSC, CAT, GATE, CA and 20+ Indian competitive exams.",
   },
   {
     slug: "spaced-revision",
     name: "Revision reminders",
     tagline: "Your revision list, your dates",
     headline: "Revision reminders — spaced review without the spreadsheet",
-    description: `Spacing reviews beats cramming — but only if you actually show up on the right days. **Revision reminders** in Kalnehi are your personal due list: add topics by name, link them to syllabus microtopics when you want, set priority, and pick due dates that match your exam timeline.
+    description: `Spacing reviews beats cramming — but only if you actually show up on the right days. **Revision reminders** in Kalnehi Daily are your personal due list: add topics by name, link them to syllabus microtopics when you want, set priority, and pick due dates that match your exam timeline.
 
 You decide the cadence (e.g. +1 day, +1 week, +1 month after a mock). Items can be pushed to your daily plan when you are ready, rescheduled when life happens, and marked done when you have genuinely revised. Mastermind and the syllabus tracker still see what you marked as **Needs revision** so strategy advice stays grounded in your real backlog.
 
@@ -118,7 +118,7 @@ For large syllabi — JEE, NEET, UPSC, CA — the risk is not forgetting that re
       "A CA student links AS 10 and AS 16 from the syllabus tracker into reminders with closer due dates until mocks improve.",
       "A NEET aspirant adds Genetics and Cell Division with the same due date; both show as due today in one list, so they batch revision before a mock.",
     ],
-    examCompatibility: "Revision reminders work for every exam profile in Kalnehi. They are especially useful when the syllabus is large and easy to lose track of without a dated queue.",
+    examCompatibility: "Revision reminders work for every exam profile in Kalnehi Daily. They are especially useful when the syllabus is large and easy to lose track of without a dated queue.",
     relatedFeatures: ["syllabus-tracker", "prepbrain-ai", "daily-planner"],
     relatedExams: ["/jee", "/neet", "/upsc", "/ca-intermediate"],
     faqs: [
@@ -127,14 +127,14 @@ For large syllabi — JEE, NEET, UPSC, CA — the risk is not forgetting that re
       { question: "How do reminders reach my daily plan?", answer: "When you schedule or add a revision task from the reminder flow, it can become a task on the day you choose. You can also work straight from the reminders page." },
       { question: "What if I miss a due date?", answer: "The item stays overdue until you reschedule or complete it. Sort by due date to clear backlog before taking on new chapters." },
     ],
-    metaDescription: "Kalnehi revision reminders: due dates, syllabus links, and priorities in one list — so spaced review actually happens for JEE, NEET, UPSC, and more.",
+    metaDescription: "Kalnehi Daily revision reminders: due dates, syllabus links, and priorities in one list — so spaced review actually happens for JEE, NEET, UPSC, and more.",
   },
   {
     slug: "marks-engine",
     name: "Marks Engine",
     tagline: "Track Scores, Predict Rank",
     headline: "Marks Engine + Rank Prediction — Know Exactly Where You Stand Before Exam Day",
-    description: `The Marks Engine is Kalnehi's scoring and rank prediction system. It does two things that most students never do systematically: track every mock test score across sessions, and predict where that score translates in actual exam rank.
+    description: `The Marks Engine is Kalnehi Daily's scoring and rank prediction system. It does two things that most students never do systematically: track every mock test score across sessions, and predict where that score translates in actual exam rank.
 
 Log your mock scores — overall and section-wise — and the Marks Engine builds a performance curve across your entire preparation. You see at a glance whether your scores are trending up, plateauing, or declining. Mastermind reads this trend and tells you why.
 
@@ -156,18 +156,18 @@ The engine also shows your Target Score Blueprint: given your target college or 
       { question: "What exams have rank prediction support?", answer: "JEE Main (percentile + rank estimate), NEET UG (AIR estimate), CAT (percentile estimate), GATE (score + rank estimate), SSC CGL (normalised score estimate). For other exams, you can track scores and Mastermind analyses trends even without a formal rank model." },
       { question: "Can I compare my performance across different coaching institute mocks?", answer: "Yes. Log each mock with a source tag (ALLEN, FIITJEE, Resonance, etc.) and the engine shows your performance per source. This helps account for difficulty variation between coaching mocks." },
     ],
-    metaDescription: "Kalnehi's Marks Engine tracks mock test scores across sessions and predicts your exam rank. Supports JEE, NEET, CAT, GATE, SSC and all major Indian competitive exams. Mastermind reads your score data.",
+    metaDescription: "Kalnehi Daily's Marks Engine tracks mock test scores across sessions and predicts your exam rank. Supports JEE, NEET, CAT, GATE, SSC and all major Indian competitive exams. Mastermind reads your score data.",
   },
   {
     slug: "study-timer",
     name: "Study Timer",
     tagline: "Focus Blocks for Exam Prep",
     headline: "Study Timer — Deep Focus Blocks That Build Into Exam-Ready Stamina",
-    description: `The Study Timer in Kalnehi is not just a countdown clock. It's a session tracker that logs your study time against specific chapters or subjects, connects to your syllabus tracker, and builds a historical record of where your hours actually went.
+    description: `The Study Timer in Kalnehi Daily is not just a countdown clock. It's a session tracker that logs your study time against specific chapters or subjects, connects to your syllabus tracker, and builds a historical record of where your hours actually went.
 
 Use it for Pomodoro-style 25-minute blocks during intense problem-solving, or for 3-hour exam-simulation blocks that build the stamina you need to sit for JEE Advanced or UPSC Mains. Every timer session is labelled with what you studied and saved to your history.
 
-The timer also integrates with Kalnehi's on-camera study feature — start a session with optional camera-on mode for self-accountability, with all processing done on-device.`,
+The timer also integrates with Kalnehi Daily's on-camera study feature — start a session with optional camera-on mode for self-accountability, with all processing done on-device.`,
     scenarios: [
       "A JEE aspirant sets a 90-minute timer for 'Electrostatics — problem practice.' At the end, the session is logged automatically to their study history. Mastermind can see how many hours they've invested in Electrostatics total and whether it matches the chapter's difficulty level.",
       "A UPSC aspirant uses a 3-hour timer for answer writing practice — simulating the actual Mains paper environment. No phone, no breaks. The timer tracks their stamina development over weeks.",
@@ -178,10 +178,10 @@ The timer also integrates with Kalnehi's on-camera study feature — start a ses
     relatedExams: ["/jee", "/upsc", "/gate"],
     faqs: [
       { question: "Does the timer pause if I leave the app?", answer: "The timer runs in the background and continues when you return. If you close the app entirely, the timer pauses and you're prompted to resume or end the session when you return." },
-      { question: "Can I see my total study hours per subject?", answer: "Yes. Your total study hours per subject are tracked in your Kalnehi dashboard. Mastermind uses this data to identify subjects where you're under-investing time relative to their syllabus weight." },
+      { question: "Can I see my total study hours per subject?", answer: "Yes. Your total study hours per subject are tracked in your Kalnehi Daily dashboard. Mastermind uses this data to identify subjects where you're under-investing time relative to their syllabus weight." },
       { question: "Is there a Pomodoro mode?", answer: "Yes. Enable Pomodoro mode for automatic 25-minute work / 5-minute break cycles. After 4 Pomodoros, a 15-minute long break is automatically suggested." },
     ],
-    metaDescription: "Kalnehi's Study Timer tracks focus sessions against specific chapters and subjects, building a history of where your hours went. Supports Pomodoro and long exam-simulation blocks.",
+    metaDescription: "Kalnehi Daily's Study Timer tracks focus sessions against specific chapters and subjects, building a history of where your hours went. Supports Pomodoro and long exam-simulation blocks.",
   },
   {
     slug: "consistency-tracker",
@@ -202,11 +202,11 @@ For long-exam preps like UPSC (12-18 months) and CA (multiple-year journey), the
     relatedFeatures: ["daily-planner", "habit-maker", "study-timer"],
     relatedExams: ["/upsc", "/ca-final", "/jee", "/gate"],
     faqs: [
-      { question: "What counts as a 'study day' for the streak and heatmap?", answer: "Any day where you log at least one completed task or study session in Kalnehi. The threshold is intentionally low — even a 30-minute session counts — because consistency matters more than volume on any given day." },
+      { question: "What counts as a 'study day' for the streak and heatmap?", answer: "Any day where you log at least one completed task or study session in Kalnehi Daily. The threshold is intentionally low — even a 30-minute session counts — because consistency matters more than volume on any given day." },
       { question: "Can I see my consistency data from previous weeks or months?", answer: "Yes. The heatmap shows your complete study history from the day you started. You can zoom to week, month, or full-history views." },
       { question: "What happens if I miss a day due to illness?", answer: "Your streak resets. There's no exception system — the consistency tracker reflects reality. However, you can add a note to any day explaining an absence, and Mastermind won't penalise the gap in its analysis if you mark it as a planned rest day." },
     ],
-    metaDescription: "Kalnehi's Consistency Tracker shows a GitHub-style heatmap of your daily study activity and tracks streaks. Built for long-haul exam prep: UPSC, CA, JEE droppers, and GATE.",
+    metaDescription: "Kalnehi Daily's Consistency Tracker shows a GitHub-style heatmap of your daily study activity and tracks streaks. Built for long-haul exam prep: UPSC, CA, JEE droppers, and GATE.",
   },
   {
     slug: "doubt-tracker",
@@ -231,16 +231,16 @@ Students who resolve their doubts systematically consistently outperform those w
     faqs: [
       { question: "Can I photograph a question and add it to my Doubt Tracker?", answer: "Yes. You can attach images to doubts — photograph the question from your textbook or coaching material and attach it to the doubt entry for context." },
       { question: "How does Mastermind use my Doubt Tracker data?", answer: "Mastermind analyses your doubts for patterns — if multiple doubts cluster around the same chapter or concept type, it identifies a systematic gap and recommends targeted practice. It also counts unresolved doubts in its readiness assessment." },
-      { question: "Can I share doubts with my tutor or study group?", answer: "You can export your doubt list as text to share via WhatsApp or any messaging app. Kalnehi doesn't have built-in social features, but sharing is easy through export." },
+      { question: "Can I share doubts with my tutor or study group?", answer: "You can export your doubt list as text to share via WhatsApp or any messaging app. Kalnehi Daily doesn't have built-in social features, but sharing is easy through export." },
     ],
-    metaDescription: "Kalnehi's Doubt Tracker uses Kanban stages to capture, tag and resolve study doubts. Mastermind reads your doubt patterns and identifies systematic gaps in JEE, NEET, GATE and all major exams.",
+    metaDescription: "Kalnehi Daily's Doubt Tracker uses Kanban stages to capture, tag and resolve study doubts. Mastermind reads your doubt patterns and identifies systematic gaps in JEE, NEET, GATE and all major exams.",
   },
   {
     slug: "daily-planner",
     name: "Daily Planner",
     tagline: "Manual + Voice Planning for Your Whole Day",
     headline: "Daily Planner — Plan Every Study Hour the Night Before, Execute All Day",
-    description: `The Daily Planner is the execution core of Kalnehi. Every night you plan tomorrow's study sessions — which chapters, how many hours, what type of work (new learning, revision, problem practice, mock test). The next morning you execute and check off.
+    description: `The Daily Planner is the execution core of Kalnehi Daily. Every night you plan tomorrow's study sessions — which chapters, how many hours, what type of work (new learning, revision, problem practice, mock test). The next morning you execute and check off.
 
 The planner supports both manual entry and voice dictation. Speak your entire day's plan in 2 minutes with "Hey Boss, dictate my day." The planner also accepts Mastermind's recommendations — ask Mastermind to plan your day and its suggestions appear directly in your daily task list.
 
@@ -252,7 +252,7 @@ Historical daily plans are saved and accessible — you can look back at what yo
       "A UPSC aspirant says 'Hey Boss, dictate my day' at 5:30 AM and speaks their entire plan in 90 seconds: Current affairs at 6, GS2 Polity from 7-10, coaching notes review 10-11, answer writing practice 11-1, NCERT Economy 3-5, essay practice 6-7. The planner captures all of it hands-free.",
       "An aspirant completes 6 out of 8 planned tasks at 9 PM. Their Master Today circle is at 75%. Mastermind says: 'You have 2 tasks left. Given your energy at this hour, complete the 20-minute revision task tonight and defer the 2-hour Organic Chemistry to tomorrow morning.'",
     ],
-    examCompatibility: "Daily Planner is the foundation of Kalnehi for all exams. Especially critical for high-volume exams with complex daily scheduling: UPSC (multiple subjects + current affairs), JEE/NEET (3-subject balance), CA (8-paper management).",
+    examCompatibility: "Daily Planner is the foundation of Kalnehi Daily for all exams. Especially critical for high-volume exams with complex daily scheduling: UPSC (multiple subjects + current affairs), JEE/NEET (3-subject balance), CA (8-paper management).",
     relatedFeatures: ["voice-control", "prepbrain-ai", "consistency-tracker"],
     relatedExams: ["/jee", "/neet", "/upsc", "/ca-final"],
     faqs: [
@@ -260,7 +260,7 @@ Historical daily plans are saved and accessible — you can look back at what yo
       { question: "Does the Daily Planner integrate with the syllabus tracker?", answer: "Yes. When you complete a task tagged to a chapter (e.g., 'Electrostatics — first reading'), you can update the chapter status in your syllabus tracker directly from the task completion action." },
       { question: "Can I carry forward incomplete tasks?", answer: "Yes. Incomplete tasks can be carried forward to the next day with one tap. They appear at the top of tomorrow's plan clearly marked as carried-over." },
     ],
-    metaDescription: "Kalnehi's Daily Planner lets you plan every study hour by voice or manually, track tasks to completion, and connect each session to your syllabus tracker. Built for JEE, NEET, UPSC and all major exams.",
+    metaDescription: "Kalnehi Daily's Daily Planner lets you plan every study hour by voice or manually, track tasks to completion, and connect each session to your syllabus tracker. Built for JEE, NEET, UPSC and all major exams.",
   },
   {
     slug: "on-camera-study",
@@ -269,7 +269,7 @@ Historical daily plans are saved and accessible — you can look back at what yo
     headline: "On-Camera Study — Accountability Camera That Never Leaves Your Device",
     description: `On-Camera Study sessions let you study with your front camera active for self-monitoring — detecting whether you're at your desk, focused, or distracted — without ever uploading your video to any server. All processing is on-device using MediaPipe, a privacy-respecting AI framework that runs locally.
 
-The camera detects basic focus signals: whether you're at the desk, whether your attention appears directed at the screen. It doesn't record video. It doesn't store images. It doesn't send anything to the cloud. The only thing that happens in Kalnehi is: focus signals are logged as session quality indicators.
+The camera detects basic focus signals: whether you're at the desk, whether your attention appears directed at the screen. It doesn't record video. It doesn't store images. It doesn't send anything to the cloud. The only thing that happens in Kalnehi Daily is: focus signals are logged as session quality indicators.
 
 This is for aspirants who want the accountability of a study partner watching them, without sharing a room or a video call. It's also useful for on-camera study sessions with a self-imposed rule: if you leave the frame, the timer pauses.`,
     scenarios: [
@@ -281,11 +281,11 @@ This is for aspirants who want the accountability of a study partner watching th
     relatedFeatures: ["study-timer", "consistency-tracker", "daily-planner"],
     relatedExams: ["/jee", "/neet", "/upsc"],
     faqs: [
-      { question: "Is video recorded or uploaded anywhere?", answer: "Never. On-Camera Study runs entirely on your device using on-device AI (MediaPipe). No video is recorded, no images are stored, nothing leaves your device. Kalnehi only logs abstract focus signals (e.g., 'attention detected: yes/no') from the session." },
-      { question: "What camera permission is needed?", answer: "Kalnehi requests camera permission only when you start an On-Camera Study session. You can revoke this permission at any time in your device settings." },
+      { question: "Is video recorded or uploaded anywhere?", answer: "Never. On-Camera Study runs entirely on your device using on-device AI (MediaPipe). No video is recorded, no images are stored, nothing leaves your device. Kalnehi Daily only logs abstract focus signals (e.g., 'attention detected: yes/no') from the session." },
+      { question: "What camera permission is needed?", answer: "Kalnehi Daily requests camera permission only when you start an On-Camera Study session. You can revoke this permission at any time in your device settings." },
       { question: "What happens if I cover the camera?", answer: "The session continues with a 'Camera covered' status. The focus signal is logged as unavailable for that period. You can choose to end the session or continue without camera monitoring." },
     ],
-    metaDescription: "Kalnehi's On-Camera Study uses on-device AI (no video upload) to monitor study focus. All processing stays on your device. Never uploaded, never recorded. Built for privacy-first exam preparation.",
+    metaDescription: "Kalnehi Daily's On-Camera Study uses on-device AI (no video upload) to monitor study focus. All processing stays on your device. Never uploaded, never recorded. Built for privacy-first exam preparation.",
   },
   {
     slug: "habit-maker",
@@ -294,7 +294,7 @@ This is for aspirants who want the accountability of a study partner watching th
     headline: "Habit Maker — Build the Non-Negotiable Daily Habits That Compound Into Rank",
     description: `Habits are the invisible scaffolding of exam preparation. The student who reads the newspaper every morning without thinking about it has a massive advantage in UPSC by November. The JEE student who opens NCERT for 30 minutes every night without motivation depleting doesn't need willpower — the habit does the work.
 
-Kalnehi's Habit Maker lets you create exam-specific habits with custom reminders, streaks, and check-in systems. Create habits like: Read The Hindu at 6 AM, Review 10 flashcards before sleep, 20-minute NCERT reading, Write 1 answer every day, Review previous day's notes.
+Kalnehi Daily's Habit Maker lets you create exam-specific habits with custom reminders, streaks, and check-in systems. Create habits like: Read The Hindu at 6 AM, Review 10 flashcards before sleep, 20-minute NCERT reading, Write 1 answer every day, Review previous day's notes.
 
 Each habit has its own streak counter. Breaking a habit streak is logged and visible. Mastermind reads your habit completion data and factors it into its strategy — a student who has been meditating daily for 30 days has better cognitive baseline than one who hasn't.`,
     scenarios: [
@@ -310,14 +310,14 @@ Each habit has its own streak counter. Breaking a habit streak is logged and vis
       { question: "Can I set different habits for different days?", answer: "Yes. Set habits as daily, weekday-only, weekend-only, or specific days of the week. For example, 'Mock test — Sundays only' or 'Answer writing — Mon, Wed, Fri.'" },
       { question: "What reminders are available?", answer: "Push notifications at a set time each day, with customisable message. You can set a morning nudge ('Time for your newspaper'), a midday check-in ('Have you written your answer today?'), and an evening reminder." },
     ],
-    metaDescription: "Kalnehi's Habit Maker builds exam-specific daily habits with streaks, reminders and Mastermind monitoring. Create the non-negotiable routines that separate UPSC, JEE and NEET toppers.",
+    metaDescription: "Kalnehi Daily's Habit Maker builds exam-specific daily habits with streaks, reminders and Mastermind monitoring. Create the non-negotiable routines that separate UPSC, JEE and NEET toppers.",
   },
   {
     slug: "daily-log",
     name: "Daily Log",
     tagline: "A Private Record of Every Study Day",
     headline: "Daily Log — Your Honest Record of Every Study Day",
-    description: `The Daily Log is Kalnehi's journal for serious aspirants. Every day, log what you studied, for how long, what felt difficult, what went well, and any notes you want to remember. It's a private, searchable record of your entire preparation journey.
+    description: `The Daily Log is Kalnehi Daily's journal for serious aspirants. Every day, log what you studied, for how long, what felt difficult, what went well, and any notes you want to remember. It's a private, searchable record of your entire preparation journey.
 
 The daily log is not just a diary. Mastermind reads your log entries — especially your difficulty notes and emotional state indicators — to understand your preparation quality, not just quantity. A day where you logged 8 hours but noted "couldn't focus, kept re-reading the same paragraph" is different from a day with 4 hours logged and "clicked — finally understood circular motion."
 
@@ -335,7 +335,7 @@ Over months, the daily log becomes your most honest preparation data. You can se
       { question: "Can I add photos to my daily log?", answer: "Yes. Attach photos of your notes, solved problems, or anything you want to preserve as part of the day's record." },
       { question: "Is my daily log private?", answer: "Completely private. Your daily log is stored encrypted and accessible only to you. Mastermind can read it for analysis, but it's never shared with anyone else." },
     ],
-    metaDescription: "Kalnehi's Daily Log is a searchable private record of every study day — what you covered, how you felt, what was difficult. Mastermind reads logs to track preparation quality, not just hours.",
+    metaDescription: "Kalnehi Daily's Daily Log is a searchable private record of every study day — what you covered, how you felt, what was difficult. Mastermind reads logs to track preparation quality, not just hours.",
   },
 ];
 
