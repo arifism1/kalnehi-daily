@@ -70,9 +70,14 @@ export function useAllExamScopes(): {
   const examScopes = useMemo<ExamScope[]>(() => {
     // Multi-exam path: examRollups exists and contains per-exam data
     if (examRollups && examRollups.length > 1 && examResults.length > 1) {
-      return examRollups.map((er, idx) => {
-        const result = examResults[idx];
-        const display = displayNameForExamCatalog(er.examLabel, catalogRows) || er.examLabel || "";
+      return examRollups.map((er) => {
+        const result = examResults.find(
+          (r) => r.examLabel === er.examLabel,
+        );
+        const display =
+          displayNameForExamCatalog(er.examLabel, catalogRows) ||
+          er.examLabel ||
+          "";
         return {
           examLabel: er.examLabel ?? "",
           displayName: display,

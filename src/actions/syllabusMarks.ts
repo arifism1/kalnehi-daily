@@ -6,7 +6,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { normalizeSyllabusMasterId } from "@/lib/syllabusIds";
 import {
   assertSyllabusBelongsToUserExam,
-  getUserCatalogExamContext,
+  getUserEnabledExamKeys,
   SyllabusExamScopeError,
 } from "@/lib/syllabusMasterWriteGuards";
 import { USER_ERROR } from "@/lib/userFacingErrors";
@@ -40,8 +40,9 @@ export async function upsertSyllabusMarksOverride(
 
     const sid = normalizeSyllabusMasterId(payload.syllabusMasterId);
 
-    const ctx = await getUserCatalogExamContext(supabase, user.id);
-    if (!ctx || ctx.examKey !== payload.examName.trim()) {
+    const { examKeys } = await getUserEnabledExamKeys(supabase, user.id);
+    const name = payload.examName.trim();
+    if (examKeys.length === 0 || !examKeys.includes(name)) {
       return { ok: false, error: USER_ERROR.tryAgain };
     }
     try {
