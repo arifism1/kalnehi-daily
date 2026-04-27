@@ -55,6 +55,31 @@ import {
   syllabusHasCatalogMarksData,
   type ChapterRollup,
 } from "@/lib/syllabusRollup";
+
+function buildRollupMapsFromChapters(chapters: ChapterRollup[]) {
+  const chapterRollupMap = new Map<string, ChapterRollup>();
+  for (const c of chapters) {
+    chapterRollupMap.set(chapterKey(c.subject, c.chapter), c);
+  }
+  const accum = new Map<string, { completed: number; total: number }>();
+  for (const ch of chapters) {
+    const prev = accum.get(ch.subject) ?? { completed: 0, total: 0 };
+    accum.set(ch.subject, {
+      completed: prev.completed + ch.completedCount,
+      total: prev.total + ch.totalCount,
+    });
+  }
+  const subjectMicrotopicMap = new Map<
+    string,
+    { completed: number; total: number; percent: number }
+  >();
+  for (const [subject, { completed, total }] of accum) {
+    const percent =
+      total > 0 ? Math.round((completed / total) * 1000) / 10 : 0;
+    subjectMicrotopicMap.set(subject, { completed, total, percent });
+  }
+  return { chapterRollupMap, subjectMicrotopicMap };
+}
 import { useExamsCatalogRows } from "@/hooks/useExamsCatalogRows";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
 import { usePrimaryExamLabel } from "@/hooks/usePrimaryExamLabel";
@@ -537,10 +562,15 @@ export function SyllabusTracker() {
     subject: string;
     chapter: string;
     rows: MergedSyllabusRow[];
+    /** When set (e.g. multi-exam), overrides `catalogExamKey` for ChapterMarksSheet saves */
+    examName?: string;
   } | null>(null);
   const [showAllYears, setShowAllYears] = useState(false);
   const [openSubject, setOpenSubject] = useState<string | null>(null);
   const [openChapterId, setOpenChapterId] = useState<string | null>(null);
+  /** Multi-exam track: composite keys `${catalogExamKey}::${subject}` / `::${chapterKey}` */
+  const [openSubjectMulti, setOpenSubjectMulti] = useState<string | null>(null);
+  const [openChapterMulti, setOpenChapterMulti] = useState<string | null>(null);
   const [revisionBundle, setRevisionBundle] =
     useState<UserPlannerTextBundle | null>(null);
 
@@ -549,6 +579,10 @@ export function SyllabusTracker() {
   useEffect(() => {
     setOpenChapterId(null);
   }, [openSubject]);
+
+  useEffect(() => {
+    setOpenChapterMulti(null);
+  }, [openSubjectMulti]);
 
   useEffect(() => {
     if (!userId) {
@@ -628,6 +662,22 @@ export function SyllabusTracker() {
     }
     return out;
   }, [rollup.chapters]);
+
+  /**
+   * Per-exam chapter + subject aggregates for multi-exam tracks. The combined
+   * `rollup` merges rows from all exams and must not drive JEE Main/Advanced UI.
+   */
+  const rollupMapsByExamLabel = useMemo(() => {
+    if (!examRollups) return null;
+    const m = new Map<
+      string,
+      ReturnType<typeof buildRollupMapsFromChapters>
+    >();
+    for (const er of examRollups) {
+      m.set(er.examLabel, buildRollupMapsFromChapters(er.rollup.chapters));
+    }
+    return m;
+  }, [examRollups]);
 
   const hasPrevYearMarks = examHasPrevYearMarks(targetExamLabel);
   /** CUET uses domain scoring; other exams need real marks_* (or overrides), not legacy 1× fallbacks. */
@@ -1004,8 +1054,25 @@ export function SyllabusTracker() {
                   section.subjects.map((subject) => {
                     const chapters = section.grouped.get(subject)!;
                     const chapterNames = sortChapterNameList([...chapters.keys()]);
-                    const subRoll = subjectMicrotopicMap.get(subject) ?? { completed: 0, total: 0, percent: 0 };
-                    const subjectIsOpen = openSubject === subject;
+                    const perExam = rollupMapsByExamLabel?.get(
+                      section.examLabel,
+                    );
+                    const subRoll =
+                      perExam?.subjectMicrotopicMap.get(subject) ?? {
+                        completed: 0,
+                        total: 0,
+                        percent: 0,
+                      };
+                    const sectionRows =
+                      examResults.find((x) => x.examLabel === section.examLabel)
+                        ?.rows ?? [];
+                    const sectionShowMarks =
+                      examHasPrevYearMarks(section.examLabel) &&
+                      syllabusHasCatalogMarksData(sectionRows);
+                    const scope =
+                      section.catalogExamKey ?? section.examLabel;
+                    const subjectOpenKey = `${scope}::${subject}`;
+                    const subjectIsOpen = openSubjectMulti === subjectOpenKey;
                     const sectionExamKey = section.catalogExamKey ?? catalogExamKey;
                     return (
                       <div
@@ -1020,11 +1087,17 @@ export function SyllabusTracker() {
                           role="button"
                           tabIndex={0}
                           aria-expanded={subjectIsOpen}
-                          onClick={() => setOpenSubject((prev) => (prev === subject ? null : subject))}
+                          onClick={() =>
+                            setOpenSubjectMulti((prev) =>
+                              prev === subjectOpenKey ? null : subjectOpenKey,
+                            )
+                          }
                           onKeyDown={(e) => {
                             if (e.key === "Enter" || e.key === " ") {
                               e.preventDefault();
-                              setOpenSubject((prev) => (prev === subject ? null : subject));
+                              setOpenSubjectMulti((prev) =>
+                                prev === subjectOpenKey ? null : subjectOpenKey,
+                              );
                             }
                           }}
                         >
@@ -1057,13 +1130,18 @@ export function SyllabusTracker() {
                               const firstRow = list[0] as MergedSyllabusRow;
                               const originSubject = firstRow.originSubject ?? firstRow.subject;
                               const originChapter = firstRow.originChapter ?? firstRow.chapter;
-                              const cr = chapterRollupMap.get(chapterKey(subject, chapter));
-                              const pct = cr?.microtopicProgressPercent ?? 0;
-                              const marksLine = showMarksUi && cr != null
-                                ? `${cr.chapterMarksAwarded.toFixed(0)} / ${cr.chapterMarksTotal.toFixed(0)} chapter marks`
-                                : null;
                               const ck = chapterKey(subject, chapter);
-                              const chapterIsOpen = !syllabusLimited && openChapterId === ck;
+                              const cr =
+                                perExam?.chapterRollupMap.get(ck) ?? undefined;
+                              const pct = cr?.microtopicProgressPercent ?? 0;
+                              const marksLine =
+                                sectionShowMarks && cr != null
+                                  ? `${cr.chapterMarksAwarded.toFixed(0)} / ${cr.chapterMarksTotal.toFixed(0)} chapter marks`
+                                  : null;
+                              const chapterOpenKey = `${scope}::${ck}`;
+                              const chapterIsOpen =
+                                !syllabusLimited &&
+                                openChapterMulti === chapterOpenKey;
                               return (
                                 <div key={chapter} className="mb-5 border-b border-kal-border pb-5 last:mb-0 last:border-b-0 last:pb-0">
                                   <div className="kal-glass-card overflow-hidden rounded-xl border border-kal-border/90 shadow-sm ring-1 ring-black/[0.03] dark:ring-white/[0.04]">
@@ -1076,11 +1154,19 @@ export function SyllabusTracker() {
                                         role={syllabusLimited ? undefined : "button"}
                                         tabIndex={syllabusLimited ? -1 : 0}
                                         aria-expanded={chapterIsOpen}
-                                        onClick={syllabusLimited ? undefined : () => setOpenChapterId((prev) => (prev === ck ? null : ck))}
+                                        onClick={syllabusLimited ? undefined : () =>
+                                          setOpenChapterMulti((prev) =>
+                                            prev === chapterOpenKey ? null : chapterOpenKey,
+                                          )
+                                        }
                                         onKeyDown={syllabusLimited ? undefined : (e) => {
                                           if (e.key === "Enter" || e.key === " ") {
                                             e.preventDefault();
-                                            setOpenChapterId((prev) => (prev === ck ? null : ck));
+                                            setOpenChapterMulti((prev) =>
+                                              prev === chapterOpenKey
+                                                ? null
+                                                : chapterOpenKey,
+                                            );
                                           }
                                         }}
                                       >
@@ -1216,7 +1302,7 @@ export function SyllabusTracker() {
                                             {cr?.isChapterMastered ? "Completed" : "Mark complete"}
                                           </span>
                                         </div>
-                                        {sectionExamKey && examHasPrevYearMarks(section.examLabel) ? (
+                                        {sectionExamKey && sectionShowMarks ? (
                                           <button
                                             type="button"
                                             title="Chapter marks (your weights)"
@@ -1228,6 +1314,7 @@ export function SyllabusTracker() {
                                                 subject,
                                                 chapter,
                                                 rows: list as MergedSyllabusRow[],
+                                                examName: sectionExamKey,
                                               });
                                             }}
                                           >
@@ -1625,9 +1712,12 @@ export function SyllabusTracker() {
       )} {/* end single-exam subjects div */}
 
       <ChapterMarksSheet
-        open={marksSheetChapter != null && Boolean(catalogExamKey)}
+        open={
+          marksSheetChapter != null &&
+          Boolean(marksSheetChapter.examName ?? catalogExamKey)
+        }
         onClose={() => setMarksSheetChapter(null)}
-        examName={catalogExamKey ?? ""}
+        examName={marksSheetChapter?.examName ?? catalogExamKey ?? ""}
         primaryYear={primaryMarksYear}
         chapterTitle={
           marksSheetChapter
