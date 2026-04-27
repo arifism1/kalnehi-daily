@@ -100,15 +100,23 @@ async function paddedSquare(size, markBuf) {
 
 /** Apple startup images — must match src/app/layout.tsx `appleStartupImages` */
 const SPLASH_SIZES = [
-  [1290, 2796],
-  [1170, 2532],
-  [1284, 2778],
-  [1242, 2688],
-  [828, 1792],
-  [750, 1334],
-  [1536, 2048],
-  [1668, 2388],
-  [2048, 2732],
+  // ── iPhone (newest first) ──────────────────────────────────────────────────
+  [1320, 2868], // iPhone 16 Pro Max      440×956 @3x
+  [1206, 2622], // iPhone 16 Pro          402×874 @3x
+  [1290, 2796], // iPhone 16 Plus / 15 Pro Max / 14 Pro Max  430×932 @3x
+  [1179, 2556], // iPhone 16 / 15 / 15 Pro / 14 Pro  393×852 @3x
+  [1170, 2532], // iPhone 14 / 13 / 12    390×844 @3x
+  [1284, 2778], // iPhone 13 Pro Max / 12 Pro Max  428×926 @3x
+  [1242, 2688], // iPhone XS Max / 11 Pro Max  414×896 @3x
+  [828, 1792],  // iPhone XR / 11         414×896 @2x
+  [750, 1334],  // iPhone SE / 8          375×667 @2x
+  // ── iPad ──────────────────────────────────────────────────────────────────
+  [2064, 2752], // iPad Pro 13" M4        1032×1376 @2x
+  [2048, 2732], // iPad Pro 12.9" (prev) / Air 13"  1024×1366 @2x
+  [1668, 2388], // iPad Pro 11"           834×1194 @2x
+  [1640, 2360], // iPad Air 11" M2/M3     820×1180 @2x
+  [1488, 2266], // iPad mini 6            744×1133 @2x
+  [1536, 2048], // iPad (standard)        768×1024 @2x
 ];
 
 function splashFilename(w, h) {

@@ -9,6 +9,8 @@ import bundleAnalyzer from "@next/bundle-analyzer";
  */
 const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
+  // NOTE: "upgrade-insecure-requests" is valid here (enforced header) but
+  // MUST NOT appear in the Report-Only variant — see REPORT_ONLY_CSP below.
   [
     "script-src",
     "'self'",
@@ -59,6 +61,16 @@ const CONTENT_SECURITY_POLICY = [
   "object-src 'none'",
   "upgrade-insecure-requests",
 ].join("; ");
+
+/**
+ * Report-Only CSP — identical to the enforced policy except:
+ * - "upgrade-insecure-requests" is excluded: the spec forbids it in report-only
+ *   mode and browsers log a security warning when it appears there.
+ */
+const REPORT_ONLY_CSP = CONTENT_SECURITY_POLICY.replace(
+  /;\s*upgrade-insecure-requests/,
+  "",
+);
 
 const marketingPublicCacheHeader = {
   key: "Cache-Control",
@@ -183,7 +195,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: "Content-Security-Policy-Report-Only",
-            value: CONTENT_SECURITY_POLICY,
+            value: REPORT_ONLY_CSP,
           },
         ],
       },
