@@ -10,14 +10,14 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 export const metadata = marketingPageMetadata({
   path: "/neet-pg",
   title: `Daily Planner for NEET PG Preparation | ${SITE_NAME}`,
-  description: `NEET PG covers 19 clinical subjects. Most medical graduates prepare while doing internship. Kalnehi's daily planner and Mastermind help you get maximum output from limited study hours.`,
+  description: `NEET PG covers 19 clinical subjects. Most medical graduates prepare while doing internship. Kalnehi Daily's daily planner and Mastermind help you get maximum output from limited study hours.`,
 });
 
 const FAQS = [
-  { question: "How does Kalnehi help NEET PG aspirants who are doing internship?", answer: "Internship leaves you with 2-4 hours of study time per day at most. Kalnehi helps you plan exactly which subject and which topic to cover in those limited hours — and tracks your completion so you don't realise in month 8 that you've barely touched Medicine or Surgery." },
+  { question: "How does Kalnehi Daily help NEET PG aspirants who are doing internship?", answer: "Internship leaves you with 2-4 hours of study time per day at most. Kalnehi Daily helps you plan exactly which subject and which topic to cover in those limited hours — and tracks your completion so you don't realise in month 8 that you've barely touched Medicine or Surgery." },
   { question: "What subjects are covered in NEET PG?", answer: "NEET PG tests all 19 clinical subjects from MBBS including Medicine, Surgery, Obstetrics & Gynaecology, Paediatrics, ENT, Ophthalmology, Psychiatry, Dermatology, Orthopaedics, Radiology, and pre-clinical subjects like Anatomy, Physiology, Biochemistry, Pathology, Microbiology, Pharmacology, Forensic Medicine, and Community Medicine." },
   { question: "How does Mastermind help NEET PG preparation?", answer: "Mastermind reads your subject-wise completion and cross-references with NEET PG question frequency data. It tells you which high-yield subjects you're under-investing in — Surgery and Medicine together make up 30%+ of NEET PG marks." },
-  { question: "Is Kalnehi useful for NEXT (National Exit Test) preparation too?", answer: "Yes. NEXT has a similar subject structure to NEET PG. Kalnehi's syllabus tracker works for any subject list — set up your NEXT subjects and track them the same way." },
+  { question: "Is Kalnehi Daily useful for NEXT (National Exit Test) preparation too?", answer: "Yes. NEXT has a similar subject structure to NEET PG. Kalnehi Daily's syllabus tracker works for any subject list — set up your NEXT subjects and track them the same way." },
 ];
 
 export default function NeetPgPage() {
@@ -33,12 +33,12 @@ export default function NeetPgPage() {
         <ExamHero
           badge="NEET PG — Medical PG Entrance"
           headline="NEET PG Preparation Daily Planner — 19 Subjects, Limited Hours, Zero Compromise"
-          subheadline="NEET PG aspirants carry one of the toughest preparation loads in India — 19 clinical subjects, revised during internship with barely 3 hours of free time per day. Kalnehi helps you make every hour count."
+          subheadline="NEET PG aspirants carry one of the toughest preparation loads in India — 19 clinical subjects, revised during internship with barely 3 hours of free time per day. Kalnehi Daily helps you make every hour count."
           stats={[{ value: "19", label: "clinical subjects" }, { value: "2-4 hrs/day", label: "typical internship window" }]}
         />
 
         <section className="space-y-3" aria-labelledby="neetpg-system">
-          <h2 id="neetpg-system" className="text-xl font-bold text-kal-text">How Kalnehi helps NEET PG aspirants</h2>
+          <h2 id="neetpg-system" className="text-xl font-bold text-kal-text">How Kalnehi Daily helps NEET PG aspirants</h2>
           <ul className="space-y-3 text-sm">
             {[
               { t: "19-subject syllabus tracker", d: "Track progress across Medicine, Surgery, OBG, Paediatrics, Pathology, Microbiology and all other NEET PG subjects at the topic level. See which subjects are lagging in one view." },

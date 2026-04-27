@@ -1,6 +1,6 @@
 "use client";
 
-import { addDays, format, parseISO } from "date-fns";
+import { addDays, format, parse, parseISO } from "date-fns";
 import { ArrowLeft, CalendarDays, Mic, Type, Zap } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -49,10 +49,13 @@ export function DailyPlanPageContent() {
     );
   }
 
+  // Use parse (local midnight) not parseISO (UTC midnight) so that chip ids
+  // for Yesterday/Tomorrow are correct in non-UTC timezones.
+  const todayLocal = parse(today, "yyyy-MM-dd", new Date());
   const DATE_CHIPS = [
     { id: today, label: "Today" },
-    { id: format(addDays(parseISO(today), -1), "yyyy-MM-dd"), label: "Yesterday" },
-    { id: format(addDays(parseISO(today), 1), "yyyy-MM-dd"), label: "Tomorrow" },
+    { id: format(addDays(todayLocal, -1), "yyyy-MM-dd"), label: "Yesterday" },
+    { id: format(addDays(todayLocal, 1), "yyyy-MM-dd"), label: "Tomorrow" },
   ];
 
   const isChipDate = DATE_CHIPS.some((d) => d.id === logDate);
@@ -70,12 +73,7 @@ export function DailyPlanPageContent() {
       <header className="mt-6 mb-5">
         <div className="flex flex-wrap items-center gap-2">
           <Zap className="h-5 w-5 text-kal-accent" aria-hidden />
-          <h1 className="kal-feature-title">
-            {heroTitle}{" "}
-            <span className="font-sans text-sm font-semibold text-kal-muted sm:text-base">
-              (live)
-            </span>
-          </h1>
+          <h1 className="kal-feature-title">{heroTitle}</h1>
         </div>
       </header>
 

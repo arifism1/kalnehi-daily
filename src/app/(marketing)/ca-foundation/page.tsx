@@ -10,14 +10,14 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 export const metadata = marketingPageMetadata({
   path: "/ca-foundation",
   title: `Daily Planner for CA Foundation Preparation | ${SITE_NAME}`,
-  description: `CA Foundation has 4 papers — Accounts, Law, Maths and Economics. Kalnehi tracks your paper-wise syllabus, helps you plan daily study hours, and uses Mastermind to identify your score gaps.`,
+  description: `CA Foundation has 4 papers — Accounts, Law, Maths and Economics. Kalnehi Daily tracks your paper-wise syllabus, helps you plan daily study hours, and uses Mastermind to identify your score gaps.`,
 });
 
 const FAQS = [
   { question: "What are the 4 papers in CA Foundation?", answer: "CA Foundation has Paper 1 (Principles and Practice of Accounting), Paper 2 (Business Laws and Business Correspondence), Paper 3 (Business Mathematics and Logical Reasoning & Statistics), and Paper 4 (Business Economics and Business and Commercial Knowledge). Papers 1 and 2 are descriptive; Papers 3 and 4 are objective." },
   { question: "How many hours should a CA Foundation student study per day?", answer: "Most CA Foundation toppers study 6-8 hours per day for 4-5 months. The key is consistency across all 4 papers — not spending all your time on Accounts because you enjoy it." },
-  { question: "How does Kalnehi track CA Foundation paper-wise progress?", answer: "Set up each paper as a subject in Kalnehi's syllabus tracker. Track chapters within each paper at the topic level. Mastermind monitors which paper is most behind and tells you how many hours to shift to close the gap before your exam date." },
-  { question: "Is CA Foundation hard to clear in the first attempt?", answer: "The pass rate for CA Foundation hovers around 30-40%. Most candidates fail due to under-preparation in 1-2 papers. Kalnehi's syllabus tracker ensures you never lose visibility on any paper — so you don't discover gaps on exam day." },
+  { question: "How does Kalnehi Daily track CA Foundation paper-wise progress?", answer: "Set up each paper as a subject in Kalnehi Daily's syllabus tracker. Track chapters within each paper at the topic level. Mastermind monitors which paper is most behind and tells you how many hours to shift to close the gap before your exam date." },
+  { question: "Is CA Foundation hard to clear in the first attempt?", answer: "The pass rate for CA Foundation hovers around 30-40%. Most candidates fail due to under-preparation in 1-2 papers. Kalnehi Daily's syllabus tracker ensures you never lose visibility on any paper — so you don't discover gaps on exam day." },
 ];
 
 export default function CaFoundationPage() {
@@ -33,11 +33,11 @@ export default function CaFoundationPage() {
         <ExamHero
           badge="CA Foundation — ICAI"
           headline="CA Foundation Preparation Daily Planner — 4 Papers, One System"
-          subheadline="CA Foundation is where most aspiring CAs begin — and where many stumble because they under-prepare one paper while over-investing in another. Kalnehi keeps all 4 papers visible and on track."
+          subheadline="CA Foundation is where most aspiring CAs begin — and where many stumble because they under-prepare one paper while over-investing in another. Kalnehi Daily keeps all 4 papers visible and on track."
         />
 
         <section className="space-y-4" aria-labelledby="cafound-papers">
-          <h2 id="cafound-papers" className="text-xl font-bold text-kal-text">CA Foundation papers tracked in Kalnehi</h2>
+          <h2 id="cafound-papers" className="text-xl font-bold text-kal-text">CA Foundation papers tracked in Kalnehi Daily</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {[
               { paper: "Paper 1: Accounts", topics: ["Basic Accounting Concepts", "Journal, Ledger, Trial Balance", "Financial Statements", "Partnership Accounts", "Company Accounts"] },

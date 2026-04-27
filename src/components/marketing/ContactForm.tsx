@@ -13,7 +13,7 @@ export function ContactForm() {
     e.preventDefault();
     const form = e.currentTarget;
     const data = new FormData(form);
-    const subject = encodeURIComponent(`[Kalnehi] ${data.get("topic") || "Contact"}`);
+    const subject = encodeURIComponent(`[Kalnehi Daily] ${data.get("topic") || "Contact"}`);
     const body = encodeURIComponent((data.get("message") as string) || "");
     window.location.href = `mailto:support@kalnehi.com?subject=${subject}&body=${body}`;
   }

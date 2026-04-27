@@ -10,14 +10,14 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 export const metadata = marketingPageMetadata({
   path: "/ipmat",
   title: `Daily Planner for IPMAT Preparation | ${SITE_NAME}`,
-  description: `IPMAT (IIM Indore, Rohtak) has Quantitative Ability and Verbal Ability sections. Kalnehi tracks your chapter-wise progress and Mastermind helps you reach the sectional cutoffs needed.`,
+  description: `IPMAT (IIM Indore, Rohtak) has Quantitative Ability and Verbal Ability sections. Kalnehi Daily tracks your chapter-wise progress and Mastermind helps you reach the sectional cutoffs needed.`,
 });
 
 const FAQS = [
   { question: "What is IPMAT and who should take it?", answer: "IPMAT (Integrated Programme in Management Aptitude Test) is offered by IIM Indore and IIM Rohtak for their 5-year IPM programme. Class 12 students who want to do their MBA from an IIM without a conventional bachelor's degree take IPMAT. It's one of the most prestigious management entrance tests for school leavers." },
   { question: "What is the IPMAT exam structure?", answer: "IPMAT IIM Indore: Section 1 — Quantitative Ability (MCQ, 45 questions, 40 minutes); Section 2 — Quantitative Ability (Short Answer, 15 questions, 40 minutes); Section 3 — Verbal Ability (45 questions, 40 minutes). There's a PI round after written results. IPMAT Rohtak has a different pattern." },
-  { question: "How does Kalnehi help IPMAT aspirants?", answer: "Kalnehi tracks your Quantitative Ability topic completion (Arithmetic, Algebra, Geometry, Number Theory) and Verbal Ability preparation (RC, Para Jumbles, Grammar). Mastermind monitors which section is weaker and tells you how to rebalance. Sectional cutoffs are strict — both sections matter equally." },
-  { question: "Can I prepare for IPMAT and Class 12 Boards simultaneously?", answer: "Yes — most IPMAT aspirants are in Class 12. Kalnehi handles both exam syllabuses in one place and Mastermind helps you allocate daily time between Boards and IPMAT prep. The overlap in Mathematics is significant." },
+  { question: "How does Kalnehi Daily help IPMAT aspirants?", answer: "Kalnehi Daily tracks your Quantitative Ability topic completion (Arithmetic, Algebra, Geometry, Number Theory) and Verbal Ability preparation (RC, Para Jumbles, Grammar). Mastermind monitors which section is weaker and tells you how to rebalance. Sectional cutoffs are strict — both sections matter equally." },
+  { question: "Can I prepare for IPMAT and Class 12 Boards simultaneously?", answer: "Yes — most IPMAT aspirants are in Class 12. Kalnehi Daily handles both exam syllabuses in one place and Mastermind helps you allocate daily time between Boards and IPMAT prep. The overlap in Mathematics is significant." },
 ];
 
 export default function IpmatPage() {
@@ -33,11 +33,11 @@ export default function IpmatPage() {
         <ExamHero
           badge="IPMAT — IIM Indore & Rohtak"
           headline="IPMAT Preparation Daily Planner — Get Into IIM Without Waiting for an MBA"
-          subheadline="IPMAT is your shortcut to IIM — directly after Class 12. The competition is intense and sectional cutoffs are non-negotiable. Kalnehi tracks your QA and VA preparation daily so you don't discover gaps during the exam."
+          subheadline="IPMAT is your shortcut to IIM — directly after Class 12. The competition is intense and sectional cutoffs are non-negotiable. Kalnehi Daily tracks your QA and VA preparation daily so you don't discover gaps during the exam."
         />
 
         <section className="space-y-4" aria-labelledby="ipmat-sections">
-          <h2 id="ipmat-sections" className="text-xl font-bold text-kal-text">IPMAT sections tracked in Kalnehi</h2>
+          <h2 id="ipmat-sections" className="text-xl font-bold text-kal-text">IPMAT sections tracked in Kalnehi Daily</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {[
               { s: "Quantitative Ability", topics: ["Arithmetic (Percentages, Ratios, Profit-Loss, Time-Work)", "Algebra (Equations, Polynomials, Inequalities)", "Geometry & Mensuration", "Number Theory (Divisibility, Remainders, LCM/HCF)", "Data Interpretation (Tables, Graphs, Caselets)"] },

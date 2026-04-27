@@ -10,14 +10,14 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 export const metadata = marketingPageMetadata({
   path: "/cuet",
   title: `Daily Planner for CUET Preparation | ${SITE_NAME}`,
-  description: `CUET has General Test, Domain Subjects and Language papers. Kalnehi tracks your subject-wise progress, plans your daily study, and helps Mastermind identify which CUET subjects need more time.`,
+  description: `CUET has General Test, Domain Subjects and Language papers. Kalnehi Daily tracks your subject-wise progress, plans your daily study, and helps Mastermind identify which CUET subjects need more time.`,
 });
 
 const FAQS = [
   { question: "What is the CUET exam structure?", answer: "CUET (Common University Entrance Test) has three sections: Section IA/IB — Language (from 33 languages, choose one); Section II — Domain Subjects (27 subjects, choose up to 6 based on your target course); Section III — General Test (optional, required by some universities). Marks depend on which universities and courses you're applying for." },
   { question: "Which universities accept CUET scores?", answer: "All Central Universities (DU, JNU, BHU, Hyderabad University, etc.), several State Universities, and private universities including Sharda, Tezpur, and more. Over 200 universities accept CUET scores. DU is the most competitive — some courses require near-perfect scores." },
-  { question: "How does Kalnehi help CUET aspirants?", answer: "Track your domain subject preparation in Kalnehi — which chapters from your chosen subjects (e.g. Economics, History, Political Science) are done vs pending. Mastermind monitors your mock scores and tells you which subject to prioritise." },
-  { question: "How many domain subjects should I choose for CUET?", answer: "Choose domain subjects based on the courses you want to apply for. For DU BA (H) Economics, you'd typically choose Economics + Mathematics + General Test. Kalnehi tracks your preparation for each chosen domain subject separately." },
+  { question: "How does Kalnehi Daily help CUET aspirants?", answer: "Track your domain subject preparation in Kalnehi Daily — which chapters from your chosen subjects (e.g. Economics, History, Political Science) are done vs pending. Mastermind monitors your mock scores and tells you which subject to prioritise." },
+  { question: "How many domain subjects should I choose for CUET?", answer: "Choose domain subjects based on the courses you want to apply for. For DU BA (H) Economics, you'd typically choose Economics + Mathematics + General Test. Kalnehi Daily tracks your preparation for each chosen domain subject separately." },
 ];
 
 export default function CuetPage() {
@@ -33,15 +33,15 @@ export default function CuetPage() {
         <ExamHero
           badge="CUET — Common University Entrance Test"
           headline="CUET Preparation Daily Planner — Track Every Domain Subject, Secure Your Central University Seat"
-          subheadline="CUET has replaced Class 12 marks as the admission criterion for Central Universities. For DU and JNU, even 95% in Boards isn't enough — you need a near-perfect CUET score in your chosen domains. Kalnehi tracks every chapter."
+          subheadline="CUET has replaced Class 12 marks as the admission criterion for Central Universities. For DU and JNU, even 95% in Boards isn't enough — you need a near-perfect CUET score in your chosen domains. Kalnehi Daily tracks every chapter."
         />
 
         <section className="space-y-3" aria-labelledby="cuet-how">
-          <h2 id="cuet-how" className="text-xl font-bold text-kal-text">How Kalnehi helps CUET aspirants</h2>
+          <h2 id="cuet-how" className="text-xl font-bold text-kal-text">How Kalnehi Daily helps CUET aspirants</h2>
           <ul className="space-y-3 text-sm">
             {[
               { t: "Multi-domain subject tracking", d: "Track your preparation across all chosen domain subjects (Economics, History, Mathematics, Political Science, etc.) simultaneously. Mastermind monitors which subject has the lowest completion and tells you to shift focus." },
-              { t: "NCERT-aligned syllabus tracking", d: "CUET domain questions are largely NCERT-based (Class 12). Kalnehi maps your NCERT chapter completion for each subject and flags incomplete chapters before your exam." },
+              { t: "NCERT-aligned syllabus tracking", d: "CUET domain questions are largely NCERT-based (Class 12). Kalnehi Daily maps your NCERT chapter completion for each subject and flags incomplete chapters before your exam." },
               { t: "Mock score analysis", d: "Log your CUET mock scores section-wise. Mastermind tracks your accuracy per domain subject and tells you which chapters within each subject are your weakest based on your test performance." },
             ].map(({ t, d }) => (
               <div key={t} className="kal-glass-card rounded-xl p-4">
@@ -61,7 +61,7 @@ export default function CuetPage() {
         </section>
 
         <FAQBlock items={FAQS} />
-        <CTABanner headline="Track your CUET domain subjects in Kalnehi" subtext="3 days free. Mastermind. No credit card." />
+        <CTABanner headline="Track your CUET domain subjects in Kalnehi Daily" subtext="3 days free. Mastermind. No credit card." />
       </article>
     </>
   );

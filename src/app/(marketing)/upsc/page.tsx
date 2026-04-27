@@ -13,7 +13,7 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 export const metadata = marketingPageMetadata({
   path: "/upsc",
   title: `Daily Planner for UPSC CSE Preparation | ${SITE_NAME}`,
-  description: `UPSC needs years of consistent preparation across GS, Essay and Optional. Kalnehi gives working professionals and full-time aspirants a daily planning system that survives the long haul.`,
+  description: `UPSC needs years of consistent preparation across GS, Essay and Optional. Kalnehi Daily gives working professionals and full-time aspirants a daily planning system that survives the long haul.`,
   ogImage: ogImageExam("UPSC CSE Preparation"),
 });
 
@@ -51,12 +51,12 @@ const FAQS = [
   {
     question: "Why do most UPSC aspirants fail despite knowing the syllabus?",
     answer:
-      "Because they cannot sustain consistent preparation over 12-18 months. They have good weeks and terrible weeks, with no system to catch the slippage. Kalnehi's consistency heatmap, streak tracker and daily plan help you build the kind of boring, reliable daily output that UPSC rewards.",
+      "Because they cannot sustain consistent preparation over 12-18 months. They have good weeks and terrible weeks, with no system to catch the slippage. Kalnehi Daily's consistency heatmap, streak tracker and daily plan help you build the kind of boring, reliable daily output that UPSC rewards.",
   },
   {
-    question: "How does Kalnehi help working professionals preparing for UPSC?",
+    question: "How does Kalnehi Daily help working professionals preparing for UPSC?",
     answer:
-      "Working professionals typically have 3-4 hours per day at most. Kalnehi's daily planner helps you extract maximum output from those hours — logging what you actually covered, tracking GS topics, and using Mastermind to tell you which paper is most behind schedule.",
+      "Working professionals typically have 3-4 hours per day at most. Kalnehi Daily's daily planner helps you extract maximum output from those hours — logging what you actually covered, tracking GS topics, and using Mastermind to tell you which paper is most behind schedule.",
   },
   {
     question: "How does Mastermind help UPSC preparation?",
@@ -64,12 +64,12 @@ const FAQS = [
       "Mastermind reads your GS completion, your Optional progress, and your daily logs. It tells you if you're spending disproportionate time on GS1 while GS4 (Ethics) is neglected. For UPSC, topic balance matters as much as depth.",
   },
   {
-    question: "Can Kalnehi help me track Current Affairs for UPSC?",
+    question: "Can Kalnehi Daily help me track Current Affairs for UPSC?",
     answer:
       "Yes. You can create daily log entries for Current Affairs reading — newspapers, PIB summaries, monthly magazines. Track it as a habit with daily check-in so you never miss a day of Current Affairs coverage.",
   },
   {
-    question: "Does Kalnehi work for UPSC Optional subjects?",
+    question: "Does Kalnehi Daily work for UPSC Optional subjects?",
     answer:
       "Yes. The syllabus tracker is flexible — you can add your Optional subject's syllabus (say, History or Public Administration) and track topics just like GS subjects. Mastermind will also account for Optional when giving strategy advice.",
   },
@@ -86,7 +86,7 @@ export default function UpscPage() {
         faqs={FAQS}
         webPage={{
           name: `Daily Planner for UPSC CSE Preparation | ${SITE_NAME}`,
-          description: `UPSC needs years of consistent preparation across GS, Essay and Optional. Kalnehi gives aspirants a daily planning system that survives the long haul.`,
+          description: `UPSC needs years of consistent preparation across GS, Essay and Optional. Kalnehi Daily gives aspirants a daily planning system that survives the long haul.`,
         }}
       />
 
@@ -99,7 +99,7 @@ export default function UpscPage() {
         <ExamHero
           badge="UPSC CSE"
           headline="UPSC Preparation Daily Planner — The Most Unpredictable Exam Needs the Most Consistent System"
-          subheadline="UPSC doesn't just test knowledge. It tests how long you can sustain serious, consistent preparation without breaking down. Most aspirants fail consistency, not content. Kalnehi fixes that."
+          subheadline="UPSC doesn't just test knowledge. It tests how long you can sustain serious, consistent preparation without breaking down. Most aspirants fail consistency, not content. Kalnehi Daily fixes that."
           stats={[
             { value: "9 papers", label: "Prelims + Mains + Interview" },
             { value: "2,000+", label: "hours of prep over 12-18 months" },
@@ -110,11 +110,11 @@ export default function UpscPage() {
         {/* Section 2 — Syllabus */}
         <section className="space-y-5" aria-labelledby="upsc-syllabus">
           <h2 id="upsc-syllabus" className="text-xl font-bold text-kal-text">
-            How Kalnehi maps to the UPSC CSE structure
+            How Kalnehi Daily maps to the UPSC CSE structure
           </h2>
           <p className="text-sm leading-relaxed text-kal-text-secondary">
             UPSC CSE has three stages — Prelims, Mains, and Interview. Most aspirants prepare for all
-            three simultaneously while managing Current Affairs daily. Kalnehi gives you a system to track
+            three simultaneously while managing Current Affairs daily. Kalnehi Daily gives you a system to track
             all of it without a single spreadsheet.
           </p>
           <div className="grid gap-4 sm:grid-cols-3">
@@ -203,7 +203,7 @@ export default function UpscPage() {
             </li>
             <li>
               <Link href="/for/upsc-working-professionals" className="font-medium text-kal-accent-dark hover:underline">
-                Kalnehi for UPSC Working Professionals
+                Kalnehi Daily for UPSC Working Professionals
               </Link>
             </li>
           </ul>

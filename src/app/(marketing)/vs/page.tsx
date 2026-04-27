@@ -8,8 +8,8 @@ import { getAllComparisons } from "@/content/comparisons";
 
 export const metadata = marketingPageMetadata({
   path: "/vs",
-  title: `Kalnehi vs other study tools | ${SITE_NAME}`,
-  description: `Side-by-side comparisons: Kalnehi against Notion, calendars, Excel planners, and more — built for competitive exam prep.`,
+  title: `Kalnehi Daily vs other study tools | ${SITE_NAME}`,
+  description: `Side-by-side comparisons: Kalnehi Daily against Notion, calendars, Excel planners, and more — built for competitive exam prep.`,
 });
 
 export default function ComparisonsIndexPage() {
@@ -20,7 +20,7 @@ export default function ComparisonsIndexPage() {
       <MarketingPageJsonLd
         breadcrumbs={[{ name: "Home", path: "/" }, { name: "Comparisons", path: "/vs" }]}
         webPage={{
-          name: `Kalnehi vs other study tools | ${SITE_NAME}`,
+          name: `Kalnehi Daily vs other study tools | ${SITE_NAME}`,
           description: "Honest feature comparisons for exam aspirants choosing a study system.",
         }}
       />
@@ -33,9 +33,9 @@ export default function ComparisonsIndexPage() {
             <span className="h-1.5 w-1.5 rounded-full bg-kal-accent" aria-hidden />
             Comparisons
           </p>
-          <h1 className="kal-feature-title">Kalnehi vs other study tools</h1>
+          <h1 className="kal-feature-title">Kalnehi Daily vs other study tools</h1>
           <p className="max-w-2xl text-base text-kal-text-secondary">
-            See how Kalnehi compares to general-purpose apps and paper workflows — for syllabus tracking, consistency, and exam-day readiness.
+            See how Kalnehi Daily compares to general-purpose apps and paper workflows — for syllabus tracking, consistency, and exam-day readiness.
           </p>
         </header>
 
@@ -54,7 +54,7 @@ export default function ComparisonsIndexPage() {
         </ul>
 
         <CTABanner
-          headline="Try Kalnehi free for 3 days"
+          headline="Try Kalnehi Daily free for 3 days"
           subtext="No credit card. Full access. See the difference in your first week of prep."
         />
       </div>

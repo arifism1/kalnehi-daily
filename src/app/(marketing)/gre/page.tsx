@@ -10,14 +10,14 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 export const metadata = marketingPageMetadata({
   path: "/gre",
   title: `Daily Planner for GRE Preparation | ${SITE_NAME}`,
-  description: `GRE requires daily Verbal vocab building, Quant practice and Analytical Writing. Kalnehi helps Indian students build the preparation habits that add 10-20 points to their GRE score.`,
+  description: `GRE requires daily Verbal vocab building, Quant practice and Analytical Writing. Kalnehi Daily helps Indian students build the preparation habits that add 10-20 points to their GRE score.`,
 });
 
 const FAQS = [
   { question: "What is the GRE exam structure?", answer: "The GRE General Test has three sections: Verbal Reasoning (2 sections × 27 questions, 170 scale), Quantitative Reasoning (2 sections × 27 questions, 170 scale), and Analytical Writing Assessment (2 essays — Issue + Argument, 0-6 scale). The test adapts based on your first section performance in each area." },
-  { question: "What GRE score is needed for top US MS programs?", answer: "Top programs (MIT, Stanford, Carnegie Mellon) typically want 165+ in Quant, 155+ in Verbal. Many admits have 320-330+ total. For mid-tier programs, 310-320 is competitive. Kalnehi's marks engine helps you target specific score benchmarks per section." },
+  { question: "What GRE score is needed for top US MS programs?", answer: "Top programs (MIT, Stanford, Carnegie Mellon) typically want 165+ in Quant, 155+ in Verbal. Many admits have 320-330+ total. For mid-tier programs, 310-320 is competitive. Kalnehi Daily's marks engine helps you target specific score benchmarks per section." },
   { question: "How long does GRE preparation take for Indian students?", answer: "For engineering graduates with strong Quant foundations, 6-8 weeks of focused preparation (3-4 hours daily) is sufficient to get 165+ in Quant. Verbal takes longer — building vocabulary and reading speed requires 2-3 months of daily practice." },
-  { question: "How does Kalnehi help GRE preparation?", answer: "Kalnehi tracks your daily Verbal vocab building (word lists, flashcards), Quant topic completion, and AWA essay practice. Mastermind monitors your ETS practice test scores and tells you which section needs the most hours before your test date." },
+  { question: "How does Kalnehi Daily help GRE preparation?", answer: "Kalnehi Daily tracks your daily Verbal vocab building (word lists, flashcards), Quant topic completion, and AWA essay practice. Mastermind monitors your ETS practice test scores and tells you which section needs the most hours before your test date." },
 ];
 
 export default function GrePage() {
@@ -37,7 +37,7 @@ export default function GrePage() {
         />
 
         <section className="space-y-4" aria-labelledby="gre-sections">
-          <h2 id="gre-sections" className="text-xl font-bold text-kal-text">GRE sections tracked in Kalnehi</h2>
+          <h2 id="gre-sections" className="text-xl font-bold text-kal-text">GRE sections tracked in Kalnehi Daily</h2>
           <div className="grid gap-3 sm:grid-cols-3">
             {[
               { s: "Verbal Reasoning (170)", topics: ["Vocabulary — Magoosh 1000, GRE Prep lists", "Text Completion (1/2/3 blanks)", "Sentence Equivalence", "Reading Comprehension — short + long"] },

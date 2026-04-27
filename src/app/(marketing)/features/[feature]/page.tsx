@@ -65,7 +65,7 @@ export default async function FeaturePage({ params }: Props) {
         <header className="space-y-4">
           <p className="inline-flex items-center gap-1.5 rounded-full border border-kal-accent/25 bg-kal-accent-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-kal-accent-dark">
             <span className="h-1.5 w-1.5 rounded-full bg-kal-accent" aria-hidden />
-            Kalnehi Feature
+            Kalnehi Daily Feature
           </p>
           <h1 className="kal-feature-title">{feature.headline}</h1>
           <p className="text-sm font-semibold text-kal-accent-dark">{feature.tagline}</p>

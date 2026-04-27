@@ -656,9 +656,14 @@ export function PrepBrainChat() {
           })}
           {isSending && (
             <div className="flex justify-start">
-              <div className="flex items-center gap-2 rounded-2xl rounded-bl-md border border-kal-border/50 bg-kal-card/85 px-3.5 py-3 text-[15px] leading-snug text-kal-text-secondary backdrop-blur-md sm:text-base">
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-                Mastermind is preparing a reply from your latest prep data…
+              <div className="flex flex-col gap-1 rounded-2xl rounded-bl-md border border-kal-border/50 bg-kal-card/85 px-3.5 py-3 backdrop-blur-md">
+                <div className="flex items-center gap-2 text-[15px] leading-snug text-kal-text-secondary sm:text-base">
+                  <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
+                  Mastermind is preparing a reply from your latest prep data…
+                </div>
+                <p className="pl-6 text-[12px] leading-snug text-kal-text-secondary/60">
+                  We take some time to process your real data and give relevant answers — please be patient.
+                </p>
               </div>
             </div>
           )}

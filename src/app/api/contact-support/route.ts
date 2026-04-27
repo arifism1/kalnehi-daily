@@ -156,7 +156,16 @@ export async function POST(req: Request) {
 
   const throttleKey = `${clientIp(req)}:${sessionUserId ?? "anon"}`;
   const maxHits = sessionUserId ? MAX_IN_WINDOW_AUTH : MAX_IN_WINDOW_ANON;
-  if (!(await allowRequest(throttleKey, maxHits))) {
+  // allowRequest calls getRedis() which throws if KV env vars are unset.
+  // Fail-open so a Redis misconfiguration does not silently block all support
+  // submissions; the error is logged for ops visibility.
+  let rateLimitPassed = true;
+  try {
+    rateLimitPassed = await allowRequest(throttleKey, maxHits);
+  } catch (e) {
+    console.error("[contact-support] rate-limit backend unavailable:", e);
+  }
+  if (!rateLimitPassed) {
     return NextResponse.json(
       { ok: false, error: "Too many requests. Please try again later." },
       { status: 429 },

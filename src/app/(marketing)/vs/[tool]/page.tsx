@@ -71,7 +71,7 @@ export default async function ComparisonPage({ params }: Props) {
         </section>
 
         <section className="space-y-4">
-          <h2 className="text-base font-semibold text-kal-text">Why exam aspirants choose Kalnehi</h2>
+          <h2 className="text-base font-semibold text-kal-text">Why exam aspirants choose Kalnehi Daily</h2>
           <ul className="space-y-3">
             {data.whyKalnehi.map((point, i) => (
               <li key={i} className="flex gap-3 text-sm text-kal-text-secondary leading-relaxed">
@@ -105,7 +105,7 @@ export default async function ComparisonPage({ params }: Props) {
 
         {data.relatedExams.length > 0 && (
           <section className="space-y-3">
-            <h2 className="text-sm font-semibold text-kal-text-secondary uppercase tracking-wide">Kalnehi for your exam</h2>
+            <h2 className="text-sm font-semibold text-kal-text-secondary uppercase tracking-wide">Kalnehi Daily for your exam</h2>
             <div className="flex flex-wrap gap-2">
               {data.relatedExams.map((exam) => (
                 <Link
@@ -138,7 +138,7 @@ export default async function ComparisonPage({ params }: Props) {
         </div>
 
         <CTABanner
-          headline="Try Kalnehi free for 3 days"
+          headline="Try Kalnehi Daily free for 3 days"
           subtext="No credit card. Full access. See why students choose it over alternatives."
         />
       </div>

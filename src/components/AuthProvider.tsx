@@ -14,13 +14,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const setInitialized = useAuthStore((s) => s.setInitialized);
 
   useEffect(() => {
+    let cancelled = false;
     let subscription: { unsubscribe: () => void } | undefined;
 
     try {
       const supabase = getSupabaseBrowserClient();
 
       const apply = (session: Session | null) => {
-        setAuth(session);
+        if (!cancelled) setAuth(session);
       };
 
       void (async () => {
@@ -31,7 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } = await supabase.auth.getSession();
           apply(session);
         } finally {
-          setInitialized(true);
+          if (!cancelled) setInitialized(true);
         }
       })();
 
@@ -40,10 +41,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       subscription = data.subscription;
     } catch {
-      setInitialized(true);
+      if (!cancelled) setInitialized(true);
     }
 
-    return () => subscription?.unsubscribe();
+    return () => {
+      cancelled = true;
+      subscription?.unsubscribe();
+    };
   }, [setAuth, setInitialized]);
 
   return <>{children}</>;

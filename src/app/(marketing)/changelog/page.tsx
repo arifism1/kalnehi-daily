@@ -125,7 +125,7 @@ export default function ChangelogPage() {
           <span className="h-1.5 w-1.5 rounded-full bg-kal-accent" aria-hidden />
           Changelog
         </p>
-        <h1 className="kal-feature-title">What&apos;s new in Kalnehi</h1>
+        <h1 className="kal-feature-title">What&apos;s new in Kalnehi Daily</h1>
         <p className="max-w-xl text-sm leading-relaxed text-kal-text-secondary">
           Every feature we ship, every bug we fix, every improvement we make — in one place, newest first. We ship meaningful updates every 2-4 weeks.
         </p>

@@ -29,7 +29,7 @@ export function RelatedContent({ pathname }: Props) {
   return (
     <section className="space-y-4 rounded-2xl border border-kal-border bg-kal-card/40 p-5" aria-labelledby="related-content">
       <h2 id="related-content" className="text-base font-bold text-kal-text">
-        Related on Kalnehi
+        Related on Kalnehi Daily
       </h2>
       <div className="grid gap-6 sm:grid-cols-2">
         {posts.length > 0 && (

@@ -28,7 +28,7 @@ export type TourStep = {
 export const PRODUCT_TOUR_STEPS: TourStep[] = [
   {
     id: "welcome",
-    title: "Welcome to Kalnehi!",
+    title: "Welcome to Kalnehi Daily!",
     description:
       "You're all set up. Let's take a quick look at where everything lives — it'll only take a minute.",
     target: null,

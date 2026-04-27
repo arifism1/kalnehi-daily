@@ -435,7 +435,7 @@ export async function POST(request: Request) {
 
   if (!profile) {
     return NextResponse.json(
-      { ok: false, error: "Mastermind requires a Kalnehi account." },
+      { ok: false, error: "Mastermind requires a Kalnehi Daily account." },
       { status: 403 },
     );
   }

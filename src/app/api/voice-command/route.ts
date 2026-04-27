@@ -27,11 +27,9 @@ export async function POST(req: Request) {
 
   const voiceSecondsCharged = clampVoiceBillingDurationSeconds(o.durationSeconds);
 
-  // Run auth and Groq in parallel — neither depends on the other at this point.
-  const [supabase, result] = await Promise.all([
-    createSupabaseServerClient(),
-    runVoiceCommand(transcript, pageContext),
-  ]);
+  // Auth must be confirmed before calling the LLM to avoid burning provider
+  // quota for unauthenticated requests.
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -39,6 +37,8 @@ export async function POST(req: Request) {
   if (!user) {
     return NextResponse.json({ ok: false, error: "Please sign in." }, { status: 401 });
   }
+
+  const result = await runVoiceCommand(transcript, pageContext);
 
   // Log voice AI token usage (best-effort, non-blocking)
   if (result.ok && (result.inputTokens > 0 || result.outputTokens > 0)) {
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
   }
 
   if (!result.ok) {
-    return NextResponse.json({ ok: false, error: result.error });
+    return NextResponse.json({ ok: false, error: result.error }, { status: 500 });
   }
 
   // Charge shared voice quota — same pool as Dictate My Day, revision voice, etc.

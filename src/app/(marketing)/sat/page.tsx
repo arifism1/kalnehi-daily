@@ -10,14 +10,14 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 export const metadata = marketingPageMetadata({
   path: "/sat",
   title: `Daily Planner for SAT Preparation | ${SITE_NAME}`,
-  description: `The digital SAT has Reading & Writing and Math sections. Kalnehi helps you track your daily practice, log Khan Academy progress, and use Mastermind to identify your score improvement areas.`,
+  description: `The digital SAT has Reading & Writing and Math sections. Kalnehi Daily helps you track your daily practice, log Khan Academy progress, and use Mastermind to identify your score improvement areas.`,
 });
 
 const FAQS = [
   { question: "What is the Digital SAT structure?", answer: "The Digital SAT (dSAT) has two sections: Reading and Writing (54 questions, 64 minutes) and Math (44 questions, 70 minutes). Total: 1600 scale. It's adaptive — Module 2 difficulty depends on Module 1 performance. SAT scores are used for US college admissions and some Indian institutions." },
-  { question: "What SAT score do I need for top US universities?", answer: "Top universities (Ivy League, MIT, Stanford) typically see admits with 1500+ SAT. Many applicants have 1550-1600. For good US universities, 1350-1450 is competitive. Kalnehi's marks engine helps you target the specific score band you need." },
-  { question: "How much time does SAT preparation take?", answer: "Students starting from a 1200 baseline typically need 3-4 months of focused preparation (2-3 hours daily) to reach 1400+. Getting from 1400 to 1500+ can take another 2-3 months. Khan Academy's official SAT prep pairs well with Kalnehi's tracking." },
-  { question: "How does Kalnehi help SAT aspirants?", answer: "Track your daily Khan Academy practice sessions, full-length practice tests, and topic-wise completion in Kalnehi. Mastermind reads your practice test scores and identifies which question types within Reading & Writing or Math are your weakest." },
+  { question: "What SAT score do I need for top US universities?", answer: "Top universities (Ivy League, MIT, Stanford) typically see admits with 1500+ SAT. Many applicants have 1550-1600. For good US universities, 1350-1450 is competitive. Kalnehi Daily's marks engine helps you target the specific score band you need." },
+  { question: "How much time does SAT preparation take?", answer: "Students starting from a 1200 baseline typically need 3-4 months of focused preparation (2-3 hours daily) to reach 1400+. Getting from 1400 to 1500+ can take another 2-3 months. Khan Academy's official SAT prep pairs well with Kalnehi Daily's tracking." },
+  { question: "How does Kalnehi Daily help SAT aspirants?", answer: "Track your daily Khan Academy practice sessions, full-length practice tests, and topic-wise completion in Kalnehi Daily. Mastermind reads your practice test scores and identifies which question types within Reading & Writing or Math are your weakest." },
 ];
 
 export default function SatPage() {
@@ -37,7 +37,7 @@ export default function SatPage() {
         />
 
         <section className="space-y-4" aria-labelledby="sat-sections">
-          <h2 id="sat-sections" className="text-xl font-bold text-kal-text">Digital SAT sections tracked in Kalnehi</h2>
+          <h2 id="sat-sections" className="text-xl font-bold text-kal-text">Digital SAT sections tracked in Kalnehi Daily</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {[
               { s: "Reading & Writing (800)", topics: ["Reading Comprehension — literary, informational", "Command of Evidence (textual + quantitative)", "Words in Context, Cross-text Connections", "Expression of Ideas — rhetoric, transitions", "Standard English Conventions — grammar"] },

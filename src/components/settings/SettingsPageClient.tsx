@@ -12,8 +12,10 @@ import { PurposeModePhotos } from "@/components/settings/PurposeModePhotos";
 import { NotificationsSettingsGroup } from "@/components/settings/NotificationsSettingsGroup";
 import { SettingsExpandableSection } from "@/components/settings/SettingsExpandableSection";
 import { SettingsToggles } from "@/components/settings/SettingsToggles";
-import { useSettingsStore } from "@/store/useSettingsStore";
+import { useSettingsStore, pickUiPrefsForSync } from "@/store/useSettingsStore";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
+import { updateUserUiPrefs } from "@/actions/clientProfileExtras";
+import type { Json } from "@/types/supabase";
 
 export function SettingsPageClient() {
   const purposeMode = useSettingsStore((s) => s.purposeModeEnabled);
@@ -133,7 +135,14 @@ export function SettingsPageClient() {
                 role="switch"
                 aria-checked={purposeMode}
                 aria-label="Toggle purpose mode"
-                onClick={() => setPurposeMode(!purposeMode)}
+                onClick={() => {
+                  setPurposeMode(!purposeMode);
+                  // Flush immediately so a fast refresh doesn't see a stale server value.
+                  // Zustand set() is synchronous, so getState() already has the new value.
+                  void updateUserUiPrefs(
+                    pickUiPrefsForSync(useSettingsStore.getState()) as unknown as Json,
+                  );
+                }}
                 className={clsx(
                   "relative h-9 w-14 shrink-0 rounded-full transition-[background-color] duration-200",
                   purposeMode ? "bg-kal-accent" : "bg-kal-border",

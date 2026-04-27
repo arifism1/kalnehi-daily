@@ -46,7 +46,7 @@ export function ComparisonTable({ competitorName, rows }: ComparisonTableProps) 
         <thead>
           <tr className="border-b border-kal-border bg-kal-card">
             <th className="px-4 py-3 text-left font-semibold text-kal-text">Feature</th>
-            <th className="px-4 py-3 text-center font-bold text-kal-accent">Kalnehi</th>
+            <th className="px-4 py-3 text-center font-bold text-kal-accent">Kalnehi Daily</th>
             <th className="px-4 py-3 text-center font-semibold text-kal-text-secondary">
               {competitorName}
             </th>

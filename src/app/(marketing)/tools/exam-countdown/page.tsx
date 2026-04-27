@@ -70,7 +70,7 @@ export default function ExamCountdownPage() {
         </div>
 
         <CTABanner
-          headline="Track what you do with those days in Kalnehi"
+          headline="Track what you do with those days in Kalnehi Daily"
           subtext="Syllabus tracker, daily planner, Mastermind. Start free for 3 days."
         />
       </div>

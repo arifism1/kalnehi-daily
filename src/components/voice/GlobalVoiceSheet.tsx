@@ -221,6 +221,7 @@ function ListeningState({
   onStopListening,
   onStartListening,
   whisperMode = false,
+  hideTranscript = false,
 }: {
   isListening: boolean;
   transcript: string | null;
@@ -229,8 +230,10 @@ function ListeningState({
   onStartListening: () => void;
   /** True when recording via MediaRecorder (Whisper fallback) instead of Web Speech API. */
   whisperMode?: boolean;
+  /** When true, live transcript text is hidden (e.g. on Android). */
+  hideTranscript?: boolean;
 }) {
-  const showHints = !transcript && !whisperMode;
+  const showHints = (!transcript || hideTranscript) && !whisperMode;
   const active = isListening || whisperMode;
 
   return (
@@ -270,7 +273,7 @@ function ListeningState({
           </span>
         )}
         <p className="text-sm font-medium text-kal-text leading-snug line-clamp-3">
-          {transcript
+          {!hideTranscript && transcript
             ? transcript
             : whisperMode
               ? "Tap the mic when done \u2014 up to 60s"
@@ -281,6 +284,7 @@ function ListeningState({
         <VoiceListeningHint
           visible={active && !transcript}
           variant={whisperMode ? "whisper" : "command"}
+          showClearVoiceHint
         />
         <p className="mt-1 text-[11px] text-kal-text-secondary/60">{voiceMinuteStatus}</p>
       </div>
@@ -291,7 +295,13 @@ function ListeningState({
   );
 }
 
-function ProcessingState({ transcript }: { transcript: string | null }) {
+function ProcessingState({
+  transcript,
+  hideTranscript = false,
+}: {
+  transcript: string | null;
+  hideTranscript?: boolean;
+}) {
   return (
     <div className="flex flex-col items-center gap-4 px-4 py-6">
       <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-kal-accent/10">
@@ -299,7 +309,7 @@ function ProcessingState({ transcript }: { transcript: string | null }) {
       </div>
       <div className="w-full text-center space-y-2">
         <p className="text-sm font-semibold text-kal-text">On it\u2026</p>
-        {transcript && (
+        {transcript && !hideTranscript && (
           <div className="relative overflow-hidden rounded-xl bg-kal-accent/[0.06] px-3 py-2">
             <p className="relative z-10 text-xs italic text-kal-text-secondary line-clamp-2">
               &ldquo;{transcript}&rdquo;
@@ -401,6 +411,11 @@ export function GlobalVoiceSheet() {
   // Animation state: `mounted` controls DOM presence, `animatingOut` selects CSS class.
   const [mounted, setMounted] = useState(false);
   const [animatingOut, setAnimatingOut] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false);
+
+  useEffect(() => {
+    setIsAndroid(/Android/i.test(navigator.userAgent));
+  }, []);
 
   const {
     isOpen,
@@ -659,7 +674,7 @@ export function GlobalVoiceSheet() {
     if (!aiGate.canDoVoiceSession) return;
     if (!isSupported) {
       setError(
-        "Voice commands are not supported in this browser. Try Chrome or the Kalnehi app.",
+        "Voice commands are not supported in this browser. Try Chrome or the Kalnehi Daily app.",
       );
       setPhase("error");
       return;
@@ -819,13 +834,14 @@ export function GlobalVoiceSheet() {
               {!aiGate.loading && !aiGate.canDoVoiceSession ? (
                 <QuotaGate voiceMinuteStatus={aiGate.voiceMinuteStatus} />
               ) : isWhisperTranscribing ? (
-                <ProcessingState transcript={transcript} />
+                <ProcessingState transcript={transcript} hideTranscript={isAndroid} />
               ) : isListeningPhase ? (
                 <ListeningState
                   isListening={isListening}
                   transcript={transcript}
                   voiceMinuteStatus={aiGate.voiceMinuteStatus}
                   whisperMode={isWhisperRecording}
+                  hideTranscript={isAndroid}
                   onStopListening={isWhisperRecording ? stopWhisperRecording : stopListening}
                   onStartListening={() => {
                     reset();
@@ -836,7 +852,7 @@ export function GlobalVoiceSheet() {
                   }}
                 />
               ) : phase === "processing" ? (
-                <ProcessingState transcript={transcript} />
+                <ProcessingState transcript={transcript} hideTranscript={isAndroid} />
               ) : phase === "done" ? (
                 <DoneState responseText={responseText} />
               ) : (

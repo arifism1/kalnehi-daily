@@ -1,6 +1,6 @@
 "use client";
 
-import { addDays, format, parseISO } from "date-fns";
+import { addDays, format, parse, parseISO } from "date-fns";
 import { ArrowLeft, Home } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -73,8 +73,8 @@ export function SelfTypeDayPage() {
         <div className="kal-glass-subtle flex min-h-[44px] items-center gap-1 rounded-xl p-1">
           {[
             { id: today, label: "Today" },
-            { id: format(addDays(parseISO(today), -1), "yyyy-MM-dd"), label: "Yesterday" },
-            { id: format(addDays(parseISO(today), 1), "yyyy-MM-dd"), label: "Tomorrow" },
+            { id: format(addDays(parse(today, "yyyy-MM-dd", new Date()), -1), "yyyy-MM-dd"), label: "Yesterday" },
+            { id: format(addDays(parse(today, "yyyy-MM-dd", new Date()), 1), "yyyy-MM-dd"), label: "Tomorrow" },
           ].map((d) => (
             <button
               key={d.id}
@@ -110,7 +110,7 @@ export function SelfTypeDayPage() {
 
       <div className="mt-4">
         <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.07em] text-kal-muted">
-          Today&apos;s plan (live)
+          {livePlanTitle}
         </p>
         <div className="rounded-xl p-4" style={{ backgroundColor: "#FAF8F4" }}>
           <UnifiedDailyPlanList

@@ -21,6 +21,7 @@ import { AddMistakeSheet } from "@/components/mistake-log/AddMistakeSheet";
 import { MISTAKE_TYPES } from "@/components/mistake-log/MistakeTypeButton";
 import { useDoubtSyllabusSubjects } from "@/hooks/useDoubtSyllabusSubjects";
 import { useAllExamScopes } from "@/hooks/useAllExamScopes";
+import { MistakeLogEmptyIllustration } from "@/components/illustrations/MistakeLogEmptyIllustration";
 
 const RANGE_OPTIONS = [
   { label: "Last 7 days", value: 7 },
@@ -178,7 +179,8 @@ export function MistakeLogClient() {
           <Loader2 className="h-6 w-6 animate-spin text-kal-accent/60" />
         </div>
       ) : logs.length === 0 ? (
-        <div className="py-12 text-center">
+        <div className="py-8 text-center">
+          <MistakeLogEmptyIllustration className="mx-auto mb-3 h-auto w-36" />
           <p className="text-sm text-kal-text-secondary">
             No mistakes logged yet — log your first error to start finding patterns.
           </p>

@@ -18,6 +18,7 @@ import {
 } from "@/actions/mockTests";
 import { AddMockTestSheet } from "@/components/mock-tests/AddMockTestSheet";
 import { useAllExamScopes } from "@/hooks/useAllExamScopes";
+import { MockTestEmptyIllustration } from "@/components/illustrations/MockTestEmptyIllustration";
 
 const SELF_RATING_META = {
   strong: { label: "Strong", class: "text-emerald-600 dark:text-emerald-400" },
@@ -267,7 +268,8 @@ export function MockTestsClient() {
           <Loader2 className="h-6 w-6 animate-spin text-kal-accent/60" />
         </div>
       ) : filteredTests.length === 0 ? (
-        <div className="py-12 text-center space-y-2">
+        <div className="py-8 text-center">
+          <MockTestEmptyIllustration className="mx-auto mb-3 h-auto w-36" />
           <p className="text-sm text-kal-text-secondary">
             {filterExam === "all"
               ? "No tests logged yet. Tap \u201cLog test\u201d to add your first mock."

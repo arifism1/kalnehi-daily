@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props) {
   return marketingPageMetadata({
     path: `/syllabus/${exam}`,
     title: `${data.exam} Syllabus ${data.lastUpdated} — Complete Topic-wise | ${SITE_NAME}`,
-    description: `Complete ${data.exam} syllabus with all subjects and topics. Updated ${data.lastUpdated}. Printable. Track your syllabus coverage in Kalnehi.`,
+    description: `Complete ${data.exam} syllabus with all subjects and topics. Updated ${data.lastUpdated}. Printable. Track your syllabus coverage in Kalnehi Daily.`,
   });
 }
 
@@ -82,7 +82,7 @@ export default async function SyllabusPage({ params }: Props) {
                 href="/auth/signup"
                 className="inline-flex min-h-[40px] items-center justify-center rounded-full bg-kal-accent px-5 text-sm font-bold text-white transition hover:brightness-105"
               >
-                Track in Kalnehi
+                Track in Kalnehi Daily
               </Link>
             </div>
           </div>
@@ -129,9 +129,9 @@ export default async function SyllabusPage({ params }: Props) {
         </div>
 
         <section className="rounded-2xl border border-kal-accent/20 bg-kal-accent/5 p-5 space-y-3">
-          <h2 className="text-base font-semibold text-kal-text">Track this syllabus in Kalnehi</h2>
+          <h2 className="text-base font-semibold text-kal-text">Track this syllabus in Kalnehi Daily</h2>
           <p className="text-sm text-kal-text-secondary leading-relaxed">
-            Kalnehi's Syllabus Tracker has {data.exam} pre-loaded. Mark topics as done, see your coverage percentage, and get Mastermind to tell you what to focus on next — based on your actual progress.
+            Kalnehi Daily's Syllabus Tracker has {data.exam} pre-loaded. Mark topics as done, see your coverage percentage, and get Mastermind to tell you what to focus on next — based on your actual progress.
           </p>
           <div className="flex flex-col gap-2 sm:flex-row">
             <Link
@@ -167,7 +167,7 @@ export default async function SyllabusPage({ params }: Props) {
         )}
 
         <CTABanner
-          headline={`Track your ${data.exam} syllabus coverage in Kalnehi`}
+          headline={`Track your ${data.exam} syllabus coverage in Kalnehi Daily`}
           subtext="Mastermind, revision reminders, and daily planning — all around your exam syllabus."
         />
       </div>

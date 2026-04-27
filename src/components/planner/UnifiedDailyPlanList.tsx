@@ -9,10 +9,15 @@ import {
   Loader2,
   Mic,
   Pencil,
+  RotateCcw,
   Trash2,
   Type,
   X,
 } from "lucide-react";
+import { KalShimmerBlock } from "@/components/loading/KalShimmerBlock";
+import { KalSpinner } from "@/components/loading/KalSpinner";
+import { WinDailyIllustration } from "@/components/illustrations/WinDailyIllustration";
+import { ConfettiBurst } from "@/components/ui/ConfettiBurst";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -53,23 +58,34 @@ import { surfaceErrorForUi } from "@/lib/userFacingErrors";
 function SourceBadge({ source }: { source: string }) {
   const isLegacyPlanImport = source === "handwritten";
   const isMoved = source === "moved";
+  const isRevision = source === "revision";
   const label = source === "voice"
     ? "Voice"
     : isLegacyPlanImport
       ? "Added from plan"
+      : isRevision
+        ? "Revision"
+        : isMoved
+          ? "Moved Here"
+          : "Typed";
+  const Icon = source === "voice"
+    ? Mic
+    : isRevision
+      ? RotateCcw
       : isMoved
-        ? "Moved Here"
-        : "Typed";
-  const Icon = source === "voice" ? Mic : isMoved ? CalendarCheck : Type;
+        ? CalendarCheck
+        : Type;
   return (
     <span
       title={isLegacyPlanImport ? "Added from plan" : undefined}
       className={`inline-flex max-w-[11rem] items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold backdrop-blur-sm ${
-        isMoved
-          ? "border-kal-accent/35 bg-kal-accent/10 text-kal-accent dark:border-kal-accent/25 dark:bg-kal-accent/10 normal-case tracking-tight"
-          : isLegacyPlanImport
-            ? "border-white/30 bg-white/55 text-kal-muted dark:border-white/12 dark:bg-zinc-900/55 normal-case tracking-tight"
-            : "border-white/30 bg-white/55 text-kal-muted dark:border-white/12 dark:bg-zinc-900/55 uppercase tracking-wide"
+        isRevision
+          ? "border-violet-400/35 bg-violet-50/80 text-violet-700 dark:border-violet-500/25 dark:bg-violet-950/40 dark:text-violet-300 normal-case tracking-tight"
+          : isMoved
+            ? "border-kal-accent/35 bg-kal-accent/10 text-kal-accent dark:border-kal-accent/25 dark:bg-kal-accent/10 normal-case tracking-tight"
+            : isLegacyPlanImport
+              ? "border-white/30 bg-white/55 text-kal-muted dark:border-white/12 dark:bg-zinc-900/55 normal-case tracking-tight"
+              : "border-white/30 bg-white/55 text-kal-muted dark:border-white/12 dark:bg-zinc-900/55 uppercase tracking-wide"
       }`}
     >
       <Icon className="h-3 w-3 shrink-0 text-kal-accent" aria-hidden />
@@ -469,26 +485,26 @@ function DailyPlanListSkeleton({ rowCount = 5 }: { rowCount?: number }) {
   return (
     <div className="space-y-2.5" aria-hidden>
       <div className="mb-4 flex items-center justify-between gap-2">
-        <div className="h-3.5 w-20 animate-pulse rounded-md bg-kal-text/[0.08] dark:bg-white/[0.08]" />
-        <div className="h-3 w-14 animate-pulse rounded-md bg-kal-text/[0.06] dark:bg-white/[0.06]" />
+        <KalShimmerBlock className="h-3.5 w-20 rounded-md" />
+        <KalShimmerBlock className="h-3 w-14 rounded-md" />
       </div>
       {Array.from({ length: rowCount }).map((_, i) => (
         <div
           key={i}
-          className="flex animate-pulse items-start gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-3 py-3 dark:border-white/10 dark:bg-zinc-900/35"
+          className="flex items-start gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-3 py-3 dark:border-white/10 dark:bg-zinc-900/35"
         >
-          <div className="h-11 w-11 shrink-0 rounded-xl bg-kal-text/[0.08] dark:bg-white/[0.08]" />
+          <KalShimmerBlock className="h-11 w-11 shrink-0 rounded-xl" />
           <div className="min-w-0 flex-1 space-y-2.5 pt-0.5">
             <div className="flex gap-2">
-              <div className="h-5 w-16 rounded-full bg-kal-text/[0.07] dark:bg-white/[0.07]" />
-              <div className="h-5 w-14 rounded-full bg-kal-text/[0.05] dark:bg-white/[0.05]" />
+              <KalShimmerBlock className="h-5 w-16 rounded-full" />
+              <KalShimmerBlock className="h-5 w-14 rounded-full" />
             </div>
-            <div className="h-4 w-[88%] max-w-md rounded-md bg-kal-text/[0.09] dark:bg-white/[0.09]" />
-            <div className="h-3 w-28 rounded-md bg-kal-text/[0.06] dark:bg-white/[0.06]" />
+            <KalShimmerBlock className="h-4 w-[88%] max-w-md rounded-md" />
+            <KalShimmerBlock className="h-3 w-28 rounded-md" />
           </div>
           <div className="flex shrink-0 gap-1 pt-0.5">
-            <div className="h-7 w-7 rounded-lg bg-kal-text/[0.06] dark:bg-white/[0.06]" />
-            <div className="h-7 w-7 rounded-lg bg-kal-text/[0.06] dark:bg-white/[0.06]" />
+            <KalShimmerBlock className="h-7 w-7 rounded-lg" />
+            <KalShimmerBlock className="h-7 w-7 rounded-lg" />
           </div>
         </div>
       ))}
@@ -537,6 +553,7 @@ export function UnifiedDailyPlanList({
     initialSyllabusExpanded: boolean;
   } | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confettiTaskId, setConfettiTaskId] = useState<string | null>(null);
   const [scheduleRevisionTask, setScheduleRevisionTask] =
     useState<DailyTaskView | null>(null);
   const [revisionScheduledPopupOpen, setRevisionScheduledPopupOpen] =
@@ -551,8 +568,12 @@ export function UnifiedDailyPlanList({
 
   const load = useCallback(
     async (opts?: { silent?: boolean }) => {
+      // Snapshot the date at call time. If the user switches dates before the
+      // fetch resolves, the response belongs to a stale day and must be
+      // discarded to avoid overwriting the correct list.
+      const dateSnapshot = planDate;
       const silent = opts?.silent === true;
-      const cached = peekDailyPlanTasksCache(planDate);
+      const cached = peekDailyPlanTasksCache(dateSnapshot);
 
       if (!silent) {
         if (cached) {
@@ -566,10 +587,12 @@ export function UnifiedDailyPlanList({
       }
 
       try {
-        const res = await fetchDailyPlanTasksForClient(planDate);
+        const res = await fetchDailyPlanTasksForClient(dateSnapshot);
+        // Discard if planDate changed while the request was in-flight.
+        if (dateSnapshot !== planDate) return;
         if (res.ok) {
           setTasks(res.tasks);
-          putDailyPlanTasksCache(planDate, res.planId, res.tasks);
+          putDailyPlanTasksCache(dateSnapshot, res.planId, res.tasks);
           if (!silent) setError(null);
           onTasksLoaded?.(res.tasks.length);
         } else if (!silent && !cached) {
@@ -581,7 +604,7 @@ export function UnifiedDailyPlanList({
         if (!silent && !cached) setLoading(false);
       }
     },
-    [planDate],
+    [planDate, onTasksLoaded],
   );
 
   useEffect(() => {
@@ -661,6 +684,7 @@ export function UnifiedDailyPlanList({
         setError(surfaceErrorForUi(res.error));
       } else {
         dispatchDailyPlanSynced();
+        if (next === "done") setConfettiTaskId(t.id);
       }
     } finally {
       setBusyId(null);
@@ -691,7 +715,7 @@ export function UnifiedDailyPlanList({
     dispatchDailyPlanSynced();
 
     const src = snapshot.source;
-    if (src !== "typed" && src !== "voice" && src !== "handwritten" && src !== "moved") {
+    if (src !== "typed" && src !== "voice" && src !== "handwritten" && src !== "moved" && src !== "revision") {
       return;
     }
 
@@ -773,10 +797,7 @@ export function UnifiedDailyPlanList({
               aria-live="polite"
               className="mb-5 flex items-center gap-2.5 text-sm font-medium leading-snug text-kal-muted"
             >
-              <Loader2
-                className="h-4 w-4 shrink-0 animate-spin text-kal-accent/70"
-                aria-hidden
-              />
+              <KalSpinner size="xs" />
               <span>{DAILY_PLAN_LOADING_MESSAGE}</span>
             </div>
             <DailyPlanListSkeleton />
@@ -787,7 +808,7 @@ export function UnifiedDailyPlanList({
           </p>
         ) : tasks.length === 0 ? (
           <div className="kal-glass-subtle flex min-h-[140px] flex-col items-center justify-center rounded-xl border border-dashed border-white/35 py-8 text-center dark:border-white/15">
-            <CalendarDays className="mb-2 h-6 w-6" style={{ color: "#FAC775" }} aria-hidden />
+            <WinDailyIllustration className="mx-auto mb-2 h-auto w-40" />
             <p className="text-sm font-semibold text-kal-text">Nothing here yet</p>
             <p className="mt-1 text-xs text-kal-muted">Your plan is empty for this date.</p>
           </div>
@@ -848,7 +869,7 @@ export function UnifiedDailyPlanList({
                         role="checkbox"
                         disabled={busyId === t.id || isDeleting || skipped || statusToggleLocked}
                         onClick={() => void toggleDone(t)}
-                        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${
+                        className={`relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${
                           checkboxReadOnly
                             ? "disabled:cursor-not-allowed disabled:opacity-90 focus-visible:ring-kal-muted/25"
                             : "disabled:opacity-40"
@@ -871,6 +892,9 @@ export function UnifiedDailyPlanList({
                         ) : skipped ? (
                           <X className="h-4 w-4 text-kal-muted" strokeWidth={2.5} />
                         ) : null}
+                        {confettiTaskId === t.id && (
+                          <ConfettiBurst onDone={() => setConfettiTaskId(null)} />
+                        )}
                       </button>
 
                       {/* Task body — title & time first, then badges */}

@@ -29,8 +29,11 @@ export function applyRemoteUiPrefs(raw: unknown): void {
   const patch: Record<string, unknown> = {};
 
   if (isAppearance(o.appearance)) patch.appearance = o.appearance;
-  if (typeof o.purposeModeEnabled === "boolean")
-    patch.purposeModeEnabled = o.purposeModeEnabled;
+  // purposeModeEnabled is intentionally NOT pulled from the server — images are device-local
+  // (IndexedDB) and the toggle must be too, or a stale server row can hide the motivation strip
+  // on refresh before the debounced push completes. It is still pushed outbound (pickUiPrefsForSync)
+  // so a user's latest value eventually lands on the server as a backup; we just never let the
+  // server value overwrite a locally-persisted one.
   if (typeof o.showCountdown === "boolean") patch.showCountdown = o.showCountdown;
   if (typeof o.advancedMarksProjectionEnabled === "boolean")
     patch.advancedMarksProjectionEnabled = o.advancedMarksProjectionEnabled;

@@ -14,7 +14,7 @@ export const LANDING_FAQ_ITEMS = [
       "Your first 3 days are completely free — no card required, every feature unlocked. After 3 days you subscribe to Smart Plan at ₹399/month with AutoPay. You choose how many months of AutoPay to authorise (1–12), and it stops automatically after that count. Cancel anytime from settings — no forms, no calls.",
   },
   {
-    question: "What exams does Kalnehi support?",
+    question: "What exams does Kalnehi Daily support?",
     answer:
       "The in-app catalog lists 27 exam profiles (engineering, medical, management, law, banking, SSC, study abroad, CUET, and an “Other” option). Daily plan, focus timer, habits, doubt tracker, Daily Log, Brain Yoga, and Mastermind work regardless of which exam you pick. The syllabus tracker, marks engine with weightage-backed predictions, and revision reminders tied to microtopic coverage are fully built for JEE Main, NEET UG, and Class 11/12 Boards today. For other exams, use the same tools for execution and coaching; chapter-level graphs improve as we ship more syllabus data for that exam.",
   },
@@ -34,18 +34,18 @@ export const LANDING_FAQ_ITEMS = [
       "Yes. Cancel from the app settings or payment portal before your next billing date and you will not be charged again. No questions asked.",
   },
   {
-    question: "Does Kalnehi analyse my mock test scores?",
+    question: "Does Kalnehi Daily analyse my mock test scores?",
     answer:
-      "No. Kalnehi tracks your syllabus coverage, daily task execution, and revision — not mock test score sheets or PDF uploads. The Marks Engine predicts scores based on the syllabus you've covered, not past test performance.",
+      "No. Kalnehi Daily tracks your syllabus coverage, daily task execution, and revision — not mock test score sheets or PDF uploads. The Marks Engine predicts scores based on the syllabus you've covered, not past test performance.",
   },
   {
     question: "Does it work offline?",
     answer:
-      "Yes. Kalnehi is a PWA (Progressive Web App) and works offline for core features — daily plan, focus timer, and study sessions. AI features like Mastermind require a connection.",
+      "Yes. Kalnehi Daily is a PWA (Progressive Web App) and works offline for core features — daily plan, focus timer, and study sessions. AI features like Mastermind require a connection.",
   },
   {
     question: "Is there an Android or iOS app?",
     answer:
-      "Kalnehi is a PWA, which means you install it from your browser — no app store required. It works like a native app: home screen icon, full screen, offline support, and push notifications where supported.",
+      "Kalnehi Daily is a PWA, which means you install it from your browser — no app store required. It works like a native app: home screen icon, full screen, offline support, and push notifications where supported.",
   },
 ] as const;

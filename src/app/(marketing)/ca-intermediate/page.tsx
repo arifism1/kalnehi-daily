@@ -14,7 +14,7 @@ export const metadata = marketingPageMetadata({
 });
 
 const FAQS = [
-  { question: "Should I attempt CA Intermediate Group 1 and Group 2 together or separately?", answer: "Both strategies work, but doing both groups together requires more preparation bandwidth. Kalnehi helps you track 8 paper syllabuses simultaneously and Mastermind tells you if you're stretching too thin across groups — a data-driven answer to this common question." },
+  { question: "Should I attempt CA Intermediate Group 1 and Group 2 together or separately?", answer: "Both strategies work, but doing both groups together requires more preparation bandwidth. Kalnehi Daily helps you track 8 paper syllabuses simultaneously and Mastermind tells you if you're stretching too thin across groups — a data-driven answer to this common question." },
   { question: "How does Mastermind help CA Intermediate students?", answer: "Mastermind tracks your ICAI mock scores paper by paper and identifies which subjects are consistently pulling your aggregate below 50%. It tells you how many focused hours each weak paper needs to recover before your group exam date." },
   { question: "What is the CA Intermediate exam structure?", answer: "CA Intermediate has 8 papers in 2 groups of 4. Group 1: Accounting, Corporate Laws, Cost and Management Accounting, Taxation. Group 2: Advanced Accounting, Auditing, EIS & SM, Financial Management & Economics for Finance. Each paper is 100 marks." },
   { question: "How many hours per day should a CA Intermediate student study?", answer: "8-10 hours per day during an articleship-free preparation period. If you're in articleship, 4-6 focused hours daily is realistic. The consistency of those hours matters more than occasional 14-hour marathon days." },
@@ -33,12 +33,12 @@ export default function CaIntermediatePage() {
         <ExamHero
           badge="CA Intermediate — ICAI"
           headline="CA Intermediate Preparation Daily Planner — 8 Papers, 2 Groups, Zero Gaps"
-          subheadline="CA Intermediate is the hardest CA exam for most students — 8 papers, complex content, and the pressure of articleship running alongside prep. Kalnehi tracks all 8 papers so nothing gets neglected."
+          subheadline="CA Intermediate is the hardest CA exam for most students — 8 papers, complex content, and the pressure of articleship running alongside prep. Kalnehi Daily tracks all 8 papers so nothing gets neglected."
           stats={[{ value: "8 papers", label: "across 2 groups" }, { value: "~25% pass rate", label: "both groups attempt" }]}
         />
 
         <section className="space-y-4" aria-labelledby="caint-papers">
-          <h2 id="caint-papers" className="text-xl font-bold text-kal-text">CA Intermediate papers mapped in Kalnehi</h2>
+          <h2 id="caint-papers" className="text-xl font-bold text-kal-text">CA Intermediate papers mapped in Kalnehi Daily</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {[
               { group: "Group 1", papers: ["Paper 1: Accounting", "Paper 2: Corporate & Other Laws", "Paper 3: Cost & Management Accounting", "Paper 4: Taxation (IT + GST)"] },

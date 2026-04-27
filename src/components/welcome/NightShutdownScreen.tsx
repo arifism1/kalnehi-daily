@@ -100,7 +100,7 @@ export function NightShutdownScreen({
         aria-labelledby={titleId}
       >
         <p className="text-center text-xs font-medium tracking-[0.18em] text-[#FAF6F1]/40">
-          Kalnehi
+          Kalnehi Daily
         </p>
         <NightIllustration className="mx-auto w-full" />
 

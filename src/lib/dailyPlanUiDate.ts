@@ -1,4 +1,4 @@
-import { addDays, format, parseISO } from "date-fns";
+import { addDays, format, parse, parseISO } from "date-fns";
 
 const PLAN_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -13,27 +13,26 @@ export function isValidPlanDateString(
  */
 export function addToPlanButtonLabel(planDate: string, today: string): string {
   if (planDate === today) return "Add to Today's Plan";
-  const tomorrow = format(addDays(parseISO(today), 1), "yyyy-MM-dd");
+  // Use parse (local midnight) not parseISO (UTC midnight) for the locally-
+  // derived today string to avoid day-boundary skew in non-UTC timezones.
+  const todayLocal = parse(today, "yyyy-MM-dd", new Date());
+  const tomorrow = format(addDays(todayLocal, 1), "yyyy-MM-dd");
   if (planDate === tomorrow) return "Add to Tomorrow's Plan";
   return `Add to ${format(parseISO(planDate), "EEEE")}'s Plan`;
 }
 
-/** Heading above `UnifiedDailyPlanList` for the selected plan date. */
-export function dailyPlanLiveHeading(planDate: string, today: string): string {
-  if (planDate === today) return "Today's plan (live)";
-  const tomorrow = format(addDays(parseISO(today), 1), "yyyy-MM-dd");
-  if (planDate === tomorrow) return "Tomorrow's plan (live)";
-  const yesterday = format(addDays(parseISO(today), -1), "yyyy-MM-dd");
-  if (planDate === yesterday) return "Yesterday's plan (live)";
-  return `${format(parseISO(planDate), "EEE d MMM")} · plan (live)`;
-}
-
-/** Page hero line for `/today-plan` (without the smaller “(live)” span). */
+/** Page hero and list title for the selected plan date. */
 export function dailyPlanPageHeroTitle(planDate: string, today: string): string {
   if (planDate === today) return "Today's plan";
-  const tomorrow = format(addDays(parseISO(today), 1), "yyyy-MM-dd");
+  const todayLocal = parse(today, "yyyy-MM-dd", new Date());
+  const tomorrow = format(addDays(todayLocal, 1), "yyyy-MM-dd");
   if (planDate === tomorrow) return "Tomorrow's plan";
-  const yesterday = format(addDays(parseISO(today), -1), "yyyy-MM-dd");
+  const yesterday = format(addDays(todayLocal, -1), "yyyy-MM-dd");
   if (planDate === yesterday) return "Yesterday's plan";
   return `${format(parseISO(planDate), "EEEE d MMM")}`;
+}
+
+/** Heading above `UnifiedDailyPlanList` — same copy as the plan page hero. */
+export function dailyPlanLiveHeading(planDate: string, today: string): string {
+  return dailyPlanPageHeroTitle(planDate, today);
 }

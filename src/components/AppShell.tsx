@@ -8,6 +8,8 @@ import { isLegalPath } from "@/lib/legal-paths";
 import { isPaidAccessOverlayExemptPath } from "@/lib/paid-access-exempt-paths";
 import { isPublicMarketingPath } from "@/lib/public-paths";
 import { useAuthStore } from "@/store/useAuthStore";
+import { KalShimmerBlock } from "@/components/loading/KalShimmerBlock";
+import { KalSpinner } from "@/components/loading/KalSpinner";
 
 function LoadingScreen() {
   return (
@@ -19,30 +21,34 @@ function LoadingScreen() {
       {/* Header skeleton */}
       <div className="kal-glass-header sticky top-0 z-40 pt-[env(safe-area-inset-top)]">
         <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
-          <div className="h-7 w-28 animate-pulse rounded-lg bg-kal-border" />
+          <KalShimmerBlock className="h-7 w-28 rounded-lg" />
           <div className="flex items-center gap-2">
-            <div className="h-9 w-9 animate-pulse rounded-xl bg-kal-border" />
-            <div className="h-9 w-9 animate-pulse rounded-xl bg-kal-border" />
+            <KalShimmerBlock className="h-9 w-9 rounded-xl" />
+            <KalShimmerBlock className="h-9 w-9 rounded-xl" />
           </div>
         </div>
       </div>
       {/* Content skeleton */}
       <div className="mx-auto w-full max-w-lg space-y-3 px-4 pt-6 md:max-w-5xl">
-        <div className="h-6 w-2/5 animate-pulse rounded-lg bg-kal-border" />
+        <KalShimmerBlock className="h-6 w-2/5 rounded-lg" />
         <div className="kal-card-surface space-y-3">
-          <div className="h-4 w-3/4 animate-pulse rounded bg-kal-border" />
-          <div className="h-4 w-1/2 animate-pulse rounded bg-kal-border" />
-          <div className="h-4 w-2/3 animate-pulse rounded bg-kal-border" />
+          <KalShimmerBlock className="h-4 w-3/4 rounded" />
+          <KalShimmerBlock className="h-4 w-1/2 rounded" />
+          <KalShimmerBlock className="h-4 w-2/3 rounded" />
         </div>
         <div className="kal-card-surface space-y-3">
-          <div className="h-4 w-4/5 animate-pulse rounded bg-kal-border" />
-          <div className="h-4 w-3/5 animate-pulse rounded bg-kal-border" />
+          <KalShimmerBlock className="h-4 w-4/5 rounded" />
+          <KalShimmerBlock className="h-4 w-3/5 rounded" />
         </div>
         <div className="kal-card-surface space-y-3">
-          <div className="h-4 w-2/3 animate-pulse rounded bg-kal-border" />
-          <div className="h-4 w-1/2 animate-pulse rounded bg-kal-border" />
-          <div className="h-4 w-3/4 animate-pulse rounded bg-kal-border" />
+          <KalShimmerBlock className="h-4 w-2/3 rounded" />
+          <KalShimmerBlock className="h-4 w-1/2 rounded" />
+          <KalShimmerBlock className="h-4 w-3/4 rounded" />
         </div>
+      </div>
+      {/* Centered spinner with branded message */}
+      <div className="flex flex-1 items-center justify-center py-12">
+        <KalSpinner size="xl" message="Getting your plan ready…" />
       </div>
     </div>
   );

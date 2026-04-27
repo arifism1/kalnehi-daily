@@ -64,18 +64,18 @@ function AuthPageMark({ priority }: { priority?: boolean }) {
 
 function AuthExploreLinks() {
   return (
-    <nav className="w-full max-w-md px-1" aria-label="Explore Kalnehi">
+    <nav className="w-full max-w-md px-1" aria-label="Explore Kalnehi Daily">
       <p className="mb-2 text-center text-[10px] font-bold uppercase tracking-widest text-kal-muted">
         Explore
       </p>
       <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1.5 text-xs font-bold sm:gap-x-3 sm:text-sm">
         <Link
           href="/what-can-kalnehi-do"
-          title="What Can Kalnehi Do?"
+          title="What Can Kalnehi Daily Do?"
           className="inline-flex items-center gap-1.5 font-bold text-kal-text-secondary transition-colors hover:text-kal-accent"
         >
           <Sparkles className="h-3.5 w-3.5 shrink-0 text-kal-accent" aria-hidden />
-          <span className="text-center leading-snug">What Can Kalnehi Do?</span>
+          <span className="text-center leading-snug">What Can Kalnehi Daily Do?</span>
         </Link>
         <span className="hidden text-kal-border select-none sm:inline" aria-hidden>
           ·

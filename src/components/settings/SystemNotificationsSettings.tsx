@@ -69,7 +69,7 @@ export function SystemNotificationsSettings({
         setMessage(
           next
             ? "System notifications are on. You’ll get morning and evening nudges (IST) when push is enabled on a device."
-            : "System notifications are off. You won’t receive automated Kalnehi pushes.",
+            : "System notifications are off. You won’t receive automated Kalnehi Daily pushes.",
         );
         showToast(
           next ? "System notifications on." : "System notifications off.",
@@ -103,7 +103,7 @@ export function SystemNotificationsSettings({
               System notifications
             </p>
             <p className="mt-0.5 text-xs leading-relaxed text-kal-text-secondary">
-              Automated Kalnehi messages: morning kickstart (7:00 AM IST), danger
+              Automated Kalnehi Daily messages: morning kickstart (7:00 AM IST), danger
               alert when Master Today drops below 25%, and evening wind-down (8:00
               PM IST). Requires push enabled on at least one device.
             </p>

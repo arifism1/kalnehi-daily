@@ -28,7 +28,7 @@ const EXAM_OVERRIDES: Partial<Record<string, { title: string; description: strin
   },
   "/upsc": {
     title: "UPSC CSE — daily execution system for prelims & mains",
-    description: "UPSC strategy: syllabus, plans, current-affairs routine, and AI-assisted revision on Kalnehi.",
+    description: "UPSC strategy: syllabus, plans, current-affairs routine, and AI-assisted revision on Kalnehi Daily.",
   },
   "/cat": { title: "CAT Preparation", description: "VARC, DILR, Quant planning, mocks, and consistency for MBA aspirants." },
   "/gate": { title: "GATE Preparation", description: "Engineering GATE: syllabus, revision windows, and mock analytics." },
@@ -63,7 +63,7 @@ const PAGE_OVERRIDES: Record<string, { title: string; description: string; type:
   },
   "/search": {
     title: "Search",
-    description: "Find exam pages, features, blog posts, and tools on Kalnehi.",
+    description: "Find exam pages, features, blog posts, and tools on Kalnehi Daily.",
     type: "page",
   },
 };

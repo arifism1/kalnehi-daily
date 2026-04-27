@@ -23,6 +23,8 @@ import {
 } from "react";
 
 import { saveEnabledExamsInTrack, upsertUserProfile } from "@/actions/profile";
+import { KalSpinner } from "@/components/loading/KalSpinner";
+import { KalnehiMark } from "@/components/KalnehiMark";
 import { CuetDomainSubjectPick } from "@/components/profile/CuetDomainSubjectPick";
 import { LoginMethodsSection } from "@/components/profile/LoginMethodsSection";
 import { TrackExamToggles } from "@/components/profile/TrackExamToggles";
@@ -98,6 +100,23 @@ const Row = memo(function Row({
 
 type ScoreRow = { id: string; label: string; score: string };
 
+function LogoutFarewellScreen() {
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-kal-page px-8 text-center">
+      <KalnehiMark className="h-8 w-auto opacity-70" />
+      <div className="space-y-2">
+        <p className="font-serif text-2xl font-normal leading-snug text-kal-text">
+          do good in life,
+          <br />
+          don&apos;t forget me hero!
+        </p>
+        <p className="text-sm text-kal-muted">Signing you out…</p>
+      </div>
+      <KalSpinner size="lg" />
+    </div>
+  );
+}
+
 export function ProfileForm() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
@@ -118,6 +137,7 @@ export function ProfileForm() {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [signOutConfirmOpen, setSignOutConfirmOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const [examHistoryOpen, setExamHistoryOpen] = useState(false);
   const examHistoryDisclosureId = useId();
   const examHistoryTriggerId = `profile-exam-history-trigger${examHistoryDisclosureId}`;
@@ -346,14 +366,18 @@ export function ProfileForm() {
 
   const signOut = useCallback(async () => {
     setSignOutConfirmOpen(false);
-    useAuthStore.getState().setAuth(null);
-    router.replace("/auth");
+    setSigningOut(true);
     try {
       const supabase = getSupabaseBrowserClient();
-      await supabase.auth.signOut();
+      await Promise.all([
+        supabase.auth.signOut(),
+        new Promise<void>((resolve) => setTimeout(resolve, 2000)),
+      ]);
     } catch {
-      /* ignore */
+      // Clear the store manually if signOut throws so the user is not stuck.
+      useAuthStore.getState().setAuth(null);
     }
+    router.replace("/auth");
   }, [router]);
 
   const togglePrevAttempted = useCallback(() => {
@@ -410,6 +434,7 @@ export function ProfileForm() {
 
   return (
     <div className="space-y-8">
+      {signingOut && <LogoutFarewellScreen />}
       <ConfirmDialog
         open={signOutConfirmOpen}
         title="Sign out?"

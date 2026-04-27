@@ -39,6 +39,7 @@ import {
 import { getUserPlannerTextBundleCached } from "@/lib/userPlannerTextLocal";
 import type { RevisionQueueEntry } from "@/lib/userPlannerTextTypes";
 import { addAcademicTaskToUnifiedDailyPlan } from "@/lib/addAcademicTaskToUnifiedDailyPlan";
+import { addRevisionReminderToUnifiedDailyPlan } from "@/lib/addRevisionReminderToUnifiedDailyPlan";
 import { resolveMicrotopicForTask } from "@/lib/resolveMicrotopicForTask";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useTaskStore, type Task } from "@/store/useTaskStore";
@@ -289,8 +290,19 @@ export function MissedTasks() {
   const onRevisionMoveToToday = useCallback(
     async (it: RevisionQueueEntry) => {
       if (!userId) return;
+      // Update the revision due-date first so the queue stays consistent even
+      // if the daily-plan insert below fails.
       const b = await plannerTextSetRevisionReminderNextDue(userId, it.id, today);
       setRevisionItems(b.revisionItems);
+      const planRes = await addRevisionReminderToUnifiedDailyPlan(it, today);
+      if (!planRes.ok) {
+        setActionNotice(
+          surfaceOptionalString(
+            planRes.error,
+            "Reminder rescheduled. Couldn't add to Today's Plan — try opening Daily Plan.",
+          ),
+        );
+      }
     },
     [userId, today],
   );

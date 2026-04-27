@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 type CircularProgressRingProps = {
   /** 0–100 */
@@ -34,7 +34,15 @@ export function CircularProgressRing({
   const p = Math.min(100, Math.max(0, percent));
   const r = (size - strokeWidth) / 2;
   const c = 2 * Math.PI * r;
-  const dash = (p / 100) * c;
+
+  // Animate from 0 on first mount — the CSS transition handles the sweep.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  const dash = mounted ? (p / 100) * c : 0;
   /** Inset scales with ring so labels stay clear of the stroke (light + dark themes). */
   const contentInset = Math.max(
     14,

@@ -100,7 +100,7 @@ That's voice planning. It took you 20 seconds.
 
 Do it every morning for a week before you wake up your phone. Your day will be structured before the first notification arrives. Your plan will be honest because you spoke it in real-time, not written it aspirationally.
 
-For aspirants who use tools like Kalnehi, voice planning connects to everything — your sylllabus tracker, your daily tasks, your Mastermind recommendations. Say "Hey Boss, plan my day" and speak. The system does the rest.
+For aspirants who use tools like Kalnehi Daily, voice planning connects to everything — your sylllabus tracker, your daily tasks, your Mastermind recommendations. Say "Hey Boss, plan my day" and speak. The system does the rest.
 
 For those without tools: just speak. The habit is the foundation. The tools make it more powerful.`,
 };

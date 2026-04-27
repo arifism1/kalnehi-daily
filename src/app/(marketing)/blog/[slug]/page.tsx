@@ -215,7 +215,7 @@ export default async function BlogPostPage({ params }: Props) {
         )}
 
         <CTABanner
-          headline="Put this into practice with Kalnehi"
+          headline="Put this into practice with Kalnehi Daily"
           subtext="Start free for 3 days. Full Mastermind, syllabus tracker and daily planner."
         />
       </article>
