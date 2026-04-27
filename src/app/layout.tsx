@@ -46,12 +46,28 @@ const syne = Syne({
   display: "swap",
 });
 
-/** Pixel-accurate launch images — must match each file in /public/splash. */
+/** Pixel-accurate launch images — must match each file in /public/splash and SPLASH_SIZES in scripts/pwa-assets.mjs. */
 const appleStartupImages = [
+  // ── iPhone (newest first) ────────────────────────────────────────────────
+  {
+    url: "/splash/apple-1320x2868.png",
+    media:
+      "(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3)",
+  },
+  {
+    url: "/splash/apple-1206x2622.png",
+    media:
+      "(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3)",
+  },
   {
     url: "/splash/apple-1290x2796.png",
     media:
       "(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)",
+  },
+  {
+    url: "/splash/apple-1179x2556.png",
+    media:
+      "(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)",
   },
   {
     url: "/splash/apple-1170x2532.png",
@@ -78,10 +94,16 @@ const appleStartupImages = [
     media:
       "(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)",
   },
+  // ── iPad ─────────────────────────────────────────────────────────────────
   {
-    url: "/splash/apple-1536x2048.png",
+    url: "/splash/apple-2064x2752.png",
     media:
-      "(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2)",
+      "(device-width: 1032px) and (device-height: 1376px) and (-webkit-device-pixel-ratio: 2)",
+  },
+  {
+    url: "/splash/apple-2048x2732.png",
+    media:
+      "(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2)",
   },
   {
     url: "/splash/apple-1668x2388.png",
@@ -89,9 +111,19 @@ const appleStartupImages = [
       "(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2)",
   },
   {
-    url: "/splash/apple-2048x2732.png",
+    url: "/splash/apple-1640x2360.png",
     media:
-      "(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2)",
+      "(device-width: 820px) and (device-height: 1180px) and (-webkit-device-pixel-ratio: 2)",
+  },
+  {
+    url: "/splash/apple-1488x2266.png",
+    media:
+      "(device-width: 744px) and (device-height: 1133px) and (-webkit-device-pixel-ratio: 2)",
+  },
+  {
+    url: "/splash/apple-1536x2048.png",
+    media:
+      "(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2)",
   },
 ] as const;
 

@@ -71,6 +71,7 @@ export function KalSpinner({ size = "md", message, className }: KalSpinnerProps)
             cy={cx}
             r={cx * 0.88}
             fill="var(--kal-accent-glow)"
+            initial={{ opacity: 0.3, r: cx * 0.88 }}
             animate={{ opacity: [0.3, 0.65, 0.3], r: [cx * 0.8, cx * 0.95, cx * 0.8] }}
             transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
           />

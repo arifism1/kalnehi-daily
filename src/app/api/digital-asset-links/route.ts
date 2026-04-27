@@ -22,13 +22,16 @@ export async function GET() {
   const rawFingerprints = process.env.TWA_SHA256_FINGERPRINTS?.trim();
 
   if (!packageName || !rawFingerprints) {
-    return new NextResponse(
-      JSON.stringify({ error: "TWA_PACKAGE_NAME or TWA_SHA256_FINGERPRINTS not set" }),
-      {
-        status: 503,
-        headers: { "Content-Type": "application/json" },
+    // Return a valid empty Digital Asset Links document instead of 503.
+    // An empty array tells Chrome/Android "no associated app" — this is the
+    // correct answer before a TWA is published and prevents the WebAPK minting
+    // server from receiving an error response.
+    return new NextResponse("[]", {
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "public, max-age=3600, s-maxage=3600",
       },
-    );
+    });
   }
 
   const fingerprints = rawFingerprints
