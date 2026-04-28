@@ -21,14 +21,15 @@ import { VoiceListeningHint } from "@/components/voice/VoiceListeningHint";
 // Example commands shown to the user while idle, to teach discoverability.
 const COMMAND_HINTS = [
   "Go to daily plan",
-  "Add task: review notes",
-  "Mark completed: morning study",
-  "Schedule revision for Physics",
   "Go to progress",
-  "Ask Mastermind: explain Newton's laws",
-  "Go to notifications",
-  "Add task: evening exercise",
   "Go to syllabus",
+  "Go to notifications",
+  "Go to mastermind",
+  "Go to consistency tracker",
+  "Go to revision reminders",
+  "Go to habits",
+  "Go to timer",
+  "Go to settings",
 ];
 
 // ─── Audio utilities ───────────────────────────────────────────────────────────
@@ -222,6 +223,7 @@ function ListeningState({
   onStartListening,
   whisperMode = false,
   hideTranscript = false,
+  showMicWhenDoneHint = false,
 }: {
   isListening: boolean;
   transcript: string | null;
@@ -232,6 +234,8 @@ function ListeningState({
   whisperMode?: boolean;
   /** When true, live transcript text is hidden (e.g. on Android). */
   hideTranscript?: boolean;
+  /** Web Speech only: show “tap mic when done” above the mic for the whole session. */
+  showMicWhenDoneHint?: boolean;
 }) {
   const showHints = (!transcript || hideTranscript) && !whisperMode;
   const active = isListening || whisperMode;
@@ -240,6 +244,15 @@ function ListeningState({
     <div className="flex flex-col items-center gap-3 px-4 pt-5 pb-2">
       {/* Waveform */}
       <AudioWaveform isListening={active} />
+
+      {showMicWhenDoneHint && (
+        <p
+          className="-mb-1 max-w-[240px] text-center text-[11px] font-semibold leading-snug text-kal-text-secondary"
+          aria-live="polite"
+        >
+          When you&apos;re done, tap the mic
+        </p>
+      )}
 
       {/* Mic button */}
       <div className="relative">
@@ -282,7 +295,7 @@ function ListeningState({
                 : "Tap the mic \u2014 I'm ready"}
         </p>
         <VoiceListeningHint
-          visible={active && !transcript}
+          visible={active && !whisperMode}
           variant={whisperMode ? "whisper" : "command"}
           showClearVoiceHint
         />
@@ -842,6 +855,7 @@ export function GlobalVoiceSheet() {
                   voiceMinuteStatus={aiGate.voiceMinuteStatus}
                   whisperMode={isWhisperRecording}
                   hideTranscript={isAndroid}
+                  showMicWhenDoneHint={isListening && !isWhisperRecording}
                   onStopListening={isWhisperRecording ? stopWhisperRecording : stopListening}
                   onStartListening={() => {
                     reset();

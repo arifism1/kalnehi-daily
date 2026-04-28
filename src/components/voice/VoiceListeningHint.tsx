@@ -14,8 +14,8 @@ type VoiceListeningHintProps = {
 };
 
 /**
- * One-line copy shown below the mic while listening. Hidden when not visible
- * (e.g. when showing live transcript in global voice).
+ * Supplementary copy below the mic while listening. Global voice uses `command`
+ * with a short timing line; the primary “tap mic when done” CTA lives above the mic.
  */
 export function VoiceListeningHint({
   visible,
@@ -26,9 +26,11 @@ export function VoiceListeningHint({
   if (!visible) return null;
 
   const line =
-    variant === "whisper" || variant === "command"
-      ? "Tap to stop · Up to 60s"
-      : "Tap to stop · 30s quiet auto-stops · Up to 60s";
+    variant === "command"
+      ? "Up to 60s"
+      : variant === "whisper"
+        ? "Tap to stop · Up to 60s"
+        : "Tap to stop · 30s quiet auto-stops · Up to 60s";
 
   return (
     <div className={clsx("flex flex-col items-center gap-0.5", className)}>
