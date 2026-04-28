@@ -13,7 +13,6 @@ import {
 } from "react";
 
 import { GlobalVoiceSheet } from "@/components/voice/GlobalVoiceSheet";
-import { Day3Paywall } from "@/components/paywall/Day3Paywall";
 import {
   ProductTour,
   readProductTourPending,
@@ -263,7 +262,6 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
       <TimerVisibilityBridge />
       <PwaInstallPromptDeferred />
       <GlobalVoiceSheet />
-      <Day3Paywall />
       {showTour && (
         <ProductTour onComplete={() => setShowTour(false)} />
       )}

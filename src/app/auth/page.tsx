@@ -133,7 +133,7 @@ export default function AuthPage() {
         setAuth(session);
         trackAuthSuccess(kind);
       }
-      router.replace("/");
+      router.replace("/home");
     },
     [router, setAuth],
   );
@@ -235,7 +235,7 @@ export default function AuthPage() {
       const supabase = getSupabaseBrowserClient();
       const { error: oErr } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: buildAuthCallbackUrl("/") },
+        options: { redirectTo: buildAuthCallbackUrl("/home") },
       });
       if (oErr) throw oErr;
     } catch (e) {

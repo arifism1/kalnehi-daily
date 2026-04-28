@@ -9,13 +9,13 @@ import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
  * Shows ₹19 option only if !hasHadTrial.
  */
 export function UpgradePrompt() {
-  const { welcomeTrialExpiredNoPay, hasHadTrial, freeTrialActive, hasPaidAccess, loading } =
+  const { welcomeTrialExpiredNoPay, hasHadTrial, hasUsedFreeTrial, freeTrialActive, hasPaidAccess, loading } =
     useSubscriptionAccess();
 
   if (loading || hasPaidAccess) return null;
   if (!welcomeTrialExpiredNoPay && !freeTrialActive) return null;
 
-  const showSkip = !hasHadTrial;
+  const showSkip = !hasHadTrial && !hasUsedFreeTrial;
 
   return (
     <div className="my-3 rounded-xl border border-kal-accent/25 bg-kal-accent/[0.06] p-4">

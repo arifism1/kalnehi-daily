@@ -161,8 +161,8 @@ function useSubscriptionAccessState(): SubscriptionData {
   }, [hasPaidAccess, trialStartedAt]);
 
   const welcomeTrialEligibleUnstarted = useMemo(
-    () => !hasPaidAccess && !hasUsedFreeTrial,
-    [hasPaidAccess, hasUsedFreeTrial],
+    () => !hasPaidAccess && !hasUsedFreeTrial && !hasHadTrial,
+    [hasPaidAccess, hasUsedFreeTrial, hasHadTrial],
   );
 
   const freeTrialEndsAtIso = useMemo(() => {

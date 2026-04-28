@@ -1,8 +1,10 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Day3Paywall } from "@/components/paywall/Day3Paywall";
 import { SubscriptionPaywallInterstitial } from "@/components/subscription/SubscriptionPaywallInterstitial";
+import { ensureFreeTrialStarted } from "@/actions/subscription";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { isLegalPath } from "@/lib/legal-paths";
 import { isPaidAccessOverlayExemptPath } from "@/lib/paid-access-exempt-paths";
@@ -74,6 +76,80 @@ function ProfileErrorScreen({ onRetry }: { onRetry: () => void }) {
   );
 }
 
+/**
+ * Shown when onboarding is complete but the welcome trial has never been started
+ * (e.g. the user hit a network error during OnboardingWizard's trial-start call,
+ * refreshed the page, and ended up with onboardingDone=true but no trial).
+ * Automatically calls ensureFreeTrialStarted and routes to waitlist or dashboard.
+ */
+function TrialStartGate({ refetch }: { refetch: () => void }) {
+  const [error, setError] = useState<string | null>(null);
+
+  const startTrial = useCallback(async () => {
+    setError(null);
+    // Fast-path: already queued in this session — skip the server round-trip.
+    if (sessionStorage.getItem("wl_position")) {
+      window.location.assign("/waitlist/position");
+      return;
+    }
+    try {
+      const result = await ensureFreeTrialStarted();
+      if (!result.ok) {
+        if (result.error === "daily_cap_reached") {
+          const cap = result as {
+            ok: false;
+            error: "daily_cap_reached";
+            position: number;
+            opensAt: string;
+          };
+          sessionStorage.setItem(
+            "wl_position",
+            JSON.stringify({
+              position: cap.position,
+              opensAt: cap.opensAt,
+              aheadCount: Math.max(0, cap.position - 1),
+            }),
+          );
+          window.location.assign("/waitlist/position");
+          return;
+        }
+        setError(result.error);
+        return;
+      }
+      refetch();
+    } catch {
+      setError("Something went wrong. Please try again.");
+    }
+  }, [refetch]);
+
+  useEffect(() => {
+    void startTrial();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div className="flex min-h-full min-h-dvh flex-1 flex-col items-center justify-center gap-4 bg-kal-page px-6 text-center">
+      {error ? (
+        <>
+          <p className="text-sm font-medium text-kal-text">
+            Could not start your free trial.
+          </p>
+          <p className="text-xs text-kal-muted">{error}</p>
+          <button
+            type="button"
+            onClick={() => { void startTrial(); }}
+            className="mt-1 inline-flex min-h-[44px] items-center justify-center rounded-xl border border-kal-border bg-kal-card-muted px-5 text-sm font-semibold text-kal-text transition-colors hover:bg-kal-accent hover:text-white"
+          >
+            Retry
+          </button>
+        </>
+      ) : (
+        <KalSpinner size="xl" message="Starting your free trial…" />
+      )}
+    </div>
+  );
+}
+
 const AUTH_PATHS = new Set(["/auth", "/auth/reset"]);
 
 function isAuthPath(p: string) {
@@ -92,6 +168,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     onboardingDone,
     hasPaidAccess,
     freeTrialActive,
+    hasHadTrial,
+    hasUsedFreeTrial,
     welcomeTrialExpiredNoPay,
     refetch,
   } = useSubscriptionAccess();
@@ -138,6 +216,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
     if (!allowAppWithoutPaid) {
       if (isPaidAccessOverlayExemptPath(pathname)) return "render";
+      // Onboarding done but trial never started — auto-start the trial (or route
+      // to waitlist). This catches users whose trial-start call failed during
+      // onboarding and who refreshed the page.
+      if (!hasUsedFreeTrial && !hasHadTrial && !welcomeTrialExpiredNoPay) return "trialStart";
       return "paywallRender";
     }
 
@@ -158,6 +240,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     fetchError,
     onboardingDone,
     allowAppWithoutPaid,
+    hasHadTrial,
+    hasUsedFreeTrial,
+    welcomeTrialExpiredNoPay,
     pathname,
   ]);
 
@@ -179,6 +264,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return (
       <main className="flex min-h-0 min-h-dvh flex-1 flex-col pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
         <ProfileErrorScreen onRetry={refetch} />
+      </main>
+    );
+  }
+
+  if (gateTarget === "trialStart") {
+    return (
+      <main className="flex min-h-0 min-h-dvh flex-1 flex-col pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
+        <TrialStartGate refetch={refetch} />
       </main>
     );
   }
@@ -205,7 +298,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           >
             {children}
           </div>
-          <SubscriptionPaywallInterstitial freeTrialEnded={welcomeTrialExpiredNoPay} />
+          {welcomeTrialExpiredNoPay
+            ? <Day3Paywall />
+            : <SubscriptionPaywallInterstitial freeTrialEnded={false} />}
         </>
       ) : (
         children

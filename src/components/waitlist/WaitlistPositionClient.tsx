@@ -135,7 +135,7 @@ export function WaitlistPositionClient() {
           setSkipDone(true);
           setSkipBusy(false);
           // Redirect to app after short delay.
-          setTimeout(() => { window.location.href = "/"; }, 1500);
+          setTimeout(() => { window.location.href = "/home"; }, 1500);
         },
         modal: { ondismiss: () => setSkipBusy(false) },
       });
@@ -150,9 +150,10 @@ export function WaitlistPositionClient() {
     return (
       <div className="flex min-h-screen items-center justify-center px-6">
         <div className="max-w-sm text-center">
-          <p className="text-lg font-semibold text-kal-text">No position found.</p>
+          <p className="text-lg font-semibold text-kal-text">No position data found.</p>
           <p className="mt-2 text-sm text-kal-text-secondary">
-            Please <a href="/auth" className="text-kal-accent underline">sign up</a> first.
+            Your session may have expired.{" "}
+            <a href="/home" className="text-kal-accent underline">Return to the app →</a>
           </p>
         </div>
       </div>
@@ -246,9 +247,15 @@ export function WaitlistPositionClient() {
                 </div>
               )}
               {countdown === 0 && data.opensAt && new Date(data.opensAt) < new Date() && (
-                <p className="mt-4 text-base font-semibold text-emerald-500">
-                  Your trial is now live — sign in to begin!
-                </p>
+                <div className="mt-4 flex flex-col items-center gap-3">
+                  <p className="text-base font-semibold text-emerald-500">Your trial is now live.</p>
+                  <a
+                    href="/home"
+                    className="inline-flex min-h-[48px] items-center justify-center rounded-full bg-kal-accent px-6 text-base font-bold text-white shadow-[0_4px_16px_rgba(255,122,0,0.32)] hover:brightness-105"
+                  >
+                    Go to dashboard →
+                  </a>
+                </div>
               )}
             </div>
           )}

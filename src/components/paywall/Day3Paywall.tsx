@@ -38,7 +38,7 @@ declare global {
 }
 
 export function Day3Paywall() {
-  const { welcomeTrialExpiredNoPay, hasHadTrial, refetch, loading } = useSubscriptionAccess();
+  const { welcomeTrialExpiredNoPay, hasHadTrial, hasUsedFreeTrial, refetch, loading } = useSubscriptionAccess();
   const user = useAuthStore((s) => s.user);
   const [months, setMonths] = useState(DEFAULT_AUTOPAY_MONTHS);
   const [busy, setBusy] = useState(false);
@@ -46,7 +46,7 @@ export function Day3Paywall() {
   const [skipBusy, setSkipBusy] = useState(false);
   const [skipError, setSkipError] = useState<string | null>(null);
 
-  const showSkipOption = !hasHadTrial;
+  const showSkipOption = !hasHadTrial && !hasUsedFreeTrial;
 
   const visible = !loading && welcomeTrialExpiredNoPay;
 
