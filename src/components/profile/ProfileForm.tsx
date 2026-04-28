@@ -2,40 +2,33 @@
 
 import clsx from "clsx";
 import {
-  ChevronDown,
   Layers,
   Loader2,
-  LogOut,
   Plus,
+  Smartphone,
   Trash2,
-  UserCircle,
+  User,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   memo,
   useCallback,
   useEffect,
   useMemo,
-  useId,
   useRef,
   useState,
 } from "react";
 
 import { saveEnabledExamsInTrack, upsertUserProfile } from "@/actions/profile";
-import { KalSpinner } from "@/components/loading/KalSpinner";
-import { KalnehiMark } from "@/components/KalnehiMark";
 import { CuetDomainSubjectPick } from "@/components/profile/CuetDomainSubjectPick";
-import { LoginMethodsSection } from "@/components/profile/LoginMethodsSection";
 import { TrackExamToggles } from "@/components/profile/TrackExamToggles";
 import { TrackPicker } from "@/components/onboarding/TrackPicker";
 import { UpscOptionalSubjectPick } from "@/components/profile/UpscOptionalSubjectPick";
 import { InstallPWA } from "@/components/InstallPWA";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { SettingsExpandableSection } from "@/components/settings/SettingsExpandableSection";
 import {
   displayNameForExamCatalog,
-  EXAMS_CATALOG_FALLBACK,
-  fetchExamsCatalog,
 } from "@/lib/examsCatalog";
 import { isCuetExam } from "@/lib/examProfile";
 import { parseCuetDomainSubjectsJson } from "@/lib/cuetDomainSubjects";
@@ -44,40 +37,13 @@ import { trackById, trackForExamName } from "@/lib/examTracks";
 import {
   isUpscCseMainsExam,
 } from "@/lib/upscMainsOptionalSubjects";
-import { SITE_NAME } from "@/lib/seo-metadata";
 import { parsePrevScoreEntries } from "@/lib/prevScoreEntries";
 import { KALNEHI_PROFILE_UPDATED_EVENT } from "@/lib/profileEvents";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { formatSupabaseError } from "@/lib/supabase";
 import { surfaceErrorForUi } from "@/lib/userFacingErrors";
+import { useExamsCatalogRows } from "@/hooks/useExamsCatalogRows";
 import { useAuthStore } from "@/store/useAuthStore";
-import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
-
-const Section = memo(function Section({
-  title,
-  footer,
-  children,
-}: {
-  title: string;
-  footer?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="transition-opacity duration-300">
-      <h2 className="px-3 pb-2 text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
-        {title}
-      </h2>
-      <div className="kal-glass-panel overflow-hidden rounded-[1rem] transition-colors duration-200">
-        {children}
-      </div>
-      {footer ? (
-        <p className="mt-2 px-3 text-[11px] leading-relaxed text-kal-text-secondary">
-          {footer}
-        </p>
-      ) : null}
-    </section>
-  );
-});
 
 const Row = memo(function Row({
   children,
@@ -100,23 +66,6 @@ const Row = memo(function Row({
 
 type ScoreRow = { id: string; label: string; score: string };
 
-function LogoutFarewellScreen() {
-  return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-kal-page px-8 text-center">
-      <KalnehiMark className="h-8 w-auto opacity-70" />
-      <div className="space-y-2">
-        <p className="font-serif text-2xl font-normal leading-snug text-kal-text">
-          do good in life,
-          <br />
-          don&apos;t forget me hero!
-        </p>
-        <p className="text-sm text-kal-muted">Signing you out…</p>
-      </div>
-      <KalSpinner size="lg" />
-    </div>
-  );
-}
-
 export function ProfileForm() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
@@ -131,17 +80,11 @@ export function ProfileForm() {
     string[]
   >([]);
   const [loadingUpscOptionals, setLoadingUpscOptionals] = useState(false);
-  const [examRows, setExamRows] = useState(EXAMS_CATALOG_FALLBACK);
+  const { rows: examRows } = useExamsCatalogRows();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
-  const [signOutConfirmOpen, setSignOutConfirmOpen] = useState(false);
-  const [signingOut, setSigningOut] = useState(false);
-  const [examHistoryOpen, setExamHistoryOpen] = useState(false);
-  const examHistoryDisclosureId = useId();
-  const examHistoryTriggerId = `profile-exam-history-trigger${examHistoryDisclosureId}`;
-  const examHistoryPanelId = `profile-exam-history-panel${examHistoryDisclosureId}`;
   const fullNameInputRef = useRef<HTMLInputElement | null>(null);
 
   // Track system state
@@ -168,20 +111,15 @@ export function ProfileForm() {
       setError(null);
       try {
         const supabase = getSupabaseBrowserClient();
-        const [{ data, error: qErr }, catalog] = await Promise.all([
-          supabase
-            .from("user_profiles")
-            .select(
-              "full_name, target_exam_date, exam_dates, primary_exam, target_exam, prev_exam_attempted, prev_score, prev_score_entries, cuet_domain_subjects, upsc_optional_subjects, selected_track, enabled_exams_in_track",
-            )
-            .eq("user_id", user.id)
-            .maybeSingle(),
-          fetchExamsCatalog(supabase),
-        ]);
+        const { data, error: qErr } = await supabase
+          .from("user_profiles")
+          .select(
+            "full_name, target_exam_date, exam_dates, primary_exam, target_exam, prev_exam_attempted, prev_score, prev_score_entries, cuet_domain_subjects, upsc_optional_subjects, selected_track, enabled_exams_in_track",
+          )
+          .eq("user_id", user.id)
+          .maybeSingle();
         if (cancelled) return;
         if (qErr) throw qErr;
-
-        setExamRows(catalog);
 
         const teRaw =
           data?.target_exam?.trim() || data?.primary_exam?.trim() || "";
@@ -364,22 +302,6 @@ export function ProfileForm() {
     router,
   ]);
 
-  const signOut = useCallback(async () => {
-    setSignOutConfirmOpen(false);
-    setSigningOut(true);
-    try {
-      const supabase = getSupabaseBrowserClient();
-      await Promise.all([
-        supabase.auth.signOut(),
-        new Promise<void>((resolve) => setTimeout(resolve, 2000)),
-      ]);
-    } catch {
-      // Clear the store manually if signOut throws so the user is not stuck.
-      useAuthStore.getState().setAuth(null);
-    }
-    router.replace("/auth");
-  }, [router]);
-
   const togglePrevAttempted = useCallback(() => {
     setPrevAttempted((was) => {
       if (was) {
@@ -402,20 +324,6 @@ export function ProfileForm() {
     ]);
   }, []);
 
-  const {
-    status: subStatus,
-    plan: subPlan,
-    endDate: subEndDate,
-    autopayMonthsTotal,
-    hasPaidAccess,
-  } = useSubscriptionAccess();
-
-  const meta = user?.user_metadata as Record<string, unknown> | undefined;
-  const avatarUrl =
-    (typeof meta?.avatar_url === "string" && meta.avatar_url) ||
-    (typeof meta?.picture === "string" && meta.picture) ||
-    null;
-
   if (!user) {
     return (
       <p className="text-sm text-kal-text-secondary">
@@ -434,20 +342,6 @@ export function ProfileForm() {
 
   return (
     <div className="space-y-8">
-      {signingOut && <LogoutFarewellScreen />}
-      <ConfirmDialog
-        open={signOutConfirmOpen}
-        title="Sign out?"
-        description={`You will be logged out of ${SITE_NAME}.`}
-        confirmLabel="Sign Out"
-        cancelLabel="Cancel"
-        danger
-        onCancel={() => setSignOutConfirmOpen(false)}
-        onConfirm={() => void signOut()}
-      />
-
-      <InstallPWA />
-
       <form
         className="space-y-8"
         onSubmit={(e) => {
@@ -455,11 +349,25 @@ export function ProfileForm() {
           void submit();
         }}
       >
-        <Section
-          title="Identity"
-          footer="Used across the app and in your study summaries."
+        <section className="space-y-6" aria-labelledby="profile-form-heading">
+          <h2 id="profile-form-heading" className="sr-only">
+            Profile settings
+          </h2>
+        <SettingsExpandableSection
+          sectionId="profile-details"
+          kicker="Profile"
+          title="Your profile"
+          description="Name, exam targets, and previous attempt marks."
+          icon={User}
+          defaultOpen
         >
-          <Row>
+          <div className="space-y-8">
+          <div>
+            <p className="mb-3 text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
+              Identity
+            </p>
+            <div className="kal-glass-panel overflow-hidden rounded-[1rem]">
+            <Row>
             <label
               htmlFor="full-name"
               className="w-28 shrink-0 text-[15px] font-medium text-kal-text-secondary"
@@ -476,13 +384,15 @@ export function ProfileForm() {
               placeholder="Your name"
               className="min-w-0 flex-1 rounded-lg border-0 bg-transparent py-1 text-base text-kal-text placeholder:text-kal-muted focus:outline-none focus:ring-0"
             />
-          </Row>
-        </Section>
+            </Row>
+          </div>
+          </div>
 
-        <Section
-          title="Exam goals"
-          footer="Your track controls which exams appear in the Syllabus Tracker."
-        >
+          <div>
+            <p className="mb-3 text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
+              Exam goals
+            </p>
+            <div className="kal-glass-panel overflow-hidden rounded-[1rem]">
           {/* Track display row */}
           <Row className="flex-col items-stretch gap-2 sm:flex-row sm:items-center">
             <span className="flex items-center gap-1.5 w-28 shrink-0 text-[15px] font-medium text-kal-text-secondary">
@@ -589,7 +499,8 @@ export function ProfileForm() {
               </div>
             </div>
           ) : null}
-        </Section>
+          </div>
+          </div>
 
         {/* Change Track modal — picker phase */}
         {changeTrackOpen && (
@@ -676,39 +587,15 @@ export function ProfileForm() {
           }}
         />
 
-        <section className="transition-opacity duration-300">
-          <h2 className="px-3 pb-2">
-            <button
-              id={examHistoryTriggerId}
-              type="button"
-              aria-expanded={examHistoryOpen}
-              aria-controls={examHistoryPanelId}
-              onClick={() => setExamHistoryOpen((o) => !o)}
-              className="flex w-full min-h-[44px] items-center justify-between gap-2 rounded-lg py-0.5 pr-0.5 text-left transition-colors hover:bg-kal-accent/5"
-            >
-              <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
-                Exam history
-              </span>
-              <ChevronDown
-                className={clsx(
-                  "h-4 w-4 shrink-0 text-kal-muted transition-transform duration-300",
-                  examHistoryOpen && "rotate-180",
-                )}
-                aria-hidden
-              />
-            </button>
-          </h2>
-          <div
-            id={examHistoryPanelId}
-            role="region"
-            aria-labelledby={examHistoryTriggerId}
-            className={clsx(
-              "grid transition-[grid-template-rows] duration-300 ease-out",
-              examHistoryOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
-            )}
-          >
-            <div className="min-h-0 overflow-hidden">
-              <div className="kal-glass-panel overflow-hidden rounded-[1rem] transition-colors duration-200">
+          <div>
+            <p className="mb-3 text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
+              Exam history
+            </p>
+            <p className="mb-3 text-xs leading-relaxed text-kal-text-secondary">
+              Add each past attempt with a short label and marks. If you tried more than once,
+              note the year or attempt number in the label.
+            </p>
+            <div className="kal-glass-panel overflow-hidden rounded-[1rem] transition-colors duration-200">
                 <Row>
                   <span className="min-w-0 flex-1 text-[15px] font-medium text-kal-text-secondary">
                     Attempted before?
@@ -838,143 +725,84 @@ export function ProfileForm() {
                   </div>
                 </div>
               </div>
-            </div>
           </div>
-          {examHistoryOpen ? (
-            <p className="mt-2 px-3 text-[11px] leading-relaxed text-kal-text-secondary">
-              Add each past attempt with a short label and marks. If you tried
-              more than once, note the year or attempt number in the label.
-            </p>
-          ) : null}
+          </div>
+        </SettingsExpandableSection>
+
+          <div className="space-y-3 border-t border-kal-border/80 pt-2">
+            <button
+              type="submit"
+              disabled={saving}
+              className="kal-btn-accent flex w-full min-h-[52px] items-center justify-center gap-2 py-3.5 text-[15px] transition-opacity duration-200 disabled:opacity-50"
+            >
+              {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+              Save profile
+            </button>
+            {error && (
+              <p className="rounded-2xl border border-[var(--kal-danger-border)] bg-[var(--kal-danger-soft)] px-4 py-3 text-sm text-[var(--kal-danger-text)]">
+                {error}
+              </p>
+            )}
+            {saved && (
+              <p className="text-center text-sm font-medium text-kal-accent" role="status">
+                Saved.
+              </p>
+            )}
+          </div>
         </section>
-
-        {error && (
-          <p className="rounded-2xl border border-[var(--kal-danger-border)] bg-[var(--kal-danger-soft)] px-4 py-3 text-sm text-[var(--kal-danger-text)]">
-            {error}
-          </p>
-        )}
-
-        {saved && (
-          <p className="text-center text-sm font-medium text-kal-accent" role="status">
-            Saved.
-          </p>
-        )}
-
-        <button
-          type="submit"
-          disabled={saving}
-          className="kal-btn-accent flex w-full min-h-[52px] items-center justify-center gap-2 py-3.5 text-[15px] transition-opacity duration-200 disabled:opacity-50"
-        >
-          {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-          Save profile
-        </button>
       </form>
 
-      <div id="login-methods" className="scroll-mt-24">
-        <Section
-          title="Login methods"
-          footer="Link Google or add a password so you always have another way to sign in to the same account."
-        >
-          <LoginMethodsSection />
-        </Section>
-      </div>
-
-      <Section title="Account" footer="Session and sign-in for this device.">
-        <Row className="items-center gap-3">
-          {avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={avatarUrl}
-              alt=""
-              className="h-11 w-11 shrink-0 rounded-full border border-kal-border object-cover"
-              referrerPolicy="no-referrer"
-            />
-          ) : (
-            <div className="kal-glass-subtle flex h-11 w-11 shrink-0 items-center justify-center rounded-full">
-              <UserCircle className="h-8 w-8 text-kal-muted" />
-            </div>
-          )}
-          <div className="min-w-0 flex-1">
-            <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
-              Signed in as
+      <SettingsExpandableSection
+        sectionId="profile-install-pwa"
+        kicker="Profile"
+        title="Install app"
+        description="Add Kalnehi to your home screen for quicker access."
+        icon={Smartphone}
+      >
+        <div className="mb-4 space-y-4 text-xs leading-relaxed text-kal-text-secondary">
+          <div>
+            <p className="font-semibold text-[0.7rem] uppercase tracking-wide text-kal-text">
+              iPhone · iPad
             </p>
-            <p className="truncate text-sm text-kal-text">{user.email}</p>
+            <p className="mt-1">
+              Open Kalnehi in <strong>Safari</strong> (installation from other browsers
+              is limited on iOS). Tap <strong className="text-kal-text">Share</strong> in
+              the toolbar, then{" "}
+              <strong className="text-kal-text">Add to Home Screen</strong>.
+            </p>
           </div>
-        </Row>
-        <div className="border-t border-kal-border px-4 py-3">
-          {subStatus ? (
-            <div className="mb-3 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3">
-              <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
-                Current plan
-              </p>
-              <p className="mt-1 text-sm font-medium text-kal-text">
-                {subPlan === "annual"
-                  ? "Annual Smart Plan"
-                  : subPlan === "six_month"
-                    ? "6-Month Smart Plan"
-                    : subPlan === "monthly" || subPlan === "trial"
-                      ? "Monthly Smart Plan"
-                      : "Smart Plan"}
-                {" · "}
-                <span
-                  className={
-                    subStatus === "active" || subStatus === "trial"
-                      ? "text-emerald-700 dark:text-emerald-400"
-                      : subStatus === "cancelled"
-                        ? "text-amber-700 dark:text-amber-400"
-                        : "text-kal-text-secondary"
-                  }
-                >
-                  {subStatus === "active"
-                    ? "Active"
-                    : subStatus === "trial"
-                      ? "Trial"
-                      : subStatus === "cancelled"
-                        ? hasPaidAccess
-                          ? "Cancelled (access continues)"
-                          : "Cancelled"
-                        : subStatus === "expired"
-                          ? "Expired"
-                          : subStatus}
-                </span>
-              </p>
-              {subEndDate ? (
-                <p className="mt-0.5 text-xs text-kal-text-secondary">
-                  {subPlan === "annual" || subPlan === "six_month"
-                    ? "Plan runs until"
-                    : subStatus === "cancelled"
-                      ? "Access until"
-                      : "Month ends"}{" "}
-                  {new Date(subEndDate).toLocaleDateString("en-IN", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })}
-                  {(subPlan === "monthly" || subPlan === "trial") &&
-                    autopayMonthsTotal !== null &&
-                    subStatus !== "cancelled" && (
-                      <> · AutoPay up to {autopayMonthsTotal} month{autopayMonthsTotal === 1 ? "" : "s"}</>
-                    )}
-                </p>
-              ) : null}
-            </div>
-          ) : null}
-          <Link
-            href="/my-subscription"
-            className="kal-glass-subtle mb-3 flex w-full min-h-[48px] items-center justify-center rounded-xl py-3 text-[15px] font-semibold text-kal-text transition-colors hover:opacity-95 active:opacity-90"
-          >
-            My Subscription &amp; billing
-          </Link>
-          <button
-            type="button"
-            onClick={() => setSignOutConfirmOpen(true)}
-            className="flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl border border-[var(--kal-danger-border)] bg-[var(--kal-danger-soft)] py-3 text-[15px] font-semibold text-[var(--kal-danger-text)] active:opacity-90"
-          >
-            <LogOut className="h-5 w-5" />
-            Sign out
-          </button>
+          <div>
+            <p className="font-semibold text-[0.7rem] uppercase tracking-wide text-kal-text">
+              Android phone · tablet
+            </p>
+            <p className="mt-1">
+              In <strong>Chrome</strong> or <strong>Edge</strong>, open the ⋮ menu and
+              choose <strong className="text-kal-text">Install app</strong> or{" "}
+              <strong className="text-kal-text">Add to Home screen</strong>. On some
+              devices you&apos;ll see an install banner at the bottom instead.
+              Some browsers label it similarly under Menu → Install.
+            </p>
+          </div>
+          <div>
+            <p className="font-semibold text-[0.7rem] uppercase tracking-wide text-kal-text">
+              Windows · Mac · Linux (desktop)
+            </p>
+            <p className="mt-1">
+              In <strong>Chrome</strong>, <strong>Edge</strong>, or{" "}
+              <strong>Brave</strong>, look for an install (⊕) icon in the address bar, or
+              open the ⋮ menu and choose <strong className="text-kal-text">Install Kalnehi</strong>{" "}
+              / install this site as an app. When your browser can install from this page,
+              the <strong className="text-kal-text">Install Kalnehi</strong> button appears
+              below.
+            </p>
+          </div>
+          <p className="text-[11px] text-kal-muted">
+            A home-screen or installed shortcut opens Kalnehi faster and often in a
+            dedicated window. Exact menus vary by device, OS, and browser version.
+          </p>
         </div>
-      </Section>
+        <InstallPWA />
+      </SettingsExpandableSection>
     </div>
   );
 }

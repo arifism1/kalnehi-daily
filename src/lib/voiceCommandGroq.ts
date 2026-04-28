@@ -21,7 +21,6 @@ export type VoiceCommandResult =
 const VALID_NAV_PATHS = new Set([
   // Core / home
   "/home",
-  "/profile",
   "/settings",
   "/notifications",
   "/my-subscription",
@@ -104,7 +103,7 @@ Parse the user voice command and return ONLY a valid JSON object — no markdown
 ### navigate — go to a screen in the app
 {"intent":"navigate","path":"<valid path>","response_text":"..."}
 Valid paths:
-  Core: /home, /profile, /settings, /notifications, /my-subscription, /feedback
+  Core: /home, /settings (profile and app preferences), /notifications, /my-subscription, /feedback
   Planning: /daily-plan, /daily-debrief (canonical; /daily-log redirects), /daily-engine, /dictate-day, /saved-plans, /missed-tasks, /calendar, /timer, /study-sessions, /study-camera, /paste-handwritten
   Planner: /planner, /planner/habits, /planner/schedule, /planner/weekly, /planner/todos, /planner/routine, /planner/productivity
   Track: /progress, /consistency-tracker, /heatmap, /marks-engine, /my-target, /target-score-blueprint
@@ -120,7 +119,7 @@ Valid paths:
 - "Go to todos" → {"intent":"navigate","path":"/planner/todos","response_text":"Opening your todos."}
 - "Open my target" → {"intent":"navigate","path":"/my-target","response_text":"Opening your exam target."}
 - "Target score blueprint" → {"intent":"navigate","path":"/target-score-blueprint","response_text":"Opening the target score blueprint."}
-- "Open profile" → {"intent":"navigate","path":"/profile","response_text":"Opening your profile."}
+- "Open profile" or "Open settings" → {"intent":"navigate","path":"/settings","response_text":"Opening Settings."}
 - "Open daily engine" → {"intent":"navigate","path":"/daily-engine","response_text":"Opening the daily engine."}
 - "Open study camera" → {"intent":"navigate","path":"/study-camera","response_text":"Opening study camera."}
 

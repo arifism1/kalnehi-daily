@@ -20,7 +20,6 @@ import {
 } from "@/components/onboarding/ProductTour";
 import { useVoiceCommandStore } from "@/store/useVoiceCommandStore";
 
-import { WelcomeMorningHost } from "@/components/welcome/WelcomeMorningHost";
 import { KalnehiMark } from "@/components/KalnehiMark";
 import { PwaInstallPromptDeferred } from "@/components/PwaInstallPromptDeferred";
 import { FreeTrialWelcomeBanner } from "@/components/subscription/FreeTrialWelcomeBanner";
@@ -250,8 +249,6 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
           </main>
         </div>
       </div>
-
-      <WelcomeMorningHost />
 
       {/* ── Mobile bottom tab bar — hidden at lg+ ───────────────────────── */}
       <BottomTabBar />

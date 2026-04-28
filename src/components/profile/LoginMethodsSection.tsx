@@ -118,7 +118,7 @@ export function LoginMethodsSection() {
       const { error } = await supabase.auth.linkIdentity({
         provider: "google",
         options: {
-          redirectTo: buildAuthCallbackUrl("/profile#login-methods"),
+          redirectTo: buildAuthCallbackUrl("/settings#login-methods"),
         },
       });
       if (error) throw error;

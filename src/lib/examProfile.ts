@@ -193,16 +193,18 @@ export function isNeetUgExam(exam: string | null | undefined): boolean {
 }
 
 /**
- * Returns true only for exams with verified prev-year mark weights.
- * Other exams have marks data that is being corrected — hide the
- * "Proj. score" cell entirely until data is ready.
+ * Returns true for exams with verified prev-year mark weights in chapter_marks.
+ * These exams show the full marks/projection UI in the Syllabus Tracker.
  */
 export function examHasPrevYearMarks(exam: string | null | undefined): boolean {
   if (!exam) return false;
+  const n = normalizeExamLabel(exam);
   return (
     isJeeMainsExam(exam) ||
-    normalizeExamLabel(exam) === "jee advanced" ||
-    isNeetUgExam(exam)
+    n === "jee advanced" ||
+    isNeetUgExam(exam) ||
+    n === "neet pg" ||
+    n === "ini cet"
   );
 }
 
@@ -251,7 +253,7 @@ export function examScoreMax(
    */
   if (isUpscCseMainsExam(exam)) return 2350;
   if (n === "gate") return 100;
-  if (n === "ini cet") return 800;
+  if (n === "ini cet") return 200;
   if (n === "cat") return 198;
   if (n === "gmat") return 805;
   if (n === "clat" || n === "clat ug") return 120;

@@ -899,7 +899,10 @@ export function MyPlanPageClient() {
                       : `${s}s remaining`;
 
             return (
-              <div className="mt-4 rounded-2xl border border-kal-border bg-kal-card p-4">
+              <div
+                id="ai-study-partner"
+                className="mt-4 scroll-mt-24 rounded-2xl border border-kal-border bg-kal-card p-4"
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-kal-accent/10">

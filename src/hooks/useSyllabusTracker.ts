@@ -254,6 +254,7 @@ export function useSyllabusTracker() {
       rows,
       statusBySyllabusMasterId,
       maxScore,
+      { collapseDuplicateScores: false },
     );
   }, [rows, statusBySyllabusMasterId, maxScore]);
 
@@ -281,6 +282,7 @@ export function useSyllabusTracker() {
         er.rows,
         statusBySyllabusMasterId,
         erMaxScore,
+        { collapseDuplicateScores: false },
       );
       return {
         examLabel: er.examLabel,

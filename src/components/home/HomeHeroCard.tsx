@@ -29,6 +29,10 @@ export type HomeHeroCardProps = {
   marksMastered: number;
   /** Projected/mastered marks denominator */
   marksTotal: number;
+  /** Yesterday's plan completion 0–100 */
+  yesterdayPercent: number;
+  /** Tasks counted for yesterday (unified plan or legacy list length) */
+  yesterdayTaskCount: number;
   /** Today's plan completion 0–100 */
   todayPercent: number;
   /** Number of tasks planned today */
@@ -81,6 +85,8 @@ export function HomeHeroCard({
   syllabusMasteryPercent,
   marksMastered,
   marksTotal,
+  yesterdayPercent,
+  yesterdayTaskCount,
   todayPercent,
   todayTaskCount,
   examDisplayName,
@@ -109,6 +115,11 @@ export function HomeHeroCard({
   }, [examDate]);
 
   const animatedMastery = useCountUp(syllabusMasteryPercent ?? 0, 750, syllabusMasteryPercent != null);
+  const animatedYesterday = useCountUp(
+    yesterdayPercent,
+    650,
+    yesterdayTaskCount > 0,
+  );
   const animatedToday = useCountUp(todayPercent, 650, todayTaskCount > 0);
 
   const masteryDisplay = useMemo(() => {
@@ -125,6 +136,11 @@ export function HomeHeroCard({
     }
     return "—";
   }, [marksMastered, marksTotal]);
+
+  const yesterdayPlanDisplay = useMemo(() => {
+    if (yesterdayTaskCount === 0) return "—";
+    return `${Math.round(animatedYesterday)}%`;
+  }, [yesterdayPercent, yesterdayTaskCount, animatedYesterday]);
 
   const todayPlanDisplay = useMemo(() => {
     if (todayTaskCount === 0) return "—";
@@ -315,15 +331,38 @@ export function HomeHeroCard({
 
           {divider}
 
-          <StatCell
-            value={todayPlanDisplay}
-            label="Today's plan"
-            ariaLabel={
-              todayTaskCount > 0
-                ? `Today's plan ${Math.round(todayPercent)} percent done`
-                : "No plan created today"
-            }
-          />
+          <div className="flex min-w-0 flex-1 flex-col justify-center gap-2 px-1 py-2 text-center sm:gap-2.5 sm:py-3">
+            <div className="flex flex-col items-center gap-0.5">
+              <span
+                className="kal-home-stat-value text-[18px] sm:text-[20px]"
+                aria-label={
+                  todayTaskCount > 0
+                    ? `Today's plan ${Math.round(todayPercent)} percent done`
+                    : "No plan created today"
+                }
+              >
+                {todayPlanDisplay}
+              </span>
+              <span className="text-[10px] leading-tight text-kal-muted">
+                Today&apos;s plan
+              </span>
+            </div>
+            <div className="flex flex-col items-center gap-0.5">
+              <span
+                className="kal-home-stat-value text-[18px] sm:text-[20px]"
+                aria-label={
+                  yesterdayTaskCount > 0
+                    ? `Yesterday's plan ${Math.round(yesterdayPercent)} percent done`
+                    : "No plan yesterday"
+                }
+              >
+                {yesterdayPlanDisplay}
+              </span>
+              <span className="text-[10px] leading-tight text-kal-muted">
+                Yesterday&apos;s plan
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </section>
