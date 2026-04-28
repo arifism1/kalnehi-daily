@@ -612,6 +612,19 @@ export function SyllabusTracker() {
       displayNameForExamCatalog(activeExamName, examCatalogRows) || "Your exam",
     [activeExamName, examCatalogRows],
   );
+  const headerSyllabusEyebrow = useMemo(() => {
+    if (examResults.length <= 1) {
+      return `${displayExam} syllabus`;
+    }
+    const names = examResults
+      .map(
+        (er) =>
+          displayNameForExamCatalog(er.examLabel, examCatalogRows) || er.examLabel,
+      )
+      .filter((n): n is string => Boolean(n?.trim()));
+    if (names.length === 0) return `${displayExam} syllabus`;
+    return `${names.join(" · ")} syllabus`;
+  }, [displayExam, examCatalogRows, examResults]);
   const grouped = useMemo(() => groupBySubjectAndChapter(rows), [rows]);
   const subjects = useMemo(
     () => [...grouped.keys()].sort(sortSubjects),
@@ -782,7 +795,7 @@ export function SyllabusTracker() {
     <div className="space-y-6 pb-4">
       <header>
         <p className="kal-category-label text-kal-accent">
-          {displayExam} syllabus
+          {headerSyllabusEyebrow}
         </p>
         <h1 className="kal-feature-title mt-1">
           Syllabus Tracker

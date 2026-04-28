@@ -650,10 +650,11 @@ body {
   /* Remove grey/blue tap-highlight flash (the most visible web-app tell) */
   html {
     -webkit-tap-highlight-color: transparent;
-    /* contain: still blocks pull-to-refresh scroll-chain propagation but
-       preserves the iOS rubber-band cue so Safari can detect and engage
-       scroll for pages with a small scrollable range (e.g. trial banner). */
-    overscroll-behavior-y: contain;
+    /* none: prevent outer viewport from bouncing on aggressive scroll
+       (macOS momentum scroll would otherwise show white space above content).
+       Inner scrollables (.kal-chrome-main-scroll) still use contain to prevent
+       scroll chaining, so overscroll is visually contained within the app. */
+    overscroll-behavior-y: none;
   }
 
   /* Eliminate the 300 ms tap delay on interactive controls without applying
