@@ -1,4 +1,13 @@
-export function TimerIllustration({ className }: { className?: string }) {
+type TimerIllustrationProps = {
+  className?: string;
+  /** Hide the decorative “FOCUS” pill — useful beside a page title where the eyebrow already says Focus. */
+  showFocusLabel?: boolean;
+};
+
+export function TimerIllustration({
+  className,
+  showFocusLabel = true,
+}: TimerIllustrationProps) {
   return (
     <svg
       viewBox="0 0 240 200"
@@ -60,9 +69,31 @@ export function TimerIllustration({ className }: { className?: string }) {
       <circle cx="184" cy="130" r="4" fill="#FF7A00" opacity="0.3" />
       <circle cx="56" cy="118" r="3" fill="#FFB366" opacity="0.3" />
 
-      {/* "Focus" label */}
-      <rect x="88" y="162" width="64" height="22" rx="11" fill="#FF7A00" opacity="0.12" />
-      <text x="120" y="177" textAnchor="middle" fontSize="10" fontWeight="700" fill="#FF7A00" letterSpacing="2">FOCUS</text>
+      {showFocusLabel ? (
+        <>
+          {/* "Focus" label */}
+          <rect
+            x="88"
+            y="162"
+            width="64"
+            height="22"
+            rx="11"
+            fill="#FF7A00"
+            opacity="0.12"
+          />
+          <text
+            x="120"
+            y="177"
+            textAnchor="middle"
+            fontSize="10"
+            fontWeight="700"
+            fill="#FF7A00"
+            letterSpacing="2"
+          >
+            FOCUS
+          </text>
+        </>
+      ) : null}
 
       {/* Small sand grains falling */}
       <circle cx="120" cy="98" r="1.5" fill="#FF7A00" opacity="0.6" />

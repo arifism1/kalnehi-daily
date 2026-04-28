@@ -1,5 +1,6 @@
 "use client";
 
+import clsx from "clsx";
 import { Camera, Loader2, X } from "lucide-react";
 import {
   useCallback,
@@ -45,7 +46,6 @@ export function AddDoubtSheet({
   const baseId = useId();
   const createDoubt = useDoubtStore((s) => s.createDoubt);
   const titleRef = useRef<HTMLTextAreaElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isMultiExam = (subjectsByExam?.length ?? 0) > 1;
 
@@ -64,7 +64,6 @@ export function AddDoubtSheet({
   const [description, setDescription] = useState("");
   const [subject, setSubject] = useState("");
   const [pending, setPending] = useState<PendingPhoto[]>([]);
-  const [showPhotoPrivacy, setShowPhotoPrivacy] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -73,7 +72,6 @@ export function AddDoubtSheet({
     setDescription("");
     setSubject("");
     setSelectedExamLabel("__all__");
-    setShowPhotoPrivacy(false);
     setError(null);
     setSaving(false);
     setPending((prev) => {
@@ -122,11 +120,6 @@ export function AddDoubtSheet({
       if (row) URL.revokeObjectURL(row.url);
       return p.filter((_, i) => i !== index);
     });
-  }, []);
-
-  const onAddPhotoClick = useCallback(() => {
-    setShowPhotoPrivacy(true);
-    fileInputRef.current?.click();
   }, []);
 
   const save = useCallback(async () => {
@@ -270,29 +263,28 @@ export function AddDoubtSheet({
 
           <div className="mt-5">
             <input
-              ref={fileInputRef}
+              id={`${baseId}-photo-input`}
               type="file"
               accept="image/*"
               multiple
+              disabled={saving}
               className="sr-only"
-              aria-hidden
               onChange={(e) => {
                 addFiles(e.target.files);
                 e.target.value = "";
               }}
             />
-            {showPhotoPrivacy ? (
-              <LocalPhotoPrivacyNote className="mb-3 max-w-none" />
-            ) : null}
-            <button
-              type="button"
-              onClick={onAddPhotoClick}
-              disabled={saving}
-              className="flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl border border-kal-accent/30 bg-kal-accent-soft px-4 py-3 text-sm font-semibold text-kal-accent-dark transition hover:border-kal-accent/45 hover:bg-kal-accent/10 disabled:opacity-50 dark:hover:bg-kal-accent-soft/20 dark:hover:text-kal-accent"
+            <LocalPhotoPrivacyNote className="mb-3 max-w-none" />
+            <label
+              htmlFor={`${baseId}-photo-input`}
+              className={clsx(
+                "flex w-full min-h-[48px] cursor-pointer items-center justify-center gap-2 rounded-xl border border-kal-accent/30 bg-kal-accent-soft px-4 py-3 text-sm font-semibold text-kal-accent-dark transition hover:border-kal-accent/45 hover:bg-kal-accent/10 dark:hover:bg-kal-accent-soft/20 dark:hover:text-kal-accent",
+                saving && "pointer-events-none cursor-not-allowed opacity-50",
+              )}
             >
               <Camera className="h-5 w-5 shrink-0" aria-hidden />
               <span>📸 Add photo</span>
-            </button>
+            </label>
 
             {pending.length > 0 ? (
               <ul className="mt-3 flex flex-wrap gap-2">
