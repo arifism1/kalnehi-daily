@@ -71,7 +71,7 @@ export function NightShutdownScreen({
 
   return (
     <div
-      className="relative min-h-dvh w-full max-w-[390px] overflow-x-hidden bg-[#1A1209] text-[#FAF6F1]"
+      className="relative min-h-dvh w-full max-w-none overflow-x-hidden bg-[#1A1209] text-[#FAF6F1]"
       style={{ color: CREAM }}
     >
       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden>
@@ -111,13 +111,13 @@ export function NightShutdownScreen({
           Night shutdown — today&apos;s summary
         </h1>
 
-        <div className="mt-1 flex min-h-0 flex-1 flex-col gap-5">
+        <div className="mt-1 flex min-h-0 flex-1 flex-col gap-5 md:gap-3 lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-6 lg:gap-y-4 xl:gap-x-8">
           <motion.section
             custom={0}
             initial="initial"
             animate="animate"
             variants={section}
-            className="rounded-2xl border border-white/10 bg-[#231810]/80 px-4 py-3 backdrop-blur-sm"
+            className="rounded-2xl border border-white/10 bg-[#231810]/80 px-4 py-3 backdrop-blur-sm lg:max-w-md xl:max-w-none"
           >
             <h2 className="text-left text-sm font-semibold text-[#FAF6F1]/80">
               Today’s summary
@@ -178,44 +178,53 @@ export function NightShutdownScreen({
             </ul>
           </motion.section>
 
-          <motion.section
-            custom={1}
-            initial="initial"
-            animate="animate"
-            variants={section}
-            className="flex flex-1 flex-col items-center justify-center py-1 text-center"
-          >
-            <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#FAF6F1]/50">
-              Night motivation
-            </p>
-            <p className="mt-3 text-balance text-xl leading-relaxed text-[#FAF6F1]/90 font-serif">
-              {nightQuote}
-            </p>
-          </motion.section>
+          <div className="flex min-h-0 flex-1 flex-col gap-4 md:gap-3 lg:col-span-1 lg:flex-none lg:gap-4">
+            <motion.section
+              custom={1}
+              initial="initial"
+              animate="animate"
+              variants={section}
+              className="flex flex-1 flex-col items-center justify-center py-1 text-center lg:flex-none lg:items-start lg:justify-start lg:text-left"
+            >
+              <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#FAF6F1]/50">
+                Night motivation
+              </p>
+              <p className="mt-3 max-w-prose text-balance text-xl leading-relaxed text-[#FAF6F1]/90 font-serif md:mt-2 md:text-2xl lg:text-3xl">
+                {nightQuote}
+              </p>
+            </motion.section>
+
+            <motion.section
+              custom={2}
+              initial="initial"
+              animate="animate"
+              variants={section}
+              className="text-center lg:text-left"
+            >
+              <p className="text-lg font-[family-name:var(--font-kal-heading)] font-semibold text-[#FAF6F1] md:text-xl">
+                You showed up today. That&apos;s everything.
+              </p>
+              <p className="mt-2 text-sm text-[#FAF6F1]/60 md:text-base">
+                Tomorrow&apos;s plan is ready when you are.
+              </p>
+            </motion.section>
+          </div>
 
           <motion.section
-            custom={2}
+            custom={3}
             initial="initial"
             animate="animate"
             variants={section}
-            className="text-center"
+            className="text-center lg:col-span-2"
           >
-            <p className="text-lg font-[family-name:var(--font-kal-heading)] font-semibold text-[#FAF6F1]">
-              You showed up today. That&apos;s everything.
-            </p>
-            <p className="mt-2 text-sm text-[#FAF6F1]/60">
-              Tomorrow&apos;s plan is ready when you are.
-            </p>
-            <div className="mt-4">
-              <button
-                type="button"
-                onClick={runClose}
-                className="inline-flex w-full min-h-[52px] max-w-sm items-center justify-center rounded-2xl border border-[#F07B1D]/50 bg-gradient-to-b from-[#2a1f0f] to-[#1A1209] px-4 text-base font-semibold text-[#FAF6F1] shadow-[0_0_32px_rgba(240,123,29,0.28)] transition-transform active:scale-[0.99]"
-                style={{ color: CREAM, borderColor: `${ORANGE}80` }}
-              >
-                Close & Rest 🌙
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={runClose}
+              className="mx-auto inline-flex w-full min-h-[52px] max-w-md items-center justify-center rounded-2xl border border-[#F07B1D]/50 bg-gradient-to-b from-[#2a1f0f] to-[#1A1209] px-4 text-base font-semibold text-[#FAF6F1] shadow-[0_0_32px_rgba(240,123,29,0.28)] transition-transform active:scale-[0.99] md:max-w-lg lg:max-w-xl"
+              style={{ color: CREAM, borderColor: `${ORANGE}80` }}
+            >
+              Close & Rest 🌙
+            </button>
           </motion.section>
         </div>
       </div>

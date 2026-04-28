@@ -115,7 +115,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
   if (pathname.startsWith("/welcome/")) {
     return (
       <div className="flex min-h-full min-h-dvh w-full justify-center overflow-x-hidden">
-        <div className="relative min-h-dvh min-h-0 w-full max-w-[390px] flex-1">
+        <div className="relative min-h-dvh min-h-0 w-full max-w-[390px] flex-1 px-4 sm:max-w-xl sm:px-6 md:max-w-3xl md:px-10 lg:max-w-4xl xl:max-w-5xl">
           {children}
         </div>
       </div>
