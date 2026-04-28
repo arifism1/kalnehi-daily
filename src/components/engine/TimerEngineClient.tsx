@@ -255,13 +255,13 @@ export function TimerEngineClient() {
         eyebrow="Focus"
         title="Timer"
         description="Pick a block length, link a task, then start — elapsed time logs to your task. Presets set duration only; press Start when ready."
+        titleAccessory={
+          <TimerIllustration
+            showFocusLabel={false}
+            className="h-10 w-auto shrink-0 opacity-90 sm:h-12"
+          />
+        }
       />
-
-      {!isRunning && !activeId && (
-        <div className="flex justify-center py-2">
-          <TimerIllustration className="w-full max-w-[200px] opacity-80" />
-        </div>
-      )}
 
       <EngineCard title="Set up focus block">
         <div className="space-y-6">

@@ -152,18 +152,25 @@ function compareByUpdatedAtDesc(
   return b.updatedAt - a.updatedAt;
 }
 
-function formatDoubtDate(timestamp: number): string {
-  const now = Date.now();
-  const diffMs = now - timestamp;
+/** Full-sentence line for card footer (readability). */
+function formatDoubtAddedSentence(timestamp: number): string {
+  const diffMs = Math.max(0, Date.now() - timestamp);
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   if (diffDays >= 1 && diffDays <= 5) {
-    return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
+    return diffDays === 1
+      ? "Added one day ago."
+      : `Added ${diffDays} days ago.`;
   }
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "2-digit",
-    month: "short",
+  if (diffDays === 0) {
+    return "Added today.";
+  }
+  const datePart = new Intl.DateTimeFormat("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
     year: "numeric",
   }).format(new Date(timestamp));
+  return `Added on ${datePart}.`;
 }
 
 const VOICE_LANGS: { value: string; label: string }[] = [
@@ -213,8 +220,6 @@ export function DoubtTracker() {
   const [editSubject, setEditSubject] = useState("");
   const [editTopic, setEditTopic] = useState("");
   const [editSaving, setEditSaving] = useState(false);
-  const [editPhotoHint, setEditPhotoHint] = useState(false);
-  const editFileInputRef = useRef<HTMLInputElement>(null);
 
   const [dragOver, setDragOver] = useState<DoubtStatus | null>(null);
   const dragCountRef = useRef<Partial<Record<DoubtStatus, number>>>({});
@@ -234,10 +239,6 @@ export function DoubtTracker() {
       setEditingId(null);
     }
   }, [editingId, doubts]);
-
-  useEffect(() => {
-    setEditPhotoHint(false);
-  }, [editingId]);
 
   const filteredDoubts = useMemo(() => {
     if (subjectFilter === "__all__") return doubts;
@@ -714,16 +715,16 @@ export function DoubtTracker() {
                       e.dataTransfer.setData("text/doubt-id", d.id);
                       e.dataTransfer.effectAllowed = "move";
                     }}
-                    className="kal-glass-subtle group relative cursor-grab rounded-lg p-2.5 transition hover:border-kal-accent/30 active:cursor-grabbing sm:rounded-xl sm:p-3 lg:p-3.5"
+                    className="kal-glass-subtle group cursor-grab rounded-lg p-2.5 transition hover:border-kal-accent/30 active:cursor-grabbing sm:rounded-xl sm:p-3 lg:p-3.5"
                   >
-                    <div className="flex gap-1.5 sm:gap-2">
+                    <div className="flex items-start gap-1.5 sm:gap-2">
                       <div
                         className="mt-px shrink-0 text-kal-muted sm:mt-0.5"
                         aria-hidden
                       >
                         <GripVertical className="h-4 w-4 sm:h-5 sm:w-5" />
                       </div>
-                      <div className="min-w-0 flex-1 pr-[4.5rem] sm:pr-20">
+                      <div className="flex min-w-0 flex-1 flex-col">
                         <button
                           type="button"
                           onClick={() => setEditingId(d.id)}
@@ -732,7 +733,7 @@ export function DoubtTracker() {
                           <p className="text-[10px] font-semibold leading-none text-kal-muted sm:text-[11px]">
                             #{cardNumberById[d.id] ?? "–"}
                           </p>
-                          <p className="text-sm font-semibold leading-snug text-kal-text sm:text-[15px]">
+                          <p className="break-words text-sm font-semibold leading-snug text-kal-text sm:text-[15px]">
                             {d.title.trim() ? (
                               d.title
                             ) : (
@@ -742,17 +743,17 @@ export function DoubtTracker() {
                             )}
                           </p>
                           {normalizeStoredDoubtSubject(d.subject) ? (
-                            <span className="mt-1 inline-flex max-w-full truncate rounded-full border border-kal-border bg-kal-card-muted/90 px-2 py-0.5 text-[10px] font-medium text-kal-text-secondary sm:text-[11px] dark:bg-zinc-800/75 dark:text-zinc-300">
+                            <span className="mt-1 inline-block min-w-0 max-w-full truncate rounded-full border border-kal-border bg-kal-card-muted/90 px-2 py-0.5 text-[10px] font-medium text-kal-text-secondary sm:text-[11px] dark:bg-zinc-800/75 dark:text-zinc-300">
                               {normalizeStoredDoubtSubject(d.subject)}
                             </span>
                           ) : null}
                           {normalizeStoredDoubtTopic(d.topic) ? (
-                            <span className="mt-1 block max-w-full truncate rounded-md border border-kal-border/80 bg-kal-page/80 px-2 py-0.5 text-[10px] text-kal-muted sm:text-[11px] dark:bg-zinc-900/40">
+                            <span className="mt-1 block min-w-0 max-w-full truncate rounded-md border border-kal-border/80 bg-kal-page/80 px-2 py-0.5 text-[10px] text-kal-muted sm:text-[11px] dark:bg-zinc-900/40">
                               {normalizeStoredDoubtTopic(d.topic)}
                             </span>
                           ) : null}
                           {d.description.trim() ? (
-                            <p className="mt-0.5 line-clamp-3 text-[11px] leading-relaxed text-kal-muted sm:mt-1 sm:text-[12px]">
+                            <p className="mt-0.5 line-clamp-3 break-words text-[11px] leading-relaxed text-kal-muted sm:mt-1 sm:text-[12px]">
                               {d.description}
                             </p>
                           ) : null}
@@ -778,32 +779,34 @@ export function DoubtTracker() {
                             ))}
                           </div>
                         ) : null}
-                        <p className="mt-2 text-[11px] leading-none text-zinc-500 dark:text-zinc-400">
-                          Added {formatDoubtDate(d.createdAt)}
+                        <p className="mt-2 w-full text-[11px] leading-relaxed text-zinc-500 dark:text-zinc-400">
+                          {formatDoubtAddedSentence(d.createdAt)}
                         </p>
-                        <div className="absolute right-1 top-1 flex flex-col items-center gap-0.5 sm:right-2 sm:top-2">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingId(d.id);
-                            }}
-                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-kal-border text-kal-muted transition-opacity hover:bg-kal-card-muted hover:text-kal-text md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100"
-                            aria-label="Edit doubt"
-                          >
-                            <PencilLine className="h-4 w-4" strokeWidth={2.25} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setPendingDeleteId(d.id);
-                            }}
-                            className="flex h-8 w-8 items-center justify-center rounded-lg text-orange-500/90 transition-opacity hover:bg-orange-100/60 hover:text-orange-600 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 dark:hover:bg-orange-950/30 dark:hover:text-orange-300"
-                            aria-label="Delete doubt"
-                          >
-                            <Trash2 className="h-4 w-4" strokeWidth={2.25} />
-                          </button>
+                        <div className="mt-2 flex w-full flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
+                          <div className="flex items-center gap-0.5">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingId(d.id);
+                              }}
+                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-kal-border text-kal-muted transition-opacity hover:bg-kal-card-muted hover:text-kal-text md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100"
+                              aria-label="Edit doubt"
+                            >
+                              <PencilLine className="h-4 w-4" strokeWidth={2.25} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPendingDeleteId(d.id);
+                              }}
+                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-orange-500/90 transition-opacity hover:bg-orange-100/60 hover:text-orange-600 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 dark:hover:bg-orange-950/30 dark:hover:text-orange-300"
+                              aria-label="Delete doubt"
+                            >
+                              <Trash2 className="h-4 w-4" strokeWidth={2.25} />
+                            </button>
+                          </div>
                           <div className="flex items-center gap-0.5">
                             <button
                               type="button"
@@ -813,7 +816,7 @@ export function DoubtTracker() {
                                 const next = shiftDoubtStatus(d.status, -1);
                                 if (next) void setDoubtStatus(d.id, next);
                               }}
-                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-kal-border text-kal-muted transition hover:bg-kal-card-muted hover:text-kal-text disabled:opacity-30 disabled:hover:bg-transparent"
+                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-kal-border text-kal-muted transition hover:bg-kal-card-muted hover:text-kal-text disabled:opacity-30 disabled:hover:bg-transparent"
                               aria-label="Move left"
                             >
                               <ChevronLeft className="h-4 w-4" />
@@ -826,7 +829,7 @@ export function DoubtTracker() {
                                 const next = shiftDoubtStatus(d.status, 1);
                                 if (next) void setDoubtStatus(d.id, next);
                               }}
-                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-kal-border text-kal-muted transition hover:bg-kal-card-muted hover:text-kal-text disabled:opacity-30 disabled:hover:bg-transparent"
+                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-kal-border text-kal-muted transition hover:bg-kal-card-muted hover:text-kal-text disabled:opacity-30 disabled:hover:bg-transparent"
                               aria-label="Move right"
                             >
                               <ChevronRight className="h-4 w-4" />
@@ -979,13 +982,14 @@ export function DoubtTracker() {
             />
             <div className="mt-4">
               <p className="text-xs font-medium text-kal-muted">Photos</p>
+              <LocalPhotoPrivacyNote className="mt-2" />
               <input
-                ref={editFileInputRef}
+                id={`${baseId}-edit-photo-input`}
                 type="file"
                 accept="image/*"
                 multiple
+                disabled={editSaving}
                 className="sr-only"
-                aria-hidden
                 onChange={(e) => {
                   const files = e.target.files;
                   e.target.value = "";
@@ -995,21 +999,16 @@ export function DoubtTracker() {
                   }
                 }}
               />
-              {editPhotoHint ? (
-                <LocalPhotoPrivacyNote className="mt-2" />
-              ) : null}
-              <button
-                type="button"
-                onClick={() => {
-                  setEditPhotoHint(true);
-                  editFileInputRef.current?.click();
-                }}
-                disabled={editSaving}
-                className="mt-2 flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl border border-kal-accent/35 bg-kal-accent-soft px-4 py-3 text-sm font-semibold text-kal-accent-dark transition hover:bg-kal-accent-soft/80 disabled:opacity-50"
+              <label
+                htmlFor={`${baseId}-edit-photo-input`}
+                className={clsx(
+                  "mt-2 flex w-full min-h-[48px] cursor-pointer items-center justify-center gap-2 rounded-xl border border-kal-accent/35 bg-kal-accent-soft px-4 py-3 text-sm font-semibold text-kal-accent-dark transition hover:bg-kal-accent-soft/80",
+                  editSaving && "pointer-events-none cursor-not-allowed opacity-50",
+                )}
               >
                 <Camera className="h-5 w-5 shrink-0" aria-hidden />
                 <span>📸 Add photo</span>
-              </button>
+              </label>
               <div className="mt-3 flex flex-wrap gap-2">
                 {editing.photoIds.map((pid) => (
                   <DoubtPhotoThumb

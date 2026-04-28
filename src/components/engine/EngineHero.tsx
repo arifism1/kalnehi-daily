@@ -4,15 +4,25 @@ type Props = {
   eyebrow: string;
   title: string;
   description: string;
+  /** Renders beside the title (e.g. small illustrative icon). */
+  titleAccessory?: ReactNode;
 };
 
-export function EngineHero({ eyebrow, title, description }: Props) {
+export function EngineHero({
+  eyebrow,
+  title,
+  description,
+  titleAccessory,
+}: Props) {
   return (
     <header className="space-y-2">
       <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
         {eyebrow}
       </p>
-      <h1 className="kal-feature-title">{title}</h1>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <h1 className="kal-feature-title">{title}</h1>
+        {titleAccessory}
+      </div>
       <p className="kal-feature-lead max-w-2xl">{description}</p>
     </header>
   );
