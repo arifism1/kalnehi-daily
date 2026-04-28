@@ -198,10 +198,10 @@ export function MissedTasks() {
     };
   }, [dateRowCounts]);
 
-  const allCaughtUp = useMemo(() => {
-    if (userId && revisionLoading) return false;
-    return missedDaily.length === 0 && missedRevision.length === 0;
-  }, [userId, revisionLoading, missedDaily.length, missedRevision.length]);
+  const allCaughtUp = useMemo(
+    () => missedDaily.length === 0 && missedRevision.length === 0,
+    [missedDaily.length, missedRevision.length],
+  );
 
   const onDelete = useCallback(
     async (t: Task) => {
@@ -552,17 +552,7 @@ export function MissedTasks() {
         </p>
       ) : null}
 
-      {userId && revisionLoading && missedDaily.length === 0 && missedRevision.length === 0 ? (
-        <div className="mt-8 flex justify-center py-6">
-          <Loader2
-            className="h-8 w-8 animate-spin text-kal-accent/50"
-            aria-label="Loading"
-          />
-        </div>
-      ) : null}
-
-      {!(userId && revisionLoading && missedDaily.length === 0 && missedRevision.length === 0) &&
-      dateFilteredRows.length > 0 ? (
+      {dateFilteredRows.length > 0 ? (
         selectedDate === null ? (
           <div className="mt-4 space-y-6 sm:mt-5">
             {(missedRowsGrouped ?? []).map(({ date, rows }) => (
