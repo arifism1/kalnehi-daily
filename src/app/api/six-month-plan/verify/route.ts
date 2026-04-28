@@ -95,11 +95,16 @@ export async function POST(req: NextRequest) {
       .maybeSingle();
     if (existing) return NextResponse.json({ ok: true, idempotent: true });
 
-    await admin.from("razorpay_processed_payments").insert({
+    const { error: insertErr } = await admin.from("razorpay_processed_payments").insert({
       razorpay_payment_id: paymentId,
       user_id: user.id,
       kind: "six_month_plan",
     });
+    if (insertErr?.code === "23505") return NextResponse.json({ ok: true, idempotent: true });
+    if (insertErr) {
+      console.error("[six-month-plan/verify] payment claim insert failed", insertErr.message);
+      return NextResponse.json({ ok: false, error: "Payment processing failed." }, { status: 500 });
+    }
 
     // Best-effort: cancel existing monthly Razorpay subscription so the user
     // is not double-charged after upgrading. Failure is non-fatal.
@@ -125,7 +130,7 @@ export async function POST(req: NextRequest) {
 
     // Clear razorpay_subscription_id so stale subscription.cancelled / subscription.charged
     // webhooks from the old monthly sub cannot overwrite this 6-month plan.
-    await admin.from("user_profiles").update({
+    const { error: updateErr } = await admin.from("user_profiles").update({
       subscription_status: "active",
       subscription_plan: "six_month",
       subscription_tier: "pro",
@@ -136,6 +141,10 @@ export async function POST(req: NextRequest) {
       ai_tokens_month: null,
       updated_at: now.toISOString(),
     }).eq("user_id", user.id);
+    if (updateErr) {
+      console.error("[six-month-plan/verify] profile update failed after payment claim", updateErr.message);
+      return NextResponse.json({ ok: false, error: "Payment recorded but access grant failed. Please contact support." }, { status: 500 });
+    }
 
     // Send confirmation email (best-effort, non-fatal).
     if (user.email) {

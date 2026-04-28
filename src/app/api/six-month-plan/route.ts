@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Service unavailable." }, { status: 503 });
   }
 
-  // Block if user already has an active 6-month plan.
+  // Block if the user already has any active upfront plan (annual or six_month).
   const { data: prof } = await admin
     .from("user_profiles")
     .select("subscription_status, subscription_end_date, subscription_plan, full_name")
@@ -40,15 +40,15 @@ export async function POST(req: NextRequest) {
     .maybeSingle();
 
   const p = prof as { subscription_status?: string | null; subscription_end_date?: string | null; subscription_plan?: string | null; full_name?: string | null } | null;
-  const isAlreadySixMonth =
-    p?.subscription_plan === "six_month" &&
+  const isAlreadyOnUpfrontPlan =
+    (p?.subscription_plan === "annual" || p?.subscription_plan === "six_month") &&
     p?.subscription_end_date &&
     new Date(p.subscription_end_date) > new Date();
 
-  if (isAlreadySixMonth) {
+  if (isAlreadyOnUpfrontPlan) {
     return NextResponse.json({
       ok: false,
-      error: "You already have an active 6-month plan.",
+      error: "You already have an active plan.",
     }, { status: 400 });
   }
 

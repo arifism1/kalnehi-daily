@@ -97,16 +97,25 @@ const EMPTY_USAGE: UsageData = {
   usageResetDate: null,
 };
 
-function isCurrentlyPaid(status: SubscriptionStatus, endDate: string | null): boolean {
+function isCurrentlyPaid(
+  status: SubscriptionStatus,
+  endDate: string | null,
+  paymentGraceUntil?: string | null,
+): boolean {
   if (status !== "trial" && status !== "active" && status !== "cancelled") return false;
+  const now = Date.now();
+  if (paymentGraceUntil) {
+    const grace = new Date(paymentGraceUntil);
+    if (!Number.isNaN(grace.getTime()) && grace.getTime() > now) return true;
+  }
   if (!endDate) return false;
   const end = new Date(endDate);
   if (Number.isNaN(end.getTime())) return false;
-  return end.getTime() > Date.now();
+  return end.getTime() > now;
 }
 
 const USER_PROFILE_SUBSCRIPTION_SELECT_BASE =
-  "mandatory_onboarding_completed_at, subscription_status, subscription_plan, subscription_start_date, subscription_end_date, subscription_tier, subscription_autopay_months_total, has_had_trial, photo_scans_used_this_month, voice_minutes_used_this_month, bonus_photo_scans, bonus_voice_minutes, bonus_photo_scans_ledger, bonus_voice_minutes_ledger, bonus_ai_tokens, bonus_ai_tokens_ledger, usage_reset_date, trial_started_at, trial_photo_scans_used, trial_voice_seconds_used, has_used_free_trial, enabled_features";
+  "mandatory_onboarding_completed_at, subscription_status, subscription_plan, subscription_start_date, subscription_end_date, subscription_tier, subscription_autopay_months_total, has_had_trial, photo_scans_used_this_month, voice_minutes_used_this_month, bonus_photo_scans, bonus_voice_minutes, bonus_photo_scans_ledger, bonus_voice_minutes_ledger, bonus_ai_tokens, bonus_ai_tokens_ledger, usage_reset_date, trial_started_at, trial_photo_scans_used, trial_voice_seconds_used, has_used_free_trial, enabled_features, payment_grace_until";
 
 const SubscriptionAccessContext = createContext<SubscriptionData | null>(null);
 
@@ -259,7 +268,11 @@ function useSubscriptionAccessState(): SubscriptionData {
           typeof rawAutopay === "number" && Number.isFinite(rawAutopay) ? rawAutopay : null,
         );
         setHasPaidAccess(
-          isCurrentlyPaid(normalizedStatus, data?.subscription_end_date ?? null),
+          isCurrentlyPaid(
+            normalizedStatus,
+            data?.subscription_end_date ?? null,
+            (data as { payment_grace_until?: string | null } | null)?.payment_grace_until ?? null,
+          ),
         );
         setHasHadTrial(!!data?.has_had_trial);
         setTrialStartedAt(

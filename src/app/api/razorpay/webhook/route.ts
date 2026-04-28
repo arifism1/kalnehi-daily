@@ -26,7 +26,8 @@ const MAX_BODY_BYTES = 64 * 1024;
  * Events to handle. Must match what is enabled in Razorpay Dashboard → Webhooks for
  * https://kalnehi.com/api/razorpay/webhook.
  *
- * subscription.pending  → Razorpay is auto-retrying a failed charge. No DB change.
+ * subscription.pending  → Razorpay is auto-retrying a failed charge. Sets payment_grace_until
+ *                         (+3 days) and sends a "payment retrying" email to the user.
  * subscription.halted   → All retries exhausted (includes mandate revoked from UPI app).
  *                         Set status="cancelled", preserve end_date so access continues
  *                         until the paid period ends.
@@ -69,6 +70,7 @@ type WebhookEnvelope = {
     };
     payment?: {
       entity?: {
+        id?: string;
         notes?: Record<string, string>;
         subscription_id?: string | null;
       };
@@ -145,11 +147,13 @@ async function applyBySubscriptionId(
   patch: Record<string, unknown>,
 ) {
   const nowIso = new Date().toISOString();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("user_profiles")
     .update({ ...patch, updated_at: nowIso })
-    .eq("razorpay_subscription_id", subscriptionId);
-  return !error;
+    .eq("razorpay_subscription_id", subscriptionId)
+    .select("user_id")
+    .limit(1);
+  return !error && (data?.length ?? 0) > 0;
 }
 
 async function applyByUserId(
@@ -158,11 +162,13 @@ async function applyByUserId(
   patch: Record<string, unknown>,
 ) {
   const nowIso = new Date().toISOString();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("user_profiles")
     .update({ ...patch, updated_at: nowIso })
-    .eq("user_id", userId);
-  return !error;
+    .eq("user_id", userId)
+    .select("user_id")
+    .limit(1);
+  return !error && (data?.length ?? 0) > 0;
 }
 
 function okResponse(extra?: Record<string, unknown>) {
@@ -281,6 +287,16 @@ export async function POST(request: Request) {
 
     const chargeUid = userIdFromNotes;
     if (chargeUid && updated) {
+      // Idempotency guard: prevent bonus extension and emails from running on duplicate delivery.
+      const chargePaymentId = (payload.payload?.payment?.entity?.id ?? "").trim();
+      if (chargePaymentId && /^pay_[a-zA-Z0-9]+$/.test(chargePaymentId)) {
+        const { error: claimErr } = await supabase
+          .from("razorpay_processed_payments")
+          .insert({ razorpay_payment_id: chargePaymentId, user_id: chargeUid, kind: "webhook_charged" });
+        if (claimErr?.code === "23505") return okResponse({ updated, idempotent: true });
+        if (claimErr) console.warn("[webhook] subscription.charged: claim insert failed", claimErr.message);
+      }
+
       const { data: bonusRow } = await supabase
         .from("user_profiles")
         .select("bonus_voice_minutes_ledger, bonus_ai_tokens_ledger")
@@ -346,9 +362,36 @@ export async function POST(request: Request) {
       }
     }
 
+    // Fetch bonus ledgers to snapshot them — needed by mergeResubscribeBonusesAfterMonthlyActivate
+    // to restore bonuses if the user resubscribes within the grace window.
+    const nowIso = new Date().toISOString();
+    let cancelledLedgerSnap: { bonus_voice_minutes_ledger?: unknown; bonus_ai_tokens_ledger?: unknown } | null = null;
+    if (subscriptionId) {
+      const { data } = await supabase
+        .from("user_profiles")
+        .select("bonus_voice_minutes_ledger, bonus_ai_tokens_ledger")
+        .eq("razorpay_subscription_id", subscriptionId)
+        .maybeSingle();
+      cancelledLedgerSnap = data;
+    } else if (userIdFromNotes) {
+      const { data } = await supabase
+        .from("user_profiles")
+        .select("bonus_voice_minutes_ledger, bonus_ai_tokens_ledger")
+        .eq("user_id", userIdFromNotes)
+        .maybeSingle();
+      cancelledLedgerSnap = data;
+    }
+
     const patch: Record<string, unknown> = {
       subscription_status: "cancelled",
+      subscription_cancelled_at: nowIso,
     };
+    if (cancelledLedgerSnap?.bonus_voice_minutes_ledger != null) {
+      patch.bonus_voice_minutes_ledger_at_cancel = cancelledLedgerSnap.bonus_voice_minutes_ledger;
+    }
+    if (cancelledLedgerSnap?.bonus_ai_tokens_ledger != null) {
+      patch.bonus_ai_tokens_ledger_at_cancel = cancelledLedgerSnap.bonus_ai_tokens_ledger;
+    }
 
     let updated = false;
     if (subscriptionId) {
@@ -442,29 +485,40 @@ export async function POST(request: Request) {
     // the UPI autopay mandate from their bank app. Cancel without wiping end_date so the
     // user retains access through the end of their already-paid billing period.
 
-    // Fetch subscription_end_date before patching, so we can include it in the email.
+    // Fetch subscription_end_date and bonus ledgers before patching.
+    // The ledger snapshot is needed by mergeResubscribeBonusesAfterMonthlyActivate for grace-window resubscriptions.
     let haltedAccessUntil: string | null = null;
     let haltedUserId: string | null = userIdFromNotes ?? null;
+    let haltedLedgerSnap: { bonus_voice_minutes_ledger?: unknown; bonus_ai_tokens_ledger?: unknown } | null = null;
     if (subscriptionId) {
       const { data: haltedRow } = await supabase
         .from("user_profiles")
-        .select("subscription_end_date, user_id")
+        .select("subscription_end_date, user_id, bonus_voice_minutes_ledger, bonus_ai_tokens_ledger")
         .eq("razorpay_subscription_id", subscriptionId)
         .maybeSingle();
       haltedAccessUntil = haltedRow?.subscription_end_date ?? null;
       if (haltedRow?.user_id) haltedUserId = haltedRow.user_id;
+      haltedLedgerSnap = haltedRow;
     } else if (userIdFromNotes) {
       const { data: haltedRow } = await supabase
         .from("user_profiles")
-        .select("subscription_end_date")
+        .select("subscription_end_date, bonus_voice_minutes_ledger, bonus_ai_tokens_ledger")
         .eq("user_id", userIdFromNotes)
         .maybeSingle();
       haltedAccessUntil = haltedRow?.subscription_end_date ?? null;
+      haltedLedgerSnap = haltedRow;
     }
 
     const patch: Record<string, unknown> = {
       subscription_status: "cancelled",
+      subscription_cancelled_at: new Date().toISOString(),
     };
+    if (haltedLedgerSnap?.bonus_voice_minutes_ledger != null) {
+      patch.bonus_voice_minutes_ledger_at_cancel = haltedLedgerSnap.bonus_voice_minutes_ledger;
+    }
+    if (haltedLedgerSnap?.bonus_ai_tokens_ledger != null) {
+      patch.bonus_ai_tokens_ledger_at_cancel = haltedLedgerSnap.bonus_ai_tokens_ledger;
+    }
 
     let updated = false;
     if (subscriptionId) {
