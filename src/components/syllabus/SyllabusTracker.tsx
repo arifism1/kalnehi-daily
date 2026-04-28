@@ -568,7 +568,6 @@ export function SyllabusTracker() {
     /** Per-exam primary marks column; falls back to hook `primaryMarksYear` */
     primaryMarksYear?: 2023 | 2024 | 2025;
   } | null>(null);
-  const [showAllYears, setShowAllYears] = useState(false);
   const [openSubject, setOpenSubject] = useState<string | null>(null);
   const [openChapterId, setOpenChapterId] = useState<string | null>(null);
   /** Multi-exam track: composite keys `${catalogExamKey}::${subject}` / `::${chapterKey}` */
@@ -832,6 +831,69 @@ export function SyllabusTracker() {
             const erDisplayName =
               displayNameForExamCatalog(er.examLabel, examCatalogRows) || er.examLabel;
             const topProjection = er.projections[0] ?? null;
+            const marksProjectionBlock =
+              erShowMarks && topProjection ? (
+                er.projections.length <= 1 ? (
+                  <div className="mt-3 flex items-baseline gap-1">
+                    <span
+                      className="text-lg font-bold tabular-nums"
+                      style={{ color: "#BA7517" }}
+                    >
+                      {topProjection.projectedOutOf720}
+                    </span>
+                    <span className="text-sm font-medium text-kal-muted">
+                      / {er.maxScore} · {topProjection.year} pattern
+                    </span>
+                  </div>
+                ) : (
+                  <details
+                    className="kal-glass-subtle group mt-3 rounded-xl border border-kal-border/60 shadow-sm open:bg-kal-card-muted/40"
+                    aria-label={`${erDisplayName} marks by year`}
+                  >
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-left outline-none transition-colors hover:bg-kal-card-muted/50 marker:hidden [&::-webkit-details-marker]:hidden focus-visible:ring-2 focus-visible:ring-kal-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-kal-card">
+                      <div className="flex min-w-0 flex-wrap items-baseline gap-1">
+                        <span
+                          className="text-lg font-bold tabular-nums"
+                          style={{ color: "#BA7517" }}
+                        >
+                          {topProjection.projectedOutOf720}
+                        </span>
+                        <span className="text-sm font-medium text-kal-muted">
+                          / {er.maxScore} · {topProjection.year} pattern
+                        </span>
+                      </div>
+                      <ChevronDown
+                        aria-hidden
+                        className="h-4 w-4 shrink-0 text-kal-accent transition-transform duration-200 group-open:rotate-180"
+                      />
+                    </summary>
+                    <div className="border-t border-kal-border/50 px-3 pb-3 pt-2">
+                      <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-kal-muted">
+                        Per-year projection
+                      </p>
+                      <ul className="space-y-2.5">
+                        {er.projections.map((p) => (
+                          <li
+                            key={p.year}
+                            className="flex flex-col gap-0.5 border-b border-kal-border/35 pb-2 last:border-0 last:pb-0"
+                          >
+                            <span className="text-[11px] font-medium text-kal-text-secondary">
+                              {p.patternLabel}
+                            </span>
+                            <span className="text-sm font-bold tabular-nums" style={{ color: "#BA7517" }}>
+                              {p.projectedOutOf720}
+                              <span className="text-xs font-semibold text-kal-muted">
+                                {" "}
+                                / {er.maxScore}
+                              </span>
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </details>
+                )
+              ) : null;
             return (
               <section
                 key={er.examLabel}
@@ -852,16 +914,8 @@ export function SyllabusTracker() {
                     style={{ width: `${Math.min(100, er.rollup.overallPercent)}%` }}
                   />
                 </div>
-                {erShowMarks && topProjection ? (
-                  <div className="mt-3 flex items-baseline gap-1">
-                    <span className="text-lg font-bold tabular-nums" style={{ color: "#BA7517" }}>
-                      {topProjection.projectedOutOf720}
-                    </span>
-                    <span className="text-sm font-medium text-kal-muted">
-                      / {er.maxScore} · {topProjection.year} pattern
-                    </span>
-                  </div>
-                ) : erShowMarks ? (
+                {marksProjectionBlock}
+                {erShowMarks && !topProjection ? (
                   <div className="mt-3 flex items-baseline gap-1">
                     <span className="text-lg font-bold tabular-nums text-orange-600 dark:text-orange-300">
                       {er.rollup.totalMarksMastered.toFixed(0)}
@@ -870,11 +924,11 @@ export function SyllabusTracker() {
                       / {er.rollup.totalMarksPool.toFixed(0)} marks
                     </span>
                   </div>
-                ) : (
+                ) : !erShowMarks ? (
                   <p className="mt-2 text-[11px] text-kal-muted">
                     {er.rollup.chapters.reduce((s, ch) => s + ch.completedCount, 0)} / {er.rollup.chapters.reduce((s, ch) => s + ch.totalCount, 0)} microtopics complete
                   </p>
-                )}
+                ) : null}
               </section>
             );
           })}
@@ -942,8 +996,8 @@ export function SyllabusTracker() {
                     </ul>
                   </div>
                 ) : showMarksUi && neetYearProjections.length > 0 ? (
-                  <>
-                    {(showAllYears ? neetYearProjections : neetYearProjections.slice(0, 1)).map((p) => (
+                  neetYearProjections.length <= 1 ? (
+                    neetYearProjections.map((p) => (
                       <div key={p.year}>
                         <p className="text-[10px] font-semibold uppercase text-kal-muted">
                           {displayExam} {p.year}
@@ -964,18 +1018,72 @@ export function SyllabusTracker() {
                           Based on {p.year} pattern
                         </p>
                       </div>
-                    ))}
-                    {neetYearProjections.length > 1 && !showAllYears && (
-                      <button
-                        type="button"
-                        onClick={() => setShowAllYears(true)}
-                        className="mt-1 text-[11px] font-medium"
-                        style={{ color: "#BA7517" }}
-                      >
-                        See all years ↓
-                      </button>
-                    )}
-                  </>
+                    ))
+                  ) : (
+                    <details
+                      className="kal-glass-subtle group mt-1 w-full rounded-xl border border-kal-border/60 text-left shadow-sm open:bg-kal-card-muted/40 sm:text-right"
+                      aria-label="Marks projection by year"
+                    >
+                      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-xl px-3 py-2.5 outline-none transition-colors hover:bg-kal-card-muted/50 marker:hidden [&::-webkit-details-marker]:hidden focus-visible:ring-2 focus-visible:ring-kal-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-kal-card">
+                        <div className="min-w-0 flex-1 sm:text-right">
+                          <p className="text-[10px] font-semibold uppercase text-kal-muted">
+                            {displayExam} {neetYearProjections[0]!.year}
+                          </p>
+                          <p className="mt-0.5 text-xl font-bold tabular-nums" style={{ color: "#BA7517" }}>
+                            {isUpscMainsUi
+                              ? rollup.totalMarksMastered.toFixed(0)
+                              : neetYearProjections[0]!.projectedOutOf720}
+                            <span className="text-base font-semibold text-kal-muted">
+                              {" "}
+                              /{" "}
+                              {isUpscMainsUi
+                                ? UPSC_CSE_MAINS_UI_TOTAL_MARKS
+                                : maxScore}
+                            </span>
+                          </p>
+                          <p className="mt-0.5 text-[10px] leading-snug text-kal-muted">
+                            Based on {neetYearProjections[0]!.year} pattern
+                          </p>
+                        </div>
+                        <ChevronDown
+                          aria-hidden
+                          className="h-4 w-4 shrink-0 text-kal-accent transition-transform duration-200 group-open:rotate-180"
+                        />
+                      </summary>
+                      <div className="border-t border-kal-border/50 px-3 pb-3 pt-2 text-left">
+                        <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-kal-muted">
+                          Per-year projection
+                        </p>
+                        <ul className="space-y-3">
+                          {neetYearProjections.map((p) => (
+                            <li
+                              key={p.year}
+                              className="border-b border-kal-border/35 pb-3 last:border-0 last:pb-0"
+                            >
+                              <p className="text-[10px] font-semibold uppercase text-kal-muted">
+                                {displayExam} {p.year}
+                              </p>
+                              <p className="mt-0.5 text-lg font-bold tabular-nums" style={{ color: "#BA7517" }}>
+                                {isUpscMainsUi
+                                  ? rollup.totalMarksMastered.toFixed(0)
+                                  : p.projectedOutOf720}
+                                <span className="text-sm font-semibold text-kal-muted">
+                                  {" "}
+                                  /{" "}
+                                  {isUpscMainsUi
+                                    ? UPSC_CSE_MAINS_UI_TOTAL_MARKS
+                                    : maxScore}
+                                </span>
+                              </p>
+                              <p className="mt-0.5 text-[10px] leading-snug text-kal-muted">
+                                {p.patternLabel}
+                              </p>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </details>
+                  )
                 ) : (
                   <div>
                     <p className="text-xs text-kal-muted">Marks secured</p>

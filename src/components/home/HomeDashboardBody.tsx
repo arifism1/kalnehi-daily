@@ -149,6 +149,8 @@ export function HomeDashboardBody({
     effectiveTodayPercent,
     effectiveTodayTotal,
     effectiveTodayDone,
+    effectiveYesterdayPercent,
+    effectiveYesterdayTotal,
     yesterdayStripPercent,
     todayStripPercent,
     todayWeighted,
@@ -161,6 +163,10 @@ export function HomeDashboardBody({
       yesterdayTasks,
       microtopicById,
     );
+    const yesterdayPct =
+      dailyExec.yesterday.totalCount > 0
+        ? dailyExec.yesterday.percent
+        : yesterdayAcademic;
     return {
       effectiveTodayPercent:
         dailyExec.today.totalCount > 0 ? dailyExec.today.percent : todayAcademic,
@@ -168,10 +174,12 @@ export function HomeDashboardBody({
         dailyExec.today.totalCount > 0 ? dailyExec.today.totalCount : todayTasks.length,
       effectiveTodayDone:
         dailyExec.today.totalCount > 0 ? dailyExec.today.doneCount : null,
-      yesterdayStripPercent:
+      effectiveYesterdayPercent: yesterdayPct,
+      effectiveYesterdayTotal:
         dailyExec.yesterday.totalCount > 0
-          ? dailyExec.yesterday.percent
-          : yesterdayAcademic,
+          ? dailyExec.yesterday.totalCount
+          : yesterdayTasks.length,
+      yesterdayStripPercent: yesterdayPct,
       todayStripPercent:
         dailyExec.today.totalCount > 0 ? dailyExec.today.percent : todayAcademic,
       todayWeighted: todayAcademic,
@@ -364,6 +372,8 @@ export function HomeDashboardBody({
             marksMastered={mastered}
             marksTotal={total}
             projectedScoreCaption={projectedScoreCaption}
+            yesterdayPercent={effectiveYesterdayPercent}
+            yesterdayTaskCount={effectiveYesterdayTotal}
             todayPercent={effectiveTodayPercent}
             todayTaskCount={effectiveTodayTotal}
             examDisplayName={allExamsDisplayName}

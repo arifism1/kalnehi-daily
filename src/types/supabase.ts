@@ -359,6 +359,33 @@ export type Database = {
         }
         Relationships: []
       }
+      exam_subject_question_history: {
+        Row: {
+          exam_name: string
+          year: number
+          shift: string
+          subject: string
+          questions_min: number
+          questions_max: number
+        }
+        Insert: {
+          exam_name: string
+          year: number
+          shift?: string
+          subject: string
+          questions_min: number
+          questions_max: number
+        }
+        Update: {
+          exam_name?: string
+          year?: number
+          shift?: string
+          subject?: string
+          questions_min?: number
+          questions_max?: number
+        }
+        Relationships: []
+      }
       daily_motivational_phrases: {
         Row: {
           active: boolean
@@ -1955,6 +1982,7 @@ export type Database = {
           cuet_domain_subjects: Json | null
           enabled_exams_in_track: string[] | null
           enabled_features: string[] | null
+          exam_dates: Json | null
           full_name: string | null
           has_had_trial: boolean
           has_used_free_trial: boolean
@@ -1990,7 +2018,6 @@ export type Database = {
           subscription_status: string | null
           subscription_tier: string | null
           system_push_notifications: boolean
-          exam_dates: Json | null
           target_exam: string | null
           target_exam_date: string | null
           trial_access_type: string | null
@@ -2026,6 +2053,7 @@ export type Database = {
           cuet_domain_subjects?: Json | null
           enabled_exams_in_track?: string[] | null
           enabled_features?: string[] | null
+          exam_dates?: Json | null
           full_name?: string | null
           has_had_trial?: boolean
           has_used_free_trial?: boolean
@@ -2057,7 +2085,6 @@ export type Database = {
           subscription_cancelled_at?: string | null
           subscription_end_date?: string | null
           subscription_plan?: string | null
-          exam_dates?: Json | null
           subscription_start_date?: string | null
           subscription_status?: string | null
           subscription_tier?: string | null
@@ -2097,6 +2124,7 @@ export type Database = {
           cuet_domain_subjects?: Json | null
           enabled_exams_in_track?: string[] | null
           enabled_features?: string[] | null
+          exam_dates?: Json | null
           full_name?: string | null
           has_had_trial?: boolean
           has_used_free_trial?: boolean
@@ -2128,7 +2156,6 @@ export type Database = {
           subscription_cancelled_at?: string | null
           subscription_end_date?: string | null
           subscription_plan?: string | null
-          exam_dates?: Json | null
           subscription_start_date?: string | null
           subscription_status?: string | null
           subscription_tier?: string | null

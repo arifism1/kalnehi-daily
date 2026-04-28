@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 import { AddStudySessionSheet } from "@/components/study/AddStudySessionSheet";
+import { StudyCameraVerificationControls } from "@/components/study/StudyCameraVerificationControls";
 import { StudySessionsLog } from "@/components/study/StudySessionsLog";
 import { getAllStudySessions, type StudySessionLog } from "@/lib/studySessionsIdb";
 import { refreshStudySessionsFromServer } from "@/lib/refreshStudySessionsFromServer";
@@ -55,6 +56,8 @@ export default function StudySessionsPageContent() {
           </p>
         </div>
       </header>
+
+      <StudyCameraVerificationControls />
 
       <button
         type="button"

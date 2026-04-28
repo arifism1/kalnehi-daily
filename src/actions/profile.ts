@@ -162,6 +162,7 @@ export async function upsertUserProfile(fields: {
 
     revalidatePath("/");
     revalidatePath("/profile");
+    revalidatePath("/settings");
     return { ok: true };
   } catch (e) {
     console.error("[profile.upsert] failed", e);
@@ -343,6 +344,7 @@ export async function saveEnabledExamsInTrack(fields: {
     if (error) throw error;
     revalidatePath("/");
     revalidatePath("/profile");
+    revalidatePath("/settings");
     return { ok: true };
   } catch (e) {
     console.error("[profile.saveEnabledExamsInTrack] failed", e);

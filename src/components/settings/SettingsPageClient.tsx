@@ -6,12 +6,14 @@ import clsx from "clsx";
 
 import { AdminSendPushNotification } from "@/components/settings/AdminSendPushNotification";
 import { DataAndThisDeviceSection } from "@/components/settings/DataAndThisDeviceSection";
-import { CameraPlannerSettings } from "@/components/settings/CameraPlannerSettings";
 import { CustomizeFeaturesSection } from "@/components/settings/CustomizeFeaturesSection";
 import { PurposeModePhotos } from "@/components/settings/PurposeModePhotos";
 import { NotificationsSettingsGroup } from "@/components/settings/NotificationsSettingsGroup";
 import { SettingsExpandableSection } from "@/components/settings/SettingsExpandableSection";
+import { SettingsSignOutFooter } from "@/components/settings/SettingsSignOutFooter";
 import { SettingsToggles } from "@/components/settings/SettingsToggles";
+import { ProfileForm } from "@/components/profile/ProfileForm";
+import { ProfileAccountSection } from "@/components/profile/ProfileAccountSection";
 import { useSettingsStore, pickUiPrefsForSync } from "@/store/useSettingsStore";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { updateUserUiPrefs } from "@/actions/clientProfileExtras";
@@ -33,61 +35,32 @@ export function SettingsPageClient() {
           Home
         </Link>
         <p className="mt-3 text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
-          App
+          You &amp; this app
         </p>
         <h1 className="kal-feature-title mt-1">Settings</h1>
         <p className="mt-1 text-sm leading-relaxed text-kal-text-secondary">
-          Tap a section to expand it and adjust theme, Home, notifications, and
-          more. Every option here is optional. Subscription, billing,
-          and Mastermind extras live under{" "}
+          One place to shape your prep profile, sign-in, and app behaviour—expand a
+          section to change it. Use <strong className="text-kal-text">Save profile</strong>{" "}
+          for name, exams, and history; scroll for{" "}
           <Link
             href="/my-subscription"
             className="font-semibold text-kal-accent underline underline-offset-2"
           >
             My Subscription
           </Link>
-          . To connect Google and email sign-in on one account, use{" "}
-          <Link
-            href="/profile#login-methods"
-            className="font-semibold text-kal-accent underline underline-offset-2"
-          >
-            Profile → Login methods
-          </Link>
-          .
+          , then sign out.
+        </p>
+      </div>
+
+      <ProfileForm />
+
+      <div className="pt-2">
+        <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
+          App
         </p>
       </div>
 
       {onboardingDone ? <CustomizeFeaturesSection /> : null}
-
-      <section aria-labelledby="toggles-heading">
-        <h2 id="toggles-heading" className="sr-only">
-          Preferences
-        </h2>
-        <SettingsToggles />
-      </section>
-
-      <section aria-labelledby="data-device-heading">
-        <h2 id="data-device-heading" className="sr-only">
-          Data and device
-        </h2>
-        <DataAndThisDeviceSection />
-      </section>
-
-      <NotificationsSettingsGroup />
-
-      <section aria-labelledby="admin-push-heading">
-        <h2 id="admin-push-heading" className="sr-only">
-          Admin push broadcast
-        </h2>
-        <AdminSendPushNotification />
-      </section>
-
-      <section aria-labelledby="camera-planner-heading">
-        <h2 id="camera-planner-heading" className="sr-only">
-          On-camera study sessions
-        </h2>
-        <CameraPlannerSettings />
-      </section>
 
       <div
         id="purpose-fuel"
@@ -162,6 +135,32 @@ export function SettingsPageClient() {
         </SettingsExpandableSection>
       </div>
 
+      <section aria-labelledby="toggles-heading">
+        <h2 id="toggles-heading" className="sr-only">
+          Preferences
+        </h2>
+        <SettingsToggles />
+      </section>
+
+      <section aria-labelledby="data-device-heading">
+        <h2 id="data-device-heading" className="sr-only">
+          Data and device
+        </h2>
+        <DataAndThisDeviceSection />
+      </section>
+
+      <NotificationsSettingsGroup />
+
+      <section aria-labelledby="admin-push-heading">
+        <h2 id="admin-push-heading" className="sr-only">
+          Admin push broadcast
+        </h2>
+        <AdminSendPushNotification />
+      </section>
+
+      <ProfileAccountSection />
+
+      <SettingsSignOutFooter />
     </div>
   );
 }

@@ -26,7 +26,6 @@ import {
   Target,
   TestTube2,
   TrendingUp,
-  User,
 } from "lucide-react";
 
 export function navActive(pathname: string, href: string): boolean {
@@ -63,7 +62,7 @@ export type MainNavItem = {
    * DASHBOARD_FEATURES[n].id). When set the item is hidden from both the
    * quick-nav bar and the hamburger menu whenever the user has customised their
    * features and this id is not in the enabled list.
-   * Items without a featureId are always visible (Home, Settings, Profile …).
+   * Items without a featureId are always visible (Home, Settings, …).
    */
   featureId?: string;
 };
@@ -197,7 +196,6 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
         Icon: Shield,
         isActive: policyHubActive,
       },
-      { href: "/profile", label: "Profile", Icon: User },
       { href: "/settings", label: "Settings", Icon: Settings },
       {
         href: "#",
@@ -259,7 +257,6 @@ const QUICK_NAV_HREF_ORDER: readonly string[] = [
 
 /** Not shown in the top quick strip (use the main menu or header links). */
 const QUICK_NAV_EXCLUDED_HREFS = new Set([
-  "/profile",
   "/settings",
   "/my-subscription",
   "/policies",

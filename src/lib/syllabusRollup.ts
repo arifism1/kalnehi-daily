@@ -438,7 +438,9 @@ export function computeNeetYearProjections(
   rows: SyllabusRow[],
   statusBySyllabusMasterId: Record<string, string>,
   maxScore: number = 720,
+  options?: { collapseDuplicateScores?: boolean },
 ): NeetYearProjection[] {
+  const collapseDuplicateScores = options?.collapseDuplicateScores !== false;
   if (maxScore <= 0) return [];
   const chapterBuckets = buildChapterBuckets(rows);
   const out: NeetYearProjection[] = [];
@@ -488,6 +490,7 @@ export function computeNeetYearProjections(
 
   const sorted = out.sort((a, b) => b.year - a.year);
   if (
+    collapseDuplicateScores &&
     sorted.length > 1 &&
     sorted.every(
       (p) => p.projectedOutOf720 === sorted[0]!.projectedOutOf720,

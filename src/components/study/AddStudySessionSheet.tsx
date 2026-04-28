@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 import { getAiStudyPartnerBalance } from "@/actions/aiStudyPartner";
-import { AiStudyPartnerPurchaseModal } from "@/components/study/AiStudyPartnerPurchaseModal";
 import { StudyCameraPrivacyModal } from "@/components/study/StudyCameraPrivacyModal";
 import { StudyCameraTracker } from "@/components/study/StudyCameraTracker";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -31,7 +30,7 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
   const [step, setStep] = useState<Step>("subject");
   const [subject, setSubject] = useState("");
   const [privacyGateOpen, setPrivacyGateOpen] = useState(false);
-  const [purchaseModalOpen, setPurchaseModalOpen] = useState(false);
+  const [needsPartnerTime, setNeedsPartnerTime] = useState(false);
   const [isCheckingBalance, setIsCheckingBalance] = useState(false);
 
   useEffect(() => {
@@ -39,23 +38,24 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
       setStep("subject");
       setSubject("");
       setPrivacyGateOpen(false);
-      setPurchaseModalOpen(false);
+      setNeedsPartnerTime(false);
       setIsCheckingBalance(false);
     }
   }, [open]);
 
-  /** Fetch balance, then route: camera if credits > 0, purchase modal otherwise. */
+  /** Routes to camera when pooled AI Study Partner time &gt; 0; otherwise surface link to subscribe. */
   const doStart = useCallback(async () => {
     setIsCheckingBalance(true);
+    setNeedsPartnerTime(false);
     try {
       const bal = await getAiStudyPartnerBalance();
       if (bal > 0) {
         setStep("camera");
       } else {
-        setPurchaseModalOpen(true);
+        setNeedsPartnerTime(true);
       }
     } catch {
-      setPurchaseModalOpen(true);
+      setNeedsPartnerTime(true);
     } finally {
       setIsCheckingBalance(false);
     }
@@ -103,14 +103,6 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
         onContinue={onPrivacyGateContinue}
         onDismiss={() => {
           setPrivacyGateOpen(false);
-        }}
-      />
-      <AiStudyPartnerPurchaseModal
-        open={purchaseModalOpen}
-        onClose={() => setPurchaseModalOpen(false)}
-        onPurchased={() => {
-          setPurchaseModalOpen(false);
-          setStep("camera");
         }}
       />
       <div className="fixed inset-0 z-[80] flex items-end justify-center sm:items-center">
@@ -196,10 +188,31 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
                       Verification not enabled
                     </p>
                     <p className="mt-1.5 text-xs leading-relaxed text-kal-muted">
-                      Turn on on-camera study sessions in Settings to log with
-                      on-device checks. Video stays on your device only — never
-                      uploaded.
+                      Turn on on-camera study sessions on{" "}
+                      <Link
+                        href="/study-sessions#study-camera-setup"
+                        className="font-semibold text-kal-accent underline underline-offset-2"
+                      >
+                        Study Sessions
+                      </Link>
+                      . Video stays on your device only — never uploaded.
                     </p>
+                  </div>
+                ) : needsPartnerTime ? (
+                  <div className="mt-4 rounded-2xl border border-amber-500/35 bg-amber-500/[0.07] px-4 py-4">
+                    <p className="text-sm font-semibold text-kal-text">
+                      No AI Study Partner time left
+                    </p>
+                    <p className="mt-1.5 text-xs leading-relaxed text-kal-muted">
+                      Buy pooled hours first — credits are deducted only while you&apos;re in
+                      session.
+                    </p>
+                    <Link
+                      href="/my-subscription#ai-study-partner"
+                      className="mt-3 inline-flex min-h-[44px] w-full items-center justify-center rounded-xl bg-kal-accent px-4 text-sm font-semibold text-kal-accent-foreground hover:bg-kal-accent-hover"
+                    >
+                      Buy hours on My Subscription
+                    </Link>
                   </div>
                 ) : null}
               </div>

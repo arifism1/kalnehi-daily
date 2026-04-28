@@ -1,11 +1,15 @@
 "use client";
 
 import clsx from "clsx";
+import Link from "next/link";
 import { Bot, Check, Info, Pause, Play, RefreshCw, Square } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Webcam from "react-webcam";
 
-import { deductAiStudyPartnerTime } from "@/actions/aiStudyPartner";
+import {
+  deductAiStudyPartnerTime,
+  getAiStudyPartnerBalance,
+} from "@/actions/aiStudyPartner";
 import { applyOptimisticStudySessionCreate } from "@/lib/studySessionMutations";
 import {
   computeStudyFrameSignals,
@@ -24,9 +28,10 @@ import { USER_ERROR } from "@/lib/userFacingErrors";
 
 /**
  * Face + Pose + Hand run in-browser via MediaPipe Tasks Vision (WASM).
- * Optional Gemini spot-checks send a single JPEG per interval when enabled in settings.
+ * Gemini cloud spot-checks run automatically during any on-camera session (single JPEG per interval).
  * Session end logs metadata only (no video stored by Kalnehi).
  */
+const GEMINI_VERIFY_INTERVAL_MIN = 3;
 const WASM_VER = "0.10.34";
 const FACE_MODEL =
   "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
@@ -46,6 +51,19 @@ type VisionVerdict = {
   reason: string;
   checkedAt: number;
 };
+
+function formatAiPartnerBalanceSeconds(totalSec: number | null): string {
+  if (totalSec === null) return "Loading…";
+  if (totalSec === 0) return "No time remaining";
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  if (h > 0) {
+    return `${h}h ${m}m${s > 0 ? ` ${s}s` : ""} remaining`;
+  }
+  if (m > 0) return `${m}m ${s}s remaining`;
+  return `${s}s remaining`;
+}
 
 function captureFrameBase64FromVideo(
   video: HTMLVideoElement,
@@ -265,13 +283,11 @@ export function StudyCameraTracker({ subject, userId, aiPartnerMode = false, onD
   const sensitivity = useSettingsStore(
     (s) => s.studyDetectionSensitivity,
   ) as StudyDetectionSensitivity;
-  const studyCameraVisionVerify =
-    useSettingsStore((s) => s.studyCameraVisionVerify ?? true);
-  const studyCameraVerifyIntervalMin =
-    useSettingsStore((s) => s.studyCameraVerifyIntervalMin ?? 3);
 
   const [videoReady, setVideoReady] = useState(false);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
+  /** AI Study Partner pooled time — shown only when aiPartnerMode */
+  const [aiPartnerBalanceSec, setAiPartnerBalanceSec] = useState<number | null>(null);
 
   const webcamRef = useRef<Webcam | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -293,7 +309,6 @@ export function StudyCameraTracker({ subject, userId, aiPartnerMode = false, onD
   const overrideTickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   /** Mirrored ref so the rAF loop reads the latest value without re-creating the effect */
   const facingRef = useRef(facing);
-  const studyCameraVisionVerifyRef = useRef(studyCameraVisionVerify);
   const visionVerdictRef = useRef<VisionVerdict | null>(null);
   const visionDismissedRef = useRef(false);
   /** True when the current paused state was caused by a high-confidence vision "not studying" check. */
@@ -314,8 +329,24 @@ export function StudyCameraTracker({ subject, userId, aiPartnerMode = false, onD
   }, [facing]);
 
   useEffect(() => {
-    studyCameraVisionVerifyRef.current = studyCameraVisionVerify;
-  }, [studyCameraVisionVerify]);
+    if (!aiPartnerMode || !userId) return;
+    let cancelled = false;
+    const loadBal = () => {
+      void getAiStudyPartnerBalance()
+        .then((b) => {
+          if (!cancelled) setAiPartnerBalanceSec(b);
+        })
+        .catch(() => {
+          if (!cancelled) setAiPartnerBalanceSec(0);
+        });
+    };
+    loadBal();
+    const t = window.setInterval(loadBal, 30_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(t);
+    };
+  }, [aiPartnerMode, userId]);
 
   useEffect(() => {
     wideSelectionDoneRef.current = false;
@@ -587,13 +618,13 @@ export function StudyCameraTracker({ subject, userId, aiPartnerMode = false, onD
       clearInterval(visionIntervalRef.current);
       visionIntervalRef.current = null;
     }
-    if (phase !== "running" || !studyCameraVisionVerify || !modelsReady || !videoReady) {
+    if (phase !== "running" || !modelsReady || !videoReady) {
       return;
     }
-    const intervalMs = studyCameraVerifyIntervalMin * 60 * 1000;
+    const intervalMs = GEMINI_VERIFY_INTERVAL_MIN * 60 * 1000;
 
     const runVerify = async () => {
-      if (sessionPhaseRef.current !== "running" || !studyCameraVisionVerifyRef.current) {
+      if (sessionPhaseRef.current !== "running") {
         return;
       }
       if (visionVerifyInFlightRef.current) return;
@@ -656,7 +687,7 @@ export function StudyCameraTracker({ subject, userId, aiPartnerMode = false, onD
         visionIntervalRef.current = null;
       }
     };
-  }, [phase, studyCameraVisionVerify, studyCameraVerifyIntervalMin, modelsReady, videoReady]);
+  }, [phase, modelsReady, videoReady]);
 
   // AI Partner feedback loop: every 30s for first 3 min, then every 3.5 min
   useEffect(() => {
@@ -803,10 +834,9 @@ export function StudyCameraTracker({ subject, userId, aiPartnerMode = false, onD
 
       const v = visionVerdictRef.current;
       const vFresh = isVisionVerdictFresh(v);
-      const visOn = studyCameraVisionVerifyRef.current;
 
       let studyingNow = baseStudying;
-      if (visOn && vFresh && v && !isOverriding) {
+      if (vFresh && v && !isOverriding) {
         if (v.is_studying) {
           studyingNow = true;
         } else if (v.confidence === "high" && !visionDismissedRef.current) {
@@ -875,7 +905,6 @@ export function StudyCameraTracker({ subject, userId, aiPartnerMode = false, onD
     : ("red" as const);
 
   const aiSpotOk =
-    studyCameraVisionVerify &&
     isVisionVerdictFresh(visionVerdictUi) &&
     visionVerdictUi?.is_studying;
   const aiNote = aiSpotOk ? " · AI spot-check: studying" : "";
@@ -925,9 +954,7 @@ export function StudyCameraTracker({ subject, userId, aiPartnerMode = false, onD
     }
     return {
       text: "Ready",
-      sub: studyCameraVisionVerify
-        ? "Face + pose + hands (on-device) · optional Gemini spot-checks"
-        : "Face + pose + hands (on-device)",
+      sub: "Face + pose + hands (on-device) · Gemini spot-checks while session runs",
       tone: "neutral" as const,
     };
   })();
@@ -958,6 +985,28 @@ export function StudyCameraTracker({ subject, userId, aiPartnerMode = false, onD
               <span className="relative z-10 flex h-20 w-20 items-center justify-center rounded-full bg-kal-accent/15 ring-2 ring-kal-accent/30">
                 <Bot className="h-9 w-9 text-kal-accent" aria-hidden />
               </span>
+            </div>
+
+            <div className="w-full rounded-xl border border-kal-border bg-kal-card px-4 py-3 text-center">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-kal-muted">
+                Balance
+              </p>
+              <p
+                className={clsx(
+                  "mt-1 text-sm font-semibold tabular-nums text-kal-text",
+                  aiPartnerBalanceSec !== null &&
+                    aiPartnerBalanceSec <= 0 &&
+                    "text-amber-600 dark:text-amber-400",
+                )}
+              >
+                {formatAiPartnerBalanceSeconds(aiPartnerBalanceSec)}
+              </p>
+              <Link
+                href="/my-subscription#ai-study-partner"
+                className="mt-2 inline-flex text-[11px] font-semibold text-kal-accent underline underline-offset-2"
+              >
+                Add hours on My Subscription
+              </Link>
             </div>
 
             {/* Speech bubble — shows last feedback or a default motivational line */}
@@ -1001,9 +1050,7 @@ export function StudyCameraTracker({ subject, userId, aiPartnerMode = false, onD
                 {facing === "user" ? "Back" : "Front"}
               </button>
               <div className="absolute bottom-2 left-2 max-w-[min(100%,16rem)] rounded-md bg-black/75 px-2 py-1 text-[8px] font-medium leading-tight text-zinc-200 ring-1 ring-white/10">
-                {studyCameraVisionVerify
-                  ? "🔒 MediaPipe on-device · AI spot-checks (no storage)"
-                  : "🔒 On-device only · Private"}
+                🔒 MediaPipe on-device · Gemini spot-checks (no storage)
               </div>
               <div className="absolute right-2 bottom-2 max-w-[55%] truncate rounded-md bg-black/75 px-2 py-1 text-[9px] font-medium text-zinc-300 ring-1 ring-white/10">
                 {subj}
@@ -1039,9 +1086,7 @@ export function StudyCameraTracker({ subject, userId, aiPartnerMode = false, onD
               {facing === "user" ? "Back" : "Front"}
             </button>
             <div className="absolute bottom-2 left-2 max-w-[min(100%,16rem)] rounded-md bg-black/75 px-2 py-1 text-[8px] font-medium leading-tight text-zinc-200 ring-1 ring-white/10">
-              {studyCameraVisionVerify
-                ? "🔒 MediaPipe on-device · optional Gemini spot-checks (no storage)"
-                : "🔒 On-device only · Private"}
+              🔒 MediaPipe on-device · Gemini spot-checks (no storage)
             </div>
             <div className="absolute right-2 bottom-2 max-w-[55%] truncate rounded-md bg-black/75 px-2 py-1 text-[9px] font-medium text-zinc-300 ring-1 ring-white/10">
               {subj}
