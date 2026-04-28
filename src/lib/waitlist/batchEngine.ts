@@ -246,7 +246,7 @@ export async function openBatch(batchId: string): Promise<OpenBatchResult> {
     for (const uid of userIds) {
       await admin
         .from("user_profiles")
-        .update({ trial_started_at: now, has_used_free_trial: true, updated_at: now })
+        .update({ trial_started_at: now, has_used_free_trial: true, has_had_trial: true, updated_at: now })
         .eq("user_id", uid)
         .is("trial_started_at", null);
     }

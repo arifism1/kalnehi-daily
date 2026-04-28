@@ -963,6 +963,14 @@ export async function ensureFreeTrialStarted(): Promise<
   const admin = getAdminClient();
   if (!admin) return { ok: false, error: "Service unavailable." };
 
+  // Short-circuit: if trial is already recorded, skip the cap RPC entirely.
+  const { data: profileCheck } = await admin
+    .from("user_profiles")
+    .select("has_used_free_trial")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (profileCheck?.has_used_free_trial) return { ok: true, started: false };
+
   // ── Daily cap check ──────────────────────────────────────────────────────
   // Read cap config directly (bypass cache so we always see the live value).
   const { data: configRow } = await admin
@@ -1079,6 +1087,7 @@ export async function ensureFreeTrialStarted(): Promise<
       .update({
         trial_started_at: nowIso,
         has_used_free_trial: true,
+        has_had_trial: true,
         updated_at: nowIso,
         // trial_access_type and trial_date are already set by the RPC.
       })
@@ -1120,6 +1129,7 @@ export async function ensureFreeTrialStarted(): Promise<
     .update({
       trial_started_at: nowIso,
       has_used_free_trial: true,
+      has_had_trial: true,
       updated_at: nowIso,
     })
     .eq("user_id", userId)
@@ -1147,7 +1157,7 @@ export async function incrementPhotoScanUsage(): Promise<
   const { data, error } = await admin
     .from("user_profiles")
     .select(
-      "subscription_tier, subscription_status, subscription_end_date, photo_scans_used_this_month, bonus_photo_scans_ledger, usage_reset_date, trial_started_at, trial_photo_scans_used, has_used_free_trial",
+      "subscription_tier, subscription_status, subscription_end_date, payment_grace_until, photo_scans_used_this_month, bonus_photo_scans_ledger, usage_reset_date, trial_started_at, trial_photo_scans_used, has_used_free_trial",
     )
     .eq("user_id", userId)
     .maybeSingle();
@@ -1157,7 +1167,11 @@ export async function incrementPhotoScanUsage(): Promise<
   const now = new Date();
 
   if (
-    isPaidSubscriptionAccess(data.subscription_status ?? undefined, data.subscription_end_date ?? undefined)
+    isPaidSubscriptionAccess(
+      data.subscription_status ?? undefined,
+      data.subscription_end_date ?? undefined,
+      (data as { payment_grace_until?: string | null }).payment_grace_until ?? null,
+    )
   ) {
     return applyPaidPhotoScanUsage(admin, userId, data, now);
   }
@@ -1188,6 +1202,7 @@ export async function incrementPhotoScanUsage(): Promise<
       isPaidSubscriptionAccess(
         again.subscription_status ?? undefined,
         again.subscription_end_date ?? undefined,
+        (again as { payment_grace_until?: string | null }).payment_grace_until ?? null,
       )) {
       return applyPaidPhotoScanUsage(admin, userId, again, now);
     }
@@ -1216,7 +1231,7 @@ export async function incrementVoiceMinuteUsage(
   const { data, error } = await admin
     .from("user_profiles")
     .select(
-      "subscription_tier, subscription_status, subscription_end_date, voice_minutes_used_this_month, bonus_voice_minutes_ledger, usage_reset_date, photo_scans_used_this_month, trial_started_at, trial_voice_seconds_used, has_used_free_trial",
+      "subscription_tier, subscription_status, subscription_end_date, payment_grace_until, voice_minutes_used_this_month, bonus_voice_minutes_ledger, usage_reset_date, photo_scans_used_this_month, trial_started_at, trial_voice_seconds_used, has_used_free_trial",
     )
     .eq("user_id", userId)
     .maybeSingle();
@@ -1226,7 +1241,11 @@ export async function incrementVoiceMinuteUsage(
   const now = new Date();
 
   if (
-    isPaidSubscriptionAccess(data.subscription_status ?? undefined, data.subscription_end_date ?? undefined)
+    isPaidSubscriptionAccess(
+      data.subscription_status ?? undefined,
+      data.subscription_end_date ?? undefined,
+      (data as { payment_grace_until?: string | null }).payment_grace_until ?? null,
+    )
   ) {
     return applyPaidVoiceMinuteUsage(admin, userId, data, now, minutes);
   }
@@ -1262,6 +1281,7 @@ export async function incrementVoiceMinuteUsage(
       isPaidSubscriptionAccess(
         again.subscription_status ?? undefined,
         again.subscription_end_date ?? undefined,
+        (again as { payment_grace_until?: string | null }).payment_grace_until ?? null,
       )) {
       return applyPaidVoiceMinuteUsage(admin, userId, again, now, minutes);
     }
@@ -1752,9 +1772,21 @@ export async function activateRazorpayMonthlySubscription(params: {
     }
     tier = tierFromRazorpayNote(sub.notes?.kalnehi_tier);
     autopayMonthsTotal = autopayMonthsFromSubscriptionEntity(sub);
+
+    // Verify the payment is actually captured before activating.
+    const paymentRecord = (await razorpay.payments.fetch(paymentId)) as { status?: string };
+    if (paymentRecord.status !== "captured") {
+      return { ok: false, error: "Payment has not been captured yet." };
+    }
   } catch {
     return { ok: false, error: "Unable to verify subscription ownership." };
   }
+
+  // Idempotency guard: prevent the same payment from activating the subscription twice
+  // (e.g. double-tap on the checkout button or a client retry).
+  const claimResult = await claimRazorpayPaymentId(userId, paymentId, PAYMENT_KIND_UPGRADE);
+  if (claimResult === "duplicate") return { ok: true, subscriptionId };
+  if (claimResult === "error") return { ok: false, error: "Unable to record payment. Please contact support." };
 
   const start = new Date();
   const monthEnd = new Date(start);
@@ -1770,7 +1802,10 @@ export async function activateRazorpayMonthlySubscription(params: {
     subscription_autopay_months_total: autopayMonthsTotal,
     has_had_trial: true,
   });
-  if (!updated.ok) return updated;
+  if (!updated.ok) {
+    await releaseRazorpayPaymentClaim(paymentId);
+    return updated;
+  }
 
   await resetMonthlyAiUsageCounters(userId);
   await mergeResubscribeBonusesAfterMonthlyActivate(userId);

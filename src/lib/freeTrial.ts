@@ -90,18 +90,25 @@ export function formatWelcomeTrialEndsIn(endsAtIso: string | null, nowMs: number
   return `Ends in ${s}s`;
 }
 
-/** Paid subscription currently in effect (trial/active/cancelled with future end date). */
+/** Paid subscription currently in effect (trial/active/cancelled with future end date, or within payment grace window). */
 export function isPaidSubscriptionAccess(
   status: string | null | undefined,
   endDate: string | null | undefined,
+  paymentGraceUntil?: string | null,
 ): boolean {
   if (status !== "trial" && status !== "active" && status !== "cancelled") {
     return false;
   }
+  const now = Date.now();
+  // Grace period: Razorpay is retrying the charge; keep access alive even if end_date passed.
+  if (paymentGraceUntil) {
+    const grace = new Date(paymentGraceUntil);
+    if (!Number.isNaN(grace.getTime()) && grace.getTime() > now) return true;
+  }
   if (!endDate) return false;
   const end = new Date(endDate);
   if (Number.isNaN(end.getTime())) return false;
-  return end.getTime() > Date.now();
+  return end.getTime() > now;
 }
 
 /**
