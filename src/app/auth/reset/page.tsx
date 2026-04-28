@@ -46,7 +46,7 @@ export default function AuthResetPage() {
         data: { session },
       } = await supabase.auth.getSession();
       if (session) setAuth(session);
-      router.replace("/");
+      router.replace("/home");
     } catch (e) {
       setError(formatSupabaseError(e));
     } finally {
