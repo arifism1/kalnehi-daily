@@ -156,8 +156,11 @@ export function useDeviceSpeechRecognition({
   const onSpeechEngineInfoRef = useRef(onSpeechEngineInfo);
   const onPreviewTranscriptRef = useRef(onPreviewTranscript);
   const interimPreviewRef = useRef(interimPreview);
+  const hadSpeechSegmentRef = useRef(false);
   const [status, setStatus] = useState<SpeechStatus>("idle");
   const [error, setError] = useState<string | null>(null);
+  /** True after `onspeechend` in this session; requires a prior `onspeechstart`. For UI (e.g. "tap mic when done"). */
+  const [speechPausedAfterUtterance, setSpeechPausedAfterUtterance] = useState(false);
 
   useEffect(() => {
     onSpeechEngineInfoRef.current = onSpeechEngineInfo;
@@ -166,6 +169,10 @@ export function useDeviceSpeechRecognition({
   }, [onSpeechEngineInfo, onPreviewTranscript, interimPreview]);
 
   const isSupported = useMemo(() => Boolean(getSpeechRecognitionCtor()), []);
+
+  useEffect(() => {
+    if (status === "idle") setSpeechPausedAfterUtterance(false);
+  }, [status]);
 
   const clearTimers = useCallback(() => {
     if (silenceTimerRef.current !== null) {
@@ -324,6 +331,8 @@ export function useDeviceSpeechRecognition({
     }
 
     recognition.onstart = () => {
+      hadSpeechSegmentRef.current = false;
+      setSpeechPausedAfterUtterance(false);
       speechStartedAtMsRef.current = Date.now();
       setStatus("listening");
       onStart?.();
@@ -331,6 +340,8 @@ export function useDeviceSpeechRecognition({
     };
 
     recognition.onspeechstart = () => {
+      hadSpeechSegmentRef.current = true;
+      setSpeechPausedAfterUtterance(false);
       if (silenceMs == null || silenceMs <= 0) return;
       if (silenceTimerRef.current !== null) {
         window.clearTimeout(silenceTimerRef.current);
@@ -340,6 +351,7 @@ export function useDeviceSpeechRecognition({
 
     recognition.onspeechend = () => {
       if (silenceMs != null && silenceMs > 0) scheduleSilenceStop();
+      if (hadSpeechSegmentRef.current) setSpeechPausedAfterUtterance(true);
     };
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
@@ -389,6 +401,7 @@ export function useDeviceSpeechRecognition({
       suppressSubmitRef.current = true;
       onPreviewTranscriptRef.current?.("");
       clearTimers();
+      setSpeechPausedAfterUtterance(false);
       setStatus("idle");
       setMicBusy(false);
     };
@@ -445,6 +458,7 @@ export function useDeviceSpeechRecognition({
     error,
     isListening: status === "listening",
     isSupported,
+    speechPausedAfterUtterance,
     startListening,
     status,
     stopListening,
