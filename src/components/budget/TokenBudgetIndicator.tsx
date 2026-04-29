@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import clsx from "clsx";
+
+import { usePlatform } from "@/hooks/usePlatform";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { WELCOME_AI_TOKEN_CAP, MONTHLY_AI_TOKEN_CAP } from "@/lib/prepbrainTokens";
 
@@ -34,6 +36,7 @@ function usePrepbrainTokenUsage(): UsagePayload {
 
 export function TokenBudgetIndicator() {
   const { freeTrialActive, hasPaidAccess, loading } = useSubscriptionAccess();
+  const { isApp } = usePlatform();
   const usage = usePrepbrainTokenUsage();
 
   if (loading || (!freeTrialActive && !hasPaidAccess)) return null;
@@ -60,6 +63,14 @@ export function TokenBudgetIndicator() {
   }
 
   if (exhausted) {
+    if (isApp) {
+      return (
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/10 px-2.5 py-1 text-xs font-semibold text-red-500">
+          <span className="h-1.5 w-1.5 rounded-full bg-red-500" aria-hidden />
+          Mastermind limit reached
+        </span>
+      );
+    }
     return (
       <Link
         href="/pricing#subscribe"

@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
+import { storageAdapter } from "@/lib/storage";
+
 export type StudyCameraFacing = "user" | "environment";
 
 export type StudyDetectionSensitivity = "strict" | "balanced" | "lenient";
@@ -132,7 +134,7 @@ export const useSettingsStore = create<SettingsState>()(
         delete s.wakeWordEnabled;
         return s;
       },
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => storageAdapter),
       partialize: (s) => pickUiPrefsForSync(s),
     },
   ),

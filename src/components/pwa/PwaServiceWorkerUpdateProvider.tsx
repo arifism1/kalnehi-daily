@@ -24,6 +24,7 @@ const PwaServiceWorkerUpdateContext =
  * Single place for production `/sw.js` registration and the "new build ready"
  * signal (`controllerchange` after a prior controller), shared by
  * {@link ServiceWorkerRegister} and {@link MainNavigationMenu}.
+ * Skipped inside Capacitor native shells to avoid conflicting with Android WebView.
  */
 export function PwaServiceWorkerUpdateProvider({ children }: { children: ReactNode }) {
   const [updateReady, setUpdateReady] = useState(false);
@@ -33,35 +34,48 @@ export function PwaServiceWorkerUpdateProvider({ children }: { children: ReactNo
     if (process.env.NODE_ENV !== "production") return;
     if (!("serviceWorker" in navigator)) return;
 
-    const hadController = !!navigator.serviceWorker.controller;
+    let disposed = false;
+    let cleanupListeners: (() => void) | undefined;
 
-    const onControllerChange = () => {
-      if (hadController) setUpdateReady(true);
-    };
-    navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
+    void (async () => {
+      const { Capacitor } = await import("@capacitor/core");
+      if (disposed || Capacitor.isNativePlatform()) return;
 
-    void navigator.serviceWorker
-      .register("/sw.js", { scope: "/" })
-      .catch(() => {
-        /* ignore — private mode, blocked, etc. */
-      });
+      const hadController = !!navigator.serviceWorker.controller;
 
-    /** Helps iOS/Android/desktop discover new SW versions when the user returns to the app. */
-    const checkForNewWorker = () => {
-      void navigator.serviceWorker.getRegistration().then((reg) => {
-        void reg?.update();
-      });
-    };
-    const onVisible = () => {
-      if (document.visibilityState === "visible") checkForNewWorker();
-    };
-    window.addEventListener("focus", checkForNewWorker);
-    document.addEventListener("visibilitychange", onVisible);
+      const onControllerChange = () => {
+        if (hadController) setUpdateReady(true);
+      };
+      navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
+
+      void navigator.serviceWorker
+        .register("/sw.js", { scope: "/" })
+        .catch(() => {
+          /* ignore — private mode, blocked, etc. */
+        });
+
+      /** Helps iOS/Android/desktop discover new SW versions when the user returns to the app. */
+      const checkForNewWorker = () => {
+        void navigator.serviceWorker.getRegistration().then((reg) => {
+          void reg?.update();
+        });
+      };
+      const onVisible = () => {
+        if (document.visibilityState === "visible") checkForNewWorker();
+      };
+      window.addEventListener("focus", checkForNewWorker);
+      document.addEventListener("visibilitychange", onVisible);
+
+      cleanupListeners = () => {
+        navigator.serviceWorker.removeEventListener("controllerchange", onControllerChange);
+        window.removeEventListener("focus", checkForNewWorker);
+        document.removeEventListener("visibilitychange", onVisible);
+      };
+    })();
 
     return () => {
-      navigator.serviceWorker.removeEventListener("controllerchange", onControllerChange);
-      window.removeEventListener("focus", checkForNewWorker);
-      document.removeEventListener("visibilitychange", onVisible);
+      disposed = true;
+      cleanupListeners?.();
     };
   }, []);
 

@@ -4,20 +4,21 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { useCallback, useState } from "react";
 
+import * as storage from "@/lib/storage";
+
 const STORAGE_KEY = "kalnehi_cinematic_onboarding_v1";
 
-export function readCinematicOnboardingDone(): boolean {
-  if (typeof window === "undefined") return false;
+export async function readCinematicOnboardingDone(): Promise<boolean> {
   try {
-    return localStorage.getItem(STORAGE_KEY) === "1";
+    return (await storage.getItem(STORAGE_KEY)) === "1";
   } catch {
     return false;
   }
 }
 
-export function writeCinematicOnboardingDone(): void {
+export async function writeCinematicOnboardingDone(): Promise<void> {
   try {
-    localStorage.setItem(STORAGE_KEY, "1");
+    await storage.setItem(STORAGE_KEY, "1");
   } catch {
     /* ignore */
   }
@@ -53,7 +54,7 @@ export function CinematicOnboarding({ onComplete }: Props) {
       setIdx((i) => i + 1);
       return;
     }
-    writeCinematicOnboardingDone();
+    void writeCinematicOnboardingDone();
     onComplete();
   }, [idx, onComplete]);
 

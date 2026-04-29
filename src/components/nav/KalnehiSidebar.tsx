@@ -30,6 +30,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { usePlatform } from "@/hooks/usePlatform";
 import { PwaUpdateCallout } from "@/components/pwa/PwaUpdateCallout";
 import { FEATURE_CATEGORIES } from "@/lib/dashboardFeatures";
 
@@ -101,7 +102,10 @@ const SIDEBAR_CATEGORIES: SidebarCategory[] = FEATURE_CATEGORIES.map((cat) => ({
 
 export function KalnehiSidebar() {
   const pathname = usePathname();
-
+  const { isApp } = usePlatform();
+  const accountItems = isApp
+    ? ACCOUNT_ITEMS.filter((item) => item.href !== "/my-subscription")
+    : ACCOUNT_ITEMS;
   return (
     <nav
       role="navigation"
@@ -198,7 +202,7 @@ export function KalnehiSidebar() {
           Account
         </p>
         <ul>
-          {ACCOUNT_ITEMS.map((item) => {
+          {accountItems.map((item) => {
             const isActive =
               pathname === item.href ||
               pathname.startsWith(`${item.href}/`);

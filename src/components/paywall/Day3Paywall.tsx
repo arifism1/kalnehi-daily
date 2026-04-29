@@ -8,6 +8,8 @@ import {
   activateRazorpayMonthlySubscription,
   createRazorpayMonthlySubscription,
 } from "@/actions/subscription";
+import { NativeLockoutScreen } from "@/components/subscription/NativeLockoutScreen";
+import { ANDROID_APP_UA_MARKER } from "@/lib/androidAppUa";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { useAuthStore } from "@/store/useAuthStore";
 import {
@@ -141,6 +143,15 @@ export function Day3Paywall() {
   }, [refetch]);
 
   if (!visible) return null;
+
+  /** Same marker as `capacitor.config.ts` / `src/proxy.ts` — blocks Razorpay before Script in the shell. */
+  const shellBlocksCheckout =
+    typeof navigator !== "undefined" &&
+    navigator.userAgent.includes(ANDROID_APP_UA_MARKER);
+
+  if (shellBlocksCheckout) {
+    return <NativeLockoutScreen />;
+  }
 
   return (
     <>

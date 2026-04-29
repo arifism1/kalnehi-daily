@@ -173,7 +173,7 @@ export function OnboardingWizard() {
         window.location.assign("/waitlist/position");
         return;
       }
-      writeProductTourPending();
+      void writeProductTourPending();
       window.location.assign("/home");
     } catch (e) {
       setError(toUserFacingMessage(e));

@@ -175,6 +175,9 @@
 }
 
 /* ── Base ─────────────────────────────────────────────────────────────── */
+/* Safe-area insets: viewportFit=cover is set in layout metadata; fixed chrome uses
+ * Tailwind `env(safe-area-inset-*)` (see KalnehiChrome / headers). Avoid duplicate
+ * global padding — fixed layers ignore body padding. */
 body {
   background-color: var(--kal-page);
   background-image:

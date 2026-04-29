@@ -18,7 +18,7 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useState } from "react";
 
-import { StudyDeskIllustration } from "@/components/illustrations/StudyDeskIllustration";
+import { buildAuthCallbackUrl } from "@/lib/authCallbackUrl";
 
 const AuthAppNavPreviewMenu = dynamic(
   () =>
@@ -29,7 +29,6 @@ const AuthAppNavPreviewMenu = dynamic(
 );
 import { attachReferralToUser } from "@/actions/referral";
 import { trackAuthSuccess } from "@/lib/analytics";
-import { buildAuthCallbackUrl } from "@/lib/authCallbackUrl";
 import {
   clearStoredReferral,
   getStoredReferral,
@@ -232,17 +231,54 @@ export default function AuthPage() {
     setBusy(true);
     setError(null);
     try {
-      const supabase = getSupabaseBrowserClient();
-      const { error: oErr } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: buildAuthCallbackUrl("/home") },
-      });
-      if (oErr) throw oErr;
+      const { Capacitor } = await import("@capacitor/core");
+      const platform = Capacitor.getPlatform(); // "android" | "ios" | "web"
+      const isNative = platform === "android" || platform === "ios";
+
+      console.log(`[Auth] Google sign-in — platform="${platform}", isNative=${String(isNative)}`);
+
+      if (isNative) {
+        console.log("[Auth] Native Flow Triggered");
+        try {
+          const { GoogleAuth } = await import(
+            "@codetrix-studio/capacitor-google-auth"
+          );
+          const googleUser = await GoogleAuth.signIn();
+          const idToken = googleUser.authentication.idToken;
+          if (!idToken) throw new Error("Google sign-in did not return an ID token.");
+          const supabase = getSupabaseBrowserClient();
+          const { error: idErr } = await supabase.auth.signInWithIdToken({
+            provider: "google",
+            token: idToken,
+          });
+          if (idErr) throw idErr;
+          await redirectAfterAuth("login");
+        } catch (nativeErr) {
+          // Native Google picker failed (e.g. google-services.json missing or
+          // account not configured) — fall back to browser OAuth with the app
+          // deep-link scheme so Android can return control to the app.
+          console.warn("[Auth] Native GoogleAuth failed, falling back to OAuth:", nativeErr);
+          const supabase = getSupabaseBrowserClient();
+          const { error: oErr } = await supabase.auth.signInWithOAuth({
+            provider: "google",
+            options: { redirectTo: "com.kalnehi.daily://home" },
+          });
+          if (oErr) throw oErr;
+        }
+      } else {
+        console.log("[Auth] Web Flow Triggered");
+        const supabase = getSupabaseBrowserClient();
+        const { error: oErr } = await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: { redirectTo: buildAuthCallbackUrl("/home") },
+        });
+        if (oErr) throw oErr;
+      }
     } catch (e) {
       setError(formatSupabaseError(e));
       setBusy(false);
     }
-  }, []);
+  }, [redirectAfterAuth]);
 
   if (view === "forgot-sent") {
     return (
@@ -360,7 +396,6 @@ export default function AuthPage() {
       <AuthAppNavPreviewMenu />
 
       <div className="flex w-full max-w-sm flex-col items-center gap-2 sm:max-w-md">
-        <StudyDeskIllustration className="w-full max-w-[280px] opacity-90 sm:max-w-[320px]" />
         <div className="text-center">
           <AuthPageMark priority />
           <h1 className="kal-feature-title mt-2 max-w-md text-balance leading-snug">

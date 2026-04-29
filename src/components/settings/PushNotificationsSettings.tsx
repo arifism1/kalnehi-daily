@@ -14,6 +14,7 @@ import { FCM_STALE_TOKEN_USER_MESSAGE } from "@/lib/fcm/messages";
 import { SITE_NAME } from "@/lib/seo-metadata";
 import { useAuthStore } from "@/store/useAuthStore";
 import { surfaceErrorForUi, surfaceOptionalString } from "@/lib/userFacingErrors";
+import * as storage from "@/lib/storage";
 
 import { SettingsSheetSwitch } from "@/components/settings/SettingsSheetSwitch";
 import { useNotificationsToast } from "@/components/settings/notificationsToastContext";
@@ -124,8 +125,7 @@ export function PushNotificationsSettings({
       return;
     }
     const want =
-      typeof localStorage !== "undefined" &&
-      localStorage.getItem(LS_ENABLED) === "1";
+      (await storage.getItem(LS_ENABLED)) === "1";
     try {
       const { token, hint } = await obtainFcmToken();
       if (!token) {
@@ -227,7 +227,7 @@ export function PushNotificationsSettings({
       }
 
       tokenRef.current = token;
-      localStorage.setItem(LS_ENABLED, "1");
+      await storage.setItem(LS_ENABLED, "1");
       setPushOn(true);
       setMessage("Push notifications are on for this device.");
       showToast("Push is on for this device.");
@@ -249,14 +249,14 @@ export function PushNotificationsSettings({
         await unregisterTokenOnServer(tok);
       }
       tokenRef.current = null;
-      localStorage.removeItem(LS_ENABLED);
+      await storage.removeItem(LS_ENABLED);
       setPushOn(false);
       setMessage("Push notifications are off for this device.");
       showToast("Push is off for this device.", "neutral");
     } catch (e) {
       console.error(e);
       setMessage("Could not turn off push completely. Try clearing site data.");
-      localStorage.removeItem(LS_ENABLED);
+      await storage.removeItem(LS_ENABLED);
       setPushOn(false);
     } finally {
       setBusy(false);
@@ -310,7 +310,7 @@ export function PushNotificationsSettings({
       }
 
       tokenRef.current = token;
-      localStorage.setItem(LS_ENABLED, "1");
+      await storage.setItem(LS_ENABLED, "1");
       setPushOn(true);
       setMessage("Push registration refreshed.");
       showToast("Push registration refreshed.");
