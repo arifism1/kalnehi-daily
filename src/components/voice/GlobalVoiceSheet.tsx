@@ -685,6 +685,15 @@ export function GlobalVoiceSheet() {
     }
     if (phase !== "idle" || autoStartedRef.current || aiGate.loading) return;
     if (!aiGate.canDoVoiceSession) return;
+    autoStartedRef.current = true;
+    playStartChime();
+    // Web Speech API (webkitSpeechRecognition) crashes the Android WebView renderer.
+    // Skip it on Android and go straight to the MediaRecorder + Whisper path.
+    if (isAndroid) {
+      whisperFallbackAttemptedRef.current = true;
+      void startWhisperRecording();
+      return;
+    }
     if (!isSupported) {
       setError(
         "Voice commands are not supported in this browser. Try Chrome or the Kalnehi Daily app.",
@@ -692,10 +701,8 @@ export function GlobalVoiceSheet() {
       setPhase("error");
       return;
     }
-    autoStartedRef.current = true;
-    playStartChime();
     startListening();
-  }, [isOpen, phase, aiGate.loading, aiGate.canDoVoiceSession, isSupported, startListening, setError, setPhase]);
+  }, [isOpen, phase, aiGate.loading, aiGate.canDoVoiceSession, isSupported, isAndroid, startListening, startWhisperRecording, setError, setPhase]);
 
   // Stop listening/recording and abort any in-flight fetch when the sheet closes.
   useEffect(() => {
@@ -769,7 +776,12 @@ export function GlobalVoiceSheet() {
     autoStartedRef.current = false;
     whisperFallbackAttemptedRef.current = false;
     playStartChime();
-    startListening();
+    if (isAndroid) {
+      whisperFallbackAttemptedRef.current = true;
+      void startWhisperRecording();
+    } else {
+      startListening();
+    }
   }
 
   const isWhisperActive = isWhisperRecording || isWhisperTranscribing;
@@ -862,7 +874,12 @@ export function GlobalVoiceSheet() {
                     autoStartedRef.current = true;
                     whisperFallbackAttemptedRef.current = false;
                     playStartChime();
-                    startListening();
+                    if (isAndroid) {
+                      whisperFallbackAttemptedRef.current = true;
+                      void startWhisperRecording();
+                    } else {
+                      startListening();
+                    }
                   }}
                 />
               ) : phase === "processing" ? (
