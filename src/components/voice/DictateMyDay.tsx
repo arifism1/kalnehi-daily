@@ -24,6 +24,7 @@ import {
   isValidPlanDateString,
 } from "@/lib/dailyPlanUiDate";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
+import { useCapacitorSpeech } from "@/hooks/useCapacitorSpeech";
 import { VOICE_MAX_SESSION_MS, VOICE_SILENCE_AUTO_STOP_MS } from "@/lib/voiceConstants";
 import { slotFromStartEnd } from "@/lib/dailyPlanTime";
 import {
@@ -161,6 +162,9 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
   /** Last on-device speech session length (for quota when saving raw note). */
   const lastVoiceDurationSecondsRef = useRef<number | undefined>(undefined);
 
+  const [isAndroid, setIsAndroid] = useState(false);
+  useEffect(() => { setIsAndroid(/Android/i.test(navigator.userAgent)); }, []);
+
   useEffect(() => {
     setPreviewRows([emptyPreviewRow()]);
     setFallbackPanel(null);
@@ -261,7 +265,7 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
     clearError: clearRecognitionError,
     error: recognitionError,
     isListening,
-    isSupported,
+    isSupported: webSpeechSupported,
     startListening,
     stopListening,
   } = useDeviceSpeechRecognition({
@@ -277,10 +281,47 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
     },
   });
 
-  const activeError = recognitionError ?? error;
-  const phase: Phase = isProcessing
+  const {
+    clearError: clearCapacitorError,
+    error: capacitorError,
+    isRecording: isWhisperRecording,
+    isTranscribing: isWhisperTranscribing,
+    startRecording: startWhisperRecording,
+    stopRecording: stopWhisperRecording,
+    isSupported: whisperSupported,
+  } = useCapacitorSpeech({
+    onTranscript: ({ transcript, occurredAt, durationSeconds }) => {
+      void sendTranscript(transcript, occurredAt, durationSeconds);
+    },
+    maxMs: VOICE_MAX_SESSION_MS,
+    lang,
+  });
+
+  const isSupported = isAndroid ? whisperSupported : webSpeechSupported;
+  const isVoiceListening = isAndroid ? isWhisperRecording : isListening;
+  const isVoiceProcessing = isAndroid ? isWhisperTranscribing : false;
+
+  const startVoice = useCallback(() => {
+    if (isAndroid) {
+      setError(null);
+      setFallbackPanel(null);
+      clearCapacitorError();
+      void startWhisperRecording();
+    } else void startListening();
+  }, [isAndroid, startWhisperRecording, startListening, clearCapacitorError]);
+
+  const stopVoice = useCallback(() => {
+    if (isAndroid) stopWhisperRecording();
+    else stopListening();
+  }, [isAndroid, stopWhisperRecording, stopListening]);
+
+  const micError = isAndroid ? capacitorError : recognitionError;
+  const clearMicError = isAndroid ? clearCapacitorError : clearRecognitionError;
+
+  const activeError = micError ?? error;
+  const phase: Phase = (isProcessing || isVoiceProcessing)
     ? "processing"
-    : isListening
+    : isVoiceListening
       ? "listening"
       : activeError
         ? "error"
@@ -556,8 +597,8 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
             type="button"
             disabled={phase === "processing" || !isSupported}
             onClick={() => {
-              if (phase === "listening") void stopListening();
-              else void startListening();
+              if (phase === "listening") stopVoice();
+              else startVoice();
             }}
             className={[
               "relative flex h-24 w-24 shrink-0 items-center justify-center rounded-full transition-all sm:h-28 sm:w-28",
@@ -600,7 +641,7 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
           {phase === "listening" ? (
             <button
               type="button"
-              onClick={() => void stopListening()}
+              onClick={() => stopVoice()}
               className="min-h-[44px] rounded-xl border border-white/30 bg-white/50 px-4 py-2 text-sm font-semibold text-kal-text-secondary backdrop-blur-sm hover:bg-white/70 dark:border-white/12 dark:bg-zinc-900/50 dark:hover:bg-zinc-900/70"
             >
               Stop
@@ -610,6 +651,10 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
             <p className="max-w-sm text-sm text-[var(--kal-warn-text)]">
               Device speech recognition is unavailable in this browser. Try Chrome or the
               Kalnehi Android app.
+            </p>
+          ) : isAndroid ? (
+            <p className="max-w-sm text-xs text-kal-text-secondary/70">
+              HD mode — tap mic, speak naturally, tap Stop when done.
             </p>
           ) : null}
         </div>
@@ -779,17 +824,17 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
         </section>
       ) : null}
 
-      {recognitionError ? (
+      {micError ? (
         <div
           role="alert"
           className="rounded-[1rem] border border-amber-200/90 bg-amber-50/95 px-4 py-3 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/35 dark:text-amber-100"
         >
           <span className="font-semibold">Speech: </span>
-          {recognitionError}
+          {micError}
           <button
             type="button"
             className="ml-3 text-xs font-semibold underline"
-            onClick={() => clearRecognitionError()}
+            onClick={() => clearMicError()}
           >
             Dismiss
           </button>

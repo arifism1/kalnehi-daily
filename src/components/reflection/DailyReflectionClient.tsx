@@ -16,6 +16,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { VoiceListeningHint } from "@/components/voice/VoiceListeningHint";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
+import { useCapacitorSpeech } from "@/hooks/useCapacitorSpeech";
 import { VOICE_MAX_SESSION_MS, VOICE_SILENCE_AUTO_STOP_MS } from "@/lib/voiceConstants";
 import {
   getTodayReflection,
@@ -140,36 +141,66 @@ export function DailyReflectionClient({
   const voiceRef = useRef<Field | null>(null);
   voiceRef.current = activeVoiceField;
 
-  const { isListening, isSupported, startListening, stopListening, error: voiceError, clearError: clearVoiceError } =
+  const [isAndroid, setIsAndroid] = useState(false);
+  useEffect(() => { setIsAndroid(/Android/i.test(navigator.userAgent)); }, []);
+
+  const handleVoiceTranscript = useCallback(({ transcript }: { transcript: string; occurredAt: string; durationSeconds: number }) => {
+    const field = voiceRef.current;
+    if (!field) return;
+    setDraft((prev) => ({
+      ...prev,
+      [field]: prev[field] ? `${prev[field]} ${transcript}` : transcript,
+    }));
+    setVoicePreview("");
+    setActiveVoiceField(null);
+  }, []);
+
+  const { isListening, isSupported: webSpeechSupported, startListening, stopListening, error: voiceError, clearError: clearVoiceError } =
     useDeviceSpeechRecognition({
       lang: "en-IN",
       maxSessionMs: VOICE_MAX_SESSION_MS,
       silenceMs: VOICE_SILENCE_AUTO_STOP_MS,
       interimPreview: true,
       onPreviewTranscript: setVoicePreview,
-      onTranscript: ({ transcript }) => {
-        const field = voiceRef.current;
-        if (!field) return;
-        setDraft((prev) => ({
-          ...prev,
-          [field]: prev[field] ? `${prev[field]} ${transcript}` : transcript,
-        }));
-        setVoicePreview("");
-        setActiveVoiceField(null);
-      },
+      onTranscript: handleVoiceTranscript,
     });
 
-  // Clear active voice field if the mic fails to start.
+  const {
+    clearError: clearCapacitorError,
+    error: capacitorError,
+    isRecording: isWhisperRecording,
+    isTranscribing: isWhisperTranscribing,
+    startRecording: startWhisperRecording,
+    stopRecording: stopWhisperRecording,
+    isSupported: whisperSupported,
+  } = useCapacitorSpeech({ onTranscript: handleVoiceTranscript, maxMs: VOICE_MAX_SESSION_MS });
+
+  const isSupported = isAndroid ? whisperSupported : webSpeechSupported;
+  const isListeningActive = isAndroid ? (isWhisperRecording || isWhisperTranscribing) : isListening;
+
+  // Clear active voice field if the mic fails to start (web speech or native Android STT).
   useEffect(() => {
-    if (voiceError) {
+    if (isAndroid ? capacitorError : voiceError) {
       setActiveVoiceField(null);
       setVoicePreview("");
     }
-  }, [voiceError]);
+  }, [voiceError, capacitorError, isAndroid]);
+
+  const reflectionVoiceMicError = isAndroid ? capacitorError : voiceError;
 
   const toggleVoice = useCallback(
     async (field: Field) => {
-      if (isListening) {
+      if (isAndroid) {
+        if (isWhisperRecording) {
+          stopWhisperRecording();
+          setActiveVoiceField(null);
+          setVoicePreview("");
+        } else {
+          clearCapacitorError();
+          setActiveVoiceField(field);
+          await startWhisperRecording();
+        }
+      } else if (isListening) {
         stopListening();
         setActiveVoiceField(null);
         setVoicePreview("");
@@ -179,7 +210,7 @@ export function DailyReflectionClient({
         await startListening();
       }
     },
-    [isListening, startListening, stopListening, clearVoiceError],
+    [isAndroid, isWhisperRecording, isListening, stopWhisperRecording, startWhisperRecording, stopListening, startListening, clearVoiceError, clearCapacitorError],
   );
 
   const handleSave = useCallback(async () => {
@@ -274,15 +305,15 @@ export function DailyReflectionClient({
                     <button
                       type="button"
                       onClick={() => toggleVoice(field)}
-                      aria-label={isActive && isListening ? "Stop voice input" : "Start voice input"}
+                      aria-label={isActive && isListeningActive ? "Stop voice input" : "Start voice input"}
                       className={clsx(
                         "absolute bottom-2 right-2 flex h-7 w-7 items-center justify-center rounded-lg transition-colors",
-                        isActive && isListening
+                        isActive && isListeningActive
                           ? "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
                           : "bg-kal-surface text-kal-text-secondary hover:text-kal-accent",
                       )}
                     >
-                      {isActive && isListening ? (
+                      {isActive && isListeningActive ? (
                         <MicOff className="h-3.5 w-3.5" />
                       ) : (
                         <Mic className="h-3.5 w-3.5" />
@@ -290,18 +321,20 @@ export function DailyReflectionClient({
                     </button>
                   )}
                 </div>
-                {isActive && isListening && (
+                {isActive && isListeningActive && (
                   <div className="space-y-1">
-                    <p className="text-xs text-kal-text-secondary animate-pulse">Listening…</p>
-                    <VoiceListeningHint visible variant="dictation" className="!text-left" />
+                    <p className="text-xs text-kal-text-secondary animate-pulse">
+                      {isWhisperTranscribing ? "Transcribing…" : "Listening…"}
+                    </p>
+                    {!isWhisperTranscribing && <VoiceListeningHint visible variant="dictation" className="!text-left" />}
                   </div>
                 )}
               </div>
             );
           })}
 
-          {(voiceError) && (
-            <p className="text-sm text-red-500">{voiceError}</p>
+          {reflectionVoiceMicError && (
+            <p className="text-sm text-red-500">{reflectionVoiceMicError}</p>
           )}
           {saveError && (
             <p className="text-sm text-red-500">{saveError}</p>
