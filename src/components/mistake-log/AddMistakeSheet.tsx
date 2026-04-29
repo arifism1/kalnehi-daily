@@ -8,7 +8,7 @@ import { createMistakeLog, type MistakeType, type MistakeSource } from "@/action
 import { MistakeTypeGrid } from "@/components/mistake-log/MistakeTypeButton";
 import { VoiceListeningHint } from "@/components/voice/VoiceListeningHint";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
-import { useMediaRecorderVoice } from "@/hooks/useMediaRecorderVoice";
+import { useCapacitorSpeech } from "@/hooks/useCapacitorSpeech";
 import { VOICE_MAX_SESSION_MS, VOICE_SILENCE_AUTO_STOP_MS } from "@/lib/voiceConstants";
 import type { ExamScope } from "@/hooks/useAllExamScopes";
 
@@ -77,7 +77,7 @@ export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects, exam
     startRecording: startWhisperRecording,
     stopRecording: stopWhisperRecording,
     isSupported: whisperSupported,
-  } = useMediaRecorderVoice({ onTranscript: handleVoiceTranscript, maxMs: VOICE_MAX_SESSION_MS });
+  } = useCapacitorSpeech({ onTranscript: handleVoiceTranscript, maxMs: VOICE_MAX_SESSION_MS });
 
   const isSupported = isAndroid ? whisperSupported : webSpeechSupported;
   const isVoiceActive = isAndroid ? (isWhisperRecording || isWhisperTranscribing) : isListening;

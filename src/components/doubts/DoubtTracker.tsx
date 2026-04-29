@@ -25,7 +25,7 @@ import {
 
 import { VoiceListeningHint } from "@/components/voice/VoiceListeningHint";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
-import { useMediaRecorderVoice } from "@/hooks/useMediaRecorderVoice";
+import { useCapacitorSpeech } from "@/hooks/useCapacitorSpeech";
 import { useDoubtSyllabusSubjects } from "@/hooks/useDoubtSyllabusSubjects";
 import { useDoubtSyllabusTopicOptions } from "@/hooks/useDoubtSyllabusTopicOptions";
 import { usePrepBrainContextSnapshot } from "@/hooks/usePrepBrainContextSnapshot";
@@ -465,7 +465,7 @@ export function DoubtTracker() {
     startRecording: startWhisperRecording,
     stopRecording: stopWhisperRecording,
     isSupported: whisperSupported,
-  } = useMediaRecorderVoice({
+  } = useCapacitorSpeech({
     onTranscript: ({ transcript, durationSeconds }) => {
       void handleVoiceTranscript(transcript, durationSeconds);
     },

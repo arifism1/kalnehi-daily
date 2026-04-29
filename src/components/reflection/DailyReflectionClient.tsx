@@ -16,7 +16,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { VoiceListeningHint } from "@/components/voice/VoiceListeningHint";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
-import { useMediaRecorderVoice } from "@/hooks/useMediaRecorderVoice";
+import { useCapacitorSpeech } from "@/hooks/useCapacitorSpeech";
 import { VOICE_MAX_SESSION_MS, VOICE_SILENCE_AUTO_STOP_MS } from "@/lib/voiceConstants";
 import {
   getTodayReflection,
@@ -171,7 +171,7 @@ export function DailyReflectionClient({
     startRecording: startWhisperRecording,
     stopRecording: stopWhisperRecording,
     isSupported: whisperSupported,
-  } = useMediaRecorderVoice({ onTranscript: handleVoiceTranscript, maxMs: VOICE_MAX_SESSION_MS });
+  } = useCapacitorSpeech({ onTranscript: handleVoiceTranscript, maxMs: VOICE_MAX_SESSION_MS });
 
   const isSupported = isAndroid ? whisperSupported : webSpeechSupported;
   const isListeningActive = isAndroid ? (isWhisperRecording || isWhisperTranscribing) : isListening;

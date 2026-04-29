@@ -24,7 +24,7 @@ import {
   isValidPlanDateString,
 } from "@/lib/dailyPlanUiDate";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
-import { useMediaRecorderVoice } from "@/hooks/useMediaRecorderVoice";
+import { useCapacitorSpeech } from "@/hooks/useCapacitorSpeech";
 import { VOICE_MAX_SESSION_MS, VOICE_SILENCE_AUTO_STOP_MS } from "@/lib/voiceConstants";
 import { slotFromStartEnd } from "@/lib/dailyPlanTime";
 import {
@@ -287,11 +287,12 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
     startRecording: startWhisperRecording,
     stopRecording: stopWhisperRecording,
     isSupported: whisperSupported,
-  } = useMediaRecorderVoice({
+  } = useCapacitorSpeech({
     onTranscript: ({ transcript, occurredAt, durationSeconds }) => {
       void sendTranscript(transcript, occurredAt, durationSeconds);
     },
     maxMs: VOICE_MAX_SESSION_MS,
+    lang,
   });
 
   const isSupported = isAndroid ? whisperSupported : webSpeechSupported;

@@ -10,6 +10,7 @@ import { ScheduleRevisionReminderDialog } from "@/components/revision/ScheduleRe
 import { useAiGate } from "@/hooks/useAiGate";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
+import { useCapacitorSpeech } from "@/hooks/useCapacitorSpeech";
 import { useMediaRecorderVoice } from "@/hooks/useMediaRecorderVoice";
 import { useVoiceCommandStore } from "@/store/useVoiceCommandStore";
 import { fetchDailyPlanTasksForClient } from "@/lib/fetchDailyPlanTasksForClient";
@@ -663,8 +664,21 @@ export function GlobalVoiceSheet() {
     onTranscript: handleTranscript,
   });
 
-  // Whisper fallback — MediaRecorder + Groq distil-whisper-large-v3-en.
-  // Called only when Web Speech API fails (once per session open).
+  // Android primary path: free native STT via Capacitor plugin.
+  const {
+    isRecording: isAndroidRecording,
+    isTranscribing: isAndroidTranscribing,
+    error: androidSpeechError,
+    clearError: clearAndroidSpeechError,
+    startRecording: startAndroidRecording,
+    stopRecording: stopAndroidRecording,
+  } = useCapacitorSpeech({
+    onTranscript: handleTranscript,
+    maxMs: VOICE_MAX_SESSION_MS,
+  });
+
+  // Web fallback path: MediaRecorder + Groq Whisper (fires when Web Speech
+  // API fails on desktop/PWA — never used on Android).
   const {
     isRecording: isWhisperRecording,
     isTranscribing: isWhisperTranscribing,
@@ -688,10 +702,10 @@ export function GlobalVoiceSheet() {
     autoStartedRef.current = true;
     playStartChime();
     // Web Speech API (webkitSpeechRecognition) crashes the Android WebView renderer.
-    // Skip it on Android and go straight to the MediaRecorder + Whisper path.
+    // Use the free native Capacitor STT instead.
     if (isAndroid) {
       whisperFallbackAttemptedRef.current = true;
-      void startWhisperRecording();
+      void startAndroidRecording();
       return;
     }
     if (!isSupported) {
@@ -702,18 +716,19 @@ export function GlobalVoiceSheet() {
       return;
     }
     startListening();
-  }, [isOpen, phase, aiGate.loading, aiGate.canDoVoiceSession, isSupported, isAndroid, startListening, startWhisperRecording, setError, setPhase]);
+  }, [isOpen, phase, aiGate.loading, aiGate.canDoVoiceSession, isSupported, isAndroid, startListening, startAndroidRecording, setError, setPhase]);
 
   // Stop listening/recording and abort any in-flight fetch when the sheet closes.
   useEffect(() => {
     if (!isOpen) {
       stopListening();
+      stopAndroidRecording();
       stopWhisperRecording();
       voiceFetchAbortRef.current?.abort();
       voiceFetchAbortRef.current = null;
       whisperFallbackAttemptedRef.current = false;
     }
-  }, [isOpen, stopListening, stopWhisperRecording]);
+  }, [isOpen, stopListening, stopAndroidRecording, stopWhisperRecording]);
 
   // STT error handler — auto-restart on "no speech", Whisper fallback on real failures.
   useEffect(() => {
@@ -730,7 +745,7 @@ export function GlobalVoiceSheet() {
     }
 
     if (!whisperFallbackAttemptedRef.current) {
-      // First real failure: silently switch to Whisper recording.
+      // First real failure: silently switch to Whisper recording (web only).
       whisperFallbackAttemptedRef.current = true;
       clearSttError();
       setTranscript(null);
@@ -744,7 +759,16 @@ export function GlobalVoiceSheet() {
     }
   }, [sttError, phase, clearSttError, setError, setPhase, setTranscript, startWhisperRecording]);
 
-  // Surface Whisper errors into store.
+  // Surface Android native STT errors into store.
+  useEffect(() => {
+    if (androidSpeechError) {
+      setError(androidSpeechError);
+      setPhase("error");
+      clearAndroidSpeechError();
+    }
+  }, [androidSpeechError, setError, setPhase, clearAndroidSpeechError]);
+
+  // Surface Whisper errors into store (web fallback path only).
   useEffect(() => {
     if (whisperError) {
       setError(whisperError);
@@ -762,6 +786,7 @@ export function GlobalVoiceSheet() {
 
   function handleClose() {
     stopListening();
+    stopAndroidRecording();
     stopWhisperRecording();
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
     closeSheet();
@@ -771,6 +796,7 @@ export function GlobalVoiceSheet() {
 
   function handleRetry() {
     clearSttError();
+    clearAndroidSpeechError();
     clearWhisperError();
     reset();
     autoStartedRef.current = false;
@@ -778,14 +804,15 @@ export function GlobalVoiceSheet() {
     playStartChime();
     if (isAndroid) {
       whisperFallbackAttemptedRef.current = true;
-      void startWhisperRecording();
+      void startAndroidRecording();
     } else {
       startListening();
     }
   }
 
+  const isAndroidActive = isAndroidRecording || isAndroidTranscribing;
   const isWhisperActive = isWhisperRecording || isWhisperTranscribing;
-  const isListeningPhase = phase === "idle" || phase === "listening" || isWhisperActive;
+  const isListeningPhase = phase === "idle" || phase === "listening" || isAndroidActive || isWhisperActive;
 
   // ─── Render ──────────────────────────────────────────────────────────────────
 
@@ -858,17 +885,21 @@ export function GlobalVoiceSheet() {
               {/* Content — each state renders its own layout */}
               {!aiGate.loading && !aiGate.canDoVoiceSession ? (
                 <QuotaGate voiceMinuteStatus={aiGate.voiceMinuteStatus} />
-              ) : isWhisperTranscribing ? (
+              ) : (isAndroidTranscribing || isWhisperTranscribing) ? (
                 <ProcessingState transcript={transcript} hideTranscript={isAndroid} />
               ) : isListeningPhase ? (
                 <ListeningState
                   isListening={isListening}
                   transcript={transcript}
                   voiceMinuteStatus={aiGate.voiceMinuteStatus}
-                  whisperMode={isWhisperRecording}
+                  whisperMode={isAndroidRecording || isWhisperRecording}
                   hideTranscript={isAndroid}
-                  showMicWhenDoneHint={isListening && !isWhisperRecording}
-                  onStopListening={isWhisperRecording ? stopWhisperRecording : stopListening}
+                  showMicWhenDoneHint={isListening && !isAndroidRecording && !isWhisperRecording}
+                  onStopListening={
+                    isAndroidRecording ? stopAndroidRecording :
+                    isWhisperRecording ? stopWhisperRecording :
+                    stopListening
+                  }
                   onStartListening={() => {
                     reset();
                     autoStartedRef.current = true;
@@ -876,7 +907,7 @@ export function GlobalVoiceSheet() {
                     playStartChime();
                     if (isAndroid) {
                       whisperFallbackAttemptedRef.current = true;
-                      void startWhisperRecording();
+                      void startAndroidRecording();
                     } else {
                       startListening();
                     }

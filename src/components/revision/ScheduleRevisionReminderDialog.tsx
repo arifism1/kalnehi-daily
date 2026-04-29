@@ -10,7 +10,7 @@ import { VoiceListeningHint } from "@/components/voice/VoiceListeningHint";
 import { useAiGate } from "@/hooks/useAiGate";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
-import { useMediaRecorderVoice } from "@/hooks/useMediaRecorderVoice";
+import { useCapacitorSpeech } from "@/hooks/useCapacitorSpeech";
 import { usePrimaryExamLabel } from "@/hooks/usePrimaryExamLabel";
 import { useSyllabusTracker } from "@/hooks/useSyllabusTracker";
 import { shouldShowSyllabusComingSoon } from "@/lib/examProfile";
@@ -274,7 +274,7 @@ export function ScheduleRevisionReminderDialog({
     startRecording: startWhisperRecording,
     stopRecording: stopWhisperRecording,
     isSupported: whisperSupported,
-  } = useMediaRecorderVoice({
+  } = useCapacitorSpeech({
     onTranscript: ({ transcript, occurredAt, durationSeconds }) => {
       void sendRevisionTranscript(transcript, occurredAt, durationSeconds);
     },
