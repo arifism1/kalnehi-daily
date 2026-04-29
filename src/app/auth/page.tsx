@@ -243,6 +243,10 @@ export default function AuthPage() {
           const { GoogleAuth } = await import(
             "@codetrix-studio/capacitor-google-auth"
           );
+          // initialize() must be called before signIn() on every invocation.
+          // The plugin's load() is a no-op; googleSignInClient stays null
+          // until initialize() wires it up from capacitor.config / strings.xml.
+          await GoogleAuth.initialize();
           const googleUser = await GoogleAuth.signIn();
           const idToken = googleUser.authentication.idToken;
           if (!idToken) throw new Error("Google sign-in did not return an ID token.");
@@ -258,6 +262,7 @@ export default function AuthPage() {
           // account not configured) — fall back to browser OAuth with the app
           // deep-link scheme so Android can return control to the app.
           console.warn("[Auth] Native GoogleAuth failed, falling back to OAuth:", nativeErr);
+          setBusy(false);
           const supabase = getSupabaseBrowserClient();
           const { error: oErr } = await supabase.auth.signInWithOAuth({
             provider: "google",

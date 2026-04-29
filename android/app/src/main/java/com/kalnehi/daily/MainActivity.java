@@ -1,31 +1,72 @@
 package com.kalnehi.daily;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.webkit.PermissionRequest;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.BridgeWebChromeClient;
 
 public class MainActivity extends BridgeActivity {
 
+    private static final int REQUEST_MEDIA_PERMISSIONS = 1001;
+
+    // Held across the async permission dialog so we can grant it after the
+    // user responds to the OS "Allow microphone?" prompt.
+    private PermissionRequest pendingWebViewPermissionRequest;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Replace Capacitor's default WebChromeClient with a subclass that
-        // explicitly grants RESOURCE_AUDIO_CAPTURE and RESOURCE_VIDEO_CAPTURE.
-        // Without this override, Android's WebView silently denies getUserMedia()
-        // even after the user grants RECORD_AUDIO / CAMERA at the OS level.
-        // BridgeWebChromeClient is used as the base so all other Capacitor bridge
-        // functionality (file chooser, geolocation, JS console) is fully preserved.
         getBridge().getWebView().setWebChromeClient(
             new BridgeWebChromeClient(getBridge()) {
                 @Override
                 public void onPermissionRequest(final PermissionRequest request) {
-                    // Grant every resource the WebView page requests
-                    // (RESOURCE_AUDIO_CAPTURE, RESOURCE_VIDEO_CAPTURE, RESOURCE_MIDI_SYSEX).
-                    request.grant(request.getResources());
+                    pendingWebViewPermissionRequest = request;
+
+                    boolean audioGranted = ContextCompat.checkSelfPermission(
+                        MainActivity.this, Manifest.permission.RECORD_AUDIO
+                    ) == PackageManager.PERMISSION_GRANTED;
+
+                    if (audioGranted) {
+                        // OS permission already granted — hand off to WebView immediately.
+                        request.grant(request.getResources());
+                        pendingWebViewPermissionRequest = null;
+                    } else {
+                        // Show the OS "Allow microphone / camera?" dialog.
+                        // onRequestPermissionsResult will complete the WebView grant.
+                        ActivityCompat.requestPermissions(
+                            MainActivity.this,
+                            new String[]{
+                                Manifest.permission.RECORD_AUDIO,
+                                Manifest.permission.CAMERA
+                            },
+                            REQUEST_MEDIA_PERMISSIONS
+                        );
+                    }
                 }
             }
         );
+    }
+
+    @Override
+    public void onRequestPermissionsResult(
+        int requestCode,
+        String[] permissions,
+        int[] grantResults
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == REQUEST_MEDIA_PERMISSIONS && pendingWebViewPermissionRequest != null) {
+            // Grant the WebView request so getUserMedia() can proceed.
+            // The OS-level restriction already applies if the user denied above.
+            pendingWebViewPermissionRequest.grant(
+                pendingWebViewPermissionRequest.getResources()
+            );
+            pendingWebViewPermissionRequest = null;
+        }
     }
 }
