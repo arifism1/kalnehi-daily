@@ -27,6 +27,10 @@ type UseDeviceSpeechRecognitionOptions = {
 
 function getSpeechRecognitionCtor(): (typeof window)["webkitSpeechRecognition"] | null {
   if (typeof window === "undefined") return null;
+  // webkitSpeechRecognition exists as a stub in Android WebView but crashes the
+  // renderer process the moment .start() is called. Treat it as unsupported so
+  // components fall back to MediaRecorder / Whisper instead.
+  if (typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent)) return null;
   return window.SpeechRecognition ?? window.webkitSpeechRecognition ?? null;
 }
 
