@@ -3,13 +3,11 @@
 import clsx from "clsx";
 import {
   ArrowLeft,
-  BookOpen,
   KeyRound,
   Loader2,
   Lock,
   LogIn,
   Mail,
-  Sparkles,
   UserPlus,
 } from "lucide-react";
 import Image from "next/image";
@@ -58,37 +56,6 @@ function AuthPageMark({ priority }: { priority?: boolean }) {
         />
       </div>
     </div>
-  );
-}
-
-function AuthExploreLinks() {
-  return (
-    <nav className="w-full max-w-md px-1" aria-label="Explore Kalnehi Daily">
-      <p className="mb-2 text-center text-[10px] font-bold uppercase tracking-widest text-kal-muted">
-        Explore
-      </p>
-      <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1.5 text-xs font-bold sm:gap-x-3 sm:text-sm">
-        <Link
-          href="/what-can-kalnehi-do"
-          title="What Can Kalnehi Daily Do?"
-          className="inline-flex items-center gap-1.5 font-bold text-kal-text-secondary transition-colors hover:text-kal-accent"
-        >
-          <Sparkles className="h-3.5 w-3.5 shrink-0 text-kal-accent" aria-hidden />
-          <span className="text-center leading-snug">What Can Kalnehi Daily Do?</span>
-        </Link>
-        <span className="hidden text-kal-border select-none sm:inline" aria-hidden>
-          ·
-        </span>
-        <Link
-          href="/best-study-practices"
-          title="Best Study Practices"
-          className="inline-flex items-center gap-1.5 font-bold text-kal-text-secondary transition-colors hover:text-kal-accent"
-        >
-          <BookOpen className="h-3.5 w-3.5 shrink-0 text-kal-accent" aria-hidden />
-          <span className="text-center leading-snug">Best Study Practices</span>
-        </Link>
-      </div>
-    </nav>
   );
 }
 
@@ -256,7 +223,12 @@ export default function AuthPage() {
             token: idToken,
           });
           if (idErr) throw idErr;
-          await redirectAfterAuth("login");
+          // Hard navigation so the Capacitor WebView sends a fresh HTTP request
+          // with the session cookie that signInWithIdToken just wrote. A soft
+          // router.replace fires an RSC fetch before the native cookie store
+          // commits the cookie, causing the proxy to see no session → redirect
+          // back to /auth.
+          window.location.href = "/home";
         } catch (nativeErr) {
           // Native Google picker failed (e.g. google-services.json missing or
           // account not configured) — fall back to browser OAuth with the app
@@ -289,7 +261,6 @@ export default function AuthPage() {
     return (
       <div className="kal-page-bg flex min-h-full flex-col items-center justify-center gap-8 px-6 py-16">
         <AuthAppNavPreviewMenu />
-        <AuthExploreLinks />
         <div className="text-center">
           <AuthPageMark />
           <h1 className="kal-feature-title mt-2">Check your email</h1>
@@ -323,7 +294,6 @@ export default function AuthPage() {
     return (
       <div className="kal-page-bg flex min-h-full flex-col items-center justify-center gap-8 px-6 py-16">
         <AuthAppNavPreviewMenu />
-        <AuthExploreLinks />
         <div className="text-center">
           <AuthPageMark />
           <h1 className="kal-feature-title mt-2">Forgot password</h1>
@@ -406,13 +376,8 @@ export default function AuthPage() {
           <h1 className="kal-feature-title mt-2 max-w-md text-balance leading-snug">
             {SITE_NAME}
           </h1>
-          <p className="mt-2 text-sm text-kal-muted">
-            Welcome back — your plan and syllabus stay with you on every device.
-          </p>
         </div>
       </div>
-
-      <AuthExploreLinks />
 
       {verifyEmailSent && (
         <div
@@ -573,10 +538,11 @@ export default function AuthPage() {
       </div>
 
       <p className="max-w-sm text-center text-[11px] text-kal-muted">
-        By continuing you agree to study like your rank depends on it.{" "}
-        <Link href="/" className="text-kal-muted hover:text-kal-accent">
-          Back to home
+        By continuing you agree to our{" "}
+        <Link href="/terms" className="underline-offset-2 hover:text-kal-accent hover:underline">
+          terms and conditions
         </Link>
+        .
       </p>
     </div>
   );
