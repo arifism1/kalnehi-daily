@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "543640707010",
+    "project_id": "kalnehi-1",
+    "storage_bucket": "kalnehi-1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:543640707010:android:0a4357048f9f5761a0805b",
+        "android_client_info": {
+          "package_name": "com.kalnehi.daily"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBw3m4mJ1La5rKROno4qULaMrHvPJKTtCw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
