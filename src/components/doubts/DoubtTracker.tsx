@@ -25,6 +25,7 @@ import {
 
 import { VoiceListeningHint } from "@/components/voice/VoiceListeningHint";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
+import { useMediaRecorderVoice } from "@/hooks/useMediaRecorderVoice";
 import { useDoubtSyllabusSubjects } from "@/hooks/useDoubtSyllabusSubjects";
 import { useDoubtSyllabusTopicOptions } from "@/hooks/useDoubtSyllabusTopicOptions";
 import { usePrepBrainContextSnapshot } from "@/hooks/usePrepBrainContextSnapshot";
@@ -437,10 +438,10 @@ export function DoubtTracker() {
   const {
     clearError: clearVoiceRecError,
     error: voiceRecError,
-    isListening: voiceListening,
-    isSupported: voiceSupported,
-    startListening: startVoiceListening,
-    stopListening: stopVoiceListening,
+    isListening: voiceListeningWeb,
+    isSupported: voiceSupportedWeb,
+    startListening: startVoiceListeningWeb,
+    stopListening: stopVoiceListeningWeb,
   } = useDeviceSpeechRecognition({
     lang: voiceLang,
     maxSessionMs: VOICE_MAX_SESSION_MS,
@@ -454,6 +455,35 @@ export function DoubtTracker() {
       void handleVoiceTranscript(transcript, durationSeconds);
     },
   });
+
+  const [isAndroid, setIsAndroid] = useState(false);
+  useEffect(() => { setIsAndroid(/Android/i.test(navigator.userAgent)); }, []);
+
+  const {
+    isRecording: isWhisperRecording,
+    isTranscribing: isWhisperTranscribing,
+    startRecording: startWhisperRecording,
+    stopRecording: stopWhisperRecording,
+    isSupported: whisperSupported,
+  } = useMediaRecorderVoice({
+    onTranscript: ({ transcript, durationSeconds }) => {
+      void handleVoiceTranscript(transcript, durationSeconds);
+    },
+    maxMs: VOICE_MAX_SESSION_MS,
+  });
+
+  const voiceSupported = isAndroid ? whisperSupported : voiceSupportedWeb;
+  const voiceListening = isAndroid ? isWhisperRecording : voiceListeningWeb;
+
+  const startVoiceListening = useCallback(() => {
+    if (isAndroid) void startWhisperRecording();
+    else void startVoiceListeningWeb();
+  }, [isAndroid, startWhisperRecording, startVoiceListeningWeb]);
+
+  const stopVoiceListening = useCallback(() => {
+    if (isAndroid) stopWhisperRecording();
+    else stopVoiceListeningWeb();
+  }, [isAndroid, stopWhisperRecording, stopVoiceListeningWeb]);
 
   const saveEdit = async () => {
     if (!editingId) return;
@@ -471,7 +501,7 @@ export function DoubtTracker() {
     }
   };
 
-  const voiceBusy = voiceListening || voiceProcessing;
+  const voiceBusy = voiceListening || voiceProcessing || isWhisperTranscribing;
   const voiceBanner = voiceRecError ?? voiceError;
 
   if (!hydrated) {
@@ -537,7 +567,7 @@ export function DoubtTracker() {
                 }
                 if (!voiceSupported) return;
                 if (voiceListening) stopVoiceListening();
-                else void startVoiceListening();
+                else startVoiceListening();
               }}
               title={
                 !user?.id

@@ -2,12 +2,13 @@
 
 import clsx from "clsx";
 import { Loader2, Mic, MicOff, X } from "lucide-react";
-import { useCallback, useId, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useId, useMemo, useState, useTransition } from "react";
 
 import { createMistakeLog, type MistakeType, type MistakeSource } from "@/actions/mistakeLogs";
 import { MistakeTypeGrid } from "@/components/mistake-log/MistakeTypeButton";
 import { VoiceListeningHint } from "@/components/voice/VoiceListeningHint";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
+import { useMediaRecorderVoice } from "@/hooks/useMediaRecorderVoice";
 import { VOICE_MAX_SESSION_MS, VOICE_SILENCE_AUTO_STOP_MS } from "@/lib/voiceConstants";
 import type { ExamScope } from "@/hooks/useAllExamScopes";
 
@@ -52,19 +53,44 @@ export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects, exam
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [voicePreview, setVoicePreview] = useState("");
+  const [isAndroid, setIsAndroid] = useState(false);
+  useEffect(() => { setIsAndroid(/Android/i.test(navigator.userAgent)); }, []);
 
-  const { isListening, isSupported, startListening, stopListening, error: voiceError, clearError } =
+  const handleVoiceTranscript = useCallback(({ transcript }: { transcript: string; occurredAt: string; durationSeconds: number }) => {
+    setNote((prev) => (prev ? `${prev} ${transcript}` : transcript));
+    setVoicePreview("");
+  }, []);
+
+  const { isListening, isSupported: webSpeechSupported, startListening, stopListening, error: voiceError, clearError } =
     useDeviceSpeechRecognition({
       lang: "en-IN",
       maxSessionMs: VOICE_MAX_SESSION_MS,
       silenceMs: VOICE_SILENCE_AUTO_STOP_MS,
       interimPreview: true,
       onPreviewTranscript: setVoicePreview,
-      onTranscript: ({ transcript }) => {
-        setNote((prev) => (prev ? `${prev} ${transcript}` : transcript));
-        setVoicePreview("");
-      },
+      onTranscript: handleVoiceTranscript,
     });
+
+  const {
+    isRecording: isWhisperRecording,
+    isTranscribing: isWhisperTranscribing,
+    startRecording: startWhisperRecording,
+    stopRecording: stopWhisperRecording,
+    isSupported: whisperSupported,
+  } = useMediaRecorderVoice({ onTranscript: handleVoiceTranscript, maxMs: VOICE_MAX_SESSION_MS });
+
+  const isSupported = isAndroid ? whisperSupported : webSpeechSupported;
+  const isVoiceActive = isAndroid ? (isWhisperRecording || isWhisperTranscribing) : isListening;
+
+  const startVoice = useCallback(() => {
+    if (isAndroid) void startWhisperRecording();
+    else { clearError(); void startListening(); }
+  }, [isAndroid, startWhisperRecording, startListening, clearError]);
+
+  const stopVoice = useCallback(() => {
+    if (isAndroid) stopWhisperRecording();
+    else stopListening();
+  }, [isAndroid, stopWhisperRecording, stopListening]);
 
   const reset = useCallback(() => {
     setSubject("");
@@ -80,10 +106,10 @@ export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects, exam
   }, [clearError]);
 
   const handleClose = useCallback(() => {
-    stopListening();
+    stopVoice();
     reset();
     onClose();
-  }, [reset, onClose, stopListening]);
+  }, [reset, onClose, stopVoice]);
 
   const handleSave = useCallback(() => {
     if (!subject) { setSaveError("Please select a subject."); return; }
@@ -252,7 +278,7 @@ export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects, exam
               <textarea
                 id={`${baseId}-note`}
                 rows={3}
-                value={isListening && voicePreview ? voicePreview : note}
+                value={isVoiceActive && voicePreview ? voicePreview : note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="Optional context, what you'll do differently…"
                 className={clsx(
@@ -264,26 +290,26 @@ export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects, exam
                 <button
                   type="button"
                   onClick={() => {
-                    if (isListening) stopListening();
-                    else { clearError(); startListening(); }
+                    if (isVoiceActive) stopVoice();
+                    else startVoice();
                   }}
                   className={clsx(
                     "absolute bottom-2 right-2 flex h-7 w-7 items-center justify-center rounded-lg border border-transparent transition-colors",
-                    isListening
+                    isVoiceActive
                       ? "border-red-200 bg-red-100 text-red-800 dark:border-red-800 dark:bg-red-950/50 dark:text-red-200"
                       : "bg-zinc-200/90 text-zinc-800 hover:border-zinc-300 hover:bg-zinc-300/90 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:border-zinc-600 dark:hover:bg-zinc-700",
                   )}
                 >
-                  {isListening ? <MicOff className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}
+                  {isVoiceActive ? <MicOff className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}
                 </button>
               )}
             </div>
-            {isListening && (
+            {isVoiceActive && (
               <>
                 <p className="animate-pulse text-xs font-medium text-zinc-600 dark:text-zinc-400">
-                  Listening…
+                  {isWhisperTranscribing ? "Transcribing…" : "Listening…"}
                 </p>
-                <VoiceListeningHint visible className="!text-left" variant="dictation" />
+                {!isWhisperTranscribing && <VoiceListeningHint visible className="!text-left" variant="dictation" />}
               </>
             )}
             {voiceError && (

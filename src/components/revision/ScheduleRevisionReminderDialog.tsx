@@ -10,6 +10,7 @@ import { VoiceListeningHint } from "@/components/voice/VoiceListeningHint";
 import { useAiGate } from "@/hooks/useAiGate";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
+import { useMediaRecorderVoice } from "@/hooks/useMediaRecorderVoice";
 import { usePrimaryExamLabel } from "@/hooks/usePrimaryExamLabel";
 import { useSyllabusTracker } from "@/hooks/useSyllabusTracker";
 import { shouldShowSyllabusComingSoon } from "@/lib/examProfile";
@@ -124,6 +125,8 @@ export function ScheduleRevisionReminderDialog({
   const [speechQuotaExceeded, setSpeechQuotaExceeded] = useState(false);
   const [speechQuotaNote, setSpeechQuotaNote] = useState<string | null>(null);
   const [speechStructHint, setSpeechStructHint] = useState<string | null>(null);
+  const [isAndroid, setIsAndroid] = useState(false);
+  useEffect(() => { setIsAndroid(/Android/i.test(navigator.userAgent)); }, []);
 
   const { hasAiAccess, canDoVoiceSession } = useAiGate();
 
@@ -249,7 +252,7 @@ export function ScheduleRevisionReminderDialog({
     clearError: clearSpeechRecognitionError,
     error: speechRecognitionError,
     isListening,
-    isSupported,
+    isSupported: webSpeechSupported,
     startListening,
     stopListening,
   } = useDeviceSpeechRecognition({
@@ -265,18 +268,45 @@ export function ScheduleRevisionReminderDialog({
     },
   });
 
-  const voicePhase: "idle" | "listening" | "processing" = speechApiBusy
+  const {
+    isRecording: isWhisperRecording,
+    isTranscribing: isWhisperTranscribing,
+    startRecording: startWhisperRecording,
+    stopRecording: stopWhisperRecording,
+    isSupported: whisperSupported,
+  } = useMediaRecorderVoice({
+    onTranscript: ({ transcript, occurredAt, durationSeconds }) => {
+      void sendRevisionTranscript(transcript, occurredAt, durationSeconds);
+    },
+    maxMs: VOICE_MAX_SESSION_MS,
+  });
+
+  const isSupported = isAndroid ? whisperSupported : webSpeechSupported;
+  const isVoiceListening = isAndroid ? isWhisperRecording : isListening;
+  const isVoiceProcessing = isAndroid ? isWhisperTranscribing : false;
+
+  const startVoice = useCallback(() => {
+    if (isAndroid) void startWhisperRecording();
+    else void startListening();
+  }, [isAndroid, startWhisperRecording, startListening]);
+
+  const stopVoice = useCallback(() => {
+    if (isAndroid) stopWhisperRecording();
+    else void stopListening();
+  }, [isAndroid, stopWhisperRecording, stopListening]);
+
+  const voicePhase: "idle" | "listening" | "processing" = (speechApiBusy || isVoiceProcessing)
     ? "processing"
-    : isListening
+    : isVoiceListening
       ? "listening"
       : "idle";
   const displaySpeechError = speechRecognitionError ?? speechError;
 
   useEffect(() => {
     if (!open) {
-      void stopListening();
+      stopVoice();
     }
-  }, [open, stopListening]);
+  }, [open, stopVoice]);
 
   // Reset form when dialog opens
   const initialTitle = (init.title ?? "").trim();
@@ -493,8 +523,8 @@ export function ScheduleRevisionReminderDialog({
                       !canDoVoiceSession
                     }
                     onClick={() => {
-                      if (voicePhase === "listening") void stopListening();
-                      else void startListening();
+                      if (voicePhase === "listening") stopVoice();
+                      else startVoice();
                     }}
                     className={clsx(
                       "flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition",
