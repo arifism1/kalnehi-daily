@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Lock } from "lucide-react";
 import { useEffect, useId, useRef } from "react";
 
+import { usePlatform } from "@/hooks/usePlatform";
 import { TIERS } from "@/lib/subscriptionTiers";
 
 /**
@@ -18,13 +19,16 @@ export function SubscriptionPaywallInterstitial({
   freeTrialEnded?: boolean;
 }) {
   const router = useRouter();
+  const { isApp } = usePlatform();
   const titleId = useId();
   const descId = useId();
   const primaryRef = useRef<HTMLAnchorElement>(null);
+  const backButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    primaryRef.current?.focus();
-  }, []);
+    if (isApp) backButtonRef.current?.focus();
+    else primaryRef.current?.focus();
+  }, [isApp]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -91,19 +95,22 @@ export function SubscriptionPaywallInterstitial({
         </div>
         <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-kal-border/50 px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end">
           <button
+            ref={backButtonRef}
             type="button"
             onClick={() => router.back()}
             className="kal-glass-subtle min-h-[48px] rounded-xl px-4 py-3 text-sm font-semibold text-kal-text sm:min-h-[44px] sm:px-5"
           >
             Go back
           </button>
-          <Link
-            ref={primaryRef}
-            href="/pricing"
-            className="kal-btn-accent min-h-[48px] sm:min-h-[44px]"
-          >
-            {freeTrialEnded ? `Subscribe — ${TIERS.pro.monthlyPriceDisplay}/month` : "View plans & pricing"}
-          </Link>
+          {!isApp && (
+            <Link
+              ref={primaryRef}
+              href="/pricing"
+              className="kal-btn-accent min-h-[48px] sm:min-h-[44px]"
+            >
+              {freeTrialEnded ? `Subscribe — ${TIERS.pro.monthlyPriceDisplay}/month` : "View plans & pricing"}
+            </Link>
+          )}
         </div>
       </div>
     </div>

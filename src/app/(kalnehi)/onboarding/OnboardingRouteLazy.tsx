@@ -21,7 +21,13 @@ export default function OnboardingRouteLazy() {
   const [phase, setPhase] = useState<"init" | "cinematic" | "wizard">("init");
 
   useEffect(() => {
-    setPhase(readCinematicOnboardingDone() ? "wizard" : "cinematic");
+    let cancelled = false;
+    void readCinematicOnboardingDone().then((done) => {
+      if (!cancelled) setPhase(done ? "wizard" : "cinematic");
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const finishCinematic = useCallback(() => {

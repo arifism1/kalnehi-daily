@@ -129,6 +129,18 @@ export async function obtainFcmToken(
     return { token: null, hint: secureHint };
   }
 
+  try {
+    const { Capacitor } = await import("@capacitor/core");
+    if (Capacitor.isNativePlatform()) {
+      return {
+        token: null,
+        hint: "Push notifications use the web service worker — enable them in the browser.",
+      };
+    }
+  } catch {
+    /* Capacitor not installed — normal web */
+  }
+
   let vapidKey: string;
   try {
     vapidKey = readFirebaseWebVapidKey();

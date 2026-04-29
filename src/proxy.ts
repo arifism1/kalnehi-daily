@@ -20,6 +20,7 @@ import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 
+import { ANDROID_APP_UA_MARKER } from "@/lib/androidAppUa";
 import { isLegalPath } from "@/lib/legal-paths";
 import { isPublicMarketingPath } from "@/lib/public-paths";
 import { getSupabaseConfig } from "@/lib/supabase";
@@ -241,6 +242,15 @@ function isProxyAuthExempt(pathname: string): boolean {
   return false;
 }
 
+/** Capacitor Android shell: hide billing/checkout routes (policy consumption-only app). */
+function isAndroidAppBillingBlockedPath(pathname: string): boolean {
+  if (pathname === "/pricing" || pathname.startsWith("/pricing/")) return true;
+  if (pathname === "/checkout" || pathname.startsWith("/checkout/")) return true;
+  if (pathname === "/my-subscription" || pathname.startsWith("/my-subscription/")) return true;
+  if (pathname === "/my-plan" || pathname.startsWith("/my-plan/")) return true;
+  return false;
+}
+
 /**
  * Refreshes the auth session cookie on each navigation so server actions and
  * Route Handlers see the same user as the browser.
@@ -257,6 +267,15 @@ function isProxyAuthExempt(pathname: string): boolean {
 export async function proxy(request: NextRequest) {
   const rateLimited = applyRateLimit(request);
   if (rateLimited) return rateLimited;
+
+  const ua = request.headers.get("user-agent") ?? "";
+  const pathname = request.nextUrl.pathname;
+  if (
+    ua.includes(ANDROID_APP_UA_MARKER) &&
+    isAndroidAppBillingBlockedPath(pathname)
+  ) {
+    return NextResponse.redirect(new URL("/home", request.url), { status: 307 });
+  }
 
   const baseResponse = NextResponse.next({ request });
 
@@ -280,8 +299,6 @@ export async function proxy(request: NextRequest) {
     supabase.auth.getUser(),
     readAppStatus(),
   ]);
-
-  const pathname = request.nextUrl.pathname;
 
   // ── Kill switch enforcement ──────────────────────────────────────────────────
   // Only runs the admin DB check when the app is actually disabled.

@@ -132,8 +132,11 @@ export function useLiveTargetBar(): LiveTargetBarModel {
       setStartOfDay(null);
       return;
     }
-    const { startOfDayMastered } = updateLiveTargetBaseline(today, mastered);
-    setStartOfDay(startOfDayMastered);
+    let cancelled = false;
+    void updateLiveTargetBaseline(today, mastered).then(({ startOfDayMastered }) => {
+      if (!cancelled) setStartOfDay(startOfDayMastered);
+    });
+    return () => { cancelled = true; };
   }, [
     today,
     mastered,

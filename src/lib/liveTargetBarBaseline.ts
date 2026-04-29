@@ -1,3 +1,5 @@
+import * as storage from "@/lib/storage";
+
 /**
  * Persists start-of-day projected marks so we can show "today's marginal progress
  * toward target" without server-side history.
@@ -13,15 +15,12 @@ export type LiveTargetBarPersisted = {
   lastMastered: number;
 };
 
-export function updateLiveTargetBaseline(
+export async function updateLiveTargetBaseline(
   today: string,
   currentMastered: number,
-): { startOfDayMastered: number } {
-  if (typeof window === "undefined") {
-    return { startOfDayMastered: currentMastered };
-  }
+): Promise<{ startOfDayMastered: number }> {
   try {
-    const raw = localStorage.getItem(LIVE_TARGET_BAR_STORAGE_KEY);
+    const raw = await storage.getItem(LIVE_TARGET_BAR_STORAGE_KEY);
     const maybeRaw: unknown = raw ? JSON.parse(raw) : null;
     const isValid =
       maybeRaw !== null &&
@@ -39,7 +38,7 @@ export function updateLiveTargetBaseline(
         startOfDayMastered: currentMastered,
         lastMastered: currentMastered,
       };
-      localStorage.setItem(LIVE_TARGET_BAR_STORAGE_KEY, JSON.stringify(init));
+      await storage.setItem(LIVE_TARGET_BAR_STORAGE_KEY, JSON.stringify(init));
       return { startOfDayMastered: currentMastered };
     }
 
@@ -49,7 +48,7 @@ export function updateLiveTargetBaseline(
         startOfDayMastered: parsed.lastMastered,
         lastMastered: currentMastered,
       };
-      localStorage.setItem(LIVE_TARGET_BAR_STORAGE_KEY, JSON.stringify(next));
+      await storage.setItem(LIVE_TARGET_BAR_STORAGE_KEY, JSON.stringify(next));
       return { startOfDayMastered: next.startOfDayMastered };
     }
 
@@ -59,7 +58,7 @@ export function updateLiveTargetBaseline(
         startOfDayMastered: currentMastered,
         lastMastered: currentMastered,
       };
-      localStorage.setItem(LIVE_TARGET_BAR_STORAGE_KEY, JSON.stringify(next));
+      await storage.setItem(LIVE_TARGET_BAR_STORAGE_KEY, JSON.stringify(next));
       return { startOfDayMastered: currentMastered };
     }
 
@@ -67,7 +66,7 @@ export function updateLiveTargetBaseline(
       ...parsed,
       lastMastered: currentMastered,
     };
-    localStorage.setItem(LIVE_TARGET_BAR_STORAGE_KEY, JSON.stringify(next));
+    await storage.setItem(LIVE_TARGET_BAR_STORAGE_KEY, JSON.stringify(next));
     return { startOfDayMastered: parsed.startOfDayMastered };
   } catch {
     return { startOfDayMastered: currentMastered };

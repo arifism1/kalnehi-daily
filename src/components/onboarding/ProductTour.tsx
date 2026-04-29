@@ -11,37 +11,38 @@ import {
   type TourStepPosition,
 } from "@/lib/productTourSteps";
 
+import * as storage from "@/lib/storage";
+
 // ─── Storage helpers ──────────────────────────────────────────────────────────
 
 const TOUR_PENDING_KEY = "kalnehi_product_tour_pending_v1";
 const TOUR_DONE_KEY = "kalnehi_product_tour_v1";
 
 /** Call this right before redirecting to /home after onboarding completes. */
-export function writeProductTourPending(): void {
+export async function writeProductTourPending(): Promise<void> {
   try {
-    localStorage.setItem(TOUR_PENDING_KEY, "1");
+    await storage.setItem(TOUR_PENDING_KEY, "1");
   } catch {
     // ignore — storage may be unavailable
   }
 }
 
 /** Returns true if the tour should be shown (pending and not yet completed). */
-export function readProductTourPending(): boolean {
+export async function readProductTourPending(): Promise<boolean> {
   if (typeof window === "undefined") return false;
   try {
-    return (
-      localStorage.getItem(TOUR_PENDING_KEY) === "1" &&
-      localStorage.getItem(TOUR_DONE_KEY) !== "done"
-    );
+    const pending = await storage.getItem(TOUR_PENDING_KEY);
+    const done = await storage.getItem(TOUR_DONE_KEY);
+    return pending === "1" && done !== "done";
   } catch {
     return false;
   }
 }
 
-function markTourDone(): void {
+async function markTourDone(): Promise<void> {
   try {
-    localStorage.setItem(TOUR_DONE_KEY, "done");
-    localStorage.removeItem(TOUR_PENDING_KEY);
+    await storage.setItem(TOUR_DONE_KEY, "done");
+    await storage.removeItem(TOUR_PENDING_KEY);
   } catch {
     // ignore
   }
@@ -307,7 +308,7 @@ function ProductTourInner({ onComplete }: { onComplete: () => void }) {
   }, [stepIdx]);
 
   const finishTour = useCallback(() => {
-    markTourDone();
+    void markTourDone();
     onComplete();
   }, [onComplete]);
 

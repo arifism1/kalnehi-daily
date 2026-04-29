@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Lock } from "lucide-react";
 
+import { usePlatform } from "@/hooks/usePlatform";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { KalSpinner } from "@/components/loading/KalSpinner";
 import {
@@ -17,6 +18,7 @@ type Props = {
 };
 
 export function FeatureGate({ feature, children }: Props) {
+  const { isApp } = usePlatform();
   const { loading, tier, hasPaidAccess, freeTrialActive } = useSubscriptionAccess();
   const trialUnlocksNav = hasPaidAccess || freeTrialActive;
 
@@ -39,9 +41,11 @@ export function FeatureGate({ feature, children }: Props) {
         <p className="text-sm leading-relaxed text-kal-text-secondary">
           {label.upgradeHint}
         </p>
-        <Link href="/pricing" className="kal-btn-accent min-h-[48px]">
-          View Plans
-        </Link>
+        {!isApp && (
+          <Link href="/pricing" className="kal-btn-accent min-h-[48px]">
+            View Plans
+          </Link>
+        )}
       </div>
     );
   }

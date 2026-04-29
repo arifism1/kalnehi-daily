@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useFreeTrialLiveEndsIn } from "@/hooks/useFreeTrialLiveEndsIn";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { FREE_TRIAL_VOICE_CAP_MINUTES } from "@/lib/freeTrial";
+import * as storage from "@/lib/storage";
 import { useAuthStore } from "@/store/useAuthStore";
 
 const STORAGE_PREFIX = "kalnehi-free-trial-banner-dismissed";
@@ -18,22 +19,19 @@ export function FreeTrialWelcomeBanner() {
   const endsIn = useFreeTrialLiveEndsIn(freeTrialEndsAtIso, !!freeTrialActive && !!trialStartedAt);
 
   useEffect(() => {
-    if (!userId || typeof window === "undefined") return;
-    try {
-      const v = window.localStorage.getItem(`${STORAGE_PREFIX}:${userId}`);
-      setDismissed(v === "1");
-    } catch {
-      setDismissed(false);
-    }
+    if (!userId) return;
+    let cancelled = false;
+    void storage.getItem(`${STORAGE_PREFIX}:${userId}`).then((v) => {
+      if (!cancelled) setDismissed(v === "1");
+    }).catch(() => {
+      if (!cancelled) setDismissed(false);
+    });
+    return () => { cancelled = true; };
   }, [userId]);
 
   const onDismiss = useCallback(() => {
     if (!userId) return;
-    try {
-      window.localStorage.setItem(`${STORAGE_PREFIX}:${userId}`, "1");
-    } catch {
-      /* ignore */
-    }
+    void storage.setItem(`${STORAGE_PREFIX}:${userId}`, "1");
     setDismissed(true);
   }, [userId]);
 

@@ -3,8 +3,10 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Day3Paywall } from "@/components/paywall/Day3Paywall";
+import { NativeLockoutScreen } from "@/components/subscription/NativeLockoutScreen";
 import { SubscriptionPaywallInterstitial } from "@/components/subscription/SubscriptionPaywallInterstitial";
 import { ensureFreeTrialStarted } from "@/actions/subscription";
+import { usePlatform } from "@/hooks/usePlatform";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { isLegalPath } from "@/lib/legal-paths";
 import { isPaidAccessOverlayExemptPath } from "@/lib/paid-access-exempt-paths";
@@ -162,6 +164,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const initialized = useAuthStore((s) => s.initialized);
   const session = useAuthStore((s) => s.session);
+  const { isApp } = usePlatform();
   const {
     loading: profileLoading,
     fetchError,
@@ -298,9 +301,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           >
             {children}
           </div>
-          {welcomeTrialExpiredNoPay
-            ? <Day3Paywall />
-            : <SubscriptionPaywallInterstitial freeTrialEnded={false} />}
+          {welcomeTrialExpiredNoPay ? (
+            isApp ? (
+              <NativeLockoutScreen />
+            ) : (
+              <Day3Paywall />
+            )
+          ) : (
+            <SubscriptionPaywallInterstitial freeTrialEnded={false} />
+          )}
         </>
       ) : (
         children

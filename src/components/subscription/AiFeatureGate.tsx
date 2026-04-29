@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Lock, Mic } from "lucide-react";
 
 import { useAiGate } from "@/hooks/useAiGate";
+import { usePlatform } from "@/hooks/usePlatform";
 import { TIERS } from "@/lib/subscriptionTiers";
 
 type Props = {
@@ -19,6 +20,7 @@ export function AiFeatureGate({ children }: Props) {
     canDoVoiceSession,
     voiceMinuteStatus,
   } = useAiGate();
+  const { isApp } = usePlatform();
 
   if (loading) return <>{children}</>;
 
@@ -30,9 +32,15 @@ export function AiFeatureGate({ children }: Props) {
         <p className="max-w-sm text-sm text-kal-text-secondary">
           Your 3-day free trial has ended. Subscribe to Smart Plan (₹399/month) to get 100 minutes of voice per month.
         </p>
-        <Link href="/pricing" className="kal-btn-accent">
-          Subscribe — ₹399/month
-        </Link>
+        {isApp ? (
+          <p className="max-w-sm text-xs text-kal-muted">
+            Account upgrades are available on the website. Check WhatsApp or email for activation instructions.
+          </p>
+        ) : (
+          <Link href="/pricing" className="kal-btn-accent">
+            Subscribe — ₹399/month
+          </Link>
+        )}
       </div>
     );
   }
@@ -49,9 +57,15 @@ export function AiFeatureGate({ children }: Props) {
             You&apos;ve used all 5 minutes of voice included in your 3-day free trial. Upgrade to Smart Plan for{" "}
             {TIERS.pro.monthlyPriceDisplay}/month and get 100 minutes of voice every month.
           </p>
-          <Link href="/pricing" className="kal-btn-accent">
-            Upgrade to Smart Plan
-          </Link>
+          {isApp ? (
+            <p className="max-w-sm text-xs text-kal-muted">
+              Account upgrades are available on the website.
+            </p>
+          ) : (
+            <Link href="/pricing" className="kal-btn-accent">
+              Upgrade to Smart Plan
+            </Link>
+          )}
         </div>
       );
     }
@@ -63,9 +77,15 @@ export function AiFeatureGate({ children }: Props) {
         <p className="max-w-sm text-sm text-kal-text-secondary">
           {voiceMinuteStatus}. Buy extra voice credits on My Subscription for more minutes.
         </p>
-        <Link href="/my-subscription" className="kal-btn-accent">
-          Open My Subscription
-        </Link>
+        {isApp ? (
+          <p className="max-w-sm text-xs text-kal-muted">
+            Purchases are available on the website.
+          </p>
+        ) : (
+          <Link href="/my-subscription" className="kal-btn-accent">
+            Open My Subscription
+          </Link>
+        )}
       </div>
     );
   }

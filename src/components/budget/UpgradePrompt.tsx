@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+
+import { usePlatform } from "@/hooks/usePlatform";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 
 /**
@@ -9,9 +11,11 @@ import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
  * Shows ₹19 option only if !hasHadTrial.
  */
 export function UpgradePrompt() {
+  const { isApp } = usePlatform();
   const { welcomeTrialExpiredNoPay, hasHadTrial, hasUsedFreeTrial, freeTrialActive, hasPaidAccess, loading } =
     useSubscriptionAccess();
 
+  if (isApp) return null;
   if (loading || hasPaidAccess) return null;
   if (!welcomeTrialExpiredNoPay && !freeTrialActive) return null;
 
