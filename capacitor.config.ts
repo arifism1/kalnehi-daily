@@ -16,9 +16,6 @@ const config: CapacitorConfig = {
     appendUserAgent: "KalnehiAndroidApp",
   },
   plugins: {
-    CapacitorCookies: {
-      enabled: true,
-    },
     GoogleAuth: {
       clientId:
         "543640707010-phpkve2satg1tj3sk2acp3t6eu7klds8.apps.googleusercontent.com",

@@ -114,6 +114,12 @@ function isCurrentlyPaid(
   return end.getTime() > now;
 }
 
+/**
+ * DB columns for subscription/trial — single source of truth (no duplicate access_level columns).
+ * Off-platform unlock (e.g. Razorpay HTTP webhook → Next route): update `subscription_status`
+ * and related `subscription_*` / `razorpay_*` fields on `user_profiles`. Welcome window uses
+ * `trial_started_at` (see `src/lib/freeTrial.ts`).
+ */
 const USER_PROFILE_SUBSCRIPTION_SELECT_BASE =
   "mandatory_onboarding_completed_at, subscription_status, subscription_plan, subscription_start_date, subscription_end_date, subscription_tier, subscription_autopay_months_total, has_had_trial, photo_scans_used_this_month, voice_minutes_used_this_month, bonus_photo_scans, bonus_voice_minutes, bonus_photo_scans_ledger, bonus_voice_minutes_ledger, bonus_ai_tokens, bonus_ai_tokens_ledger, usage_reset_date, trial_started_at, trial_photo_scans_used, trial_voice_seconds_used, has_used_free_trial, enabled_features, payment_grace_until";
 

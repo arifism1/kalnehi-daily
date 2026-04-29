@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
+import { activateMonthlySubscriptionFromCapturedWebhookPayment } from "@/actions/subscription";
 import {
   extendActiveBonusPoolsBy30Days,
   parseBonusLedger,
@@ -26,6 +27,8 @@ const MAX_BODY_BYTES = 64 * 1024;
  * Events to handle. Must match what is enabled in Razorpay Dashboard → Webhooks for
  * https://kalnehi.com/api/razorpay/webhook.
  *
+ * payment.captured      → Server-side unlock for Reader `/upgrade` checkout (kalnehi_no_trial
+ *                         subscriptions). Idempotent via razorpay_processed_payments.
  * subscription.pending  → Razorpay is auto-retrying a failed charge. Sets payment_grace_until
  *                         (+3 days) and sends a "payment retrying" email to the user.
  * subscription.halted   → All retries exhausted (includes mandate revoked from UPI app).
@@ -36,6 +39,7 @@ const MAX_BODY_BYTES = 64 * 1024;
  *                         payment failures are ignored.
  */
 const HANDLED_EVENTS = new Set([
+  "payment.captured",
   "subscription.charged",
   "subscription.cancelled",
   "subscription.completed",
@@ -206,6 +210,22 @@ export async function POST(request: Request) {
   const event = payload.event;
   if (!event || !HANDLED_EVENTS.has(event)) {
     return okResponse({ ignored: true });
+  }
+
+  if (event === "payment.captured") {
+    const paymentEntity = payload.payload?.payment?.entity;
+    const paymentId =
+      typeof paymentEntity?.id === "string" ? paymentEntity.id.trim() : "";
+    if (!paymentId || !/^pay_[a-zA-Z0-9]+$/.test(paymentId)) {
+      return okResponse({ ignored: true });
+    }
+    const result = await activateMonthlySubscriptionFromCapturedWebhookPayment(paymentId);
+    if (!result.ok) {
+      console.error("[razorpay/webhook] payment.captured activation failed:", result.error);
+      return errorResponse(500);
+    }
+    if (result.skipped) return okResponse({ ignored: true });
+    return okResponse(result.duplicate ? { duplicate: true as const } : {});
   }
 
   const supabase = createAdminClient(env);

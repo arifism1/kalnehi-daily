@@ -26,6 +26,8 @@ import {
 import { VoiceListeningHint } from "@/components/voice/VoiceListeningHint";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
 import { useCapacitorSpeech } from "@/hooks/useCapacitorSpeech";
+import { useMediaRecorderVoice } from "@/hooks/useMediaRecorderVoice";
+import { useVoiceSttRouting } from "@/hooks/useVoiceSttRouting";
 import { useDoubtSyllabusSubjects } from "@/hooks/useDoubtSyllabusSubjects";
 import { useDoubtSyllabusTopicOptions } from "@/hooks/useDoubtSyllabusTopicOptions";
 import { usePrepBrainContextSnapshot } from "@/hooks/usePrepBrainContextSnapshot";
@@ -35,7 +37,10 @@ import {
   normalizeStoredDoubtTopic,
   resolveSubjectAgainstCatalog,
 } from "@/lib/doubtSubjects";
-import { VOICE_MAX_SESSION_MS, VOICE_SILENCE_AUTO_STOP_MS } from "@/lib/voiceConstants";
+import {
+  VOICE_LONG_FORM_MAX_SESSION_MS,
+  VOICE_LONG_FORM_SILENCE_MS,
+} from "@/lib/voiceConstants";
 import { resolveTopicLineAgainstCatalog } from "@/lib/doubtVoiceTagSyllabus";
 import { trimPrepBrainContextForDoubtTag } from "@/lib/prepBrainContextTrimForDoubt";
 import { surfaceOptionalString } from "@/lib/userFacingErrors";
@@ -205,6 +210,8 @@ export function DoubtTracker() {
   const [voiceProcessing, setVoiceProcessing] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const [voiceDoubtQuotaHit, setVoiceDoubtQuotaHit] = useState(false);
+  /** Live partial transcript from Android native STT */
+  const [nativeSpeechDraft, setNativeSpeechDraft] = useState("");
   const [voicePreviewOpen, setVoicePreviewOpen] = useState(false);
   const [voicePreview, setVoicePreview] = useState({
     title: "",
@@ -444,8 +451,8 @@ export function DoubtTracker() {
     stopListening: stopVoiceListeningWeb,
   } = useDeviceSpeechRecognition({
     lang: voiceLang,
-    maxSessionMs: VOICE_MAX_SESSION_MS,
-    silenceMs: VOICE_SILENCE_AUTO_STOP_MS,
+    maxSessionMs: VOICE_LONG_FORM_MAX_SESSION_MS,
+    silenceMs: VOICE_LONG_FORM_SILENCE_MS,
     onStart: () => {
       setVoiceError(null);
       setVoiceDoubtQuotaHit(false);
@@ -456,42 +463,90 @@ export function DoubtTracker() {
     },
   });
 
-  const [isAndroid, setIsAndroid] = useState(false);
-  useEffect(() => { setIsAndroid(/Android/i.test(navigator.userAgent)); }, []);
+  const routing = useVoiceSttRouting();
 
   const {
-    clearError: clearCapacitorError,
-    error: capacitorError,
+    clearError: clearCapError,
+    error: capError,
+    isRecording: isCapRecording,
+    isTranscribing: isCapTranscribing,
+    startRecording: startCapRecording,
+    stopRecording: stopCapRecording,
+  } = useCapacitorSpeech({
+    variant: "longForm",
+    onTranscript: ({ transcript, durationSeconds }) => {
+      setNativeSpeechDraft("");
+      void handleVoiceTranscript(transcript, durationSeconds);
+    },
+    onPartialTranscript: setNativeSpeechDraft,
+    maxMs: VOICE_LONG_FORM_MAX_SESSION_MS,
+    lang: voiceLang,
+  });
+
+  const {
+    clearError: clearWhisperError,
+    error: whisperError,
     isRecording: isWhisperRecording,
     isTranscribing: isWhisperTranscribing,
     startRecording: startWhisperRecording,
     stopRecording: stopWhisperRecording,
-    isSupported: whisperSupported,
-  } = useCapacitorSpeech({
+    isSupported: whisperMicSupported,
+  } = useMediaRecorderVoice({
+    maxMs: VOICE_LONG_FORM_MAX_SESSION_MS,
     onTranscript: ({ transcript, durationSeconds }) => {
       void handleVoiceTranscript(transcript, durationSeconds);
     },
-    maxMs: VOICE_MAX_SESSION_MS,
-    lang: voiceLang,
   });
 
-  const voiceSupported = isAndroid ? whisperSupported : voiceSupportedWeb;
-  const voiceListening = isAndroid ? isWhisperRecording : voiceListeningWeb;
+  const voiceSupported = routing.useNativeCapacitorStt
+    ? true
+    : routing.useBrowserWhisperStt
+      ? whisperMicSupported
+      : voiceSupportedWeb;
+
+  const voiceListening = routing.useNativeCapacitorStt
+    ? isCapRecording
+    : routing.useBrowserWhisperStt
+      ? isWhisperRecording
+      : voiceListeningWeb;
 
   const startVoiceListening = useCallback(() => {
-    if (isAndroid) {
+    if (routing.useNativeCapacitorStt) {
       setVoiceError(null);
       setVoiceDoubtQuotaHit(false);
       clearVoiceRecError();
-      clearCapacitorError();
+      clearCapError();
+      setNativeSpeechDraft("");
+      void startCapRecording();
+    } else if (routing.useBrowserWhisperStt) {
+      setVoiceError(null);
+      setVoiceDoubtQuotaHit(false);
+      clearVoiceRecError();
+      clearWhisperError();
       void startWhisperRecording();
     } else void startVoiceListeningWeb();
-  }, [isAndroid, startWhisperRecording, startVoiceListeningWeb, clearVoiceRecError, clearCapacitorError]);
+  }, [
+    routing.useNativeCapacitorStt,
+    routing.useBrowserWhisperStt,
+    startCapRecording,
+    startWhisperRecording,
+    startVoiceListeningWeb,
+    clearVoiceRecError,
+    clearCapError,
+    clearWhisperError,
+  ]);
 
   const stopVoiceListening = useCallback(() => {
-    if (isAndroid) stopWhisperRecording();
+    if (routing.useNativeCapacitorStt) stopCapRecording();
+    else if (routing.useBrowserWhisperStt) stopWhisperRecording();
     else stopVoiceListeningWeb();
-  }, [isAndroid, stopWhisperRecording, stopVoiceListeningWeb]);
+  }, [
+    routing.useNativeCapacitorStt,
+    routing.useBrowserWhisperStt,
+    stopCapRecording,
+    stopWhisperRecording,
+    stopVoiceListeningWeb,
+  ]);
 
   const saveEdit = async () => {
     if (!editingId) return;
@@ -509,10 +564,22 @@ export function DoubtTracker() {
     }
   };
 
-  const voiceBusy = voiceListening || voiceProcessing || isWhisperTranscribing;
-  const voiceBanner = isAndroid
-    ? (capacitorError ?? voiceRecError ?? voiceError)
-    : (voiceRecError ?? voiceError);
+  const voiceTranscribingActive =
+    routing.useNativeCapacitorStt
+      ? isCapTranscribing
+      : routing.useBrowserWhisperStt
+        ? isWhisperTranscribing
+        : false;
+
+  const voiceBusy = voiceListening || voiceProcessing || voiceTranscribingActive;
+
+  const pipelineSpeechError = routing.useNativeCapacitorStt
+    ? capError
+    : routing.useBrowserWhisperStt
+      ? whisperError
+      : voiceRecError;
+
+  const voiceBanner = pipelineSpeechError ?? voiceError;
 
   if (!hydrated) {
     return (
@@ -645,6 +712,11 @@ export function DoubtTracker() {
                 variant="dictation"
                 className="!text-right"
               />
+              {routing.useNativeCapacitorStt && nativeSpeechDraft ? (
+                <p className="mt-1 max-w-[min(100%,22rem)] rounded-md border border-kal-border/35 bg-kal-card-muted/60 px-2 py-1.5 text-[11px] leading-snug text-kal-muted sm:ml-auto">
+                  {nativeSpeechDraft}
+                </p>
+              ) : null}
             </div>
           ) : null}
         </div>

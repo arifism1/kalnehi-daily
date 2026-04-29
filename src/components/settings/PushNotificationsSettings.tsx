@@ -11,6 +11,7 @@ import {
   revokeFcmToken,
 } from "@/lib/firebase/messagingClient";
 import { FCM_STALE_TOKEN_USER_MESSAGE } from "@/lib/fcm/messages";
+import { usePlatform } from "@/hooks/usePlatform";
 import { SITE_NAME } from "@/lib/seo-metadata";
 import { useAuthStore } from "@/store/useAuthStore";
 import { surfaceErrorForUi, surfaceOptionalString } from "@/lib/userFacingErrors";
@@ -74,6 +75,7 @@ export function PushNotificationsSettings({
 }: {
   embedded?: boolean;
 }) {
+  const { isApp: isNativeKalnehiShell } = usePlatform();
   const baseId = useId();
   const user = useAuthStore((s) => s.user);
   const showToast = useNotificationsToast();
@@ -381,7 +383,7 @@ export function PushNotificationsSettings({
     return null;
   }
 
-  const unsupported =
+  const legacyUnsupportedEnv =
     typeof window !== "undefined" &&
     (!("Notification" in window) || !("serviceWorker" in navigator));
 
@@ -422,9 +424,17 @@ export function PushNotificationsSettings({
           </span>{" "}
           on the server.
         </p>
-      ) : unsupported ? (
+      ) : legacyUnsupportedEnv ? (
         <p className={clsx("text-xs text-kal-text-secondary", !embedded && "mt-3")}>
           This environment does not support web push.
+        </p>
+      ) : isNativeKalnehiShell ? (
+        <p className={clsx("text-xs leading-relaxed text-kal-text-secondary", !embedded && "mt-3")}>
+          Reminders use Firebase Web Push inside Chrome / Safari / desktop browsers—not inside this
+          installed Kalnehi shell yet. Open{" "}
+          <span className="font-medium text-kal-text">kalnehi.com</span> in Chrome, sign in, and turn
+          on notifications there (or install the PWA from the browser menu) for push while we keep
+          the native app consumption-only on the Play Store.
         </p>
       ) : (
         <>

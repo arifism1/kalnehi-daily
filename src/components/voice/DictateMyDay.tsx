@@ -25,7 +25,12 @@ import {
 } from "@/lib/dailyPlanUiDate";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
 import { useCapacitorSpeech } from "@/hooks/useCapacitorSpeech";
-import { VOICE_MAX_SESSION_MS, VOICE_SILENCE_AUTO_STOP_MS } from "@/lib/voiceConstants";
+import { useMediaRecorderVoice } from "@/hooks/useMediaRecorderVoice";
+import { useVoiceSttRouting } from "@/hooks/useVoiceSttRouting";
+import {
+  VOICE_LONG_FORM_MAX_SESSION_MS,
+  VOICE_LONG_FORM_SILENCE_MS,
+} from "@/lib/voiceConstants";
 import { slotFromStartEnd } from "@/lib/dailyPlanTime";
 import {
   FREE_TRIAL_VOICE_CAP_SECONDS,
@@ -156,14 +161,15 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
   const [planListKey, setPlanListKey] = useState(0);
   const [savePhase, setSavePhase] = useState<"idle" | "save">("idle");
   const [voiceQuotaNote, setVoiceQuotaNote] = useState<string | null>(null);
+  /** Live partial transcript from native Capacitor STT (shell only). */
+  const [nativeSpeechDraft, setNativeSpeechDraft] = useState("");
 
   const previewRowsRef = useRef(previewRows);
   previewRowsRef.current = previewRows;
   /** Last on-device speech session length (for quota when saving raw note). */
   const lastVoiceDurationSecondsRef = useRef<number | undefined>(undefined);
 
-  const [isAndroid, setIsAndroid] = useState(false);
-  useEffect(() => { setIsAndroid(/Android/i.test(navigator.userAgent)); }, []);
+  const routing = useVoiceSttRouting();
 
   useEffect(() => {
     setPreviewRows([emptyPreviewRow()]);
@@ -270,8 +276,8 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
     stopListening,
   } = useDeviceSpeechRecognition({
     lang,
-    maxSessionMs: VOICE_MAX_SESSION_MS,
-    silenceMs: VOICE_SILENCE_AUTO_STOP_MS,
+    maxSessionMs: VOICE_LONG_FORM_MAX_SESSION_MS,
+    silenceMs: VOICE_LONG_FORM_SILENCE_MS,
     onStart: () => {
       setError(null);
       setFallbackPanel(null);
@@ -282,41 +288,96 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
   });
 
   const {
-    clearError: clearCapacitorError,
-    error: capacitorError,
+    clearError: clearCapError,
+    error: capError,
+    isRecording: isCapRecording,
+    isTranscribing: isCapTranscribing,
+    startRecording: startCapRecording,
+    stopRecording: stopCapRecording,
+  } = useCapacitorSpeech({
+    variant: "longForm",
+    onTranscript: ({ transcript, occurredAt, durationSeconds }) => {
+      setNativeSpeechDraft("");
+      void sendTranscript(transcript, occurredAt, durationSeconds);
+    },
+    onPartialTranscript: (t) => setNativeSpeechDraft(t),
+    maxMs: VOICE_LONG_FORM_MAX_SESSION_MS,
+    lang,
+  });
+
+  const {
+    clearError: clearWhisperError,
+    error: whisperError,
     isRecording: isWhisperRecording,
     isTranscribing: isWhisperTranscribing,
     startRecording: startWhisperRecording,
     stopRecording: stopWhisperRecording,
-    isSupported: whisperSupported,
-  } = useCapacitorSpeech({
+    isSupported: whisperMicSupported,
+  } = useMediaRecorderVoice({
+    maxMs: VOICE_LONG_FORM_MAX_SESSION_MS,
     onTranscript: ({ transcript, occurredAt, durationSeconds }) => {
       void sendTranscript(transcript, occurredAt, durationSeconds);
     },
-    maxMs: VOICE_MAX_SESSION_MS,
-    lang,
   });
 
-  const isSupported = isAndroid ? whisperSupported : webSpeechSupported;
-  const isVoiceListening = isAndroid ? isWhisperRecording : isListening;
-  const isVoiceProcessing = isAndroid ? isWhisperTranscribing : false;
+  const isSupported = routing.useNativeCapacitorStt
+    ? true
+    : routing.useBrowserWhisperStt
+      ? whisperMicSupported
+      : webSpeechSupported;
+
+  const isVoiceListening = routing.useNativeCapacitorStt
+    ? isCapRecording
+    : routing.useBrowserWhisperStt
+      ? isWhisperRecording
+      : isListening;
+
+  const isVoiceProcessing = routing.useNativeCapacitorStt
+    ? isCapTranscribing
+    : routing.useBrowserWhisperStt
+      ? isWhisperTranscribing
+      : false;
 
   const startVoice = useCallback(() => {
-    if (isAndroid) {
+    if (routing.useNativeCapacitorStt) {
       setError(null);
       setFallbackPanel(null);
-      clearCapacitorError();
+      clearCapError();
+      setNativeSpeechDraft("");
+      void startCapRecording();
+    } else if (routing.useBrowserWhisperStt) {
+      setError(null);
+      setFallbackPanel(null);
+      clearWhisperError();
       void startWhisperRecording();
     } else void startListening();
-  }, [isAndroid, startWhisperRecording, startListening, clearCapacitorError]);
+  }, [
+    routing.useNativeCapacitorStt,
+    routing.useBrowserWhisperStt,
+    startCapRecording,
+    startWhisperRecording,
+    startListening,
+    clearCapError,
+    clearWhisperError,
+  ]);
 
   const stopVoice = useCallback(() => {
-    if (isAndroid) stopWhisperRecording();
+    if (routing.useNativeCapacitorStt) stopCapRecording();
+    else if (routing.useBrowserWhisperStt) stopWhisperRecording();
     else stopListening();
-  }, [isAndroid, stopWhisperRecording, stopListening]);
+  }, [routing.useNativeCapacitorStt, routing.useBrowserWhisperStt, stopCapRecording, stopWhisperRecording, stopListening]);
 
-  const micError = isAndroid ? capacitorError : recognitionError;
-  const clearMicError = isAndroid ? clearCapacitorError : clearRecognitionError;
+  const micError = routing.useNativeCapacitorStt
+    ? capError
+    : routing.useBrowserWhisperStt
+      ? whisperError
+      : recognitionError;
+
+  const clearMicError = routing.useNativeCapacitorStt
+    ? clearCapError
+    : routing.useBrowserWhisperStt
+      ? clearWhisperError
+      : clearRecognitionError;
 
   const activeError = micError ?? error;
   const phase: Phase = (isProcessing || isVoiceProcessing)
@@ -638,6 +699,11 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
             visible={phase === "listening"}
             variant="dictation"
           />
+          {phase === "listening" && nativeSpeechDraft && routing.useNativeCapacitorStt ? (
+            <p className="max-w-md rounded-lg border border-kal-border/40 bg-kal-surface/60 px-3 py-2 text-left text-xs leading-snug text-kal-text">
+              {nativeSpeechDraft}
+            </p>
+          ) : null}
           {phase === "listening" ? (
             <button
               type="button"
@@ -649,10 +715,10 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
           ) : null}
           {!isSupported ? (
             <p className="max-w-sm text-sm text-[var(--kal-warn-text)]">
-              Device speech recognition is unavailable in this browser. Try Chrome or the
-              Kalnehi Android app.
+              Voice isn&apos;t available here. Use Chrome on desktop or Android (mic allowed), or the
+              Kalnehi Daily app from the Play Store.
             </p>
-          ) : isAndroid ? (
+          ) : routing.useNativeCapacitorStt || routing.useBrowserWhisperStt ? (
             <p className="max-w-sm text-xs text-kal-text-secondary/70">
               HD mode — tap mic, speak naturally, tap Stop when done.
             </p>

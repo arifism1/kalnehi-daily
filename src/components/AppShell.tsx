@@ -2,11 +2,9 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Day3Paywall } from "@/components/paywall/Day3Paywall";
-import { NativeLockoutScreen } from "@/components/subscription/NativeLockoutScreen";
 import { SubscriptionPaywallInterstitial } from "@/components/subscription/SubscriptionPaywallInterstitial";
+import { TrialGuard } from "@/components/TrialGuard";
 import { ensureFreeTrialStarted } from "@/actions/subscription";
-import { usePlatform } from "@/hooks/usePlatform";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { isLegalPath } from "@/lib/legal-paths";
 import { isPaidAccessOverlayExemptPath } from "@/lib/paid-access-exempt-paths";
@@ -158,13 +156,17 @@ function isAuthPath(p: string) {
   return AUTH_PATHS.has(p);
 }
 
+/** Allows anonymous session handoff (`?rt=`) and account buffer UI without redirecting to /auth. */
+function isAccountBufferPath(p: string): boolean {
+  return p === "/account";
+}
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
 
   const initialized = useAuthStore((s) => s.initialized);
   const session = useAuthStore((s) => s.session);
-  const { isApp } = usePlatform();
   const {
     loading: profileLoading,
     fetchError,
@@ -185,12 +187,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     if (!initialized) return "wait";
     if (!authed) {
       if (isAuthPath(pathname)) return "render";
+      if (isAccountBufferPath(pathname)) return "render";
       if (isPublicMarketingPath(pathname)) return "render";
       if (isLegalPath(pathname)) return "render";
       return "auth";
     }
     if (profileLoading) {
-      if (isAuthPath(pathname) || isLegalPath(pathname)) return "render";
+      if (
+        isAuthPath(pathname) ||
+        isLegalPath(pathname) ||
+        isAccountBufferPath(pathname) ||
+        pathname === "/upgrade"
+      ) {
+        return "render";
+      }
       return "wait";
     }
 
@@ -200,7 +210,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       fetchError &&
       !isAuthPath(pathname) &&
       !isLegalPath(pathname) &&
-      !isPublicMarketingPath(pathname)
+      !isPublicMarketingPath(pathname) &&
+      !isAccountBufferPath(pathname)
     ) {
       return "error";
     }
@@ -210,6 +221,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     if (!onboardingDone) {
       if (
         pathname === "/onboarding" ||
+        pathname === "/account" ||
+        pathname === "/upgrade" ||
         isLegalPath(pathname) ||
         isPublicMarketingPath(pathname)
       )
@@ -294,21 +307,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     >
       {gateTarget === "paywallRender" ? (
         <>
-          <div
-            className="flex min-h-0 min-h-dvh flex-1 flex-col"
-            aria-hidden="true"
-            inert
-          >
-            {children}
-          </div>
           {welcomeTrialExpiredNoPay ? (
-            isApp ? (
-              <NativeLockoutScreen />
-            ) : (
-              <Day3Paywall />
-            )
+            <TrialGuard>{children}</TrialGuard>
           ) : (
-            <SubscriptionPaywallInterstitial freeTrialEnded={false} />
+            <>
+              <div
+                className="flex min-h-0 min-h-dvh flex-1 flex-col"
+                aria-hidden="true"
+                inert
+              >
+                {children}
+              </div>
+              <SubscriptionPaywallInterstitial freeTrialEnded={false} />
+            </>
           )}
         </>
       ) : (

@@ -15,6 +15,7 @@ export async function POST(req: Request) {
   }
 
   const o = body as Record<string, unknown>;
+  // Voice pipeline: clients send transcript text only (native STT or Web Speech). No audio upload here.
   const transcript = typeof o.transcript === "string" ? o.transcript.trim() : "";
   const pageContext = typeof o.page_context === "string" ? o.page_context.trim() : "";
 

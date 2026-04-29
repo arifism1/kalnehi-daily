@@ -1813,3 +1813,96 @@ export async function activateRazorpayMonthlySubscription(params: {
   return { ok: true, subscriptionId };
 }
 
+/**
+ * Called from `POST /api/razorpay/webhook` on `payment.captured` after webhook signature verification.
+ * Mirrors `activateRazorpayMonthlySubscription` profile updates without client-submitted HMAC
+ * (trust comes from Razorpay signing the webhook + server-side payment/subscription fetch).
+ */
+export async function activateMonthlySubscriptionFromCapturedWebhookPayment(
+  paymentId: string,
+): Promise<{ ok: true; duplicate?: boolean; skipped?: boolean } | { ok: false; error: string }> {
+  const trimmedPaymentId = paymentId?.trim() ?? "";
+  if (!RAZORPAY_ID_RE.test(trimmedPaymentId)) {
+    return { ok: false, error: "Invalid payment reference." };
+  }
+
+  const config = getRazorpayConfig();
+  if (!config) return { ok: false, error: "Payment system is not configured yet." };
+
+  const razorpay = getRazorpayClient(config);
+  let subscriptionId = "";
+  try {
+    const paymentRecord = (await razorpay.payments.fetch(trimmedPaymentId)) as {
+      status?: string;
+      subscription_id?: string | null;
+    };
+    if (paymentRecord.status !== "captured") {
+      // Payment was sent as captured but API disagrees — not an error we own.
+      return { ok: true, skipped: true };
+    }
+    const sid =
+      typeof paymentRecord.subscription_id === "string"
+        ? paymentRecord.subscription_id.trim()
+        : "";
+    if (!sid || !RAZORPAY_ID_RE.test(sid)) {
+      // Non-subscription payment (one-off order, etc.) — not ours to process.
+      return { ok: true, skipped: true };
+    }
+    subscriptionId = sid;
+  } catch {
+    return { ok: false, error: "Unable to verify payment." };
+  }
+
+  let userId = "";
+  let tier: SubscriptionTier = "pro";
+  let autopayMonthsTotal: number | null = null;
+  try {
+    const sub = (await razorpay.subscriptions.fetch(subscriptionId)) as {
+      id: string;
+      notes?: Record<string, string>;
+      total_count?: unknown;
+    };
+    userId = sub.notes?.kalnehi_user_id?.trim() ?? "";
+    if (!userId) {
+      // Subscription not created by this app — silently ignore.
+      return { ok: true, skipped: true };
+    }
+    if (sub.notes?.kalnehi_no_trial !== "true") {
+      // Legacy trial subscription or other type — let subscription.charged handle it.
+      return { ok: true, skipped: true };
+    }
+    tier = tierFromRazorpayNote(sub.notes?.kalnehi_tier);
+    autopayMonthsTotal = autopayMonthsFromSubscriptionEntity(sub);
+  } catch {
+    return { ok: false, error: "Unable to verify subscription." };
+  }
+
+  const claimResult = await claimRazorpayPaymentId(userId, trimmedPaymentId, PAYMENT_KIND_UPGRADE);
+  if (claimResult === "duplicate") return { ok: true, duplicate: true };
+  if (claimResult === "error") return { ok: false, error: "Unable to record payment." };
+
+  const start = new Date();
+  const monthEnd = new Date(start);
+  monthEnd.setMonth(monthEnd.getMonth() + 1);
+
+  const updated = await upsertProfileByUserId(userId, {
+    subscription_status: "active",
+    subscription_plan: "monthly",
+    subscription_tier: tier,
+    subscription_start_date: start.toISOString(),
+    subscription_end_date: monthEnd.toISOString(),
+    razorpay_subscription_id: subscriptionId,
+    subscription_autopay_months_total: autopayMonthsTotal,
+    has_had_trial: true,
+  });
+  if (!updated.ok) {
+    await releaseRazorpayPaymentClaim(trimmedPaymentId);
+    return updated;
+  }
+
+  await resetMonthlyAiUsageCounters(userId);
+  await mergeResubscribeBonusesAfterMonthlyActivate(userId);
+
+  return { ok: true };
+}
+

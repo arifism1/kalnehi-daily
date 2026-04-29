@@ -99,7 +99,11 @@ export default function AuthPage() {
         setAuth(session);
         trackAuthSuccess(kind);
       }
-      router.replace("/home");
+      const params = new URLSearchParams(window.location.search);
+      const nextRaw = params.get("next");
+      const nextPath =
+        nextRaw && nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "/home";
+      router.replace(nextPath);
     },
     [router, setAuth],
   );

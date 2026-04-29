@@ -12,6 +12,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
 import { useCapacitorSpeech } from "@/hooks/useCapacitorSpeech";
 import { useMediaRecorderVoice } from "@/hooks/useMediaRecorderVoice";
+import { useVoiceSttRouting } from "@/hooks/useVoiceSttRouting";
 import { useVoiceCommandStore } from "@/store/useVoiceCommandStore";
 import { fetchDailyPlanTasksForClient } from "@/lib/fetchDailyPlanTasksForClient";
 import { VOICE_COMMAND_SILENCE_MS, VOICE_MAX_SESSION_MS } from "@/lib/voiceConstants";
@@ -233,7 +234,7 @@ function ListeningState({
   onStartListening: () => void;
   /** True when recording via MediaRecorder (Whisper fallback) instead of Web Speech API. */
   whisperMode?: boolean;
-  /** When true, live transcript text is hidden (e.g. on Android). */
+  /** When true, live transcript text is hidden (rare — global voice keeps it visible). */
   hideTranscript?: boolean;
   /** Web Speech only: show “tap mic when done” above the mic for the whole session. */
   showMicWhenDoneHint?: boolean;
@@ -419,17 +420,16 @@ export function GlobalVoiceSheet() {
   const executeRef = useRef<((intent: VoiceCommandIntent, text: string) => Promise<void>) | null>(null);
   // Prevents infinite retry: Whisper fallback fires at most once per session open.
   const whisperFallbackAttemptedRef = useRef(false);
+  /** After native Capacitor STT fails once, try browser Whisper before surfacing error. */
+  const capacitorFallbackToWhisperRef = useRef(false);
   // Abort controller for the in-flight /api/voice-command fetch.
   const voiceFetchAbortRef = useRef<AbortController | null>(null);
 
   // Animation state: `mounted` controls DOM presence, `animatingOut` selects CSS class.
   const [mounted, setMounted] = useState(false);
   const [animatingOut, setAnimatingOut] = useState(false);
-  const [isAndroid, setIsAndroid] = useState(false);
 
-  useEffect(() => {
-    setIsAndroid(/Android/i.test(navigator.userAgent));
-  }, []);
+  const routing = useVoiceSttRouting();
 
   const {
     isOpen,
@@ -585,6 +585,13 @@ export function GlobalVoiceSheet() {
 
   // ─── Handle STT transcript ───────────────────────────────────────────────────
 
+  const handleNativeCapPartialTranscript = useCallback(
+    (text: string) => {
+      setTranscript(text);
+    },
+    [setTranscript],
+  );
+
   const handleTranscript = useCallback(
     async ({
       transcript: text,
@@ -664,21 +671,23 @@ export function GlobalVoiceSheet() {
     onTranscript: handleTranscript,
   });
 
-  // Android primary path: free native STT via Capacitor plugin.
+  // Native Capacitor STT (Play Store / sideload shell only).
   const {
-    isRecording: isAndroidRecording,
-    isTranscribing: isAndroidTranscribing,
-    error: androidSpeechError,
-    clearError: clearAndroidSpeechError,
-    startRecording: startAndroidRecording,
-    stopRecording: stopAndroidRecording,
+    isRecording: isCapRecording,
+    isTranscribing: isCapTranscribing,
+    error: capSpeechError,
+    clearError: clearCapSpeechError,
+    startRecording: startCapRecording,
+    stopRecording: stopCapRecording,
   } = useCapacitorSpeech({
     onTranscript: handleTranscript,
     maxMs: VOICE_MAX_SESSION_MS,
+    variant: "longForm",
+    silenceAfterSpeechMs: VOICE_COMMAND_SILENCE_MS,
+    onPartialTranscript: handleNativeCapPartialTranscript,
   });
 
-  // Web fallback path: MediaRecorder + Groq Whisper (fires when Web Speech
-  // API fails on desktop/PWA — never used on Android).
+  // Android mobile browser: Web Speech disabled — Groq Whisper via MediaRecorder. Also native Cap fallback.
   const {
     isRecording: isWhisperRecording,
     isTranscribing: isWhisperTranscribing,
@@ -686,10 +695,17 @@ export function GlobalVoiceSheet() {
     clearError: clearWhisperError,
     startRecording: startWhisperRecording,
     stopRecording: stopWhisperRecording,
+    isSupported: whisperMicSupported,
   } = useMediaRecorderVoice({
     onTranscript: handleTranscript,
     maxMs: VOICE_MAX_SESSION_MS,
   });
+
+  useEffect(() => {
+    if (isOpen) {
+      capacitorFallbackToWhisperRef.current = false;
+    }
+  }, [isOpen]);
 
   // Auto-start listening when sheet opens, with chime.
   useEffect(() => {
@@ -701,13 +717,26 @@ export function GlobalVoiceSheet() {
     if (!aiGate.canDoVoiceSession) return;
     autoStartedRef.current = true;
     playStartChime();
-    // Web Speech API (webkitSpeechRecognition) crashes the Android WebView renderer.
-    // Use the free native Capacitor STT instead.
-    if (isAndroid) {
+
+    if (routing.useNativeCapacitorStt) {
       whisperFallbackAttemptedRef.current = true;
-      void startAndroidRecording();
+      void startCapRecording();
       return;
     }
+
+    if (routing.useBrowserWhisperStt) {
+      if (!whisperMicSupported) {
+        setError(
+          "Voice commands need a microphone. Allow mic access or try the Kalnehi Daily app from the Play Store.",
+        );
+        setPhase("error");
+        return;
+      }
+      whisperFallbackAttemptedRef.current = true;
+      void startWhisperRecording();
+      return;
+    }
+
     if (!isSupported) {
       setError(
         "Voice commands are not supported in this browser. Try Chrome or the Kalnehi Daily app.",
@@ -716,19 +745,33 @@ export function GlobalVoiceSheet() {
       return;
     }
     startListening();
-  }, [isOpen, phase, aiGate.loading, aiGate.canDoVoiceSession, isSupported, isAndroid, startListening, startAndroidRecording, setError, setPhase]);
+  }, [
+    isOpen,
+    phase,
+    aiGate.loading,
+    aiGate.canDoVoiceSession,
+    isSupported,
+    routing.useNativeCapacitorStt,
+    routing.useBrowserWhisperStt,
+    whisperMicSupported,
+    startListening,
+    startCapRecording,
+    startWhisperRecording,
+    setError,
+    setPhase,
+  ]);
 
   // Stop listening/recording and abort any in-flight fetch when the sheet closes.
   useEffect(() => {
     if (!isOpen) {
       stopListening();
-      stopAndroidRecording();
+      stopCapRecording();
       stopWhisperRecording();
       voiceFetchAbortRef.current?.abort();
       voiceFetchAbortRef.current = null;
       whisperFallbackAttemptedRef.current = false;
     }
-  }, [isOpen, stopListening, stopAndroidRecording, stopWhisperRecording]);
+  }, [isOpen, stopListening, stopCapRecording, stopWhisperRecording]);
 
   // STT error handler — auto-restart on "no speech", Whisper fallback on real failures.
   useEffect(() => {
@@ -759,16 +802,36 @@ export function GlobalVoiceSheet() {
     }
   }, [sttError, phase, clearSttError, setError, setPhase, setTranscript, startWhisperRecording]);
 
-  // Surface Android native STT errors into store.
+  // Surface Capacitor native STT errors — once native STT fails, fall back to Whisper (same session).
   useEffect(() => {
-    if (androidSpeechError) {
-      setError(androidSpeechError);
-      setPhase("error");
-      clearAndroidSpeechError();
-    }
-  }, [androidSpeechError, setError, setPhase, clearAndroidSpeechError]);
+    if (!capSpeechError || !(phase === "idle" || phase === "listening")) return;
+    if (!routing.useNativeCapacitorStt) return;
 
-  // Surface Whisper errors into store (web fallback path only).
+    if (!capacitorFallbackToWhisperRef.current) {
+      capacitorFallbackToWhisperRef.current = true;
+      clearCapSpeechError();
+      setTranscript(null);
+      playStartChime();
+      whisperFallbackAttemptedRef.current = true;
+      void startWhisperRecording();
+      return;
+    }
+
+    setError(capSpeechError);
+    setPhase("error");
+    clearCapSpeechError();
+  }, [
+    capSpeechError,
+    phase,
+    routing.useNativeCapacitorStt,
+    clearCapSpeechError,
+    setError,
+    setPhase,
+    setTranscript,
+    startWhisperRecording,
+  ]);
+
+  // Surface Whisper errors into store (Android browser path + native Cap fallback).
   useEffect(() => {
     if (whisperError) {
       setError(whisperError);
@@ -786,7 +849,7 @@ export function GlobalVoiceSheet() {
 
   function handleClose() {
     stopListening();
-    stopAndroidRecording();
+    stopCapRecording();
     stopWhisperRecording();
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
     closeSheet();
@@ -796,23 +859,34 @@ export function GlobalVoiceSheet() {
 
   function handleRetry() {
     clearSttError();
-    clearAndroidSpeechError();
+    clearCapSpeechError();
     clearWhisperError();
-    reset();
-    autoStartedRef.current = false;
-    whisperFallbackAttemptedRef.current = false;
-    playStartChime();
-    if (isAndroid) {
-      whisperFallbackAttemptedRef.current = true;
-      void startAndroidRecording();
-    } else {
-      startListening();
-    }
+    void (async () => {
+      stopListening();
+      await stopCapRecording();
+      await stopWhisperRecording();
+      reset();
+      playStartChime();
+      // Mirror onStartListening: block duplicate auto-start effect from starting a second session.
+      autoStartedRef.current = true;
+      capacitorFallbackToWhisperRef.current = false;
+      whisperFallbackAttemptedRef.current = false;
+      if (routing.useNativeCapacitorStt) {
+        whisperFallbackAttemptedRef.current = true;
+        await startCapRecording();
+      } else if (routing.useBrowserWhisperStt) {
+        whisperFallbackAttemptedRef.current = true;
+        await startWhisperRecording();
+      } else {
+        startListening();
+      }
+    })();
   }
 
-  const isAndroidActive = isAndroidRecording || isAndroidTranscribing;
+  const isCapActive = isCapRecording || isCapTranscribing;
   const isWhisperActive = isWhisperRecording || isWhisperTranscribing;
-  const isListeningPhase = phase === "idle" || phase === "listening" || isAndroidActive || isWhisperActive;
+  const isListeningPhase =
+    phase === "idle" || phase === "listening" || isCapActive || isWhisperActive;
 
   // ─── Render ──────────────────────────────────────────────────────────────────
 
@@ -885,36 +959,42 @@ export function GlobalVoiceSheet() {
               {/* Content — each state renders its own layout */}
               {!aiGate.loading && !aiGate.canDoVoiceSession ? (
                 <QuotaGate voiceMinuteStatus={aiGate.voiceMinuteStatus} />
-              ) : (isAndroidTranscribing || isWhisperTranscribing) ? (
-                <ProcessingState transcript={transcript} hideTranscript={isAndroid} />
+              ) : (isCapTranscribing || isWhisperTranscribing) ? (
+                <ProcessingState transcript={transcript} hideTranscript={false} />
               ) : isListeningPhase ? (
                 <ListeningState
                   isListening={isListening}
                   transcript={transcript}
                   voiceMinuteStatus={aiGate.voiceMinuteStatus}
-                  whisperMode={isAndroidRecording || isWhisperRecording}
-                  hideTranscript={isAndroid}
-                  showMicWhenDoneHint={isListening && !isAndroidRecording && !isWhisperRecording}
+                  whisperMode={isCapRecording || isWhisperRecording}
+                  hideTranscript={false}
+                  showMicWhenDoneHint={isListening && !isCapRecording && !isWhisperRecording}
                   onStopListening={
-                    isAndroidRecording ? stopAndroidRecording :
-                    isWhisperRecording ? stopWhisperRecording :
-                    stopListening
+                    isCapRecording
+                      ? stopCapRecording
+                      : isWhisperRecording
+                        ? stopWhisperRecording
+                        : stopListening
                   }
                   onStartListening={() => {
                     reset();
                     autoStartedRef.current = true;
                     whisperFallbackAttemptedRef.current = false;
+                    capacitorFallbackToWhisperRef.current = false;
                     playStartChime();
-                    if (isAndroid) {
+                    if (routing.useNativeCapacitorStt) {
                       whisperFallbackAttemptedRef.current = true;
-                      void startAndroidRecording();
+                      void startCapRecording();
+                    } else if (routing.useBrowserWhisperStt) {
+                      whisperFallbackAttemptedRef.current = true;
+                      void startWhisperRecording();
                     } else {
                       startListening();
                     }
                   }}
                 />
               ) : phase === "processing" ? (
-                <ProcessingState transcript={transcript} hideTranscript={isAndroid} />
+                <ProcessingState transcript={transcript} hideTranscript={false} />
               ) : phase === "done" ? (
                 <DoneState responseText={responseText} />
               ) : (

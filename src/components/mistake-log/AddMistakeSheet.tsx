@@ -2,14 +2,19 @@
 
 import clsx from "clsx";
 import { Loader2, Mic, MicOff, X } from "lucide-react";
-import { useCallback, useEffect, useId, useMemo, useState, useTransition } from "react";
+import { useCallback, useId, useMemo, useState, useTransition } from "react";
 
 import { createMistakeLog, type MistakeType, type MistakeSource } from "@/actions/mistakeLogs";
 import { MistakeTypeGrid } from "@/components/mistake-log/MistakeTypeButton";
 import { VoiceListeningHint } from "@/components/voice/VoiceListeningHint";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
 import { useCapacitorSpeech } from "@/hooks/useCapacitorSpeech";
-import { VOICE_MAX_SESSION_MS, VOICE_SILENCE_AUTO_STOP_MS } from "@/lib/voiceConstants";
+import { useMediaRecorderVoice } from "@/hooks/useMediaRecorderVoice";
+import { useVoiceSttRouting } from "@/hooks/useVoiceSttRouting";
+import {
+  VOICE_LONG_FORM_MAX_SESSION_MS,
+  VOICE_LONG_FORM_SILENCE_MS,
+} from "@/lib/voiceConstants";
 import type { ExamScope } from "@/hooks/useAllExamScopes";
 
 type Props = {
@@ -53,8 +58,7 @@ export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects, exam
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [voicePreview, setVoicePreview] = useState("");
-  const [isAndroid, setIsAndroid] = useState(false);
-  useEffect(() => { setIsAndroid(/Android/i.test(navigator.userAgent)); }, []);
+  const routing = useVoiceSttRouting();
 
   const handleVoiceTranscript = useCallback(({ transcript }: { transcript: string; occurredAt: string; durationSeconds: number }) => {
     setNote((prev) => (prev ? `${prev} ${transcript}` : transcript));
@@ -64,39 +68,88 @@ export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects, exam
   const { isListening, isSupported: webSpeechSupported, startListening, stopListening, error: voiceError, clearError } =
     useDeviceSpeechRecognition({
       lang: "en-IN",
-      maxSessionMs: VOICE_MAX_SESSION_MS,
-      silenceMs: VOICE_SILENCE_AUTO_STOP_MS,
+      maxSessionMs: VOICE_LONG_FORM_MAX_SESSION_MS,
+      silenceMs: VOICE_LONG_FORM_SILENCE_MS,
       interimPreview: true,
       onPreviewTranscript: setVoicePreview,
       onTranscript: handleVoiceTranscript,
     });
 
   const {
-    clearError: clearCapacitorError,
-    error: capacitorError,
+    clearError: clearCapError,
+    error: capError,
+    isRecording: isCapRecording,
+    isTranscribing: isCapTranscribing,
+    startRecording: startCapRecording,
+    stopRecording: stopCapRecording,
+  } = useCapacitorSpeech({
+    variant: "longForm",
+    onTranscript: handleVoiceTranscript,
+    onPartialTranscript: setVoicePreview,
+    maxMs: VOICE_LONG_FORM_MAX_SESSION_MS,
+  });
+
+  const {
+    clearError: clearWhisperError,
+    error: whisperError,
     isRecording: isWhisperRecording,
     isTranscribing: isWhisperTranscribing,
     startRecording: startWhisperRecording,
     stopRecording: stopWhisperRecording,
-    isSupported: whisperSupported,
-  } = useCapacitorSpeech({ onTranscript: handleVoiceTranscript, maxMs: VOICE_MAX_SESSION_MS });
+    isSupported: whisperMicSupported,
+  } = useMediaRecorderVoice({
+    maxMs: VOICE_LONG_FORM_MAX_SESSION_MS,
+    onTranscript: handleVoiceTranscript,
+  });
 
-  const isSupported = isAndroid ? whisperSupported : webSpeechSupported;
-  const isVoiceActive = isAndroid ? (isWhisperRecording || isWhisperTranscribing) : isListening;
+  const isSupported = routing.useNativeCapacitorStt
+    ? true
+    : routing.useBrowserWhisperStt
+      ? whisperMicSupported
+      : webSpeechSupported;
 
-  const voiceMicError = isAndroid ? capacitorError : voiceError;
+  const isVoiceActive =
+    routing.useNativeCapacitorStt
+      ? isCapRecording || isCapTranscribing
+      : routing.useBrowserWhisperStt
+        ? isWhisperRecording || isWhisperTranscribing
+        : isListening;
+
+  const voiceMicError = routing.useNativeCapacitorStt
+    ? capError
+    : routing.useBrowserWhisperStt
+      ? whisperError
+      : voiceError;
 
   const startVoice = useCallback(() => {
-    if (isAndroid) {
-      clearCapacitorError();
+    if (routing.useNativeCapacitorStt) {
+      clearCapError();
+      setVoicePreview("");
+      void startCapRecording();
+    } else if (routing.useBrowserWhisperStt) {
+      clearWhisperError();
+      setVoicePreview("");
       void startWhisperRecording();
-    } else { clearError(); void startListening(); }
-  }, [isAndroid, startWhisperRecording, startListening, clearError, clearCapacitorError]);
+    } else {
+      clearError();
+      void startListening();
+    }
+  }, [
+    routing.useNativeCapacitorStt,
+    routing.useBrowserWhisperStt,
+    startCapRecording,
+    startWhisperRecording,
+    startListening,
+    clearCapError,
+    clearWhisperError,
+    clearError,
+  ]);
 
   const stopVoice = useCallback(() => {
-    if (isAndroid) stopWhisperRecording();
+    if (routing.useNativeCapacitorStt) stopCapRecording();
+    else if (routing.useBrowserWhisperStt) stopWhisperRecording();
     else stopListening();
-  }, [isAndroid, stopWhisperRecording, stopListening]);
+  }, [routing.useNativeCapacitorStt, routing.useBrowserWhisperStt, stopCapRecording, stopWhisperRecording, stopListening]);
 
   const reset = useCallback(() => {
     setSubject("");
@@ -109,8 +162,9 @@ export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects, exam
     setVoicePreview("");
     setSelectedExamLabel("__all__");
     clearError();
-    clearCapacitorError();
-  }, [clearError, clearCapacitorError]);
+    clearCapError();
+    clearWhisperError();
+  }, [clearError, clearCapError, clearWhisperError]);
 
   const handleClose = useCallback(() => {
     stopVoice();

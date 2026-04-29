@@ -3,15 +3,20 @@
 /**
  * useCapacitorSpeech
  *
- * Wraps @capacitor-community/speech-recognition to provide free, on-device
- * speech-to-text on Android via the native SpeechRecognizer API (Google's
- * built-in engine). Drop-in replacement for useMediaRecorderVoice in the
- * Android path — same return shape, no Groq API calls, no quota cost.
+ * Wraps @capacitor-community/speech-recognition for free on-device STT on Android.
+ *
+ * - variant "command": single-shot session (short phrases, no partial UI).
+ * - variant "longForm": partial results + trailing silence after last partial (timings configurable — global voice uses command silence + command max session).
  */
 
+import type { PluginListenerHandle } from "@capacitor/core";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { VOICE_MAX_SESSION_MS } from "@/lib/voiceConstants";
+import {
+  VOICE_LONG_FORM_MAX_SESSION_MS,
+  VOICE_LONG_FORM_SILENCE_MS,
+  VOICE_MAX_SESSION_MS,
+} from "@/lib/voiceConstants";
 
 type TranscriptPayload = {
   transcript: string;
@@ -19,28 +24,48 @@ type TranscriptPayload = {
   durationSeconds: number;
 };
 
+export type CapacitorSpeechVariant = "command" | "longForm";
+
 type Options = {
   onTranscript: (payload: TranscriptPayload) => void;
+  /** Wall-clock safety cap. Defaults by variant. */
   maxMs?: number;
   /** BCP-47 language tag, e.g. "en-IN", "hi-IN". Defaults to "en-IN". */
   lang?: string;
+  /** Short commands vs long dictation (partial + trailing silence). Default "command". */
+  variant?: CapacitorSpeechVariant;
+  /** After last partial, wait this long before finalizing (longForm only). Default long-form 120s; pass `VOICE_COMMAND_SILENCE_MS` from `@/lib/voiceConstants` for global commands. */
+  silenceAfterSpeechMs?: number;
+  /** Live partial text for UI (longForm; optional for command if enabled later). */
+  onPartialTranscript?: (text: string) => void;
 };
 
 export function useCapacitorSpeech({
   onTranscript,
-  maxMs = VOICE_MAX_SESSION_MS,
+  maxMs: maxMsProp,
   lang = "en-IN",
+  variant = "command",
+  silenceAfterSpeechMs = VOICE_LONG_FORM_SILENCE_MS,
+  onPartialTranscript,
 }: Options) {
   const [isRecording, setIsRecording] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isMountedRef = useRef(true);
   const onTranscriptRef = useRef(onTranscript);
+  const onPartialTranscriptRef = useRef(onPartialTranscript);
   const startedAtRef = useRef<number | null>(null);
   const sessionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Set to true when stopRecording() is called so the start() promise knows
-  // the session was intentionally cancelled and should not call onTranscript.
+  const trailingSilenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cancelledRef = useRef(false);
+  const listenerHandlesRef = useRef<PluginListenerHandle[]>([]);
+  const accumulatedRef = useRef("");
+  const activeLongFormSessionRef = useRef(false);
+  const finalizeLongFormRef = useRef<((reason: "silence" | "maxMs" | "manual") => Promise<void>) | null>(
+    null,
+  );
+  /** Bumped when a long-form session ends or unmounts so stale partial events are ignored. */
+  const partialEpochRef = useRef(0);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -51,20 +76,46 @@ export function useCapacitorSpeech({
 
   useEffect(() => {
     onTranscriptRef.current = onTranscript;
-  }, [onTranscript]);
+    onPartialTranscriptRef.current = onPartialTranscript;
+  }, [onTranscript, onPartialTranscript]);
 
-  const clearTimer = useCallback(() => {
+  const clearSessionTimer = useCallback(() => {
     if (sessionTimerRef.current !== null) {
       clearTimeout(sessionTimerRef.current);
       sessionTimerRef.current = null;
     }
   }, []);
 
+  const clearTrailingSilenceTimer = useCallback(() => {
+    if (trailingSilenceTimerRef.current !== null) {
+      clearTimeout(trailingSilenceTimerRef.current);
+      trailingSilenceTimerRef.current = null;
+    }
+  }, []);
+
   const clearError = useCallback(() => setError(null), []);
+
+  const removeSpeechListeners = useCallback(async () => {
+    for (const h of listenerHandlesRef.current) {
+      try {
+        await h.remove();
+      } catch {
+        /* ignore */
+      }
+    }
+    listenerHandlesRef.current = [];
+  }, []);
 
   const stopRecording = useCallback(async () => {
     cancelledRef.current = true;
-    clearTimer();
+    clearSessionTimer();
+    clearTrailingSilenceTimer();
+
+    if (activeLongFormSessionRef.current && finalizeLongFormRef.current) {
+      await finalizeLongFormRef.current("manual");
+      return;
+    }
+
     try {
       const { SpeechRecognition } = await import(
         "@capacitor-community/speech-recognition"
@@ -74,20 +125,24 @@ export function useCapacitorSpeech({
       // ignore — stop() can throw if recognition wasn't active
     }
     if (isMountedRef.current) setIsRecording(false);
-  }, [clearTimer]);
+  }, [clearSessionTimer, clearTrailingSilenceTimer]);
 
   const startRecording = useCallback(async () => {
     cancelledRef.current = false;
     setError(null);
     setIsRecording(true);
     startedAtRef.current = Date.now();
+    accumulatedRef.current = "";
+
+    const effectiveMaxMs =
+      maxMsProp ??
+      (variant === "longForm" ? VOICE_LONG_FORM_MAX_SESSION_MS : VOICE_MAX_SESSION_MS);
 
     try {
       const { SpeechRecognition } = await import(
         "@capacitor-community/speech-recognition"
       );
 
-      // Ensure permission is granted.
       const perms = await SpeechRecognition.checkPermissions();
       if (perms.speechRecognition !== "granted") {
         const req = await SpeechRecognition.requestPermissions();
@@ -100,10 +155,88 @@ export function useCapacitorSpeech({
         }
       }
 
-      // Safety: auto-stop if user forgets to tap Stop.
+      if (variant === "longForm") {
+        partialEpochRef.current += 1;
+        const partialEpoch = partialEpochRef.current;
+        activeLongFormSessionRef.current = true;
+
+        const finalizeLongForm = async (reason: "silence" | "maxMs" | "manual") => {
+          if (!activeLongFormSessionRef.current) return;
+          partialEpochRef.current += 1;
+          activeLongFormSessionRef.current = false;
+          finalizeLongFormRef.current = null;
+          clearSessionTimer();
+          clearTrailingSilenceTimer();
+          await removeSpeechListeners();
+
+          try {
+            await SpeechRecognition.stop();
+          } catch {
+            /* ignore */
+          }
+
+          const transcript = accumulatedRef.current.trim();
+          const durationSeconds = startedAtRef.current
+            ? Math.max(1, (Date.now() - startedAtRef.current) / 1000)
+            : 1;
+          startedAtRef.current = null;
+
+          if (!isMountedRef.current) return;
+          setIsRecording(false);
+
+          if (transcript) {
+            onTranscriptRef.current({
+              transcript,
+              occurredAt: new Date().toISOString(),
+              durationSeconds,
+            });
+          } else if (reason === "manual") {
+            // User stopped with nothing captured — quiet cancel
+          } else {
+            setError("No speech captured. Try again.");
+          }
+        };
+
+        finalizeLongFormRef.current = finalizeLongForm;
+
+        const resetTrailingSilence = () => {
+          clearTrailingSilenceTimer();
+          trailingSilenceTimerRef.current = setTimeout(() => {
+            void finalizeLongForm("silence");
+          }, silenceAfterSpeechMs);
+        };
+
+        const partialHandle = await SpeechRecognition.addListener(
+          "partialResults",
+          (ev: { matches: string[] }) => {
+            if (partialEpoch !== partialEpochRef.current) return;
+            const next = (ev.matches?.[0] ?? "").trim();
+            if (!next) return;
+            accumulatedRef.current = next;
+            onPartialTranscriptRef.current?.(next);
+            resetTrailingSilence();
+          },
+        );
+        listenerHandlesRef.current.push(partialHandle);
+
+        sessionTimerRef.current = setTimeout(() => {
+          void finalizeLongForm("maxMs");
+        }, effectiveMaxMs);
+
+        await SpeechRecognition.start({
+          language: lang,
+          maxResults: 5,
+          partialResults: true,
+          popup: false,
+        });
+
+        return;
+      }
+
+      // ─── Command variant: single-shot ─────────────────────────────────────
       sessionTimerRef.current = setTimeout(() => {
         void stopRecording();
-      }, maxMs);
+      }, effectiveMaxMs);
 
       const { matches } = await SpeechRecognition.start({
         language: lang,
@@ -112,9 +245,8 @@ export function useCapacitorSpeech({
         popup: false,
       });
 
-      clearTimer();
+      clearSessionTimer();
 
-      // Session was cancelled via stopRecording() while start() was pending.
       if (cancelledRef.current) return;
 
       const transcript = (matches?.[0] ?? "").trim();
@@ -136,7 +268,12 @@ export function useCapacitorSpeech({
         setError("No speech captured. Try again.");
       }
     } catch (e) {
-      clearTimer();
+      clearSessionTimer();
+      clearTrailingSilenceTimer();
+      partialEpochRef.current += 1;
+      await removeSpeechListeners();
+      activeLongFormSessionRef.current = false;
+      finalizeLongFormRef.current = null;
       startedAtRef.current = null;
       if (cancelledRef.current || !isMountedRef.current) return;
       setIsRecording(false);
@@ -147,25 +284,43 @@ export function useCapacitorSpeech({
         setError("Speech recognition failed. Try again.");
       }
     }
-  }, [lang, maxMs, stopRecording, clearTimer]);
+  }, [
+    variant,
+    lang,
+    maxMsProp,
+    silenceAfterSpeechMs,
+    stopRecording,
+    clearSessionTimer,
+    clearTrailingSilenceTimer,
+    removeSpeechListeners,
+  ]);
 
-  // Cleanup on unmount.
   useEffect(() => {
     return () => {
-      clearTimer();
+      clearSessionTimer();
+      clearTrailingSilenceTimer();
+      partialEpochRef.current += 1;
+      void (async () => {
+        await removeSpeechListeners();
+        try {
+          const { SpeechRecognition } = await import(
+            "@capacitor-community/speech-recognition"
+          );
+          await SpeechRecognition.stop();
+        } catch {
+          /* ignore */
+        }
+      })();
     };
-  }, [clearTimer]);
+  }, [clearSessionTimer, clearTrailingSilenceTimer, removeSpeechListeners]);
 
   return {
     isRecording,
-    /** Always false — native STT returns the transcript synchronously, no
-     *  separate upload/transcription step unlike Whisper. */
     isTranscribing: false as const,
     error,
     clearError,
     startRecording,
     stopRecording,
-    /** Always true in native Android context. */
     isSupported: true as const,
   };
 }

@@ -134,7 +134,8 @@ export async function obtainFcmToken(
     if (Capacitor.isNativePlatform()) {
       return {
         token: null,
-        hint: "Push notifications use the web service worker — enable them in the browser.",
+        hint:
+          "Web push is not registered inside the installed Kalnehi app shell. Open kalnehi.com in Chrome (or another browser), sign in, and enable notifications there—or install the PWA from Chrome for reminders. Native in-app push is not wired yet.",
       };
     }
   } catch {

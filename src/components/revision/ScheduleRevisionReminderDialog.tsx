@@ -11,6 +11,8 @@ import { useAiGate } from "@/hooks/useAiGate";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
 import { useCapacitorSpeech } from "@/hooks/useCapacitorSpeech";
+import { useMediaRecorderVoice } from "@/hooks/useMediaRecorderVoice";
+import { useVoiceSttRouting } from "@/hooks/useVoiceSttRouting";
 import { usePrimaryExamLabel } from "@/hooks/usePrimaryExamLabel";
 import { useSyllabusTracker } from "@/hooks/useSyllabusTracker";
 import { shouldShowSyllabusComingSoon } from "@/lib/examProfile";
@@ -20,7 +22,7 @@ import { plannerTextAppendRevisionReminder } from "@/lib/userPlannerTextClient";
 import type { UserPlannerTextBundle } from "@/lib/userPlannerTextTypes";
 import { surfaceErrorForUi } from "@/lib/userFacingErrors";
 import type { MergedSyllabusRow } from "@/lib/userSyllabusMerge";
-import { VOICE_MAX_SESSION_MS, VOICE_SILENCE_AUTO_STOP_MS } from "@/lib/voiceConstants";
+import { VOICE_LONG_FORM_MAX_SESSION_MS, VOICE_LONG_FORM_SILENCE_MS } from "@/lib/voiceConstants";
 import { normalizeSpeechTranscript } from "@/lib/voiceTranscriptNormalize";
 
 const TOPIC_MATCH_CAP = 40;
@@ -125,8 +127,10 @@ export function ScheduleRevisionReminderDialog({
   const [speechQuotaExceeded, setSpeechQuotaExceeded] = useState(false);
   const [speechQuotaNote, setSpeechQuotaNote] = useState<string | null>(null);
   const [speechStructHint, setSpeechStructHint] = useState<string | null>(null);
-  const [isAndroid, setIsAndroid] = useState(false);
-  useEffect(() => { setIsAndroid(/Android/i.test(navigator.userAgent)); }, []);
+  /** Live native-STT partials (Capacitor shell only). */
+  const [speechDraftLive, setSpeechDraftLive] = useState("");
+
+  const routing = useVoiceSttRouting();
 
   const { hasAiAccess, canDoVoiceSession } = useAiGate();
 
@@ -257,8 +261,8 @@ export function ScheduleRevisionReminderDialog({
     stopListening,
   } = useDeviceSpeechRecognition({
     lang: speechLang,
-    maxSessionMs: VOICE_MAX_SESSION_MS,
-    silenceMs: VOICE_SILENCE_AUTO_STOP_MS,
+    maxSessionMs: VOICE_LONG_FORM_MAX_SESSION_MS,
+    silenceMs: VOICE_LONG_FORM_SILENCE_MS,
     onStart: () => {
       setSpeechError(null);
       setSpeechStructHint(null);
@@ -269,45 +273,100 @@ export function ScheduleRevisionReminderDialog({
   });
 
   const {
-    clearError: clearCapacitorError,
-    error: capacitorError,
+    clearError: clearCapError,
+    error: capError,
+    isRecording: isCapRecording,
+    isTranscribing: isCapTranscribing,
+    startRecording: startCapRecording,
+    stopRecording: stopCapRecording,
+  } = useCapacitorSpeech({
+    variant: "longForm",
+    onTranscript: ({ transcript, occurredAt, durationSeconds }) => {
+      setSpeechDraftLive("");
+      void sendRevisionTranscript(transcript, occurredAt, durationSeconds);
+    },
+    onPartialTranscript: setSpeechDraftLive,
+    maxMs: VOICE_LONG_FORM_MAX_SESSION_MS,
+    lang: speechLang,
+  });
+
+  const {
+    clearError: clearWhisperError,
+    error: whisperError,
     isRecording: isWhisperRecording,
     isTranscribing: isWhisperTranscribing,
     startRecording: startWhisperRecording,
     stopRecording: stopWhisperRecording,
-    isSupported: whisperSupported,
-  } = useCapacitorSpeech({
+    isSupported: whisperMicSupported,
+  } = useMediaRecorderVoice({
+    maxMs: VOICE_LONG_FORM_MAX_SESSION_MS,
     onTranscript: ({ transcript, occurredAt, durationSeconds }) => {
       void sendRevisionTranscript(transcript, occurredAt, durationSeconds);
     },
-    maxMs: VOICE_MAX_SESSION_MS,
-    lang: speechLang,
   });
 
-  const isSupported = isAndroid ? whisperSupported : webSpeechSupported;
-  const isVoiceListening = isAndroid ? isWhisperRecording : isListening;
-  const isVoiceProcessing = isAndroid ? isWhisperTranscribing : false;
+  const isSupported = routing.useNativeCapacitorStt
+    ? true
+    : routing.useBrowserWhisperStt
+      ? whisperMicSupported
+      : webSpeechSupported;
+
+  const isVoiceListening = routing.useNativeCapacitorStt
+    ? isCapRecording
+    : routing.useBrowserWhisperStt
+      ? isWhisperRecording
+      : isListening;
+
+  const isVoiceProcessing = routing.useNativeCapacitorStt
+    ? isCapTranscribing
+    : routing.useBrowserWhisperStt
+      ? isWhisperTranscribing
+      : false;
 
   const startVoice = useCallback(() => {
-    if (isAndroid) {
-      clearCapacitorError();
+    if (routing.useNativeCapacitorStt) {
+      clearCapError();
+      setSpeechDraftLive("");
+      void startCapRecording();
+    } else if (routing.useBrowserWhisperStt) {
+      clearWhisperError();
+      setSpeechDraftLive("");
       void startWhisperRecording();
     } else void startListening();
-  }, [isAndroid, startWhisperRecording, startListening, clearCapacitorError]);
+  }, [
+    routing.useNativeCapacitorStt,
+    routing.useBrowserWhisperStt,
+    startCapRecording,
+    startWhisperRecording,
+    startListening,
+    clearCapError,
+    clearWhisperError,
+  ]);
 
   const stopVoice = useCallback(() => {
-    if (isAndroid) stopWhisperRecording();
+    if (routing.useNativeCapacitorStt) stopCapRecording();
+    else if (routing.useBrowserWhisperStt) stopWhisperRecording();
     else void stopListening();
-  }, [isAndroid, stopWhisperRecording, stopListening]);
+  }, [
+    routing.useNativeCapacitorStt,
+    routing.useBrowserWhisperStt,
+    stopCapRecording,
+    stopWhisperRecording,
+    stopListening,
+  ]);
 
   const voicePhase: "idle" | "listening" | "processing" = (speechApiBusy || isVoiceProcessing)
     ? "processing"
     : isVoiceListening
       ? "listening"
       : "idle";
-  const displaySpeechError = isAndroid
-    ? (capacitorError ?? speechError)
-    : (speechRecognitionError ?? speechError);
+
+  const displaySpeechError =
+    (routing.useNativeCapacitorStt
+      ? capError
+      : routing.useBrowserWhisperStt
+        ? whisperError
+        : speechRecognitionError) ?? speechError;
 
   useEffect(() => {
     if (!open) {
@@ -338,9 +397,11 @@ export function ScheduleRevisionReminderDialog({
       setSpeechQuotaExceeded(false);
       setSpeechQuotaNote(null);
       setSpeechStructHint(null);
+      setSpeechDraftLive("");
       setSpeechApiBusy(false);
       clearSpeechRecognitionError();
-      clearCapacitorError();
+      clearCapError();
+      clearWhisperError();
     }
   }, [
     open,
@@ -351,7 +412,8 @@ export function ScheduleRevisionReminderDialog({
     initialNotes,
     showVoice,
     clearSpeechRecognitionError,
-    clearCapacitorError,
+    clearCapError,
+    clearWhisperError,
   ]);
 
   useEffect(() => {
@@ -584,6 +646,11 @@ export function ScheduleRevisionReminderDialog({
                       className="!text-left"
                       variant="dictation"
                     />
+                    {voicePhase === "listening" && speechDraftLive ? (
+                      <p className="mt-1 max-w-[280px] rounded-md border border-kal-border/40 bg-kal-surface/40 px-2 py-1.5 text-[11px] leading-snug text-kal-text">
+                        {speechDraftLive}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
               </div>

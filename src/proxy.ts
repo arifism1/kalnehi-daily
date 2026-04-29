@@ -89,6 +89,8 @@ function applyRateLimit(req: NextRequest): NextResponse | null {
  *  - Legal pages (ToS / Privacy) — always publicly accessible.
  */
 function isKillSwitchExempt(pathname: string): boolean {
+  if (pathname === "/account") return true;
+  if (pathname === "/upgrade") return true;
   if (pathname === "/auth" || pathname === "/auth/reset") return true;
   if (pathname.startsWith("/auth/callback")) return true;
   if (pathname === "/api/app-status") return true;
@@ -237,6 +239,7 @@ function isProxyAuthExempt(pathname: string): boolean {
   }
   if (pathname === "/auth" || pathname === "/auth/reset") return true;
   if (pathname.startsWith("/auth/callback")) return true;
+  if (pathname === "/account") return true;
   if (isLegalPath(pathname)) return true;
   if (isPublicMarketingPath(pathname)) return true;
   return false;

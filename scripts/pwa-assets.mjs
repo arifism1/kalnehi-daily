@@ -1,5 +1,8 @@
 /**
  * PWA launcher icons: wordmark from `public/brand/launcher-source.png` on cream; navy splashes.
+ * Also writes Android `mipmap-*dpi/ic_launcher*.png` — adaptive foregrounds must be **108×108 dp**
+ * per density (not legacy 48dp icon sizes) or installed builds look blurry.
+ *
  * Run: node scripts/rebuild-pwa-assets.mjs
  *   or: node scripts/rebuild-pwa-assets.mjs --icons  (icons + source only, no splashes)
  */
@@ -11,6 +14,30 @@ import sharp from "sharp";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "..");
+const ANDROID_RES = join(ROOT, "android/app/src/main/res");
+
+/**
+ * Adaptive-icon foreground bitmaps: full **108×108 dp** layer per density (Android docs).
+ * Old tooling often shipped legacy 48dp launcher sizes here → upscaling blur on home screen.
+ */
+const ANDROID_ADAPTIVE_FG_PX = {
+  "mipmap-ldpi": 81, // 108 × 0.75
+  "mipmap-mdpi": 108,
+  "mipmap-hdpi": 162,
+  "mipmap-xhdpi": 216,
+  "mipmap-xxhdpi": 324,
+  "mipmap-xxxhdpi": 432,
+};
+
+/** Pre-adaptive / fallback launcher bitmaps (48×48 dp base). */
+const ANDROID_LEGACY_PX = {
+  "mipmap-ldpi": 36,
+  "mipmap-mdpi": 48,
+  "mipmap-hdpi": 72,
+  "mipmap-xhdpi": 96,
+  "mipmap-xxhdpi": 144,
+  "mipmap-xxxhdpi": 192,
+};
 /** Square master (white or near-white plate); upscaled to 1024 for crisp 192/512 exports. */
 const BRAND_SOURCE = join(ROOT, "public/brand/launcher-source.png");
 /** Written on each `generate:icons` run — 1024×1024, matches pipeline input. */
@@ -164,13 +191,33 @@ export async function buildSplashes() {
   }
 }
 
+/** Regenerate Play Store / launcher mipmaps from the same master as PWA icons. */
+export async function buildAndroidLauncherMipmaps() {
+  const markRaw = await readBrandMasterPng();
+  const toUse = await stripNearWhitePlatePng(markRaw);
+
+  for (const [folder, px] of Object.entries(ANDROID_ADAPTIVE_FG_PX)) {
+    const buf = await paddedSquare(px, toUse);
+    writeFileSync(join(ANDROID_RES, folder, "ic_launcher_foreground.png"), buf);
+  }
+
+  for (const [folder, px] of Object.entries(ANDROID_LEGACY_PX)) {
+    const buf = await paddedSquare(px, toUse);
+    const dir = join(ANDROID_RES, folder);
+    writeFileSync(join(dir, "ic_launcher.png"), buf);
+    writeFileSync(join(dir, "ic_launcher_round.png"), buf);
+  }
+}
+
 export async function runPwaAssetBuild({ splashes = true } = {}) {
   await buildIcons();
+  await buildAndroidLauncherMipmaps();
   if (splashes) {
     await buildSplashes();
   }
   console.log("PWA assets OK:", {
     icons: "public/brand/launcher-source.png → app-icon-source.png + icon-*.png + apple-touch-icon.png",
+    android: "android/app/src/main/res/mipmap-*/ic_launcher*.png (adaptive + legacy)",
     splashes: splashes ? "public/splash/apple-*.png" : "skipped",
   });
 }

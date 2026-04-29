@@ -17,7 +17,12 @@ import { VoiceListeningHint } from "@/components/voice/VoiceListeningHint";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
 import { useCapacitorSpeech } from "@/hooks/useCapacitorSpeech";
-import { VOICE_MAX_SESSION_MS, VOICE_SILENCE_AUTO_STOP_MS } from "@/lib/voiceConstants";
+import { useMediaRecorderVoice } from "@/hooks/useMediaRecorderVoice";
+import { useVoiceSttRouting } from "@/hooks/useVoiceSttRouting";
+import {
+  VOICE_LONG_FORM_MAX_SESSION_MS,
+  VOICE_LONG_FORM_SILENCE_MS,
+} from "@/lib/voiceConstants";
 import {
   getTodayReflection,
   getRecentReflections,
@@ -141,8 +146,7 @@ export function DailyReflectionClient({
   const voiceRef = useRef<Field | null>(null);
   voiceRef.current = activeVoiceField;
 
-  const [isAndroid, setIsAndroid] = useState(false);
-  useEffect(() => { setIsAndroid(/Android/i.test(navigator.userAgent)); }, []);
+  const routing = useVoiceSttRouting();
 
   const handleVoiceTranscript = useCallback(({ transcript }: { transcript: string; occurredAt: string; durationSeconds: number }) => {
     const field = voiceRef.current;
@@ -158,45 +162,93 @@ export function DailyReflectionClient({
   const { isListening, isSupported: webSpeechSupported, startListening, stopListening, error: voiceError, clearError: clearVoiceError } =
     useDeviceSpeechRecognition({
       lang: "en-IN",
-      maxSessionMs: VOICE_MAX_SESSION_MS,
-      silenceMs: VOICE_SILENCE_AUTO_STOP_MS,
+      maxSessionMs: VOICE_LONG_FORM_MAX_SESSION_MS,
+      silenceMs: VOICE_LONG_FORM_SILENCE_MS,
       interimPreview: true,
       onPreviewTranscript: setVoicePreview,
       onTranscript: handleVoiceTranscript,
     });
 
   const {
-    clearError: clearCapacitorError,
-    error: capacitorError,
+    clearError: clearCapError,
+    error: capError,
+    isRecording: isCapRecording,
+    isTranscribing: isCapTranscribing,
+    startRecording: startCapRecording,
+    stopRecording: stopCapRecording,
+  } = useCapacitorSpeech({
+    variant: "longForm",
+    onTranscript: handleVoiceTranscript,
+    onPartialTranscript: setVoicePreview,
+    maxMs: VOICE_LONG_FORM_MAX_SESSION_MS,
+  });
+
+  const {
+    clearError: clearWhisperError,
+    error: whisperError,
     isRecording: isWhisperRecording,
     isTranscribing: isWhisperTranscribing,
     startRecording: startWhisperRecording,
     stopRecording: stopWhisperRecording,
-    isSupported: whisperSupported,
-  } = useCapacitorSpeech({ onTranscript: handleVoiceTranscript, maxMs: VOICE_MAX_SESSION_MS });
+    isSupported: whisperMicSupported,
+  } = useMediaRecorderVoice({
+    maxMs: VOICE_LONG_FORM_MAX_SESSION_MS,
+    onTranscript: handleVoiceTranscript,
+  });
 
-  const isSupported = isAndroid ? whisperSupported : webSpeechSupported;
-  const isListeningActive = isAndroid ? (isWhisperRecording || isWhisperTranscribing) : isListening;
+  const isSupported = routing.useNativeCapacitorStt
+    ? true
+    : routing.useBrowserWhisperStt
+      ? whisperMicSupported
+      : webSpeechSupported;
 
-  // Clear active voice field if the mic fails to start (web speech or native Android STT).
+  const isListeningActive =
+    routing.useNativeCapacitorStt
+      ? isCapRecording || isCapTranscribing
+      : routing.useBrowserWhisperStt
+        ? isWhisperRecording || isWhisperTranscribing
+        : isListening;
+
+  // Clear active voice field if the mic fails (web speech, native Capacitor, or browser Whisper).
   useEffect(() => {
-    if (isAndroid ? capacitorError : voiceError) {
+    const err = routing.useNativeCapacitorStt
+      ? capError
+      : routing.useBrowserWhisperStt
+        ? whisperError
+        : voiceError;
+    if (err) {
       setActiveVoiceField(null);
       setVoicePreview("");
     }
-  }, [voiceError, capacitorError, isAndroid]);
+  }, [voiceError, capError, whisperError, routing.useNativeCapacitorStt, routing.useBrowserWhisperStt]);
 
-  const reflectionVoiceMicError = isAndroid ? capacitorError : voiceError;
+  const reflectionVoiceMicError = routing.useNativeCapacitorStt
+    ? capError
+    : routing.useBrowserWhisperStt
+      ? whisperError
+      : voiceError;
 
   const toggleVoice = useCallback(
     async (field: Field) => {
-      if (isAndroid) {
+      if (routing.useNativeCapacitorStt) {
+        if (isCapRecording) {
+          stopCapRecording();
+          setActiveVoiceField(null);
+          setVoicePreview("");
+        } else {
+          clearCapError();
+          setVoicePreview("");
+          setActiveVoiceField(field);
+          await startCapRecording();
+        }
+      } else if (routing.useBrowserWhisperStt) {
         if (isWhisperRecording) {
           stopWhisperRecording();
           setActiveVoiceField(null);
           setVoicePreview("");
         } else {
-          clearCapacitorError();
+          clearWhisperError();
+          setVoicePreview("");
           setActiveVoiceField(field);
           await startWhisperRecording();
         }
@@ -210,7 +262,22 @@ export function DailyReflectionClient({
         await startListening();
       }
     },
-    [isAndroid, isWhisperRecording, isListening, stopWhisperRecording, startWhisperRecording, stopListening, startListening, clearVoiceError, clearCapacitorError],
+    [
+      routing.useNativeCapacitorStt,
+      routing.useBrowserWhisperStt,
+      isCapRecording,
+      isWhisperRecording,
+      isListening,
+      stopCapRecording,
+      startCapRecording,
+      stopWhisperRecording,
+      startWhisperRecording,
+      stopListening,
+      startListening,
+      clearVoiceError,
+      clearCapError,
+      clearWhisperError,
+    ],
   );
 
   const handleSave = useCallback(async () => {
