@@ -4,10 +4,13 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.webkit.PermissionRequest;
+import android.webkit.RenderProcessGoneDetail;
+import android.webkit.WebView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.BridgeWebChromeClient;
+import com.getcapacitor.BridgeWebViewClient;
 
 public class MainActivity extends BridgeActivity {
 
@@ -20,6 +23,18 @@ public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Catch WebView renderer crashes (e.g. during audio capture) so the
+        // whole app doesn't die — just reload the bridge instead.
+        getBridge().getWebView().setWebViewClient(
+            new BridgeWebViewClient(getBridge()) {
+                @Override
+                public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
+                    getBridge().reload();
+                    return true;
+                }
+            }
+        );
 
         getBridge().getWebView().setWebChromeClient(
             new BridgeWebChromeClient(getBridge()) {
