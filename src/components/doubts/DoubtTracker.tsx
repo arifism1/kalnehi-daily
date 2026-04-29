@@ -476,9 +476,13 @@ export function DoubtTracker() {
   const voiceListening = isAndroid ? isWhisperRecording : voiceListeningWeb;
 
   const startVoiceListening = useCallback(() => {
-    if (isAndroid) void startWhisperRecording();
-    else void startVoiceListeningWeb();
-  }, [isAndroid, startWhisperRecording, startVoiceListeningWeb]);
+    if (isAndroid) {
+      setVoiceError(null);
+      setVoiceDoubtQuotaHit(false);
+      clearVoiceRecError();
+      void startWhisperRecording();
+    } else void startVoiceListeningWeb();
+  }, [isAndroid, startWhisperRecording, startVoiceListeningWeb, clearVoiceRecError]);
 
   const stopVoiceListening = useCallback(() => {
     if (isAndroid) stopWhisperRecording();

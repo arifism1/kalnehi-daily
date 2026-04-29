@@ -299,8 +299,11 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
   const isVoiceProcessing = isAndroid ? isWhisperTranscribing : false;
 
   const startVoice = useCallback(() => {
-    if (isAndroid) void startWhisperRecording();
-    else void startListening();
+    if (isAndroid) {
+      setError(null);
+      setFallbackPanel(null);
+      void startWhisperRecording();
+    } else void startListening();
   }, [isAndroid, startWhisperRecording, startListening]);
 
   const stopVoice = useCallback(() => {

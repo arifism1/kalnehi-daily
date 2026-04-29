@@ -176,6 +176,14 @@ export function DailyReflectionClient({
   const isSupported = isAndroid ? whisperSupported : webSpeechSupported;
   const isListeningActive = isAndroid ? (isWhisperRecording || isWhisperTranscribing) : isListening;
 
+  // Clear active voice field if the web speech mic fails to start.
+  useEffect(() => {
+    if (voiceError) {
+      setActiveVoiceField(null);
+      setVoicePreview("");
+    }
+  }, [voiceError]);
+
   const toggleVoice = useCallback(
     async (field: Field) => {
       if (isAndroid) {
