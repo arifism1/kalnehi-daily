@@ -282,6 +282,8 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
   });
 
   const {
+    clearError: clearCapacitorError,
+    error: capacitorError,
     isRecording: isWhisperRecording,
     isTranscribing: isWhisperTranscribing,
     startRecording: startWhisperRecording,
@@ -303,16 +305,20 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
     if (isAndroid) {
       setError(null);
       setFallbackPanel(null);
+      clearCapacitorError();
       void startWhisperRecording();
     } else void startListening();
-  }, [isAndroid, startWhisperRecording, startListening]);
+  }, [isAndroid, startWhisperRecording, startListening, clearCapacitorError]);
 
   const stopVoice = useCallback(() => {
     if (isAndroid) stopWhisperRecording();
     else stopListening();
   }, [isAndroid, stopWhisperRecording, stopListening]);
 
-  const activeError = recognitionError ?? error;
+  const micError = isAndroid ? capacitorError : recognitionError;
+  const clearMicError = isAndroid ? clearCapacitorError : clearRecognitionError;
+
+  const activeError = micError ?? error;
   const phase: Phase = (isProcessing || isVoiceProcessing)
     ? "processing"
     : isVoiceListening
@@ -818,17 +824,17 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
         </section>
       ) : null}
 
-      {recognitionError ? (
+      {micError ? (
         <div
           role="alert"
           className="rounded-[1rem] border border-amber-200/90 bg-amber-50/95 px-4 py-3 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/35 dark:text-amber-100"
         >
           <span className="font-semibold">Speech: </span>
-          {recognitionError}
+          {micError}
           <button
             type="button"
             className="ml-3 text-xs font-semibold underline"
-            onClick={() => clearRecognitionError()}
+            onClick={() => clearMicError()}
           >
             Dismiss
           </button>

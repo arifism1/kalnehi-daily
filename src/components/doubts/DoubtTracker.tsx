@@ -460,6 +460,8 @@ export function DoubtTracker() {
   useEffect(() => { setIsAndroid(/Android/i.test(navigator.userAgent)); }, []);
 
   const {
+    clearError: clearCapacitorError,
+    error: capacitorError,
     isRecording: isWhisperRecording,
     isTranscribing: isWhisperTranscribing,
     startRecording: startWhisperRecording,
@@ -470,6 +472,7 @@ export function DoubtTracker() {
       void handleVoiceTranscript(transcript, durationSeconds);
     },
     maxMs: VOICE_MAX_SESSION_MS,
+    lang: voiceLang,
   });
 
   const voiceSupported = isAndroid ? whisperSupported : voiceSupportedWeb;
@@ -480,9 +483,10 @@ export function DoubtTracker() {
       setVoiceError(null);
       setVoiceDoubtQuotaHit(false);
       clearVoiceRecError();
+      clearCapacitorError();
       void startWhisperRecording();
     } else void startVoiceListeningWeb();
-  }, [isAndroid, startWhisperRecording, startVoiceListeningWeb, clearVoiceRecError]);
+  }, [isAndroid, startWhisperRecording, startVoiceListeningWeb, clearVoiceRecError, clearCapacitorError]);
 
   const stopVoiceListening = useCallback(() => {
     if (isAndroid) stopWhisperRecording();
@@ -506,7 +510,9 @@ export function DoubtTracker() {
   };
 
   const voiceBusy = voiceListening || voiceProcessing || isWhisperTranscribing;
-  const voiceBanner = voiceRecError ?? voiceError;
+  const voiceBanner = isAndroid
+    ? (capacitorError ?? voiceRecError ?? voiceError)
+    : (voiceRecError ?? voiceError);
 
   if (!hydrated) {
     return (

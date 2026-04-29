@@ -166,6 +166,8 @@ export function DailyReflectionClient({
     });
 
   const {
+    clearError: clearCapacitorError,
+    error: capacitorError,
     isRecording: isWhisperRecording,
     isTranscribing: isWhisperTranscribing,
     startRecording: startWhisperRecording,
@@ -176,13 +178,15 @@ export function DailyReflectionClient({
   const isSupported = isAndroid ? whisperSupported : webSpeechSupported;
   const isListeningActive = isAndroid ? (isWhisperRecording || isWhisperTranscribing) : isListening;
 
-  // Clear active voice field if the web speech mic fails to start.
+  // Clear active voice field if the mic fails to start (web speech or native Android STT).
   useEffect(() => {
-    if (voiceError) {
+    if (isAndroid ? capacitorError : voiceError) {
       setActiveVoiceField(null);
       setVoicePreview("");
     }
-  }, [voiceError]);
+  }, [voiceError, capacitorError, isAndroid]);
+
+  const reflectionVoiceMicError = isAndroid ? capacitorError : voiceError;
 
   const toggleVoice = useCallback(
     async (field: Field) => {
@@ -192,6 +196,7 @@ export function DailyReflectionClient({
           setActiveVoiceField(null);
           setVoicePreview("");
         } else {
+          clearCapacitorError();
           setActiveVoiceField(field);
           await startWhisperRecording();
         }
@@ -205,7 +210,7 @@ export function DailyReflectionClient({
         await startListening();
       }
     },
-    [isAndroid, isWhisperRecording, isListening, stopWhisperRecording, startWhisperRecording, stopListening, startListening, clearVoiceError],
+    [isAndroid, isWhisperRecording, isListening, stopWhisperRecording, startWhisperRecording, stopListening, startListening, clearVoiceError, clearCapacitorError],
   );
 
   const handleSave = useCallback(async () => {
@@ -328,8 +333,8 @@ export function DailyReflectionClient({
             );
           })}
 
-          {(voiceError) && (
-            <p className="text-sm text-red-500">{voiceError}</p>
+          {reflectionVoiceMicError && (
+            <p className="text-sm text-red-500">{reflectionVoiceMicError}</p>
           )}
           {saveError && (
             <p className="text-sm text-red-500">{saveError}</p>

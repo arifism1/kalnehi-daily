@@ -72,6 +72,8 @@ export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects, exam
     });
 
   const {
+    clearError: clearCapacitorError,
+    error: capacitorError,
     isRecording: isWhisperRecording,
     isTranscribing: isWhisperTranscribing,
     startRecording: startWhisperRecording,
@@ -82,10 +84,14 @@ export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects, exam
   const isSupported = isAndroid ? whisperSupported : webSpeechSupported;
   const isVoiceActive = isAndroid ? (isWhisperRecording || isWhisperTranscribing) : isListening;
 
+  const voiceMicError = isAndroid ? capacitorError : voiceError;
+
   const startVoice = useCallback(() => {
-    if (isAndroid) void startWhisperRecording();
-    else { clearError(); void startListening(); }
-  }, [isAndroid, startWhisperRecording, startListening, clearError]);
+    if (isAndroid) {
+      clearCapacitorError();
+      void startWhisperRecording();
+    } else { clearError(); void startListening(); }
+  }, [isAndroid, startWhisperRecording, startListening, clearError, clearCapacitorError]);
 
   const stopVoice = useCallback(() => {
     if (isAndroid) stopWhisperRecording();
@@ -103,7 +109,8 @@ export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects, exam
     setVoicePreview("");
     setSelectedExamLabel("__all__");
     clearError();
-  }, [clearError]);
+    clearCapacitorError();
+  }, [clearError, clearCapacitorError]);
 
   const handleClose = useCallback(() => {
     stopVoice();
@@ -312,8 +319,8 @@ export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects, exam
                 {!isWhisperTranscribing && <VoiceListeningHint visible className="!text-left" variant="dictation" />}
               </>
             )}
-            {voiceError && (
-              <p className="text-xs font-medium text-red-700 dark:text-red-300">{voiceError}</p>
+            {voiceMicError && (
+              <p className="text-xs font-medium text-red-700 dark:text-red-300">{voiceMicError}</p>
             )}
           </div>
 

@@ -269,6 +269,8 @@ export function ScheduleRevisionReminderDialog({
   });
 
   const {
+    clearError: clearCapacitorError,
+    error: capacitorError,
     isRecording: isWhisperRecording,
     isTranscribing: isWhisperTranscribing,
     startRecording: startWhisperRecording,
@@ -279,6 +281,7 @@ export function ScheduleRevisionReminderDialog({
       void sendRevisionTranscript(transcript, occurredAt, durationSeconds);
     },
     maxMs: VOICE_MAX_SESSION_MS,
+    lang: speechLang,
   });
 
   const isSupported = isAndroid ? whisperSupported : webSpeechSupported;
@@ -286,9 +289,11 @@ export function ScheduleRevisionReminderDialog({
   const isVoiceProcessing = isAndroid ? isWhisperTranscribing : false;
 
   const startVoice = useCallback(() => {
-    if (isAndroid) void startWhisperRecording();
-    else void startListening();
-  }, [isAndroid, startWhisperRecording, startListening]);
+    if (isAndroid) {
+      clearCapacitorError();
+      void startWhisperRecording();
+    } else void startListening();
+  }, [isAndroid, startWhisperRecording, startListening, clearCapacitorError]);
 
   const stopVoice = useCallback(() => {
     if (isAndroid) stopWhisperRecording();
@@ -300,7 +305,9 @@ export function ScheduleRevisionReminderDialog({
     : isVoiceListening
       ? "listening"
       : "idle";
-  const displaySpeechError = speechRecognitionError ?? speechError;
+  const displaySpeechError = isAndroid
+    ? (capacitorError ?? speechError)
+    : (speechRecognitionError ?? speechError);
 
   useEffect(() => {
     if (!open) {
@@ -333,6 +340,7 @@ export function ScheduleRevisionReminderDialog({
       setSpeechStructHint(null);
       setSpeechApiBusy(false);
       clearSpeechRecognitionError();
+      clearCapacitorError();
     }
   }, [
     open,
@@ -343,6 +351,7 @@ export function ScheduleRevisionReminderDialog({
     initialNotes,
     showVoice,
     clearSpeechRecognitionError,
+    clearCapacitorError,
   ]);
 
   useEffect(() => {
