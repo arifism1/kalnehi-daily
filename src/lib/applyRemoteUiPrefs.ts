@@ -7,7 +7,7 @@ import {
 } from "@/store/useSettingsStore";
 
 function isAppearance(v: unknown): v is AppearanceMode {
-  return v === "light" || v === "dark";
+  return v === "light" || v === "dark" || v === "system";
 }
 
 function isFacing(v: unknown): v is StudyCameraFacing {

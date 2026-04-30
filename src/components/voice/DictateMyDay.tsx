@@ -206,6 +206,7 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
         const parseRes = await fetch("/api/voice-parse-draft", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({
             transcript: cleaned,
             log_date: targetDate,
@@ -647,6 +648,12 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
                   </option>
                 ))}
               </select>
+              {routing.useBrowserWhisperStt ? (
+                <span className="mt-1 block text-[10px] leading-snug text-kal-text-secondary/80">
+                  On Android, transcription uses an English‑tuned cloud model — English or Hinglish
+                  tends to parse most reliably into tasks.
+                </span>
+              ) : null}
             </label>
           </div>
         </>
@@ -690,14 +697,16 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
             aria-live="polite"
           >
             {phase === "listening"
-              ? "Listening..."
+              ? routing.useBrowserWhisperStt
+                ? "Recording… tap Stop when you’re finished"
+                : "Listening..."
               : phase === "processing"
                 ? "Processing..."
                 : "Tap the mic to dictate"}
           </p>
           <VoiceListeningHint
             visible={phase === "listening"}
-            variant="dictation"
+            variant={routing.useBrowserWhisperStt ? "whisper" : "dictation"}
           />
           {phase === "listening" && nativeSpeechDraft && routing.useNativeCapacitorStt ? (
             <p className="max-w-md rounded-lg border border-kal-border/40 bg-kal-surface/60 px-3 py-2 text-left text-xs leading-snug text-kal-text">
@@ -753,7 +762,9 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
           processing={previewProcessing}
           processingLabel={
             phase === "listening"
-              ? "Listening…"
+              ? routing.useBrowserWhisperStt
+                ? "Recording…"
+                : "Listening…"
               : "Processing your transcript into tasks…"
           }
           excludeFromSaveHint="Exclude this row from the next save"

@@ -6,7 +6,7 @@ export type VoiceListeningHintVariant = "command" | "dictation" | "whisper";
 
 type VoiceListeningHintProps = {
   visible: boolean;
-  /** "command" = short global voice; "dictation" = long-form with 30s silence; "whisper" = no app-side silence. */
+  /** "command" = short global voice; "dictation" = Web Speech long-form; "whisper" = MediaRecorder + server STT. */
   variant: VoiceListeningHintVariant;
   className?: string;
   /** When true, shows a subtle "Be loud and clear" reminder below the main hint. Defaults to false. */
@@ -29,8 +29,8 @@ export function VoiceListeningHint({
     variant === "command"
       ? "Up to 60s"
       : variant === "whisper"
-        ? "Tap to stop · Up to 60s"
-        : "Tap to stop · 30s quiet auto-stops · Up to 60s";
+        ? "Tap Stop · audio uploads · long sessions OK"
+        : "Tap Stop when done · long pause ends phrase · sessions up to 30 min";
 
   return (
     <div className={clsx("flex flex-col items-center gap-0.5", className)}>

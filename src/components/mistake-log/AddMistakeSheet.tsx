@@ -368,9 +368,21 @@ export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects, exam
             {isVoiceActive && (
               <>
                 <p className="animate-pulse text-xs font-medium text-zinc-600 dark:text-zinc-400">
-                  {isWhisperTranscribing ? "Transcribing…" : "Listening…"}
+                  {isWhisperTranscribing
+                    ? "Transcribing…"
+                    : routing.useBrowserWhisperStt && isWhisperRecording
+                      ? "Recording…"
+                      : "Listening…"}
                 </p>
-                {!isWhisperTranscribing && <VoiceListeningHint visible className="!text-left" variant="dictation" />}
+                {!isWhisperTranscribing && (
+                  <VoiceListeningHint
+                    visible
+                    className="!text-left"
+                    variant={
+                      routing.useBrowserWhisperStt ? "whisper" : "dictation"
+                    }
+                  />
+                )}
               </>
             )}
             {voiceMicError && (

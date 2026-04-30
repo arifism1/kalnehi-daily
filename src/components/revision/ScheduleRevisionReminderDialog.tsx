@@ -176,6 +176,7 @@ export function ScheduleRevisionReminderDialog({
         const parseRes = await fetch("/api/voice-parse-revision-reminder", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({
             transcript: cleaned,
             today,
@@ -636,7 +637,9 @@ export function ScheduleRevisionReminderDialog({
                       aria-live="polite"
                     >
                       {voicePhase === "listening"
-                        ? "Listening…"
+                        ? routing.useBrowserWhisperStt
+                          ? "Recording…"
+                          : "Listening…"
                         : voicePhase === "processing"
                           ? "Filling form…"
                           : "Tap the mic to dictate"}
@@ -644,7 +647,9 @@ export function ScheduleRevisionReminderDialog({
                     <VoiceListeningHint
                       visible={voicePhase === "listening"}
                       className="!text-left"
-                      variant="dictation"
+                      variant={
+                        routing.useBrowserWhisperStt ? "whisper" : "dictation"
+                      }
                     />
                     {voicePhase === "listening" && speechDraftLive ? (
                       <p className="mt-1 max-w-[280px] rounded-md border border-kal-border/40 bg-kal-surface/40 px-2 py-1.5 text-[11px] leading-snug text-kal-text">

@@ -104,6 +104,7 @@ export function DailyPlanTypedQuickAdd({ planDate, onAdded }: Props) {
       const parseRes = await fetch("/api/voice-parse-draft", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           transcript: raw,
           log_date: planDate,

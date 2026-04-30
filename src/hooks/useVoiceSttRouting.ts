@@ -7,19 +7,33 @@ import { usePlatform } from "@/hooks/usePlatform";
 export type VoiceSttRouting = {
   /** True when `navigator.userAgent` matches Android. */
   isAndroidUa: boolean;
-  /** Kalnehi Capacitor shell — native plugins available. */
+  /** Kalnehi Capacitor native shell (`Capacitor.isNativePlatform()`). */
   isNativeApp: boolean;
-  /** `@capacitor-community/speech-recognition` (native STT). */
+  /**
+   * Retained for call-site branching. **Always false** — Android shell uses Whisper (same as Chrome on Android).
+   */
   useNativeCapacitorStt: boolean;
-  /** Android mobile browsers: Web Speech disabled (`useDeviceSpeechRecognition`) → MediaRecorder + `/api/voice-transcribe`. */
+  /**
+   * **Any Android** User-Agent (Kalnehi app shell or browser): MediaRecorder → `/api/voice-transcribe` (Groq).
+   */
+  useAndroidWhisperStt: boolean;
+  /** @deprecated Alias of `useAndroidWhisperStt`. */
   useBrowserWhisperStt: boolean;
   /** Desktop / iPhone Safari / etc.: Web Speech API. */
   useWebSpeechStt: boolean;
 };
 
 /**
- * Routes voice capture across native Capacitor STT, browser Whisper upload, and Web Speech.
- * Do not use `/Android/` UA alone as a proxy for the Play Store shell.
+ * Voice capture routing:
+ *
+ * | Where | STT | Server |
+ * |-------|-----|--------|
+ * | **Any Android** (`isAndroidUa`, app shell or Chrome) | MediaRecorder upload | Groq **transcribe** (`/api/voice-transcribe`), then parse/command APIs |
+ * | **Normal browser** (`!isApp`, not Android UA) | Web Speech | Text-only → Groq for structure |
+ *
+ * On iOS shell (`isApp && !isAndroidUa`), Whisper and native flags are both false → Web Speech in components.
+ *
+ * `useWebSpeechStt` is `!isApp && !isAndroidUa`.
  */
 export function useVoiceSttRouting(): VoiceSttRouting {
   const { isApp } = usePlatform();
@@ -28,15 +42,17 @@ export function useVoiceSttRouting(): VoiceSttRouting {
     const isAndroidUa =
       typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent);
 
-    const useNativeCapacitorStt = isApp;
-    const useBrowserWhisperStt = isAndroidUa && !isApp;
+    const useNativeCapacitorStt = false;
+    const useAndroidWhisperStt = isAndroidUa;
     const useWebSpeechStt = !isApp && !isAndroidUa;
 
     return {
       isAndroidUa,
       isNativeApp: isApp,
       useNativeCapacitorStt,
-      useBrowserWhisperStt,
+      /** @deprecated Prefer `useAndroidWhisperStt` — retained for call-site compatibility. */
+      useBrowserWhisperStt: useAndroidWhisperStt,
+      useAndroidWhisperStt,
       useWebSpeechStt,
     };
   }, [isApp]);

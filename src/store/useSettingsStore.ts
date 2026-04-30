@@ -7,10 +7,10 @@ export type StudyCameraFacing = "user" | "environment";
 
 export type StudyDetectionSensitivity = "strict" | "balanced" | "lenient";
 
-export type AppearanceMode = "light" | "dark";
+export type AppearanceMode = "light" | "dark" | "system";
 
 export type SettingsState = {
-  /** UI theme: "light" (Orange theme) or "dark" (Coffee theme). */
+  /** UI theme: Orange, Coffee, or follow OS / browser `prefers-color-scheme`. */
   appearance: AppearanceMode;
   purposeModeEnabled: boolean;
   showCountdown: boolean;
@@ -84,7 +84,7 @@ export function pickUiPrefsForSync(s: SettingsState): UiPrefsPersisted {
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
-      appearance: "light",
+      appearance: "system",
       purposeModeEnabled: false,
       showCountdown: true,
       advancedMarksProjectionEnabled: true,
@@ -121,18 +121,17 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: "kalnehi-settings",
-      version: 2,
-      migrate: (persisted: unknown) => {
+      version: 3,
+      migrate: (persisted: unknown, storedVersion: number) => {
         const s = persisted as Record<string, unknown>;
-        if (s.appearance === "system") {
-          s.appearance =
-            typeof window !== "undefined" &&
-            window.matchMedia("(prefers-color-scheme: dark)").matches
-              ? "dark"
-              : "light";
-        }
         delete s.wakeWordEnabled;
-        return s;
+        if (storedVersion < 3) {
+          const a = s.appearance;
+          if (a !== "light" && a !== "dark" && a !== "system") {
+            s.appearance = "system";
+          }
+        }
+        return s as unknown;
       },
       storage: createJSONStorage(() => storageAdapter),
       partialize: (s) => pickUiPrefsForSync(s),

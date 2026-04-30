@@ -709,7 +709,9 @@ export function DoubtTracker() {
             <div className="w-full sm:text-right">
               <VoiceListeningHint
                 visible
-                variant="dictation"
+                variant={
+                  routing.useBrowserWhisperStt ? "whisper" : "dictation"
+                }
                 className="!text-right"
               />
               {routing.useNativeCapacitorStt && nativeSpeechDraft ? (

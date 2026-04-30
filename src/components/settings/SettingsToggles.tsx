@@ -47,6 +47,7 @@ function SheetSwitch({
 const APPEARANCE_OPTIONS: { value: AppearanceMode; label: string }[] = [
   { value: "light", label: "Orange theme" },
   { value: "dark", label: "Coffee theme" },
+  { value: "system", label: "Match device" },
 ];
 
 function ToggleStateBadge({ checked }: { checked: boolean }) {
@@ -67,7 +68,7 @@ function ToggleStateBadge({ checked }: { checked: boolean }) {
 export function SettingsToggles() {
   const baseId = useId();
 
-  const appearance = useSettingsStore((s) => s.appearance ?? "light");
+  const appearance = useSettingsStore((s) => s.appearance ?? "system");
   const setAppearance = useSettingsStore((s) => s.setAppearance);
   const showCountdown = useSettingsStore((s) => s.showCountdown);
   const setShowCountdown = useSettingsStore((s) => s.setShowCountdown);
@@ -96,7 +97,7 @@ export function SettingsToggles() {
           Choose how Kalnehi looks.
         </p>
         <div
-          className="kal-glass-subtle mt-3 flex gap-1 rounded-xl p-1"
+          className="kal-glass-subtle mt-3 flex flex-wrap gap-1 rounded-xl p-1 sm:flex-nowrap"
           role="group"
           aria-label="Theme"
         >

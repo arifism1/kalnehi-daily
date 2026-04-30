@@ -391,9 +391,21 @@ export function DailyReflectionClient({
                 {isActive && isListeningActive && (
                   <div className="space-y-1">
                     <p className="text-xs text-kal-text-secondary animate-pulse">
-                      {isWhisperTranscribing ? "Transcribing…" : "Listening…"}
+                      {isWhisperTranscribing
+                        ? "Transcribing…"
+                        : routing.useBrowserWhisperStt && isWhisperRecording
+                          ? "Recording…"
+                          : "Listening…"}
                     </p>
-                    {!isWhisperTranscribing && <VoiceListeningHint visible variant="dictation" className="!text-left" />}
+                    {!isWhisperTranscribing && (
+                      <VoiceListeningHint
+                        visible
+                        variant={
+                          routing.useBrowserWhisperStt ? "whisper" : "dictation"
+                        }
+                        className="!text-left"
+                      />
+                    )}
                   </div>
                 )}
               </div>

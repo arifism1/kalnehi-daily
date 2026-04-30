@@ -3,7 +3,10 @@
 /**
  * useCapacitorSpeech
  *
- * Wraps @capacitor-community/speech-recognition for free on-device STT on Android.
+ * Wraps `@capacitor-community/speech-recognition` for on-device STT. **Kalnehi Android routing** uses
+ * `useMediaRecorderVoice` + `/api/voice-transcribe` instead (parity with Chrome on Android); this hook stays
+ * wired in shared components but **is not started** when `useNativeCapacitorStt` is false (see `useVoiceSttRouting`).
+ * Text post-transcript flows to server **parse** routes (Groq structured).
  *
  * - variant "command": single-shot session (short phrases, no partial UI).
  * - variant "longForm": partial results + trailing silence after last partial (timings configurable — global voice uses command silence + command max session).
@@ -162,18 +165,25 @@ export function useCapacitorSpeech({
 
         const finalizeLongForm = async (reason: "silence" | "maxMs" | "manual") => {
           if (!activeLongFormSessionRef.current) return;
-          partialEpochRef.current += 1;
           activeLongFormSessionRef.current = false;
           finalizeLongFormRef.current = null;
           clearSessionTimer();
           clearTrailingSilenceTimer();
-          await removeSpeechListeners();
 
+          // Android: SpeechRecognizer delivers final hypotheses after stop() as
+          // `partialResults`. We must stop first and keep listeners alive until the
+          // bridge flushes — removing listeners before stop drops the final transcript.
           try {
             await SpeechRecognition.stop();
           } catch {
             /* ignore */
           }
+
+          // Native onResults → notifyListeners("partialResults") can trail the stop() resolve.
+          await new Promise((r) => setTimeout(r, 480));
+
+          partialEpochRef.current += 1;
+          await removeSpeechListeners();
 
           const transcript = accumulatedRef.current.trim();
           const durationSeconds = startedAtRef.current

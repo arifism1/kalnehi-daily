@@ -418,10 +418,8 @@ export function GlobalVoiceSheet() {
   const autoStartedRef = useRef(false);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const executeRef = useRef<((intent: VoiceCommandIntent, text: string) => Promise<void>) | null>(null);
-  // Prevents infinite retry: Whisper fallback fires at most once per session open.
+  // Prevents infinite retry: Whisper fallback fires at most once per session open (non-app Web Speech failures only).
   const whisperFallbackAttemptedRef = useRef(false);
-  /** After native Capacitor STT fails once, try browser Whisper before surfacing error. */
-  const capacitorFallbackToWhisperRef = useRef(false);
   // Abort controller for the in-flight /api/voice-command fetch.
   const voiceFetchAbortRef = useRef<AbortController | null>(null);
 
@@ -611,6 +609,7 @@ export function GlobalVoiceSheet() {
         const res = await fetch("/api/voice-command", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({
             transcript: text,
             page_context: pathname,
@@ -671,7 +670,7 @@ export function GlobalVoiceSheet() {
     onTranscript: handleTranscript,
   });
 
-  // Native Capacitor STT (Play Store / sideload shell only).
+  // useCapacitorSpeech — unused on Android while `useNativeCapacitorStt` is false; shell uses Whisper below.
   const {
     isRecording: isCapRecording,
     isTranscribing: isCapTranscribing,
@@ -687,7 +686,7 @@ export function GlobalVoiceSheet() {
     onPartialTranscript: handleNativeCapPartialTranscript,
   });
 
-  // Android mobile browser: Web Speech disabled — Groq Whisper via MediaRecorder. Also native Cap fallback.
+  // MediaRecorder + Groq transcribe for any Android UA (Kalnehi shell or Chrome browser).
   const {
     isRecording: isWhisperRecording,
     isTranscribing: isWhisperTranscribing,
@@ -700,12 +699,6 @@ export function GlobalVoiceSheet() {
     onTranscript: handleTranscript,
     maxMs: VOICE_MAX_SESSION_MS,
   });
-
-  useEffect(() => {
-    if (isOpen) {
-      capacitorFallbackToWhisperRef.current = false;
-    }
-  }, [isOpen]);
 
   // Auto-start listening when sheet opens, with chime.
   useEffect(() => {
@@ -802,20 +795,10 @@ export function GlobalVoiceSheet() {
     }
   }, [sttError, phase, clearSttError, setError, setPhase, setTranscript, startWhisperRecording]);
 
-  // Surface Capacitor native STT errors — once native STT fails, fall back to Whisper (same session).
+  // Capacitor-plugin errors — only surfaced if native STT routing is enabled (currently unused on Android).
   useEffect(() => {
     if (!capSpeechError || !(phase === "idle" || phase === "listening")) return;
     if (!routing.useNativeCapacitorStt) return;
-
-    if (!capacitorFallbackToWhisperRef.current) {
-      capacitorFallbackToWhisperRef.current = true;
-      clearCapSpeechError();
-      setTranscript(null);
-      playStartChime();
-      whisperFallbackAttemptedRef.current = true;
-      void startWhisperRecording();
-      return;
-    }
 
     setError(capSpeechError);
     setPhase("error");
@@ -827,11 +810,9 @@ export function GlobalVoiceSheet() {
     clearCapSpeechError,
     setError,
     setPhase,
-    setTranscript,
-    startWhisperRecording,
   ]);
 
-  // Surface Whisper errors into store (Android browser path + native Cap fallback).
+  // Surface Whisper/MediaRecorder errors into store (Android app + Chrome; desktop after Web-Speech→Whisper fallback).
   useEffect(() => {
     if (whisperError) {
       setError(whisperError);
@@ -869,7 +850,6 @@ export function GlobalVoiceSheet() {
       playStartChime();
       // Mirror onStartListening: block duplicate auto-start effect from starting a second session.
       autoStartedRef.current = true;
-      capacitorFallbackToWhisperRef.current = false;
       whisperFallbackAttemptedRef.current = false;
       if (routing.useNativeCapacitorStt) {
         whisperFallbackAttemptedRef.current = true;
@@ -980,7 +960,6 @@ export function GlobalVoiceSheet() {
                     reset();
                     autoStartedRef.current = true;
                     whisperFallbackAttemptedRef.current = false;
-                    capacitorFallbackToWhisperRef.current = false;
                     playStartChime();
                     if (routing.useNativeCapacitorStt) {
                       whisperFallbackAttemptedRef.current = true;

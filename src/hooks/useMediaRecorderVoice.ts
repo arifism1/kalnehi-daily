@@ -15,11 +15,31 @@ type UseMediaRecorderVoiceOptions = {
   maxMs?: number;
 };
 
-function getPreferredMimeType(): string {
-  if (typeof MediaRecorder === "undefined") return "audio/webm";
-  if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) return "audio/webm;codecs=opus";
-  if (MediaRecorder.isTypeSupported("audio/webm")) return "audio/webm";
-  return "audio/mp4";
+function preferredMimeCandidates(): string[] {
+  const c: string[] = [];
+  if (typeof MediaRecorder === "undefined") return c;
+  if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus"))
+    c.push("audio/webm;codecs=opus");
+  if (MediaRecorder.isTypeSupported("audio/webm")) c.push("audio/webm");
+  if (MediaRecorder.isTypeSupported("audio/mp4")) c.push("audio/mp4");
+  if (MediaRecorder.isTypeSupported("audio/3gpp")) c.push("audio/3gpp");
+  return c;
+}
+
+function createMediaRecorderPreferringMime(stream: MediaStream): MediaRecorder | null {
+  if (typeof MediaRecorder === "undefined") return null;
+  for (const mime of preferredMimeCandidates()) {
+    try {
+      return new MediaRecorder(stream, { mimeType: mime });
+    } catch {
+      /* try next */
+    }
+  }
+  try {
+    return new MediaRecorder(stream);
+  } catch {
+    return null;
+  }
 }
 
 export function useMediaRecorderVoice({
@@ -60,11 +80,19 @@ export function useMediaRecorderVoice({
     // isTranscribing is already set to true in stopRecording before this is called.
     try {
       const fd = new FormData();
-      const mimeType = blob.type || "audio/webm";
-      const ext = mimeType.includes("mp4") ? "m4a" : "webm";
+      const mimeType = blob.type || mimeRef.current || "audio/webm";
+      const ext = mimeType.includes("mp4")
+        ? "m4a"
+        : mimeType.includes("3gp")
+          ? "3gp"
+          : "webm";
       fd.set("audio", new File([blob], `voice-command.${ext}`, { type: mimeType }));
 
-      const res = await fetch("/api/voice-transcribe", { method: "POST", body: fd });
+      const res = await fetch("/api/voice-transcribe", {
+        method: "POST",
+        body: fd,
+        credentials: "include",
+      });
       const data = (await res.json()) as {
         ok: boolean;
         error?: string;
@@ -119,6 +147,11 @@ export function useMediaRecorderVoice({
       }
     };
     try {
+      if (mr.state === "recording") mr.requestData();
+    } catch {
+      /* some WebViews omit requestData */
+    }
+    try {
       mr.stop();
     } catch {
       mediaRecorderRef.current = null;
@@ -148,24 +181,22 @@ export function useMediaRecorderVoice({
       return;
     }
 
-    const mime = getPreferredMimeType();
-    mimeRef.current = mime;
-
-    let mr: MediaRecorder;
-    try {
-      mr = new MediaRecorder(stream, { mimeType: mime });
-    } catch {
+    const mr = createMediaRecorderPreferringMime(stream);
+    if (!mr) {
       stream.getTracks().forEach((t) => t.stop());
       setError("Audio recording is not supported in this browser.");
       return;
     }
+
+    mimeRef.current = mr.mimeType || preferredMimeCandidates()[0] || "audio/webm";
 
     mediaRecorderRef.current = mr;
     startedAtRef.current = Date.now();
     mr.ondataavailable = (e) => {
       if (e.data.size > 0) chunksRef.current.push(e.data);
     };
-    mr.start();
+    // Timeslice avoids empty blobs on some Android WebViews that only flush on periodic events.
+    mr.start(250);
     setIsRecording(true);
 
     // Auto-stop after maxMs to prevent runaway recordings.

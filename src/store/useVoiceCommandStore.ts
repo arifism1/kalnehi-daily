@@ -14,7 +14,7 @@ type VoiceCommandState = {
   responseText: string | null;
   error: string | null;
   pendingRevision: PendingRevision | null;
-  /** True while any useDeviceSpeechRecognition session is active (avoids overlapping voice sessions). */
+  /** Driven by Web Speech mic sessions only (`useDeviceSpeechRecognition`); Android Whisper does not toggle this flag today. Reserved for overlapping-session UX. */
   isMicBusy: boolean;
 
   open: () => void;
