@@ -16,7 +16,7 @@ export const PAID_TRIAL_AI_TOKEN_CAP = 500_000;
 export const MONTHLY_AI_TOKEN_CAP = 2_000_000;
 
 export const PREPBRAIN_LIMIT_MESSAGE_MONTHLY =
-  "You have reached your monthly Mastermind token limit of 2 million. It will reset on the 1st of next month.";
+  "You have reached your monthly Mastermind token limit of 2 million. Your allowance refreshes on the same date each month as your Smart Plan started.";
 export const PREPBRAIN_LIMIT_MESSAGE_WELCOME =
   `You have used all 60,000 Mastermind tokens included in your 3-day free trial. Upgrade to Smart Plan (${SMART_PLAN_MONTHLY_DISPLAY}/month) for 2 million tokens per month.`;
 /** @deprecated paid trial removed */

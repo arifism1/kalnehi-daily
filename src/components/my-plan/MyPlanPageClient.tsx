@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Script from "next/script";
-import { addMonths, differenceInCalendarDays, format } from "date-fns";
+import { addMonths, differenceInCalendarDays, format, parse } from "date-fns";
 import { ArrowLeft, Bot, Brain, Crown, Loader2, Mic, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useState, useTransition } from "react";
 
@@ -32,6 +32,7 @@ import {
   SMART_PLAN_SIX_MONTH_BILLING_LABEL,
 } from "@/lib/smartPlanPricing";
 import { getTierConfig, TIERS } from "@/lib/subscriptionTiers";
+import { istNextUsagePeriodStartDateString } from "@/lib/subscriptionUsage";
 import { useAuthStore } from "@/store/useAuthStore";
 import { surfaceErrorForUi } from "@/lib/userFacingErrors";
 
@@ -86,12 +87,6 @@ function statusColor(status: string | null): string {
     default:
       return "text-kal-text-secondary";
   }
-}
-
-function nextResetDate(): string {
-  const now = new Date();
-  const next = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-  return format(next, "d MMM yyyy");
 }
 
 function trialDaysRemaining(endDate: string | null): number | null {
@@ -247,6 +242,12 @@ export function MyPlanPageClient() {
   const onWelcomeTrial = freeTrialActive && !hasPaidAccess;
 
   const welcomeEndsIn = useFreeTrialLiveEndsIn(freeTrialEndsAtIso, onWelcomeTrial);
+
+  const nextVoicePhotoResetLabel = (() => {
+    const next = istNextUsagePeriodStartDateString(startDate);
+    if (!next) return "—";
+    return format(parse(next, "yyyy-MM-dd", new Date()), "d MMM yyyy");
+  })();
 
   useEffect(() => {
     if (!user?.id || loading) return;
@@ -758,9 +759,11 @@ export function MyPlanPageClient() {
                 </div>
                 <div className="flex items-center justify-between border-t border-kal-border px-4 py-2">
                   <span className="text-xs text-kal-text-secondary">
-                    Usage resets (calendar month)
+                    Next included allowance reset
                   </span>
-                  <span className="text-xs font-medium text-kal-text">{nextResetDate()}</span>
+                  <span className="text-xs font-medium text-kal-text">
+                    {nextVoicePhotoResetLabel}
+                  </span>
                 </div>
               </div>
             )}

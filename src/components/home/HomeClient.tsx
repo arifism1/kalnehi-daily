@@ -6,13 +6,13 @@ import { useRouter } from "next/navigation";
 
 import { ensureAutomatedNotifications } from "@/actions/notifications";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
+import { useProfileDisplayName } from "@/hooks/useProfileDisplayName";
 import { useRefreshTasksOnHomeFocus } from "@/hooks/useRefreshTasksOnHomeFocus";
 import {
   pickDailyPhraseIndex,
   type DailyMotivationalPhraseRow,
 } from "@/lib/dailyMotivationalPhrase";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
-import { useAuthStore } from "@/store/useAuthStore";
 
 import { InstagramWelcomeBanner } from "@/components/InstagramWelcomeBanner";
 import { MotivationWallpaper } from "./MotivationWallpaper";
@@ -42,7 +42,7 @@ const HomeDashboardBody = dynamic(
 
 export function HomeClient() {
   const router = useRouter();
-  const user = useAuthStore((s) => s.user);
+  const { displayName: welcomeName } = useProfileDisplayName();
 
   useRefreshTasksOnHomeFocus();
 
@@ -84,19 +84,6 @@ export function HomeClient() {
   }, []);
 
   const today = useCalendarDate();
-
-  const welcomeName = useMemo(() => {
-    const meta = user?.user_metadata as Record<string, unknown> | undefined;
-    const fromMeta =
-      (typeof meta?.full_name === "string" && meta.full_name.trim()) ||
-      (typeof meta?.name === "string" && meta.name.trim()) ||
-      null;
-    if (fromMeta) return fromMeta;
-    if (typeof user?.email === "string" && user.email.includes("@")) {
-      return user.email.split("@")[0] ?? "Aspirant";
-    }
-    return "Aspirant";
-  }, [user]);
 
   const firstName = useMemo(() => {
     const part = welcomeName.split(/\s+/)[0]?.trim();

@@ -7,7 +7,7 @@ import { SMART_PLAN_MONTHLY_DISPLAY } from "@/lib/smartPlanPricing";
 
 /** Monthly cap copy without naming deprecated UI surfaces (see `PREPBRAIN_LIMIT_MESSAGE_MONTHLY`). */
 const PREPBRAIN_LIMIT_MESSAGE_MONTHLY_UI =
-  "You have reached your monthly Mastermind token limit of 2 million. It will reset on the 1st of next month.";
+  "You have reached your monthly Mastermind token limit of 2 million. Your allowance refreshes each month on your Smart Plan anniversary (same calendar date you subscribed).";
 
 const PREPBRAIN_LIMIT_MESSAGE_WELCOME_UI =
   `You've used all 60,000 Mastermind tokens in your 3-day free trial. Upgrade to Smart Plan (${SMART_PLAN_MONTHLY_DISPLAY}/month) for 2 million tokens every month.`;

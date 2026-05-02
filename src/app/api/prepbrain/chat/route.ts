@@ -52,6 +52,7 @@ import {
   resolveAiUsagePhase,
   type PrepBrainTokenRow,
 } from "@/lib/prepbrainTokens";
+import { prepbrainMonthKeyFromSubscriptionStart } from "@/lib/subscriptionUsage";
 import {
   persistPrepbrainTurn,
   prepbrainAssertRoomBeforeTurn,
@@ -326,6 +327,7 @@ async function createConversationSummary(
 type ChatProfileRow = Pick<
   Tables<"user_profiles">,
   | "subscription_status"
+  | "subscription_start_date"
   | "subscription_end_date"
   | "trial_started_at"
   | "ai_tokens_used"
@@ -409,7 +411,7 @@ export async function POST(request: Request) {
     admin
       .from("user_profiles")
       .select(
-        "subscription_status,subscription_end_date,trial_started_at,ai_tokens_used,ai_tokens_month,welcome_ai_tokens_used,paid_trial_ai_tokens_used,bonus_ai_tokens_ledger,primary_exam,target_exam,cuet_domain_subjects,upsc_optional_subjects",
+        "subscription_status,subscription_start_date,subscription_end_date,trial_started_at,ai_tokens_used,ai_tokens_month,welcome_ai_tokens_used,paid_trial_ai_tokens_used,bonus_ai_tokens_ledger,primary_exam,target_exam,cuet_domain_subjects,upsc_optional_subjects",
       )
       .eq("user_id", user.id)
       .maybeSingle(),
@@ -484,8 +486,11 @@ export async function POST(request: Request) {
     );
   }
 
-  const monthKey = prepbrainCalendarMonthKey();
   const now = new Date();
+  const monthKey =
+    phase === "monthly"
+      ? prepbrainMonthKeyFromSubscriptionStart(profile.subscription_start_date ?? null, now)
+      : prepbrainCalendarMonthKey(now);
   const welcomeUsed =
     typeof profile.welcome_ai_tokens_used === "number" ? profile.welcome_ai_tokens_used : 0;
   const paidTrialUsed =
@@ -653,7 +658,7 @@ export async function POST(request: Request) {
     })(),
     // Conversation summary: gives the model memory beyond the 4-message window.
     createConversationSummary(fullMessages, models),
-    prepbrainAiTokenReserve(admin, user.id),
+    prepbrainAiTokenReserve(admin, user.id, monthKey),
   ]);
 
   if (!reserve.ok) {
