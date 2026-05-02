@@ -8,7 +8,7 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 export const metadata = marketingPageMetadata({
   path: "/best-study-practices",
   title: `Best Study Practices for JEE, NEET & UPSC — Backed by IIT, AIIMS, Stanford & Harvard | ${SITE_NAME}`,
-  description: `Discover evidence-based study practices proven by IIT Bombay, AIIMS Delhi, Stanford, and Harvard research — and how Kalnehi Daily builds every one of them into your daily exam prep routine. Daily planning, syllabus tracking, Brain Yoga, execution signals, smart reminders, voice capture, and personalised AI insights.`,
+  description: `Study habits tied to published research, and where Kalnehi Daily fits: planning, syllabus, reminders, voice, Mastermind — without the hype.`,
 });
 
 export default function BestStudyPracticesPage() {
@@ -33,7 +33,7 @@ export default function BestStudyPracticesPage() {
           {
             question: "Is there a free trial to experience all these features?",
             answer:
-              `Yes. New accounts get a 3-day free trial with every feature unlocked — including Mastermind (60,000 tokens) and 5 minutes of voice. After 3 days, subscribe to Smart Plan (${SMART_PLAN_MONTHLY_DISPLAY}/month) to keep full access.`,
+              `Yes. You get 3 days with the full app, 60,000 Mastermind tokens, and 5 minutes of voice — no card. After that it's ${SMART_PLAN_MONTHLY_DISPLAY}/month on Smart Plan if you stay.`,
           },
           {
             question: "Which exams is Kalnehi Daily designed for?",

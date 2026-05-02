@@ -119,6 +119,34 @@ function inferTier(payload: WebhookEnvelope): TierType {
   return "pro";
 }
 
+/**
+ * Idempotency key for subscription.charged bonus-pool extension + emails.
+ * Prefer payment id; else subscription id + current period (stable per charge cycle).
+ */
+function subscriptionChargedSideEffectsDedupeKey(
+  payload: WebhookEnvelope,
+  subscriptionId: string | null,
+): string | null {
+  const rawPay = (payload.payload?.payment?.entity?.id ?? "").trim();
+  if (rawPay && /^pay_[a-zA-Z0-9]+$/.test(rawPay)) return rawPay;
+
+  const sub = payload.payload?.subscription?.entity;
+  const sid = (subscriptionId ?? sub?.id ?? "").trim();
+  const cs = typeof sub?.current_start === "number" ? sub.current_start : null;
+  const ce = typeof sub?.current_end === "number" ? sub.current_end : null;
+  if (
+    sid &&
+    RAZORPAY_PAYMENT_OR_SUB_ID_RE.test(sid) &&
+    cs != null &&
+    ce != null &&
+    cs > 0 &&
+    ce > 0
+  ) {
+    return `wh_charged_${sid}_${cs}_${ce}`;
+  }
+  return null;
+}
+
 function buildUpdateFromSubscription(payload: WebhookEnvelope): ProfileUpdate | null {
   const sub = payload.payload?.subscription?.entity;
   const subId = sub?.id?.trim();
@@ -307,54 +335,71 @@ export async function POST(request: Request) {
 
     const chargeUid = userIdFromNotes;
     if (chargeUid && updated) {
-      // Idempotency guard: prevent bonus extension and emails from running on duplicate delivery.
-      const chargePaymentId = (payload.payload?.payment?.entity?.id ?? "").trim();
-      if (chargePaymentId && /^pay_[a-zA-Z0-9]+$/.test(chargePaymentId)) {
-        const { error: claimErr } = await supabase
-          .from("razorpay_processed_payments")
-          .insert({ razorpay_payment_id: chargePaymentId, user_id: chargeUid, kind: "webhook_charged" });
-        if (claimErr?.code === "23505") return okResponse({ updated, idempotent: true });
-        if (claimErr) console.warn("[webhook] subscription.charged: claim insert failed", claimErr.message);
+      const sideEffectsKey = subscriptionChargedSideEffectsDedupeKey(payload, subscriptionId);
+      let runSideEffects = false;
+      if (sideEffectsKey) {
+        const { error: claimErr } = await supabase.from("razorpay_processed_payments").insert({
+          razorpay_payment_id: sideEffectsKey,
+          user_id: chargeUid,
+          kind: "webhook_charged",
+        });
+        if (claimErr?.code === "23505") {
+          return okResponse({ updated, idempotent: true });
+        }
+        if (claimErr) {
+          console.warn("[webhook] subscription.charged: claim insert failed", claimErr.message);
+          return errorResponse(500);
+        }
+        runSideEffects = true;
+      } else {
+        console.warn(
+          "[webhook] subscription.charged: no side-effects dedupe key; skipping bonus extend and welcome email",
+          { subscriptionId: subscriptionId?.slice(0, 14) ?? "none" },
+        );
       }
 
-      const { data: bonusRow } = await supabase
-        .from("user_profiles")
-        .select("bonus_voice_minutes_ledger, bonus_ai_tokens_ledger")
-        .eq("user_id", chargeUid)
-        .maybeSingle();
-      if (bonusRow) {
-        const now = new Date();
-        const vLed = extendActiveBonusPoolsBy30Days(
-          parseBonusLedger(bonusRow.bonus_voice_minutes_ledger),
-          now,
-        );
-        const aLed = extendActiveBonusPoolsBy30Days(
-          parseBonusLedger(bonusRow.bonus_ai_tokens_ledger),
-          now,
-        );
-        await supabase
+      if (runSideEffects) {
+        const { data: bonusRow } = await supabase
           .from("user_profiles")
-          .update({
-            bonus_voice_minutes_ledger: vLed,
-            bonus_voice_minutes: totalActiveBonus(vLed, now),
-            bonus_ai_tokens_ledger: aLed,
-            bonus_ai_tokens: totalActiveBonus(aLed, now),
-            updated_at: now.toISOString(),
-          })
-          .eq("user_id", chargeUid);
-      }
-
-      // Send a branded welcome email on the first real payment (trial → active transition).
-      if (priorStatus === "trial") {
-        const { data: authUser } = await supabase.auth.admin.getUserById(chargeUid);
-        const email = authUser?.user?.email;
-        if (email) {
-          void sendMonthlyWelcomeEmail({
-            email,
-            autopayMonthsTotal: autopayFromNotes,
-          }).catch((e) =>
-            console.warn("[webhook] subscription.charged: welcome email failed", e instanceof Error ? e.message : e),
+          .select("bonus_voice_minutes_ledger, bonus_ai_tokens_ledger")
+          .eq("user_id", chargeUid)
+          .maybeSingle();
+        if (bonusRow) {
+          const now = new Date();
+          const vLed = extendActiveBonusPoolsBy30Days(
+            parseBonusLedger(bonusRow.bonus_voice_minutes_ledger),
+            now,
           );
+          const aLed = extendActiveBonusPoolsBy30Days(
+            parseBonusLedger(bonusRow.bonus_ai_tokens_ledger),
+            now,
+          );
+          await supabase
+            .from("user_profiles")
+            .update({
+              bonus_voice_minutes_ledger: vLed,
+              bonus_voice_minutes: totalActiveBonus(vLed, now),
+              bonus_ai_tokens_ledger: aLed,
+              bonus_ai_tokens: totalActiveBonus(aLed, now),
+              updated_at: now.toISOString(),
+            })
+            .eq("user_id", chargeUid);
+        }
+
+        if (priorStatus === "trial") {
+          const { data: authUser } = await supabase.auth.admin.getUserById(chargeUid);
+          const email = authUser?.user?.email;
+          if (email) {
+            void sendMonthlyWelcomeEmail({
+              email,
+              autopayMonthsTotal: autopayFromNotes,
+            }).catch((e) =>
+              console.warn(
+                "[webhook] subscription.charged: welcome email failed",
+                e instanceof Error ? e.message : e,
+              ),
+            );
+          }
         }
       }
     }

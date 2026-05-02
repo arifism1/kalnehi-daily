@@ -628,7 +628,7 @@ export function MyPlanPageClient() {
                   {onWelcomeTrial
                     ? "You're on your 3-day free trial with 60,000 Mastermind tokens and 5 minutes of voice. Subscribe to Smart Plan anytime for the full monthly quota."
                     : noActivePlan
-                      ? `Choose a plan to unlock ${SITE_NAME}.`
+                      ? `Pick a plan to keep using ${SITE_NAME}.`
                       : tierConfig.tagline}
                 </p>
                 {hasPaidAccess && !noActivePlan ? (

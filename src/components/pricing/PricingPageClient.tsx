@@ -23,11 +23,13 @@ import {
 } from "@/lib/autopayMonths";
 import { SITE_NAME } from "@/lib/seo-metadata";
 import {
-  SMART_PLAN_ANNUAL_PRICE_PAISE,
   SMART_PLAN_ANNUAL_BILLING_LABEL,
+  SMART_PLAN_ANNUAL_PRICE_PAISE,
+  SMART_PLAN_ANNUAL_TOTAL_DISPLAY,
   SMART_PLAN_MONTHLY_DISPLAY,
   SMART_PLAN_SIX_MONTH_BILLING_LABEL,
   SMART_PLAN_SIX_MONTH_PRICE_PAISE,
+  SMART_PLAN_SIX_MONTH_TOTAL_DISPLAY,
   smartPlanEffectiveMonthlyMoLabel,
 } from "@/lib/smartPlanPricing";
 import { toUserFacingMessage } from "@/lib/userFacingErrors";
@@ -370,7 +372,7 @@ export function PricingPageClient() {
       const rzp = new window.Razorpay({
         key: created.keyId,
         name: SITE_NAME,
-        description: `Smart Plan Annual · ₹3,591/year`,
+        description: `Smart Plan Annual · ${SMART_PLAN_ANNUAL_BILLING_LABEL}`,
         order_id: created.orderId,
         amount: created.amountPaise,
         currency: "INR",
@@ -434,7 +436,7 @@ export function PricingPageClient() {
       const rzp = new window.Razorpay({
         key: created.keyId,
         name: SITE_NAME,
-        description: `Smart Plan 6 Months · ₹2,154`,
+        description: `Smart Plan 6 Months · ${SMART_PLAN_SIX_MONTH_BILLING_LABEL}`,
         order_id: created.orderId,
         amount: created.amountPaise,
         currency: "INR",
@@ -515,7 +517,8 @@ export function PricingPageClient() {
         return (
           <div className="rounded-2xl border border-kal-accent/30 bg-kal-accent-soft/50 px-5 py-4 dark:border-kal-accent/25 dark:bg-kal-accent/10">
             <p className="text-sm font-medium text-kal-accent-dark dark:text-kal-accent">
-              Upgrading to Annual will cancel your monthly plan and give you 12 months of access for ₹3,591 — no further monthly charges.
+              Upgrading to Annual will cancel your monthly plan and give you 12 months of access for{" "}
+              {SMART_PLAN_ANNUAL_TOTAL_DISPLAY} — no further monthly charges.
             </p>
           </div>
         );
@@ -524,7 +527,8 @@ export function PricingPageClient() {
         return (
           <div className="rounded-2xl border border-kal-accent/30 bg-kal-accent-soft/50 px-5 py-4 dark:border-kal-accent/25 dark:bg-kal-accent/10">
             <p className="text-sm font-medium text-kal-accent-dark dark:text-kal-accent">
-              Upgrading to 6 Months will cancel your monthly plan and give you 6 months of access for ₹2,154 — no further monthly charges.
+              Upgrading to 6 Months will cancel your monthly plan and give you 6 months of access for{" "}
+              {SMART_PLAN_SIX_MONTH_TOTAL_DISPLAY} — no further monthly charges.
             </p>
           </div>
         );
@@ -587,17 +591,17 @@ export function PricingPageClient() {
     if (busy) {
       buttonLabel = "Opening checkout...";
     } else if (billingCycle === "annual") {
-      buttonLabel = "Upgrade to Annual — ₹3,591/year";
+      buttonLabel = `Upgrade to Annual — ${SMART_PLAN_ANNUAL_BILLING_LABEL}`;
     } else {
-      buttonLabel = "Upgrade to 6 Months — ₹2,154";
+      buttonLabel = `Upgrade to 6 Months — ${SMART_PLAN_SIX_MONTH_TOTAL_DISPLAY}`;
     }
   } else if (isActiveProSubscription) {
     buttonLabel = "Current plan";
   } else if (isCancelledWithAccess) {
     if (billingCycle === "annual") {
-      buttonLabel = "Resubscribe — ₹3,591/year";
+      buttonLabel = `Resubscribe — ${SMART_PLAN_ANNUAL_BILLING_LABEL}`;
     } else if (billingCycle === "six_month") {
-      buttonLabel = "Resubscribe — ₹2,154/6 months";
+      buttonLabel = `Resubscribe — ${SMART_PLAN_SIX_MONTH_BILLING_LABEL}`;
     } else {
       buttonLabel = `Resubscribe — ${pro.monthlyPriceDisplay}/month`;
     }
@@ -607,9 +611,9 @@ export function PricingPageClient() {
     buttonLabel = "Opening checkout...";
   } else {
     if (billingCycle === "annual") {
-      buttonLabel = "Subscribe — ₹3,591/year";
+      buttonLabel = `Subscribe — ${SMART_PLAN_ANNUAL_BILLING_LABEL}`;
     } else if (billingCycle === "six_month") {
-      buttonLabel = "Subscribe — ₹2,154/6 months";
+      buttonLabel = `Subscribe — ${SMART_PLAN_SIX_MONTH_BILLING_LABEL}`;
     } else {
       buttonLabel = `Subscribe — ${pro.monthlyPriceDisplay}/month`;
     }

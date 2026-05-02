@@ -31,6 +31,17 @@ function getRazorpayConfig() {
   return { keyId, keySecret };
 }
 
+function hasActiveSixMonthAccess(profile: {
+  subscription_plan?: string | null;
+  subscription_status?: string | null;
+  subscription_end_date?: string | null;
+} | null): boolean {
+  if (!profile) return false;
+  if (profile.subscription_plan !== "six_month" || profile.subscription_status !== "active") return false;
+  const end = profile.subscription_end_date ? new Date(profile.subscription_end_date) : null;
+  return !!end && !Number.isNaN(end.getTime()) && end.getTime() > Date.now();
+}
+
 export async function POST(req: NextRequest) {
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -86,36 +97,50 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, error: "Order mismatch." }, { status: 403 });
     }
 
-    // Idempotency.
-    const { data: existing } = await admin
+    const { data: existingClaim } = await admin
       .from("razorpay_processed_payments")
       .select("razorpay_payment_id")
       .eq("razorpay_payment_id", paymentId)
       .maybeSingle();
-    if (existing) return NextResponse.json({ ok: true, idempotent: true });
 
-    const { error: insertErr } = await admin.from("razorpay_processed_payments").insert({
-      razorpay_payment_id: paymentId,
-      user_id: user.id,
-      kind: "six_month_plan",
-    });
-    if (insertErr?.code === "23505") return NextResponse.json({ ok: true, idempotent: true });
-    if (insertErr) {
-      console.error("[six-month-plan/verify] payment claim insert failed", insertErr.message);
-      return NextResponse.json({ ok: false, error: "Payment processing failed." }, { status: 500 });
+    if (!existingClaim) {
+      const { error: insertErr } = await admin.from("razorpay_processed_payments").insert({
+        razorpay_payment_id: paymentId,
+        user_id: user.id,
+        kind: "six_month_plan",
+      });
+      if (insertErr?.code === "23505") {
+        /* concurrent claim */
+      } else if (insertErr) {
+        console.error("[six-month-plan/verify] payment claim insert failed", insertErr.message);
+        return NextResponse.json({ ok: false, error: "Payment processing failed." }, { status: 500 });
+      }
     }
 
-    // Best-effort: cancel existing monthly Razorpay subscription so the user
-    // is not double-charged after upgrading. Failure is non-fatal.
+    const { data: profileBefore } = await admin
+      .from("user_profiles")
+      .select("subscription_plan, subscription_end_date, subscription_status, razorpay_subscription_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    const p = profileBefore as {
+      subscription_plan?: string | null;
+      subscription_end_date?: string | null;
+      subscription_status?: string | null;
+      razorpay_subscription_id?: string | null;
+    } | null;
+
+    if (p && hasActiveSixMonthAccess(p)) {
+      return NextResponse.json({
+        ok: true,
+        idempotent: true,
+        endsAt: p.subscription_end_date as string,
+      });
+    }
+
     let autopayWasCancelled = false;
     try {
-      const { data: prof } = await admin
-        .from("user_profiles")
-        .select("razorpay_subscription_id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      const subId = (prof as { razorpay_subscription_id?: string | null } | null)
-        ?.razorpay_subscription_id?.trim();
+      const subId = p?.razorpay_subscription_id?.trim();
       if (subId && /^sub_[a-zA-Z0-9]+$/.test(subId)) {
         await razorpay.subscriptions.cancel(subId, false);
         autopayWasCancelled = true;
@@ -127,8 +152,6 @@ export async function POST(req: NextRequest) {
     const now = new Date();
     const endsAt = new Date(now.getTime() + 183 * 24 * 60 * 60 * 1000).toISOString();
 
-    // Clear razorpay_subscription_id so stale subscription.cancelled / subscription.charged
-    // webhooks from the old monthly sub cannot overwrite this 6-month plan.
     const { error: updateErr } = await admin.from("user_profiles").update({
       subscription_status: "active",
       subscription_plan: "six_month",
@@ -141,11 +164,10 @@ export async function POST(req: NextRequest) {
       updated_at: now.toISOString(),
     }).eq("user_id", user.id);
     if (updateErr) {
-      console.error("[six-month-plan/verify] profile update failed after payment claim", updateErr.message);
+      console.error("[six-month-plan/verify] profile update failed", updateErr.message);
       return NextResponse.json({ ok: false, error: "Payment recorded but access grant failed. Please contact support." }, { status: 500 });
     }
 
-    // Send confirmation email (best-effort, non-fatal).
     if (user.email) {
       void sendSixMonthPlanActivatedEmail({
         email: user.email,

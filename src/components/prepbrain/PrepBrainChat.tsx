@@ -338,7 +338,7 @@ export function PrepBrainChat() {
         "kal-glass-panel flex flex-col overflow-hidden rounded-3xl",
         historyOpen && "max-sm:touch-none",
         "h-[min(calc(100dvh-9rem),760px)]",
-        "sm:h-auto sm:min-h-[min(76vh,640px)] sm:max-h-none",
+        "sm:h-[min(calc(100dvh-10rem),800px)] sm:min-h-[min(76vh,640px)]",
       ].join(" ")}
     >
       {/* Minimal header — calm hierarchy; usage lives in sidebar */}

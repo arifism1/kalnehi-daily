@@ -8,11 +8,11 @@ import { SITE_BRAND } from "@/lib/seo-metadata";
 
 /** Shown below the Mastermind chat input (product + liability notice). */
 export const PREPBRAIN_UI_DISCLAIMER =
-  "Mastermind is an AI assistant. It can make mistakes and its answers are not professional, medical, or legal advice. Kalnehi is not responsible for decisions you make based on this chat. Use your own judgment and official sources for exam rules and outcomes.";
+  "Mastermind uses AI. It can be wrong. It is not legal, medical, or official exam advice — check notices and rules yourself.";
 
 /** Top-of-panel banner: two short sentences only (Mastermind chat UI). */
 export const PREPBRAIN_TOP_NOTICE =
-  "Mastermind is your exam strategist—planning, revision, targets, motivation, sleep/focus, and weekly reviews. Add syllabus, daily plan, and meditation trackers for sharper, personalised answers.";
+  "It reads the syllabus, plan, and trackers you add here. For step-by-step tutoring or problem solving, use a general-purpose tool.";
 
 /**
  * Core system prompt for PrepBrain AI.

@@ -8,7 +8,7 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 export const metadata = marketingPageMetadata({
   path: "/what-can-kalnehi-do",
   title: `What Can Kalnehi Daily Do? — complete feature tour for JEE, NEET & UPSC | ${SITE_NAME}`,
-  description: `Every feature of Kalnehi Daily in one place: Daily Plan, Syllabus Tracker, Execution Planner, Marks Engine, Revision Reminders, Focus Timer, Consistency Heatmap, Habit Maker, Brain Yoga, Mastermind, AI voice dictation, Doubt Tracker, Personal Motivation Vault, Daily Log, push notifications and reminders — built for JEE, NEET, UPSC and Boards. Start with a 3-day free trial, no card required.`,
+  description: `Plain-language tour of Kalnehi Daily: daily plan, syllabus tracker, timer, habits, Mastermind, voice dictation, and the rest. Three-day free trial, no card.`,
 });
 
 export default function WhatCanKalnehiDoPage() {
@@ -28,7 +28,7 @@ export default function WhatCanKalnehiDoPage() {
           {
             question: "Is there a trial?",
             answer:
-              `New accounts get a 3-day free trial — every feature unlocked, no card required. After 3 days, subscribe to Smart Plan (${SMART_PLAN_MONTHLY_DISPLAY}/month) to continue.`,
+              `New accounts get 3 days free — no card. After that, Smart Plan is ${SMART_PLAN_MONTHLY_DISPLAY}/month if you want to continue.`,
           },
           {
             question: "Can I install Kalnehi Daily like an app?",

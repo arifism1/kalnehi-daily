@@ -15,7 +15,7 @@ export const LANDING_FAQ_ITEMS = [
   {
     question: "How does the trial work?",
     answer:
-      `Your first 3 days are completely free — no card required, every feature unlocked. After 3 days you subscribe to Smart Plan at ${m}/month with AutoPay. You choose how many months of AutoPay to authorise (1–12), and it stops automatically after that count. Cancel anytime from settings — no forms, no calls.`,
+      `First 3 days are free with no card. After that, Smart Plan is ${m}/month on AutoPay. You choose 1–12 monthly charges up front; the mandate stops when that number is reached. Cancel from settings anytime — no forms or calls.`,
   },
   {
     question: "What exams does Kalnehi Daily support?",

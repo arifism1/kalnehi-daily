@@ -51,7 +51,7 @@ export function AiTokenLimitLinks({ phase }: { phase: AiUsagePhase }) {
         >
           View plans & pricing
         </Link>
-        <span className="text-kal-text-secondary"> to unlock full Smart Plan access.</span>
+        <span className="text-kal-text-secondary"> for full Smart Plan access.</span>
       </p>
     );
   }

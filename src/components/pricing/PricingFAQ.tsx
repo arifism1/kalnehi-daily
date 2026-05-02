@@ -16,31 +16,31 @@ function buildFaqs(): { q: string; a: string }[] {
   return [
     {
       q: "What is included in the 3-day free trial?",
-      a: "Everything. Your free trial unlocks the full Kalnehi Daily system — Daily planner, Syllabus tracker, Focus timer, Study camera, Streak heatmap, Doubt tracker, Marks engine, Rank prediction, Revision reminders, Daily log, and Mastermind AI coach. You also get 60,000 Mastermind tokens and 5 minutes of voice control for those 3 days.",
+      a: "All product features for three days: voice planning, syllabus tracker, focus timer, study camera, streaks, doubts, marks engine, revision queue, daily log, Mastermind Strategy Coach, plus 60,000 Mastermind tokens and 5 minutes of voice.",
     },
     {
       q: "What happens after the 3-day free trial ends?",
-      a: `After your 3-day trial, you'll need to subscribe to Smart Plan to keep using Kalnehi Daily. You can choose monthly (${m}/month), 6 months upfront (${SMART_PLAN_SIX_MONTH_TOTAL_DISPLAY} — 10% off), or annual upfront (${SMART_PLAN_ANNUAL_TOTAL_DISPLAY} — 25% off). Your data, streaks, and all progress are preserved exactly as you left them — nothing is deleted. You can subscribe anytime from the pricing page or your subscription settings.`,
+      a: `You need Smart Plan to keep using the app (${m}/month, or 6 months upfront at ${SMART_PLAN_SIX_MONTH_TOTAL_DISPLAY} with 10% off, or 12 months at ${SMART_PLAN_ANNUAL_TOTAL_DISPLAY} with 25% off). Your data and progress stay put. Subscribe from pricing or subscription settings whenever you're ready.`,
     },
     {
       q: "Is a credit card required to start the trial?",
-      a: "No. Your 3-day free trial requires no card at all. Just sign up, complete onboarding, and start your trial from the pricing page.",
+      a: "No. Sign up, finish onboarding, and start the trial from the pricing page — no card.",
     },
     {
       q: "Can I upgrade to Smart Plan during the free trial?",
-      a: "Yes, absolutely. You can subscribe to Smart Plan at any point during your trial — or even before it starts. Your remaining trial time transitions immediately to your Smart Plan subscription.",
+      a: "Yes. Subscribe anytime, including during the trial. Billing moves to Smart Plan on the schedule you pick.",
     },
     {
       q: "What does Mastermind actually do?",
-      a: "Mastermind is your personalized AI prep coach built around your prep — not a generic chatbot. Ask it to explain a concept in depth, quiz you on any topic, identify your weakest areas from your marks data, or suggest exactly what to revise today. It knows your syllabus, your progress, and your patterns. Smart Plan gives you 2 million tokens per month.",
+      a: "It looks at what you've logged — syllabus, tasks, marks engine, habits — and answers in plain language: what to revise, how to order the week, what to worry about first. It does not replace a tutor for solving problems or teaching a chapter; use another chatbot for that. Smart Plan includes 2 million tokens per month.",
     },
     {
       q: "What can I do with voice control?",
-      a: "Speak to plan your day, log doubts, set reminders, and navigate the app — completely hands-free. Your 3-day free trial includes 5 minutes of voice time. Smart Plan gives you 100 minutes of voice every month, resetting each billing cycle.",
+      a: "Dictate your plan, log doubts, set reminders, and move around the app. The trial includes 5 minutes of voice total. Smart Plan includes 100 minutes per month, resetting each billing cycle.",
     },
     {
       q: "Is there a discount for longer autopay?",
-      a: `The monthly price stays ${m}/month regardless of how many months you authorise on the AutoPay plan. What changes is the control you set upfront — you decide how many monthly charges the autopay mandate can take (from 1 to 12). The mandate stops automatically after that count is reached. Alternatively, pay upfront for 6 months (${SMART_PLAN_SIX_MONTH_BILLING_LABEL} — 10% off) or 12 months (${SMART_PLAN_ANNUAL_BILLING_LABEL} — 25% off) for a bigger saving with no recurring charge at all. You can cancel anytime from settings.`,
+      a: `The monthly rate is still ${m}/month. On AutoPay you choose how many monthly charges to allow (1–12); the mandate stops after that. Or pay upfront for 6 months (${SMART_PLAN_SIX_MONTH_BILLING_LABEL} — 10% off) or 12 months (${SMART_PLAN_ANNUAL_BILLING_LABEL} — 25% off). Cancel from settings anytime.`,
     },
   ];
 }

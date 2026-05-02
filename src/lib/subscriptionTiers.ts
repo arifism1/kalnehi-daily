@@ -84,7 +84,7 @@ export const TIERS: Record<SubscriptionTier, TierConfig> = {
     maxTasksPerDay: null,
     tagline: "The complete AI-powered prep system",
     benefits: [
-      "Daily planner + syllabus tracker",
+      "Plan your day with voice + syllabus tracker",
       "Focus timer + study camera",
       "Streak + consistency heatmap",
       "Doubt tracker",

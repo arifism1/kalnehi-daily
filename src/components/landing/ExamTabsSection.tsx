@@ -56,7 +56,7 @@ const UNIVERSAL_FEATURES = [
   "Revision engine (fullest when microtopic syllabus is loaded for your exam)",
   "Consistency heatmap & habit tracker",
   "Brain Yoga / meditation resets",
-  "Mastermind AI coach",
+  "mastermind strategy coach",
   "Doubt tracker",
   "Daily log",
   "Push notifications & reminders",

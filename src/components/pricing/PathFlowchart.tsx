@@ -172,7 +172,7 @@ export function PathFlowchart() {
         <p className="text-xs text-kal-muted">No credit card needed</p>
         <div className="mt-3 space-y-1.5 text-left">
           {[
-            "Every feature fully unlocked",
+            "Full app for 3 days",
             "Mastermind — 60,000 tokens",
             "Voice control — 5 minutes",
           ].map((f) => (

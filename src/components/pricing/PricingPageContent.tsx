@@ -17,7 +17,7 @@ import { PricingTableMobile } from "./PricingTableMobile";
 type FeatureValue = boolean | string | null;
 
 const FEATURES: { name: string; trial: FeatureValue; smart: FeatureValue }[] = [
-  { name: "Daily planner", trial: true, smart: true },
+  { name: "Plan your day with voice", trial: true, smart: true },
   { name: "Syllabus tracker", trial: true, smart: true },
   { name: "Focus timer + study camera", trial: true, smart: true },
   { name: "Streak + consistency heatmap", trial: true, smart: true },
@@ -25,7 +25,7 @@ const FEATURES: { name: string; trial: FeatureValue; smart: FeatureValue }[] = [
   { name: "Marks engine + rank prediction", trial: true, smart: true },
   { name: "Revision reminders", trial: true, smart: true },
   { name: "Daily log & prep insights", trial: true, smart: true },
-  { name: "Mastermind AI coach", trial: true, smart: true },
+  { name: "Mastermind Strategy Coach", trial: true, smart: true },
   { name: "Voice control", trial: "5 min total", smart: "100 min/month" },
   { name: "Mastermind tokens", trial: "60,000 total", smart: "20,00,000/month" },
 ];
@@ -60,7 +60,6 @@ function FeatureCell({ value }: { value: FeatureValue }) {
 
 function HeroSection({ capStatus }: { capStatus: DailyCapStatus }) {
   const capFull = capStatus.capEnabled && capStatus.isFull;
-  const cap = capStatus.dailyCap;
 
   return (
     <section className="relative overflow-hidden pb-16 pt-12 sm:pb-20 sm:pt-16 lg:pb-24 lg:pt-20">
@@ -87,10 +86,6 @@ function HeroSection({ capStatus }: { capStatus: DailyCapStatus }) {
         >
           The voice-controlled exam prep tracker for serious aspirants.
         </h1>
-
-        <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-kal-text-secondary sm:text-xl">
-          Up to {cap.toLocaleString("en-IN")} free trials available each day. Spots reset at midnight IST.
-        </p>
 
         {capFull ? (
           <div className="mt-10 flex flex-col items-center gap-3">
@@ -138,8 +133,7 @@ function HeroSection({ capStatus }: { capStatus: DailyCapStatus }) {
   );
 }
 
-function HowItWorksSection({ capStatus }: { capStatus: DailyCapStatus }) {
-  const cap = capStatus.dailyCap;
+function HowItWorksSection() {
   const steps = [
     {
       num: "①",
@@ -149,7 +143,7 @@ function HowItWorksSection({ capStatus }: { capStatus: DailyCapStatus }) {
     {
       num: "②",
       title: "Claim a free spot",
-      body: `Up to ${cap.toLocaleString("en-IN")} spots available each day. Spots reset at midnight IST.`,
+      body: "Limited free spots each day. Spots reset at midnight IST.",
     },
     {
       num: "③",
@@ -195,7 +189,7 @@ function PricingTableSection() {
           >
             What you get
           </h2>
-          <p className="mt-2 text-sm text-kal-muted">Everything unlocked during your trial. Keep it all with Smart Plan.</p>
+          <p className="mt-2 text-sm text-kal-muted">All features during the trial; Smart Plan keeps them after that.</p>
         </div>
 
         {/* Mobile: tab switcher (hidden on md+) */}
@@ -307,8 +301,7 @@ function PricingTableSection() {
   );
 }
 
-function PlanCardsSection({ capStatus }: { capStatus: DailyCapStatus }) {
-  const cap = capStatus.dailyCap;
+function PlanCardsSection() {
   const m = SMART_PLAN_MONTHLY_DISPLAY;
   const upfrontNote = `or ${SMART_PLAN_SIX_MONTH_BILLING_LABEL} (10% off) · ${SMART_PLAN_ANNUAL_BILLING_LABEL} (25% off)`;
   const cards: {
@@ -338,15 +331,15 @@ function PlanCardsSection({ capStatus }: { capStatus: DailyCapStatus }) {
       ctaHref: "/#subscribe",
       ctaClass:
         "border border-kal-border bg-kal-card text-kal-text hover:border-kal-accent/40 hover:text-kal-accent",
-      intro: `Up to ${cap.toLocaleString("en-IN")} free spots available each day. Spots reset at midnight IST.`,
+      intro: "Limited free spots each day. Spots reset at midnight IST.",
       bullets: [
-        "Daily planner + syllabus tracker",
+        "Plan your day with voice + syllabus tracker",
         "Focus timer + study camera",
         "Streak + consistency heatmap",
         "Doubt tracker",
         "Marks engine + rank prediction",
         "Revision reminders + daily log",
-        "Mastermind AI coach",
+        "Mastermind Strategy Coach",
         "Voice control — 5 minutes total",
         "Mastermind tokens — 60,000 total",
       ],
@@ -586,9 +579,9 @@ export function PricingPageContent({ capStatus }: { capStatus: DailyCapStatus })
   return (
     <div className="w-full">
       <HeroSection capStatus={capStatus} />
-      <HowItWorksSection capStatus={capStatus} />
+      <HowItWorksSection />
       <PricingTableSection />
-      <PlanCardsSection capStatus={capStatus} />
+      <PlanCardsSection />
       <CheckoutSection />
       <FAQSection />
       <ExamFooterStrip />
