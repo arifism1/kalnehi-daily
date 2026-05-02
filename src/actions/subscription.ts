@@ -38,8 +38,9 @@ import {
 } from "@/lib/freeTrial";
 import {
   coerceVoiceMinutesUsed,
-  firstOfCurrentMonthDateString,
-  needsMonthlyUsageReset,
+  currentUsagePeriodStartDateString,
+  needsUsagePeriodReset,
+  istCalendarDateStringFromInstant,
 } from "@/lib/subscriptionUsage";
 import { SMART_PLAN_MONTHLY_DISPLAY } from "@/lib/smartPlanPricing";
 import {
@@ -588,13 +589,22 @@ async function upsertProfileByUserId(
 async function resetMonthlyAiUsageCounters(userId: string) {
   const admin = getAdminClient();
   if (!admin) return;
+  const { data } = await admin
+    .from("user_profiles")
+    .select("subscription_start_date")
+    .eq("user_id", userId)
+    .maybeSingle();
+  const subStart =
+    (data as { subscription_start_date?: string | null } | null)?.subscription_start_date ?? null;
+  const periodStart =
+    currentUsagePeriodStartDateString(subStart) ?? istCalendarDateStringFromInstant();
   const nowIso = new Date().toISOString();
   await admin
     .from("user_profiles")
     .update({
       photo_scans_used_this_month: 0,
       voice_minutes_used_this_month: 0,
-      usage_reset_date: firstOfCurrentMonthDateString(),
+      usage_reset_date: periodStart,
       updated_at: nowIso,
     })
     .eq("user_id", userId);
@@ -757,6 +767,7 @@ type PaidProfilePhotoRow = {
   subscription_tier: string | null;
   subscription_status: string | null;
   subscription_end_date: string | null;
+  subscription_start_date: string | null;
   photo_scans_used_this_month: number | null;
   bonus_photo_scans_ledger: unknown;
   usage_reset_date: string | null;
@@ -768,7 +779,11 @@ async function applyPaidPhotoScanUsage(
   data: PaidProfilePhotoRow,
   now: Date,
 ): Promise<{ ok: true; used: number; limit: number } | { ok: false; error: string }> {
-  const resetNeeded = needsMonthlyUsageReset(data.usage_reset_date);
+  const resetNeeded = needsUsagePeriodReset(
+    data.usage_reset_date,
+    data.subscription_start_date,
+    now,
+  );
   const currentUsed = resetNeeded ? 0 : (data.photo_scans_used_this_month ?? 0);
   const ledger = parseBonusLedger(data.bonus_photo_scans_ledger);
 
@@ -776,6 +791,9 @@ async function applyPaidPhotoScanUsage(
   const tierResolved: SubscriptionTier = parseSubscriptionTier(rawTier) ?? "pro";
   const isTrial = data.subscription_status === "trial";
   const monthlyLimit = getPhotoScansLimit(tierResolved, isTrial);
+  const periodStart =
+    currentUsagePeriodStartDateString(data.subscription_start_date, now) ??
+    istCalendarDateStringFromInstant(now);
 
   const { ledger: afterBonus, taken } = consumeFromBonusLedger(ledger, 1, now);
   if (taken === 1) {
@@ -788,7 +806,7 @@ async function applyPaidPhotoScanUsage(
     if (resetNeeded) {
       patch.photo_scans_used_this_month = 0;
       patch.voice_minutes_used_this_month = 0;
-      patch.usage_reset_date = firstOfCurrentMonthDateString();
+      patch.usage_reset_date = periodStart;
     }
     const { error: updateErr } = await admin
       .from("user_profiles")
@@ -809,7 +827,7 @@ async function applyPaidPhotoScanUsage(
   };
   if (resetNeeded) {
     patch.voice_minutes_used_this_month = 0;
-    patch.usage_reset_date = firstOfCurrentMonthDateString();
+    patch.usage_reset_date = periodStart;
   }
 
   if (!resetNeeded) {
@@ -862,6 +880,7 @@ type PaidProfileVoiceRow = {
   subscription_tier: string | null;
   subscription_status: string | null;
   subscription_end_date: string | null;
+  subscription_start_date: string | null;
   /** PostgREST may return `numeric` as string. */
   voice_minutes_used_this_month: number | string | null;
   bonus_voice_minutes_ledger: unknown;
@@ -876,7 +895,11 @@ async function applyPaidVoiceMinuteUsage(
   now: Date,
   minutes: number,
 ): Promise<{ ok: true; used: number; limit: number } | { ok: false; error: string }> {
-  const resetNeeded = needsMonthlyUsageReset(data.usage_reset_date);
+  const resetNeeded = needsUsagePeriodReset(
+    data.usage_reset_date,
+    data.subscription_start_date,
+    now,
+  );
   const currentUsed = resetNeeded
     ? 0
     : coerceVoiceMinutesUsed(data.voice_minutes_used_this_month);
@@ -886,6 +909,9 @@ async function applyPaidVoiceMinuteUsage(
   const tierResolved: SubscriptionTier = parseSubscriptionTier(rawTier) ?? "pro";
   const isTrial = data.subscription_status === "trial";
   const monthlyLimit = getVoiceMinutesLimit(tierResolved, isTrial);
+  const periodStart =
+    currentUsagePeriodStartDateString(data.subscription_start_date, now) ??
+    istCalendarDateStringFromInstant(now);
 
   const { ledger: ledgerAfterBonus, taken: takenFromBonus } = consumeFromBonusLedger(
     ledger,
@@ -906,7 +932,7 @@ async function applyPaidVoiceMinuteUsage(
   };
   if (resetNeeded) {
     patch.photo_scans_used_this_month = 0;
-    patch.usage_reset_date = firstOfCurrentMonthDateString();
+    patch.usage_reset_date = periodStart;
   }
 
   const { error: updateErr } = await admin
@@ -1159,7 +1185,7 @@ export async function incrementPhotoScanUsage(): Promise<
   const { data, error } = await admin
     .from("user_profiles")
     .select(
-      "subscription_tier, subscription_status, subscription_end_date, payment_grace_until, photo_scans_used_this_month, bonus_photo_scans_ledger, usage_reset_date, trial_started_at, trial_photo_scans_used, has_used_free_trial",
+      "subscription_tier, subscription_status, subscription_end_date, subscription_start_date, payment_grace_until, photo_scans_used_this_month, bonus_photo_scans_ledger, usage_reset_date, trial_started_at, trial_photo_scans_used, has_used_free_trial",
     )
     .eq("user_id", userId)
     .maybeSingle();
@@ -1196,7 +1222,7 @@ export async function incrementPhotoScanUsage(): Promise<
     const { data: again, error: againErr } = await admin
       .from("user_profiles")
       .select(
-        "subscription_tier, subscription_status, subscription_end_date, photo_scans_used_this_month, bonus_photo_scans_ledger, usage_reset_date",
+        "subscription_tier, subscription_status, subscription_end_date, subscription_start_date, photo_scans_used_this_month, bonus_photo_scans_ledger, usage_reset_date",
       )
       .eq("user_id", userId)
       .maybeSingle();
@@ -1238,7 +1264,7 @@ export async function ensureVoiceMinuteHeadroom(
   const { data, error } = await admin
     .from("user_profiles")
     .select(
-      "subscription_tier, subscription_status, subscription_end_date, payment_grace_until, voice_minutes_used_this_month, bonus_voice_minutes_ledger, usage_reset_date, trial_started_at, trial_voice_seconds_used",
+      "subscription_tier, subscription_status, subscription_end_date, subscription_start_date, payment_grace_until, voice_minutes_used_this_month, bonus_voice_minutes_ledger, usage_reset_date, trial_started_at, trial_voice_seconds_used",
     )
     .eq("user_id", userId)
     .maybeSingle();
@@ -1254,7 +1280,11 @@ export async function ensureVoiceMinuteHeadroom(
       (data as { payment_grace_until?: string | null }).payment_grace_until ?? null,
     )
   ) {
-    const resetNeeded = needsMonthlyUsageReset(data.usage_reset_date);
+    const resetNeeded = needsUsagePeriodReset(
+      data.usage_reset_date,
+      data.subscription_start_date ?? null,
+      now,
+    );
     const currentUsed = resetNeeded
       ? 0
       : coerceVoiceMinutesUsed(data.voice_minutes_used_this_month);
@@ -1312,7 +1342,7 @@ export async function incrementVoiceMinuteUsage(
   const { data, error } = await admin
     .from("user_profiles")
     .select(
-      "subscription_tier, subscription_status, subscription_end_date, payment_grace_until, voice_minutes_used_this_month, bonus_voice_minutes_ledger, usage_reset_date, photo_scans_used_this_month, trial_started_at, trial_voice_seconds_used, has_used_free_trial",
+      "subscription_tier, subscription_status, subscription_end_date, subscription_start_date, payment_grace_until, voice_minutes_used_this_month, bonus_voice_minutes_ledger, usage_reset_date, photo_scans_used_this_month, trial_started_at, trial_voice_seconds_used, has_used_free_trial",
     )
     .eq("user_id", userId)
     .maybeSingle();
@@ -1354,7 +1384,7 @@ export async function incrementVoiceMinuteUsage(
     const { data: again, error: againErr } = await admin
       .from("user_profiles")
       .select(
-        "subscription_tier, subscription_status, subscription_end_date, voice_minutes_used_this_month, bonus_voice_minutes_ledger, usage_reset_date, photo_scans_used_this_month",
+        "subscription_tier, subscription_status, subscription_end_date, subscription_start_date, voice_minutes_used_this_month, bonus_voice_minutes_ledger, usage_reset_date, photo_scans_used_this_month",
       )
       .eq("user_id", userId)
       .maybeSingle();

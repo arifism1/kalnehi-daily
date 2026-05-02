@@ -293,6 +293,7 @@ function useSubscriptionAccessState(): SubscriptionData {
         setHasUsedFreeTrial(!!data?.has_used_free_trial);
         const eff = effectiveUsageForDisplay(
           data?.usage_reset_date ?? null,
+          data?.subscription_start_date ?? null,
           data?.photo_scans_used_this_month ?? 0,
           coerceVoiceMinutesUsed(data?.voice_minutes_used_this_month),
         );

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { isFreeTrialWindowActive } from "@/lib/freeTrial";
 import { buildPrepbrainUsageDisplayPayload } from "@/lib/prepbrainTokenAccounting";
+import { prepbrainMonthKeyFromSubscriptionStart } from "@/lib/subscriptionUsage";
 import {
   prepbrainCalendarMonthKey,
   resolveAiUsagePhase,
@@ -18,6 +19,7 @@ export const runtime = "nodejs";
 type UsageProfileRow = Pick<
   Tables<"user_profiles">,
   | "subscription_status"
+  | "subscription_start_date"
   | "subscription_end_date"
   | "trial_started_at"
   | "ai_tokens_used"
@@ -70,7 +72,7 @@ export async function GET() {
   const { data: profileRaw, error } = await admin
     .from("user_profiles")
     .select(
-      "subscription_status,subscription_end_date,trial_started_at,ai_tokens_used,ai_tokens_month,welcome_ai_tokens_used,paid_trial_ai_tokens_used,bonus_ai_tokens_ledger",
+      "subscription_status,subscription_start_date,subscription_end_date,trial_started_at,ai_tokens_used,ai_tokens_month,welcome_ai_tokens_used,paid_trial_ai_tokens_used,bonus_ai_tokens_ledger",
     )
     .eq("user_id", user.id)
     .maybeSingle();
@@ -119,8 +121,11 @@ export async function GET() {
     );
   }
 
-  const calMonth = prepbrainCalendarMonthKey();
   const now = new Date();
+  const monthKey =
+    phase === "monthly"
+      ? prepbrainMonthKeyFromSubscriptionStart(profile.subscription_start_date ?? null, now)
+      : prepbrainCalendarMonthKey(now);
   const tokenRow: PrepBrainTokenRow = {
     ai_tokens_used: profile.ai_tokens_used,
     ai_tokens_month: profile.ai_tokens_month,
@@ -137,7 +142,7 @@ export async function GET() {
   const usage = buildPrepbrainUsageDisplayPayload(
     phase,
     tokenRow,
-    calMonth,
+    monthKey,
     profile.bonus_ai_tokens_ledger,
     now,
   );

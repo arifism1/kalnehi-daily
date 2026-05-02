@@ -11,7 +11,7 @@ import {
 } from "@/lib/bonusCreditsLedger";
 import { autopayMonthsFromNotes } from "@/lib/autopayMonths";
 import { RAZORPAY_PAYMENT_OR_SUB_ID_RE } from "@/lib/razorpayIds";
-import { firstOfCurrentMonthDateString } from "@/lib/subscriptionUsage";
+import { currentUsagePeriodStartDateString } from "@/lib/subscriptionUsage";
 import type { Database } from "@/types/supabase";
 import {
   sendMonthlyWelcomeEmail,
@@ -321,7 +321,12 @@ export async function POST(request: Request) {
     if (priorStatus === "trial") {
       effectivePatch.photo_scans_used_this_month = 0;
       effectivePatch.voice_minutes_used_this_month = 0;
-      effectivePatch.usage_reset_date = firstOfCurrentMonthDateString();
+      const startIso =
+        typeof effectivePatch.subscription_start_date === "string"
+          ? effectivePatch.subscription_start_date
+          : null;
+      effectivePatch.usage_reset_date =
+        currentUsagePeriodStartDateString(startIso) ?? startIso?.slice(0, 10) ?? null;
       effectivePatch.paid_trial_ai_tokens_used = 0;
     }
 

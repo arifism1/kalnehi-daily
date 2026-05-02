@@ -8,8 +8,6 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { prepbrainCalendarMonthKey } from "@/lib/prepbrainTokens";
-
 /** Conservative pre-debit per chat completion (aligned with typical short replies). */
 export const PREPBRAIN_AI_TOKEN_RESERVE_ESTIMATE = 1500;
 
@@ -23,12 +21,12 @@ function parseRpcJson(data: unknown): Record<string, unknown> | null {
 export async function prepbrainAiTokenReserve(
   admin: SupabaseClient,
   userId: string,
+  monthKey: string,
   estimate: number = PREPBRAIN_AI_TOKEN_RESERVE_ESTIMATE,
 ): Promise<
   | { ok: true; reservationId: string; version: number }
   | { ok: false; error: string; code: string }
 > {
-  const monthKey = prepbrainCalendarMonthKey();
   const { data, error } = await admin.rpc("prepbrain_ai_token_reserve", {
     p_user_id: userId,
     p_estimate: estimate,
