@@ -2,6 +2,7 @@ import { WhatCanKalnehiDoClient } from "@/components/marketing/WhatCanKalnehiDoC
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
+import { SMART_PLAN_MONTHLY_DISPLAY } from "@/lib/smartPlanPricing";
 import { SITE_NAME } from "@/lib/seo-metadata";
 
 export const metadata = marketingPageMetadata({
@@ -27,7 +28,7 @@ export default function WhatCanKalnehiDoPage() {
           {
             question: "Is there a trial?",
             answer:
-              "New accounts get a 3-day free trial — every feature unlocked, no card required. After 3 days, subscribe to Smart Plan (₹399/month) to continue.",
+              `New accounts get a 3-day free trial — every feature unlocked, no card required. After 3 days, subscribe to Smart Plan (${SMART_PLAN_MONTHLY_DISPLAY}/month) to continue.`,
           },
           {
             question: "Can I install Kalnehi Daily like an app?",

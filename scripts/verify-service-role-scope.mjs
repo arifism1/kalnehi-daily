@@ -32,10 +32,6 @@ const SITES = [
       "createAdminClient with service role after HMAC verify; updates profiles by subscription id from trusted Razorpay payload (no end-user auth).",
   },
   {
-    file: "src/app/api/helpyji/chat/route.ts",
-    scope: "After getUser(); writes keyed by user.id / subject_key patterns.",
-  },
-  {
     file: "src/app/api/cron/system-push/route.ts",
     scope: "Cron bearer only; batch sends by user rows from DB (global job).",
   },

@@ -32,7 +32,7 @@ import {
   filterTasksForDate,
   findMissedIncompleteTasks,
 } from "@/lib/progressEngine";
-import { FEATURE_CATEGORIES } from "@/lib/dashboardFeatures";
+import { VISIBLE_FEATURE_CATEGORIES } from "@/lib/dashboardFeatures";
 import { useEnabledFeaturesStore } from "@/store/useEnabledFeaturesStore";
 import { useTaskStore } from "@/store/useTaskStore";
 
@@ -247,7 +247,7 @@ const FEATURE_ITEM_BY_ID: Record<string, FeatureItem> = {
   },
 };
 
-const CATEGORIES: Category[] = FEATURE_CATEGORIES.map((cat) => ({
+const CATEGORIES: Category[] = VISIBLE_FEATURE_CATEGORIES.map((cat) => ({
   title: cat.title,
   dotColor: cat.dotColor,
   items: cat.featureIds.flatMap((id) => {

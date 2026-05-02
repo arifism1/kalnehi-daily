@@ -1,6 +1,6 @@
 /**
  * Shared PrepBrain token headroom checks and persistence (base phase pool + bonus_ai_tokens_ledger).
- * Used by /api/prepbrain/usage, /api/prepbrain/chat, /api/helpyji/chat.
+ * Used by /api/prepbrain/usage and /api/prepbrain/chat.
  */
 
 import {

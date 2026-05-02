@@ -1,45 +1,57 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ChevronDown } from "lucide-react";
 
-const FAQS = [
-  {
-    q: "What is included in the 3-day free trial?",
-    a: "Everything. Your free trial unlocks the full Kalnehi Daily system — Daily planner, Syllabus tracker, Focus timer, Study camera, Streak heatmap, Doubt tracker, Marks engine, Rank prediction, Revision reminders, Daily log, and Mastermind AI coach. You also get 60,000 Mastermind tokens and 5 minutes of voice control for those 3 days.",
-  },
-  {
-    q: "What happens after the 3-day free trial ends?",
-    a: "After your 3-day trial, you'll need to subscribe to Smart Plan to keep using Kalnehi Daily. You can choose monthly (₹399/month), 6 months upfront (₹2,154 — 10% off), or annual upfront (₹3,591 — 25% off). Your data, streaks, and all progress are preserved exactly as you left them — nothing is deleted. You can subscribe anytime from the pricing page or your subscription settings.",
-  },
-  {
-    q: "Is a credit card required to start the trial?",
-    a: "No. Your 3-day free trial requires no card at all. Just sign up, complete onboarding, and start your trial from the pricing page.",
-  },
-  {
-    q: "Can I upgrade to Smart Plan during the free trial?",
-    a: "Yes, absolutely. You can subscribe to Smart Plan at any point during your trial — or even before it starts. Your remaining trial time transitions immediately to your Smart Plan subscription.",
-  },
-  {
-    q: "What does Mastermind actually do?",
-    a: "Mastermind is your personalized AI prep coach built around your prep — not a generic chatbot. Ask it to explain a concept in depth, quiz you on any topic, identify your weakest areas from your marks data, or suggest exactly what to revise today. It knows your syllabus, your progress, and your patterns. Smart Plan gives you 2 million tokens per month.",
-  },
-  {
-    q: "What can I do with voice control?",
-    a: "Speak to plan your day, log doubts, set reminders, and navigate the app — completely hands-free. Your 3-day free trial includes 5 minutes of voice time. Smart Plan gives you 100 minutes of voice every month, resetting each billing cycle.",
-  },
-  {
-    q: "Is there a discount for longer autopay?",
-    a: "The monthly price stays ₹399/month regardless of how many months you authorise on the AutoPay plan. What changes is the control you set upfront — you decide how many monthly charges the autopay mandate can take (from 1 to 12). The mandate stops automatically after that count is reached. Alternatively, pay upfront for 6 months (₹2,154 — 10% off) or 12 months (₹3,591 — 25% off) for a bigger saving with no recurring charge at all. You can cancel anytime from settings.",
-  },
-] as const;
+import {
+  SMART_PLAN_ANNUAL_BILLING_LABEL,
+  SMART_PLAN_ANNUAL_TOTAL_DISPLAY,
+  SMART_PLAN_MONTHLY_DISPLAY,
+  SMART_PLAN_SIX_MONTH_BILLING_LABEL,
+  SMART_PLAN_SIX_MONTH_TOTAL_DISPLAY,
+} from "@/lib/smartPlanPricing";
+
+function buildFaqs(): { q: string; a: string }[] {
+  const m = SMART_PLAN_MONTHLY_DISPLAY;
+  return [
+    {
+      q: "What is included in the 3-day free trial?",
+      a: "Everything. Your free trial unlocks the full Kalnehi Daily system — Daily planner, Syllabus tracker, Focus timer, Study camera, Streak heatmap, Doubt tracker, Marks engine, Rank prediction, Revision reminders, Daily log, and Mastermind AI coach. You also get 60,000 Mastermind tokens and 5 minutes of voice control for those 3 days.",
+    },
+    {
+      q: "What happens after the 3-day free trial ends?",
+      a: `After your 3-day trial, you'll need to subscribe to Smart Plan to keep using Kalnehi Daily. You can choose monthly (${m}/month), 6 months upfront (${SMART_PLAN_SIX_MONTH_TOTAL_DISPLAY} — 10% off), or annual upfront (${SMART_PLAN_ANNUAL_TOTAL_DISPLAY} — 25% off). Your data, streaks, and all progress are preserved exactly as you left them — nothing is deleted. You can subscribe anytime from the pricing page or your subscription settings.`,
+    },
+    {
+      q: "Is a credit card required to start the trial?",
+      a: "No. Your 3-day free trial requires no card at all. Just sign up, complete onboarding, and start your trial from the pricing page.",
+    },
+    {
+      q: "Can I upgrade to Smart Plan during the free trial?",
+      a: "Yes, absolutely. You can subscribe to Smart Plan at any point during your trial — or even before it starts. Your remaining trial time transitions immediately to your Smart Plan subscription.",
+    },
+    {
+      q: "What does Mastermind actually do?",
+      a: "Mastermind is your personalized AI prep coach built around your prep — not a generic chatbot. Ask it to explain a concept in depth, quiz you on any topic, identify your weakest areas from your marks data, or suggest exactly what to revise today. It knows your syllabus, your progress, and your patterns. Smart Plan gives you 2 million tokens per month.",
+    },
+    {
+      q: "What can I do with voice control?",
+      a: "Speak to plan your day, log doubts, set reminders, and navigate the app — completely hands-free. Your 3-day free trial includes 5 minutes of voice time. Smart Plan gives you 100 minutes of voice every month, resetting each billing cycle.",
+    },
+    {
+      q: "Is there a discount for longer autopay?",
+      a: `The monthly price stays ${m}/month regardless of how many months you authorise on the AutoPay plan. What changes is the control you set upfront — you decide how many monthly charges the autopay mandate can take (from 1 to 12). The mandate stops automatically after that count is reached. Alternatively, pay upfront for 6 months (${SMART_PLAN_SIX_MONTH_BILLING_LABEL} — 10% off) or 12 months (${SMART_PLAN_ANNUAL_BILLING_LABEL} — 25% off) for a bigger saving with no recurring charge at all. You can cancel anytime from settings.`,
+    },
+  ];
+}
 
 export function PricingFAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const faqs = useMemo(() => buildFaqs(), []);
 
   return (
     <div className="space-y-3">
-      {FAQS.map(({ q, a }, idx) => {
+      {faqs.map(({ q, a }, idx) => {
         const isOpen = openIndex === idx;
         return (
           <div

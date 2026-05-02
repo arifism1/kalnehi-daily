@@ -4,6 +4,24 @@ export const VOICE_BILLING_DURATION_SEC_MIN = 1;
 export const VOICE_BILLING_DURATION_SEC_MAX = 300;
 export const VOICE_BILLING_DURATION_SEC_DEFAULT = 60;
 
+/** Assumes a low bitrate so duration is not underestimated for quota pre-checks. */
+const VOICE_FILESIZE_MIN_BITRATE_BPS = 24_000;
+
+/**
+ * Upper bound on audio length from byte size (pre-Whisper quota check).
+ * Capped to {@link VOICE_BILLING_DURATION_SEC_MAX}.
+ */
+export function estimateMaxVoiceAudioDurationSeconds(fileSizeBytes: number): number {
+  if (!Number.isFinite(fileSizeBytes) || fileSizeBytes <= 0) {
+    return VOICE_BILLING_DURATION_SEC_MIN;
+  }
+  const sec = Math.ceil((fileSizeBytes * 8) / VOICE_FILESIZE_MIN_BITRATE_BPS);
+  return Math.min(
+    VOICE_BILLING_DURATION_SEC_MAX,
+    Math.max(VOICE_BILLING_DURATION_SEC_MIN, sec),
+  );
+}
+
 export function clampVoiceBillingDurationSeconds(input: unknown): number {
   if (input === undefined || input === null) {
     return VOICE_BILLING_DURATION_SEC_DEFAULT;

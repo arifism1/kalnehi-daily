@@ -18,6 +18,7 @@ import {
   clampAutopayMonths,
   DEFAULT_AUTOPAY_MONTHS,
 } from "@/lib/autopayMonths";
+import { SMART_PLAN_MONTHLY_DISPLAY } from "@/lib/smartPlanPricing";
 
 const AUTOPAY_PRESET_MONTHS = [1, 2, 3, 6, 12] as const;
 
@@ -203,7 +204,7 @@ export function Day3Paywall() {
                       className="text-3xl font-normal text-kal-text"
                       style={{ fontFamily: "var(--font-display)" }}
                     >
-                      ₹399
+                      {SMART_PLAN_MONTHLY_DISPLAY}
                     </span>
                     <span className="text-xs text-kal-muted">/month</span>
                   </div>

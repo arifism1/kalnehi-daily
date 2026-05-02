@@ -4,6 +4,7 @@ import { getAllFeatures } from "@/content/features";
 import { getSyllabusSlugs, getSyllabusBySlug } from "@/content/syllabus";
 import { getAllUseCases } from "@/content/use-cases";
 import { EXAM_SITEMAP_PATHS, getPagesSitemapEntries } from "@/lib/sitemap-data";
+import { SMART_PLAN_MONTHLY_DISPLAY } from "@/lib/smartPlanPricing";
 
 export type SearchResultType = "page" | "exam" | "feature" | "blog" | "tool" | "comparison" | "for-audience" | "syllabus";
 
@@ -58,7 +59,7 @@ const PAGE_OVERRIDES: Record<string, { title: string; description: string; type:
   },
   "/pricing": {
     title: "Pricing",
-    description: "3-day free trial and Smart Plan (₹399/month) — JEE, NEET, UPSC, and all major exams.",
+    description: `3-day free trial and Smart Plan (${SMART_PLAN_MONTHLY_DISPLAY}/month) — JEE, NEET, UPSC, and all major exams.`,
     type: "page",
   },
   "/search": {

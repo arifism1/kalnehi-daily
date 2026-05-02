@@ -1,5 +1,5 @@
 /**
- * Unified AI chat client for PrepBrain and HelpyJi.
+ * Unified AI chat client for PrepBrain.
  *
  * Supports two providers:
  *   - "deepinfra" — OpenAI-compatible endpoint at api.deepinfra.com (primary for chat)

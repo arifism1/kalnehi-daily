@@ -7,7 +7,13 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
 import { ogImageExam } from "@/lib/og-image";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
+import {
+  SMART_PLAN_ANNUAL_BILLING_LABEL,
+  SMART_PLAN_MONTHLY_DISPLAY,
+} from "@/lib/smartPlanPricing";
 import { SITE_NAME } from "@/lib/seo-metadata";
+
+const MONTHLY = SMART_PLAN_MONTHLY_DISPLAY;
 
 export const metadata = marketingPageMetadata({
   path: "/neet",
@@ -75,7 +81,7 @@ const FAQS = [
   {
     question: "What is the pricing for NEET aspirants?",
     answer:
-      "Start free for 3 days with full access. Smart Plan is ₹399/month or ₹3,591/year. For a 12-month NEET prep cycle, the annual plan costs less than ₹300/month — less than a single coaching batch's monthly fee for just notes.",
+      `Start free for 3 days with full access. Smart Plan is ${MONTHLY}/month or ${SMART_PLAN_ANNUAL_BILLING_LABEL}. For a 12-month NEET prep cycle, the annual plan costs less than ₹300/month — less than a single coaching batch's monthly fee for just notes.`,
   },
 ];
 
@@ -144,8 +150,8 @@ export default function NeetPage() {
         </section>
 
         {/* Section 3 — Mastermind */}
-        <section className="space-y-4" aria-labelledby="neet-prepbrain">
-          <h2 id="neet-prepbrain" className="text-xl font-bold text-kal-text">
+        <section className="space-y-4" aria-labelledby="neet-mastermind">
+          <h2 id="neet-mastermind" className="text-xl font-bold text-kal-text">
             How Mastermind helps NEET aspirants
           </h2>
           <div className="grid gap-4 sm:grid-cols-2">

@@ -129,8 +129,8 @@ export default function CatPage() {
           </div>
         </section>
 
-        <section className="space-y-4" aria-labelledby="cat-prepbrain">
-          <h2 id="cat-prepbrain" className="text-xl font-bold text-kal-text">How Mastermind helps CAT aspirants</h2>
+        <section className="space-y-4" aria-labelledby="cat-mastermind">
+          <h2 id="cat-mastermind" className="text-xl font-bold text-kal-text">How Mastermind helps CAT aspirants</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <FeatureBlock
               title="Sectional balance analysis"

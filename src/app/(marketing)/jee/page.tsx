@@ -7,7 +7,10 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
 import { ogImageExam } from "@/lib/og-image";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
+import { SMART_PLAN_MONTHLY_DISPLAY } from "@/lib/smartPlanPricing";
 import { SITE_NAME } from "@/lib/seo-metadata";
+
+const MONTHLY = SMART_PLAN_MONTHLY_DISPLAY;
 
 export const metadata = marketingPageMetadata({
   path: "/jee",
@@ -72,7 +75,8 @@ const FAQS = [
   {
     question: "How much does it cost for a JEE aspirant?",
     answer:
-      "Start completely free for 3 days with full access including Mastermind (60,000 tokens) and 5 minutes of voice — no card required. After your trial, Smart Plan is ₹399/month with 2 million tokens and 100 minutes of voice per month.",
+      "Start completely free for 3 days with full access including Mastermind (60,000 tokens) and 5 minutes of voice — no card required. After your trial, Smart Plan is " +
+      `${MONTHLY}/month with 2 million tokens and 100 minutes of voice per month.`,
   },
 ];
 
@@ -146,8 +150,8 @@ export default function JeePage() {
         </section>
 
         {/* Section 3 — Mastermind */}
-        <section className="space-y-4" aria-labelledby="jee-prepbrain">
-          <h2 id="jee-prepbrain" className="text-xl font-bold text-kal-text">
+        <section className="space-y-4" aria-labelledby="jee-mastermind">
+          <h2 id="jee-mastermind" className="text-xl font-bold text-kal-text">
             How Mastermind helps JEE aspirants
           </h2>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -213,7 +217,7 @@ export default function JeePage() {
 
         <CTABanner
           headline="Start your JEE prep system today"
-          subtext="3 days free. Full access. No credit card. Then ₹399/month."
+          subtext={`3 days free. Full access. No credit card. Then ${MONTHLY}/month.`}
         />
       </article>
     </>

@@ -226,6 +226,30 @@ export const DASHBOARD_FEATURES: DashboardFeature[] = [
 
 export const ALL_FEATURE_IDS: string[] = DASHBOARD_FEATURES.map((f) => f.id);
 
+/**
+ * Feature IDs that are hidden while the corresponding feature flag is off.
+ * Add an id here to suppress it from all nav/discovery surfaces at once.
+ */
+const HIDDEN_FEATURE_IDS: ReadonlySet<string> =
+  process.env.NEXT_PUBLIC_ENABLE_AI_STUDY_PARTNER !== "true"
+    ? new Set(["study-sessions"])
+    : new Set();
+
+/** `FEATURE_CATEGORIES` with any currently-hidden features removed from their groups. */
+export const VISIBLE_FEATURE_CATEGORIES: FeatureCategoryDef[] = FEATURE_CATEGORIES.map(
+  (cat) => ({
+    ...cat,
+    featureIds: (cat.featureIds as readonly string[]).filter(
+      (id) => !HIDDEN_FEATURE_IDS.has(id),
+    ) as readonly string[],
+  }),
+).filter((cat) => cat.featureIds.length > 0);
+
+/** `DASHBOARD_FEATURES` with any currently-hidden features removed. */
+export const VISIBLE_DASHBOARD_FEATURES: DashboardFeature[] = DASHBOARD_FEATURES.filter(
+  (f) => !HIDDEN_FEATURE_IDS.has(f.id),
+);
+
 if (process.env.NODE_ENV === "development") {
   const fromCategories = FEATURE_CATEGORIES.flatMap((c) => [...c.featureIds]);
   const fromRegistry = DASHBOARD_FEATURES.map((f) => f.id);

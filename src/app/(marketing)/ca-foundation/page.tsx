@@ -53,8 +53,8 @@ export default function CaFoundationPage() {
           </div>
         </section>
 
-        <section className="space-y-3" aria-labelledby="cafound-prepbrain">
-          <h2 id="cafound-prepbrain" className="text-xl font-bold text-kal-text">How Mastermind helps CA Foundation students</h2>
+        <section className="space-y-3" aria-labelledby="cafound-mastermind">
+          <h2 id="cafound-mastermind" className="text-xl font-bold text-kal-text">How Mastermind helps CA Foundation students</h2>
           <p className="text-sm text-kal-text-secondary">Mastermind tracks your ICAI mock scores and tells you which paper is pulling your aggregate down. It also flags when you're spending too many hours on Paper 1 (Accounts) while Paper 3 (Maths) is neglected — a common mistake that causes Foundation failures.</p>
         </section>
 

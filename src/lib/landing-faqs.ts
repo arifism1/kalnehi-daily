@@ -2,6 +2,10 @@
  * Single source of truth for landing FAQ copy (on-page + JSON-LD).
  * Keep in sync with product: trial, exam scope, privacy, AI quotas.
  */
+import { SMART_PLAN_MONTHLY_DISPLAY } from "@/lib/smartPlanPricing";
+
+const m = SMART_PLAN_MONTHLY_DISPLAY;
+
 export const LANDING_FAQ_ITEMS = [
   {
     question: "What is Kalnehi Daily?",
@@ -11,7 +15,7 @@ export const LANDING_FAQ_ITEMS = [
   {
     question: "How does the trial work?",
     answer:
-      "Your first 3 days are completely free — no card required, every feature unlocked. After 3 days you subscribe to Smart Plan at ₹399/month with AutoPay. You choose how many months of AutoPay to authorise (1–12), and it stops automatically after that count. Cancel anytime from settings — no forms, no calls.",
+      `Your first 3 days are completely free — no card required, every feature unlocked. After 3 days you subscribe to Smart Plan at ${m}/month with AutoPay. You choose how many months of AutoPay to authorise (1–12), and it stops automatically after that count. Cancel anytime from settings — no forms, no calls.`,
   },
   {
     question: "What exams does Kalnehi Daily support?",
@@ -26,7 +30,7 @@ export const LANDING_FAQ_ITEMS = [
   {
     question: "How much AI (Mastermind) do I get?",
     answer:
-      "The 3-day free trial includes 60,000 Mastermind tokens and 5 minutes of voice dictation — shared across all 3 days. Smart Plan (₹399/month) includes 2 million tokens and 100 minutes of voice every month, both resetting each billing cycle.",
+      `The 3-day free trial includes 60,000 Mastermind tokens and 5 minutes of voice dictation — shared across all 3 days. Smart Plan (${m}/month) includes 2 million tokens and 100 minutes of voice every month, both resetting each billing cycle.`,
   },
   {
     question: "Can I cancel at any time?",

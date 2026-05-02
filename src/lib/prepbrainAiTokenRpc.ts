@@ -1,8 +1,8 @@
 /**
- * Atomic PrepBrain / HelpyJi **chat** AI token reserve → finalize (or cancel) via Postgres RPC.
+ * Atomic PrepBrain **chat** AI token reserve → finalize (or cancel) via Postgres RPC.
  * Debits a conservative estimate before the model; reconciles to real usage after.
  *
- * Scope: used by `/api/prepbrain/chat` and `/api/helpyji/chat` only. Voice dictation and
+ * Scope: used by `/api/prepbrain/chat` only. Voice dictation and
  * voice-parse-draft bill **voice minutes** (and related quotas), not this shared AI token pool.
  */
 

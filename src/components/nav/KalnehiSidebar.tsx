@@ -32,7 +32,7 @@ import { usePathname } from "next/navigation";
 
 import { usePlatform } from "@/hooks/usePlatform";
 import { PwaUpdateCallout } from "@/components/pwa/PwaUpdateCallout";
-import { FEATURE_CATEGORIES } from "@/lib/dashboardFeatures";
+import { VISIBLE_FEATURE_CATEGORIES } from "@/lib/dashboardFeatures";
 
 type SidebarItem = {
   href: string;
@@ -85,7 +85,7 @@ const SIDEBAR_LINK_BY_ID: Record<string, SidebarItem> = {
   "brain-yoga": { href: "/meditation", label: "Brain Yoga / Meditation", icon: Flower2 },
 };
 
-const SIDEBAR_CATEGORIES: SidebarCategory[] = FEATURE_CATEGORIES.map((cat) => ({
+const SIDEBAR_CATEGORIES: SidebarCategory[] = VISIBLE_FEATURE_CATEGORIES.map((cat) => ({
   title: cat.title,
   dotColor: cat.dotColor,
   items: cat.featureIds.flatMap((id) => {

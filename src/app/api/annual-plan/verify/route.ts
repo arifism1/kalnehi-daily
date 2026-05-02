@@ -9,11 +9,10 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
+import { SMART_PLAN_ANNUAL_PRICE_PAISE } from "@/lib/smartPlanPricing";
 import { sendAnnualPlanActivatedEmail } from "@/lib/waitlist/notifications";
 
 export const runtime = "nodejs";
-
-const ANNUAL_PRICE_PAISE = 359100;
 const RAZORPAY_PAYMENT_ID_RE = /^pay_[a-zA-Z0-9]+$/;
 const RAZORPAY_ORDER_ID_RE = /^order_[a-zA-Z0-9]+$/;
 const HEX_SIGNATURE_RE = /^[a-f0-9]{64}$/;
@@ -80,7 +79,7 @@ export async function POST(req: NextRequest) {
     if (payment.order_id !== orderId || payment.status !== "captured") {
       return NextResponse.json({ ok: false, error: "Payment not complete." }, { status: 400 });
     }
-    if (Number(order.amount) !== ANNUAL_PRICE_PAISE || Number(payment.amount) !== ANNUAL_PRICE_PAISE) {
+    if (Number(order.amount) !== SMART_PLAN_ANNUAL_PRICE_PAISE || Number(payment.amount) !== SMART_PLAN_ANNUAL_PRICE_PAISE) {
       return NextResponse.json({ ok: false, error: "Amount mismatch." }, { status: 400 });
     }
     if (order.notes?.kalnehi_user_id !== user.id || order.notes?.kalnehi_order_kind !== "annual_plan") {

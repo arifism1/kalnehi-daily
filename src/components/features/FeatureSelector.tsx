@@ -4,7 +4,7 @@ import clsx from "clsx";
 import { Check } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { DASHBOARD_FEATURES } from "@/lib/dashboardFeatures";
+import { VISIBLE_DASHBOARD_FEATURES } from "@/lib/dashboardFeatures";
 
 type FeatureSelectorProps = {
   selected: string[];
@@ -15,7 +15,7 @@ type FeatureSelectorProps = {
 
 export function FeatureSelector({ selected, onChange, toolbarEnd }: FeatureSelectorProps) {
   // Safety net: keep retired/internal features hidden even if stale data still references them.
-  const visibleFeatures = DASHBOARD_FEATURES.filter((feature) => feature.id !== "daily-log");
+  const visibleFeatures = VISIBLE_DASHBOARD_FEATURES.filter((feature) => feature.id !== "daily-log");
   const visibleFeatureIds = new Set(visibleFeatures.map((feature) => feature.id));
   const visibleSelectedCount = selected.filter((id) => visibleFeatureIds.has(id)).length;
   const allSelected = visibleSelectedCount === visibleFeatures.length;

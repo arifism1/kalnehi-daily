@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { getAiStudyPartnerBalance } from "@/actions/aiStudyPartner";
 import { StudyCameraPrivacyModal } from "@/components/study/StudyCameraPrivacyModal";
 import { StudyCameraTracker } from "@/components/study/StudyCameraTracker";
+import { isAiStudyPartnerUiEnabled } from "@/lib/aiStudyPartnerUi";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 
@@ -43,8 +44,12 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
     }
   }, [open]);
 
-  /** Routes to camera when pooled AI Study Partner time &gt; 0; otherwise surface link to subscribe. */
+  /** Routes to camera; when AI Study Partner is enabled, gates on pooled balance first. */
   const doStart = useCallback(async () => {
+    if (!isAiStudyPartnerUiEnabled) {
+      setStep("camera");
+      return;
+    }
     setIsCheckingBalance(true);
     setNeedsPartnerTime(false);
     try {
@@ -140,7 +145,7 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
                 <StudyCameraTracker
                   subject={subject}
                   userId={userId}
-                  aiPartnerMode={true}
+                  aiPartnerMode={isAiStudyPartnerUiEnabled}
                   onDone={onClose}
                 />
               </div>
@@ -198,7 +203,7 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
                       . Video stays on your device only — never uploaded.
                     </p>
                   </div>
-                ) : needsPartnerTime ? (
+                ) : isAiStudyPartnerUiEnabled && needsPartnerTime ? (
                   <div className="mt-4 rounded-2xl border border-amber-500/35 bg-amber-500/[0.07] px-4 py-4">
                     <p className="text-sm font-semibold text-kal-text">
                       No AI Study Partner time left

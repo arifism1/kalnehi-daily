@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
+import { SMART_PLAN_MONTHLY_DISPLAY } from "@/lib/smartPlanPricing";
+
 export function HeroSection() {
   return (
     <section className="relative min-h-[88vh] overflow-hidden bg-kal-page">
@@ -66,7 +68,7 @@ export function HeroSection() {
           </div>
 
           <p className="mt-3 text-xs text-kal-muted">
-            No card · 3 days fully free · Then ₹399/month · Cancel anytime
+            No card · 3 days fully free · Then {SMART_PLAN_MONTHLY_DISPLAY}/month · Cancel anytime
           </p>
         </div>
 

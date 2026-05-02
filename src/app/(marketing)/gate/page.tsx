@@ -115,8 +115,8 @@ export default function GatePage() {
           </p>
         </section>
 
-        <section className="space-y-4" aria-labelledby="gate-prepbrain">
-          <h2 id="gate-prepbrain" className="text-xl font-bold text-kal-text">How Mastermind helps GATE aspirants</h2>
+        <section className="space-y-4" aria-labelledby="gate-mastermind">
+          <h2 id="gate-mastermind" className="text-xl font-bold text-kal-text">How Mastermind helps GATE aspirants</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <FeatureBlock
               title="Subject weight vs completion analysis"
