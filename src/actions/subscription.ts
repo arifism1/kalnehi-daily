@@ -33,6 +33,7 @@ import {
 import {
   FREE_TRIAL_PHOTO_CAP,
   FREE_TRIAL_VOICE_CAP_SECONDS,
+  isFreeTrialWindowActive,
   isPaidSubscriptionAccess,
 } from "@/lib/freeTrial";
 import {
@@ -40,6 +41,7 @@ import {
   firstOfCurrentMonthDateString,
   needsMonthlyUsageReset,
 } from "@/lib/subscriptionUsage";
+import { SMART_PLAN_MONTHLY_DISPLAY } from "@/lib/smartPlanPricing";
 import {
   AUTOPAY_MONTHS_MIN,
   clampAutopayMonths,
@@ -1215,6 +1217,85 @@ export async function incrementPhotoScanUsage(): Promise<
         ? welcome.error
         : "Unable to update usage.",
   };
+}
+
+/**
+ * Read-only check before billable STT: same limits as {@link incrementVoiceMinuteUsage}
+ * without writing. Pass an upper bound on minutes (e.g. from file-size estimate).
+ */
+export async function ensureVoiceMinuteHeadroom(
+  minutes: number,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const userId = await getAuthedUserId();
+  if (!userId) return { ok: false, error: "Please sign in." };
+
+  const needMin = Math.max(0, minutes);
+  if (needMin <= 0) return { ok: true };
+
+  const admin = getAdminClient();
+  if (!admin) return { ok: false, error: "Service unavailable." };
+
+  const { data, error } = await admin
+    .from("user_profiles")
+    .select(
+      "subscription_tier, subscription_status, subscription_end_date, payment_grace_until, voice_minutes_used_this_month, bonus_voice_minutes_ledger, usage_reset_date, trial_started_at, trial_voice_seconds_used",
+    )
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error || !data) return { ok: false, error: "Unable to check usage." };
+
+  const now = new Date();
+
+  if (
+    isPaidSubscriptionAccess(
+      data.subscription_status ?? undefined,
+      data.subscription_end_date ?? undefined,
+      (data as { payment_grace_until?: string | null }).payment_grace_until ?? null,
+    )
+  ) {
+    const resetNeeded = needsMonthlyUsageReset(data.usage_reset_date);
+    const currentUsed = resetNeeded
+      ? 0
+      : coerceVoiceMinutesUsed(data.voice_minutes_used_this_month);
+    const ledger = parseBonusLedger(data.bonus_voice_minutes_ledger);
+    const tierResolved: SubscriptionTier =
+      parseSubscriptionTier(data.subscription_tier) ?? "pro";
+    const isTrial = data.subscription_status === "trial";
+    const monthlyLimit = getVoiceMinutesLimit(tierResolved, isTrial);
+    const { taken: takenFromBonus } = consumeFromBonusLedger(ledger, needMin, now);
+    const fromMonthly = needMin - takenFromBonus;
+    if (fromMonthly > 0 && currentUsed + fromMonthly > monthlyLimit) {
+      return { ok: false, error: "Monthly voice minutes limit reached." };
+    }
+    return { ok: true };
+  }
+
+  if (!data.trial_started_at) {
+    return {
+      ok: false,
+      error: "Start your 3-day free trial to use voice.",
+    };
+  }
+  if (!isFreeTrialWindowActive(data.trial_started_at, now)) {
+    return {
+      ok: false,
+      error: `Your 3-day free trial has ended. Subscribe to Smart Plan (${SMART_PLAN_MONTHLY_DISPLAY}/month) to continue.`,
+    };
+  }
+
+  const addSec = Math.round(needMin * 60);
+  if (addSec <= 0) return { ok: true };
+  const used = Math.max(0, data.trial_voice_seconds_used ?? 0);
+  if (used + addSec > FREE_TRIAL_VOICE_CAP_SECONDS) {
+    return {
+      ok: false,
+      error:
+        "You've used all 5 minutes of voice included in your 3-day free trial. Upgrade to Smart Plan for 100 minutes/month.",
+    };
+  }
+
+  return { ok: true };
 }
 
 export async function incrementVoiceMinuteUsage(

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useId, useState } from "react";
 
 import { StudyCameraPrivacyModal } from "@/components/study/StudyCameraPrivacyModal";
+import { isAiStudyPartnerUiEnabled } from "@/lib/aiStudyPartnerUi";
 import { useAuthStore } from "@/store/useAuthStore";
 import {
   useSettingsStore,
@@ -203,17 +204,19 @@ export function StudyCameraVerificationControls({ className }: { className?: str
             </>
           ) : null}
         </div>
-        <div className="border-t border-kal-border bg-kal-card-muted/50 px-4 py-3 sm:px-5">
-          <p className="text-[11px] leading-relaxed text-kal-text-secondary">
-            AI Study Partner pooled time &amp; extra hours:&nbsp;
-            <Link
-              href="/my-subscription#ai-study-partner"
-              className="font-semibold text-kal-accent underline underline-offset-2"
-            >
-              My Subscription
-            </Link>
-          </p>
-        </div>
+        {isAiStudyPartnerUiEnabled && (
+          <div className="border-t border-kal-border bg-kal-card-muted/50 px-4 py-3 sm:px-5">
+            <p className="text-[11px] leading-relaxed text-kal-text-secondary">
+              AI Study Partner pooled time &amp; extra hours:&nbsp;
+              <Link
+                href="/my-subscription#ai-study-partner"
+                className="font-semibold text-kal-accent underline underline-offset-2"
+              >
+                My Subscription
+              </Link>
+            </p>
+          </div>
+        )}
       </section>
     </>
   );

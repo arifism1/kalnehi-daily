@@ -2,6 +2,7 @@ import { BestStudyPracticesClient } from "@/components/marketing/BestStudyPracti
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
+import { SMART_PLAN_MONTHLY_DISPLAY } from "@/lib/smartPlanPricing";
 import { SITE_NAME } from "@/lib/seo-metadata";
 
 export const metadata = marketingPageMetadata({
@@ -32,7 +33,7 @@ export default function BestStudyPracticesPage() {
           {
             question: "Is there a free trial to experience all these features?",
             answer:
-              "Yes. New accounts get a 3-day free trial with every feature unlocked — including Mastermind (60,000 tokens) and 5 minutes of voice. After 3 days, subscribe to Smart Plan (₹399/month) to keep full access.",
+              `Yes. New accounts get a 3-day free trial with every feature unlocked — including Mastermind (60,000 tokens) and 5 minutes of voice. After 3 days, subscribe to Smart Plan (${SMART_PLAN_MONTHLY_DISPLAY}/month) to keep full access.`,
           },
           {
             question: "Which exams is Kalnehi Daily designed for?",

@@ -22,6 +22,14 @@ import {
   DEFAULT_AUTOPAY_MONTHS,
 } from "@/lib/autopayMonths";
 import { SITE_NAME } from "@/lib/seo-metadata";
+import {
+  SMART_PLAN_ANNUAL_PRICE_PAISE,
+  SMART_PLAN_ANNUAL_BILLING_LABEL,
+  SMART_PLAN_MONTHLY_DISPLAY,
+  SMART_PLAN_SIX_MONTH_BILLING_LABEL,
+  SMART_PLAN_SIX_MONTH_PRICE_PAISE,
+  smartPlanEffectiveMonthlyMoLabel,
+} from "@/lib/smartPlanPricing";
 import { toUserFacingMessage } from "@/lib/userFacingErrors";
 import { TIERS } from "@/lib/subscriptionTiers";
 import type { PaymentErrorProof } from "@/lib/paymentSupportEmail";
@@ -78,7 +86,8 @@ function AutopayDurationPanel({
                 How long should AutoPay run?
               </h2>
               <p className="mt-1 text-xs leading-snug text-kal-text-secondary sm:mt-1.5">
-                <span className="font-semibold text-kal-text">Monthly</span> billing at ₹399/month. Set how many
+                <span className="font-semibold text-kal-text">Monthly</span> billing at{" "}
+                {SMART_PLAN_MONTHLY_DISPLAY}/month. Set how many
                 monthly charges your UPI or card mandate may take. Cancel anytime
                 &mdash; even before all months are used &mdash; and keep access for what you&apos;ve
                 already paid.
@@ -763,7 +772,9 @@ export function PricingPageClient() {
               }`}
             >
               <span className="text-[11px] font-bold leading-tight">Monthly</span>
-              <span className="mt-0.5 text-[11px] font-semibold tabular-nums">₹399/mo</span>
+              <span className="mt-0.5 text-[11px] font-semibold tabular-nums">
+                {`${SMART_PLAN_MONTHLY_DISPLAY}/mo`}
+              </span>
             </button>
             <button
               type="button"
@@ -776,7 +787,9 @@ export function PricingPageClient() {
               }`}
             >
               <span className="text-[11px] font-bold leading-tight">6 Months</span>
-              <span className="mt-0.5 text-[11px] font-semibold tabular-nums">₹359/mo</span>
+              <span className="mt-0.5 text-[11px] font-semibold tabular-nums">
+                {smartPlanEffectiveMonthlyMoLabel(SMART_PLAN_SIX_MONTH_PRICE_PAISE, 6)}
+              </span>
               <span className={`mt-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide leading-none ${
                 billingCycle === "six_month" ? "bg-white/25 text-white" : "bg-kal-accent/15 text-kal-accent"
               }`}>
@@ -794,7 +807,9 @@ export function PricingPageClient() {
               }`}
             >
               <span className="text-[11px] font-bold leading-tight">Annual</span>
-              <span className="mt-0.5 text-[11px] font-semibold tabular-nums">₹299/mo</span>
+              <span className="mt-0.5 text-[11px] font-semibold tabular-nums">
+                {smartPlanEffectiveMonthlyMoLabel(SMART_PLAN_ANNUAL_PRICE_PAISE, 12)}
+              </span>
               <span className={`mt-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide leading-none ${
                 billingCycle === "annual" ? "bg-white/25 text-white" : "bg-kal-accent/15 text-kal-accent"
               }`}>
@@ -849,8 +864,10 @@ export function PricingPageClient() {
               {billingCycle === "annual" ? (
                 <>
                   <p className="text-lg font-bold leading-snug text-kal-text">
-                    ₹3,591/year
-                    <span className="ml-2 text-xs font-semibold text-kal-accent">₹299/mo · Save 25%</span>
+                    {SMART_PLAN_ANNUAL_BILLING_LABEL}
+                    <span className="ml-2 text-xs font-semibold text-kal-accent">
+                      {smartPlanEffectiveMonthlyMoLabel(SMART_PLAN_ANNUAL_PRICE_PAISE, 12)} · Save 25%
+                    </span>
                   </p>
                   <p className="mt-1 text-xs font-medium leading-snug text-kal-text-secondary">
                     One-time payment · 12 months access · no recurring charge.
@@ -859,8 +876,10 @@ export function PricingPageClient() {
               ) : billingCycle === "six_month" ? (
                 <>
                   <p className="text-lg font-bold leading-snug text-kal-text">
-                    ₹2,154/6 months
-                    <span className="ml-2 text-xs font-semibold text-kal-accent">₹359/mo · Save 10%</span>
+                    {SMART_PLAN_SIX_MONTH_BILLING_LABEL}
+                    <span className="ml-2 text-xs font-semibold text-kal-accent">
+                      {smartPlanEffectiveMonthlyMoLabel(SMART_PLAN_SIX_MONTH_PRICE_PAISE, 6)} · Save 10%
+                    </span>
                   </p>
                   <p className="mt-1 text-xs font-medium leading-snug text-kal-text-secondary">
                     One-time payment · 6 months access · no recurring charge.

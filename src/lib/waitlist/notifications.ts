@@ -7,6 +7,7 @@ import { Resend } from "resend";
 
 import { tryGetFirebaseMessaging } from "@/lib/fcm/admin";
 import { sendFcmToUserTokens } from "@/lib/fcm/sendNotifications";
+import { SMART_PLAN_MONTHLY_DISPLAY } from "@/lib/smartPlanPricing";
 import { SITE_URL } from "@/lib/site";
 
 function getResend(): Resend | null {
@@ -447,7 +448,7 @@ export async function sendDay3Evening(params: {
   await sendPush(
     params.userId,
     "Your trial ends in a few hours",
-    `Your ${params.streakDays}-day streak is paused — not deleted. Continue for ₹399/month.`,
+    `Your ${params.streakDays}-day streak is paused — not deleted. Continue for ${SMART_PLAN_MONTHLY_DISPLAY}/month.`,
     "/pricing",
   );
 }
@@ -540,7 +541,7 @@ function monthlyWelcomeHtml(params: {
 <div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
   <h2 style="font-size:22px;font-weight:600;margin-bottom:8px">Welcome to Smart Plan.</h2>
   <p style="color:#444;margin:0 0 16px">
-    You're now on the <strong>Smart Plan</strong> at <strong>₹399/month</strong>. You have full access to every feature on Kalnehi Daily — 2 million Mastermind tokens and 100 minutes of voice every month.
+    You're now on the <strong>Smart Plan</strong> at <strong>${SMART_PLAN_MONTHLY_DISPLAY}/month</strong>. You have full access to every feature on Kalnehi Daily — 2 million Mastermind tokens and 100 minutes of voice every month.
   </p>
   ${autopayLine}
   <a href="${appUrl}/my-subscription"
@@ -706,7 +707,7 @@ function waitlistSkipTrialStartedHtml(): { subject: string; html: string } {
     Start now →
   </a>
   <p style="color:#888;font-size:13px;margin-top:24px">
-    After your trial, subscribe to Smart Plan for ₹399/month — get 100 minutes of voice and 2 million Mastermind tokens every month.
+    After your trial, subscribe to Smart Plan for ${SMART_PLAN_MONTHLY_DISPLAY}/month — get 100 minutes of voice and 2 million Mastermind tokens every month.
   </p>
 </div>`;
   return { subject, html };

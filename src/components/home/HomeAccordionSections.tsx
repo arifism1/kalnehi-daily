@@ -29,6 +29,8 @@ import clsx from "clsx";
 import dynamic from "next/dynamic";
 import { useState, type ReactNode } from "react";
 
+import { isAiStudyPartnerUiEnabled } from "@/lib/aiStudyPartnerUi";
+
 import { MissedTasks } from "@/components/home/MissedTasks";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useEnabledFeaturesStore } from "@/store/useEnabledFeaturesStore";
@@ -320,15 +322,20 @@ export function HomeAccordionSections() {
     },
   ];
 
+  // Remove any sections for features that are currently launch-gated.
+  const availableSections = isAiStudyPartnerUiEnabled
+    ? allSections
+    : allSections.filter((s) => s.id !== "study-sessions");
+
   // null = all features enabled (no customisation set)
   const hasCustomisation = enabledFeatures !== null;
 
   const visibleSections =
     showAll || !hasCustomisation
-      ? allSections
-      : allSections.filter((s) => enabledFeatures.includes(s.id));
+      ? availableSections
+      : availableSections.filter((s) => enabledFeatures.includes(s.id));
 
-  const hiddenCount = allSections.length - visibleSections.length;
+  const hiddenCount = availableSections.length - visibleSections.length;
 
   return (
     <section

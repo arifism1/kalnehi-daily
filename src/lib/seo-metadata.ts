@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { absoluteUrl, getSiteUrl } from "@/lib/site";
+import { SMART_PLAN_MONTHLY_DISPLAY } from "@/lib/smartPlanPricing";
 
 /** Full official product name (SEO, manifest, browser tab, install UI). */
 export const SITE_NAME = "Kalnehi Daily - Voice Controlled Exam Prep Tracker";
@@ -91,7 +92,7 @@ const PAGE_SEO: Record<
     path: "/pricing",
     title: `Pricing — 3-Day Free Trial & Smart Plan | ${SITE_NAME}`,
     description:
-      `Start with a 3-day free trial — every feature, no card required. Then ₹399/month with Smart Plan: 2 million Mastermind tokens, 100 minutes voice, marks engine, and rank prediction.`,
+      `Start with a 3-day free trial — every feature, no card required. Then ${SMART_PLAN_MONTHLY_DISPLAY}/month with Smart Plan: 2 million Mastermind tokens, 100 minutes voice, marks engine, and rank prediction.`,
   },
   about: {
     path: "/about",

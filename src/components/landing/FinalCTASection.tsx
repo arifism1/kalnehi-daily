@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { SMART_PLAN_MONTHLY_DISPLAY } from "@/lib/smartPlanPricing";
+
 export function FinalCTASection() {
   return (
     <section className="bg-kal-page-end py-24 lg:py-32">
@@ -19,7 +21,7 @@ export function FinalCTASection() {
             Try Kalnehi Daily for free
           </Link>
           <p className="text-sm text-kal-muted">
-            3 days fully free · No card needed · Then ₹399/month · Cancel anytime.
+            3 days fully free · No card needed · Then {SMART_PLAN_MONTHLY_DISPLAY}/month · Cancel anytime.
           </p>
         </div>
       </div>

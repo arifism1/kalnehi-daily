@@ -15,6 +15,7 @@ import { getAiStudyPartnerBalance } from "@/actions/aiStudyPartner";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ExtraCreditsSection } from "@/components/settings/ExtraCreditsSection";
 import { AiStudyPartnerPurchaseModal } from "@/components/study/AiStudyPartnerPurchaseModal";
+import { isAiStudyPartnerUiEnabled } from "@/lib/aiStudyPartnerUi";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { useAiGate } from "@/hooks/useAiGate";
 import { useFreeTrialLiveEndsIn } from "@/hooks/useFreeTrialLiveEndsIn";
@@ -26,6 +27,10 @@ import {
 } from "@/lib/freeTrial";
 import { SITE_NAME } from "@/lib/seo-metadata";
 import type { AiUsagePhase, PrepBrainUsagePayload } from "@/lib/prepbrainTokens";
+import {
+  SMART_PLAN_ANNUAL_BILLING_LABEL,
+  SMART_PLAN_SIX_MONTH_BILLING_LABEL,
+} from "@/lib/smartPlanPricing";
 import { getTierConfig, TIERS } from "@/lib/subscriptionTiers";
 import { useAuthStore } from "@/store/useAuthStore";
 import { surfaceErrorForUi } from "@/lib/userFacingErrors";
@@ -299,7 +304,7 @@ export function MyPlanPageClient() {
   ]);
 
   useEffect(() => {
-    if (!user?.id) return;
+    if (!isAiStudyPartnerUiEnabled || !user?.id) return;
     let cancelled = false;
     void getAiStudyPartnerBalance()
       .then((bal) => { if (!cancelled) setAiPartnerBalance(bal); })
@@ -396,9 +401,9 @@ export function MyPlanPageClient() {
     rows.push({
       label: "Billing",
       value: isAnnualPlan
-        ? "₹3,591/year · one-time payment"
+        ? `${SMART_PLAN_ANNUAL_BILLING_LABEL} · one-time payment`
         : isSixMonthPlan
-          ? "₹2,154/6 months · one-time payment"
+          ? `${SMART_PLAN_SIX_MONTH_BILLING_LABEL} · one-time payment`
           : plan === "monthly" || plan === "trial"
             ? `${tierConfig.monthlyPriceDisplay}/month · cancel anytime`
             : (plan ?? "—"),
@@ -448,14 +453,16 @@ export function MyPlanPageClient() {
 
   return (
     <>
-    <AiStudyPartnerPurchaseModal
-      open={partnerPurchaseOpen}
-      onClose={() => setPartnerPurchaseOpen(false)}
-      onPurchased={() => {
-        setPartnerPurchaseOpen(false);
-        void getAiStudyPartnerBalance().then(setAiPartnerBalance).catch(() => null);
-      }}
-    />
+    {isAiStudyPartnerUiEnabled && (
+      <AiStudyPartnerPurchaseModal
+        open={partnerPurchaseOpen}
+        onClose={() => setPartnerPurchaseOpen(false)}
+        onPurchased={() => {
+          setPartnerPurchaseOpen(false);
+          void getAiStudyPartnerBalance().then(setAiPartnerBalance).catch(() => null);
+        }}
+      />
+    )}
     {(isCancelledWithAccess || welcomeTrialExpiredNoPay || onWelcomeTrial) && (
       <Script
         src="https://checkout.razorpay.com/v1/checkout.js"
@@ -632,7 +639,11 @@ export function MyPlanPageClient() {
                       {statusLabel(status)}
                     </span>
                     <span className="text-sm font-semibold text-kal-text">
-                      {isAnnualPlan ? "₹3,591/year" : isSixMonthPlan ? "₹2,154/6 months" : `${tierConfig.monthlyPriceDisplay}/month`}
+                      {isAnnualPlan
+                        ? SMART_PLAN_ANNUAL_BILLING_LABEL
+                        : isSixMonthPlan
+                          ? SMART_PLAN_SIX_MONTH_BILLING_LABEL
+                          : `${tierConfig.monthlyPriceDisplay}/month`}
                     </span>
                   </div>
                 ) : null}
@@ -882,7 +893,7 @@ export function MyPlanPageClient() {
           </div>
 
           {/* AI Study Partner balance */}
-          {user?.id ? (() => {
+          {isAiStudyPartnerUiEnabled && user?.id ? (() => {
             const totalSec = aiPartnerBalance ?? 0;
             const h = Math.floor(totalSec / 3600);
             const m = Math.floor((totalSec % 3600) / 60);

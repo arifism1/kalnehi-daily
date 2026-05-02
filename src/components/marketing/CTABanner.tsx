@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { SMART_PLAN_MONTHLY_DISPLAY } from "@/lib/smartPlanPricing";
+
 interface CTABannerProps {
   headline?: string;
   subtext?: string;
@@ -11,7 +13,7 @@ interface CTABannerProps {
 
 export function CTABanner({
   headline = "Start free — 3 days on us",
-  subtext = "No credit card. Full access for 3 days. Then ₹399/month — or save 10–25% with 6-month or annual plans.",
+  subtext = `No credit card. Full access for 3 days. Then ${SMART_PLAN_MONTHLY_DISPLAY}/month — or save 10–25% with 6-month or annual plans.`,
   primaryLabel = "Start free — 3 days on us",
   primaryHref = "/auth",
   secondaryLabel = "See pricing",

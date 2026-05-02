@@ -1,7 +1,7 @@
 /**
  * Vercel Cron — runs on the 1st of every month at 00:00 UTC.
  * Resets ai_tokens_used = 0 for all users so the shared 2M monthly budget
- * refreshes for both PrepBrain and HelpyJi.
+ * refreshes for PrepBrain.
  *
  * Secured with CRON_SECRET (set in Vercel environment variables).
  * Vercel automatically sends: Authorization: Bearer <CRON_SECRET>

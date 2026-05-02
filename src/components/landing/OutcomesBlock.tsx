@@ -1,4 +1,7 @@
-const FACTS = [
+import { SMART_PLAN_MONTHLY_DISPLAY } from "@/lib/smartPlanPricing";
+
+function facts() {
+  return [
   {
     value: "18",
     label: "features in one app",
@@ -10,7 +13,7 @@ const FACTS = [
     detail: "Every feature unlocked for 3 days. Your trial starts when you're ready.",
   },
   {
-    value: "₹399",
+    value: SMART_PLAN_MONTHLY_DISPLAY,
     label: "per month, full access",
     detail: "2 million Mastermind tokens and 100 minutes of voice every month. Everything, always.",
   },
@@ -20,7 +23,8 @@ const FACTS = [
     detail:
       "Pick your profile in-app (including Other). Deepest syllabus + marks + revision coverage today: JEE Main, NEET UG, and Class 11/12 Boards.",
   },
-] as const;
+];
+}
 
 export function OutcomesBlock() {
   return (
@@ -39,7 +43,7 @@ export function OutcomesBlock() {
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {FACTS.map(({ value, label, detail }) => (
+          {facts().map(({ value, label, detail }) => (
             <div
               key={label}
               className="flex flex-col gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.04] p-6"
@@ -64,7 +68,7 @@ export function OutcomesBlock() {
           <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
             {[
               { label: "3-day free trial", voice: "5 min total", tokens: "60k tokens" },
-              { label: "Smart Plan (₹399/mo)", voice: "100 min/month", tokens: "2M tokens/month" },
+              { label: `Smart Plan (${SMART_PLAN_MONTHLY_DISPLAY}/mo)`, voice: "100 min/month", tokens: "2M tokens/month" },
             ].map(({ label, voice, tokens }) => (
               <div key={label} className="text-center">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-kal-accent/60">{label}</p>

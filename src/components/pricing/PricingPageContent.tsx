@@ -2,6 +2,11 @@ import Link from "next/link";
 import { Check, Minus } from "lucide-react";
 
 import type { DailyCapStatus } from "@/lib/daily-trial-cap";
+import {
+  SMART_PLAN_MONTHLY_DISPLAY,
+  SMART_PLAN_ANNUAL_BILLING_LABEL,
+  SMART_PLAN_SIX_MONTH_BILLING_LABEL,
+} from "@/lib/smartPlanPricing";
 import { PathFlowchart } from "./PathFlowchart";
 import { PricingFAQ } from "./PricingFAQ";
 import { PricingPageClient } from "./PricingPageClient";
@@ -240,7 +245,7 @@ function PricingTableSection() {
                         className="text-2xl font-normal text-kal-text"
                         style={{ fontFamily: "var(--font-display)" }}
                       >
-                        ₹399
+                        {SMART_PLAN_MONTHLY_DISPLAY}
                       </p>
                       <span className="text-xs text-kal-muted">/mo</span>
                     </div>
@@ -289,7 +294,7 @@ function PricingTableSection() {
                       href="#subscribe"
                       className="inline-flex min-h-[40px] items-center justify-center rounded-full bg-kal-accent px-5 text-sm font-bold text-white shadow-[0_4px_16px_rgba(255,122,0,0.28)] transition hover:brightness-105"
                     >
-                      Subscribe — ₹399/mo
+                      Subscribe — {SMART_PLAN_MONTHLY_DISPLAY}/mo
                     </Link>
                   </td>
                 </tr>
@@ -304,6 +309,8 @@ function PricingTableSection() {
 
 function PlanCardsSection({ capStatus }: { capStatus: DailyCapStatus }) {
   const cap = capStatus.dailyCap;
+  const m = SMART_PLAN_MONTHLY_DISPLAY;
+  const upfrontNote = `or ${SMART_PLAN_SIX_MONTH_BILLING_LABEL} (10% off) · ${SMART_PLAN_ANNUAL_BILLING_LABEL} (25% off)`;
   const cards: {
     name: string;
     price: string;
@@ -346,14 +353,14 @@ function PlanCardsSection({ capStatus }: { capStatus: DailyCapStatus }) {
     },
     {
       name: "Smart Plan",
-      price: "₹399",
+      price: m,
       duration: "per month",
-      annualNote: "or ₹2,154/6 months (10% off) · ₹3,591/year (25% off)",
+      annualNote: upfrontNote,
       tag: "Most popular",
       borderClass: "border-kal-accent/60",
       badgeBg: "bg-kal-accent",
       badgeText: "text-white",
-      cta: "Subscribe — ₹399/month",
+      cta: `Subscribe — ${m}/month`,
       ctaHref: "#subscribe",
       ctaClass:
         "bg-kal-accent text-white shadow-[0_4px_16px_rgba(255,122,0,0.28)] hover:brightness-105",
@@ -514,7 +521,7 @@ function CheckoutSection() {
             Subscribe to Smart Plan.
           </h2>
           <p className="mt-2 text-sm text-kal-muted">
-            ₹399/month · cancel anytime · AutoPay for the duration you choose.
+            {SMART_PLAN_MONTHLY_DISPLAY}/month · cancel anytime · AutoPay for the duration you choose.
           </p>
         </div>
         <PricingPageClient />
@@ -565,7 +572,7 @@ function ExamFooterStrip() {
             href="#subscribe"
             className="inline-flex min-h-[48px] w-full items-center justify-center rounded-full border border-kal-border bg-kal-card/70 px-8 text-base font-semibold text-kal-text backdrop-blur-sm transition hover:border-kal-accent/40 hover:text-kal-accent sm:w-auto"
           >
-            Subscribe — ₹399/month
+            Subscribe — {SMART_PLAN_MONTHLY_DISPLAY}/month
           </Link>
         </div>
       </div>

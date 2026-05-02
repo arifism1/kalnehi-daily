@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useCallback, useState } from "react";
+
+import { isAiStudyPartnerUiEnabled } from "@/lib/aiStudyPartnerUi";
 import { ChevronDown } from "lucide-react";
 
 type FeatureCard = {
@@ -275,7 +277,7 @@ export function WhatCanKalnehiDoClient() {
         </div>
 
         <ul className="grid list-none grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-7">
-          {FEATURES.map((f) => {
+          {FEATURES.filter((f) => isAiStudyPartnerUiEnabled || f.id !== "study-sessions").map((f) => {
             const expanded = openId === f.id;
             return (
               <li key={f.id}>

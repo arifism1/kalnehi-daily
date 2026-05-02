@@ -132,8 +132,8 @@ export default function UpscPage() {
         </section>
 
         {/* Section 3 — Mastermind */}
-        <section className="space-y-4" aria-labelledby="upsc-prepbrain">
-          <h2 id="upsc-prepbrain" className="text-xl font-bold text-kal-text">
+        <section className="space-y-4" aria-labelledby="upsc-mastermind">
+          <h2 id="upsc-mastermind" className="text-xl font-bold text-kal-text">
             How Mastermind helps UPSC aspirants
           </h2>
           <div className="grid gap-4 sm:grid-cols-2">

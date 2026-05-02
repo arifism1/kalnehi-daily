@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { Check, ArrowRight } from "lucide-react";
 
-const PLANS = [
+import { SMART_PLAN_MONTHLY_DISPLAY } from "@/lib/smartPlanPricing";
+
+function plans() {
+  const m = SMART_PLAN_MONTHLY_DISPLAY;
+  return [
   {
     name: "3-Day Free Trial",
     price: "₹0",
@@ -21,7 +25,7 @@ const PLANS = [
   },
   {
     name: "Smart Plan",
-    price: "₹399",
+    price: m,
     duration: "/month",
     highlight: true,
     features: [
@@ -31,12 +35,13 @@ const PLANS = [
       "Mastermind — 20,00,000 tokens/month",
       "Voice control — 100 minutes/month",
     ],
-    cta: "Subscribe — ₹399/month",
+    cta: `Subscribe — ${m}/month`,
     ctaHref: "/pricing",
     ctaClass:
       "bg-kal-accent text-white shadow-[0_4px_16px_rgba(255,122,0,0.28)] hover:brightness-105",
   },
-] as const;
+];
+}
 
 export function PricingSection() {
   return (
@@ -60,7 +65,7 @@ export function PricingSection() {
 
         {/* Plan cards */}
         <div className="mx-auto grid max-w-2xl gap-5 sm:grid-cols-2">
-          {PLANS.map((plan) => (
+          {plans().map((plan) => (
             <div
               key={plan.name}
               className={`relative flex flex-col rounded-2xl border-2 p-6 transition-shadow hover:shadow-[var(--kal-shadow-card-hover)] ${

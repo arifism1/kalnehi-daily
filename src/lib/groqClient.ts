@@ -3,7 +3,7 @@
  *
  * Env overrides (optional):
  * - `GROQ_MODEL_PARSING` — Dictate / voice-parse-draft / handwritten structured parse (default: cheap 8B).
- * - `GROQ_MODEL_CHAT` — PrepBrain & HelpyJi chat (default: 8B).
+ * - `GROQ_MODEL_CHAT` — PrepBrain chat (default: 8B).
  * - `GROQ_MODEL_REASONING` — reserved for future use (default: same as parsing).
  *
  * Legacy: `GROQ_DEFAULT_MODEL` applies only to **chat** if `GROQ_MODEL_CHAT` is unset.
@@ -13,7 +13,7 @@
 
 export type GroqTaskType = "parsing" | "chat" | "reasoning";
 
-/** Default chat (cheap) — PrepBrain / HelpyJi. */
+/** Default chat (cheap) — PrepBrain. */
 export const GROQ_DEFAULT_CHAT_ID = "llama-3.1-8b-instant" as const;
 
 /** Default parsing / reasoning (cheap) — voice, paste plan, etc. */

@@ -37,7 +37,6 @@ const VALID_NAV_PATHS = new Set([
   "/timer",
   "/study-sessions",
   "/study-camera",
-  "/paste-handwritten",
   // Planner sub-pages
   "/planner",
   "/planner/habits",
@@ -104,7 +103,7 @@ Parse the user voice command and return ONLY a valid JSON object — no markdown
 {"intent":"navigate","path":"<valid path>","response_text":"..."}
 Valid paths:
   Core: /home, /settings (profile and app preferences), /notifications, /my-subscription, /feedback
-  Planning: /daily-plan, /daily-debrief (canonical; /daily-log redirects), /daily-engine, /dictate-day, /saved-plans, /missed-tasks, /calendar, /timer, /study-sessions, /study-camera, /paste-handwritten
+  Planning: /daily-plan, /daily-debrief (canonical; /daily-log redirects), /daily-engine, /dictate-day, /saved-plans, /missed-tasks, /calendar, /timer, /study-sessions, /study-camera
   Planner: /planner, /planner/habits, /planner/schedule, /planner/weekly, /planner/todos, /planner/routine, /planner/productivity
   Track: /progress, /consistency-tracker, /heatmap, /marks-engine, /my-target, /target-score-blueprint
   Revise: /revision-reminders, /syllabus, /doubts, /mastermind
@@ -121,9 +120,9 @@ Valid paths:
 - "Target score blueprint" → {"intent":"navigate","path":"/target-score-blueprint","response_text":"Opening the target score blueprint."}
 - "Open profile" or "Open settings" → {"intent":"navigate","path":"/settings","response_text":"Opening Settings."}
 - "Open daily engine" → {"intent":"navigate","path":"/daily-engine","response_text":"Opening the daily engine."}
-- "Open study camera" → {"intent":"navigate","path":"/study-camera","response_text":"Opening study camera."}
+${process.env.NEXT_PUBLIC_ENABLE_AI_STUDY_PARTNER === "true" ? `- "Open study camera" → {"intent":"navigate","path":"/study-camera","response_text":"Opening study camera."}
 
-- "Plan my day" → {"intent":"navigate","path":"/daily-plan","response_text":"Opening your daily plan."}
+` : ""}- "Plan my day" → {"intent":"navigate","path":"/daily-plan","response_text":"Opening your daily plan."}
 - "Open Mastermind" → {"intent":"navigate","path":"/mastermind","response_text":"Opening Mastermind."}
 - "Go to revision reminders" → {"intent":"navigate","path":"/revision-reminders","response_text":"Opening Revision Reminders."}
 

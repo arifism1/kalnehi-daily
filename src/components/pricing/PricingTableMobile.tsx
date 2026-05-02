@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Check, Minus } from "lucide-react";
 import Link from "next/link";
 
+import { SMART_PLAN_MONTHLY_DISPLAY } from "@/lib/smartPlanPricing";
+
 type FeatureValue = boolean | string | null;
 
 const FEATURES: { name: string; trial: FeatureValue; smart: FeatureValue }[] = [
@@ -22,7 +24,7 @@ const FEATURES: { name: string; trial: FeatureValue; smart: FeatureValue }[] = [
 
 type PlanKey = "trial" | "smart";
 
-const PLANS: {
+function plans(): {
   key: PlanKey;
   label: string;
   price: string;
@@ -30,7 +32,9 @@ const PLANS: {
   cta: string;
   ctaHref: string;
   highlight: boolean;
-}[] = [
+}[] {
+  const m = SMART_PLAN_MONTHLY_DISPLAY;
+  return [
   {
     key: "trial",
     label: "Free Trial",
@@ -43,13 +47,14 @@ const PLANS: {
   {
     key: "smart",
     label: "Smart Plan",
-    price: "₹399",
+    price: m,
     duration: "/month",
-    cta: "Subscribe — ₹399/month",
+    cta: `Subscribe — ${m}/month`,
     ctaHref: "#subscribe",
     highlight: true,
   },
 ];
+}
 
 function FeatureRow({ value }: { value: FeatureValue }) {
   if (value === true)
@@ -61,6 +66,8 @@ function FeatureRow({ value }: { value: FeatureValue }) {
 
 export function PricingTableMobile() {
   const [active, setActive] = useState<PlanKey>("trial");
+  const monthly = SMART_PLAN_MONTHLY_DISPLAY;
+  const PLANS = plans();
   const plan = PLANS.find((p) => p.key === active)!;
 
   return (
@@ -78,7 +85,7 @@ export function PricingTableMobile() {
                     : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
                 }
               : {
-                  label: "₹399",
+                  label: monthly,
                   color: isActive ? "bg-white/20 text-white" : "bg-kal-accent/15 text-kal-accent",
                 };
 

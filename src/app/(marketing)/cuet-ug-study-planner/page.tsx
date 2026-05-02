@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
+import { SMART_PLAN_MONTHLY_DISPLAY } from "@/lib/smartPlanPricing";
 import { SITE_NAME } from "@/lib/seo-metadata";
 
 export const metadata = marketingPageMetadata({
@@ -39,7 +40,7 @@ export default function CuetUgStudyPlannerPage() {
           {
             question: "Is there a free tier?",
             answer:
-              `${SITE_NAME} offers a 3-day free trial (no card required), then Smart Plan at ₹399/month — see pricing. These public guides stay free to read.`,
+              `${SITE_NAME} offers a 3-day free trial (no card required), then Smart Plan at ${SMART_PLAN_MONTHLY_DISPLAY}/month — see pricing. These public guides stay free to read.`,
           },
         ]}
       />

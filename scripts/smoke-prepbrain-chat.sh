@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# App smoke: PrepBrain + HelpyJi chat (requires local dev server + valid session cookie).
+# App smoke: PrepBrain chat (requires local dev server + valid session cookie).
 # Usage:
 #   export BASE_URL=http://localhost:3000
 #   export SESSION_COOKIE='sb-...-auth-token=...'
@@ -70,9 +70,4 @@ else
   echo ""
 fi
 echo ""
-echo "POST /api/helpyji/chat (minimal body — adjust to match your API contract)"
-curl -sS "${HDR[@]}" -X POST "$BASE_URL/api/helpyji/chat" \
-  -d '{"messages":[{"role":"user","content":"Hello"}],"session_id":"smoke-test"}' | head -c 1200
-echo ""
-echo ""
-echo "Done. 403/429 on chat when not allowed; PrepBrain LLM path returns SSE — usage is in the final data: {type:done, usage:...}. Token finalize may complete shortly after the response ends."
+echo "Done. PrepBrain LLM path returns SSE — usage is in the final data: {type:done, usage:...}. Token finalize may complete shortly after the response ends."

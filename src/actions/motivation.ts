@@ -3,10 +3,16 @@
 import Groq from "groq-sdk";
 import { revalidatePath } from "next/cache";
 
+import { ensureVoiceMinuteHeadroom, incrementVoiceMinuteUsage } from "@/actions/subscription";
 import type { MotivationOutboxOp } from "@/lib/motivationTypes";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatSupabaseError } from "@/lib/supabase";
 import { USER_ERROR } from "@/lib/userFacingErrors";
+import {
+  clampVoiceBillingDurationSeconds,
+  estimateMaxVoiceAudioDurationSeconds,
+  VOICE_BILLING_DURATION_SEC_MIN,
+} from "@/lib/voiceDurationBilling";
 import type { TablesInsert, TablesUpdate } from "@/types/supabase";
 
 const GROQ_TRANSCRIBE_MODEL = "whisper-large-v3-turbo";
@@ -321,15 +327,37 @@ export async function transcribeMotivationAudio(
       return { ok: false, error: "Recording is too large." };
     }
 
+    const headroomMin =
+      clampVoiceBillingDurationSeconds(estimateMaxVoiceAudioDurationSeconds(file.size)) /
+      60;
+    const headroom = await ensureVoiceMinuteHeadroom(headroomMin);
+    if (!headroom.ok) {
+      return { ok: false, error: headroom.error };
+    }
+
     const groq = new Groq({ apiKey });
     const transcription = await groq.audio.transcriptions.create({
       file,
       model: GROQ_TRANSCRIBE_MODEL,
+      response_format: "verbose_json",
+      language: "en",
     });
     const text = (transcription.text ?? "").trim();
     if (!text) {
       return { ok: false, error: "Could not transcribe audio." };
     }
+
+    const verbose = transcription as { duration?: number };
+    const billedSeconds = clampVoiceBillingDurationSeconds(
+      typeof verbose.duration === "number" && verbose.duration > 0
+        ? verbose.duration
+        : VOICE_BILLING_DURATION_SEC_MIN,
+    );
+    const usage = await incrementVoiceMinuteUsage(billedSeconds / 60);
+    if (!usage.ok) {
+      return { ok: false, error: usage.error };
+    }
+
     return { ok: true, text };
   } catch (e) {
     return { ok: false, error: formatSupabaseError(e) };

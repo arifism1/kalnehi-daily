@@ -8,7 +8,6 @@ export type FeatureAccess = "allowed" | "limited" | "blocked";
 
 export type FeatureKey =
   | "dictate_day"
-  | "handwritten_scanner"
   | "self_type_day"
   | "syllabus"
   | "marks_engine"
@@ -31,7 +30,6 @@ export type FeatureKey =
 
 const PRO_ACCESS: Record<FeatureKey, FeatureAccess> = {
   dictate_day: "allowed",
-  handwritten_scanner: "allowed",
   self_type_day: "allowed",
   syllabus: "allowed",
   marks_engine: "allowed",
@@ -51,43 +49,6 @@ const PRO_ACCESS: Record<FeatureKey, FeatureAccess> = {
   prepbrain_ai: "allowed",
   mock_tests: "allowed",
   mistake_log: "allowed",
-};
-
-/** Human-readable upgrade prompt per blocked feature. */
-export const FEATURE_LABELS: Record<FeatureKey, { name: string; upgradeHint: string }> = {
-  dictate_day: { name: "Dictate My Day", upgradeHint: "Upgrade to Smart Plan (₹399/month) for voice-based daily planning." },
-  handwritten_scanner: {
-    name: "Plan My Day",
-    upgradeHint: "Upgrade to Smart Plan (₹399/month) for handwriting scan and planning.",
-  },
-  self_type_day: { name: "Self Type Day", upgradeHint: "" },
-  syllabus: { name: "Syllabus Tracker", upgradeHint: "Upgrade to Smart Plan (₹399/month) for full syllabus with microtopics & predictions." },
-  marks_engine: { name: "Marks Engine", upgradeHint: "Upgrade to Smart Plan (₹399/month) for marks predictions & microtopic analysis." },
-  execution_planner: { name: "Execution Planner", upgradeHint: "Upgrade to Smart Plan (₹399/month) for the full execution planner." },
-  timer: { name: "Timer", upgradeHint: "Upgrade to Smart Plan (₹399/month) for the full execution timer." },
-  progress: { name: "Progress Tracker", upgradeHint: "Upgrade to Smart Plan (₹399/month) to track your preparation progress." },
-  daily_log: { name: "Daily Log", upgradeHint: "Upgrade to Smart Plan (₹399/month) for daily study logging." },
-  consistency_tracker: { name: "Consistency Tracker", upgradeHint: "Upgrade to Smart Plan (₹399/month) for the consistency calendar." },
-  revision: {
-    name: "Revision Reminders",
-    upgradeHint: "Upgrade to Smart Plan (₹399/month) for revision reminders and your due list.",
-  },
-  habits: { name: "Habit Maker", upgradeHint: "Upgrade to Smart Plan (₹399/month) for full habit tracking with streaks." },
-  motivation: { name: "Personal Motivation Vault", upgradeHint: "Upgrade to Smart Plan (₹399/month) for the motivation vault." },
-  meditation: { name: "Meditation", upgradeHint: "Upgrade to Smart Plan (₹399/month) for meditation sessions." },
-  meditation_consistency: { name: "Meditation Consistency", upgradeHint: "Upgrade to Smart Plan (₹399/month) for meditation consistency tracking." },
-  doubts: { name: "Doubt Tracker", upgradeHint: "Upgrade to Smart Plan (₹399/month) for doubt tracking." },
-  ai_photo_scan: {
-    name: "Handwriting photo scans",
-    upgradeHint: "Upgrade to Smart Plan (₹399/month) for monthly handwriting photo scans.",
-  },
-  ai_voice: { name: "AI Voice Dictation", upgradeHint: "Upgrade to Smart Plan (₹399/month) for AI voice dictation — 100 minutes/month." },
-  prepbrain_ai: {
-    name: "Mastermind",
-    upgradeHint: "Upgrade to Smart Plan (₹399/month) for Mastermind — 2 million tokens per month.",
-  },
-  mock_tests: { name: "Mock Test Tracker", upgradeHint: "Upgrade to Smart Plan (₹399/month) to track mock tests and score trends." },
-  mistake_log: { name: "Mistake Log", upgradeHint: "Upgrade to Smart Plan (₹399/month) to log and analyse your mistake patterns." },
 };
 
 export type TierConfig = {
@@ -135,6 +96,43 @@ export const TIERS: Record<SubscriptionTier, TierConfig> = {
       "20,00,000 Mastermind tokens/month",
     ],
   },
+};
+
+function smartUpgradeHint(rest: string): string {
+  return `Upgrade to Smart Plan (${TIERS.pro.monthlyPriceDisplay}/month) ${rest}`;
+}
+
+/** Human-readable upgrade prompt per blocked feature. */
+export const FEATURE_LABELS: Record<FeatureKey, { name: string; upgradeHint: string }> = {
+  dictate_day: { name: "Dictate My Day", upgradeHint: smartUpgradeHint("for voice-based daily planning.") },
+  self_type_day: { name: "Self Type Day", upgradeHint: "" },
+  syllabus: { name: "Syllabus Tracker", upgradeHint: smartUpgradeHint("for full syllabus with microtopics & predictions.") },
+  marks_engine: { name: "Marks Engine", upgradeHint: smartUpgradeHint("for marks predictions & microtopic analysis.") },
+  execution_planner: { name: "Execution Planner", upgradeHint: smartUpgradeHint("for the full execution planner.") },
+  timer: { name: "Timer", upgradeHint: smartUpgradeHint("for the full execution timer.") },
+  progress: { name: "Progress Tracker", upgradeHint: smartUpgradeHint("to track your preparation progress.") },
+  daily_log: { name: "Daily Log", upgradeHint: smartUpgradeHint("for daily study logging.") },
+  consistency_tracker: { name: "Consistency Tracker", upgradeHint: smartUpgradeHint("for the consistency calendar.") },
+  revision: {
+    name: "Revision Reminders",
+    upgradeHint: smartUpgradeHint("for revision reminders and your due list."),
+  },
+  habits: { name: "Habit Maker", upgradeHint: smartUpgradeHint("for full habit tracking with streaks.") },
+  motivation: { name: "Personal Motivation Vault", upgradeHint: smartUpgradeHint("for the motivation vault.") },
+  meditation: { name: "Meditation", upgradeHint: smartUpgradeHint("for meditation sessions.") },
+  meditation_consistency: { name: "Meditation Consistency", upgradeHint: smartUpgradeHint("for meditation consistency tracking.") },
+  doubts: { name: "Doubt Tracker", upgradeHint: smartUpgradeHint("for doubt tracking.") },
+  ai_photo_scan: {
+    name: "Study session photo verification",
+    upgradeHint: smartUpgradeHint("for verified study session photo quota."),
+  },
+  ai_voice: { name: "AI Voice Dictation", upgradeHint: smartUpgradeHint("for AI voice dictation — 100 minutes/month.") },
+  prepbrain_ai: {
+    name: "Mastermind",
+    upgradeHint: smartUpgradeHint("for Mastermind — 2 million tokens per month."),
+  },
+  mock_tests: { name: "Mock Test Tracker", upgradeHint: smartUpgradeHint("to track mock tests and score trends.") },
+  mistake_log: { name: "Mistake Log", upgradeHint: smartUpgradeHint("to log and analyse your mistake patterns.") },
 };
 
 export const TIER_ORDER: SubscriptionTier[] = ["pro"];

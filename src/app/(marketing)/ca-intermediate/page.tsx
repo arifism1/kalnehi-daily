@@ -52,8 +52,8 @@ export default function CaIntermediatePage() {
           </div>
         </section>
 
-        <section className="space-y-3" aria-labelledby="caint-prepbrain">
-          <h2 id="caint-prepbrain" className="text-xl font-bold text-kal-text">Mastermind for CA Intermediate</h2>
+        <section className="space-y-3" aria-labelledby="caint-mastermind">
+          <h2 id="caint-mastermind" className="text-xl font-bold text-kal-text">Mastermind for CA Intermediate</h2>
           <p className="text-sm text-kal-text-secondary leading-relaxed">Mastermind tracks your ICAI mock scores paper by paper and tells you which Accounting or Audit topics are pulling your aggregate down. It also monitors whether you're spending proportional time across both groups — the #1 mistake that causes Group 2 failures among students who focused all attention on Group 1.</p>
         </section>
 

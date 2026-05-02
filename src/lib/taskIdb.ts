@@ -9,8 +9,8 @@ import type { Microtopic, Task } from "@/store/useTaskStore";
 import type { StudySessionLog } from "@/lib/studySessionTypes";
 
 const DB_NAME = "kalnehi-daily";
-/** v6: `handwritten_planner_snapshots` for Paste Handwritten offline draft. */
-const DB_VERSION = 6;
+/** v7: dropped `handwritten_planner_snapshots` (OCR feature removed). */
+const DB_VERSION = 7;
 
 export type ExecutionSessionRow = Tables<"task_sessions">;
 
@@ -35,37 +35,6 @@ export type VoicePlannerSnapshot = {
   rows: VoicePlannerSnapshotRow[];
   transcriptAggregate: string;
   updatedAt: number;
-};
-
-/** Paste Handwritten Plan — offline snapshot (not voice or typed tasks). */
-export type HandwrittenPlannerSnapshotRow = {
-  id: string;
-  include: boolean;
-  name: string;
-  startInput: string;
-  endInput: string;
-  duration: string | null;
-};
-
-export type HandwrittenPlannerSnapshot = {
-  key: string;
-  userId: string;
-  logDate: string;
-  sourceText: string;
-  rows: HandwrittenPlannerSnapshotRow[];
-  updatedAt: number;
-};
-
-/** Payload for `handwritten_planner_replace` outbox op (matches server replace shape). */
-export type HandwrittenPlannerReplacePayload = {
-  log_date: string;
-  source_text: string;
-  tasks: Array<{
-    activityName: string;
-    start_time: string | null;
-    end_time: string | null;
-    duration: string | null;
-  }>;
 };
 
 type KalnehiDB = DBSchema & {
@@ -93,10 +62,6 @@ type KalnehiDB = DBSchema & {
     key: string;
     value: VoicePlannerSnapshot;
   };
-  handwritten_planner_snapshots: {
-    key: string;
-    value: HandwrittenPlannerSnapshot;
-  };
 };
 
 export type OutboxMutation = {
@@ -111,7 +76,6 @@ export type OutboxMutation = {
     | "voice_timeline_create"
     | "voice_timeline_update"
     | "voice_timeline_delete"
-    | "handwritten_planner_replace"
     | "daily_task_create"
     | "daily_task_update"
     | "daily_task_delete";
@@ -130,8 +94,6 @@ export type OutboxMutation = {
   voiceInsert?: Omit<TablesInsert<"voice_timeline_entries">, "user_id">;
   /** voice_timeline_update */
   voicePatch?: TablesUpdate<"voice_timeline_entries">;
-  /** handwritten_planner_replace — delete all rows for log_date then insert tasks */
-  handwrittenReplace?: HandwrittenPlannerReplacePayload;
   /** daily_tasks — plan resolved from plan_date on flush */
   dailyTaskInsert?: {
     plan_date: string;
@@ -158,8 +120,7 @@ type StoreName =
   | "execution_log"
   | "outbox"
   | "study_sessions"
-  | "voice_planner_snapshots"
-  | "handwritten_planner_snapshots";
+  | "voice_planner_snapshots";
 
 function ensureStore(
   db: IDBPDatabase<KalnehiDB>,
@@ -207,9 +168,11 @@ function migrateDatabase(
     ensureStore(db, "voice_planner_snapshots", "key");
   }
 
-  if (oldVersion < 6) {
-    console.log("[taskIdb] applying migration < v6");
-    ensureStore(db, "handwritten_planner_snapshots", "key");
+  if (oldVersion < 7) {
+    console.log("[taskIdb] applying migration < v7: removing handwritten_planner_snapshots");
+    if (db.objectStoreNames.contains("handwritten_planner_snapshots" as never)) {
+      db.deleteObjectStore("handwritten_planner_snapshots" as never);
+    }
   }
 
   // Safety net: guarantee all known stores exist even on irregular upgrade paths.
@@ -219,7 +182,6 @@ function migrateDatabase(
   ensureStore(db, "execution_log", "id");
   ensureStore(db, "study_sessions", "id");
   ensureStore(db, "voice_planner_snapshots", "key");
-  ensureStore(db, "handwritten_planner_snapshots", "key");
 
   console.log(`[taskIdb] migrate done: v${oldVersion} -> v${newVersion}`);
 }
@@ -276,50 +238,6 @@ export async function getVoicePlannerSnapshot(
 ): Promise<VoicePlannerSnapshot | undefined> {
   const db = await getDb();
   return db.get("voice_planner_snapshots", voicePlannerSnapshotKey(userId, logDate));
-}
-
-export function handwrittenPlannerSnapshotKey(
-  userId: string,
-  logDate: string,
-): string {
-  return `${userId}|${logDate}`;
-}
-
-export async function putHandwrittenPlannerSnapshot(
-  snap: HandwrittenPlannerSnapshot,
-): Promise<void> {
-  const db = await getDb();
-  await db.put("handwritten_planner_snapshots", snap);
-}
-
-export async function getHandwrittenPlannerSnapshot(
-  userId: string,
-  logDate: string,
-): Promise<HandwrittenPlannerSnapshot | undefined> {
-  const db = await getDb();
-  return db.get(
-    "handwritten_planner_snapshots",
-    handwrittenPlannerSnapshotKey(userId, logDate),
-  );
-}
-
-/** Drop pending handwritten replace ops for a date so only the latest survives. */
-export async function removePendingHandwrittenReplacementsForDate(
-  logDate: string,
-): Promise<void> {
-  const db = await getDb();
-  const all = await db.getAll("outbox");
-  const targets = all.filter(
-    (m) =>
-      m.op === "handwritten_planner_replace" &&
-      m.handwrittenReplace?.log_date === logDate,
-  );
-  if (targets.length === 0) return;
-  const tx = db.transaction("outbox", "readwrite");
-  for (const m of targets) {
-    await tx.store.delete(m.clientMutationId);
-  }
-  await tx.done;
 }
 
 export async function loadAllLocalState(): Promise<{

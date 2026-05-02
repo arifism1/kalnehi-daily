@@ -112,7 +112,7 @@ export async function getAiUsageSnapshot(): Promise<AiUsageSnapshot | null> {
     groq: { inputTokens: 0, outputTokens: 0, costInr: 0 },
   };
 
-  // PrepBrain / HelpyJi rows
+  // PrepBrain rows
   for (const r of rows) {
     const t = new Date(r.finalized_at).getTime();
     const k = dateKeyIST(new Date(r.finalized_at));

@@ -1,5 +1,5 @@
 /**
- * Vercel Cron — refunds estimate for PrepBrain/HelpyJi AI token reservations that passed
+ * Vercel Cron — refunds estimate for PrepBrain AI token reservations that passed
  * expires_at without finalize (abandoned requests, crashed handlers, or finalize RPC failures).
  *
  * Secured with CRON_SECRET (same pattern as reset-ai-tokens).

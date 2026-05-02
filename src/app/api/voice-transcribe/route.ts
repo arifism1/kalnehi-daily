@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import Groq from "groq-sdk";
 
+import { ensureVoiceMinuteHeadroom, incrementVoiceMinuteUsage } from "@/actions/subscription";
+import {
+  clampVoiceBillingDurationSeconds,
+  estimateMaxVoiceAudioDurationSeconds,
+  VOICE_BILLING_DURATION_SEC_MIN,
+} from "@/lib/voiceDurationBilling";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 /** `verbose_json` adds `duration` (seconds); groq-sdk's Transcription type only declares `text`. */
@@ -47,6 +53,15 @@ export async function POST(req: Request) {
     );
   }
 
+  const headroomMin =
+    clampVoiceBillingDurationSeconds(
+      estimateMaxVoiceAudioDurationSeconds(audioField.size),
+    ) / 60;
+  const headroom = await ensureVoiceMinuteHeadroom(headroomMin);
+  if (!headroom.ok) {
+    return NextResponse.json({ ok: false, error: headroom.error }, { status: 402 });
+  }
+
   try {
     const groq = new Groq({ apiKey });
     // verbose_json returns `duration` — the actual audio length in seconds.
@@ -67,10 +82,21 @@ export async function POST(req: Request) {
     }
 
     const verbose = transcription as GroqVerboseTranscription;
-    // `duration` is in seconds as a float; round up to avoid zero-billing edge cases.
-    const durationSeconds = Math.ceil(
-      typeof verbose.duration === "number" && verbose.duration > 0 ? verbose.duration : 5,
+    const billedSeconds = clampVoiceBillingDurationSeconds(
+      typeof verbose.duration === "number" && verbose.duration > 0
+        ? verbose.duration
+        : VOICE_BILLING_DURATION_SEC_MIN,
     );
+    const durationSeconds = billedSeconds;
+
+    const usage = await incrementVoiceMinuteUsage(billedSeconds / 60);
+    if (!usage.ok) {
+      const unauthorized = usage.error === "Please sign in.";
+      return NextResponse.json(
+        { ok: false, error: usage.error },
+        { status: unauthorized ? 401 : 402 },
+      );
+    }
 
     return NextResponse.json({ ok: true, transcript, durationSeconds });
   } catch (err) {

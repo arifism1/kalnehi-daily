@@ -3,6 +3,8 @@
  * Used by global JSON-LD, OG image fallbacks, and related UI.
  */
 
+import { TIERS } from "@/lib/subscriptionTiers";
+
 export const SITE_ALTERNATE_NAME = "Kalnehi" as const;
 
 export const ORGANIZATION_DESCRIPTION =
@@ -39,7 +41,7 @@ export const PRICING_OFFERS = [
   },
   {
     name: "Smart Plan",
-    price: "399",
+    price: String(TIERS.pro.monthlyPricePaise / 100),
     priceCurrency: "INR",
     description: "Full monthly plan with 2 million Mastermind tokens and 100 minutes voice per month",
     unitCode: "MON" as const,

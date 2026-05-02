@@ -99,7 +99,7 @@ export function SearchClient({ index }: Props) {
         <div className="space-y-4 rounded-2xl border border-kal-border bg-kal-card/60 p-6">
           <p className="text-sm text-kal-text">
             No results for <span className="font-semibold text-kal-text">&quot;{q}&quot;</span>. Try
-            &quot;jee&quot;, &quot;prepbrain&quot;, or &quot;upsc routine&quot;.
+            &quot;jee&quot;, &quot;mastermind&quot;, or &quot;upsc routine&quot;.
           </p>
           <div>
             <p className="text-xs font-bold uppercase tracking-wide text-kal-muted">Popular on Kalnehi Daily</p>

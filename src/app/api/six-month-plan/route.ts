@@ -1,16 +1,15 @@
 /**
  * POST /api/six-month-plan
- * Creates a Razorpay order for Smart Plan 6-Month (₹2,154 — 10% off).
+ * Creates a Razorpay order for Smart Plan 6-Month (upfront total in {@link SMART_PLAN_SIX_MONTH_PRICE_PAISE}).
  */
 import Razorpay from "razorpay";
 import { type NextRequest, NextResponse } from "next/server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
+import { SMART_PLAN_SIX_MONTH_PRICE_PAISE } from "@/lib/smartPlanPricing";
 
 export const runtime = "nodejs";
-
-const SIX_MONTH_PRICE_PAISE = 215400; // ₹2,154 in paise
 
 function getRazorpayConfig() {
   const keyId = process.env.RAZORPAY_KEY_ID?.trim();
@@ -62,13 +61,13 @@ export async function POST(req: NextRequest) {
     const receiptId = `6mo_${user.id.replace(/-/g, "").slice(0, 16)}_${Date.now()}`;
 
     const order = (await razorpay.orders.create({
-      amount: SIX_MONTH_PRICE_PAISE,
+      amount: SMART_PLAN_SIX_MONTH_PRICE_PAISE,
       currency: "INR",
       receipt: receiptId,
       notes: {
         kalnehi_user_id: user.id,
         kalnehi_order_kind: "six_month_plan",
-        kalnehi_price_paise: String(SIX_MONTH_PRICE_PAISE),
+        kalnehi_price_paise: String(SMART_PLAN_SIX_MONTH_PRICE_PAISE),
       },
     })) as { id: string; amount: number };
 
@@ -76,7 +75,7 @@ export async function POST(req: NextRequest) {
       ok: true,
       keyId: config.keyId,
       orderId: order.id,
-      amountPaise: SIX_MONTH_PRICE_PAISE,
+      amountPaise: SMART_PLAN_SIX_MONTH_PRICE_PAISE,
       prefill: { name: p?.full_name ?? "", email: user.email ?? "" },
     });
   } catch (e) {
