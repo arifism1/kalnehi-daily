@@ -38,6 +38,7 @@ import {
   type SyllabusCustomizeSheetMode,
 } from "@/components/syllabus/SyllabusCustomizeSheet";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useContactSupport } from "@/components/support/ContactSupportProvider";
 import { TransientNotice } from "@/components/ui/TransientNotice";
 import {
   MICROTOPIC_STATUSES,
@@ -594,6 +595,8 @@ export function SyllabusTracker() {
     void hydrateUserPlannerTextRevisionsFromServer(userId).then(setRevisionBundle);
   }, [userId]);
 
+  const { openContactSupport } = useContactSupport();
+
   const openSheet = useCallback((mode: SyllabusCustomizeSheetMode) => {
     setSheetMode(mode);
     setSheetOpen(true);
@@ -694,6 +697,21 @@ export function SyllabusTracker() {
     }
     return m;
   }, [examRollups]);
+
+  const syllabusIssuePrefill = useMemo(() => {
+    if (examResults.length > 1) {
+      const names = examResults
+        .map(
+          (er) =>
+            displayNameForExamCatalog(er.examLabel, examCatalogRows) ||
+            er.examLabel,
+        )
+        .filter((n): n is string => Boolean(n?.trim()));
+      const line = names.length > 0 ? names.join(", ") : displayExam;
+      return `Exam(s): ${line}\n\nDescribe what is missing or incorrect:`;
+    }
+    return `Exam(s): ${displayExam}\n\nDescribe what is missing or incorrect:`;
+  }, [displayExam, examCatalogRows, examResults]);
 
   const hasPrevYearMarks = examHasPrevYearMarks(targetExamLabel);
   /** CUET uses domain scoring; other exams need real marks_* (or overrides), not legacy 1× fallbacks. */
@@ -806,6 +824,12 @@ export function SyllabusTracker() {
             : showMarksUi
               ? "Conquer chapters the right way: full chapter weight unlocks only when every microtopic in that chapter is complete."
               : "Track your syllabus by chapter and microtopic — completion % reflects chapters you fully finish."}
+        </p>
+        <p className="mt-2 text-sm leading-relaxed text-kal-muted">
+          Add your own microtopics under any catalog chapter, or hide topics you
+          don&apos;t need. New subjects or chapters aren&apos;t created in the
+          app; if something is missing or looks wrong, use &ldquo;Report a syllabus
+          issue&rdquo; below.
         </p>
         {showMarksUi && !cuetScoringRollup ? (
           <details
@@ -1361,8 +1385,10 @@ export function SyllabusTracker() {
                                                 openSheet({
                                                   kind: "add_microtopic",
                                                   examName: sectionExamKey!,
-                                                  defaultSubject: subject,
-                                                  defaultChapter: chapter,
+                                                  subjectLabel: subject,
+                                                  chapterLabel: chapter,
+                                                  catalogSubject: originSubject,
+                                                  catalogChapter: originChapter,
                                                 });
                                               }}
                                             >
@@ -1531,27 +1557,6 @@ export function SyllabusTracker() {
                     ) : null}
                   </span>
                   <span className="flex shrink-0 items-center gap-1.5">
-                    {canCustomize && catalogExamKey ? (
-                      <button
-                        type="button"
-                        title="Add chapter"
-                        className="inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg border border-kal-accent/30 bg-orange-950/40 text-kal-accent hover:bg-orange-900/50 sm:px-2"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          openSheet({
-                            kind: "add_chapter_block",
-                            examName: catalogExamKey,
-                            defaultSubject: subject,
-                          });
-                        }}
-                      >
-                        <Plus className="h-4 w-4" aria-hidden />
-                        <span className="sr-only sm:not-sr-only sm:ml-1 sm:text-[11px] sm:font-semibold">
-                          Chapter
-                        </span>
-                      </button>
-                    ) : null}
                     <ChevronDown
                       className={clsx(
                         "h-5 w-5 shrink-0 text-kal-muted transition-transform duration-200",
@@ -1719,8 +1724,10 @@ export function SyllabusTracker() {
                                     openSheet({
                                       kind: "add_microtopic",
                                       examName: catalogExamKey,
-                                      defaultSubject: subject,
-                                      defaultChapter: chapter,
+                                      subjectLabel: subject,
+                                      chapterLabel: chapter,
+                                      catalogSubject: originSubject,
+                                      catalogChapter: originChapter,
                                     });
                                   }}
                                 >
@@ -1850,6 +1857,25 @@ export function SyllabusTracker() {
       </div>
 
       )} {/* end single-exam subjects div */}
+
+      <div className="kal-glass-subtle rounded-2xl border border-kal-border/60 px-4 py-5 sm:px-6 dark:border-white/10">
+        <p className="text-sm leading-relaxed text-kal-text">
+          Is the syllabus wrong here? Please tell us what&apos;s wrong so we can
+          improve your experience.
+        </p>
+        <button
+          type="button"
+          className="mt-4 flex min-h-[48px] w-full items-center justify-center rounded-xl bg-kal-accent px-4 py-3 text-sm font-semibold text-kal-accent-foreground hover:bg-kal-accent-hover sm:w-auto sm:min-w-[12rem]"
+          onClick={() =>
+            openContactSupport({
+              subject: "syllabus_correction",
+              message: syllabusIssuePrefill,
+            })
+          }
+        >
+          Report a syllabus issue
+        </button>
+      </div>
 
       <ChapterMarksSheet
         open={

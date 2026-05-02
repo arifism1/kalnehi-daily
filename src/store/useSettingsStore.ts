@@ -84,7 +84,7 @@ export function pickUiPrefsForSync(s: SettingsState): UiPrefsPersisted {
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
-      appearance: "system",
+      appearance: "light",
       purposeModeEnabled: false,
       showCountdown: true,
       advancedMarksProjectionEnabled: true,

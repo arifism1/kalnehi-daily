@@ -15,13 +15,12 @@ export type SyllabusCustomizeSheetMode =
   | {
       kind: "add_microtopic";
       examName: string;
-      defaultSubject: string;
-      defaultChapter: string;
-    }
-  | {
-      kind: "add_chapter_block";
-      examName: string;
-      defaultSubject: string;
+      /** Display strings (e.g. after chapter rename). */
+      subjectLabel: string;
+      chapterLabel: string;
+      /** Keys matching syllabus_master for validation and insert. */
+      catalogSubject: string;
+      catalogChapter: string;
     }
   | {
       kind: "edit_user_microtopic";
@@ -54,6 +53,31 @@ type Props = {
   onSaved: () => void | Promise<void>;
 };
 
+function ReadOnlySyllabusPair({
+  subject,
+  chapter,
+}: {
+  subject: string;
+  chapter: string;
+}) {
+  return (
+    <>
+      <div className="block">
+        <span className="text-xs font-medium text-kal-muted">Subject</span>
+        <div className="mt-1.5 rounded-xl border border-kal-border bg-kal-card-muted px-3 py-2.5 text-base text-kal-text">
+          {subject || "—"}
+        </div>
+      </div>
+      <div className="block">
+        <span className="text-xs font-medium text-kal-muted">Chapter</span>
+        <div className="mt-1.5 rounded-xl border border-kal-border bg-kal-card-muted px-3 py-2.5 text-base text-kal-text">
+          {chapter || "—"}
+        </div>
+      </div>
+    </>
+  );
+}
+
 export function SyllabusCustomizeSheet({
   open,
   mode,
@@ -71,12 +95,8 @@ export function SyllabusCustomizeSheet({
     if (!open || !mode) return;
     setError(null);
     if (mode.kind === "add_microtopic") {
-      setSubject(mode.defaultSubject);
-      setChapter(mode.defaultChapter);
-      setMicrotopic("");
-    } else if (mode.kind === "add_chapter_block") {
-      setSubject(mode.defaultSubject);
-      setChapter("");
+      setSubject(mode.subjectLabel);
+      setChapter(mode.chapterLabel);
       setMicrotopic("");
     } else if (mode.kind === "edit_user_microtopic") {
       setSubject(mode.subject);
@@ -99,17 +119,9 @@ export function SyllabusCustomizeSheet({
       if (mode.kind === "add_microtopic") {
         const res = await addCustomSyllabusItem({
           examName: mode.examName,
-          subject: subject.trim(),
-          chapter: chapter.trim(),
+          subject: mode.catalogSubject.trim(),
+          chapter: mode.catalogChapter.trim(),
           microtopic: microtopic.trim(),
-        });
-        if (!res.ok) throw new Error(res.error);
-      } else if (mode.kind === "add_chapter_block") {
-        const res = await addCustomSyllabusItem({
-          examName: mode.examName,
-          subject: subject.trim(),
-          chapter: chapter.trim(),
-          microtopic: microtopic.trim() || "Getting started",
         });
         if (!res.ok) throw new Error(res.error);
       } else if (mode.kind === "edit_user_microtopic") {
@@ -117,8 +129,6 @@ export function SyllabusCustomizeSheet({
           examName: mode.examName,
           mode: "user_add",
           customizationId: mode.customizationId,
-          subject: subject.trim(),
-          chapter: chapter.trim(),
           microtopic: microtopic.trim(),
         };
         const res = await editCustomSyllabusItem(payload);
@@ -128,8 +138,6 @@ export function SyllabusCustomizeSheet({
           examName: mode.examName,
           mode: "global_microtopic",
           syllabusMasterId: mode.syllabusMasterId,
-          subjectOverride: subject.trim(),
-          chapterOverride: chapter.trim(),
           microtopicOverride: microtopic.trim(),
         };
         const res = await editCustomSyllabusItem(payload);
@@ -152,20 +160,23 @@ export function SyllabusCustomizeSheet({
     } finally {
       setBusy(false);
     }
-  }, [mode, subject, chapter, microtopic, chapterNew, onClose, onSaved]);
+  }, [mode, microtopic, chapterNew, onClose, onSaved]);
 
   if (!open || !mode) return null;
 
   const title =
     mode.kind === "add_microtopic"
       ? "Add microtopic"
-      : mode.kind === "add_chapter_block"
-        ? "Add chapter"
-        : mode.kind === "edit_user_microtopic"
-          ? "Edit your microtopic"
-          : mode.kind === "edit_global_microtopic"
-            ? "Edit display (your copy)"
-            : "Rename chapter";
+      : mode.kind === "edit_user_microtopic"
+        ? "Edit your microtopic"
+        : mode.kind === "edit_global_microtopic"
+          ? "Edit display (your copy)"
+          : "Rename chapter";
+
+  const showLockedSubjectChapter =
+    mode.kind === "add_microtopic" ||
+    mode.kind === "edit_user_microtopic" ||
+    mode.kind === "edit_global_microtopic";
 
   return (
     <div
@@ -204,100 +215,92 @@ export function SyllabusCustomizeSheet({
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-6 py-4 [-webkit-overflow-scrolling:touch]">
-        {mode.kind === "rename_chapter" ? (
-          <p className="text-xs leading-relaxed text-kal-muted">
-            Renames this chapter for you only. Microtopics stay linked; labels
-            update everywhere.
-          </p>
-        ) : (
-          <p className="text-xs leading-relaxed text-kal-muted">
-            Changes apply to your syllabus only — the shared catalog stays
-            unchanged.
-          </p>
-        )}
-
-        <div className="mt-5 space-y-4">
           {mode.kind === "rename_chapter" ? (
-            <label className="block">
-              <span className="text-xs font-medium text-kal-muted">
-                New chapter title
-              </span>
-              <input
-                value={chapterNew}
-                onChange={(e) => setChapterNew(e.target.value)}
-                className="mt-1.5 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-base text-kal-text placeholder:text-kal-muted focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
-                placeholder="Chapter name"
-                autoComplete="off"
-              />
-            </label>
-          ) : (
+            <p className="text-xs leading-relaxed text-kal-muted">
+              Renames this chapter for you only. Microtopics stay linked; labels
+              update everywhere.
+            </p>
+          ) : mode.kind === "add_microtopic" ? (
             <>
-              <label className="block">
-                <span className="text-xs font-medium text-kal-muted">
-                  Subject
-                </span>
-                <input
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                  disabled={busy}
-                  className="mt-1.5 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-base text-kal-text placeholder:text-kal-muted focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
-                />
-              </label>
-              <label className="block">
-                <span className="text-xs font-medium text-kal-muted">
-                  Chapter
-                </span>
-                <input
-                  value={chapter}
-                  onChange={(e) => setChapter(e.target.value)}
-                  disabled={busy}
-                  className="mt-1.5 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-base text-kal-text placeholder:text-kal-muted focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
-                />
-              </label>
-              <label className="block">
-                <span className="text-xs font-medium text-kal-muted">
-                  Microtopic
-                </span>
-                <input
-                  value={microtopic}
-                  onChange={(e) => setMicrotopic(e.target.value)}
-                  disabled={busy}
-                  className="mt-1.5 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-base text-kal-text placeholder:text-kal-muted focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
-                />
-              </label>
+              <p className="text-xs leading-relaxed text-kal-muted">
+                Changes apply to your syllabus only — the shared catalog stays
+                unchanged.
+              </p>
+              <p className="mt-2 text-xs leading-relaxed text-kal-muted">
+                This microtopic is added under the catalog chapter shown above
+                (official syllabus structure).
+              </p>
             </>
+          ) : (
+            <p className="text-xs leading-relaxed text-kal-muted">
+              Changes apply to your syllabus only — the shared catalog stays
+              unchanged.
+            </p>
           )}
-        </div>
+
+          <div className="mt-5 space-y-4">
+            {mode.kind === "rename_chapter" ? (
+              <label className="block">
+                <span className="text-xs font-medium text-kal-muted">
+                  New chapter title
+                </span>
+                <input
+                  value={chapterNew}
+                  onChange={(e) => setChapterNew(e.target.value)}
+                  className="mt-1.5 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-base text-kal-text placeholder:text-kal-muted focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
+                  placeholder="Chapter name"
+                  autoComplete="off"
+                />
+              </label>
+            ) : (
+              <>
+                {showLockedSubjectChapter ? (
+                  <ReadOnlySyllabusPair subject={subject} chapter={chapter} />
+                ) : null}
+                <label className="block">
+                  <span className="text-xs font-medium text-kal-muted">
+                    Microtopic
+                  </span>
+                  <input
+                    value={microtopic}
+                    onChange={(e) => setMicrotopic(e.target.value)}
+                    disabled={busy}
+                    className="mt-1.5 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-2.5 text-base text-kal-text placeholder:text-kal-muted focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
+                  />
+                </label>
+              </>
+            )}
+          </div>
         </div>
 
         <div className="shrink-0 border-t border-kal-border/60 bg-[var(--kal-page)]/95 px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-sm dark:border-white/10">
-        {error ? (
-          <p className="mb-3 text-sm text-kal-danger-text" role="alert">
-            {error}
-          </p>
-        ) : null}
+          {error ? (
+            <p className="mb-3 text-sm text-kal-danger-text" role="alert">
+              {error}
+            </p>
+          ) : null}
 
-        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <button
-            type="button"
-            disabled={busy}
-            onClick={onClose}
-            className="kal-glass-subtle min-h-[48px] rounded-xl px-4 py-3 text-sm font-semibold text-kal-text sm:min-h-[44px]"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void submit()}
-            className={clsx(
-              "min-h-[48px] rounded-xl px-4 py-3 text-sm font-semibold text-kal-accent-foreground sm:min-h-[44px]",
-              "bg-kal-accent hover:bg-kal-accent-hover disabled:opacity-50",
-            )}
-          >
-            {busy ? "Saving…" : "Save"}
-          </button>
-        </div>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={onClose}
+              className="kal-glass-subtle min-h-[48px] rounded-xl px-4 py-3 text-sm font-semibold text-kal-text sm:min-h-[44px]"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void submit()}
+              className={clsx(
+                "min-h-[48px] rounded-xl px-4 py-3 text-sm font-semibold text-kal-accent-foreground sm:min-h-[44px]",
+                "bg-kal-accent hover:bg-kal-accent-hover disabled:opacity-50",
+              )}
+            >
+              {busy ? "Saving…" : "Save"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

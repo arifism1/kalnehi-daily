@@ -68,7 +68,7 @@ function ToggleStateBadge({ checked }: { checked: boolean }) {
 export function SettingsToggles() {
   const baseId = useId();
 
-  const appearance = useSettingsStore((s) => s.appearance ?? "system");
+  const appearance = useSettingsStore((s) => s.appearance ?? "light");
   const setAppearance = useSettingsStore((s) => s.setAppearance);
   const showCountdown = useSettingsStore((s) => s.showCountdown);
   const setShowCountdown = useSettingsStore((s) => s.setShowCountdown);

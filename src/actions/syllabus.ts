@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { formatSupabaseError } from "@/lib/supabase";
 import { USER_ERROR } from "@/lib/userFacingErrors";
@@ -14,6 +15,7 @@ import {
   isMicrotopicProgressStatus,
   type MicrotopicProgressStatus,
 } from "@/lib/syllabusConstants";
+import type { Database } from "@/types/supabase";
 
 export type ProgressRowPayload = {
   syllabus_master_id: string;
@@ -173,6 +175,23 @@ export async function updateMicrotopicStatus(
 
 export type CustomSyllabusResult = { ok: true } | { ok: false; error: string };
 
+async function catalogHasSubjectChapter(
+  supabase: SupabaseClient<Database>,
+  examName: string,
+  subject: string,
+  chapter: string,
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("syllabus_master")
+    .select("id")
+    .eq("exam_name", examName)
+    .eq("subject", subject)
+    .eq("chapter", chapter)
+    .limit(1);
+  if (error) throw error;
+  return Array.isArray(data) && data.length > 0;
+}
+
 export async function addCustomSyllabusItem(fields: {
   examName: string;
   subject: string;
@@ -192,6 +211,16 @@ export async function addCustomSyllabusItem(fields: {
     const chapter = fields.chapter.trim();
     const microtopic = fields.microtopic.trim();
     if (!examName || !subject || !chapter || !microtopic) {
+      return { ok: false, error: USER_ERROR.tryAgain };
+    }
+
+    const hasCatalog = await catalogHasSubjectChapter(
+      supabase,
+      examName,
+      subject,
+      chapter,
+    );
+    if (!hasCatalog) {
       return { ok: false, error: USER_ERROR.tryAgain };
     }
 
@@ -221,16 +250,12 @@ export type EditCustomSyllabusPayload =
       examName: string;
       mode: "user_add";
       customizationId: string;
-      subject: string;
-      chapter: string;
       microtopic: string;
     }
   | {
       examName: string;
       mode: "global_microtopic";
       syllabusMasterId: string;
-      subjectOverride?: string | null;
-      chapterOverride?: string | null;
       microtopicOverride?: string | null;
     }
   | {
@@ -258,8 +283,6 @@ export async function editCustomSyllabusItem(
       const { error } = await supabase
         .from("user_syllabus_customizations")
         .update({
-          subject: payload.subject.trim(),
-          chapter: payload.chapter.trim(),
           custom_microtopic: payload.microtopic.trim(),
           updated_at: now,
         })
@@ -275,10 +298,8 @@ export async function editCustomSyllabusItem(
       const sid = normalizeSyllabusMasterId(payload.syllabusMasterId);
       const examName = payload.examName.trim();
 
-      const s = payload.subjectOverride?.trim() || "";
-      const c = payload.chapterOverride?.trim() || "";
       const m = payload.microtopicOverride?.trim() || "";
-      const hasAny = Boolean(s || c || m);
+      const hasAny = Boolean(m);
 
       await supabase
         .from("user_syllabus_customizations")
@@ -300,8 +321,8 @@ export async function editCustomSyllabusItem(
         action_type: "edit",
         target_type: "microtopic",
         syllabus_master_id: sid,
-        custom_subject: s || null,
-        custom_chapter: c || null,
+        custom_subject: null,
+        custom_chapter: null,
         custom_microtopic: m || null,
         updated_at: now,
       });

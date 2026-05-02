@@ -13,7 +13,7 @@ function setDarkClass(root: HTMLElement, dark: boolean) {
  * Syncs `dark` on <html> from settings: fixed light/dark or `prefers-color-scheme` when "system".
  */
 export function ThemeSync() {
-  const appearance = useSettingsStore((s) => s.appearance ?? "system");
+  const appearance = useSettingsStore((s) => s.appearance ?? "light");
 
   useEffect(() => {
     const root = document.documentElement;

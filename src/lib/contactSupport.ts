@@ -1,6 +1,7 @@
 export const CONTACT_SUPPORT_SUBJECTS = [
   { value: "bug_report", label: "Bug report" },
   { value: "feature_request", label: "Feature request" },
+  { value: "syllabus_correction", label: "Syllabus / catalog issue" },
   { value: "billing_issue", label: "Billing issue" },
   { value: "general_support", label: "General support" },
   { value: "other", label: "Other" },
