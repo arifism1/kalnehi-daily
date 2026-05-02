@@ -161,13 +161,7 @@ export const metadata: Metadata = {
     telephone: false,
   },
   other: {
-    // PWA / TWA chrome signals
-    "mobile-web-app-capable": "yes",
-    "apple-mobile-web-app-capable": "yes",
-    "apple-mobile-web-app-title": PWA_STANDALONE_DISPLAY_NAME,
-    /** Stabilizes iOS home-screen launch URL (same-origin path). */
-    "apple-mobile-web-app-start-url": "/",
-    // Disable tap highlight flash inside the TWA chrome shell
+    // Disable tap highlight flash on Windows/Edge
     "msapplication-tap-highlight": "no",
     // Tile colour for Windows/Edge "pin to start"
     "msapplication-TileColor": "#FF7A00",

@@ -1,15 +1,10 @@
 "use client";
 
-import { Browser } from "@capacitor/browser";
-import { Capacitor } from "@capacitor/core";
 import clsx from "clsx";
-import { useCallback, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { type ReactNode } from "react";
 
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
-import { getSupabaseBrowserClient } from "@/lib/supabase";
-
-/** Reader-app buffer — general account URL first (no direct checkout deep link from native shell). */
-const WEB_ORIGIN = "https://kalnehi.com";
 
 type TrialGuardProps = {
   children: ReactNode;
@@ -17,36 +12,9 @@ type TrialGuardProps = {
 
 export function TrialGuard({ children }: TrialGuardProps) {
   const { welcomeTrialExpiredNoPay, loading } = useSubscriptionAccess();
-  const [openBusy, setOpenBusy] = useState(false);
-  const [openError, setOpenError] = useState<string | null>(null);
+  const router = useRouter();
 
   const locked = welcomeTrialExpiredNoPay && !loading;
-
-  const handleManageAccount = useCallback(async () => {
-    setOpenError(null);
-    setOpenBusy(true);
-    try {
-      const supabase = getSupabaseBrowserClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const refreshToken = session?.refresh_token;
-      if (!refreshToken) {
-        setOpenError("Could not load your session. Try signing in again.");
-        return;
-      }
-      const url = `${WEB_ORIGIN}/account?rt=${encodeURIComponent(refreshToken)}`;
-      if (Capacitor.isNativePlatform()) {
-        await Browser.open({ url });
-      } else {
-        window.open(url, "_blank", "noopener,noreferrer");
-      }
-    } catch {
-      setOpenError("Something went wrong. Please try again.");
-    } finally {
-      setOpenBusy(false);
-    }
-  }, []);
 
   return (
     <div className="relative flex min-h-0 min-h-dvh flex-1 flex-col">
@@ -82,18 +50,12 @@ export function TrialGuard({ children }: TrialGuardProps) {
                   study logs synced and maintain your daily preparation streak, please update your
                   access status.
                 </p>
-                {openError ? (
-                  <p className="text-xs text-red-600" role="alert">
-                    {openError}
-                  </p>
-                ) : null}
                 <button
                   type="button"
-                  onClick={() => void handleManageAccount()}
-                  disabled={openBusy}
-                  className="kal-btn-accent min-h-[48px] w-full max-w-xs disabled:opacity-60"
+                  onClick={() => router.push("/upgrade")}
+                  className="kal-btn-accent min-h-[48px] w-full max-w-xs"
                 >
-                  {openBusy ? "Opening…" : "Manage Account Status"}
+                  Manage Account Status
                 </button>
               </div>
             </div>

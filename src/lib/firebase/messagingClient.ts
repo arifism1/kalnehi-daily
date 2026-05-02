@@ -129,19 +129,6 @@ export async function obtainFcmToken(
     return { token: null, hint: secureHint };
   }
 
-  try {
-    const { Capacitor } = await import("@capacitor/core");
-    if (Capacitor.isNativePlatform()) {
-      return {
-        token: null,
-        hint:
-          "Web push is not registered inside the installed Kalnehi app shell. Open kalnehi.com in Chrome (or another browser), sign in, and enable notifications there—or install the PWA from Chrome for reminders. Native in-app push is not wired yet.",
-      };
-    }
-  } catch {
-    /* Capacitor not installed — normal web */
-  }
-
   let vapidKey: string;
   try {
     vapidKey = readFirebaseWebVapidKey();
