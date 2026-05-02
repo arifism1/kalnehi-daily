@@ -5,17 +5,17 @@ function facts() {
   {
     value: "18",
     label: "features in one app",
-    detail: "Plan, track, revise, stay consistent — nothing left to juggle separately.",
+    detail: "Plan, track, revise, and log — without juggling separate apps.",
   },
   {
     value: "3",
     label: "days free, no card",
-    detail: "Every feature unlocked for 3 days. Your trial starts when you're ready.",
+    detail: "You get the full app for 3 days. Start the trial when you're ready.",
   },
   {
     value: SMART_PLAN_MONTHLY_DISPLAY,
     label: "per month, full access",
-    detail: "2 million Mastermind tokens and 100 minutes of voice every month. Everything, always.",
+    detail: "2 million Mastermind tokens and 100 minutes of voice each billing month.",
   },
   {
     value: "27",

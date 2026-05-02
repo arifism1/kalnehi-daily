@@ -8,7 +8,7 @@ import { TIERS } from "@/lib/subscriptionTiers";
 export const SITE_ALTERNATE_NAME = "Kalnehi" as const;
 
 export const ORGANIZATION_DESCRIPTION =
-  "Privacy-first daily study operating system for Indian competitive exam aspirants. Daily planning, Mastermind, voice control, syllabus tracking, and spaced revision — built to win daily." as const;
+  "Web app for competitive exam prep in India: daily planning, Mastermind, voice input, syllabus tracking, and revision reminders." as const;
 
 export const SOFTWARE_APP_DESCRIPTION =
   "Voice-controlled exam prep tracker for JEE, NEET, UPSC, CAT, GATE, CA and all major Indian competitive exams." as const;

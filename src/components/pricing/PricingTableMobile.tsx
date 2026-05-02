@@ -9,7 +9,7 @@ import { SMART_PLAN_MONTHLY_DISPLAY } from "@/lib/smartPlanPricing";
 type FeatureValue = boolean | string | null;
 
 const FEATURES: { name: string; trial: FeatureValue; smart: FeatureValue }[] = [
-  { name: "Daily planner", trial: true, smart: true },
+  { name: "Plan your day with voice", trial: true, smart: true },
   { name: "Syllabus tracker", trial: true, smart: true },
   { name: "Focus timer + study camera", trial: true, smart: true },
   { name: "Streak + consistency heatmap", trial: true, smart: true },
@@ -17,7 +17,7 @@ const FEATURES: { name: string; trial: FeatureValue; smart: FeatureValue }[] = [
   { name: "Marks engine + rank prediction", trial: true, smart: true },
   { name: "Revision reminders", trial: true, smart: true },
   { name: "Daily log & prep insights", trial: true, smart: true },
-  { name: "Mastermind AI coach", trial: true, smart: true },
+  { name: "Mastermind Strategy Coach", trial: true, smart: true },
   { name: "Voice control", trial: "5 min total", smart: "100 min/month" },
   { name: "Mastermind tokens", trial: "60,000 total", smart: "20,00,000/month" },
 ];

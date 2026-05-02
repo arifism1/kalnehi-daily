@@ -12,8 +12,8 @@ function plans() {
     duration: "3 days",
     highlight: false,
     features: [
-      "Every feature fully unlocked",
-      "Daily planner + syllabus tracker",
+      "Full app for 3 days",
+      "Plan your day with voice + syllabus tracker",
       "Marks engine + rank prediction",
       "Mastermind — 60,000 tokens",
       "Voice control — 5 minutes",
@@ -55,12 +55,12 @@ export function PricingSection() {
           >
             Most students plan.
             <br />
-            <span className="text-kal-accent">Toppers have a system.</span>
+            <span className="text-kal-accent">We help you run one system.</span>
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-base text-kal-text-secondary">
             Start free for 3 days. Upgrade to Smart Plan to keep going.
           </p>
-          <p className="mt-2 text-sm text-kal-muted">Two simple options. One direction.</p>
+          <p className="mt-2 text-sm text-kal-muted">Trial or monthly plan — same feature set.</p>
         </div>
 
         {/* Plan cards */}

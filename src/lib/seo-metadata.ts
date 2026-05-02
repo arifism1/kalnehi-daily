@@ -19,7 +19,7 @@ export const PWA_STANDALONE_DISPLAY_NAME = "Kalnehi";
 export const SUPPORT_EMAIL = "curioversitylearning@gmail.com";
 export const SUPPORT_MAILTO_HREF = `mailto:${SUPPORT_EMAIL}`;
 
-export const SITE_TAGLINE = "Win Daily — Voice Controlled Smart Exam Prep";
+export const SITE_TAGLINE = "Voice-first exam prep tracker";
 
 /** Served by [`src/app/opengraph-image.tsx`](src/app/opengraph-image.tsx) (1200×630). */
 export const OG_IMAGE_PATH = "/opengraph-image";
@@ -60,21 +60,21 @@ const PAGE_SEO: Record<
     path: "/",
     title: `${SITE_NAME} — Voice Controlled Exam Prep Tracker & study app`,
     description:
-      `Kalnehi Daily is the voice-controlled exam prep tracker for Indian competitive exam aspirants. Dictate your study plan, track your syllabus, and build daily discipline — all in one place.`,
+      `Plan by voice, track syllabus, and log study time in one web app for Indian competitive exams.`,
     ogDescription:
-      `The only exam prep tracker where you can plan your entire day by speaking. Built for JEE, NEET, UPSC & all major exams. Win daily. Rank higher.`,
+      `Voice planning, syllabus tracking, and Mastermind for JEE, NEET, UPSC, and more.`,
   },
   prepbrain: {
     path: "/prepbrain",
-    title: `Mastermind — syllabus-aware AI study coach | ${SITE_NAME}`,
+    title: `Mastermind — prep strategy from your data | ${SITE_NAME}`,
     description:
-      `Ask syllabus-aware questions, get structured help, and stay aligned with your planner. Mastermind in ${SITE_NAME} uses your tracked syllabus, schedule, and study rhythm so answers stay concrete.`,
+      `Ask what to prioritise and how to pace revision — Mastermind uses the syllabus and activity you log in ${SITE_NAME}.`,
   },
   mastermind: {
     path: "/mastermind",
-    title: `Mastermind — syllabus-aware AI study coach | ${SITE_NAME}`,
+    title: `Mastermind — prep strategy from your data | ${SITE_NAME}`,
     description:
-      `Ask syllabus-aware questions, get structured help, and stay aligned with your planner. Mastermind in ${SITE_NAME} uses your tracked syllabus, schedule, and study rhythm so answers stay concrete.`,
+      `Ask what to prioritise and how to pace revision — Mastermind uses the syllabus and activity you log in ${SITE_NAME}.`,
   },
   studySessions: {
     path: "/study-sessions",

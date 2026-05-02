@@ -105,8 +105,7 @@ export async function GET(req: NextRequest) {
     if (rpc?.ok) {
       const nowIso = new Date().toISOString();
 
-      // Set trial_started_at (trial_access_type / trial_date are set by the RPC).
-      await admin
+      const { data: updatedProfile, error: profileUpdateErr } = await admin
         .from("user_profiles")
         .update({
           trial_started_at: nowIso,
@@ -114,7 +113,33 @@ export async function GET(req: NextRequest) {
           updated_at: nowIso,
         })
         .eq("user_id", entry.user_id)
-        .eq("has_used_free_trial", false);
+        .eq("has_used_free_trial", false)
+        .select("id");
+
+      if (profileUpdateErr) {
+        console.error(`${LOG} profile update failed for ${entry.user_id}:`, profileUpdateErr.message);
+        continue;
+      }
+
+      if (!updatedProfile?.length) {
+        const { data: p } = await admin
+          .from("user_profiles")
+          .select("has_used_free_trial")
+          .eq("user_id", entry.user_id)
+          .maybeSingle();
+        if ((p as { has_used_free_trial?: boolean } | null)?.has_used_free_trial) {
+          await (admin as unknown as { from: (t: string) => { update: (v: object) => { eq: (k: string, v: string) => unknown } } })
+            .from("trial_queue_entries")
+            .update({ status: "skipped" })
+            .eq("id", entry.id);
+          skipped++;
+        } else {
+          console.error(
+            `${LOG} profile update matched 0 rows after RPC ok for ${entry.user_id} — leaving pending for retry`,
+          );
+        }
+        continue;
+      }
 
       // Mark queue entry as activated.
       await (admin as unknown as { from: (t: string) => { update: (v: object) => { eq: (k: string, v: string) => unknown } } })

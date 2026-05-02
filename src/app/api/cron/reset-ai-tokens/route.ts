@@ -3,6 +3,11 @@
  * Resets ai_tokens_used = 0 for all users so the shared 2M monthly budget
  * refreshes for PrepBrain.
  *
+ * Product note: this is a **global calendar reset** (same instant for every user),
+ * not aligned to each customer’s Razorpay billing renewal date. If copy ever promises
+ * “2M tokens per subscription month,” switch to per-user resets keyed off
+ * subscription_start_date / webhook renewal instead of this single cron.
+ *
  * Secured with CRON_SECRET (set in Vercel environment variables).
  * Vercel automatically sends: Authorization: Bearer <CRON_SECRET>
  */
