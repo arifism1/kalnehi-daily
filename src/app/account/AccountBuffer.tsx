@@ -1,24 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMemo } from "react";
 
 import { KalSpinner } from "@/components/loading/KalSpinner";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
-import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { useAuthStore } from "@/store/useAuthStore";
 
-/**
- * Reader-app compliance buffer: restores session from refresh-token handoff (see TrialGuard),
- * strips ?rt= via navigation, then surfaces account status with a separate navigation to /upgrade
- * for checkout (no direct checkout link from native shell).
- *
- * Uses `refreshSession({ refresh_token })` — GoTrue requires both tokens for `setSession`; refresh-only flow exchanges for a new pair.
- */
 export function AccountBuffer() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const user = useAuthStore((s) => s.user);
   const initialized = useAuthStore((s) => s.initialized);
 
@@ -29,12 +20,6 @@ export function AccountBuffer() {
     fetchError,
     refetch,
   } = useSubscriptionAccess();
-
-  const rt = searchParams.get("rt");
-  const needsRt = Boolean(rt?.length);
-
-  const [handoffFinished, setHandoffFinished] = useState(() => !needsRt);
-  const [handoffError, setHandoffError] = useState<string | null>(null);
 
   const displayName = useMemo(() => {
     const meta = user?.user_metadata as { full_name?: string } | undefined;
@@ -52,50 +37,10 @@ export function AccountBuffer() {
     return "Trial";
   }, [hasPaidAccess, subscriptionLoading, user, welcomeTrialExpiredNoPay]);
 
-  const runHandoff = useCallback(
-    async (refreshToken: string): Promise<string | null> => {
-      const supabase = getSupabaseBrowserClient();
-      const { error } = await supabase.auth.refreshSession({
-        refresh_token: refreshToken,
-      });
-      if (error) return error.message;
-      router.replace("/account");
-      return null;
-    },
-    [router],
-  );
-
-  useEffect(() => {
-    if (!needsRt || !rt) return;
-
-    let cancelled = false;
-
-    void (async () => {
-      const errMsg = await runHandoff(rt);
-      if (cancelled) return;
-      if (errMsg) setHandoffError(errMsg);
-      setHandoffFinished(true);
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [needsRt, rt, runHandoff]);
-
-  const showHandoffSpinner = needsRt && !handoffFinished;
-
   if (!initialized) {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center bg-kal-page px-6 py-16">
         <KalSpinner size="lg" message="Loading…" />
-      </div>
-    );
-  }
-
-  if (showHandoffSpinner) {
-    return (
-      <div className="flex min-h-dvh flex-col items-center justify-center bg-kal-page px-6 py-16">
-        <KalSpinner size="lg" message="Signing you in…" />
       </div>
     );
   }
@@ -108,11 +53,6 @@ export function AccountBuffer() {
           <p className="text-sm leading-relaxed text-kal-muted">
             Sign in to manage your account and billing.
           </p>
-          {handoffError ? (
-            <p className="text-xs text-red-600" role="alert">
-              {handoffError}
-            </p>
-          ) : null}
           <Link
             href="/auth"
             className="kal-btn-accent inline-flex min-h-[48px] w-full items-center justify-center"

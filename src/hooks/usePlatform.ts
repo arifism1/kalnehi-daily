@@ -1,21 +1,19 @@
 "use client";
 
-import { Capacitor } from "@capacitor/core";
 import { useLayoutEffect, useState } from "react";
 
 export { ANDROID_APP_UA_MARKER } from "@/lib/androidAppUa";
 
 /**
- * True inside the Capacitor native shell (`Capacitor.isNativePlatform()`). Kalnehi’s native rollout is Android-only for now,
- * but the flag stays generic (any future Capacitor target would flip it the same way).
- *
- * Defaults false for SSR / first paint; `useLayoutEffect` sets the real value before paint.
+ * Always false — the app is distributed as a PWA. The Capacitor native shell has been removed.
+ * The hook remains for interface compatibility; callers that branch on `isApp` will always take
+ * the web path.
  */
 export function usePlatform(): { isApp: boolean } {
-  const [isApp, setIsApp] = useState(false);
+  const [isApp] = useState(false);
 
   useLayoutEffect(() => {
-    setIsApp(Capacitor.isNativePlatform());
+    // no-op: native platform detection removed with Capacitor
   }, []);
 
   return { isApp };

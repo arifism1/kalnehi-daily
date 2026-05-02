@@ -1,7 +1,6 @@
 "use client";
 
 import Script from "next/script";
-import { Capacitor } from "@capacitor/core";
 import { Check, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -22,7 +21,6 @@ import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { useAuthStore } from "@/store/useAuthStore";
 
 const AUTOPAY_PRESET_MONTHS = [1, 2, 3, 6, 12] as const;
-const APP_HOME_DEEP_LINK = "com.kalnehi.daily://home";
 
 type RazorpayCheckoutResponse = {
   razorpay_payment_id: string;
@@ -38,10 +36,6 @@ declare global {
 
 function navigateHomeAfterPurchase() {
   if (typeof window === "undefined") return;
-  if (Capacitor.isNativePlatform()) {
-    window.location.href = APP_HOME_DEEP_LINK;
-    return;
-  }
   window.location.assign("/home");
 }
 

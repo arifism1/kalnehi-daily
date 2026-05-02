@@ -144,13 +144,7 @@ const nextConfig: NextConfig = {
   },
 
   async rewrites() {
-    return [
-      {
-        // TWA Digital Asset Links verification — Play Console reads this URL.
-        source: "/.well-known/assetlinks.json",
-        destination: "/api/digital-asset-links",
-      },
-    ];
+    return [];
   },
 
   async headers() {
@@ -170,11 +164,6 @@ const nextConfig: NextConfig = {
           },
           { key: "Service-Worker-Allowed", value: "/" },
         ],
-      },
-      {
-        // Ensure correct content-type for asset links; Play Console is strict about this.
-        source: "/.well-known/assetlinks.json",
-        headers: [{ key: "Content-Type", value: "application/json" }],
       },
       {
         source: "/:path*",

@@ -38,8 +38,7 @@ export function PwaServiceWorkerUpdateProvider({ children }: { children: ReactNo
     let cleanupListeners: (() => void) | undefined;
 
     void (async () => {
-      const { Capacitor } = await import("@capacitor/core");
-      if (disposed || Capacitor.isNativePlatform()) return;
+      if (disposed) return;
 
       const hadController = !!navigator.serviceWorker.controller;
 

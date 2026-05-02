@@ -14,8 +14,6 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/",
     scope: "/",
     display: "standalone",
-    /** Avoid minimal-ui fallback so installed surfaces stay chrome-free where supported. */
-    display_override: ["standalone"],
     orientation: "portrait-primary",
     // Premium glassmorphic theme: warm cream background, Kalnehi warm orange accent.
     background_color: "#FAF7F2",
@@ -25,8 +23,6 @@ export default function manifest(): MetadataRoute.Manifest {
     categories: ["education", "productivity"],
     // TWA: keep false so Chrome doesn't redirect users to the Play Store listing.
     prefer_related_applications: false,
-    // Play Store requires ≥2 screenshots per form factor; 8 max per factor.
-    // Replace image files in public/screenshots/ before submitting to Play Console.
     screenshots: [
       // ── Narrow (phone portrait 1080×1920) ──────────────────────────────────
       {
@@ -35,7 +31,6 @@ export default function manifest(): MetadataRoute.Manifest {
         type: "image/png",
         form_factor: "narrow",
         label: "Today's Plan — live task checklist for Smart Exam Prep",
-        platform: "play",
       },
       {
         src: "/screenshots/narrow-2.png",
@@ -43,7 +38,6 @@ export default function manifest(): MetadataRoute.Manifest {
         type: "image/png",
         form_factor: "narrow",
         label: "Syllabus Tracker — chapter and topic progress",
-        platform: "play",
       },
       {
         src: "/screenshots/narrow-3.png",
@@ -51,7 +45,6 @@ export default function manifest(): MetadataRoute.Manifest {
         type: "image/png",
         form_factor: "narrow",
         label: "Brain Yoga — guided focus reset between study blocks",
-        platform: "play",
       },
       {
         src: "/screenshots/narrow-4.png",
@@ -59,7 +52,6 @@ export default function manifest(): MetadataRoute.Manifest {
         type: "image/png",
         form_factor: "narrow",
         label: "Notifications & push reminders — never miss a study slot",
-        platform: "play",
       },
       // ── Wide (tablet landscape 1920×1080) ──────────────────────────────────
       {
@@ -68,7 +60,6 @@ export default function manifest(): MetadataRoute.Manifest {
         type: "image/png",
         form_factor: "wide",
         label: "Daily Hub — execution signals and 3-Day view on tablet",
-        platform: "play",
       },
       {
         src: "/screenshots/wide-2.png",
@@ -76,7 +67,6 @@ export default function manifest(): MetadataRoute.Manifest {
         type: "image/png",
         form_factor: "wide",
         label: "Mastermind AI coaching on tablet",
-        platform: "play",
       },
     ],
     // Android long-press shortcuts — max 4 shown by Android launcher; keep most-used first.

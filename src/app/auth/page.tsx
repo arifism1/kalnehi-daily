@@ -202,59 +202,12 @@ export default function AuthPage() {
     setBusy(true);
     setError(null);
     try {
-      const { Capacitor } = await import("@capacitor/core");
-      const platform = Capacitor.getPlatform(); // "android" | "ios" | "web"
-      const isNative = platform === "android" || platform === "ios";
-
-      console.log(`[Auth] Google sign-in — platform="${platform}", isNative=${String(isNative)}`);
-
-      if (isNative) {
-        console.log("[Auth] Native Flow Triggered");
-        try {
-          const { GoogleAuth } = await import(
-            "@codetrix-studio/capacitor-google-auth"
-          );
-          // initialize() must be called before signIn() on every invocation.
-          // The plugin's load() is a no-op; googleSignInClient stays null
-          // until initialize() wires it up from capacitor.config / strings.xml.
-          await GoogleAuth.initialize();
-          const googleUser = await GoogleAuth.signIn();
-          const idToken = googleUser.authentication.idToken;
-          if (!idToken) throw new Error("Google sign-in did not return an ID token.");
-          const supabase = getSupabaseBrowserClient();
-          const { error: idErr } = await supabase.auth.signInWithIdToken({
-            provider: "google",
-            token: idToken,
-          });
-          if (idErr) throw idErr;
-          // Hard navigation so the Capacitor WebView sends a fresh HTTP request
-          // with the session cookie that signInWithIdToken just wrote. A soft
-          // router.replace fires an RSC fetch before the native cookie store
-          // commits the cookie, causing the proxy to see no session → redirect
-          // back to /auth.
-          window.location.href = "/home";
-        } catch (nativeErr) {
-          // Native Google picker failed (e.g. google-services.json missing or
-          // account not configured) — fall back to browser OAuth with the app
-          // deep-link scheme so Android can return control to the app.
-          console.warn("[Auth] Native GoogleAuth failed, falling back to OAuth:", nativeErr);
-          setBusy(false);
-          const supabase = getSupabaseBrowserClient();
-          const { error: oErr } = await supabase.auth.signInWithOAuth({
-            provider: "google",
-            options: { redirectTo: "com.kalnehi.daily://home" },
-          });
-          if (oErr) throw oErr;
-        }
-      } else {
-        console.log("[Auth] Web Flow Triggered");
-        const supabase = getSupabaseBrowserClient();
-        const { error: oErr } = await supabase.auth.signInWithOAuth({
-          provider: "google",
-          options: { redirectTo: buildAuthCallbackUrl("/home") },
-        });
-        if (oErr) throw oErr;
-      }
+      const supabase = getSupabaseBrowserClient();
+      const { error: oErr } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: buildAuthCallbackUrl("/home") },
+      });
+      if (oErr) throw oErr;
     } catch (e) {
       setError(formatSupabaseError(e));
       setBusy(false);
