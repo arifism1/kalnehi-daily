@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { SubscriptionPaywallInterstitial } from "@/components/subscription/SubscriptionPaywallInterstitial";
 import { TrialGuard } from "@/components/TrialGuard";
 import { ensureFreeTrialStarted } from "@/actions/subscription";
+import { trackMetaFreeTrialStarted } from "@/lib/analytics";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { isLegalPath } from "@/lib/legal-paths";
 import { isPaidAccessOverlayExemptPath } from "@/lib/paid-access-exempt-paths";
@@ -116,6 +117,7 @@ function TrialStartGate({ refetch }: { refetch: () => void }) {
         setError(result.error);
         return;
       }
+      if (result.started) trackMetaFreeTrialStarted();
       refetch();
     } catch {
       setError("Something went wrong. Please try again.");

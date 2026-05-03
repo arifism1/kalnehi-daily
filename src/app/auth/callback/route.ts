@@ -21,8 +21,8 @@ export async function GET(request: NextRequest) {
     return errRedirect("Missing authorization code");
   }
 
-  const redirectUrl = `${origin}${next}`;
-  const response = NextResponse.redirect(redirectUrl);
+  const dest = new URL(next, origin);
+  const response = NextResponse.redirect(dest.toString());
   const { url, anonKey } = getSupabaseConfig();
 
   const supabase = createServerClient(url, anonKey, {
@@ -38,10 +38,20 @@ export async function GET(request: NextRequest) {
     },
   });
 
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) {
     return errRedirect(error.message);
   }
+
+  const createdMs =
+    data.user?.created_at != null
+      ? new Date(data.user.created_at).getTime()
+      : data.session?.user?.created_at != null
+        ? new Date(data.session.user.created_at).getTime()
+        : 0;
+  const isNewUser = createdMs > 0 && Date.now() - createdMs < 5 * 60 * 1000;
+  dest.searchParams.set("kalnehi_auth_event", isNewUser ? "sign_up" : "login");
+  response.headers.set("Location", dest.toString());
 
   return response;
 }
