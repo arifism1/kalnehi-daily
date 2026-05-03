@@ -3,6 +3,7 @@
 import type { TablesInsert } from "@/types/supabase";
 import { chapterKey, type SyllabusRow } from "@/lib/syllabusGrouping";
 import { applyOptimisticTaskCreate } from "@/lib/taskMutations";
+import { trackMetaTaskCreated } from "@/lib/analytics";
 import { toUserFacingLocalError } from "@/lib/userFacingErrors";
 import { useTaskStore, type Task } from "@/store/useTaskStore";
 
@@ -46,6 +47,7 @@ export async function quickCreateEmptyTask(
       };
 
     await applyOptimisticTaskCreate(row, userId, fullTask);
+    trackMetaTaskCreated();
     return { ok: true, id };
   } catch (e) {
     return { ok: false, error: toUserFacingLocalError(e) };
@@ -104,6 +106,7 @@ export async function quickCreatePlannedTask(
       };
 
     await applyOptimisticTaskCreate(row, userId, fullTask);
+    trackMetaTaskCreated();
     return { ok: true, id };
   } catch (e) {
     return { ok: false, error: toUserFacingLocalError(e) };
@@ -172,6 +175,7 @@ export async function bulkAddSyllabusMicrotopicsToDailyPlan(
       };
       const r = await applyOptimisticTaskCreate(insertRow, userId, fullTask);
       if (!r.ok) return r;
+      trackMetaTaskCreated();
       existing.add(mid);
       created++;
     }
@@ -243,6 +247,7 @@ export async function addSelectedSyllabusRowsToDailyPlan(
       };
       const r = await applyOptimisticTaskCreate(insertRow, userId, fullTask);
       if (!r.ok) return r;
+      trackMetaTaskCreated();
       existing.add(mid);
       created++;
     }

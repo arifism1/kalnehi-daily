@@ -4,6 +4,7 @@ import { Loader2, Pause, Play, Square } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 import { updateDailyTaskWorkedTime, type DailyTaskView } from "@/actions/dailyPlan";
+import { trackMetaTimerStarted } from "@/lib/analytics";
 import { plannedMinutesFromSlot } from "@/lib/dailyPlanTime";
 import { surfaceErrorForUi } from "@/lib/userFacingErrors";
 import { useDailyTaskTimerStore } from "@/store/useDailyTaskTimerStore";
@@ -122,6 +123,7 @@ export function DailyTaskTimerControls({
       }
     }
     useDailyTaskTimerStore.getState().start(taskId, task.actual_worked_minutes ?? 0);
+    trackMetaTimerStarted();
   };
 
   const handleStop = () => {
@@ -204,7 +206,10 @@ export function DailyTaskTimerControls({
               <>
                 <button
                   type="button"
-                  onClick={() => useDailyTaskTimerStore.getState().resume()}
+                  onClick={() => {
+                    useDailyTaskTimerStore.getState().resume();
+                    trackMetaTimerStarted();
+                  }}
                   className="inline-flex h-8 items-center gap-1 rounded-lg border border-kal-accent/40 bg-kal-accent/10 px-2.5 text-xs font-semibold text-kal-accent"
                   aria-label="Resume timer"
                 >

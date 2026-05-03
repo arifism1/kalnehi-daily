@@ -17,6 +17,7 @@ import {
   applyOptimisticTaskDelete,
   applyOptimisticTaskUpdate,
 } from "@/lib/taskMutations";
+import { trackMetaTaskCompleted } from "@/lib/analytics";
 import { quickCreateEmptyTask } from "@/lib/quickTaskCreate";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useTaskStore, type Task } from "@/store/useTaskStore";
@@ -296,8 +297,16 @@ export function AddEditTaskSheet({
       marks_value: Number.isFinite(marksNum) ? marksNum : null,
     };
 
+    const prevRow = useTaskStore.getState().tasks[tid];
     const res = await applyOptimisticTaskUpdate(tid, patch, uid);
     if (!res.ok) setError(surfaceErrorForUi(res.error));
+    else if (
+      prevRow &&
+      prevRow.status !== "completed" &&
+      patch.status === "completed"
+    ) {
+      trackMetaTaskCompleted();
+    }
   }, [userId, task?.id, ensureDraftTaskId]);
 
   const scheduleFlush = useCallback(() => {
