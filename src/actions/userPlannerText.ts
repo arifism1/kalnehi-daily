@@ -20,7 +20,7 @@ export type UserRevisionQueueFetchResult =
   | { ok: true; revisions: Tables<"user_revision_queue_items">[] }
   | { ok: false; error: string };
 
-/** One table — used by revision reminders list to avoid a full planner-text fetch. */
+/** One table — used by Revision Tracker to avoid a full planner-text fetch. */
 export async function fetchUserRevisionQueueItemsForSync(): Promise<UserRevisionQueueFetchResult> {
   try {
     const supabase = await createSupabaseServerClient();

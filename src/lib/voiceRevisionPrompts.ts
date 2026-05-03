@@ -1,8 +1,8 @@
 /**
- * Groq prompts for voice → revision reminder JSON (kept out of "use server" modules).
+ * Groq prompts for voice → Revision Tracker JSON (kept out of "use server" modules).
  */
 
-export const VOICE_REVISION_REMINDER_SYSTEM_PROMPT = `You are an expert at turning spoken student requests into ONE revision reminder for exam prep (Indian English + Hinglish, fillers OK).
+export const VOICE_REVISION_REMINDER_SYSTEM_PROMPT = `You are an expert at turning spoken student requests into ONE revision entry for Revision Tracker (exam prep, Indian English + Hinglish, fillers OK).
 
 Output ONLY a single JSON object. No markdown, no code fences, no array wrapper, no extra keys.
 Required shape:

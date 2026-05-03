@@ -29,7 +29,7 @@ export default function RevisionSchedulerPage() {
     { question: "What is spaced repetition?", answer: "Spaced repetition is a learning technique where you review material at increasing intervals. Instead of cramming everything the night before, you review on Day 1, Day 3, Day 7, Day 14 and Day 30 after first studying a topic. This matches how human memory works." },
     { question: "Which exams is this useful for?", answer: "All of them. JEE, NEET, UPSC, CAT, GATE, CA, CLAT, SSC, Banking — any exam with significant content volume benefits from spaced repetition. The more topics you cover, the more critical the scheduling becomes." },
     { question: "Can I export the schedule?", answer: "Yes. You can export as CSV (opens in Excel / Google Sheets) or copy as plain text to paste into your notes. No data is stored on our servers — everything runs in your browser." },
-    { question: "How is this different from Kalnehi Daily's revision reminders?", answer: "This tool gives you a static schedule you can paste anywhere. Inside Kalnehi Daily, Revision Reminders is your dated queue — set due dates, link syllabus topics if you want, and push reviews into your daily plan when you're ready." },
+    { question: "How is this different from Kalnehi Daily's Revision Tracker?", answer: "This tool gives you a static schedule you can paste anywhere. Inside the app, Revision Tracker is your dated queue — set due dates, link syllabus topics if you want, and push reviews into your daily plan when you're ready." },
   ];
 
   return (
@@ -98,7 +98,7 @@ export default function RevisionSchedulerPage() {
 
         <CTABanner
           headline="Track the same intervals inside Kalnehi Daily"
-          subtext="Revision Reminders keeps your due list next to your syllabus and daily plan. Start free for 3 days."
+          subtext="Revision Tracker keeps your due list next to your syllabus and daily plan. Start free for 3 days."
         />
       </div>
     </>

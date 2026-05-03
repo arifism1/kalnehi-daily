@@ -64,7 +64,7 @@ type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   userId: string | undefined;
-  /** Show voice-to-fields; Revision Reminders only. */
+  /** Show voice-to-fields; Revision Tracker only. */
   showVoice: boolean;
   dialogTitle: string;
   /** ARIA id for the heading (stable) */
@@ -83,7 +83,7 @@ export function ScheduleRevisionReminderDialog({
   dialogTitle,
   titleId = "schedule-revision-reminder-dialog-title",
   initial,
-  saveButtonLabel = "Save reminder",
+  saveButtonLabel = "Save",
   onSaved,
 }: Props) {
   const init = initial ?? EMPTY_INITIAL;
@@ -616,8 +616,8 @@ export function ScheduleRevisionReminderDialog({
                     aria-pressed={voicePhase === "listening"}
                     aria-label={
                       voicePhase === "listening"
-                        ? "Stop listening for reminder"
-                        : "Dictate revision reminder by voice"
+                        ? "Stop listening"
+                        : "Dictate revision by voice"
                     }
                   >
                     {voicePhase === "processing" ? (

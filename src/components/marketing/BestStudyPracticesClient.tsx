@@ -132,7 +132,7 @@ const RESEARCH_SECTIONS: ResearchSection[] = [
   {
     id: "revision",
     emoji: "🔄",
-    title: "Revision reminders",
+    title: "Revision Tracker",
     researchHook: "What you studied three weeks ago is already fading. That's not laziness — that's just how memory works.",
     researchDetail:
       "Ebbinghaus mapped the forgetting curve in 1885 and it hasn't changed. Cepeda's 2006 meta-analysis across 317 experiments confirmed what every topper who logs revision discovers: spacing it out across days beats cramming by 200%. The chapters you revisited once and never returned to — those are the ones that cost you marks in the mock. A prompt on the right day catches them first.",
@@ -141,7 +141,7 @@ const RESEARCH_SECTIONS: ResearchSection[] = [
       "Roediger, H. L. & Butler, A. C. (2011). The critical role of retrieval practice in long-term retention. Trends in Cognitive Sciences, 15(1), 20–27.",
     ],
     kalnehiConnection:
-      "Revision reminders keep a visible due list — you set dates and priorities so revisits happen before a bad mock exposes gaps.",
+      "Revision Tracker keeps a visible due list — you set dates and priorities so revisits happen before a bad mock exposes gaps.",
     accent: "from-teal-400/20 via-white/40 to-cyan-400/15",
     badgeColor: "bg-teal-500/15 text-teal-700 dark:text-teal-400",
   },

@@ -15,7 +15,7 @@ const FEATURES: { name: string; trial: FeatureValue; smart: FeatureValue }[] = [
   { name: "Streak + consistency heatmap", trial: true, smart: true },
   { name: "Doubt tracker", trial: true, smart: true },
   { name: "Marks engine + rank prediction", trial: true, smart: true },
-  { name: "Revision reminders", trial: true, smart: true },
+  { name: "Revision Tracker", trial: true, smart: true },
   { name: "Daily log & prep insights", trial: true, smart: true },
   { name: "Mastermind Strategy Coach", trial: true, smart: true },
   { name: "Voice control", trial: "5 min total", smart: "100 min/month" },

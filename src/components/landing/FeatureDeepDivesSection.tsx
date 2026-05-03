@@ -39,12 +39,12 @@ const FEATURES: Feature[] = [
     illustration: <MarksEngineIllustration />,
   },
   {
-    tag: "Revision reminders",
+    tag: "Revision Tracker",
     headline: "A dated queue beats a vague promise to \"revise later.\"",
     bullets: [
       "Due dates, priorities, and optional syllabus links — in one list you control.",
       "Reschedule when life happens; overdue items stay visible until you clear them.",
-      "Push a reminder into your daily plan when you are ready to execute.",
+      "Push a revision into your daily plan when you are ready to execute.",
     ],
     illustration: <RevisionEngineIllustration />,
   },
@@ -297,7 +297,7 @@ function RevisionEngineIllustration() {
   return (
     <div className="p-6 select-none">
       <div className="mb-1 flex items-center justify-between">
-        <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-kal-muted">Revision reminders</p>
+        <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-kal-muted">Revision Tracker</p>
       </div>
       <p className="mb-4 text-[11px] text-kal-muted">Due list — next reviews</p>
 

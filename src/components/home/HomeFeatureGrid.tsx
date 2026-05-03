@@ -189,13 +189,13 @@ const FEATURE_ITEM_BY_ID: Record<string, FeatureItem> = {
     staticHint: "Build strategy here",
     fallback: "Build strategy here",
   },
-  "revision-reminders": {
-    id: "revision-reminders",
-    href: "/revision-reminders",
-    label: "Revision Reminders",
+  "revision-tracker": {
+    id: "revision-tracker",
+    href: "/revision-tracker",
+    label: "Revision Tracker",
     icon: AlarmClock,
     staticHint: "Your own due list",
-    fallback: "Add reminders",
+    fallback: "Add to tracker",
   },
   "doubt-tracker": {
     id: "doubt-tracker",

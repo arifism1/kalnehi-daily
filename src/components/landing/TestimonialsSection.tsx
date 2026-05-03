@@ -23,7 +23,7 @@ const WALKTHROUGH = [
   {
     time: "2:00 PM",
     icon: "🔁",
-    title: "Revision reminders",
+    title: "Revision Tracker",
     action: "Due list shows Optics for today — you chose the cadence.",
     detail: "Marked reviewed; next due date set for +14 days. Nothing slips off the radar.",
   },

@@ -101,9 +101,9 @@ const FEATURES: FeatureCard[] = [
     accent: "from-orange-400/25 via-white/40 to-amber-400/20",
   },
   {
-    id: "revision-reminders",
+    id: "revision-tracker",
     emoji: "🔄",
-    title: "Revision reminders",
+    title: "Revision Tracker",
     tagline: "A dated queue instead of “I’ll revise later.”",
     bullets: [
       "Due dates and priority in one list; optional links to syllabus items.",

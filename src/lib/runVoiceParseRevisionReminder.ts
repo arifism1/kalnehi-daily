@@ -44,7 +44,7 @@ export type ParseRevisionReminderResult =
   | { ok: false; error: string; openRawFallback?: boolean };
 
 /**
- * Server-side: transcript → one revision reminder. Uses TODAYS_DATE for relative dates.
+ * Server-side: transcript → one Revision Tracker row JSON. Uses TODAYS_DATE for relative dates.
  */
 export async function runVoiceParseRevisionReminder(
   raw: string,

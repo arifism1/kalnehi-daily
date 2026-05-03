@@ -1066,7 +1066,7 @@ export function UnifiedDailyPlanList({
         dialogTitle="Schedule revision"
         titleId="daily-plan-schedule-revision-dialog"
         initial={scheduleRevisionInitial}
-        saveButtonLabel="Save reminder"
+        saveButtonLabel="Save"
         onSaved={() => setRevisionScheduledPopupOpen(true)}
       />
 

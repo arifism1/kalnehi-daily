@@ -82,12 +82,12 @@ For JEE, this means all ~720 topics across Physics, Chemistry and Mathematics. F
 
 Each topic can be marked as: Not started, In progress, Done, or Needs revision. The tracker calculates your completion percentage per subject and overall. Mastermind reads this data to give you strategy advice.
 
-**Revision reminders** pair with the tracker: you choose due dates, optionally link a microtopic from the syllabus, and keep everything in one due list. When you are ready, add a reminder to your daily plan or reschedule it — you stay in control of the cadence.
+**Revision Tracker** pairs with the tracker: you choose due dates, optionally link a microtopic from the syllabus, and keep everything in one due list. When you are ready, add an item to your daily plan or reschedule it — you stay in control of the cadence.
 
 The tracker also shows your Target Score Blueprint — which chapters have the highest weightage for your exam — so you can prioritise where to spend your time when you can't cover everything.`,
     scenarios: [
       "A JEE aspirant opens the syllabus tracker 90 days before the exam. Physics shows 65% complete, Chemistry 72%, Maths 80%. Mastermind reads this and immediately says: 'Physics is your highest risk — here are the 8 Physics chapters with the highest JEE weightage that you haven't completed yet. Cover these in the next 2 weeks.'",
-      "A NEET aspirant finishes Genetics and adds a revision reminder for 1 week out, linked to that microtopic. When the due date hits, they see it in Revision Reminders, spend 20 minutes on active recall, then mark it done or push the next review.",
+      "A NEET aspirant finishes Genetics and adds a revision for 1 week out, linked to that microtopic. When the due date hits, they open Revision Tracker, spend 20 minutes on active recall, then mark it done or push the next review.",
       "A UPSC aspirant uses the syllabus tracker across GS1, GS2, GS3, GS4, Essay, and their Optional (History). Mastermind monitors all 6 tracks and alerts them when GS4 (Ethics) is 3 weeks behind schedule relative to the others.",
       "A CA Intermediate student tracks all 8 papers across 2 groups. Before their mock exam, they open the tracker and see Paper 6 (Auditing) is only 40% complete while everything else is 70%+. They reallocate 10 hours to Auditing that week.",
     ],
@@ -104,30 +104,30 @@ The tracker also shows your Target Score Blueprint — which chapters have the h
   },
   {
     slug: "spaced-revision",
-    name: "Revision reminders",
+    name: "Revision Tracker",
     tagline: "Your revision list, your dates",
-    headline: "Revision reminders — spaced review without the spreadsheet",
-    description: `Spacing reviews beats cramming — but only if you actually show up on the right days. **Revision reminders** in Kalnehi Daily are your personal due list: add topics by name, link them to syllabus microtopics when you want, set priority, and pick due dates that match your exam timeline.
+    headline: "Revision Tracker — spaced review without the spreadsheet",
+    description: `Spacing reviews beats cramming — but only if you actually show up on the right days. **Revision Tracker** in Kalnehi Daily is your personal due list: add topics by name, link them to syllabus microtopics when you want, set priority, and pick due dates that match your exam timeline.
 
 You decide the cadence (e.g. +1 day, +1 week, +1 month after a mock). Items can be pushed to your daily plan when you are ready, rescheduled when life happens, and marked done when you have genuinely revised. Mastermind and the syllabus tracker still see what you marked as **Needs revision** so strategy advice stays grounded in your real backlog.
 
 For large syllabi — JEE, NEET, UPSC, CA — the risk is not forgetting that revision matters; it is forgetting which chapter is due. A single sorted list fixes that.`,
     scenarios: [
-      "A JEE aspirant finishes Rotational Motion and adds reminders for 1 day, 1 week, and 3 weeks. Each time a row is due, they open Revision Reminders, do a short active-recall pass, then sets the next date.",
+      "A JEE aspirant finishes Rotational Motion and adds follow-ups for 1 day, 1 week, and 3 weeks. Each time a row is due, they open Revision Tracker, do a short active-recall pass, then sets the next date.",
       "A UPSC aspirant lists Polity chapters with staggered due dates before Prelims. They review in 20-minute blocks instead of re-reading full chapters cold.",
-      "A CA student links AS 10 and AS 16 from the syllabus tracker into reminders with closer due dates until mocks improve.",
+      "A CA student links AS 10 and AS 16 from the syllabus tracker into Revision Tracker with closer due dates until mocks improve.",
       "A NEET aspirant adds Genetics and Cell Division with the same due date; both show as due today in one list, so they batch revision before a mock.",
     ],
-    examCompatibility: "Revision reminders work for every exam profile in Kalnehi Daily. They are especially useful when the syllabus is large and easy to lose track of without a dated queue.",
+    examCompatibility: "Revision Tracker works for every exam profile in Kalnehi Daily. It is especially useful when the syllabus is large and easy to lose track of without a dated queue.",
     relatedFeatures: ["syllabus-tracker", "prepbrain-ai", "daily-planner"],
     relatedExams: ["/jee", "/neet", "/upsc", "/ca-intermediate"],
     faqs: [
-      { question: "Is this automatic spaced repetition from the syllabus tracker?", answer: "No. You set due dates and priorities. The tracker still shows Done / Needs revision for Mastermind; reminders are the execution list you control." },
-      { question: "Can I link a reminder to a syllabus microtopic?", answer: "Yes. Linking keeps the title and subject aligned with your tracker and avoids duplicate free-text entries." },
-      { question: "How do reminders reach my daily plan?", answer: "When you schedule or add a revision task from the reminder flow, it can become a task on the day you choose. You can also work straight from the reminders page." },
+      { question: "Is this automatic spaced repetition from the syllabus tracker?", answer: "No. You set due dates and priorities. The syllabus tracker still shows Done / Needs revision for Mastermind; Revision Tracker is the execution list you control." },
+      { question: "Can I link an item to a syllabus microtopic?", answer: "Yes. Linking keeps the title and subject aligned with your tracker and avoids duplicate free-text entries." },
+      { question: "How do revision items reach my daily plan?", answer: "When you schedule or add a revision task from Revision Tracker, it can become a task on the day you choose. You can also work straight from the Revision Tracker page." },
       { question: "What if I miss a due date?", answer: "The item stays overdue until you reschedule or complete it. Sort by due date to clear backlog before taking on new chapters." },
     ],
-    metaDescription: "Kalnehi Daily revision reminders: due dates, syllabus links, and priorities in one list — so spaced review actually happens for JEE, NEET, UPSC, and more.",
+    metaDescription: "Kalnehi Daily Revision Tracker: due dates, syllabus links, and priorities in one list — so spaced review actually happens for JEE, NEET, UPSC, and more.",
   },
   {
     slug: "marks-engine",

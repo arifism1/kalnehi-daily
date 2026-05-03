@@ -121,7 +121,12 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/revision-engine",
-        destination: "/revision-reminders",
+        destination: "/revision-tracker",
+        permanent: true,
+      },
+      {
+        source: "/revision-reminders",
+        destination: "/revision-tracker",
         permanent: true,
       },
       {

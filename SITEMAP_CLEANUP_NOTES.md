@@ -37,7 +37,7 @@ These URLs are disallowed by `src/app/robots.ts` and should NOT appear in any se
 /prepbrain
 /marks-engine
 /daily-engine
-/revision-reminders
+/revision-tracker
 /progress
 /heatmap
 /calendar

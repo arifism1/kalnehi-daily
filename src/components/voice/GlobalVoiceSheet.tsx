@@ -46,7 +46,7 @@ const COMMAND_HINTS = [
   "Go to notifications",
   "Go to mastermind",
   "Go to consistency tracker",
-  "Go to revision reminders",
+  "Go to revision tracker",
   "Go to today's recap",
   "Open daily debrief",
   "Go to habits",

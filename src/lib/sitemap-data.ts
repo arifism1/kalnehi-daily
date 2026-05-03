@@ -113,7 +113,7 @@ const MARKETING_SITEMAP: SitemapEntry[] = [
  * KEPT FOR REFERENCE: in case you want to build a separate internal sitemap:
  * /daily-plan, /planner/*, /meditation/*, /my-subscription, /settings,
  * /target-score-blueprint, /my-target, /saved-plans, /study-sessions, /prepbrain,
- * /marks-engine, /daily-engine, /revision-reminders, /progress, /heatmap,
+ * /marks-engine, /daily-engine, /revision-tracker, /progress, /heatmap,
  * /calendar, /consistency-tracker, /habits, /timer, /motivation, /notifications,
  * /feedback, /doubts, /profile, /onboarding, /dictate-day, /self-type*
  */

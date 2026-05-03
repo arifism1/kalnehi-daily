@@ -391,19 +391,19 @@ export function RevisionRemindersPageClient() {
         <p className="kal-category-label text-kal-accent">Study tools</p>
         <h1 className="kal-feature-title mt-2 flex items-center gap-2.5">
           <AlarmClock className="h-7 w-7 shrink-0 text-kal-accent/90" aria-hidden />
-          Revision Reminders
+          Revision Tracker
         </h1>
         <p className="kal-feature-lead mt-3 max-w-xl">
-          Today and upcoming due dates only — past-due reminders live under Missed
+          Today and upcoming due dates only — past-due items live under Missed
           Tasks. Tap <span className="font-semibold text-kal-text">Done</span> next
-          to Add to see reminders you&apos;ve completed. Your list is what you add;
+          to Add to see entries you&apos;ve completed. Your list is what you add;
           nothing is dropped into your daily plan automatically.
         </p>
       </header>
 
       {!userId ? (
         <div className="kal-glass-card rounded-2xl border border-kal-border/60 p-6 text-sm text-kal-muted">
-          Sign in to save and sync revision reminders across devices.
+          Sign in to save and sync Revision Tracker across devices.
         </div>
       ) : null}
 
@@ -439,7 +439,7 @@ export function RevisionRemindersPageClient() {
             className="kal-btn-accent inline-flex min-h-[44px] items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold disabled:pointer-events-none disabled:opacity-50"
           >
             <Plus className="h-4 w-4" aria-hidden />
-            Add New Reminder
+            Add revision
           </button>
         </div>
       </div>
@@ -471,7 +471,7 @@ export function RevisionRemindersPageClient() {
       ) : baseFiltered.length === 0 ? (
         <div className="kal-glass-card rounded-2xl border border-kal-border/50 p-8 text-center">
           <p className="text-sm text-kal-muted">
-            No reminders due today or later. Add one for a future date, or check
+            No items due today or later. Add one for a future date, or check
             Missed Tasks if something was due before today.
           </p>
         </div>
@@ -495,16 +495,16 @@ export function RevisionRemindersPageClient() {
             dateFilteredArchived.length > 0 ? (
               <p className="text-sm text-kal-muted">
                 {selectedDate != null
-                  ? "No pending reminders on this date."
-                  : "No pending reminders in this view."}
+                  ? "No pending items on this date."
+                  : "No pending items in this view."}
               </p>
             ) : dateFilteredActive.length === 0 &&
               dateFilteredArchived.length === 0 &&
               doneItems.length > 0 ? (
               <p className="text-sm text-kal-muted">
                 {selectedDate != null
-                  ? "No pending reminders on this date. Tap Done to see completed reminders."
-                  : "Tap Done to see completed reminders."}
+                  ? "No pending items on this date. Tap Done to see completed items."
+                  : "Tap Done to see completed items."}
               </p>
             ) : null}
             {selectedDate === null ? (
@@ -587,7 +587,7 @@ export function RevisionRemindersPageClient() {
                 id="revision-done-panel-title"
                 className="text-lg font-bold text-kal-text"
               >
-                Completed reminders
+                Completed items
               </h2>
               <button
                 type="button"
@@ -601,7 +601,7 @@ export function RevisionRemindersPageClient() {
             <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain px-5 py-4 sm:px-6 [-webkit-overflow-scrolling:touch]">
               {doneItems.length === 0 ? (
                 <p className="text-sm text-kal-muted">
-                  No completed reminders yet.
+                  No completed items yet.
                 </p>
               ) : (
                 <div className="space-y-6">
@@ -627,7 +627,7 @@ export function RevisionRemindersPageClient() {
         onOpenChange={setModalOpen}
         userId={userId}
         showVoice
-        dialogTitle="New reminder"
+        dialogTitle="Add revision"
         titleId="revision-reminder-modal-title"
         initial={addInitial}
         onSaved={(bundle) => setItems(bundle.revisionItems)}
@@ -635,8 +635,8 @@ export function RevisionRemindersPageClient() {
 
       <ConfirmDialog
         open={deleteTarget != null}
-        title="Delete reminder?"
-        description="This removes the reminder from your list. You can add a new one anytime."
+        title="Remove from tracker?"
+        description="This removes the item from Revision Tracker. You can add a new one anytime."
         confirmLabel="Delete"
         busy={deleteBusy}
         onCancel={() => !deleteBusy && setDeleteTarget(null)}

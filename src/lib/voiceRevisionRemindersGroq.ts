@@ -136,7 +136,7 @@ REFERENCE_TIME_ISO: ${ctx.referenceIso}
 Transcript:
 """${trimmed}"""
 
-Return ONLY the JSON object for one revision reminder, per system rules.`;
+Return ONLY the JSON object for one revision entry for Revision Tracker, per system rules.`;
 }
 
 /**

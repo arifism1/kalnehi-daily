@@ -72,7 +72,7 @@ export const FEATURE_CATEGORIES: FeatureCategoryDef[] = [
     dotColor: "#7F77DD",
     featureIds: [
       "prepbrain-ai",
-      "revision-reminders",
+      "revision-tracker",
       "doubt-tracker",
       "mistake-log",
       "study-sessions",
@@ -178,8 +178,8 @@ export const DASHBOARD_FEATURES: DashboardFeature[] = [
     description: "Your AI-powered personal prep coach, available 24/7.",
   },
   {
-    id: "revision-reminders",
-    title: "Revision Reminders",
+    id: "revision-tracker",
+    title: "Revision Tracker",
     icon: AlarmClock,
     description:
       "Your own revision list — custom topics or syllabus links, due dates, and priorities.",

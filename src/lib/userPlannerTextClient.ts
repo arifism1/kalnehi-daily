@@ -106,7 +106,7 @@ export async function hydrateUserPlannerTextFromServer(
   return p;
 }
 
-/** Single-table sync for the revision queue — use on `/revision-reminders` instead of full planner hydrate. */
+/** Single-table sync for the revision queue — use on `/revision-tracker` instead of full planner hydrate. */
 export async function hydrateUserPlannerTextRevisionsFromServer(
   userId: string,
 ): Promise<UserPlannerTextBundle> {

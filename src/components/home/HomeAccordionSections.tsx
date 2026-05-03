@@ -51,7 +51,7 @@ const ProgressRouteLazy = dynamic(
   { ssr: false },
 );
 const RevisionRemindersRouteLazy = dynamic(
-  () => import("@/app/(kalnehi)/revision-reminders/RevisionRemindersRouteLazy"),
+  () => import("@/app/(kalnehi)/revision-tracker/RevisionRemindersRouteLazy"),
   { ssr: false },
 );
 const ConsistencyTrackerRouteLazy = dynamic(
@@ -279,8 +279,8 @@ export function HomeAccordionSections() {
       content: <PrepBrainChatLazy />,
     },
     {
-      id: "revision-reminders",
-      title: "Revision Reminders",
+      id: "revision-tracker",
+      title: "Revision Tracker",
       icon: AlarmClock,
       content: <RevisionRemindersRouteLazy />,
     },

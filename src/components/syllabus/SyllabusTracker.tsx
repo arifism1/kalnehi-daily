@@ -215,7 +215,7 @@ function SyllabusMicrotopicRow({
 
   const onSaveRevision = useCallback(async () => {
     if (!userId) {
-      setRevErr("Sign in to save revision reminders.");
+      setRevErr("Sign in to save to Revision Tracker.");
       return;
     }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(due.trim())) {
@@ -421,8 +421,8 @@ function SyllabusMicrotopicRow({
                   {savingRev
                     ? "Saving…"
                     : existingPendingManual
-                      ? "Update reminder"
-                      : "Save to reminders"}
+                      ? "Update in tracker"
+                      : "Save to Revision Tracker"}
                 </button>
               </div>
               {revErr ? (
@@ -435,7 +435,7 @@ function SyllabusMicrotopicRow({
                   className="mt-1.5 text-[11px] font-medium text-kal-accent"
                   role="status"
                 >
-                  Saved to revision reminders
+                  Saved to Revision Tracker
                 </p>
               ) : null}
             </div>
