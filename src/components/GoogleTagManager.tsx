@@ -3,8 +3,8 @@ import Script from "next/script";
 const GTM_CONTAINER_ID = "GTM-K76BLZFN";
 
 /**
- * GTM bootstrap — `beforeInteractive` is injected into `<head>` and runs before hydration
- * (Next.js forbids raw `<script>` in React tree; see next/script docs).
+ * GTM bootstrap — `beforeInteractive` is emitted into `<head>` even though this component is
+ * rendered under `<body>` in the root layout (Next.js rejects `<script>` / `next/script` under `<head>` in the tree).
  */
 export function GoogleTagManagerHead() {
   return (
