@@ -274,6 +274,7 @@ async function groqOpenAiChatStream(params: {
       temperature: params.temperature,
       max_tokens: params.max_tokens,
       stream: true,
+      stream_options: { include_usage: true },
     }),
   });
 

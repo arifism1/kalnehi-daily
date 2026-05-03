@@ -276,6 +276,44 @@ export async function updateDailyTaskWorkedTime(
   }
 }
 
+/** Repoint a daily task to another calendar day (ensures `daily_plans` row exists). */
+export async function moveDailyTaskToPlanDate(
+  taskId: string,
+  targetPlanDate: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const planDate = targetPlanDate?.trim() ?? "";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(planDate)) {
+    return { ok: false, error: "Invalid date." };
+  }
+  if (!taskId) return { ok: false, error: "Invalid task." };
+
+  const ensured = await ensureDailyPlanId(planDate);
+  if (!ensured.ok) return ensured;
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return { ok: false, error: USER_ERROR.session };
+
+    const { error } = await supabase
+      .from("daily_tasks")
+      .update({
+        daily_plan_id: ensured.planId,
+        source: "moved",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", taskId);
+
+    if (error) return { ok: false, error: USER_ERROR.tryAgain };
+    revalidateDailyPlanPaths();
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: formatSupabaseError(e) };
+  }
+}
+
 export async function deleteDailyTask(
   id: string,
 ): Promise<{ ok: true } | { ok: false; error: string }> {

@@ -89,10 +89,6 @@ export async function runVoiceDictationPipeline(
   }
 
   const voiceMinutes = voiceBillingMinutesFromOptionalDurationSeconds(durationSeconds);
-  const usageCheck = await incrementVoiceMinuteUsage(voiceMinutes);
-  if (!usageCheck.ok) {
-    return { ok: false, error: usageCheck.error };
-  }
 
   const entryIds: string[] = [];
   let preview: ParsedVoiceDayEntry | undefined;
@@ -122,6 +118,11 @@ export async function runVoiceDictationPipeline(
       return { ok: false, error: ins.error };
     }
     entryIds.push(id);
+  }
+
+  const usageCheck = await incrementVoiceMinuteUsage(voiceMinutes);
+  if (!usageCheck.ok) {
+    return { ok: false, error: usageCheck.error };
   }
 
   revalidatePath("/dictate-day");

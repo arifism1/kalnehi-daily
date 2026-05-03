@@ -4,7 +4,7 @@ import { addDays, format, parse, parseISO } from "date-fns";
 import { ArrowLeft, CalendarDays, Mic, Type, Zap } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 import { ShareYourDayCard } from "@/components/daily/ShareYourDayCard";
 import { TaskInputModal, type TaskInputMode } from "@/components/planner/TaskInputModal";
@@ -16,19 +16,50 @@ import { usePlannerDateMidnightRollover } from "@/hooks/usePlannerDateMidnightRo
 import {
   dailyPlanLiveHeading,
   dailyPlanPageHeroTitle,
+  isValidPlanDateString,
 } from "@/lib/dailyPlanUiDate";
+import {
+  VOICE_PLAN_HINT_KEY,
+  type VoicePlanHintV1,
+} from "@/lib/voiceBossModeHints";
 import { useAuthStore } from "@/store/useAuthStore";
 
 export function DailyPlanPageContent() {
   const user = useAuthStore((s) => s.user);
   const today = useCalendarDate();
-  const [logDate, setLogDate] = useState(today);
   const searchParams = useSearchParams();
+  const rawPlanDate = searchParams.get("planDate") ?? searchParams.get("date");
+  const urlPlanDate =
+    rawPlanDate && isValidPlanDateString(rawPlanDate) ? rawPlanDate : null;
+  const [logDate, setLogDate] = useState(() => urlPlanDate ?? today);
 
   const openParam = searchParams.get("open");
   const initialMode: TaskInputMode | null =
     openParam === "dictate" ? "dictate" : openParam === "self-type" ? "self-type" : null;
   const [modalMode, setModalMode] = useState<TaskInputMode | null>(initialMode);
+  const [voicePlanBanner, setVoicePlanBanner] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (urlPlanDate) setLogDate(urlPlanDate);
+  }, [urlPlanDate]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const raw = sessionStorage.getItem(VOICE_PLAN_HINT_KEY);
+    if (!raw) return;
+    sessionStorage.removeItem(VOICE_PLAN_HINT_KEY);
+    try {
+      const hint = JSON.parse(raw) as VoicePlanHintV1;
+      if (hint.v !== 1) return;
+      setLogDate(hint.target_date);
+      setVoicePlanBanner(
+        `Couldn't find “${hint.task_name}”. Search your plan below.`,
+      );
+      window.setTimeout(() => setVoicePlanBanner(null), 12_000);
+    } catch {
+      // ignore
+    }
+  }, []);
 
   usePlannerDateMidnightRollover(today, setLogDate);
 
@@ -133,6 +164,15 @@ export function DailyPlanPageContent() {
           Self Type
         </button>
       </div>
+
+      {voicePlanBanner ? (
+        <p
+          role="status"
+          className="mb-4 rounded-xl border border-amber-500/35 bg-amber-500/[0.08] px-3 py-2 text-sm text-amber-950 dark:border-amber-500/25 dark:bg-amber-950/20 dark:text-amber-100/90"
+        >
+          {voicePlanBanner}
+        </p>
+      ) : null}
 
       <UnifiedDailyPlanList
         planDate={logDate}

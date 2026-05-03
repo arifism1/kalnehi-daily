@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { incrementVoiceMinuteUsage } from "@/actions/subscription";
+import {
+  ensureVoiceMinuteHeadroom,
+  incrementVoiceMinuteUsage,
+} from "@/actions/subscription";
 import { clampVoiceBillingDurationSeconds } from "@/lib/voiceDurationBilling";
 import {
   runVoiceNotificationParse,
@@ -72,6 +75,18 @@ export async function POST(req: Request) {
         : new Date().toISOString();
 
     const voiceSecondsCharged = clampVoiceBillingDurationSeconds(body.durationSeconds);
+
+    const billedMinutes = voiceSecondsCharged / 60;
+    const headroom = await ensureVoiceMinuteHeadroom(billedMinutes);
+    if (!headroom.ok) {
+      const msg = headroom.error;
+      const quotaLike =
+        /limit|trial ended|Upgrade|free trial|not configured|voice included/i.test(msg);
+      return NextResponse.json(
+        { ok: false, error: quotaLike ? "quota_exceeded" : msg },
+        { status: quotaLike ? 429 : 403 },
+      );
+    }
 
     /**
      * Charge voice quota only after Groq successfully returns structured data,

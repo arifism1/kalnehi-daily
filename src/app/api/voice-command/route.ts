@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 
-import { incrementVoiceMinuteUsage } from "@/actions/subscription";
+import {
+  ensureVoiceMinuteHeadroom,
+  incrementVoiceMinuteUsage,
+} from "@/actions/subscription";
+import { istCalendarDateStringFromInstant } from "@/lib/subscriptionUsage";
 import { clampVoiceBillingDurationSeconds } from "@/lib/voiceDurationBilling";
 import { runVoiceCommand } from "@/lib/voiceCommandGroq";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -39,7 +43,25 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "Please sign in." }, { status: 401 });
   }
 
-  const result = await runVoiceCommand(transcript, pageContext);
+  const billedMinutes = voiceSecondsCharged / 60;
+  const headroom = await ensureVoiceMinuteHeadroom(billedMinutes);
+  if (!headroom.ok) {
+    const msg = headroom.error;
+    const quotaLike =
+      /limit|trial ended|Upgrade|free trial|not configured|voice included/i.test(
+        msg,
+      );
+    return NextResponse.json(
+      { ok: false, error: quotaLike ? "quota_exceeded" : msg },
+      { status: quotaLike ? 429 : 403 },
+    );
+  }
+
+  const result = await runVoiceCommand(
+    transcript,
+    pageContext,
+    istCalendarDateStringFromInstant(),
+  );
 
   // Log voice AI token usage (best-effort, non-blocking)
   if (result.ok && (result.inputTokens > 0 || result.outputTokens > 0)) {

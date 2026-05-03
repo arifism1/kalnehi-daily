@@ -810,6 +810,22 @@ body {
   animation: kalVoiceBar 0.55s ease-in-out infinite alternate;
 }
 
+@keyframes kalVoicePreviewProgress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.kal-voice-preview-progress {
+  width: 0%;
+  animation-name: kalVoicePreviewProgress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
 .kal-check-draw {
   stroke-dasharray: 30;
   stroke-dashoffset: 0;
@@ -869,6 +885,7 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .kal-voice-bar,
+  .kal-voice-preview-progress,
   .kal-check-draw,
   .kal-shimmer-sweep,
   .kal-voice-modal-in,

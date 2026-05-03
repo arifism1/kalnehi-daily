@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { incrementVoiceMinuteUsage } from "@/actions/subscription";
+import {
+  ensureVoiceMinuteHeadroom,
+  incrementVoiceMinuteUsage,
+} from "@/actions/subscription";
 import { clampVoiceBillingDurationSeconds } from "@/lib/voiceDurationBilling";
 import {
   allValidTopicLinesFromRows,
@@ -59,6 +62,17 @@ export async function POST(req: Request) {
   }
 
   const voiceSecondsCharged = clampVoiceBillingDurationSeconds(body.durationSeconds);
+  const billedMinutes = voiceSecondsCharged / 60;
+  const headroom = await ensureVoiceMinuteHeadroom(billedMinutes);
+  if (!headroom.ok) {
+    const msg = headroom.error;
+    const quotaLike =
+      /limit|trial ended|Upgrade|free trial|not configured|voice included/i.test(msg);
+    return NextResponse.json(
+      { ok: false, error: quotaLike ? "quota_exceeded" : msg },
+      { status: quotaLike ? 429 : 403 },
+    );
+  }
 
   let rows: Awaited<
     ReturnType<typeof fetchDoubtVoiceTagSyllabusRows>
@@ -103,15 +117,6 @@ export async function POST(req: Request) {
     validTopicLines,
   );
 
-  const usage = await incrementVoiceMinuteUsage(voiceSecondsCharged / 60);
-  if (!usage.ok) {
-    const unauthorized = usage.error === "Please sign in.";
-    return NextResponse.json(
-      { ok: false, error: usage.error },
-      { status: unauthorized ? 401 : 429 },
-    );
-  }
-
   if (!groq.ok) {
     return NextResponse.json({
       ok: true,
@@ -120,8 +125,17 @@ export async function POST(req: Request) {
       topic: null,
       groq_model: "",
       tag_note: groq.error,
-      voice_seconds_charged: voiceSecondsCharged,
+      voice_seconds_charged: 0,
     });
+  }
+
+  const usage = await incrementVoiceMinuteUsage(billedMinutes);
+  if (!usage.ok) {
+    const unauthorized = usage.error === "Please sign in.";
+    return NextResponse.json(
+      { ok: false, error: usage.error },
+      { status: unauthorized ? 401 : 429 },
+    );
   }
 
   return NextResponse.json({

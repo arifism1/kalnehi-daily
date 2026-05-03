@@ -30,8 +30,12 @@ import {
   abandonActiveTimerWithoutSaving,
   finalizeActiveTimerForTask,
 } from "@/lib/timerSession";
-import { useAuthStore } from "@/store/useAuthStore";
+import {
+  VOICE_FOCUS_HINT_KEY,
+  type VoiceFocusHintV1,
+} from "@/lib/voiceBossModeHints";
 import { useActiveTimerStore } from "@/store/useActiveTimerStore";
+import { useAuthStore } from "@/store/useAuthStore";
 import { useDailyTaskTimerStore } from "@/store/useDailyTaskTimerStore";
 import { useTaskStore } from "@/store/useTaskStore";
 import type { Task } from "@/store/useTaskStore";
@@ -628,6 +632,57 @@ export function TimerEngineClient() {
     };
     void startLinked(task, sessionMeta);
   };
+
+  const handleStartRef = useRef(handleStart);
+  handleStartRef.current = handleStart;
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !userId) return;
+    const raw = sessionStorage.getItem(VOICE_FOCUS_HINT_KEY);
+    if (!raw) return;
+    let hint: VoiceFocusHintV1;
+    try {
+      hint = JSON.parse(raw) as VoiceFocusHintV1;
+      if (hint.v !== 1) {
+        sessionStorage.removeItem(VOICE_FOCUS_HINT_KEY);
+        return;
+      }
+    } catch {
+      sessionStorage.removeItem(VOICE_FOCUS_HINT_KEY);
+      return;
+    }
+    if (hint.dailyTaskId && dailyPlanTasks.length === 0) return;
+
+    sessionStorage.removeItem(VOICE_FOCUS_HINT_KEY);
+    setCustomSec(hint.customSec);
+    setSuggestOpen(true);
+
+    if (hint.dailyTaskId) {
+      const row = dailyPlanTasks.find((t) => t.id === hint.dailyTaskId);
+      if (row && row.plan_date === today) {
+        setPickedDailyTaskId(hint.dailyTaskId);
+        setPickedTaskId(null);
+        setTaskInput(dailyPlanPickerLine(row));
+      }
+    } else if (hint.legacyTaskId) {
+      const t = tasksRecord[hint.legacyTaskId];
+      if (t && toCalendarDateKey(t.assigned_date) === today) {
+        setPickedTaskId(hint.legacyTaskId);
+        setPickedDailyTaskId(null);
+        setTaskInput(`${t.assigned_date} · ${taskLabel(t, microRecord)}`);
+      }
+    } else if (hint.taskHint) {
+      setPickedDailyTaskId(null);
+      setPickedTaskId(null);
+      setTaskInput(hint.taskHint);
+    }
+
+    if (hint.autoStart) {
+      window.setTimeout(() => {
+        void handleStartRef.current();
+      }, 120);
+    }
+  }, [userId, today, dailyPlanTasks, tasksRecord, microRecord]);
 
   const ringProgress =
     focusTarget != null && focusTarget > 0
