@@ -13,10 +13,6 @@ import {
 } from "react";
 
 import { GlobalVoiceSheet } from "@/components/voice/GlobalVoiceSheet";
-import {
-  ProductTour,
-  readProductTourPending,
-} from "@/components/onboarding/ProductTour";
 import { useVoiceCommandStore } from "@/store/useVoiceCommandStore";
 
 import { KalnehiMark } from "@/components/KalnehiMark";
@@ -67,16 +63,8 @@ const MINIMAL_CHROME_PATHS = new Set([
 export function KalnehiChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [showTour, setShowTour] = useState(false);
   const { open: openVoice, close: closeVoice, isOpen: voiceOpen } = useVoiceCommandStore();
 
-  // Show product tour on first /home visit after onboarding completes
-  // Disabled for now
-  useEffect(() => {
-    // if (pathname === "/home" && readProductTourPending()) {
-    //   setShowTour(true);
-    // }
-  }, [pathname]);
   const onboarding = pathname === "/onboarding";
   const minimalChrome = MINIMAL_CHROME_PATHS.has(pathname);
 
@@ -263,9 +251,6 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
       <TimerVisibilityBridge />
       <PwaInstallPromptDeferred />
       <GlobalVoiceSheet />
-      {showTour && (
-        <ProductTour onComplete={() => setShowTour(false)} />
-      )}
     </div>
   );
 }
