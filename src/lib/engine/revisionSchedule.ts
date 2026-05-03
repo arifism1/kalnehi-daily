@@ -4,7 +4,7 @@ import { toCalendarDateKey } from "@/lib/calendarDateKey";
 
 export type RevisionDifficulty = "hard" | "medium" | "easy";
 
-/** Workflow for revision reminders (distinct from spaced-repetition "log" UX). */
+/** Workflow for Revision Tracker rows (distinct from spaced-repetition "log" UX). */
 export type RevisionReminderStatus = "pending" | "done" | "archived";
 
 /** `manual` = student-created; `suggested` reserved for PrepBrain / smart inserts. */
@@ -76,7 +76,7 @@ export type BuildRevisionReminderInput = {
 };
 
 /**
- * Student-controlled revision reminder: due date is explicit (not derived from difficulty).
+ * Student-controlled Revision Tracker row: due date is explicit (not derived from difficulty).
  */
 export function buildRevisionReminderItem(
   input: BuildRevisionReminderInput,
@@ -127,7 +127,7 @@ export function markRevisionReminderDone(
   };
 }
 
-/** Past-due revision reminders that still need action (Missed page). */
+/** Past-due Revision Tracker items that still need action (Missed page). */
 export function isOverduePendingRevisionReminder(
   it: RevisionItem,
   todayYyyyMmDd: string,
@@ -138,7 +138,7 @@ export function isOverduePendingRevisionReminder(
   return d < t;
 }
 
-/** Today or future — items shown on the main Revision Reminders list. */
+/** Today or future — items shown on the main Revision Tracker list. */
 export function isRevisionReminderOnOrAfterDate(
   it: RevisionItem,
   todayYyyyMmDd: string,

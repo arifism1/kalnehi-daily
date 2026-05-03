@@ -29,7 +29,7 @@ const guides = [
     href: "/",
     title: `${SITE_NAME} — full product overview`,
     blurb:
-      "The public landing page: daily plan, syllabus & marks, revision reminders, focus timer, Mastermind, pricing, and FAQs — the same story Google indexes for the home URL.",
+      "The public landing page: daily plan, syllabus & marks, Revision Tracker, focus timer, Mastermind, pricing, and FAQs — the same story Google indexes for the home URL.",
     icon: Home,
   },
   {

@@ -45,7 +45,7 @@ const ALL_FEATURES = [
   },
   {
     emoji: "🔄",
-    title: "Revision reminders",
+    title: "Revision Tracker",
     tagline: "A dated queue beats a vague promise to \"revise later.\"",
     detail: "Due dates, priorities, optional syllabus links — reschedule anytime, push to your daily plan when ready.",
   },

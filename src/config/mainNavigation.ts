@@ -155,11 +155,11 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
         featureId: "prepbrain-ai",
       },
       {
-        href: "/revision-reminders",
-        label: "Revision Reminders",
-        shortLabel: "Reminders",
+        href: "/revision-tracker",
+        label: "Revision Tracker",
+        shortLabel: "Revision",
         Icon: AlarmClock,
-        featureId: "revision-reminders",
+        featureId: "revision-tracker",
       },
       { href: "/doubts", label: "Doubt Tracker", shortLabel: "Doubts", Icon: HelpCircle, featureId: "doubt-tracker" },
       { href: "/mistake-log", label: "Mistake Log", Icon: ClipboardList, featureId: "mistake-log" },
@@ -260,7 +260,7 @@ const QUICK_NAV_EXCLUDED_HREFS = new Set([
   "/settings",
   "/my-subscription",
   "/policies",
-  "/revision-reminders",
+  "/revision-tracker",
 ]);
 
 function quickNavOrderIndex(href: string): number {

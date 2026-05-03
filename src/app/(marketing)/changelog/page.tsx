@@ -26,15 +26,15 @@ const RELEASES: Release[] = [
   {
     version: "2.5",
     date: "April 2026",
-    summary: "Revision reminders are the single home for due-date revision; legacy Smart Revision Engine screen removed.",
+    summary: "Revision Tracker is the single home for due-date revision; legacy Smart Revision Engine screen removed.",
     changes: [
       {
         version: "2.5",
         date: "April 2026",
         type: "improvement",
-        title: "Revision reminders only",
+        title: "Revision Tracker only",
         description:
-          "The standalone Smart Revision Engine page is removed. Use Revision Reminders for your due list (and link syllabus microtopics when you want). Old /revision-engine links redirect to /revision-reminders.",
+          "The standalone Smart Revision Engine page is removed. Use Revision Tracker for your due list (and link syllabus microtopics when you want). Old /revision-engine links redirect to /revision-tracker.",
       },
     ],
   },
@@ -45,7 +45,7 @@ const RELEASES: Release[] = [
     changes: [
       { version: "2.4", date: "April 2026", type: "feature", title: "CUET and NDA syllabus added", description: "Syllabus Tracker now includes complete syllabi for CUET UG/PG and NDA (Maths + GAT). Select your exam during onboarding or from Settings → Exam." },
       { version: "2.4", date: "April 2026", type: "improvement", title: "Mastermind context awareness", description: "Mastermind now considers your revision history alongside coverage — giving advice that accounts for topics you studied long ago and haven't revisited." },
-      { version: "2.4", date: "April 2026", type: "improvement", title: "Mobile revision reminders", description: "Revision Reminders is easier to use on mobile: sort by due date, reschedule, and mark items done in fewer taps." },
+      { version: "2.4", date: "April 2026", type: "improvement", title: "Mobile Revision Tracker", description: "Revision Tracker is easier to use on mobile: sort by due date, reschedule, and mark items done in fewer taps." },
       { version: "2.4", date: "April 2026", type: "fix", title: "Voice log persistence on Safari iOS", description: "Fixed an issue where voice-logged doubts were not saving correctly on Safari (iOS 17+). All voice input now persists correctly." },
     ],
   },

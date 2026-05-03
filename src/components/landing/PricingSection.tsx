@@ -31,7 +31,7 @@ function plans() {
     features: [
       "Everything in the free trial, every month",
       "Marks engine + rank prediction",
-      "Revision reminders",
+      "Revision Tracker",
       "Mastermind — 20,00,000 tokens/month",
       "Voice control — 100 minutes/month",
     ],

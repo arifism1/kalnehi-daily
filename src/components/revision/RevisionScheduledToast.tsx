@@ -12,7 +12,7 @@ type Props = {
 };
 
 /**
- * Floating success popup when a revision reminder is saved from the daily plan.
+ * Floating success popup when a revision is saved to Revision Tracker from the daily plan.
  */
 export function RevisionScheduledToast({
   open,
@@ -50,14 +50,14 @@ export function RevisionScheduledToast({
           <p className="font-semibold text-kal-text">Revision scheduled</p>
           <p className="mt-1 text-xs leading-relaxed text-kal-muted">
             It is on your list with the due date you picked. You can open Revision
-            Reminders anytime to review or edit it.
+            Tracker anytime to review or edit it.
           </p>
           <Link
-            href="/revision-reminders"
+            href="/revision-tracker"
             className="mt-2 inline-block text-xs font-bold text-kal-accent underline-offset-2 hover:underline"
             onClick={() => onDismiss()}
           >
-            Open Revision Reminders
+            Open Revision Tracker
           </Link>
         </div>
         <button

@@ -168,7 +168,7 @@ export default function JeePage() {
             <FeatureBlock
               title="Revision prioritisation"
               description="As your JEE date approaches, Mastermind shifts its focus from new chapters to revision windows — telling you which chapters need a second pass based on how long ago you studied them."
-              tag="Revision reminders"
+              tag="Revision Tracker"
             />
             <FeatureBlock
               title="Daily study load optimisation"

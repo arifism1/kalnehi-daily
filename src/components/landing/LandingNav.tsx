@@ -21,7 +21,7 @@ const EXAM_LINKS = [
 const FEATURE_LINKS = [
   { href: "/features/prepbrain-ai", label: "Mastermind" },
   { href: "/features/syllabus-tracker", label: "Syllabus Tracker" },
-  { href: "/features/spaced-revision", label: "Revision reminders" },
+  { href: "/features/spaced-revision", label: "Revision Tracker" },
   { href: "/features/voice-control", label: "Voice Control" },
   { href: "/features/marks-engine", label: "Marks Engine" },
   { href: "/features", label: "All features →" },

@@ -168,7 +168,7 @@ export default async function SyllabusPage({ params }: Props) {
 
         <CTABanner
           headline={`Track your ${data.exam} syllabus coverage in Kalnehi Daily`}
-          subtext="Mastermind, revision reminders, and daily planning — all around your exam syllabus."
+          subtext="Mastermind, Revision Tracker, and daily planning — all around your exam syllabus."
         />
       </div>
     </>

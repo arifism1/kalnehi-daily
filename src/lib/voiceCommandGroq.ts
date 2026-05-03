@@ -115,6 +115,7 @@ const VALID_NAV_PATHS = new Set([
   "/my-target",
   "/target-score-blueprint",
   // Learn & revise
+  "/revision-tracker",
   "/revision-reminders",
   "/syllabus",
   "/doubts",
@@ -191,12 +192,12 @@ Parse the user voice command and return ONLY a valid JSON object — no markdown
 {"intent":"ask_prepbrain","query":"<the question>","response_text":"..."}
 - "Ask Mastermind which chapters I should focus on" → {"intent":"ask_prepbrain","query":"Which chapters should I focus on?","response_text":"Opening Mastermind with your question."}
 
-### schedule_revision — schedule a revision reminder for a topic
+### schedule_revision — schedule a revision in Revision Tracker for a topic
 {"intent":"schedule_revision","subject":"<topic name>","days":<number>,"exact_date":"<YYYY-MM-DD or null>","response_text":"..."}
 - exact_date: set to ISO YYYY-MM-DD when the user names a calendar date ("30 May 2026", "2026-05-30"). Use [Today (IST calendar date)] from the message for "tomorrow" / relative calendar math. Set exact_date to null when they only say "in N days".
 - When exact_date is non-null, days may be 1 as a placeholder (clients ignore days in that case).
-- "Schedule revision for coordination compounds in 7 days" → {"intent":"schedule_revision","subject":"Coordination Compounds","days":7,"exact_date":null,"response_text":"Let's set a revision reminder for Coordination Compounds in 7 days."}
-- "Schedule revision for SHM on 30 May 2026" → {"intent":"schedule_revision","subject":"SHM","days":1,"exact_date":"2026-05-30","response_text":"Opening revision reminder for SHM on 30 May 2026."}
+- "Schedule revision for coordination compounds in 7 days" → {"intent":"schedule_revision","subject":"Coordination Compounds","days":7,"exact_date":null,"response_text":"Let's add Coordination Compounds to Revision Tracker for 7 days from now."}
+- "Schedule revision for SHM on 30 May 2026" → {"intent":"schedule_revision","subject":"SHM","days":1,"exact_date":"2026-05-30","response_text":"Opening Revision Tracker for SHM on 30 May 2026."}
 
 ### mark_syllabus_progress — update syllabus completion percentage
 {"intent":"mark_syllabus_progress","subject":"<chapter or topic>","percent":<0-100>,"response_text":"..."}
@@ -252,7 +253,7 @@ Valid paths:
   Planning: /daily-plan, /daily-debrief (/daily-log redirects to debrief), /recap (Today's Recap), /recap/weekly, /recap/monthly, /daily-engine, /dictate-day, /saved-plans, /missed-tasks, /calendar, /timer, /study-sessions, /study-camera
   Planner: /planner, /planner/habits, /planner/schedule, /planner/weekly, /planner/todos, /planner/routine, /planner/productivity
   Track: /progress, /consistency-tracker, /heatmap, /marks-engine, /my-target, /target-score-blueprint, /mock-tests, /mistake-log
-  Revise: /revision-reminders, /syllabus, /doubts, /mastermind, /prepbrain (same AI coach as Mastermind — prefer /mastermind)
+  Revise: /revision-tracker, /syllabus, /doubts, /mastermind, /prepbrain (same AI coach as Mastermind — prefer /mastermind)
   Wellbeing: /habits, /meditation, /meditation/consistency, /motivation
 - "Go to home" → {"intent":"navigate","path":"/home","response_text":"Going home."}
 - "Go to daily plan" → {"intent":"navigate","path":"/daily-plan","response_text":"Going to your daily plan."}
@@ -276,7 +277,7 @@ ${process.env.NEXT_PUBLIC_ENABLE_AI_STUDY_PARTNER === "true" ? `- "Open study ca
 
 ` : ""}- "Plan my day" → {"intent":"navigate","path":"/daily-plan","response_text":"Opening your daily plan."}
 - "Open Mastermind" / "Open PrepBrain" → {"intent":"navigate","path":"/mastermind","response_text":"Opening Mastermind."}
-- "Go to revision reminders" → {"intent":"navigate","path":"/revision-reminders","response_text":"Opening Revision Reminders."}
+- "Go to revision tracker" / "Open revision reminders" → {"intent":"navigate","path":"/revision-tracker","response_text":"Opening Revision Tracker."}
 
 ### query_plan — ask about today's plan
 {"intent":"query_plan","response_text":"..."}

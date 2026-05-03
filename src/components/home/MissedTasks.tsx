@@ -363,7 +363,7 @@ export function MissedTasks() {
             {row.item.title}
           </p>
           <span className="shrink-0 rounded-full border border-violet-200/90 bg-violet-50/90 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-violet-900/90 dark:border-violet-500/30 dark:bg-violet-950/50 dark:text-violet-200">
-            Revision Reminder
+            Revision Tracker
           </span>
         </div>
         <p className="text-xs text-kal-muted">
@@ -425,7 +425,7 @@ export function MissedTasks() {
           You&apos;re all caught up
         </h2>
         <p className="mt-1.5 text-[13px] text-kal-muted max-w-sm">
-          No overdue daily plan tasks and no past-due revision reminders.
+          No overdue daily plan tasks and no past-due Revision Tracker items.
         </p>
         <Link
           href="/daily-plan"
@@ -455,7 +455,7 @@ export function MissedTasks() {
             Overdue &amp; missed
           </h2>
           <p className="mt-0.5 text-[11px] leading-snug text-kal-text-secondary sm:mt-1 sm:text-xs sm:leading-relaxed dark:text-amber-200/85">
-            Daily plan tasks and revision reminders you haven&apos;t closed —
+            Daily plan tasks and Revision Tracker items you haven&apos;t closed —
             reschedule or finish them.
           </p>
         </div>
@@ -470,7 +470,7 @@ export function MissedTasks() {
           [
             { id: "all" as const, label: "All" },
             { id: "daily" as const, label: "Daily Task" },
-            { id: "revision" as const, label: "Revision Reminder" },
+            { id: "revision" as const, label: "Revision Tracker" },
           ] as const
         ).map((opt) => (
           <button
@@ -514,7 +514,7 @@ export function MissedTasks() {
       {userId && revisionLoading && missedDaily.length > 0 ? (
         <p className="mt-2 flex items-center gap-2 text-xs text-kal-muted">
           <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" aria-hidden />
-          Syncing revision reminders…
+          Syncing Revision Tracker…
         </p>
       ) : null}
 
@@ -586,8 +586,8 @@ export function MissedTasks() {
 
       <ConfirmDialog
         open={deleteRevision != null}
-        title="Delete reminder?"
-        description="This removes the revision reminder from your list."
+        title="Remove from tracker?"
+        description="This removes the item from Revision Tracker."
         confirmLabel="Delete"
         busy={deleteRevisionBusy}
         onCancel={() => !deleteRevisionBusy && setDeleteRevision(null)}

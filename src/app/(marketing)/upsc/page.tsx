@@ -177,7 +177,7 @@ export default function UpscPage() {
               },
               {
                 cmd: "Hey Boss, mark Indian Economy Chapter 4 as needs revision",
-                result: "Chapter flagged; set your next revision date in Revision Reminders",
+                result: "Chapter flagged; set your next revision date in Revision Tracker",
               },
             ].map(({ cmd, result }) => (
               <div key={cmd} className="kal-glass-card rounded-xl p-4 space-y-1">
