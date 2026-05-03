@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { isAndroidWebViewUserAgent } from "@/lib/androidWebSpeechEnv";
 import { VOICE_LONG_FORM_SILENCE_MS, VOICE_MAX_SESSION_MS } from "@/lib/voiceConstants";
 import { useVoiceCommandStore } from "@/store/useVoiceCommandStore";
 
@@ -27,10 +28,8 @@ type UseDeviceSpeechRecognitionOptions = {
 
 function getSpeechRecognitionCtor(): (typeof window)["webkitSpeechRecognition"] | null {
   if (typeof window === "undefined") return null;
-  // webkitSpeechRecognition exists as a stub in Android WebView but crashes the
-  // renderer process the moment .start() is called. Treat it as unsupported so
-  // components fall back to MediaRecorder / Whisper instead.
-  if (typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent)) return null;
+  const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+  if (isAndroidWebViewUserAgent(ua)) return null;
   return window.SpeechRecognition ?? window.webkitSpeechRecognition ?? null;
 }
 
@@ -297,7 +296,7 @@ export function useDeviceSpeechRecognition({
     const Ctor = getSpeechRecognitionCtor();
     if (!Ctor) {
       setError(
-        "This browser does not support device speech recognition. Try Chrome or the Kalnehi Android app.",
+        "This browser does not support device speech recognition. Try Google Chrome (including Install app / PWA on Android).",
       );
       return;
     }
