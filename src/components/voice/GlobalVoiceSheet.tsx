@@ -28,7 +28,10 @@ import { fetchDailyPlanTasksForClient } from "@/lib/fetchDailyPlanTasksForClient
 import { slotFromStartEnd } from "@/lib/dailyPlanTime";
 import { toCalendarDateKey } from "@/lib/calendarDateKey";
 import { writeVoiceFocusHint, writeVoicePlanHint } from "@/lib/voiceBossModeHints";
-import { VOICE_COMMAND_SILENCE_MS, VOICE_MAX_SESSION_MS } from "@/lib/voiceConstants";
+import {
+  VOICE_COMMAND_MAX_SESSION_MS,
+  VOICE_COMMAND_SILENCE_MS,
+} from "@/lib/voiceConstants";
 import type { DailyTaskView } from "@/actions/dailyPlan";
 import type { VoiceCommandIntent } from "@/lib/voiceCommandGroq";
 import { isVoiceNavigatePathAllowed } from "@/lib/voiceCommandGroq";
@@ -303,7 +306,7 @@ function ListeningState({
   whisperMode?: boolean;
   /** When true, live transcript text is hidden (rare — global voice keeps it visible). */
   hideTranscript?: boolean;
-  /** Web Speech only: show “tap mic when done” above the mic for the whole session. */
+  /** When true, show “tap mic to stop” above the mic while actively capturing (Web Speech or Whisper). */
   showMicWhenDoneHint?: boolean;
 }) {
   const showHints = (!transcript || hideTranscript) && !whisperMode;
@@ -319,7 +322,7 @@ function ListeningState({
           className="-mb-1 max-w-[240px] text-center text-[11px] font-semibold leading-snug text-kal-text-secondary"
           aria-live="polite"
         >
-          When you&apos;re done, tap the mic
+          Tap the mic anytime to stop listening
         </p>
       )}
 
@@ -358,7 +361,7 @@ function ListeningState({
           {!hideTranscript && transcript
             ? transcript
             : whisperMode
-              ? "Tap the mic when done \u2014 up to 60s"
+              ? "Tap the mic anytime to stop \u2014 up to 2 min"
               : active
                 ? "Go ahead, I'm listening\u2026"
                 : "Tap the mic \u2014 I'm ready"}
@@ -926,7 +929,7 @@ export function GlobalVoiceSheet() {
   } = useDeviceSpeechRecognition({
     lang: "en-US",
     silenceMs: VOICE_COMMAND_SILENCE_MS,
-    maxSessionMs: VOICE_MAX_SESSION_MS,
+    maxSessionMs: VOICE_COMMAND_MAX_SESSION_MS,
     interimPreview: true,
     onPreviewTranscript: (t) => {
       if (t) setTranscript(t);
@@ -944,7 +947,7 @@ export function GlobalVoiceSheet() {
     stopRecording: stopCapRecording,
   } = useCapacitorSpeech({
     onTranscript: handleTranscript,
-    maxMs: VOICE_MAX_SESSION_MS,
+    maxMs: VOICE_COMMAND_MAX_SESSION_MS,
     variant: "longForm",
     silenceAfterSpeechMs: VOICE_COMMAND_SILENCE_MS,
     onPartialTranscript: handleNativeCapPartialTranscript,
@@ -961,7 +964,7 @@ export function GlobalVoiceSheet() {
     isSupported: whisperMicSupported,
   } = useMediaRecorderVoice({
     onTranscript: handleTranscript,
-    maxMs: VOICE_MAX_SESSION_MS,
+    maxMs: VOICE_COMMAND_MAX_SESSION_MS,
   });
 
   // Auto-start listening when sheet opens, with chime.
@@ -1030,17 +1033,23 @@ export function GlobalVoiceSheet() {
     }
   }, [isOpen, stopListening, stopCapRecording, stopWhisperRecording]);
 
-  // STT error handler — auto-restart on "no speech", Whisper fallback on real failures.
+  // STT error handler — Whisper fallback when Web Speech fails (never silent dismiss).
   useEffect(() => {
     if (!sttError || !(phase === "idle" || phase === "listening")) return;
 
-    // "No speech captured" is not a device/browser failure — the silence timer
-    // fired before the user said anything. Just close the sheet quietly.
-    const isNoSpeech = sttError.toLowerCase().startsWith("no speech");
-    if (isNoSpeech) {
+    const lower = sttError.toLowerCase();
+    const skipWhisperFallback =
+      lower.includes("permission") ||
+      lower.includes("microphone permission") ||
+      lower.includes("does not support device speech") ||
+      lower.includes("secure context") ||
+      lower.includes("no microphone") ||
+      lower.includes("not found on this device");
+
+    if (skipWhisperFallback) {
+      setError(sttError);
+      setPhase("error");
       clearSttError();
-      closeSheet();
-      reset();
       return;
     }
 
@@ -1219,7 +1228,9 @@ export function GlobalVoiceSheet() {
                   voiceMinuteStatus={aiGate.voiceMinuteStatus}
                   whisperMode={isCapRecording || isWhisperRecording}
                   hideTranscript={false}
-                  showMicWhenDoneHint={isListening && !isCapRecording && !isWhisperRecording}
+                  showMicWhenDoneHint={
+                    isListening || isCapRecording || isWhisperRecording
+                  }
                   onStopListening={
                     isCapRecording
                       ? stopCapRecording
