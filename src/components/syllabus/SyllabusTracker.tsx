@@ -13,7 +13,6 @@ import {
   Trash2,
 } from "lucide-react";
 import { addDays, format, parseISO } from "date-fns";
-import Link from "next/link";
 import {
   useCallback,
   useEffect,
@@ -819,33 +818,6 @@ export function SyllabusTracker() {
         <h1 className="kal-feature-title mt-1">
           Syllabus Tracker
         </h1>
-        <p className="mt-1 text-sm leading-relaxed text-kal-muted">
-          {cuetScoringRollup
-            ? "CUET: mark off microtopics as you go — each domain scores up to 200 marks from your completion rate."
-            : showMarksUi
-              ? "Conquer chapters the right way: full chapter weight unlocks only when every microtopic in that chapter is complete."
-              : "Track your syllabus by chapter and microtopic — completion % reflects chapters you fully finish."}
-        </p>
-        <p className="mt-2 text-sm leading-relaxed text-kal-muted">
-          Add your own microtopics under any catalog chapter, or hide topics you
-          don&apos;t need. New subjects or chapters aren&apos;t created in the
-          app; if something is missing or looks wrong, use &ldquo;Report a syllabus
-          issue&rdquo; below.
-        </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Link
-            href="/task-list"
-            className="inline-flex rounded-xl border border-kal-border bg-kal-card-muted px-3 py-1.5 text-xs font-semibold text-kal-accent hover:border-kal-accent/40"
-          >
-            Backlog List — clear backlog
-          </Link>
-          <Link
-            href="/backlog-tracker"
-            className="inline-flex rounded-xl border border-kal-border bg-kal-card-muted px-3 py-1.5 text-xs font-semibold text-kal-muted hover:text-kal-accent"
-          >
-            Backlog Tracker
-          </Link>
-        </div>
         {showMarksUi && !cuetScoringRollup ? (
           <details
             className="kal-glass-subtle group mt-4 rounded-xl border-kal-border/60 shadow-sm open:bg-kal-card-muted/45"
