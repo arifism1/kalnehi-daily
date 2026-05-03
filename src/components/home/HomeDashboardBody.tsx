@@ -38,6 +38,7 @@ import { HomeHeroCard } from "./HomeHeroCard";
 import { HomePriorityStrip } from "./HomePriorityStrip";
 import { MotivationStrip } from "./MotivationStrip";
 import { ThreeDayStrip } from "./ThreeDayStrip";
+import { BacklogRecoveryHomeNudge } from "@/components/backlog/BacklogRecoveryHomeNudge";
 
 export type HomeDashboardBodyProps = {
   firstName: string;
@@ -398,6 +399,10 @@ export function HomeDashboardBody({
             )}
           </motion.p>
         )}
+
+        <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transition: { duration: 0.32 } } }}>
+          <BacklogRecoveryHomeNudge />
+        </motion.div>
 
         {/* Section C — Purpose mode strip */}
         <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transition: { duration: 0.32 } } }}>

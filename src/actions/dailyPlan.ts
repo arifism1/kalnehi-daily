@@ -35,6 +35,8 @@ const REVAL_PATHS = [
   "/dictate-day",
   "/self-type-day",
   "/saved-plans",
+  "/task-list",
+  "/backlog-tracker",
   "/",
 ] as const;
 
@@ -92,9 +94,17 @@ export async function insertDailyTask(
     time_end?: string | null;
     priority?: string;
     status?: string;
-    source: "typed" | "voice" | "handwritten" | "moved" | "revision";
+    source:
+      | "typed"
+      | "voice"
+      | "handwritten"
+      | "moved"
+      | "revision"
+      | "backlog";
     source_raw_text?: string | null;
     syllabus_master_id?: string | null;
+    estimated_minutes?: number | null;
+    backlog_item_id?: string | null;
     /** Restored on undo; defaults to 0 for new tasks. */
     actual_worked_minutes?: number;
   },
@@ -146,6 +156,11 @@ export async function insertDailyTask(
       source_raw_text: input.source_raw_text?.slice(0, 12000) ?? null,
       syllabus_master_id,
       actual_worked_minutes: input.actual_worked_minutes ?? 0,
+      estimated_minutes:
+        input.estimated_minutes != null && Number.isFinite(input.estimated_minutes)
+          ? Math.max(0, Math.round(Number(input.estimated_minutes)))
+          : null,
+      backlog_item_id: input.backlog_item_id?.trim() || null,
     };
 
     const { error } = await supabase.from("daily_tasks").insert(row);
@@ -217,6 +232,24 @@ export async function updateDailyTask(
       .eq("id", id);
 
     if (error) return { ok: false, error: USER_ERROR.tryAgain };
+    if (patch.status === "done") {
+      const { data: taskRow } = await supabase
+        .from("daily_tasks")
+        .select("backlog_item_id")
+        .eq("id", id)
+        .maybeSingle();
+      const bid = taskRow?.backlog_item_id?.trim();
+      if (bid) {
+        await supabase
+          .from("user_syllabus_backlog")
+          .update({
+            status: "fixed",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", bid)
+          .eq("user_id", user.id);
+      }
+    }
     revalidateDailyPlanPaths();
     return { ok: true };
   } catch (e) {

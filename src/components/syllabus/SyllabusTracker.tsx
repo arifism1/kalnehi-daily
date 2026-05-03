@@ -13,6 +13,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { addDays, format, parseISO } from "date-fns";
+import Link from "next/link";
 import {
   useCallback,
   useEffect,
@@ -831,6 +832,20 @@ export function SyllabusTracker() {
           app; if something is missing or looks wrong, use &ldquo;Report a syllabus
           issue&rdquo; below.
         </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Link
+            href="/task-list"
+            className="inline-flex rounded-xl border border-kal-border bg-kal-card-muted px-3 py-1.5 text-xs font-semibold text-kal-accent hover:border-kal-accent/40"
+          >
+            Backlog List — clear backlog
+          </Link>
+          <Link
+            href="/backlog-tracker"
+            className="inline-flex rounded-xl border border-kal-border bg-kal-card-muted px-3 py-1.5 text-xs font-semibold text-kal-muted hover:text-kal-accent"
+          >
+            Backlog Tracker
+          </Link>
+        </div>
         {showMarksUi && !cuetScoringRollup ? (
           <details
             className="kal-glass-subtle group mt-4 rounded-xl border-kal-border/60 shadow-sm open:bg-kal-card-muted/45"

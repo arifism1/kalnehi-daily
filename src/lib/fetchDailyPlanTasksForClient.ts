@@ -29,6 +29,8 @@ const DAILY_PLANS_WITH_TASKS_SELECT = `
     status,
     source,
     syllabus_master_id,
+    backlog_item_id,
+    estimated_minutes,
     actual_worked_minutes,
     created_at,
     updated_at,

@@ -442,6 +442,46 @@ export async function getMarksIntelligence(
   };
 }
 
+export async function getSyllabusBacklogSnapshot(admin: AdminClient, userId: string) {
+  const [{ data: profile }, { data: rows }] = await Promise.all([
+    admin
+      .from("user_profiles")
+      .select("target_exam_date")
+      .eq("user_id", userId)
+      .maybeSingle(),
+    admin
+      .from("user_syllabus_backlog")
+      .select("id, title, status, group_label, effort_estimate_minutes, retry_count, created_at")
+      .eq("user_id", userId)
+      .in("status", ["pending", "scheduled", "draft"])
+      .order("created_at", { ascending: false })
+      .limit(40),
+  ]);
+
+  let days_until_exam: number | null = null;
+  const raw = profile?.target_exam_date?.trim();
+  if (raw && /^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    const exam = new Date(`${raw}T00:00:00`);
+    const now = new Date();
+    const ms = exam.getTime() - now.getTime();
+    days_until_exam = ms > 0 ? Math.ceil(ms / (24 * 60 * 60 * 1000)) : 0;
+  }
+
+  const list = (rows ?? []).map((r) => ({
+    title: r.title,
+    status: r.status,
+    group: r.group_label,
+    effort_min: r.effort_estimate_minutes,
+    retries: r.retry_count ?? 0,
+  }));
+
+  return {
+    days_until_exam,
+    backlog_items: list,
+    note: "Use with marks + syllabus tools for phased recovery; no calendar invention.",
+  };
+}
+
 export type PrepbrainToolName =
   | "getTodayPlan"
   | "getSyllabusOverview"
@@ -453,5 +493,6 @@ export type PrepbrainToolName =
   | "getMarksIntelligence"
   | "getMissedTasksContext"
   | "getRevisionQueueSnapshot"
-  | "getLatestMockScores";
+  | "getLatestMockScores"
+  | "getSyllabusBacklogSnapshot";
 

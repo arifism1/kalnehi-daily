@@ -8,6 +8,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useRecapForDay } from "@/hooks/useRecapForDay";
 import { useShareCardIdentity } from "@/hooks/useShareCardIdentity";
+import { fetchBacklogRecoverySummaryForHome } from "@/actions/backlogRecovery";
 import { formatSecondsShort } from "@/lib/dailyExecutionStats";
 import {
   exportShareablePng,
@@ -22,6 +23,18 @@ export function EndOfDayRecapClient() {
   const [busy, setBusy] = useState(false);
   const [shareError, setShareError] = useState<string | null>(null);
   const [isStandalone, setIsStandalone] = useState(false);
+  const [backlogPending, setBacklogPending] = useState<number | null>(null);
+
+  useEffect(() => {
+    let c = false;
+    void (async () => {
+      const s = await fetchBacklogRecoverySummaryForHome();
+      if (!c && s.ok) setBacklogPending(s.pendingCount);
+    })();
+    return () => {
+      c = true;
+    };
+  }, [today]);
 
   useEffect(() => {
     const nav = window.navigator as Navigator & { standalone?: boolean };
@@ -237,6 +250,22 @@ export function EndOfDayRecapClient() {
               Monthly magazine
             </Link>
           </div>
+          {backlogPending != null && backlogPending > 0 ? (
+            <p className="mx-auto max-w-md text-center text-sm leading-relaxed text-kal-muted">
+              Still catching up on{" "}
+              <span className="font-semibold text-kal-text">{backlogPending}</span> backlog{" "}
+              item{backlogPending === 1 ? "" : "s"} —{" "}
+              <Link href="/task-list" className="font-semibold text-kal-accent underline">
+                Backlog List
+              </Link>{" "}
+                Backlog List keeps everything in motion.
+            </p>
+          ) : null}
+          {backlogPending !== null && backlogPending === 0 ? (
+            <p className="mx-auto max-w-md text-center text-xs text-kal-muted">
+              Nothing pending in your recovery list right now.
+            </p>
+          ) : null}
           {shareError && (
             <p className="text-center text-sm text-red-500">{shareError}</p>
           )}

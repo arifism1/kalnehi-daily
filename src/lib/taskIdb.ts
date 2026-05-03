@@ -104,9 +104,11 @@ export type OutboxMutation = {
     time_end: string | null;
     priority: string;
     status: string;
-    source: "typed" | "voice" | "handwritten" | "moved" | "revision";
+    source: "typed" | "voice" | "handwritten" | "moved" | "revision" | "backlog";
     source_raw_text: string | null;
     syllabus_master_id?: string | null;
+    estimated_minutes?: number | null;
+    backlog_item_id?: string | null;
   };
   dailyTaskPatch?: TablesUpdate<"daily_tasks">;
   /** How many consecutive flush attempts failed for this entry. */

@@ -476,8 +476,10 @@ export type Database = {
       daily_tasks: {
         Row: {
           actual_worked_minutes: number
+          backlog_item_id: string | null
           created_at: string
           daily_plan_id: string
+          estimated_minutes: number | null
           id: string
           priority: string
           source: string
@@ -492,8 +494,10 @@ export type Database = {
         }
         Insert: {
           actual_worked_minutes?: number
+          backlog_item_id?: string | null
           created_at?: string
           daily_plan_id: string
+          estimated_minutes?: number | null
           id: string
           priority?: string
           source: string
@@ -508,8 +512,10 @@ export type Database = {
         }
         Update: {
           actual_worked_minutes?: number
+          backlog_item_id?: string | null
           created_at?: string
           daily_plan_id?: string
+          estimated_minutes?: number | null
           id?: string
           priority?: string
           source?: string
@@ -523,6 +529,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "daily_tasks_backlog_item_id_fkey"
+            columns: ["backlog_item_id"]
+            isOneToOne: false
+            referencedRelation: "user_syllabus_backlog"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "daily_tasks_daily_plan_id_fkey"
             columns: ["daily_plan_id"]
@@ -2663,6 +2676,90 @@ export type Database = {
           },
           {
             foreignKeyName: "user_syllabus_marks_overrides_syllabus_master_id_fkey"
+            columns: ["syllabus_master_id"]
+            isOneToOne: false
+            referencedRelation: "syllabus_master"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_backlog_vents: {
+        Row: {
+          created_at: string
+          id: string
+          raw_text: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          raw_text: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          raw_text?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_syllabus_backlog: {
+        Row: {
+          created_at: string
+          details: string
+          difficulty: string | null
+          effort_estimate_minutes: number | null
+          group_label: string | null
+          id: string
+          last_attempt_date: string | null
+          retry_count: number
+          status: string
+          syllabus_master_id: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string
+          difficulty?: string | null
+          effort_estimate_minutes?: number | null
+          group_label?: string | null
+          id?: string
+          last_attempt_date?: string | null
+          retry_count?: number
+          status?: string
+          syllabus_master_id?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: string
+          difficulty?: string | null
+          effort_estimate_minutes?: number | null
+          group_label?: string | null
+          id?: string
+          last_attempt_date?: string | null
+          retry_count?: number
+          status?: string
+          syllabus_master_id?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_syllabus_backlog_syllabus_master_id_fkey"
+            columns: ["syllabus_master_id"]
+            isOneToOne: false
+            referencedRelation: "exam_full_analysis_view"
+            referencedColumns: ["microtopic_id"]
+          },
+          {
+            foreignKeyName: "user_syllabus_backlog_syllabus_master_id_fkey"
             columns: ["syllabus_master_id"]
             isOneToOne: false
             referencedRelation: "syllabus_master"

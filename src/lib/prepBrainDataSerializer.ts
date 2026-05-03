@@ -374,6 +374,38 @@ export function formatTargetBlueprintMarkdown(data: unknown): string {
   return `### Target score blueprint\n${exam} (${mode}): target **${target ?? "—"}**, estimated range **${low ?? "—"}–${high ?? "—"}**, estimated at save **${est ?? "—"}**, marks covered **${cov ?? "—"}**.`;
 }
 
+export function formatBacklogSnapshotMarkdown(data: unknown): string {
+  if (data === null || data === undefined) return "";
+  if (!isRecord(data)) return "";
+  if ("error" in data && data.error === "unavailable") {
+    return "*Backlog snapshot unavailable.*";
+  }
+  const days =
+    typeof data.days_until_exam === "number" && Number.isFinite(data.days_until_exam)
+      ? data.days_until_exam
+      : null;
+  const head =
+    days !== null
+      ? `### Syllabus backlog\nDays until target exam (if set): **${days}**`
+      : "### Syllabus backlog\nTarget exam date not set — suggest they add it in Profile.";
+  const items = data.backlog_items;
+  if (!Array.isArray(items) || items.length === 0) {
+    return `${head}\n_No open backlog rows._`;
+  }
+  const lines = items.slice(0, 20).map((raw) => {
+    if (!isRecord(raw)) return "";
+    const title = typeof raw.title === "string" ? raw.title : "?";
+    const st = typeof raw.status === "string" ? raw.status : "";
+    const g = typeof raw.group === "string" ? raw.group : "";
+    const em =
+      typeof raw.effort_min === "number" && Number.isFinite(raw.effort_min)
+        ? `${raw.effort_min}m`
+        : "—";
+    return `- [${st}] ${title}${g ? ` (${g})` : ""} · ~${em}`;
+  });
+  return [head, "", ...lines].join("\n");
+}
+
 function formatToolSection(name: PrepbrainToolName, payload: unknown): string {
   switch (name) {
     case "getTodayPlan":
@@ -398,6 +430,8 @@ function formatToolSection(name: PrepbrainToolName, payload: unknown): string {
       return formatRevisionQueueMarkdown(payload);
     case "getLatestMockScores":
       return formatMockScoresMarkdown(payload);
+    case "getSyllabusBacklogSnapshot":
+      return formatBacklogSnapshotMarkdown(payload);
     default:
       return "";
   }
@@ -411,6 +445,7 @@ const TOOL_ORDER: PrepbrainToolName[] = [
   "getWeakStrongSubjects",
   "getMarksIntelligence",
   "getRevisionQueueSnapshot",
+  "getSyllabusBacklogSnapshot",
   "getLatestMockScores",
   "getHabitStreakSummary",
   "getMeditationConsistency",

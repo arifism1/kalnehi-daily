@@ -13,6 +13,7 @@ import {
   getMissedTasksContext,
   getRecentStudyCameraData,
   getRevisionQueueSnapshot,
+  getSyllabusBacklogSnapshot,
   getSyllabusOverview,
   getTargetScoreBlueprint,
   getTodayPlan,
@@ -117,6 +118,7 @@ function maxCompletionTokensForIntent(
     case "weak_vs_strong":
     case "revision":
     case "mock_test":
+    case "syllabus_backlog":
       return 1150;
     case "syllabus_progress":
     case "habits_or_meditation":
@@ -244,6 +246,8 @@ async function runToolByName(
       return getRevisionQueueSnapshot(admin, userId);
     case "getLatestMockScores":
       return getLatestMockScores(admin, userId);
+    case "getSyllabusBacklogSnapshot":
+      return getSyllabusBacklogSnapshot(admin, userId);
     default:
       return null;
   }

@@ -10,6 +10,7 @@ import {
   Mic,
   Pencil,
   RotateCcw,
+  Sparkles,
   Trash2,
   Type,
   X,
@@ -59,33 +60,40 @@ function SourceBadge({ source }: { source: string }) {
   const isLegacyPlanImport = source === "handwritten";
   const isMoved = source === "moved";
   const isRevision = source === "revision";
+  const isBacklog = source === "backlog";
   const label = source === "voice"
     ? "Voice"
-    : isLegacyPlanImport
-      ? "Added from plan"
-      : isRevision
-        ? "Revision"
-        : isMoved
-          ? "Moved Here"
-          : "Typed";
+    : isBacklog
+      ? "Recovery"
+      : isLegacyPlanImport
+        ? "Added from plan"
+        : isRevision
+          ? "Revision"
+          : isMoved
+            ? "Moved Here"
+            : "Typed";
   const Icon = source === "voice"
     ? Mic
-    : isRevision
-      ? RotateCcw
-      : isMoved
-        ? CalendarCheck
-        : Type;
+    : isBacklog
+      ? Sparkles
+      : isRevision
+        ? RotateCcw
+        : isMoved
+          ? CalendarCheck
+          : Type;
   return (
     <span
       title={isLegacyPlanImport ? "Added from plan" : undefined}
       className={`inline-flex max-w-[11rem] items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold backdrop-blur-sm ${
-        isRevision
-          ? "border-violet-400/35 bg-violet-50/80 text-violet-700 dark:border-violet-500/25 dark:bg-violet-950/40 dark:text-violet-300 normal-case tracking-tight"
-          : isMoved
-            ? "border-kal-accent/35 bg-kal-accent/10 text-kal-accent dark:border-kal-accent/25 dark:bg-kal-accent/10 normal-case tracking-tight"
-            : isLegacyPlanImport
-              ? "border-white/30 bg-white/55 text-kal-muted dark:border-white/12 dark:bg-zinc-900/55 normal-case tracking-tight"
-              : "border-white/30 bg-white/55 text-kal-muted dark:border-white/12 dark:bg-zinc-900/55 uppercase tracking-wide"
+        isBacklog
+          ? "border-emerald-400/30 bg-emerald-50/70 text-emerald-800 dark:border-emerald-500/25 dark:bg-emerald-950/35 dark:text-emerald-200/90 normal-case tracking-tight"
+          : isRevision
+            ? "border-violet-400/35 bg-violet-50/80 text-violet-700 dark:border-violet-500/25 dark:bg-violet-950/40 dark:text-violet-300 normal-case tracking-tight"
+            : isMoved
+              ? "border-kal-accent/35 bg-kal-accent/10 text-kal-accent dark:border-kal-accent/25 dark:bg-kal-accent/10 normal-case tracking-tight"
+              : isLegacyPlanImport
+                ? "border-white/30 bg-white/55 text-kal-muted dark:border-white/12 dark:bg-zinc-900/55 normal-case tracking-tight"
+                : "border-white/30 bg-white/55 text-kal-muted dark:border-white/12 dark:bg-zinc-900/55 uppercase tracking-wide"
       }`}
     >
       <Icon className="h-3 w-3 shrink-0 text-kal-accent" aria-hidden />

@@ -36,6 +36,7 @@ export function detectConversationThread(
     "revision",
     "mock_test",
     "today_plan",
+    "syllabus_backlog",
     "habits_or_meditation",
     "study_camera",
   ];
@@ -84,6 +85,7 @@ export type PrepBrainIntent =
   | "target_score"
   | "revision"
   | "mock_test"
+  | "syllabus_backlog"
   | "small_talk"
   | "no_data"
   | "general";
@@ -200,6 +202,19 @@ export function detectPrepBrainIntent(lastUserMessage: string): PrepBrainIntent 
   if (isGenericStrategyQuestion(lastUserMessage)) return "no_data";
 
   const t = lastUserMessage.toLowerCase();
+
+  if (
+    t.includes("backlog") ||
+    t.includes("backlog list") ||
+    t.includes("task list") ||
+    /\bcatch(?:ing)?\s+up\b/.test(t) ||
+    t.includes("pending topics") ||
+    t.includes("unplanned fix") ||
+    t.includes("recovery plan") ||
+    t.includes("clear my backlog")
+  ) {
+    return "syllabus_backlog";
+  }
 
   // Focus/priority phrasing is checked BEFORE the "today" keyword so that
   // "what should I focus on today?" routes to marks_score (gets marks + weak
@@ -320,6 +335,13 @@ export function selectToolsForIntent(
       return ["getRevisionQueueSnapshot", "getWeakStrongSubjects", "getMissedTasksContext"];
     case "mock_test":
       return ["getLatestMockScores", "getWeakStrongSubjects"];
+    case "syllabus_backlog":
+      return [
+        "getSyllabusBacklogSnapshot",
+        "getMarksIntelligence",
+        "getSyllabusOverview",
+        "getMissedTasksContext",
+      ];
     // General: omit getTodayPlan — reduces token cost for non-today queries.
     case "general":
       return ["getSyllabusOverview", "getWeakStrongSubjects", "getMarksIntelligence"];

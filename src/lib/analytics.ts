@@ -138,6 +138,14 @@ export function trackMetaFreeTrialStarted(): void {
   window.fbq?.("trackCustom", "Free Trial Started");
 }
 
+export const trackMetaBacklogAdded = (): void => {
+  callMetaTrackCustom("Backlog Added");
+};
+
+export const trackMetaBacklogPlanLocked = (): void => {
+  callMetaTrackCustom("Backlog Plan Locked");
+};
+
 export const trackMetaTaskCreated = (): void => {
   callMetaTrackCustom("Task Created");
 };
