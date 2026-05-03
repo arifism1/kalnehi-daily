@@ -25,7 +25,7 @@ import {
   redisToolGet,
   redisToolSet,
 } from "@/lib/prepbrainRedisCache";
-import { isFreeTrialWindowActive } from "@/lib/freeTrial";
+import { isFreeTrialWindowActive, isPaidSubscriptionAccess } from "@/lib/freeTrial";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 import { resolvePrepbrainGroqModels } from "@/lib/groqPrepbrainModel";
@@ -135,23 +135,6 @@ type IncomingMessage = {
   role: ChatRole;
   content: string;
 };
-
-function isCurrentlyPaid(
-  status: string | null,
-  endDate: string | null,
-): boolean {
-  if (
-    status !== "trial" &&
-    status !== "active" &&
-    status !== "cancelled"
-  ) {
-    return false;
-  }
-  if (!endDate) return false;
-  const end = new Date(endDate);
-  if (Number.isNaN(end.getTime())) return false;
-  return end.getTime() > Date.now();
-}
 
 function isRecord(x: unknown): x is Record<string, unknown> {
   return x !== null && typeof x === "object" && !Array.isArray(x);
@@ -331,6 +314,7 @@ type ChatProfileRow = Pick<
   | "subscription_status"
   | "subscription_start_date"
   | "subscription_end_date"
+  | "payment_grace_until"
   | "trial_started_at"
   | "ai_tokens_used"
   | "ai_tokens_month"
@@ -413,7 +397,7 @@ export async function POST(request: Request) {
     admin
       .from("user_profiles")
       .select(
-        "subscription_status,subscription_start_date,subscription_end_date,trial_started_at,ai_tokens_used,ai_tokens_month,welcome_ai_tokens_used,paid_trial_ai_tokens_used,bonus_ai_tokens_ledger,primary_exam,target_exam,cuet_domain_subjects,upsc_optional_subjects",
+        "subscription_status,subscription_start_date,subscription_end_date,payment_grace_until,trial_started_at,ai_tokens_used,ai_tokens_month,welcome_ai_tokens_used,paid_trial_ai_tokens_used,bonus_ai_tokens_ledger,primary_exam,target_exam,cuet_domain_subjects,upsc_optional_subjects",
       )
       .eq("user_id", user.id)
       .maybeSingle(),
@@ -451,9 +435,10 @@ export async function POST(request: Request) {
     );
   }
 
-  const paid = isCurrentlyPaid(
+  const paid = isPaidSubscriptionAccess(
     profile.subscription_status ?? null,
     profile.subscription_end_date ?? null,
+    profile.payment_grace_until ?? null,
   );
   const trialStarted =
     typeof profile.trial_started_at === "string" ? profile.trial_started_at : null;

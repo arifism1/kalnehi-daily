@@ -73,7 +73,7 @@ export function FreeTrialWelcomeBanner() {
       aria-live="polite"
       className="pointer-events-none fixed left-1/2 top-[calc(env(safe-area-inset-top)+52px+0.75rem)] z-[60] w-[min(32rem,calc(100vw-1.5rem))] -translate-x-1/2"
     >
-      <div className="kal-trial-welcome-toast-in pointer-events-auto overflow-hidden rounded-2xl border border-kal-accent/25 bg-gradient-to-br from-kal-accent/12 via-kal-card to-kal-card-muted shadow-[0_12px_40px_-16px_rgba(0,0,0,0.18)] dark:border-kal-accent/20 dark:from-kal-accent/10 dark:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.45)]">
+      <div className="kal-trial-welcome-toast-in pointer-events-auto overflow-hidden rounded-2xl border border-kal-accent/25 bg-kal-bg-elevated shadow-[0_12px_40px_-16px_rgba(0,0,0,0.18)] dark:border-kal-accent/20 dark:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.45)]">
         <div className="relative px-4 py-3.5 sm:flex sm:items-center sm:gap-4 sm:px-5">
           <div className="flex shrink-0 items-center justify-center rounded-xl bg-kal-accent/20 p-2 text-kal-accent ring-1 ring-kal-accent/25">
             <Sparkles className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2} aria-hidden />
