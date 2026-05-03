@@ -3,7 +3,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { isAndroidWebViewUserAgent } from "@/lib/androidWebSpeechEnv";
-import { VOICE_LONG_FORM_SILENCE_MS, VOICE_MAX_SESSION_MS } from "@/lib/voiceConstants";
+import {
+  VOICE_LONG_FORM_SILENCE_MS,
+  VOICE_MAX_SESSION_MS,
+} from "@/lib/voiceConstants";
 import { useVoiceCommandStore } from "@/store/useVoiceCommandStore";
 
 type SpeechStatus = "idle" | "listening";
@@ -235,6 +238,9 @@ export function useDeviceSpeechRecognition({
     setStatus("idle");
     setMicBusy(false);
 
+    const hadHeardSpeech = hadSpeechSegmentRef.current;
+    hadSpeechSegmentRef.current = false;
+
     const fromPreview = lastCombinedPreviewRef.current.trim();
     const fromFinal = finalTranscriptRef.current.trim();
     const transcript = (fromPreview || fromFinal).trim();
@@ -253,7 +259,11 @@ export function useDeviceSpeechRecognition({
     if (!transcript) {
       speechStartedAtMsRef.current = null;
       onPreviewTranscriptRef.current?.("");
-      setError("No speech captured. Try again.");
+      setError(
+        hadHeardSpeech
+          ? "We lost the last phrase. Try again, or speak a bit longer."
+          : "Nothing picked up yet. Speak again or tap Try again.",
+      );
       return;
     }
 
@@ -389,8 +399,12 @@ export function useDeviceSpeechRecognition({
         return;
       }
       if (event.error === "no-speech") {
-        setError("No speech captured. Try again.");
-      } else if (event.error === "not-allowed") {
+        // Let `onend` run `finalizeSession` so interim/preview text is committed when present.
+        clearTimers();
+        setSpeechPausedAfterUtterance(false);
+        return;
+      }
+      if (event.error === "not-allowed") {
         setError("Microphone permission denied. Allow mic access in your browser settings.");
       } else if (event.error === "network") {
         setError(

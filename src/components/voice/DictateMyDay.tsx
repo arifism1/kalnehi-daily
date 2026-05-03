@@ -698,8 +698,8 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
           >
             {phase === "listening"
               ? routing.useBrowserWhisperStt
-                ? "Recording… tap Stop when you’re finished"
-                : "Listening..."
+                ? "Recording… tap the mic or Stop when you’re finished"
+                : "Listening… tap the mic anytime to stop"
               : phase === "processing"
                 ? "Processing..."
                 : "Tap the mic to dictate"}

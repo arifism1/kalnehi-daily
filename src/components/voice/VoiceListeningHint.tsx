@@ -27,7 +27,7 @@ export function VoiceListeningHint({
 
   const line =
     variant === "command"
-      ? "Up to 60s"
+      ? "Up to 2 min · tap mic to stop anytime"
       : variant === "whisper"
         ? "Tap Stop · audio uploads · long sessions OK"
         : "Tap Stop when done · long pause ends phrase · sessions up to 30 min";
