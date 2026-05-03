@@ -105,6 +105,22 @@ export function trackAuthSuccess(event: "login" | "sign_up"): void {
   trackMetaAuthSuccess(event);
 }
 
+/** Meta Pixel custom events — use when `fbq` may be unavailable (warn in dev). */
+function callMetaTrackCustom(eventName: string): void {
+  if (typeof window === "undefined") return;
+  const fbq = window.fbq;
+  if (typeof fbq === "function") {
+    fbq("trackCustom", eventName);
+    return;
+  }
+  if (process.env.NODE_ENV === "development") {
+    console.warn(
+      "[kalnehi analytics] Meta Pixel not ready; skipped trackCustom:",
+      eventName,
+    );
+  }
+}
+
 /** Meta Pixel: registration standard event + funnel custom event for all auths. */
 export function trackMetaAuthSuccess(event: "login" | "sign_up"): void {
   if (typeof window === "undefined") return;
@@ -123,19 +139,13 @@ export function trackMetaFreeTrialStarted(): void {
 }
 
 export const trackMetaTaskCreated = (): void => {
-  if (typeof window === "undefined") return;
-  console.log("Fired: Task Created");
-  window.fbq?.("trackCustom", "Task Created");
+  callMetaTrackCustom("Task Created");
 };
 
 export const trackMetaTimerStarted = (): void => {
-  if (typeof window === "undefined") return;
-  console.log("Fired: Timer Started");
-  window.fbq?.("trackCustom", "Timer Started");
+  callMetaTrackCustom("Timer Started");
 };
 
 export const trackMetaTaskCompleted = (): void => {
-  if (typeof window === "undefined") return;
-  console.log("Fired: Task Completed");
-  window.fbq?.("trackCustom", "Task Completed");
+  callMetaTrackCustom("Task Completed");
 };

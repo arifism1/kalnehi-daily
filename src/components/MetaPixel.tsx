@@ -7,7 +7,7 @@ const META_PIXEL_ID = "820742390658477";
 
 export function MetaPixelScript() {
   return (
-    <Script id="curioversity-ar-pixel" strategy="afterInteractive">
+    <Script id="curioversity-ar-pixel" strategy="beforeInteractive">
       {`
 !function(f,b,e,v,n,t,s)
 {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
