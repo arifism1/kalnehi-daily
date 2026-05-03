@@ -573,7 +573,8 @@ export function GlobalVoiceSheet() {
           source: "voice",
           source_raw_text: `Voice command: ${intent.subject}`,
           ...slot,
-          actual_worked_minutes: intent.duration_minutes ?? 0,
+          // `duration_minutes` from the model is planned/estimated time, not time already worked.
+          actual_worked_minutes: 0,
         });
         if (!result.ok) {
           setError(result.error);
@@ -663,7 +664,8 @@ export function GlobalVoiceSheet() {
             source: "voice",
             source_raw_text: `Voice plan_management: ${task_name}`,
             ...slot,
-            actual_worked_minutes: duration_logged ?? 0,
+            // For adds, model often fills `duration_logged` with planned minutes — not worked time.
+            actual_worked_minutes: 0,
           });
           if (!result.ok) {
             setError(result.error);
@@ -740,7 +742,7 @@ export function GlobalVoiceSheet() {
             source: "voice",
             source_raw_text: `Voice batch_add_tasks: ${item.title}`,
             ...slot,
-            actual_worked_minutes: item.duration_minutes ?? 0,
+            actual_worked_minutes: 0,
           });
           if (!result.ok) {
             setError(result.error);

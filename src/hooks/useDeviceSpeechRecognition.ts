@@ -153,6 +153,11 @@ export function useDeviceSpeechRecognition({
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const speechStartedAtMsRef = useRef<number | null>(null);
   const finalTranscriptRef = useRef("");
+  /**
+   * Android Chrome often reports `resultIndex === 0` on every `onresult` while `continuous` is true,
+   * re-delivering all prior finals — we skip indices already committed via this count.
+   */
+  const processedFinalCountRef = useRef(0);
   /** Last `combined` (final+interim) from onresult; onend can run before a final is committed, so this preserves what the user saw. */
   const lastCombinedPreviewRef = useRef("");
   const silenceTimerRef = useRef<number | null>(null);
@@ -327,6 +332,7 @@ export function useDeviceSpeechRecognition({
     }
 
     finalTranscriptRef.current = "";
+    processedFinalCountRef.current = 0;
     lastCombinedPreviewRef.current = "";
     speechStartedAtMsRef.current = null;
     suppressSubmitRef.current = false;
@@ -370,7 +376,11 @@ export function useDeviceSpeechRecognition({
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       let heardSpeech = false;
       let interimPiece = "";
-      for (let i = event.resultIndex; i < event.results.length; i++) {
+      const startIndex = Math.max(
+        event.resultIndex,
+        processedFinalCountRef.current,
+      );
+      for (let i = startIndex; i < event.results.length; i++) {
         const result = event.results[i];
         const chunk = result[0]?.transcript?.trim();
         if (!chunk) continue;
@@ -379,6 +389,7 @@ export function useDeviceSpeechRecognition({
           finalTranscriptRef.current = finalTranscriptRef.current
             ? `${finalTranscriptRef.current} ${chunk}`
             : chunk;
+          processedFinalCountRef.current = i + 1;
         } else if (interimPreviewRef.current) {
           interimPiece += result[0]?.transcript ?? "";
         }
