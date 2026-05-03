@@ -61,3 +61,22 @@ export async function finalizeActiveTimerForTask(
 
   return { totalSeconds: totalElapsed, loggedSession };
 }
+
+/**
+ * Stops the timer without logging `task_sessions` and restores cumulative
+ * `time_spent_seconds` to what it was when this focus session began.
+ */
+export async function abandonActiveTimerWithoutSaving(
+  userId: string | undefined,
+  taskId: string,
+): Promise<void> {
+  const st = useActiveTimerStore.getState();
+  if (st.taskId !== taskId) return;
+  const revertTo = st.sessionBaseSeconds;
+  st.stop();
+  await applyOptimisticTaskUpdate(
+    taskId,
+    { time_spent_seconds: revertTo },
+    userId,
+  );
+}

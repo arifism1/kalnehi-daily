@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { Pause, Play, Square } from "lucide-react";
+import { Check, Pause, Play, Undo2 } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -11,16 +11,28 @@ import {
   useState,
 } from "react";
 
+import {
+  updateDailyTask,
+  updateDailyTaskWorkedTime,
+  type DailyTaskView,
+} from "@/actions/dailyPlan";
 import { CircularProgressRing } from "@/components/ui/CircularProgressRing";
 import { TASK_STATUS } from "@/components/task/TaskCard";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useRefreshTasksOnHomeFocus } from "@/hooks/useRefreshTasksOnHomeFocus";
+import { toCalendarDateKey } from "@/lib/calendarDateKey";
+import { fetchDailyPlanTasksForClient } from "@/lib/fetchDailyPlanTasksForClient";
 import { quickCreatePlannedTask } from "@/lib/quickTaskCreate";
+import { normalizeSyllabusMasterId } from "@/lib/syllabusIds";
 import { applyOptimisticTaskUpdate } from "@/lib/taskMutations";
 import { formatElapsedSeconds } from "@/lib/taskTime";
-import { finalizeActiveTimerForTask } from "@/lib/timerSession";
+import {
+  abandonActiveTimerWithoutSaving,
+  finalizeActiveTimerForTask,
+} from "@/lib/timerSession";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useActiveTimerStore } from "@/store/useActiveTimerStore";
+import { useDailyTaskTimerStore } from "@/store/useDailyTaskTimerStore";
 import { useTaskStore } from "@/store/useTaskStore";
 import type { Task } from "@/store/useTaskStore";
 
@@ -41,6 +53,21 @@ function taskLabel(
   return (t.name?.trim() || m?.microtopic || "Task").trim();
 }
 
+type TaskLinkPick =
+  | { kind: "legacy"; id: string; task: Task }
+  | { kind: "daily"; id: string; row: DailyTaskView };
+
+type LegacySessionOutcome = "done" | "undone" | "auto";
+
+function dailyPlanPickerLine(row: DailyTaskView): string {
+  return `Daily plan · ${row.title.trim() || "Untitled"}`;
+}
+
+function notifyDailyPlanPage(): void {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event("kalnehi-daily-plan-synced"));
+}
+
 export function TimerEngineClient() {
   useRefreshTasksOnHomeFocus();
   const userId = useAuthStore((s) => s.user?.id);
@@ -55,6 +82,17 @@ export function TimerEngineClient() {
 
   const [taskInput, setTaskInput] = useState("");
   const [pickedTaskId, setPickedTaskId] = useState<string | null>(null);
+  const [pickedDailyTaskId, setPickedDailyTaskId] = useState<string | null>(
+    null,
+  );
+  const [dailyPlanTasks, setDailyPlanTasks] = useState<DailyTaskView[]>([]);
+  const todayRef = useRef(today);
+  const dailyPlanTasksRef = useRef<DailyTaskView[]>([]);
+  const microRecordRef = useRef(microRecord);
+  todayRef.current = today;
+  dailyPlanTasksRef.current = dailyPlanTasks;
+  microRecordRef.current = microRecord;
+
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [creatingTask, setCreatingTask] = useState(false);
   /**
@@ -63,21 +101,73 @@ export function TimerEngineClient() {
    * Missed Tasks — the user studied the topic, the task is done.
    */
   const timerCreatedTaskIdRef = useRef<string | null>(null);
+  /** Per active timer session — used when ending/logging so we can complete or revert pending tasks correctly. */
+  const activeSessionMetaRef = useRef<{
+    taskId: string;
+    focusTargetSec: number;
+    startedAsPending: boolean;
+    isTimerCreated: boolean;
+    initialStatus: Task["status"];
+  } | null>(null);
   const [customSec, setCustomSec] = useState(25 * 60);
   const [focusTarget, setFocusTarget] = useState<number | null>(null);
   const [tick, setTick] = useState(0);
 
-  const taskList = useMemo(() => {
+  /** Open tasks (any day) — used when resolving free-typed names to an existing task. */
+  const allOpenTasks = useMemo(() => {
     return Object.values(tasksRecord)
       .filter((t) => t.status !== "completed")
       .sort((a, b) => a.assigned_date.localeCompare(b.assigned_date));
   }, [tasksRecord]);
 
-  const filteredSuggestions = useMemo(() => {
+  /** Today's legacy `tasks` rows for the link picker (includes completed so users can log more time). */
+  const todaysPickList = useMemo(() => {
+    const rank = (t: Task) =>
+      t.status === "completed" ? 2 : t.status === "in_progress" ? 1 : 0;
+    return Object.values(tasksRecord)
+      .filter((t) => toCalendarDateKey(t.assigned_date) === today)
+      .sort((a, b) => {
+        const dr = rank(a) - rank(b);
+        if (dr !== 0) return dr;
+        return taskLabel(a, microRecord).localeCompare(taskLabel(b, microRecord));
+      });
+  }, [tasksRecord, today, microRecord]);
+
+  /** Today's rows from Daily Plan (`daily_tasks`) — same list as /daily-plan for `planDate === today`. */
+  const dailyPickList = useMemo(() => {
+    return dailyPlanTasks.filter(
+      (t) =>
+        t.plan_date === today &&
+        t.status !== "done" &&
+        t.status !== "skipped",
+    );
+  }, [dailyPlanTasks, today]);
+
+  const combinedPicks = useMemo((): TaskLinkPick[] => {
+    const daily: TaskLinkPick[] = dailyPickList.map((row) => ({
+      kind: "daily",
+      id: row.id,
+      row,
+    }));
+    const legacy: TaskLinkPick[] = todaysPickList.map((task) => ({
+      kind: "legacy",
+      id: task.id,
+      task,
+    }));
+    return [...daily, ...legacy];
+  }, [dailyPickList, todaysPickList]);
+
+  const filteredCombinedPicks = useMemo(() => {
     const q = taskInput.trim().toLowerCase();
-    if (!q) return taskList.slice(0, 8);
-    return taskList
-      .filter((t) => {
+    if (!q) return combinedPicks.slice(0, 25);
+    return combinedPicks
+      .filter((pick) => {
+        if (pick.kind === "daily") {
+          const title = (pick.row.title || "").toLowerCase();
+          const line = dailyPlanPickerLine(pick.row).toLowerCase();
+          return line.includes(q) || title.includes(q);
+        }
+        const t = pick.task;
         const label =
           `${t.assigned_date} · ${taskLabel(t, microRecord)}`.toLowerCase();
         return (
@@ -85,8 +175,8 @@ export function TimerEngineClient() {
           taskLabel(t, microRecord).toLowerCase().includes(q)
         );
       })
-      .slice(0, 8);
-  }, [taskList, taskInput, microRecord]);
+      .slice(0, 25);
+  }, [combinedPicks, taskInput, microRecord]);
 
   const matchedPreset = useMemo(
     () => PRESETS.find((p) => p.work === customSec) ?? null,
@@ -106,31 +196,80 @@ export function TimerEngineClient() {
     }
   }, [taskInput, pickedTaskId, tasksRecord, microRecord]);
 
+  useEffect(() => {
+    if (!pickedDailyTaskId) return;
+    const row = dailyPlanTasks.find((t) => t.id === pickedDailyTaskId);
+    if (!row) {
+      setPickedDailyTaskId(null);
+      return;
+    }
+    const line = dailyPlanPickerLine(row);
+    if (line.toLowerCase() !== taskInput.trim().toLowerCase()) {
+      setPickedDailyTaskId(null);
+    }
+  }, [taskInput, pickedDailyTaskId, dailyPlanTasks]);
+
+  const refreshDailyPlanTasks = useCallback(async () => {
+    if (!userId) {
+      setDailyPlanTasks([]);
+      return;
+    }
+    const r = await fetchDailyPlanTasksForClient(today);
+    if (r.ok) setDailyPlanTasks(r.tasks);
+  }, [userId, today]);
+
+  useEffect(() => {
+    void refreshDailyPlanTasks();
+  }, [refreshDailyPlanTasks]);
+
+  useEffect(() => {
+    if (!userId) return;
+    const onVis = () => {
+      if (document.visibilityState === "visible")
+        void refreshDailyPlanTasks();
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, [userId, refreshDailyPlanTasks]);
+
   const activeId = useActiveTimerStore((s) => s.taskId);
   const isRunning = useActiveTimerStore((s) => s.resumeAt != null);
   const pausedHere = Boolean(activeId && !isRunning);
+
+  const dailyActiveId = useDailyTaskTimerStore((s) => s.taskId);
+  const dailyResumeAt = useDailyTaskTimerStore((s) => s.resumeAt);
+  const dailyRunning = Boolean(dailyActiveId && dailyResumeAt != null);
+  const dailyPausedHere = Boolean(dailyActiveId && !dailyResumeAt);
+
   const prevActiveIdRef = useRef<string | null>(null);
+  const prevDailyActiveIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const prev = prevActiveIdRef.current;
-    if (prev && !activeId) {
+    const prevL = prevActiveIdRef.current;
+    const prevD = prevDailyActiveIdRef.current;
+    if ((prevL || prevD) && !activeId && !dailyActiveId) {
       setFocusTarget(null);
     }
     prevActiveIdRef.current = activeId;
-  }, [activeId]);
+    prevDailyActiveIdRef.current = dailyActiveId;
+  }, [activeId, dailyActiveId]);
 
   useEffect(() => {
-    if (!activeId || !isRunning) return;
+    const legacyTick = activeId && isRunning;
+    const dailyTick = dailyActiveId && dailyRunning;
+    if (!legacyTick && !dailyTick) return;
     const id = window.setInterval(() => setTick((n) => n + 1), 1000);
     return () => window.clearInterval(id);
-  }, [activeId, isRunning]);
+  }, [activeId, isRunning, dailyActiveId, dailyRunning]);
 
   const elapsed = useMemo(() => {
     void tick;
+    const d = useDailyTaskTimerStore.getState();
+    if (d.taskId) return d.getElapsed();
     const st = useActiveTimerStore.getState();
     if (!st.taskId) return 0;
     return st.getElapsed();
-  }, [tick, activeId]);
+  }, [tick, activeId, dailyActiveId]);
 
   const activeTask = activeId ? tasksRecord[activeId] : null;
   const activeTaskTitle = activeTask
@@ -140,32 +279,226 @@ export function TimerEngineClient() {
     ? `${activeTask.assigned_date} · ${taskLabel(activeTask, microRecord)}`
     : null;
 
+  const activeDailyRow = dailyActiveId
+    ? dailyPlanTasks.find((t) => t.id === dailyActiveId)
+    : null;
+  const activeDailyTitle = activeDailyRow
+    ? activeDailyRow.title.trim() || "Daily task"
+    : null;
+  const activeDailyLine = activeDailyRow
+    ? dailyPlanPickerLine(activeDailyRow)
+    : null;
+  
   const remainingSec =
     focusTarget != null && focusTarget > 0
       ? Math.max(0, focusTarget - elapsed)
       : null;
 
-  const commitTimerToServer = useCallback(
-    async (taskId: string) => {
-      if (!userId) return;
-      await finalizeActiveTimerForTask(userId, taskId);
-      // If this task was auto-created by the timer session, mark it completed so it
-      // doesn't appear in Missed Tasks — the user just studied it.
-      if (timerCreatedTaskIdRef.current === taskId) {
-        timerCreatedTaskIdRef.current = null;
-        await applyOptimisticTaskUpdate(taskId, { status: TASK_STATUS.completed }, userId);
+  /** Today's Daily Plan rows linked to this legacy `tasks` row (syllabus id and/or same title). */
+  const syncLegacyTimerTaskToDailyPlan = useCallback(
+    async (legacyTaskId: string): Promise<boolean> => {
+      if (!userId) return false;
+      const t = useTaskStore.getState().tasks[legacyTaskId];
+      if (!t) return false;
+      const day = todayRef.current;
+      const micro = microRecordRef.current;
+      const labelKey = taskLabel(t, micro).trim().toLowerCase();
+      const sid = t.microtopic_id?.trim();
+      const normSid = sid ? normalizeSyllabusMasterId(sid) : null;
+
+      const seen = new Set<string>();
+      const matches: DailyTaskView[] = [];
+      for (const r of dailyPlanTasksRef.current) {
+        if (r.plan_date !== day || r.status === "skipped") continue;
+        if (seen.has(r.id)) continue;
+        let match = false;
+        if (normSid && r.syllabus_master_id?.trim()) {
+          match =
+            normalizeSyllabusMasterId(r.syllabus_master_id) === normSid;
+        }
+        if (!match && labelKey.length > 0) {
+          match = (r.title || "").trim().toLowerCase() === labelKey;
+        }
+        if (!match) continue;
+        seen.add(r.id);
+        matches.push(r);
       }
+
+      if (matches.length === 0) return false;
+
+      const planDone = t.status === TASK_STATUS.completed;
+      const nextDailyStatus = planDone ? "done" : "pending";
+      let any = false;
+      for (const row of matches) {
+        if (row.status === nextDailyStatus) continue;
+        const res = await updateDailyTask(row.id, { status: nextDailyStatus });
+        if (res.ok) {
+          any = true;
+          setDailyPlanTasks((prev) =>
+            prev.map((x) =>
+              x.id === row.id ? { ...x, status: nextDailyStatus } : x,
+            ),
+          );
+        }
+      }
+      return any;
     },
     [userId],
   );
 
-  const startLinked = async (task: Task) => {
+  /** Daily Plan timer end: explicit done/undone vs switching tasks (time only, no status flip). */
+  const flushDailyTaskTimerToServer = useCallback(
+    async (
+      taskId: string,
+      mode: "mark_done" | "mark_undone" | "save_time_only",
+    ) => {
+      const st = useDailyTaskTimerStore.getState();
+      if (st.taskId !== taskId) return;
+      const atStart = st.workMinutesAtSessionStart;
+      const sec = st.getElapsed();
+      st.stop();
+      const add = Math.max(0, Math.round(sec / 60) - atStart);
+      if (mode !== "mark_undone" && add > 0) {
+        const res = await updateDailyTaskWorkedTime(taskId, add);
+        if (res.ok) {
+          setDailyPlanTasks((rows) =>
+            rows.map((r) =>
+              r.id === taskId
+                ? { ...r, actual_worked_minutes: res.totalMinutes }
+                : r,
+            ),
+          );
+        }
+      }
+      if (mode === "mark_done") {
+        const statusRes = await updateDailyTask(taskId, { status: "done" });
+        if (statusRes.ok) {
+          setDailyPlanTasks((rows) =>
+            rows.map((r) =>
+              r.id === taskId ? { ...r, status: "done" } : r,
+            ),
+          );
+        }
+      } else if (mode === "mark_undone") {
+        const cur = dailyPlanTasksRef.current.find((r) => r.id === taskId);
+        if (
+          cur &&
+          cur.status !== "skipped" &&
+          cur.status === "done"
+        ) {
+          const statusRes = await updateDailyTask(taskId, {
+            status: "pending",
+          });
+          if (statusRes.ok) {
+            setDailyPlanTasks((rows) =>
+              rows.map((r) =>
+                r.id === taskId ? { ...r, status: "pending" } : r,
+              ),
+            );
+          }
+        }
+      }
+      notifyDailyPlanPage();
+    },
+    [],
+  );
+
+  const commitTimerToServer = useCallback(
+    async (taskId: string, outcome: LegacySessionOutcome = "auto") => {
+      if (!userId) return;
+      const st = useActiveTimerStore.getState();
+      const elapsed = st.taskId === taskId ? st.getElapsed() : 0;
+      const meta = activeSessionMetaRef.current;
+
+      if (outcome === "undone") {
+        if (st.taskId === taskId) {
+          await abandonActiveTimerWithoutSaving(userId, taskId);
+        }
+      } else {
+        await finalizeActiveTimerForTask(userId, taskId);
+      }
+
+      const patchStatus = async (status: Task["status"]) => {
+        await applyOptimisticTaskUpdate(taskId, { status }, userId);
+      };
+
+      if (meta?.taskId !== taskId) {
+        if (timerCreatedTaskIdRef.current === taskId) {
+          timerCreatedTaskIdRef.current = null;
+          if (outcome === "undone") {
+            await patchStatus(TASK_STATUS.pending);
+          } else {
+            await patchStatus(TASK_STATUS.completed);
+          }
+        }
+        activeSessionMetaRef.current = null;
+        if (await syncLegacyTimerTaskToDailyPlan(taskId)) {
+          notifyDailyPlanPage();
+        }
+        return;
+      }
+
+      const { isTimerCreated, startedAsPending, initialStatus, focusTargetSec } =
+        meta;
+
+      if (isTimerCreated && timerCreatedTaskIdRef.current === taskId) {
+        timerCreatedTaskIdRef.current = null;
+        if (outcome === "undone") {
+          await patchStatus(TASK_STATUS.pending);
+        } else {
+          await patchStatus(TASK_STATUS.completed);
+        }
+      } else if (startedAsPending) {
+        let wantDone = false;
+        if (outcome === "done") wantDone = true;
+        else if (outcome === "undone") wantDone = false;
+        else wantDone = focusTargetSec > 0 && elapsed >= focusTargetSec;
+        await patchStatus(
+          wantDone ? TASK_STATUS.completed : TASK_STATUS.pending,
+        );
+      } else {
+        if (outcome === "done") {
+          if (initialStatus !== TASK_STATUS.completed) {
+            await patchStatus(TASK_STATUS.completed);
+          }
+        } else if (outcome === "undone") {
+          if (initialStatus === TASK_STATUS.in_progress) {
+            await patchStatus(TASK_STATUS.pending);
+          }
+        }
+      }
+
+      if (activeSessionMetaRef.current?.taskId === taskId) {
+        activeSessionMetaRef.current = null;
+      }
+      if (await syncLegacyTimerTaskToDailyPlan(taskId)) {
+        notifyDailyPlanPage();
+      }
+    },
+    [userId, syncLegacyTimerTaskToDailyPlan],
+  );
+
+  const startLinked = async (
+    task: Task,
+    sessionMeta: {
+      taskId: string;
+      focusTargetSec: number;
+      startedAsPending: boolean;
+      isTimerCreated: boolean;
+      initialStatus: Task["status"];
+    },
+  ) => {
     if (!userId) return;
+    const d0 = useDailyTaskTimerStore.getState();
+    if (d0.taskId) {
+      await flushDailyTaskTimerToServer(d0.taskId, "save_time_only");
+    }
     const st = useActiveTimerStore.getState();
     if (st.taskId && st.taskId !== task.id) {
-      await commitTimerToServer(st.taskId);
+      await commitTimerToServer(st.taskId, "auto");
     }
-    if (task.status === "pending") {
+    activeSessionMetaRef.current = sessionMeta;
+    if (task.status === TASK_STATUS.pending) {
       await applyOptimisticTaskUpdate(
         task.id,
         {
@@ -177,7 +510,7 @@ export function TimerEngineClient() {
       useActiveTimerStore
         .getState()
         .start(task.id, task.time_spent_seconds ?? 0);
-    } else if (task.status === "in_progress") {
+    } else if (task.status === TASK_STATUS.in_progress) {
       const cur = useActiveTimerStore.getState();
       if (cur.taskId !== task.id) {
         cur.start(task.id, task.time_spent_seconds ?? 0);
@@ -189,9 +522,40 @@ export function TimerEngineClient() {
     }
   };
 
-  const stopAndSave = async () => {
+  const startDailyLinked = async (row: DailyTaskView) => {
+    if (!userId) return;
+    const leg = useActiveTimerStore.getState();
+    if (leg.taskId) {
+      await commitTimerToServer(leg.taskId, "auto");
+    }
+    const dSt = useDailyTaskTimerStore.getState();
+    if (dSt.taskId && dSt.taskId !== row.id) {
+      await flushDailyTaskTimerToServer(dSt.taskId, "save_time_only");
+    }
+    useDailyTaskTimerStore
+      .getState()
+      .start(row.id, row.actual_worked_minutes ?? 0);
+  };
+
+  const finishSessionMarkDone = async () => {
+    if (dailyActiveId) {
+      await flushDailyTaskTimerToServer(dailyActiveId, "mark_done");
+      setTick((n) => n + 1);
+      return;
+    }
     if (!activeId || !userId) return;
-    await commitTimerToServer(activeId);
+    await commitTimerToServer(activeId, "done");
+    setTick((n) => n + 1);
+  };
+
+  const finishSessionMarkUndone = async () => {
+    if (dailyActiveId) {
+      await flushDailyTaskTimerToServer(dailyActiveId, "mark_undone");
+      setTick((n) => n + 1);
+      return;
+    }
+    if (!activeId || !userId) return;
+    await commitTimerToServer(activeId, "undone");
     setTick((n) => n + 1);
   };
 
@@ -204,11 +568,11 @@ export function TimerEngineClient() {
     const q = taskInput.trim();
     if (!q) return null;
     const lower = q.toLowerCase();
-    const exact = taskList.find(
+    const exact = allOpenTasks.find(
       (t) => taskLabel(t, microRecord).toLowerCase() === lower,
     );
     if (exact) return exact;
-    const lineMatch = taskList.find((t) => {
+    const lineMatch = allOpenTasks.find((t) => {
       const line = `${t.assigned_date} · ${taskLabel(t, microRecord)}`;
       return line.toLowerCase() === lower;
     });
@@ -230,16 +594,39 @@ export function TimerEngineClient() {
     pickedTaskId,
     tasksRecord,
     taskInput,
-    taskList,
+    allOpenTasks,
     microRecord,
     today,
   ]);
 
   const handleStart = async () => {
+    if (pickedDailyTaskId) {
+      const row = dailyPlanTasks.find((t) => t.id === pickedDailyTaskId);
+      if (
+        !row ||
+        row.plan_date !== today ||
+        row.status === "done" ||
+        row.status === "skipped"
+      ) {
+        return;
+      }
+      setFocusTarget(customSec);
+      await startDailyLinked(row);
+      return;
+    }
+
     const task = await resolveTaskForTimer();
     if (!task) return;
     setFocusTarget(customSec);
-    void startLinked(task);
+    const isTimerCreated = timerCreatedTaskIdRef.current === task.id;
+    const sessionMeta = {
+      taskId: task.id,
+      focusTargetSec: customSec,
+      startedAsPending: !isTimerCreated && task.status === TASK_STATUS.pending,
+      isTimerCreated,
+      initialStatus: task.status,
+    };
+    void startLinked(task, sessionMeta);
   };
 
   const ringProgress =
@@ -248,6 +635,13 @@ export function TimerEngineClient() {
       : 0;
 
   const blockMinutes = Math.max(1, Math.round(customSec / 60));
+
+  const hasAnyTodayPick = combinedPicks.length > 0;
+  const showLinkTaskPicker =
+    suggestOpen &&
+    (filteredCombinedPicks.length > 0 ||
+      (!taskInput.trim() && !hasAnyTodayPick) ||
+      (!!taskInput.trim() && filteredCombinedPicks.length === 0));
 
   return (
     <div className="space-y-6">
@@ -350,15 +744,53 @@ export function TimerEngineClient() {
               autoComplete="off"
               className="mt-3 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-3 text-sm text-kal-text placeholder:text-kal-muted focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
               aria-autocomplete="list"
-              aria-expanded={suggestOpen && filteredSuggestions.length > 0}
+              aria-expanded={showLinkTaskPicker}
             />
-            {suggestOpen && filteredSuggestions.length > 0 ? (
+            {showLinkTaskPicker ? (
               <ul
                 role="listbox"
                 className="kal-glass-panel absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-xl py-1"
               >
-                {filteredSuggestions.map((t) => {
+                {!taskInput.trim() && !hasAnyTodayPick ? (
+                  <li className="px-3 py-2.5 text-sm text-kal-text-secondary">
+                    No tasks for today yet — add some on Daily Plan, or type a name
+                    to create a syllabus-linked task for today.
+                  </li>
+                ) : null}
+                {taskInput.trim() && filteredCombinedPicks.length === 0 ? (
+                  <li className="px-3 py-2.5 text-sm text-kal-text-secondary">
+                    {hasAnyTodayPick
+                      ? "No tasks for today match — try another word or type a new name."
+                      : "No saved tasks for today — press Enter to add one from the name you typed."}
+                  </li>
+                ) : null}
+                {filteredCombinedPicks.map((pick) => {
+                  if (pick.kind === "daily") {
+                    const row = pick.row;
+                    const line = dailyPlanPickerLine(row);
+                    return (
+                      <li key={`daily-${row.id}`} role="option">
+                        <button
+                          type="button"
+                          className="w-full px-3 py-2.5 text-left text-sm text-kal-text hover:bg-kal-card-muted"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => {
+                            setPickedDailyTaskId(row.id);
+                            setPickedTaskId(null);
+                            setTaskInput(line);
+                            setSuggestOpen(false);
+                            timerCreatedTaskIdRef.current = null;
+                          }}
+                        >
+                          {line}
+                        </button>
+                      </li>
+                    );
+                  }
+                  const t = pick.task;
                   const line = `${t.assigned_date} · ${taskLabel(t, microRecord)}`;
+                  const doneTag =
+                    t.status === "completed" ? " · Done (add time)" : "";
                   return (
                     <li key={t.id} role="option">
                       <button
@@ -367,14 +799,16 @@ export function TimerEngineClient() {
                         onMouseDown={(e) => e.preventDefault()}
                         onClick={() => {
                           setPickedTaskId(t.id);
+                          setPickedDailyTaskId(null);
                           setTaskInput(line);
                           setSuggestOpen(false);
-                          // Picking an existing task — clear the auto-create ref so we
-                          // don't accidentally auto-complete this task on timer stop.
                           timerCreatedTaskIdRef.current = null;
                         }}
                       >
                         {line}
+                        {doneTag ? (
+                          <span className="text-kal-muted">{doneTag}</span>
+                        ) : null}
                       </button>
                     </li>
                   );
@@ -382,11 +816,14 @@ export function TimerEngineClient() {
               </ul>
             ) : null}
             <p className="mt-1.5 text-[11px] leading-relaxed text-kal-text-secondary">
-              New name creates a task for today and marks it done when you stop — or pick from your list to log time only.
+              Tap the field for today&apos;s Daily Plan tasks (top) and syllabus daily
+              tasks. Daily Plan time updates worked minutes; syllabus tasks follow the
+              ring (pending vs done when you end). New names create a syllabus task for
+              today.
             </p>
           </div>
 
-          {!activeId ? (
+          {!activeId && !dailyActiveId ? (
             <div className="kal-glass-subtle flex flex-col items-stretch gap-4 rounded-2xl p-4 sm:flex-row sm:items-center">
               <CircularProgressRing
                 percent={0}
@@ -430,7 +867,7 @@ export function TimerEngineClient() {
       </EngineCard>
 
       <EngineCard title="Active session">
-        {activeId ? (
+        {activeId || dailyActiveId ? (
           <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start sm:gap-8">
             <CircularProgressRing
               percent={ringProgress}
@@ -446,7 +883,8 @@ export function TimerEngineClient() {
                 <span
                   className={clsx(
                     "text-3xl font-bold tabular-nums text-kal-accent sm:text-4xl",
-                    isRunning && "motion-safe:animate-pulse",
+                    (isRunning || dailyRunning) &&
+                      "motion-safe:animate-pulse",
                   )}
                 >
                   {formatElapsedSeconds(elapsed)}
@@ -465,9 +903,14 @@ export function TimerEngineClient() {
                   Linked task
                 </p>
                 <p className="mt-1 text-base font-semibold leading-snug text-kal-text">
-                  {activeTaskTitle ?? "Task"}
+                  {dailyActiveId
+                    ? (activeDailyTitle ?? "Daily task")
+                    : (activeTaskTitle ?? "Task")}
                 </p>
-                {activeTaskLine ? (
+                {dailyActiveId && activeDailyLine ? (
+                  <p className="mt-0.5 text-xs text-kal-muted">{activeDailyLine}</p>
+                ) : null}
+                {!dailyActiveId && activeTaskLine ? (
                   <p className="mt-0.5 text-xs text-kal-muted">{activeTaskLine}</p>
                 ) : null}
               </div>
@@ -485,39 +928,80 @@ export function TimerEngineClient() {
               ) : null}
 
               <div className="flex flex-wrap justify-center gap-2 sm:justify-start">
-                {isRunning && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      useActiveTimerStore.getState().pause();
-                      setTick((n) => n + 1);
-                    }}
-                    className="inline-flex items-center gap-2 rounded-xl bg-kal-accent px-4 py-2.5 text-sm font-semibold text-kal-accent-foreground transition-colors hover:bg-kal-accent-hover"
-                  >
-                    <Pause className="h-4 w-4" />
-                    Pause
-                  </button>
-                )}
-                {pausedHere && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      useActiveTimerStore.getState().resume();
-                      setTick((n) => n + 1);
-                    }}
-                    className="inline-flex items-center gap-2 rounded-xl bg-kal-accent px-4 py-2.5 text-sm font-semibold text-kal-accent-foreground hover:bg-kal-accent-hover"
-                  >
-                    <Play className="h-4 w-4" />
-                    Resume
-                  </button>
+                {dailyActiveId ? (
+                  <>
+                    {dailyRunning && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          useDailyTaskTimerStore.getState().pause();
+                          setTick((n) => n + 1);
+                        }}
+                        className="inline-flex items-center gap-2 rounded-xl bg-kal-accent px-4 py-2.5 text-sm font-semibold text-kal-accent-foreground transition-colors hover:bg-kal-accent-hover"
+                      >
+                        <Pause className="h-4 w-4" />
+                        Pause
+                      </button>
+                    )}
+                    {dailyPausedHere && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          useDailyTaskTimerStore.getState().resume();
+                          setTick((n) => n + 1);
+                        }}
+                        className="inline-flex items-center gap-2 rounded-xl bg-kal-accent px-4 py-2.5 text-sm font-semibold text-kal-accent-foreground hover:bg-kal-accent-hover"
+                      >
+                        <Play className="h-4 w-4" />
+                        Resume
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {isRunning && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          useActiveTimerStore.getState().pause();
+                          setTick((n) => n + 1);
+                        }}
+                        className="inline-flex items-center gap-2 rounded-xl bg-kal-accent px-4 py-2.5 text-sm font-semibold text-kal-accent-foreground transition-colors hover:bg-kal-accent-hover"
+                      >
+                        <Pause className="h-4 w-4" />
+                        Pause
+                      </button>
+                    )}
+                    {pausedHere && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          useActiveTimerStore.getState().resume();
+                          setTick((n) => n + 1);
+                        }}
+                        className="inline-flex items-center gap-2 rounded-xl bg-kal-accent px-4 py-2.5 text-sm font-semibold text-kal-accent-foreground hover:bg-kal-accent-hover"
+                      >
+                        <Play className="h-4 w-4" />
+                        Resume
+                      </button>
+                    )}
+                  </>
                 )}
                 <button
                   type="button"
-                  onClick={() => void stopAndSave()}
+                  onClick={() => void finishSessionMarkUndone()}
                   className="inline-flex items-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-2.5 text-sm font-semibold text-kal-text hover:bg-kal-card hover:border-kal-border-strong"
                 >
-                  <Square className="h-4 w-4" />
-                  End &amp; log session
+                  <Undo2 className="h-4 w-4" />
+                  Mark undone
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void finishSessionMarkDone()}
+                  className="inline-flex items-center gap-2 rounded-xl bg-kal-accent px-4 py-2.5 text-sm font-semibold text-kal-accent-foreground transition-colors hover:bg-kal-accent-hover"
+                >
+                  <Check className="h-4 w-4" />
+                  Mark done
                 </button>
               </div>
             </div>
@@ -525,9 +1009,11 @@ export function TimerEngineClient() {
         ) : (
           <p className="text-sm leading-relaxed text-kal-text-secondary">
             No active timer — choose a block length, link a task, and press
-            Start. Time accrues to{" "}
-            <span className="font-medium text-kal-text">time spent</span> on the
-            task.
+            Start. When you stop, use{" "}
+            <span className="font-medium text-kal-text">Mark done</span> if you
+            finished the work, or{" "}
+            <span className="font-medium text-kal-text">Mark undone</span> to log
+            time without marking complete.
           </p>
         )}
       </EngineCard>
