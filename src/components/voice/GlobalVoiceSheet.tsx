@@ -1,24 +1,39 @@
 "use client";
 
 import clsx from "clsx";
+import { addDays, format, parseISO } from "date-fns";
 import { Loader2, Mic, MicOff, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
-import { insertDailyTask, updateDailyTask } from "@/actions/dailyPlan";
+import {
+  insertDailyTask,
+  moveDailyTaskToPlanDate,
+  updateDailyTask,
+  updateDailyTaskWorkedTime,
+} from "@/actions/dailyPlan";
+import { VoiceCreditBanner } from "@/components/budget/VoiceCreditBanner";
 import { ScheduleRevisionReminderDialog } from "@/components/revision/ScheduleRevisionReminderDialog";
-import { useAiGate } from "@/hooks/useAiGate";
+import { useVoiceCommand } from "@/hooks/useVoiceCommand";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
 import { useCapacitorSpeech } from "@/hooks/useCapacitorSpeech";
 import { useMediaRecorderVoice } from "@/hooks/useMediaRecorderVoice";
 import { useVoiceSttRouting } from "@/hooks/useVoiceSttRouting";
 import { useVoiceCommandStore } from "@/store/useVoiceCommandStore";
+import { useDoubtStore } from "@/store/useDoubtStore";
+import { useUndoStore } from "@/store/useUndoStore";
+import { useTaskStore, type Task } from "@/store/useTaskStore";
 import { fetchDailyPlanTasksForClient } from "@/lib/fetchDailyPlanTasksForClient";
+import { slotFromStartEnd } from "@/lib/dailyPlanTime";
+import { toCalendarDateKey } from "@/lib/calendarDateKey";
+import { writeVoiceFocusHint, writeVoicePlanHint } from "@/lib/voiceBossModeHints";
 import { VOICE_COMMAND_SILENCE_MS, VOICE_MAX_SESSION_MS } from "@/lib/voiceConstants";
 import type { DailyTaskView } from "@/actions/dailyPlan";
 import type { VoiceCommandIntent } from "@/lib/voiceCommandGroq";
+import { isVoiceNavigatePathAllowed } from "@/lib/voiceCommandGroq";
 import { VoiceListeningHint } from "@/components/voice/VoiceListeningHint";
+import { CommandPreviewToast } from "@/components/voice/CommandPreviewToast";
 
 // Example commands shown to the user while idle, to teach discoverability.
 const COMMAND_HINTS = [
@@ -29,6 +44,8 @@ const COMMAND_HINTS = [
   "Go to mastermind",
   "Go to consistency tracker",
   "Go to revision reminders",
+  "Go to today's recap",
+  "Open daily debrief",
   "Go to habits",
   "Go to timer",
   "Go to settings",
@@ -77,6 +94,25 @@ function localISODate(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+/** After voice mutates a plan day, open daily plan on that calendar date. */
+function voiceDailyPlanHref(planDateIso: string): string {
+  const today = localISODate();
+  if (planDateIso === today) return "/daily-plan";
+  return `/daily-plan?planDate=${encodeURIComponent(planDateIso)}`;
+}
+
+const ISO_CAL_DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+function voiceTimeSlotFields(
+  time_start: string | null,
+  time_end: string | null,
+): { time_slot: string | null; time_start: string | null; time_end: string | null } {
+  if (!time_start && !time_end) {
+    return { time_slot: null, time_start: null, time_end: null };
+  }
+  return slotFromStartEnd(time_start ?? "", time_end ?? "");
+}
+
 function fuzzyMatchTask(tasks: DailyTaskView[], subject: string): DailyTaskView | null {
   const needle = subject.toLowerCase().trim();
 
@@ -89,7 +125,7 @@ function fuzzyMatchTask(tasks: DailyTaskView[], subject: string): DailyTaskView 
   };
   const ordinalIdx = ordinals[needle];
   if (ordinalIdx !== undefined) {
-    const pending = tasks.filter((t) => t.status !== "completed");
+    const pending = tasks.filter((t) => t.status !== "done" && t.status !== "skipped");
     return pending[ordinalIdx] ?? tasks[ordinalIdx] ?? null;
   }
 
@@ -100,6 +136,37 @@ function fuzzyMatchTask(tasks: DailyTaskView[], subject: string): DailyTaskView 
         t.title.toLowerCase().includes(needle) ||
         needle.includes(t.title.toLowerCase()),
     ) ??
+    null
+  );
+}
+
+function fuzzyMatchLegacyTodayTask(
+  tasks: Task[],
+  today: string,
+  subject: string,
+): Task | null {
+  const needle = subject.toLowerCase().trim();
+  const ordinals: Record<string, number> = {
+    "first task": 0,
+    "second task": 1,
+    "third task": 2,
+    "fourth task": 3,
+    "fifth task": 4,
+  };
+  const ordinalIdx = ordinals[needle];
+  const dayTasks = tasks.filter(
+    (t) => toCalendarDateKey(t.assigned_date) === today,
+  );
+  if (ordinalIdx !== undefined) {
+    const pending = dayTasks.filter((t) => t.status !== "completed");
+    return pending[ordinalIdx] ?? dayTasks[ordinalIdx] ?? null;
+  }
+  return (
+    dayTasks.find((t) => (t.name ?? "").toLowerCase().trim() === needle) ??
+    dayTasks.find((t) => {
+      const n = (t.name ?? "").toLowerCase();
+      return n.includes(needle) || needle.includes(n);
+    }) ??
     null
   );
 }
@@ -413,7 +480,7 @@ export function GlobalVoiceSheet() {
   const pathname = usePathname();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const aiGate = useAiGate();
+  const { submitVoiceCommand, aiGate } = useVoiceCommand();
 
   const autoStartedRef = useRef(false);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -436,12 +503,14 @@ export function GlobalVoiceSheet() {
     responseText,
     error,
     pendingRevision,
+    pendingIntent,
     close: closeSheet,
     setPhase,
     setTranscript,
     setResponseText,
     setError,
     setPendingRevision,
+    setPendingIntent,
     reset,
   } = useVoiceCommandStore();
 
@@ -466,7 +535,7 @@ export function GlobalVoiceSheet() {
   useEffect(() => {
     if (prevPathnameRef.current !== pathname) {
       prevPathnameRef.current = pathname;
-      if (isOpen && (phase === "processing" || phase === "done")) {
+      if (isOpen && (phase === "processing" || phase === "done" || phase === "preview")) {
         if (closeTimerRef.current) {
           clearTimeout(closeTimerRef.current);
           closeTimerRef.current = null;
@@ -484,26 +553,31 @@ export function GlobalVoiceSheet() {
 
     switch (intent.intent) {
       case "navigate": {
-        router.push(intent.path);
+        router.push(
+          isVoiceNavigatePathAllowed(intent.path) ? intent.path : "/home",
+        );
         break;
       }
 
       case "add_task": {
         const planDate = localISODate();
         const id = crypto.randomUUID();
+        const slot = voiceTimeSlotFields(intent.time_start, intent.time_end);
         const result = await insertDailyTask({
           plan_date: planDate,
           id,
           title: intent.subject,
           source: "voice",
           source_raw_text: `Voice command: ${intent.subject}`,
-          time_slot: null,
+          ...slot,
+          actual_worked_minutes: intent.duration_minutes ?? 0,
         });
         if (!result.ok) {
           setError(result.error);
           setPhase("error");
           return;
         }
+        router.push(voiceDailyPlanHref(planDate));
         break;
       }
 
@@ -513,8 +587,20 @@ export function GlobalVoiceSheet() {
         if (tasksRes.ok && tasksRes.tasks.length > 0) {
           const matched = fuzzyMatchTask(tasksRes.tasks, intent.subject);
           if (matched) {
-            await updateDailyTask(matched.id, { status: "completed" });
+            await updateDailyTask(matched.id, { status: "done" });
+            router.push(voiceDailyPlanHref(planDate));
           } else {
+            writeVoicePlanHint({
+              action_type: "mark_done",
+              task_name: intent.subject,
+              target_date: planDate,
+              duration_logged: null,
+            });
+            useUndoStore.getState().offerUndo({
+              message: `Couldn't find "${intent.subject}". Find it on your plan.`,
+              runUndo: async () => {},
+              autoDismissMs: 4500,
+            });
             router.push("/daily-plan");
           }
         } else {
@@ -523,11 +609,181 @@ export function GlobalVoiceSheet() {
         break;
       }
 
+      case "focus_mode": {
+        const planDate = localISODate();
+        const customSec = Math.min(
+          120 * 60,
+          Math.max(60, intent.duration * 60),
+        );
+        let dailyTaskId: string | null = null;
+        let legacyTaskId: string | null = null;
+        const taskHint: string | null = intent.linked_task;
+
+        if (intent.linked_task) {
+          const tasksRes = await fetchDailyPlanTasksForClient(planDate);
+          if (tasksRes.ok) {
+            const dm = fuzzyMatchTask(tasksRes.tasks, intent.linked_task);
+            if (dm) dailyTaskId = dm.id;
+          }
+          if (!dailyTaskId) {
+            const leg = fuzzyMatchLegacyTodayTask(
+              Object.values(useTaskStore.getState().tasks),
+              planDate,
+              intent.linked_task,
+            );
+            if (leg) legacyTaskId = leg.id;
+          }
+        }
+
+        writeVoiceFocusHint({
+          customSec,
+          taskHint,
+          dailyTaskId,
+          legacyTaskId,
+          autoStart: intent.auto_start,
+        });
+        router.push("/timer");
+        break;
+      }
+
+      case "plan_management": {
+        const { action_type, task_name, target_date, duration_logged, time_start, time_end } =
+          intent;
+
+        if (action_type === "add") {
+          const id = crypto.randomUUID();
+          const slot = voiceTimeSlotFields(time_start, time_end);
+          const result = await insertDailyTask({
+            plan_date: target_date,
+            id,
+            title: task_name,
+            source: "voice",
+            source_raw_text: `Voice plan_management: ${task_name}`,
+            ...slot,
+            actual_worked_minutes: duration_logged ?? 0,
+          });
+          if (!result.ok) {
+            setError(result.error);
+            setPhase("error");
+            return;
+          }
+          router.push(voiceDailyPlanHref(target_date));
+          break;
+        }
+
+        const sourcePlanDate = localISODate();
+        const tasksToday = await fetchDailyPlanTasksForClient(sourcePlanDate);
+        let matched =
+          tasksToday.ok && tasksToday.tasks.length > 0
+            ? fuzzyMatchTask(tasksToday.tasks, task_name)
+            : null;
+
+        if (!matched) {
+          const tasksTarget = await fetchDailyPlanTasksForClient(target_date);
+          if (tasksTarget.ok && tasksTarget.tasks.length > 0) {
+            matched = fuzzyMatchTask(tasksTarget.tasks, task_name);
+          }
+        }
+
+        if (!matched) {
+          writeVoicePlanHint({
+            action_type,
+            task_name,
+            target_date,
+            duration_logged,
+          });
+          useUndoStore.getState().offerUndo({
+            message: `Couldn't find "${task_name}". Search on your daily plan.`,
+            runUndo: async () => {},
+            autoDismissMs: 4500,
+          });
+          router.push("/daily-plan");
+          break;
+        }
+
+        if (action_type === "move") {
+          const mv = await moveDailyTaskToPlanDate(matched.id, target_date);
+          if (!mv.ok) {
+            setError(mv.error);
+            setPhase("error");
+            return;
+          }
+        } else if (action_type === "mark_done") {
+          await updateDailyTask(matched.id, { status: "done" });
+          if (duration_logged != null && duration_logged > 0) {
+            const add = await updateDailyTaskWorkedTime(
+              matched.id,
+              duration_logged,
+            );
+            if (!add.ok) {
+              setError(add.error);
+              setPhase("error");
+              return;
+            }
+          }
+        }
+        router.push(voiceDailyPlanHref(target_date));
+        break;
+      }
+
+      case "batch_add_tasks": {
+        for (const item of intent.items) {
+          const id = crypto.randomUUID();
+          const slot = voiceTimeSlotFields(item.time_start, item.time_end);
+          const result = await insertDailyTask({
+            plan_date: intent.plan_date,
+            id,
+            title: item.title,
+            source: "voice",
+            source_raw_text: `Voice batch_add_tasks: ${item.title}`,
+            ...slot,
+            actual_worked_minutes: item.duration_minutes ?? 0,
+          });
+          if (!result.ok) {
+            setError(result.error);
+            setPhase("error");
+            return;
+          }
+        }
+        router.push(voiceDailyPlanHref(intent.plan_date));
+        break;
+      }
+
+      case "doubt_logging": {
+        await useDoubtStore.getState().createDoubt({
+          title:
+            intent.doubt_text.length > 72
+              ? `${intent.doubt_text.slice(0, 72)}…`
+              : intent.doubt_text,
+          description: intent.doubt_text,
+          subject: intent.subject,
+        });
+        if (intent.open_camera) router.push("/study-camera");
+        else router.push("/doubts");
+        break;
+      }
+
+      case "mindset_trigger": {
+        if (intent.trigger_type === "purpose_mode") {
+          router.push("/motivation");
+        } else if (intent.trigger_type === "anxiety_reset") {
+          router.push("/meditation?trigger=anxiety");
+        } else {
+          router.push("/meditation");
+        }
+        break;
+      }
+
       case "schedule_revision": {
+        const todayIso = localISODate();
+        const nextDue =
+          intent.exact_date && ISO_CAL_DAY_RE.test(intent.exact_date)
+            ? intent.exact_date
+            : format(addDays(parseISO(todayIso), intent.days), "yyyy-MM-dd");
         setPhase("done");
         setTimeout(() => {
           closeSheet();
-          setPendingRevision({ subject: intent.subject, days: intent.days });
+          setPendingRevision({ subject: intent.subject, nextDue });
         }, 900);
         return;
       }
@@ -590,6 +846,23 @@ export function GlobalVoiceSheet() {
     [setTranscript],
   );
 
+  const handlePreviewConfirm = useCallback(() => {
+    const p = useVoiceCommandStore.getState().pendingIntent;
+    if (!p) return;
+    // Move to processing before clearing pending — otherwise one frame has
+    // phase "preview" + null pending and the UI falls through to ErrorState.
+    setError(null);
+    setPhase("processing");
+    setPendingIntent(null);
+    void executeRef.current?.(p.intent, p.responseText);
+  }, [setPendingIntent, setPhase, setError]);
+
+  const handlePreviewCancel = useCallback(() => {
+    setPendingIntent(null);
+    setPhase("idle");
+    setTranscript(null);
+  }, [setPendingIntent, setPhase, setTranscript]);
+
   const handleTranscript = useCallback(
     async ({
       transcript: text,
@@ -606,50 +879,41 @@ export function GlobalVoiceSheet() {
       voiceFetchAbortRef.current = controller;
 
       try {
-        const res = await fetch("/api/voice-command", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            transcript: text,
-            page_context: pathname,
-            durationSeconds,
-          }),
-          signal: controller.signal,
-        });
+        const result = await submitVoiceCommand(
+          text,
+          pathname,
+          durationSeconds,
+          controller.signal,
+        );
 
-        const data = (await res.json()) as {
-          ok: boolean;
-          error?: string;
-          intent?: VoiceCommandIntent;
-          response_text?: string;
-        };
-
-        if (!data.ok) {
-          const isQuota = data.error === "quota_exceeded" || res.status === 429;
-          const msg = isQuota
-            ? "You've used your voice time for this month. Get more from My Subscription."
-            : (data.error ?? "Something went wrong. Please try again.");
-          setError(msg);
+        if (!result.ok) {
+          setError(result.error);
           setPhase("error");
           return;
         }
 
-        if (!data.intent || !data.response_text) {
+        const { intent: parsedIntent, response_text: respText } = result.data;
+        if (!parsedIntent || !respText) {
           setError("Couldn't parse that command. Please try again.");
           setPhase("error");
           return;
         }
 
-        await executeRef.current?.(data.intent, data.response_text);
+        if (parsedIntent.intent === "unknown") {
+          await executeRef.current?.(parsedIntent, respText);
+          return;
+        }
+
+        setError(null);
+        setPendingIntent({ intent: parsedIntent, responseText: respText });
+        setPhase("preview");
       } catch (e) {
         if (e instanceof Error && e.name === "AbortError") return;
         setError("Network error. Check your connection and try again.");
         setPhase("error");
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [pathname],
+    [pathname, submitVoiceCommand, setError, setPendingIntent, setPhase, setTranscript],
   );
 
   const {
@@ -867,6 +1131,7 @@ export function GlobalVoiceSheet() {
   const isWhisperActive = isWhisperRecording || isWhisperTranscribing;
   const isListeningPhase =
     phase === "idle" || phase === "listening" || isCapActive || isWhisperActive;
+  const isWideCard = isListeningPhase || phase === "preview";
 
   // ─── Render ──────────────────────────────────────────────────────────────────
 
@@ -883,7 +1148,11 @@ export function GlobalVoiceSheet() {
         dialogTitle="Schedule Revision"
         initial={
           pendingRevision
-            ? { title: pendingRevision.subject, sourceTab: "custom" }
+            ? {
+                title: pendingRevision.subject,
+                sourceTab: "custom",
+                nextDue: pendingRevision.nextDue,
+              }
             : undefined
         }
       />
@@ -912,7 +1181,7 @@ export function GlobalVoiceSheet() {
               aria-modal="true"
               className={clsx(
                 "pointer-events-auto w-full rounded-2xl kal-glass-panel shadow-2xl transition-[max-width] duration-300",
-                isListeningPhase ? "max-w-md" : "max-w-sm",
+                isWideCard ? "max-w-md" : "max-w-sm",
                 animatingOut ? "kal-voice-modal-out" : "kal-voice-modal-in",
               )}
             >
@@ -935,6 +1204,8 @@ export function GlobalVoiceSheet() {
                   <X className="h-3.5 w-3.5" strokeWidth={2.5} aria-hidden />
                 </button>
               </div>
+
+              {aiGate.canDoVoiceSession && !aiGate.loading ? <VoiceCreditBanner /> : null}
 
               {/* Content — each state renders its own layout */}
               {!aiGate.loading && !aiGate.canDoVoiceSession ? (
@@ -971,6 +1242,13 @@ export function GlobalVoiceSheet() {
                       startListening();
                     }
                   }}
+                />
+              ) : phase === "preview" && pendingIntent ? (
+                <CommandPreviewToast
+                  intent={pendingIntent.intent}
+                  responseText={pendingIntent.responseText}
+                  onConfirm={handlePreviewConfirm}
+                  onCancel={handlePreviewCancel}
                 />
               ) : phase === "processing" ? (
                 <ProcessingState transcript={transcript} hideTranscript={false} />

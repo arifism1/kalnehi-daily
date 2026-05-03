@@ -891,61 +891,106 @@ type PaidProfileVoiceRow = {
 async function applyPaidVoiceMinuteUsage(
   admin: NonNullable<ReturnType<typeof getAdminClient>>,
   userId: string,
-  data: PaidProfileVoiceRow,
+  initialData: PaidProfileVoiceRow,
   now: Date,
   minutes: number,
 ): Promise<{ ok: true; used: number; limit: number } | { ok: false; error: string }> {
-  const resetNeeded = needsUsagePeriodReset(
-    data.usage_reset_date,
-    data.subscription_start_date,
-    now,
-  );
-  const currentUsed = resetNeeded
-    ? 0
-    : coerceVoiceMinutesUsed(data.voice_minutes_used_this_month);
-  const ledger = parseBonusLedger(data.bonus_voice_minutes_ledger);
+  let data: PaidProfileVoiceRow = initialData;
 
-  const rawTier = data.subscription_tier;
-  const tierResolved: SubscriptionTier = parseSubscriptionTier(rawTier) ?? "pro";
-  const isTrial = data.subscription_status === "trial";
-  const monthlyLimit = getVoiceMinutesLimit(tierResolved, isTrial);
-  const periodStart =
-    currentUsagePeriodStartDateString(data.subscription_start_date, now) ??
-    istCalendarDateStringFromInstant(now);
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const resetNeeded = needsUsagePeriodReset(
+      data.usage_reset_date,
+      data.subscription_start_date,
+      now,
+    );
+    const currentUsed = resetNeeded
+      ? 0
+      : coerceVoiceMinutesUsed(data.voice_minutes_used_this_month);
+    const ledger = parseBonusLedger(data.bonus_voice_minutes_ledger);
 
-  const { ledger: ledgerAfterBonus, taken: takenFromBonus } = consumeFromBonusLedger(
-    ledger,
-    minutes,
-    now,
-  );
-  const fromMonthly = minutes - takenFromBonus;
-  if (fromMonthly > 0 && currentUsed + fromMonthly > monthlyLimit) {
-    return { ok: false, error: "Monthly voice minutes limit reached." };
+    const rawTier = data.subscription_tier;
+    const tierResolved: SubscriptionTier = parseSubscriptionTier(rawTier) ?? "pro";
+    const isTrial = data.subscription_status === "trial";
+    const monthlyLimit = getVoiceMinutesLimit(tierResolved, isTrial);
+    const periodStart =
+      currentUsagePeriodStartDateString(data.subscription_start_date, now) ??
+      istCalendarDateStringFromInstant(now);
+
+    const { ledger: ledgerAfterBonus, taken: takenFromBonus } = consumeFromBonusLedger(
+      ledger,
+      minutes,
+      now,
+    );
+    const fromMonthly = minutes - takenFromBonus;
+    if (fromMonthly > 0 && currentUsed + fromMonthly > monthlyLimit) {
+      return { ok: false, error: "Monthly voice minutes limit reached." };
+    }
+
+    const bonusSum = totalActiveBonus(ledgerAfterBonus, now);
+    const newVoiceUsed = currentUsed + fromMonthly;
+    const patch: UserProfileUpdate = {
+      bonus_voice_minutes_ledger: ledgerAfterBonus,
+      bonus_voice_minutes: bonusSum,
+      voice_minutes_used_this_month: newVoiceUsed,
+      updated_at: now.toISOString(),
+    };
+    if (resetNeeded) {
+      patch.photo_scans_used_this_month = 0;
+      patch.usage_reset_date = periodStart;
+    }
+
+    let q = admin.from("user_profiles").update(patch).eq("user_id", userId);
+
+    if (fromMonthly === 0 && takenFromBonus > 0) {
+      q = q.eq("bonus_voice_minutes", totalActiveBonus(ledger, now));
+    }
+
+    if (resetNeeded) {
+      const anchor = data.usage_reset_date;
+      if (anchor == null || anchor === "") {
+        q = q.is("usage_reset_date", null);
+      } else {
+        q = q.eq("usage_reset_date", anchor);
+      }
+    } else {
+      const usedRaw = data.voice_minutes_used_this_month;
+      if (usedRaw == null || usedRaw === "") {
+        q = q.is("voice_minutes_used_this_month", null);
+      } else {
+        q = q.eq(
+          "voice_minutes_used_this_month",
+          coerceVoiceMinutesUsed(usedRaw),
+        );
+      }
+    }
+
+    const { data: updatedRow, error: updateErr } = await q
+      .select("voice_minutes_used_this_month")
+      .maybeSingle();
+
+    if (!updateErr && updatedRow) {
+      return {
+        ok: true,
+        used: coerceVoiceMinutesUsed(updatedRow.voice_minutes_used_this_month),
+        limit: monthlyLimit + bonusSum,
+      };
+    }
+
+    const { data: fresh, error: freshErr } = await admin
+      .from("user_profiles")
+      .select(
+        "subscription_tier, subscription_status, subscription_end_date, subscription_start_date, voice_minutes_used_this_month, bonus_voice_minutes_ledger, usage_reset_date, photo_scans_used_this_month",
+      )
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (freshErr || !fresh) {
+      return { ok: false, error: "Unable to update usage." };
+    }
+    data = fresh as PaidProfileVoiceRow;
   }
 
-  const bonusSum = totalActiveBonus(ledgerAfterBonus, now);
-  const patch: UserProfileUpdate = {
-    bonus_voice_minutes_ledger: ledgerAfterBonus,
-    bonus_voice_minutes: bonusSum,
-    voice_minutes_used_this_month: currentUsed + fromMonthly,
-    updated_at: now.toISOString(),
-  };
-  if (resetNeeded) {
-    patch.photo_scans_used_this_month = 0;
-    patch.usage_reset_date = periodStart;
-  }
-
-  const { error: updateErr } = await admin
-    .from("user_profiles")
-    .update(patch)
-    .eq("user_id", userId);
-  if (updateErr) return { ok: false, error: "Unable to update usage." };
-
-  return {
-    ok: true,
-    used: currentUsed + fromMonthly,
-    limit: monthlyLimit + bonusSum,
-  };
+  return { ok: false, error: "Could not apply usage. Please try again." };
 }
 
 /**

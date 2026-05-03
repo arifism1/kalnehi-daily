@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { incrementVoiceMinuteUsage } from "@/actions/subscription";
+import {
+  ensureVoiceMinuteHeadroom,
+  incrementVoiceMinuteUsage,
+} from "@/actions/subscription";
 import { runVoiceParseDraft } from "@/lib/runVoiceParseDraft";
 import { clampVoiceBillingDurationSeconds } from "@/lib/voiceDurationBilling";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -50,6 +53,18 @@ export async function POST(req: Request) {
   }
 
   const voiceSecondsCharged = clampVoiceBillingDurationSeconds(o.durationSeconds);
+
+  const billedMinutes = voiceSecondsCharged / 60;
+  const headroom = await ensureVoiceMinuteHeadroom(billedMinutes);
+  if (!headroom.ok) {
+    const msg = headroom.error;
+    const quotaLike =
+      /limit|trial ended|Upgrade|free trial|not configured|voice included/i.test(msg);
+    return NextResponse.json(
+      { ok: false, error: quotaLike ? "quota_exceeded" : msg },
+      { status: quotaLike ? 429 : 403 },
+    );
+  }
 
   const result = await runVoiceParseDraft(raw, logDate, occurredAt);
 

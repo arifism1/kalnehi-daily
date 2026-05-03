@@ -43,6 +43,8 @@ function formatRowForDisplay(r: MergedSyllabusRow): string {
 
 export type ScheduleRevisionInitialSnapshot = {
   title: string;
+  /** Voice / deep-link: next due date as YYYY-MM-DD (IST calendar sense from caller) */
+  nextDue?: string | null;
   /** Optional notes pre-fill (e.g. empty for new; daily task can leave empty) */
   notes?: string;
   /** Syllabus id from a daily task — saved even on custom topic tab */
@@ -380,13 +382,15 @@ export function ScheduleRevisionReminderDialog({
   const initialMicro = init.microtopicId?.trim() || null;
   const initialSource = init.sourceTab ?? (initialMicro ? "syllabus" : "custom");
   const initialNotes = (init.notes ?? "").trim();
+  const initialNextDue = (init.nextDue ?? "").trim();
 
   useEffect(() => {
     if (!open) return;
     setFormError(null);
     setSourceTab(initialSource);
     setTitleInput(initialTitle);
-    setNextDue(format(addDays(parseISO(today), 7), "yyyy-MM-dd"));
+    const fallbackDue = format(addDays(parseISO(today), 7), "yyyy-MM-dd");
+    setNextDue(/^\d{4}-\d{2}-\d{2}$/.test(initialNextDue) ? initialNextDue : fallbackDue);
     setDifficulty("medium");
     setNotesInput(initialNotes);
     setSyllabusQuery("");
@@ -411,6 +415,7 @@ export function ScheduleRevisionReminderDialog({
     initialMicro,
     initialSource,
     initialNotes,
+    initialNextDue,
     showVoice,
     clearSpeechRecognitionError,
     clearCapError,

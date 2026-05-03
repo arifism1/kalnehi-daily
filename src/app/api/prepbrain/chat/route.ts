@@ -277,9 +277,9 @@ async function runToolByName(
 async function createConversationSummary(
   messages: IncomingMessage[],
   models: ModelCandidate[],
-): Promise<string> {
+): Promise<{ text: string; tokens: number }> {
   // No history beyond the model window — nothing to summarise.
-  if (messages.length <= 7) return "";
+  if (messages.length <= 7) return { text: "", tokens: 0 };
 
   const recent = messages.slice(-15);
   const transcript = recent
@@ -305,17 +305,19 @@ async function createConversationSummary(
     );
 
     const summaryText = result.text?.trim();
-    if (!summaryText || summaryText.length < 30) return "";
+    if (!summaryText || summaryText.length < 30) return { text: "", tokens: 0 };
 
-    return (
-      "=== RECENT CONVERSATION SUMMARY ===\n" +
-      summaryText +
-      "\n=== END SUMMARY ===\n\n"
-    );
+    return {
+      text:
+        "=== RECENT CONVERSATION SUMMARY ===\n" +
+        summaryText +
+        "\n=== END SUMMARY ===\n\n",
+      tokens: Math.max(0, Math.floor(result.totalTokens)),
+    };
   } catch (err) {
     // Non-fatal — the main reply proceeds without the summary.
     console.warn("[prepbrain/chat] conversation summary failed (non-fatal):", err);
-    return "";
+    return { text: "", tokens: 0 };
   }
 }
 
@@ -694,7 +696,7 @@ export async function POST(request: Request) {
 
 ${PREPBRAIN_SYSTEM_PROMPT}
 
-${conversationSummary}
+${conversationSummary.text}
 --- USER PREP DATA ---
 ${toolPack.toolDataMarkdown}
 --- END USER PREP DATA ---
@@ -766,11 +768,11 @@ ${fullMessages
         const actualRaw = Math.max(0, Math.floor(groqTotalTokens));
         const promptComp = groqPromptTokens + groqCompletionTokens;
         const billed =
-          actualRaw > 0
+          (actualRaw > 0
             ? actualRaw
             : promptComp > 0
               ? promptComp
-              : PREPBRAIN_AI_TOKEN_RESERVE_ESTIMATE;
+              : PREPBRAIN_AI_TOKEN_RESERVE_ESTIMATE) + conversationSummary.tokens;
 
         const persistNow = new Date();
         const { tokenRow: rowAfter, patch: tokenPatch } = computePrepbrainTokenPersist(
@@ -819,11 +821,24 @@ ${fullMessages
 
         if (!persistResult.ok) {
           console.error("[prepbrain/chat] persist failed", persistResult);
+          await prepbrainAiTokenCancelReservation(admin, user.id, reservationId);
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({
+                type: "done",
+                ok: false,
+                error:
+                  persistResult.error ??
+                  "Could not save your message. Your quota was not charged.",
+                usage: usageAfter,
+              })}\n\n`,
+            ),
+          );
+          controller.close();
+          return;
         }
 
-        const conversationOut = persistResult.ok
-          ? persistResult.conversationId
-          : conversationIdIn;
+        const conversationOut = persistResult.conversationId;
 
         console.log(
           "[prepbrain/chat] model=%s intent=%s depth=%d max_completion_tokens=%d tools=%s cache=%s redis=%s prompt_tokens=%d completion_tokens=%d total_tokens=%d tool_chars=%d tool_est_tokens=%d summary=%s",
@@ -839,7 +854,7 @@ ${fullMessages
           groqTotalTokens,
           toolDataChars,
           toolDataEstTokens,
-          conversationSummary ? "yes" : "no",
+          conversationSummary.text ? "yes" : "no",
         );
 
         const donePayload: Record<string, unknown> = {
