@@ -34,7 +34,10 @@ import {
 } from "@/lib/voiceConstants";
 import type { DailyTaskView } from "@/actions/dailyPlan";
 import type { VoiceCommandIntent } from "@/lib/voiceCommandGroq";
-import { isVoiceNavigatePathAllowed } from "@/lib/voiceCommandGroq";
+import {
+  canonicalVoiceNavigatePath,
+  isVoiceNavigatePathAllowed,
+} from "@/lib/voiceCommandGroq";
 import { VoiceListeningHint } from "@/components/voice/VoiceListeningHint";
 import { CommandPreviewToast } from "@/components/voice/CommandPreviewToast";
 
@@ -557,7 +560,9 @@ export function GlobalVoiceSheet() {
     switch (intent.intent) {
       case "navigate": {
         router.push(
-          isVoiceNavigatePathAllowed(intent.path) ? intent.path : "/home",
+          isVoiceNavigatePathAllowed(intent.path)
+            ? canonicalVoiceNavigatePath(intent.path)
+            : "/home",
         );
         break;
       }

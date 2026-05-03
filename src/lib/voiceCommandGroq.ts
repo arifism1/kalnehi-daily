@@ -116,7 +116,6 @@ const VALID_NAV_PATHS = new Set([
   "/target-score-blueprint",
   // Learn & revise
   "/revision-tracker",
-  "/revision-reminders",
   "/syllabus",
   "/doubts",
   "/mastermind",
@@ -142,6 +141,16 @@ function voiceNavigatePathname(path: string): string {
   return path.trim().split(/[?#]/)[0] ?? "";
 }
 
+/** Legacy URLs still emitted by models or bookmarks → canonical app path. */
+const VOICE_NAV_PATH_ALIASES: Readonly<Record<string, string>> = {
+  "/revision-reminders": "/revision-tracker",
+};
+
+export function canonicalVoiceNavigatePath(path: string): string {
+  const raw = typeof path === "string" ? path.trim() : "";
+  return VOICE_NAV_PATH_ALIASES[raw] ?? raw;
+}
+
 function isBlockedVoiceNavigatePrefix(pathname: string): boolean {
   const p = pathname.toLowerCase();
   if (!p.startsWith("/")) return true;
@@ -161,10 +170,11 @@ export function isVoiceNavigatePathAllowed(path: string): boolean {
   if (!raw.startsWith("/")) return false;
   if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/i.test(raw)) return false;
   if (raw.includes("://")) return false;
-  const pathname = voiceNavigatePathname(raw);
+  const canonical = canonicalVoiceNavigatePath(raw);
+  const pathname = voiceNavigatePathname(canonical);
   if (!pathname) return false;
   if (isBlockedVoiceNavigatePrefix(pathname)) return false;
-  return VALID_NAV_PATHS.has(raw);
+  return VALID_NAV_PATHS.has(canonical);
 }
 
 const SYSTEM_PROMPT = `You are a voice assistant for Kalnehi Daily, an Indian competitive exam preparation app (JEE, NEET, UPSC, CUET, CAT, etc.).
@@ -375,7 +385,10 @@ function parseIntent(o: Record<string, unknown>): VoiceCommandIntent | null {
     }
     case "navigate": {
       const path = typeof o.path === "string" ? o.path.trim() : "";
-      return { intent: "navigate", path: isVoiceNavigatePathAllowed(path) ? path : "/home" };
+      return {
+        intent: "navigate",
+        path: isVoiceNavigatePathAllowed(path) ? canonicalVoiceNavigatePath(path) : "/home",
+      };
     }
     case "query_plan":
       return { intent: "query_plan" };
