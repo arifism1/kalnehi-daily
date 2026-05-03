@@ -24,6 +24,10 @@ import {
 } from "@/lib/seo-metadata";
 import { KillSwitchGuard } from "@/components/KillSwitchGuard";
 import {
+  GoogleTagManagerHead,
+  GoogleTagManagerNoScript,
+} from "@/components/GoogleTagManager";
+import {
   MetaPixelNoScript,
   MetaPixelRouteTracker,
   MetaPixelScript,
@@ -197,9 +201,11 @@ export default function RootLayout({
       className={`${dmSans.variable} ${dmSerifDisplay.variable} ${syne.variable} h-full min-h-dvh min-h-[-webkit-fill-available] antialiased`}
     >
       <head>
+        <GoogleTagManagerHead />
         <MetaPixelScript />
       </head>
       <body className="flex min-h-dvh min-h-[-webkit-fill-available] flex-col bg-kal-page font-sans text-kal-text">
+        <GoogleTagManagerNoScript />
         <MetaPixelNoScript />
         <Suspense fallback={null}>
           <MetaPixelRouteTracker />

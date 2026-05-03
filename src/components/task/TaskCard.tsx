@@ -18,6 +18,7 @@ import {
   useState,
 } from "react";
 
+import { trackMetaTaskCompleted, trackMetaTimerStarted } from "@/lib/analytics";
 import {
   applyOptimisticTaskUpdate,
   undoRestoreTaskUpdate,
@@ -265,6 +266,7 @@ export function TaskCard({
         useActiveTimerStore
           .getState()
           .start(task.id, task.time_spent_seconds ?? 0);
+        trackMetaTimerStarted();
         return;
       }
 
@@ -272,8 +274,10 @@ export function TaskCard({
         const cur = useActiveTimerStore.getState();
         if (cur.taskId !== task.id) {
           cur.start(task.id, task.time_spent_seconds ?? 0);
+          trackMetaTimerStarted();
         } else if (!cur.resumeAt) {
           cur.resume();
+          trackMetaTimerStarted();
         }
       }
     } finally {
@@ -319,6 +323,7 @@ export function TaskCard({
         userId,
       );
       if (res.ok) {
+        trackMetaTaskCompleted();
         useUndoStore.getState().offerUndo({
           message: "Task completed",
           runUndo: async () => {

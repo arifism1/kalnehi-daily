@@ -24,6 +24,7 @@ import { toCalendarDateKey } from "@/lib/calendarDateKey";
 import { fetchDailyPlanTasksForClient } from "@/lib/fetchDailyPlanTasksForClient";
 import { quickCreatePlannedTask } from "@/lib/quickTaskCreate";
 import { normalizeSyllabusMasterId } from "@/lib/syllabusIds";
+import { trackMetaTaskCompleted, trackMetaTimerStarted } from "@/lib/analytics";
 import { applyOptimisticTaskUpdate } from "@/lib/taskMutations";
 import { formatElapsedSeconds } from "@/lib/taskTime";
 import {
@@ -423,7 +424,11 @@ export function TimerEngineClient() {
       }
 
       const patchStatus = async (status: Task["status"]) => {
+        const prev = useTaskStore.getState().tasks[taskId]?.status;
         await applyOptimisticTaskUpdate(taskId, { status }, userId);
+        if (prev !== "completed" && status === TASK_STATUS.completed) {
+          trackMetaTaskCompleted();
+        }
       };
 
       if (meta?.taskId !== taskId) {
@@ -514,15 +519,19 @@ export function TimerEngineClient() {
       useActiveTimerStore
         .getState()
         .start(task.id, task.time_spent_seconds ?? 0);
+      trackMetaTimerStarted();
     } else if (task.status === TASK_STATUS.in_progress) {
       const cur = useActiveTimerStore.getState();
       if (cur.taskId !== task.id) {
         cur.start(task.id, task.time_spent_seconds ?? 0);
+        trackMetaTimerStarted();
       } else if (!cur.resumeAt) {
         cur.resume();
+        trackMetaTimerStarted();
       }
     } else {
       useActiveTimerStore.getState().start(task.id, task.time_spent_seconds ?? 0);
+      trackMetaTimerStarted();
     }
   };
 
@@ -539,6 +548,7 @@ export function TimerEngineClient() {
     useDailyTaskTimerStore
       .getState()
       .start(row.id, row.actual_worked_minutes ?? 0);
+    trackMetaTimerStarted();
   };
 
   const finishSessionMarkDone = async () => {
@@ -1003,6 +1013,7 @@ export function TimerEngineClient() {
                         type="button"
                         onClick={() => {
                           useDailyTaskTimerStore.getState().resume();
+                          trackMetaTimerStarted();
                           setTick((n) => n + 1);
                         }}
                         className="inline-flex items-center gap-2 rounded-xl bg-kal-accent px-4 py-2.5 text-sm font-semibold text-kal-accent-foreground hover:bg-kal-accent-hover"
@@ -1032,6 +1043,7 @@ export function TimerEngineClient() {
                         type="button"
                         onClick={() => {
                           useActiveTimerStore.getState().resume();
+                          trackMetaTimerStarted();
                           setTick((n) => n + 1);
                         }}
                         className="inline-flex items-center gap-2 rounded-xl bg-kal-accent px-4 py-2.5 text-sm font-semibold text-kal-accent-foreground hover:bg-kal-accent-hover"

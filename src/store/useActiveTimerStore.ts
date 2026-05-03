@@ -26,7 +26,7 @@ export const useActiveTimerStore = create<ActiveTimerState>((set, get) => ({
   wallSessionStartIso: null,
   sessionBaseSeconds: 0,
 
-  start: (taskId, existingSeconds) =>
+  start: (taskId, existingSeconds) => {
     set((state) => {
       const base = Math.max(0, existingSeconds);
       const sameSession =
@@ -41,7 +41,8 @@ export const useActiveTimerStore = create<ActiveTimerState>((set, get) => ({
           : new Date().toISOString(),
         sessionBaseSeconds: sameSession ? state.sessionBaseSeconds : base,
       };
-    }),
+    });
+  },
 
   pause: () => {
     const { taskId, resumeAt, baseSeconds } = get();

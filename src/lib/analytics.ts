@@ -121,3 +121,21 @@ export function trackMetaFreeTrialStarted(): void {
   if (typeof window === "undefined") return;
   window.fbq?.("trackCustom", "Free Trial Started");
 }
+
+export const trackMetaTaskCreated = (): void => {
+  if (typeof window === "undefined") return;
+  console.log("Fired: Task Created");
+  window.fbq?.("trackCustom", "Task Created");
+};
+
+export const trackMetaTimerStarted = (): void => {
+  if (typeof window === "undefined") return;
+  console.log("Fired: Timer Started");
+  window.fbq?.("trackCustom", "Timer Started");
+};
+
+export const trackMetaTaskCompleted = (): void => {
+  if (typeof window === "undefined") return;
+  console.log("Fired: Task Completed");
+  window.fbq?.("trackCustom", "Task Completed");
+};
