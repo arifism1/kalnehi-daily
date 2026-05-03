@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { DM_Sans, DM_Serif_Display, Syne } from "next/font/google";
@@ -22,6 +23,12 @@ import {
   SITE_NAME,
 } from "@/lib/seo-metadata";
 import { KillSwitchGuard } from "@/components/KillSwitchGuard";
+import {
+  MetaPixelNoScript,
+  MetaPixelRouteTracker,
+  MetaPixelScript,
+} from "@/components/MetaPixel";
+import { OAuthAuthAnalytics } from "@/components/OAuthAuthAnalytics";
 
 import "./globals.css";
 
@@ -189,7 +196,15 @@ export default function RootLayout({
       data-scroll-behavior="smooth"
       className={`${dmSans.variable} ${dmSerifDisplay.variable} ${syne.variable} h-full min-h-dvh min-h-[-webkit-fill-available] antialiased`}
     >
+      <head>
+        <MetaPixelScript />
+      </head>
       <body className="flex min-h-dvh min-h-[-webkit-fill-available] flex-col bg-kal-page font-sans text-kal-text">
+        <MetaPixelNoScript />
+        <Suspense fallback={null}>
+          <MetaPixelRouteTracker />
+        </Suspense>
+        <OAuthAuthAnalytics />
         <PwaServiceWorkerUpdateProvider>
           <JsonLd />
           <OrganicEntryCapture />

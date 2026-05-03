@@ -101,4 +101,23 @@ export function trackAuthSuccess(event: "login" | "sign_up"): void {
   if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
     console.info("[kalnehi analytics]", event, { firstTouch: ft, organic });
   }
+
+  trackMetaAuthSuccess(event);
+}
+
+/** Meta Pixel: registration standard event + funnel custom event for all auths. */
+export function trackMetaAuthSuccess(event: "login" | "sign_up"): void {
+  if (typeof window === "undefined") return;
+  const fbq = window.fbq;
+  if (typeof fbq !== "function") return;
+  if (event === "sign_up") {
+    fbq("track", "CompleteRegistration");
+  }
+  fbq("trackCustom", "Auth Success");
+}
+
+/** Meta Pixel custom event when the 3-day welcome trial is newly started (not idempotent no-op). */
+export function trackMetaFreeTrialStarted(): void {
+  if (typeof window === "undefined") return;
+  window.fbq?.("trackCustom", "Free Trial Started");
 }

@@ -15,6 +15,7 @@ import type { DailyCapStatus } from "@/lib/daily-trial-cap";
 import { CancelSubscriptionButton } from "@/components/subscription/CancelSubscriptionButton";
 import { PaymentErrorMailButton } from "@/components/subscription/PaymentErrorMailButton";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
+import { trackMetaFreeTrialStarted } from "@/lib/analytics";
 import {
   AUTOPAY_MONTHS_MAX,
   AUTOPAY_MONTHS_MIN,
@@ -271,7 +272,10 @@ export function PricingPageClient() {
         setCheckoutError({ text: r.error });
         return;
       }
-      if (r.started) refetch();
+      if (r.started) {
+        trackMetaFreeTrialStarted();
+        refetch();
+      }
       window.location.assign("/home");
     } catch (error) {
       setCheckoutError({
