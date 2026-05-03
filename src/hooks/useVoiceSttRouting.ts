@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 
 import { usePlatform } from "@/hooks/usePlatform";
+import { isAndroidWebViewUserAgent } from "@/lib/androidWebSpeechEnv";
 
 export type VoiceSttRouting = {
   /** True when `navigator.userAgent` matches Android. */
@@ -10,41 +11,46 @@ export type VoiceSttRouting = {
   /** Kalnehi Capacitor native shell (`Capacitor.isNativePlatform()`). */
   isNativeApp: boolean;
   /**
-   * Retained for call-site branching. **Always false** — Android shell uses Whisper (same as Chrome on Android).
+   * Retained for call-site branching. **Always false** — Capacitor shell removed.
    */
   useNativeCapacitorStt: boolean;
   /**
-   * **Any Android** User-Agent (Kalnehi app shell or browser): MediaRecorder → `/api/voice-transcribe` (Groq).
+   * Android when Web Speech is unsafe or missing: MediaRecorder → `/api/voice-transcribe` (Groq).
+   * Regular Android Chrome / PWA uses Web Speech first (same as desktop Chrome) when API exists.
    */
   useAndroidWhisperStt: boolean;
   /** @deprecated Alias of `useAndroidWhisperStt`. */
   useBrowserWhisperStt: boolean;
-  /** Desktop / iPhone Safari / etc.: Web Speech API. */
+  /** Web Speech API (device / browser STT); includes Android Chrome when ctor exists and not WebView. */
   useWebSpeechStt: boolean;
 };
 
 /**
  * Voice capture routing:
  *
- * | Where | STT | Server |
- * |-------|-----|--------|
- * | **Any Android** (`isAndroidUa`, app shell or Chrome) | MediaRecorder upload | Groq **transcribe** (`/api/voice-transcribe`), then parse/command APIs |
- * | **Normal browser** (`!isApp`, not Android UA) | Web Speech | Text-only → Groq for structure |
+ * | Where | Primary STT | Fallback |
+ * |-------|-------------|----------|
+ * | **Android Chrome / PWA** | Web Speech (same family as Mac Chrome) | MediaRecorder → `/api/voice-transcribe` |
+ * | **Android WebView** (`; wv)` in UA) | Whisper only (Web Speech stub/crash risk) | — |
+ * | **Desktop / iOS Safari** | Web Speech | Whisper (e.g. global sheet on errors) |
  *
- * On iOS shell (`isApp && !isAndroidUa`), Whisper and native flags are both false → Web Speech in components.
- *
- * `useWebSpeechStt` is `!isApp && !isAndroidUa`.
+ * `usePlatform().isApp` is always false (PWA distribution); hook kept for compatibility.
  */
 export function useVoiceSttRouting(): VoiceSttRouting {
   const { isApp } = usePlatform();
 
   return useMemo(() => {
-    const isAndroidUa =
-      typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent);
+    const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+    const isAndroidUa = /Android/i.test(ua);
+    const androidWebView = isAndroidWebViewUserAgent(ua);
+    const ctorAvailable =
+      typeof window !== "undefined" &&
+      !!(window.SpeechRecognition ?? window.webkitSpeechRecognition);
 
     const useNativeCapacitorStt = false;
-    const useAndroidWhisperStt = isAndroidUa;
-    const useWebSpeechStt = !isApp && !isAndroidUa;
+    const useAndroidWhisperStt = isAndroidUa && (androidWebView || !ctorAvailable);
+    const useWebSpeechStt =
+      !isApp && !useAndroidWhisperStt && ctorAvailable;
 
     return {
       isAndroidUa,

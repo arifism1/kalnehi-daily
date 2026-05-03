@@ -950,7 +950,7 @@ export function GlobalVoiceSheet() {
     onPartialTranscript: handleNativeCapPartialTranscript,
   });
 
-  // MediaRecorder + Groq transcribe for any Android UA (Kalnehi shell or Chrome browser).
+  // MediaRecorder + Groq when Web Speech unavailable (WebView) or as fallback after Web Speech errors.
   const {
     isRecording: isWhisperRecording,
     isTranscribing: isWhisperTranscribing,
@@ -984,7 +984,7 @@ export function GlobalVoiceSheet() {
     if (routing.useBrowserWhisperStt) {
       if (!whisperMicSupported) {
         setError(
-          "Voice commands need a microphone. Allow mic access or try the Kalnehi Daily app from the Play Store.",
+          "Voice commands need a microphone. Allow mic access in your browser settings.",
         );
         setPhase("error");
         return;
@@ -996,7 +996,7 @@ export function GlobalVoiceSheet() {
 
     if (!isSupported) {
       setError(
-        "Voice commands are not supported in this browser. Try Chrome or the Kalnehi Daily app.",
+        "Voice commands are not supported in this browser. Try Google Chrome (desktop or Android, including Install app).",
       );
       setPhase("error");
       return;
