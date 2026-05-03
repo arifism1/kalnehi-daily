@@ -490,6 +490,16 @@ body {
     margin: 0;
     border: none;
   }
+
+  /** Entrance for fixed free-trial welcome toast (see FreeTrialWelcomeBanner). */
+  .kal-trial-welcome-toast-in {
+    animation: kal-fade-up 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .kal-trial-welcome-toast-in {
+      animation: none;
+    }
+  }
 }
 
 /* ── Utilities ────────────────────────────────────────────────────────── */

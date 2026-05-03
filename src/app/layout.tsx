@@ -201,11 +201,10 @@ export default function RootLayout({
       className={`${dmSans.variable} ${dmSerifDisplay.variable} ${syne.variable} h-full min-h-dvh min-h-[-webkit-fill-available] antialiased`}
     >
       <body className="flex min-h-dvh min-h-[-webkit-fill-available] flex-col bg-kal-page font-sans text-kal-text">
-        <GoogleTagManagerNoScript />
         <MetaPixelNoScript />
-        {/* next/script belongs in <body>; strategies still inject into <head> when applicable */}
-        <GoogleTagManagerHead />
         <MetaPixelScript />
+        <GoogleTagManagerNoScript />
+        <GoogleTagManagerHead />
         <Suspense fallback={null}>
           <MetaPixelRouteTracker />
         </Suspense>

@@ -60,6 +60,9 @@ const MINIMAL_CHROME_PATHS = new Set([
   "/pricing",
 ]);
 
+/** Free-trial welcome toast: dashboard + subscription only (not syllabus, tools, etc.). */
+const FREE_TRIAL_WELCOME_BANNER_PATHS = new Set(["/home", "/my-subscription"]);
+
 export function KalnehiChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -67,6 +70,8 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
 
   const onboarding = pathname === "/onboarding";
   const minimalChrome = MINIMAL_CHROME_PATHS.has(pathname);
+  const showFreeTrialBanner =
+    pathname != null && FREE_TRIAL_WELCOME_BANNER_PATHS.has(pathname);
 
   useEffect(() => {
     if (process.env.NODE_ENV === "development") {
@@ -214,6 +219,8 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
+      {showFreeTrialBanner ? <FreeTrialWelcomeBanner /> : null}
+
       {/* ── Body: sidebar + content ─────────────────────────────────────── */}
       <div className="kal-chrome-body flex min-w-0 flex-1 overflow-hidden">
         {/* Desktop sidebar — hidden below lg (900px) */}
@@ -232,7 +239,6 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
             )}
           >
             <SyncStatusBanner />
-            <FreeTrialWelcomeBanner />
             {children}
           </main>
         </div>

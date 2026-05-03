@@ -5,7 +5,7 @@ import bundleAnalyzer from "@next/bundle-analyzer";
  * App CSP (enforced + report-only duplicate for tuning in devtools).
  * Still allows inline/eval for third-party scripts (GA, Razorpay, MediaPipe); tighten with
  * nonces/hashes in a follow-up when feasible.
- * Covers Supabase, Firebase, Vercel Analytics, GA4, Razorpay checkout, MediaPipe CDNs.
+ * Covers Supabase, Firebase, Vercel Analytics, GA4, Meta Pixel, Razorpay checkout, MediaPipe CDNs.
  */
 const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
@@ -16,6 +16,7 @@ const CONTENT_SECURITY_POLICY = [
     "'self'",
     "'unsafe-inline'",
     "'unsafe-eval'",
+    "https://connect.facebook.net",
     "https://va.vercel-scripts.com",
     "https://vitals.vercel-insights.com",
     "https://www.googletagmanager.com",
@@ -34,6 +35,9 @@ const CONTENT_SECURITY_POLICY = [
     "'self'",
     "https://*.supabase.co",
     "wss://*.supabase.co",
+    "https://connect.facebook.net",
+    "https://*.facebook.com",
+    "https://*.fbcdn.net",
     "https://*.googleapis.com",
     "https://*.gstatic.com",
     "https://www.google-analytics.com",
