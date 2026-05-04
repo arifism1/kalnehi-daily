@@ -21,5 +21,41 @@ export const VOICE_MAX_SESSION_MS = 60_000;
 /** Wall-clock cap for boss / global voice so long planning isn’t cut at 60s. */
 export const VOICE_COMMAND_MAX_SESSION_MS = 120_000;
 
+/**
+ * Android Web Speech: longer trailing silence before auto-stop (phrase gaps, noisy mics).
+ * Hook uses `Math.max(callerSilence, this)` on Android Chrome-like hosts.
+ */
+export const VOICE_ANDROID_TRAILING_SILENCE_MS = 60_000;
+
+/**
+ * Brief delay before the first {@link SpeechRecognition#start} on Android so capture
+ * is less likely to clip the opening syllable.
+ */
+export const VOICE_ANDROID_PRE_START_DELAY_MS = 220;
+
+/**
+ * Android only: defer arming trailing-silence after {@link SpeechRecognition#onspeechend}
+ * so clause-sized pauses do not arm an early Stop.
+ */
+export const VOICE_ANDROID_SPEECH_END_GRACE_MS = 450;
+
+/**
+ * Android Web Speech: extend short session caps (commands / generic 60s) so mid-utterance
+ * restarts do not cut off. Long-form callers using {@link VOICE_LONG_FORM_MAX_SESSION_MS} are unchanged.
+ */
+export const VOICE_ANDROID_COMMAND_MAX_SESSION_MS = 180_000;
+
+/** Long-form session cap above this is treated as “already generous” — no Android bump. */
+export const VOICE_ANDROID_SESSION_BUMP_BELOW_MS = 10 * 60 * 1000;
+
+/** Max engine `onend` → `start()` restarts per user listen session (Android phrase-gap recovery). */
+export const VOICE_ANDROID_MAX_ENGINE_RESTARTS = 48;
+
+/**
+ * Android only: stagger {@link SpeechRecognition#start} after {@link SpeechRecognition#onend}
+ * to reduce flaky restarts between phrases.
+ */
+export const VOICE_ANDROID_ONEND_RESTART_JITTER_MS = 50;
+
 /** Safety wall-clock cap for long-form native STT sessions (30 min). */
 export const VOICE_LONG_FORM_MAX_SESSION_MS = 30 * 60 * 1000;

@@ -934,7 +934,7 @@ export function GlobalVoiceSheet() {
     error: sttError,
     clearError: clearSttError,
   } = useDeviceSpeechRecognition({
-    lang: "en-US",
+    lang: "en-IN",
     silenceMs: VOICE_COMMAND_SILENCE_MS,
     maxSessionMs: VOICE_COMMAND_MAX_SESSION_MS,
     interimPreview: true,

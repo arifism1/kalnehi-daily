@@ -442,6 +442,8 @@ export function DoubtTracker() {
     [user, buildContextSnapshot, syllabusSubjects, linesForSubject],
   );
 
+  const routing = useVoiceSttRouting();
+
   const {
     clearError: clearVoiceRecError,
     error: voiceRecError,
@@ -462,8 +464,6 @@ export function DoubtTracker() {
       void handleVoiceTranscript(transcript, durationSeconds);
     },
   });
-
-  const routing = useVoiceSttRouting();
 
   const {
     clearError: clearCapError,

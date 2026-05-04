@@ -170,6 +170,7 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
   const lastVoiceDurationSecondsRef = useRef<number | undefined>(undefined);
 
   const routing = useVoiceSttRouting();
+  const listeningHintAndroidWebSpeech = routing.useWebSpeechStt && routing.isAndroidUa;
 
   useEffect(() => {
     setPreviewRows([emptyPreviewRow()]);
@@ -273,8 +274,10 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
     error: recognitionError,
     isListening,
     isSupported: webSpeechSupported,
+    speechPausedAfterUtterance,
     startListening,
     stopListening,
+    transcriptionQualityHint,
   } = useDeviceSpeechRecognition({
     lang,
     maxSessionMs: VOICE_LONG_FORM_MAX_SESSION_MS,
@@ -351,7 +354,9 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
       setFallbackPanel(null);
       clearWhisperError();
       void startWhisperRecording();
-    } else void startListening();
+    } else {
+      void startListening();
+    }
   }, [
     routing.useNativeCapacitorStt,
     routing.useBrowserWhisperStt,
@@ -653,6 +658,11 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
                   On Android, transcription uses an English‑tuned cloud model — English or Hinglish
                   tends to parse most reliably into tasks.
                 </span>
+              ) : listeningHintAndroidWebSpeech ? (
+                <span className="mt-1 block text-[10px] leading-snug text-kal-text-secondary/80">
+                  On Android Chrome, listening stays active between phrases. Wait a beat after tapping the
+                  mic, then speak clearly toward the phone—final text appears when you stop.
+                </span>
               ) : null}
             </label>
           </div>
@@ -708,7 +718,12 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
             visible={phase === "listening"}
             variant={routing.useBrowserWhisperStt ? "whisper" : "dictation"}
           />
-          {phase === "listening" && nativeSpeechDraft && routing.useNativeCapacitorStt ? (
+          {phase === "listening" && listeningHintAndroidWebSpeech && speechPausedAfterUtterance ? (
+            <p className="max-w-md px-1 text-[11px] leading-snug text-kal-text-secondary">
+              Brief pause—we&apos;re still listening. Continue when you&apos;re ready, or tap Stop.
+            </p>
+          ) : null}
+{phase === "listening" && nativeSpeechDraft && routing.useNativeCapacitorStt ? (
             <p className="max-w-md rounded-lg border border-kal-border/40 bg-kal-surface/60 px-3 py-2 text-left text-xs leading-snug text-kal-text">
               {nativeSpeechDraft}
             </p>
@@ -915,6 +930,14 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
           >
             Dismiss
           </button>
+        </div>
+      ) : null}
+      {listeningHintAndroidWebSpeech && transcriptionQualityHint ? (
+        <div
+          role="status"
+          className="rounded-[1rem] border border-amber-200/80 bg-amber-50/90 px-4 py-3 text-xs leading-relaxed text-amber-950 dark:border-amber-700/55 dark:bg-amber-950/40 dark:text-amber-50"
+        >
+          {transcriptionQualityHint}
         </div>
       ) : null}
       {error ? (

@@ -3,7 +3,10 @@
 import { useMemo } from "react";
 
 import { usePlatform } from "@/hooks/usePlatform";
-import { isAndroidWebViewUserAgent } from "@/lib/androidWebSpeechEnv";
+import {
+  getSpeechRecognitionCtor,
+  isAndroidWebViewUserAgent,
+} from "@/lib/androidWebSpeechEnv";
 
 export type VoiceSttRouting = {
   /** True when `navigator.userAgent` matches Android. */
@@ -44,8 +47,7 @@ export function useVoiceSttRouting(): VoiceSttRouting {
     const isAndroidUa = /Android/i.test(ua);
     const androidWebView = isAndroidWebViewUserAgent(ua);
     const ctorAvailable =
-      typeof window !== "undefined" &&
-      !!(window.SpeechRecognition ?? window.webkitSpeechRecognition);
+      typeof window !== "undefined" && Boolean(getSpeechRecognitionCtor(window));
 
     const useNativeCapacitorStt = false;
     const useAndroidWhisperStt = isAndroidUa && (androidWebView || !ctorAvailable);
