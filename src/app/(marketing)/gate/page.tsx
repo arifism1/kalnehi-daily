@@ -6,7 +6,6 @@ import { FeatureBlock } from "@/components/marketing/FeatureBlock";
 import { FAQBlock } from "@/components/marketing/FAQBlock";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
-import { ogImageExam } from "@/lib/og-image";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
 import { SITE_NAME } from "@/lib/seo-metadata";
 
@@ -14,7 +13,6 @@ export const metadata = marketingPageMetadata({
   path: "/gate",
   title: `Daily Planner for GATE Preparation | ${SITE_NAME}`,
   description: `GATE covers 10+ technical subjects across 6 months. Kalnehi Daily tracks your subject-wise progress, helps you plan revision before the exam, and lets Mastermind identify your biggest score gaps.`,
-  ogImage: ogImageExam("GATE Preparation"),
 });
 
 const GATE_CSE_SUBJECTS = [
