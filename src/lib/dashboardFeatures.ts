@@ -65,8 +65,8 @@ export const FEATURE_CATEGORIES: FeatureCategoryDef[] = [
       "mock-test-tracker",
       "progress",
       "syllabus-tracker",
-      "backlog-list",
       "backlog-tracker",
+      "backlog-list",
       "target-score-blueprint",
       "my-target",
     ] as const,
@@ -164,16 +164,16 @@ export const DASHBOARD_FEATURES: DashboardFeature[] = [
     description: "Track chapter and microtopic progress with weight-aware precision.",
   },
   {
-    id: "backlog-list",
-    title: "Backlog List",
-    icon: ListChecks,
-    description: "See planned vs unplanned backlog items and jump to scheduling when ready.",
-  },
-  {
     id: "backlog-tracker",
     title: "Backlog Tracker",
     icon: Sparkles,
     description: "Capture, split, and turn backlog text into time-boxed tasks for your plan.",
+  },
+  {
+    id: "backlog-list",
+    title: "Backlog List",
+    icon: ListChecks,
+    description: "See planned vs unplanned backlog items and jump to scheduling when ready.",
   },
   {
     id: "target-score-blueprint",

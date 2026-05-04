@@ -51,16 +51,16 @@ export function BacklogRecoveryHomeNudge() {
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         <Link
-          href="/task-list"
+          href="/backlog-tracker"
           className="inline-flex rounded-xl bg-kal-accent px-3 py-2 text-xs font-bold text-kal-accent-foreground"
         >
-          Open Backlog List
+          Open Backlog Tracker
         </Link>
         <Link
-          href="/backlog-tracker"
+          href="/backlog-list"
           className="inline-flex rounded-xl border border-kal-border px-3 py-2 text-xs font-semibold text-kal-text"
         >
-          Backlog Tracker
+          Backlog List
         </Link>
       </div>
     </div>

@@ -166,7 +166,7 @@ const FEATURE_ITEM_BY_ID: Record<string, FeatureItem> = {
   },
   "backlog-list": {
     id: "backlog-list",
-    href: "/task-list",
+    href: "/backlog-list",
     label: "Backlog List",
     icon: ListChecks,
     staticHint: "Planned vs unplanned items",

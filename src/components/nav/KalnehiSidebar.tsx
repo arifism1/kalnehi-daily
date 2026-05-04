@@ -71,7 +71,7 @@ const SIDEBAR_LINK_BY_ID: Record<string, SidebarItem> = {
   "mock-test-tracker": { href: "/mock-tests", label: "Mock Test Tracker", icon: TestTube2 },
   progress: { href: "/progress", label: "Progress", icon: TrendingUp },
   "syllabus-tracker": { href: "/syllabus", label: "Syllabus Tracker", icon: BookOpen },
-  "backlog-list": { href: "/task-list", label: "Backlog List", icon: ListChecks },
+  "backlog-list": { href: "/backlog-list", label: "Backlog List", icon: ListChecks },
   "backlog-tracker": { href: "/backlog-tracker", label: "Backlog Tracker", icon: Sparkles },
   "target-score-blueprint": {
     href: "/target-score-blueprint",

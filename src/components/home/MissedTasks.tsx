@@ -464,12 +464,12 @@ export function MissedTasks() {
       <div className="mt-3 rounded-xl border border-amber-200/60 bg-white/60 px-3 py-2 dark:bg-stone-900/50">
         <p className="text-[11px] leading-snug text-kal-text-secondary dark:text-amber-100/90">
           Exam backlog (recovery loop):{" "}
-          <Link href="/task-list" className="font-semibold text-kal-accent underline">
-            Backlog List
-          </Link>{" "}
-          ·{" "}
           <Link href="/backlog-tracker" className="font-semibold text-kal-accent underline">
             Backlog Tracker
+          </Link>{" "}
+          ·{" "}
+          <Link href="/backlog-list" className="font-semibold text-kal-accent underline">
+            Backlog List
           </Link>
         </p>
       </div>

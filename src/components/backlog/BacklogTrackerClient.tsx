@@ -684,7 +684,7 @@ export function BacklogTrackerClient() {
       ) : null}
 
       <div className="flex flex-wrap gap-3 text-sm">
-        <Link href="/task-list" className="font-semibold text-kal-accent hover:underline">
+        <Link href="/backlog-list" className="font-semibold text-kal-accent hover:underline">
           Backlog List
         </Link>
         <Link

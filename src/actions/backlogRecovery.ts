@@ -29,7 +29,7 @@ export type OrganizedBacklogItemInput = {
 };
 
 const REVAL_PATHS = [
-  "/task-list",
+  "/backlog-list",
   "/backlog-tracker",
   "/daily-plan",
   "/",

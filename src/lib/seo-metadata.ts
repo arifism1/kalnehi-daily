@@ -51,7 +51,7 @@ export type KalnehiPageSeoKey =
   | "daily-debrief"
   | "mock-tests"
   | "mistake-log"
-  | "taskList"
+  | "backlogList"
   | "backlogTracker";
 
 const PAGE_SEO: Record<
@@ -198,8 +198,8 @@ const PAGE_SEO: Record<
     description:
       `Log every mistake with 4-type taxonomy: Knowledge Gap, Application Error, Careless, Time Pressure. ${SITE_NAME} reveals your real bottleneck across any exam.`,
   },
-  taskList: {
-    path: "/task-list",
+  backlogList: {
+    path: "/backlog-list",
     title: `Backlog List — syllabus recovery | ${SITE_NAME}`,
     description: `View planned and unplanned recovery tasks; open Backlog Tracker to add new backlog items in ${SITE_NAME}.`,
   },

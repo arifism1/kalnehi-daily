@@ -255,7 +255,7 @@ export function EndOfDayRecapClient() {
               Still catching up on{" "}
               <span className="font-semibold text-kal-text">{backlogPending}</span> backlog{" "}
               item{backlogPending === 1 ? "" : "s"} —{" "}
-              <Link href="/task-list" className="font-semibold text-kal-accent underline">
+              <Link href="/backlog-list" className="font-semibold text-kal-accent underline">
                 Backlog List
               </Link>{" "}
                 Backlog List keeps everything in motion.
