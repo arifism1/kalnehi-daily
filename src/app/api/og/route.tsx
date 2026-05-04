@@ -2,9 +2,16 @@ import { ImageResponse } from "next/og";
 
 import { SITE_BRAND } from "@/lib/seo-metadata";
 
+export const revalidate = 3600;
+
 export const runtime = "edge";
 
 const ogSize = { width: 1200, height: 630 } as const;
+
+const ogCacheHeaders = {
+  "Cache-Control":
+    "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400",
+};
 
 const accent = "#FF7A00";
 const bg = "linear-gradient(135deg, #FAF7F2 0%, #FFF5EB 45%, #FAF7F2 100%)";
@@ -77,7 +84,7 @@ export async function GET(request: Request) {
           </div>
         </div>
       ),
-      { ...ogSize },
+      { ...ogSize, headers: ogCacheHeaders },
     );
   }
 
@@ -132,7 +139,7 @@ export async function GET(request: Request) {
           </div>
         </div>
       ),
-      { ...ogSize },
+      { ...ogSize, headers: ogCacheHeaders },
     );
   }
 
@@ -185,6 +192,6 @@ export async function GET(request: Request) {
         </div>
       </div>
     ),
-    { ...ogSize },
+    { ...ogSize, headers: ogCacheHeaders },
   );
 }
