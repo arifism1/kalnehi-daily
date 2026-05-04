@@ -5,7 +5,6 @@ import { FeatureBlock } from "@/components/marketing/FeatureBlock";
 import { FAQBlock } from "@/components/marketing/FAQBlock";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
-import { ogImageExam } from "@/lib/og-image";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
 import {
   SMART_PLAN_ANNUAL_BILLING_LABEL,
@@ -19,7 +18,6 @@ export const metadata = marketingPageMetadata({
   path: "/neet",
   title: `Daily Planner for NEET Preparation | ${SITE_NAME}`,
   description: `Track Biology, Physics and Chemistry at the chapter level. Mastermind identifies which NEET topics have the highest weightage vs your current completion. Start free for 3 days.`,
-  ogImage: ogImageExam("NEET Preparation"),
 });
 
 const SYLLABUS = [

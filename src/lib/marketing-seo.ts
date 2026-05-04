@@ -42,7 +42,7 @@ export type MarketingPageMetadataInput = {
   articleAuthor?: string;
   /**
    * Path or full URL. Defaults to default OG image route.
-   * Example: `/api/og?title=JEE&type=exam` or `https://...`
+   * Example: `/jee/opengraph-image` or `https://…/blog/my-post/opengraph-image`
    */
   ogImage?: string;
   /**

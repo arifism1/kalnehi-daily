@@ -6,7 +6,6 @@ import { FeatureBlock } from "@/components/marketing/FeatureBlock";
 import { FAQBlock } from "@/components/marketing/FAQBlock";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
-import { ogImageExam } from "@/lib/og-image";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
 import { SITE_NAME } from "@/lib/seo-metadata";
 
@@ -14,7 +13,6 @@ export const metadata = marketingPageMetadata({
   path: "/cat",
   title: `Daily Planner for CAT Preparation | ${SITE_NAME}`,
   description: `CAT prep alongside a job or college is brutal without a system. Kalnehi Daily helps you track Quant, VARC and DILR, plan mock review sessions, and build daily consistency that converts to percentile.`,
-  ogImage: ogImageExam("CAT Preparation"),
 });
 
 const SYLLABUS = [

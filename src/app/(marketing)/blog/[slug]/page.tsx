@@ -5,7 +5,6 @@ import { CTABanner } from "@/components/marketing/CTABanner";
 import { BlogCard } from "@/components/marketing/BlogCard";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { ArticleJsonLd } from "@/components/seo/ArticleJsonLd";
-import { ogImageBlog } from "@/lib/og-image";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
 import { SITE_NAME } from "@/lib/seo-metadata";
 import { absoluteUrl } from "@/lib/site";
@@ -24,7 +23,6 @@ export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const post = getPostBySlug(slug);
   if (!post) return {};
-  const label = CATEGORY_LABELS[post.category] ?? post.category;
   return marketingPageMetadata({
     path: `/blog/${slug}`,
     title: `${post.title} | ${SITE_NAME}`,
@@ -33,7 +31,6 @@ export async function generateMetadata({ params }: Props) {
     articlePublishedTime: post.publishedAt,
     articleModifiedTime: post.modifiedAt ?? post.publishedAt,
     articleAuthor: "Kalnehi Daily",
-    ogImage: ogImageBlog(post.title, label),
   });
 }
 
@@ -137,7 +134,7 @@ export default async function BlogPostPage({ params }: Props) {
         description={post.description}
         publishedAt={post.publishedAt}
         modifiedAt={post.modifiedAt}
-        imageUrl={absoluteUrl(ogImageBlog(post.title, CATEGORY_LABELS[post.category] ?? post.category))}
+        imageUrl={absoluteUrl(`/blog/${post.slug}/opengraph-image`)}
         breadcrumbs={[
           { name: "Home", path: "/" },
           { name: "Blog", path: "/blog" },

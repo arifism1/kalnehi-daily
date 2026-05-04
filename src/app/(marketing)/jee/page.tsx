@@ -5,7 +5,6 @@ import { FeatureBlock } from "@/components/marketing/FeatureBlock";
 import { FAQBlock } from "@/components/marketing/FAQBlock";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
-import { ogImageExam } from "@/lib/og-image";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
 import { SMART_PLAN_MONTHLY_DISPLAY } from "@/lib/smartPlanPricing";
 import { SITE_NAME } from "@/lib/seo-metadata";
@@ -16,7 +15,6 @@ export const metadata = marketingPageMetadata({
   path: "/jee",
   title: `Daily Planner for JEE Preparation | ${SITE_NAME}`,
   description: `Track every PCM topic, plan your day with voice, and let Mastermind show exactly where your next 3 study hours should go. Built for JEE Main & Advanced aspirants. Start free.`,
-  ogImage: ogImageExam("JEE Preparation"),
 });
 
 const SYLLABUS = [
