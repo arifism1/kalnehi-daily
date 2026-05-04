@@ -51,42 +51,58 @@ function todayRangeUtc() {
   };
 }
 
-async function insertIfMissingToday(
+type PlannedAutomatedNotification = {
+  kind: NotificationKind;
+  title: string;
+  message: string;
+};
+
+async function insertAutomatedNotificationsIfMissing(
   supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
   userId: string,
-  kind: NotificationKind,
-  title: string,
-  message: string,
-) {
+  planned: PlannedAutomatedNotification[],
+): Promise<void> {
+  if (planned.length === 0) return;
+
   const { startIso, endIso } = todayRangeUtc();
-  const { count, error: countError } = await supabase
+
+  const { data: existing, error: selectError } = await supabase
     .from("user_notifications")
-    .select("id", { count: "exact", head: true })
+    .select("kind, title")
     .eq("user_id", userId)
-    .eq("kind", kind)
-    .eq("title", title)
     .gte("created_at", startIso)
     .lte("created_at", endIso);
-  if (countError) {
-    if (isUserNotificationsTableMissing(countError)) {
+
+  if (selectError) {
+    if (isUserNotificationsTableMissing(selectError)) {
       console.log(
         "[user_notifications] table missing; skip insert until migration is applied",
-        countError,
+        selectError,
       );
       return;
     }
-    throw countError;
+    throw selectError;
   }
-  if ((count ?? 0) > 0) return;
 
-  const row: TablesInsert<"user_notifications"> = {
-    user_id: userId,
-    kind,
-    title,
-    message,
-    read: false,
-  };
-  const { error } = await supabase.from("user_notifications").insert(row);
+  const present = new Set(
+    (existing ?? []).map((r) => `${(r as { kind: string }).kind}\0${(r as { title: string }).title}`),
+  );
+
+  const toInsert: TablesInsert<"user_notifications">[] = [];
+  for (const p of planned) {
+    if (present.has(`${p.kind}\0${p.title}`)) continue;
+    toInsert.push({
+      user_id: userId,
+      kind: p.kind,
+      title: p.title,
+      message: p.message,
+      read: false,
+    });
+  }
+
+  if (toInsert.length === 0) return;
+
+  const { error } = await supabase.from("user_notifications").insert(toInsert);
   if (error) {
     if (isUserNotificationsTableMissing(error)) {
       console.log(
@@ -112,71 +128,50 @@ export async function ensureAutomatedNotifications(): Promise<
 
     const today = format(new Date(), "yyyy-MM-dd");
 
-    const [{ count: incompleteTaskCount, error: incompleteCountError }, { data: todayTasks, error: dayErr }, { data: streakRows, error: streakErr }] =
-      await Promise.all([
-        supabase
-          .from("tasks")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", user.id)
-          .neq("status", "completed"),
-        supabase
-          .from("tasks")
-          .select("id, status")
-          .eq("user_id", user.id)
-          .eq("assigned_date", today),
-        supabase
-          .from("tasks")
-          .select("assigned_date")
-          .eq("user_id", user.id)
-          .eq("status", "completed")
-          .gte("assigned_date", format(new Date(Date.now() - 1000 * 60 * 60 * 24 * 30), "yyyy-MM-dd"))
-          .order("assigned_date", { ascending: false }),
-      ]);
-    if (incompleteCountError) throw incompleteCountError;
-    if (dayErr) throw dayErr;
-    if (streakErr) throw streakErr;
-
-    const incompleteTasks = incompleteTaskCount ?? 0;
-    await insertIfMissingToday(
-      supabase,
-      user.id,
-      "reminder",
-      "Open tasks reminder",
-      incompleteTasks > 0
-        ? `You have ${incompleteTasks} incomplete task${incompleteTasks === 1 ? "" : "s"} in your plan. Start with one high-impact task now.`
-        : "No incomplete tasks in your backlog right now. Great momentum — keep it up.",
+    const { data: signalRows, error: signalErr } = await supabase.rpc(
+      "automated_notification_task_signals",
+      { p_today: today },
     );
+    if (signalErr) throw signalErr;
 
-    const totalToday = todayTasks?.length ?? 0;
-    const completedToday = (todayTasks ?? []).filter((t) => t.status === "completed").length;
-    await insertIfMissingToday(
-      supabase,
-      user.id,
-      "deadline",
-      "Daily progress summary",
-      totalToday > 0
-        ? `Today's progress: ${completedToday}/${totalToday} tasks completed.`
-        : "No tasks scheduled for today yet. Add a small target to stay consistent.",
-    );
-
-    const completedDays = new Set((streakRows ?? []).map((r) => r.assigned_date));
-    let streak = 0;
-    let cursor = new Date();
-    while (streak < 30) {
-      const key = format(cursor, "yyyy-MM-dd");
-      if (!completedDays.has(key)) break;
-      streak += 1;
-      cursor = new Date(cursor.getTime() - 1000 * 60 * 60 * 24);
+    const sig = signalRows?.[0];
+    if (!sig) {
+      throw new Error("automated_notification_task_signals returned no row");
     }
+
+    const incompleteTasks = Number(sig.incomplete_task_count) || 0;
+    const totalToday = Number(sig.today_task_total) || 0;
+    const completedToday = Number(sig.today_task_completed) || 0;
+    const streak = Number(sig.completion_streak) || 0;
+
+    const planned: PlannedAutomatedNotification[] = [
+      {
+        kind: "reminder",
+        title: "Open tasks reminder",
+        message:
+          incompleteTasks > 0
+            ? `You have ${incompleteTasks} incomplete task${incompleteTasks === 1 ? "" : "s"} in your plan. Start with one high-impact task now.`
+            : "No incomplete tasks in your backlog right now. Great momentum — keep it up.",
+      },
+      {
+        kind: "deadline",
+        title: "Daily progress summary",
+        message:
+          totalToday > 0
+            ? `Today's progress: ${completedToday}/${totalToday} tasks completed.`
+            : "No tasks scheduled for today yet. Add a small target to stay consistent.",
+      },
+    ];
+
     if (streak >= 2) {
-      await insertIfMissingToday(
-        supabase,
-        user.id,
-        "streak",
-        "Streak alert",
-        `You're on a ${streak}-day completion streak. Protect it today.`,
-      );
+      planned.push({
+        kind: "streak",
+        title: "Streak alert",
+        message: `You're on a ${streak}-day completion streak. Protect it today.`,
+      });
     }
+
+    await insertAutomatedNotificationsIfMissing(supabase, user.id, planned);
 
     return { ok: true };
   } catch (e) {

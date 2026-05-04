@@ -3238,6 +3238,17 @@ export type Database = {
         }
         Returns: Json
       }
+      automated_notification_task_signals: {
+        Args: {
+          p_today: string
+        }
+        Returns: {
+          completion_streak: number
+          incomplete_task_count: number
+          today_task_completed: number
+          today_task_total: number
+        }[]
+      }
       auth_rate_limit_password_reset: {
         Args: { p_email: string; p_ip: string; p_step: string }
         Returns: Json

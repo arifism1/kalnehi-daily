@@ -100,10 +100,8 @@ export default function NotificationsPage() {
   // --- Active segment ---
   const [segment, setSegment] = useState<Segment>("general");
 
-  // Load general notifications on mount.
-  // ensureAutomatedNotifications and listUserNotifications run in parallel.
-  // On the rare first-load-of-the-day case, today's auto-inserted notifications may
-  // not appear until next visit — acceptable trade-off for the 2x speed gain.
+  // Load list first; do not block paint on ensureAutomatedNotifications (task scans + inserts).
+  // After ensure completes, refetch once so today’s auto-inserted rows appear without a full reload.
   useEffect(() => {
     if (!userId) {
       setNotifications([]);
@@ -115,27 +113,34 @@ export default function NotificationsPage() {
     setGeneralError(null);
     void (async () => {
       try {
-        const [ensureRes, listRes] = await Promise.all([
-          ensureAutomatedNotifications(),
-          listUserNotifications(),
-        ]);
+        const ensureP = ensureAutomatedNotifications();
 
+        const listRes = await listUserNotifications();
         if (cancelled) return;
-
-        if (!ensureRes.ok) setGeneralError(surfaceErrorForUi(ensureRes.error));
-
         if (!listRes.ok) {
           setGeneralError(surfaceErrorForUi(listRes.error));
           setNotifications([]);
+          setLoadingGeneral(false);
+          void ensureP.catch(() => {});
           return;
         }
         setNotifications(listRes.notifications);
+        setLoadingGeneral(false);
+
+        const ensureRes = await ensureP;
+        if (cancelled) return;
+        if (!ensureRes.ok) {
+          console.warn("[notifications] ensureAutomatedNotifications failed", ensureRes.error);
+        } else {
+          const refreshRes = await listUserNotifications();
+          if (cancelled || !refreshRes.ok) return;
+          setNotifications(refreshRes.notifications);
+        }
       } catch (e) {
         if (cancelled) return;
         setGeneralError(toUserFacingMessage(e));
         setNotifications([]);
-      } finally {
-        if (!cancelled) setLoadingGeneral(false);
+        setLoadingGeneral(false);
       }
     })();
     return () => { cancelled = true; };
