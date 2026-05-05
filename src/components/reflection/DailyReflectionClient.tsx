@@ -14,6 +14,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { VoiceListeningHint } from "@/components/voice/VoiceListeningHint";
+import { VoiceLiveTranscriptOverlay } from "@/components/voice/VoiceLiveTranscriptOverlay";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
 import { useCapacitorSpeech } from "@/hooks/useCapacitorSpeech";
@@ -143,20 +144,31 @@ export function DailyReflectionClient({
     return () => { cancelled = true; };
   }, [today, showInlineRecentHistory]);
 
-  const voiceRef = useRef<Field | null>(null);
-  voiceRef.current = activeVoiceField;
+  /** Target field for the in-flight utterance — must survive mic Stop until `onTranscript` fires. */
+  const voicePendingFieldRef = useRef<Field | null>(null);
+  /** Drives overlay visibility + subtitle when `activeVoiceField` is cleared on Stop. */
+  const [voiceOverlayField, setVoiceOverlayField] = useState<Field | null>(null);
 
   const routing = useVoiceSttRouting();
 
+  const disarmVoiceSession = useCallback(() => {
+    voicePendingFieldRef.current = null;
+    setVoiceOverlayField(null);
+    setActiveVoiceField(null);
+    setVoicePreview("");
+  }, []);
+
   const handleVoiceTranscript = useCallback(({ transcript }: { transcript: string; occurredAt: string; durationSeconds: number }) => {
-    const field = voiceRef.current;
+    const field = voicePendingFieldRef.current;
     if (!field) return;
+    voicePendingFieldRef.current = null;
+    setVoiceOverlayField(null);
+    setActiveVoiceField(null);
+    setVoicePreview("");
     setDraft((prev) => ({
       ...prev,
       [field]: prev[field] ? `${prev[field]} ${transcript}` : transcript,
     }));
-    setVoicePreview("");
-    setActiveVoiceField(null);
   }, []);
 
   const { isListening, isSupported: webSpeechSupported, startListening, stopListening, error: voiceError, clearError: clearVoiceError } =
@@ -167,6 +179,7 @@ export function DailyReflectionClient({
       interimPreview: true,
       onPreviewTranscript: setVoicePreview,
       onTranscript: handleVoiceTranscript,
+      reportUsage: routing.useWebSpeechStt ? "onTranscript" : "none",
     });
 
   const {
@@ -217,10 +230,16 @@ export function DailyReflectionClient({
         ? whisperError
         : voiceError;
     if (err) {
-      setActiveVoiceField(null);
-      setVoicePreview("");
+      disarmVoiceSession();
     }
-  }, [voiceError, capError, whisperError, routing.useNativeCapacitorStt, routing.useBrowserWhisperStt]);
+  }, [
+    voiceError,
+    capError,
+    whisperError,
+    routing.useNativeCapacitorStt,
+    routing.useBrowserWhisperStt,
+    disarmVoiceSession,
+  ]);
 
   const reflectionVoiceMicError = routing.useNativeCapacitorStt
     ? capError
@@ -228,16 +247,32 @@ export function DailyReflectionClient({
       ? whisperError
       : voiceError;
 
+  const stopVoiceSession = useCallback(() => {
+    if (routing.useNativeCapacitorStt && isCapRecording) stopCapRecording();
+    else if (routing.useBrowserWhisperStt && isWhisperRecording) stopWhisperRecording();
+    else if (isListening) stopListening();
+  }, [
+    routing.useNativeCapacitorStt,
+    routing.useBrowserWhisperStt,
+    isCapRecording,
+    isWhisperRecording,
+    isListening,
+    stopCapRecording,
+    stopWhisperRecording,
+    stopListening,
+  ]);
+
   const toggleVoice = useCallback(
     async (field: Field) => {
       if (routing.useNativeCapacitorStt) {
         if (isCapRecording) {
           stopCapRecording();
           setActiveVoiceField(null);
-          setVoicePreview("");
         } else {
           clearCapError();
           setVoicePreview("");
+          voicePendingFieldRef.current = field;
+          setVoiceOverlayField(field);
           setActiveVoiceField(field);
           await startCapRecording();
         }
@@ -245,19 +280,22 @@ export function DailyReflectionClient({
         if (isWhisperRecording) {
           stopWhisperRecording();
           setActiveVoiceField(null);
-          setVoicePreview("");
         } else {
           clearWhisperError();
           setVoicePreview("");
+          voicePendingFieldRef.current = field;
+          setVoiceOverlayField(field);
           setActiveVoiceField(field);
           await startWhisperRecording();
         }
       } else if (isListening) {
         stopListening();
         setActiveVoiceField(null);
-        setVoicePreview("");
       } else {
         clearVoiceError();
+        setVoicePreview("");
+        voicePendingFieldRef.current = field;
+        setVoiceOverlayField(field);
         setActiveVoiceField(field);
         await startListening();
       }
@@ -324,6 +362,36 @@ export function DailyReflectionClient({
 
   const showForm = isEditing || !savedToday;
 
+  const voiceOverlayQuestion =
+    voiceOverlayField !== null
+      ? QUESTIONS.find((q) => q.field === voiceOverlayField)?.question
+      : undefined;
+
+  const debriefVoiceOverlayTranscript =
+    voiceOverlayField !== null
+      ? [draft[voiceOverlayField], voicePreview].filter(Boolean).join(" ").trim()
+      : "";
+
+  const debriefVoiceOverlayOpen =
+    showForm &&
+    voiceOverlayField !== null &&
+    (isListeningActive ||
+      Boolean(voicePreview.trim()) ||
+      isWhisperTranscribing ||
+      (routing.useBrowserWhisperStt && isWhisperRecording));
+
+  const debriefVoiceOverlay = (
+    <VoiceLiveTranscriptOverlay
+      open={debriefVoiceOverlayOpen}
+      title="Daily Debrief"
+      subtitle={voiceOverlayQuestion}
+      transcript={debriefVoiceOverlayTranscript}
+      isTranscribing={isWhisperTranscribing}
+      isWhisperRecording={routing.useBrowserWhisperStt && isWhisperRecording}
+      onStop={stopVoiceSession}
+    />
+  );
+
   const subtitle = (
     <p className="text-sm text-kal-text-secondary">
       {formatDate(today)} · 60-second end-of-day check-in
@@ -345,8 +413,11 @@ export function DailyReflectionClient({
   const formSection = showForm ? (
         <div className="space-y-4">
           {QUESTIONS.map(({ field, icon: Icon, question, placeholder, accentClass, borderClass }) => {
-            const isActive = activeVoiceField === field;
-            const currentPreview = isActive && voicePreview ? voicePreview : "";
+            const voiceSessionForField =
+              voiceOverlayField === field || activeVoiceField === field;
+            const textareaValue = voiceSessionForField
+              ? [draft[field], voicePreview].filter(Boolean).join(" ").trim()
+              : draft[field];
 
             return (
               <div
@@ -363,7 +434,7 @@ export function DailyReflectionClient({
                 <div className="relative">
                   <textarea
                     rows={2}
-                    value={isActive && currentPreview ? currentPreview : draft[field]}
+                    value={textareaValue}
                     onChange={(e) => setDraft((prev) => ({ ...prev, [field]: e.target.value }))}
                     placeholder={placeholder}
                     className="w-full resize-none rounded-xl border border-kal-border bg-kal-surface/60 px-3 py-2.5 text-sm text-kal-text placeholder:text-kal-text-secondary/60 focus:outline-none focus:ring-2 focus:ring-kal-accent/40"
@@ -372,15 +443,19 @@ export function DailyReflectionClient({
                     <button
                       type="button"
                       onClick={() => toggleVoice(field)}
-                      aria-label={isActive && isListeningActive ? "Stop voice input" : "Start voice input"}
+                      aria-label={
+                        voiceSessionForField && isListeningActive
+                          ? "Stop voice input"
+                          : "Start voice input"
+                      }
                       className={clsx(
                         "absolute bottom-2 right-2 flex h-7 w-7 items-center justify-center rounded-lg transition-colors",
-                        isActive && isListeningActive
+                        voiceSessionForField && isListeningActive
                           ? "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
                           : "bg-kal-surface text-kal-text-secondary hover:text-kal-accent",
                       )}
                     >
-                      {isActive && isListeningActive ? (
+                      {voiceSessionForField && isListeningActive ? (
                         <MicOff className="h-3.5 w-3.5" />
                       ) : (
                         <Mic className="h-3.5 w-3.5" />
@@ -388,7 +463,7 @@ export function DailyReflectionClient({
                     </button>
                   )}
                 </div>
-                {isActive && isListeningActive && (
+                {voiceSessionForField && isListeningActive && (
                   <div className="space-y-1">
                     <p className="text-xs text-kal-text-secondary animate-pulse">
                       {isWhisperTranscribing
@@ -479,7 +554,9 @@ export function DailyReflectionClient({
 
   if (collapsible) {
     return (
-      <div className="mx-auto max-w-2xl space-y-3">
+      <>
+        {debriefVoiceOverlay}
+        <div className="mx-auto max-w-2xl space-y-3">
         <header className="space-y-0.5">
           <div className="flex items-start justify-between gap-2">
             <button
@@ -523,11 +600,14 @@ export function DailyReflectionClient({
           </div>
         ) : null}
       </div>
+      </>
     );
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <>
+      {debriefVoiceOverlay}
+      <div className="mx-auto max-w-2xl space-y-6">
       <header className="space-y-1">
         <div className="flex items-center justify-between">
           <div>
@@ -540,5 +620,6 @@ export function DailyReflectionClient({
       {formSection}
       {historySection}
     </div>
+    </>
   );
 }

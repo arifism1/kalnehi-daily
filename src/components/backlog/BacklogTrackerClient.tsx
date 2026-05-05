@@ -19,6 +19,7 @@ import {
 import type { BacklogScheduleIntensity } from "@/lib/backlogRecoveryScheduling";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
+import { useVoiceSttRouting } from "@/hooks/useVoiceSttRouting";
 import {
   VOICE_LONG_FORM_MAX_SESSION_MS,
   VOICE_LONG_FORM_SILENCE_MS,
@@ -44,6 +45,7 @@ function clampMinutes(m: number): number {
 export function BacklogTrackerClient() {
   const user = useAuthStore((s) => s.user);
   const today = useCalendarDate();
+  const sttRouting = useVoiceSttRouting();
 
   const [transcript, setTranscript] = useState("");
   const [directTranscript, setDirectTranscript] = useState("");
@@ -256,6 +258,7 @@ export function BacklogTrackerClient() {
       maxSessionMs: VOICE_LONG_FORM_MAX_SESSION_MS,
       silenceMs: VOICE_LONG_FORM_SILENCE_MS,
       onTranscript: ({ transcript: tr }) => appendTranscript(tr),
+      reportUsage: sttRouting.useWebSpeechStt ? "onTranscript" : "none",
     });
 
   const onFinalReview = () => {
