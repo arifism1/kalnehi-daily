@@ -25,6 +25,7 @@ import {
   remainingPhotoScansTrial,
   remainingVoiceSecondsTrial,
 } from "@/lib/freeTrial";
+import { KALNEHI_PROFILE_UPDATED_EVENT } from "@/lib/profileEvents";
 import {
   coerceVoiceMinutesUsed,
   effectiveUsageForDisplay,
@@ -339,6 +340,13 @@ function useSubscriptionAccessState(): SubscriptionData {
       cancelled = true;
     };
   }, [user?.id, fetchKey]);
+
+  useEffect(() => {
+    const onProfile = () => refetch();
+    window.addEventListener(KALNEHI_PROFILE_UPDATED_EVENT, onProfile);
+    return () =>
+      window.removeEventListener(KALNEHI_PROFILE_UPDATED_EVENT, onProfile);
+  }, [refetch]);
 
   return {
     loading,

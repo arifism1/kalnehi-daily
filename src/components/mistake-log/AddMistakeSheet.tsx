@@ -73,6 +73,7 @@ export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects, exam
       interimPreview: true,
       onPreviewTranscript: setVoicePreview,
       onTranscript: handleVoiceTranscript,
+      reportUsage: routing.useWebSpeechStt ? "onTranscript" : "none",
     });
 
   const {

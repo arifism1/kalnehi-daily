@@ -23,7 +23,7 @@ import {
   useState,
 } from "react";
 
-import { VoiceListeningHint } from "@/components/voice/VoiceListeningHint";
+import { VoiceLiveTranscriptOverlay } from "@/components/voice/VoiceLiveTranscriptOverlay";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
 import { useCapacitorSpeech } from "@/hooks/useCapacitorSpeech";
 import { useMediaRecorderVoice } from "@/hooks/useMediaRecorderVoice";
@@ -210,8 +210,8 @@ export function DoubtTracker() {
   const [voiceProcessing, setVoiceProcessing] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const [voiceDoubtQuotaHit, setVoiceDoubtQuotaHit] = useState(false);
-  /** Live partial transcript from Android native STT */
-  const [nativeSpeechDraft, setNativeSpeechDraft] = useState("");
+  /** Live STT partials (Web Speech preview + native shell partials). */
+  const [liveSpeechDraft, setLiveSpeechDraft] = useState("");
   const [voicePreviewOpen, setVoicePreviewOpen] = useState(false);
   const [voicePreview, setVoicePreview] = useState({
     title: "",
@@ -340,6 +340,7 @@ export function DoubtTracker() {
 
   const handleVoiceTranscript = useCallback(
     async (transcript: string, durationSeconds: number) => {
+      setLiveSpeechDraft("");
       const parts = transcript.trim().split(/\s+/).filter(Boolean);
       const deduped: string[] = [];
       for (const p of parts) {
@@ -459,7 +460,10 @@ export function DoubtTracker() {
       setVoiceError(null);
       setVoiceDoubtQuotaHit(false);
       clearVoiceRecError();
+      setLiveSpeechDraft("");
     },
+    interimPreview: true,
+    onPreviewTranscript: setLiveSpeechDraft,
     onTranscript: ({ transcript, durationSeconds }) => {
       void handleVoiceTranscript(transcript, durationSeconds);
     },
@@ -475,10 +479,10 @@ export function DoubtTracker() {
   } = useCapacitorSpeech({
     variant: "longForm",
     onTranscript: ({ transcript, durationSeconds }) => {
-      setNativeSpeechDraft("");
+      setLiveSpeechDraft("");
       void handleVoiceTranscript(transcript, durationSeconds);
     },
-    onPartialTranscript: setNativeSpeechDraft,
+    onPartialTranscript: setLiveSpeechDraft,
     maxMs: VOICE_LONG_FORM_MAX_SESSION_MS,
     lang: voiceLang,
   });
@@ -516,15 +520,19 @@ export function DoubtTracker() {
       setVoiceDoubtQuotaHit(false);
       clearVoiceRecError();
       clearCapError();
-      setNativeSpeechDraft("");
+      setLiveSpeechDraft("");
       void startCapRecording();
     } else if (routing.useBrowserWhisperStt) {
       setVoiceError(null);
       setVoiceDoubtQuotaHit(false);
       clearVoiceRecError();
       clearWhisperError();
+      setLiveSpeechDraft("");
       void startWhisperRecording();
-    } else void startVoiceListeningWeb();
+    } else {
+      setLiveSpeechDraft("");
+      void startVoiceListeningWeb();
+    }
   }, [
     routing.useNativeCapacitorStt,
     routing.useBrowserWhisperStt,
@@ -581,6 +589,15 @@ export function DoubtTracker() {
 
   const voiceBanner = pipelineSpeechError ?? voiceError;
 
+  const doubtVoiceOverlayOpen =
+    !voicePreviewOpen &&
+    Boolean(user?.id) &&
+    (voiceListening ||
+      voiceProcessing ||
+      voiceTranscribingActive ||
+      Boolean(liveSpeechDraft.trim()) ||
+      (routing.useBrowserWhisperStt && isWhisperRecording));
+
   if (!hydrated) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 text-kal-muted">
@@ -599,6 +616,17 @@ export function DoubtTracker() {
   }
 
   return (
+    <>
+      <VoiceLiveTranscriptOverlay
+        open={doubtVoiceOverlayOpen}
+        title="Doubt Tracker"
+        subtitle="Speak your doubt — text updates live; confirm details in the preview sheet."
+        transcript={liveSpeechDraft}
+        isTranscribing={voiceTranscribingActive || voiceProcessing}
+        isWhisperRecording={routing.useBrowserWhisperStt && isWhisperRecording}
+        onStop={stopVoiceListening}
+        stopDisabled={voiceProcessing}
+      />
     <div className="w-full min-w-0 space-y-4 pb-6 sm:space-y-6 sm:pb-8">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
         <div className="min-w-0 space-y-1.5 sm:space-y-2">
@@ -703,21 +731,6 @@ export function DoubtTracker() {
                 <div className="mt-1.5 text-[10px] text-kal-text [&_a]:text-kal-accent">
                   <VoiceMinuteLimitLink />
                 </div>
-              ) : null}
-            </div>
-          ) : voiceListening ? (
-            <div className="w-full sm:text-right">
-              <VoiceListeningHint
-                visible
-                variant={
-                  routing.useBrowserWhisperStt ? "whisper" : "dictation"
-                }
-                className="!text-right"
-              />
-              {routing.useNativeCapacitorStt && nativeSpeechDraft ? (
-                <p className="mt-1 max-w-[min(100%,22rem)] rounded-md border border-kal-border/35 bg-kal-card-muted/60 px-2 py-1.5 text-[11px] leading-snug text-kal-muted sm:ml-auto">
-                  {nativeSpeechDraft}
-                </p>
               ) : null}
             </div>
           ) : null}
@@ -1193,5 +1206,6 @@ export function DoubtTracker() {
         </div>
       )}
     </div>
+    </>
   );
 }

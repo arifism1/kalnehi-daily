@@ -17,6 +17,7 @@ import {
   VOICE_LONG_FORM_SILENCE_MS,
   VOICE_MAX_SESSION_MS,
 } from "@/lib/voiceConstants";
+import { KALNEHI_PROFILE_UPDATED_EVENT } from "@/lib/profileEvents";
 import { useVoiceCommandStore } from "@/store/useVoiceCommandStore";
 
 type SpeechStatus = "idle" | "listening";
@@ -39,6 +40,11 @@ type UseDeviceSpeechRecognitionOptions = {
   /** When true, enables interim results and calls `onPreviewTranscript` with finals + partial text (UI only). */
   interimPreview?: boolean;
   onPreviewTranscript?: (text: string) => void;
+  /**
+   * `onTranscript`: deduct voice quota for this browser Web Speech session on the server
+   * (flows that bill again on `/api/voice-parse-*` / `voice-command` must keep `"none"` to avoid double charge).
+   */
+  reportUsage?: "none" | "onTranscript";
 };
 
 function stopStream(stream: MediaStream | null) {
@@ -250,6 +256,7 @@ export function useDeviceSpeechRecognition({
   onSpeechEngineInfo,
   interimPreview = false,
   onPreviewTranscript,
+  reportUsage = "none",
 }: UseDeviceSpeechRecognitionOptions) {
   const setMicBusy = useCallback(
     (busy: boolean) => useVoiceCommandStore.getState().setMicBusy(busy),
@@ -286,6 +293,8 @@ export function useDeviceSpeechRecognition({
   const onSpeechEngineInfoRef = useRef(onSpeechEngineInfo);
   const onPreviewTranscriptRef = useRef(onPreviewTranscript);
   const interimPreviewRef = useRef(interimPreview);
+  const onTranscriptRef = useRef(onTranscript);
+  const reportUsageRef = useRef(reportUsage);
 
   const hadSpeechSegmentRef = useRef(false);
   const [status, setStatus] = useState<SpeechStatus>("idle");
@@ -297,7 +306,10 @@ export function useDeviceSpeechRecognition({
     onSpeechEngineInfoRef.current = onSpeechEngineInfo;
     onPreviewTranscriptRef.current = onPreviewTranscript;
     interimPreviewRef.current = interimPreview;
-  }, [onSpeechEngineInfo, onPreviewTranscript, interimPreview]);
+    onTranscriptRef.current = onTranscript;
+  }, [onSpeechEngineInfo, onPreviewTranscript, interimPreview, onTranscript]);
+
+  reportUsageRef.current = reportUsage;
 
   const isAndroidStableHost =
     typeof navigator !== "undefined"
@@ -336,93 +348,130 @@ export function useDeviceSpeechRecognition({
   }, []);
 
   const finalizeSession = useCallback(() => {
-    clearTimers();
-    recognitionRef.current = null;
-    intentionalEngineEndRef.current = true;
-    androidRestartCountRef.current = 0;
-    setStatus("idle");
-    setMicBusy(false);
+    void (async () => {
+      clearTimers();
+      recognitionRef.current = null;
+      intentionalEngineEndRef.current = true;
+      androidRestartCountRef.current = 0;
+      setStatus("idle");
+      setMicBusy(false);
 
-    const hadHeardSpeech = hadSpeechSegmentRef.current;
-    hadSpeechSegmentRef.current = false;
+      const hadHeardSpeech = hadSpeechSegmentRef.current;
+      hadSpeechSegmentRef.current = false;
 
-    const fromPreview = lastCombinedPreviewRef.current.trim();
-    const fromFinal = finalTranscriptRef.current.trim();
-    const transcriptRaw = (fromPreview || fromFinal).trim();
-    lastCombinedPreviewRef.current = "";
-    finalTranscriptRef.current = "";
+      const fromPreview = lastCombinedPreviewRef.current.trim();
+      const fromFinal = finalTranscriptRef.current.trim();
+      const transcriptRaw = (fromPreview || fromFinal).trim();
+      lastCombinedPreviewRef.current = "";
+      finalTranscriptRef.current = "";
 
-    const suppressSubmit = suppressSubmitRef.current;
-    suppressSubmitRef.current = false;
-    ignoreAbortErrorRef.current = false;
-    lastRecognitionErrorKindRef.current = "";
+      const suppressSubmit = suppressSubmitRef.current;
+      suppressSubmitRef.current = false;
+      ignoreAbortErrorRef.current = false;
+      lastRecognitionErrorKindRef.current = "";
 
-    if (suppressSubmit) {
+      if (suppressSubmit) {
+        speechSessionAnchorMsRef.current = null;
+        onPreviewTranscriptRef.current?.("");
+        setTranscriptionQualityHint(null);
+        return;
+      }
+      if (!transcriptRaw) {
+        speechSessionAnchorMsRef.current = null;
+        onPreviewTranscriptRef.current?.("");
+        setTranscriptionQualityHint(null);
+        setError(
+          isAndroidStableHost
+            ? androidEmptyFinalizeMessage(hadHeardSpeech)
+            : hadHeardSpeech
+              ? "We lost the last phrase. Try again, or speak a bit longer."
+              : "Nothing picked up yet. Speak again or tap Try again.",
+        );
+        return;
+      }
+
+      const transcript = isAndroidStableHost
+        ? squashAdjacentPhraseRepeats(transcriptRaw)
+        : transcriptRaw;
+
+      if (!transcript.trim()) {
+        speechSessionAnchorMsRef.current = null;
+        onPreviewTranscriptRef.current?.("");
+        setTranscriptionQualityHint(null);
+        setError(
+          isAndroidStableHost
+            ? androidEmptyFinalizeMessage(hadHeardSpeech)
+            : hadHeardSpeech
+              ? "We lost the last phrase. Try again, or speak a bit longer."
+              : "Nothing picked up yet. Speak again or tap Try again.",
+        );
+        return;
+      }
+
+      const startedMs = speechSessionAnchorMsRef.current;
       speechSessionAnchorMsRef.current = null;
+      const durationSeconds =
+        startedMs != null ? Math.max(0, (Date.now() - startedMs) / 1000) : 0;
+
+      const wc = transcript.split(/\s+/).filter(Boolean).length;
+      const cleanedDuplicates =
+        isAndroidStableHost && transcriptRaw.length - transcript.length > 6;
+
+      if (isAndroidStableHost && cleanedDuplicates) {
+        setTranscriptionQualityHint(
+          "Android cleaned repeated words Chrome sometimes duplicates. Speak in shorter phrases if you still see echoes.",
+        );
+      } else if (isAndroidStableHost && hadHeardSpeech && wc >= 2 && wc < 5) {
+        setTranscriptionQualityHint(
+          "Android tip: if this looks shortened, pause briefly between tasks and speak closer to the mic.",
+        );
+      } else {
+        setTranscriptionQualityHint(null);
+      }
+
+      if (reportUsageRef.current === "onTranscript") {
+        try {
+          const res = await fetch("/api/voice-usage/consume", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ durationSeconds }),
+          });
+          const data = (await res.json()) as { ok?: boolean; error?: string };
+          if (!data.ok) {
+            const quota =
+              data.error === "quota_exceeded" || res.status === 429;
+            setTranscriptionQualityHint(null);
+            setError(
+              quota
+                ? "You've used your voice time for this month. Get more from My Subscription."
+                : (data.error ??
+                    "Could not apply voice usage. Try again or type instead."),
+            );
+            onPreviewTranscriptRef.current?.("");
+            return;
+          }
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new Event(KALNEHI_PROFILE_UPDATED_EVENT));
+          }
+        } catch {
+          setTranscriptionQualityHint(null);
+          setError(
+            "Connection dropped. Check your network and try again, or type instead.",
+          );
+          onPreviewTranscriptRef.current?.("");
+          return;
+        }
+      }
+
+      onTranscriptRef.current?.({
+        transcript,
+        occurredAt: new Date().toISOString(),
+        durationSeconds,
+      });
       onPreviewTranscriptRef.current?.("");
-      setTranscriptionQualityHint(null);
-      return;
-    }
-    if (!transcriptRaw) {
-      speechSessionAnchorMsRef.current = null;
-      onPreviewTranscriptRef.current?.("");
-      setTranscriptionQualityHint(null);
-      setError(
-        isAndroidStableHost
-          ? androidEmptyFinalizeMessage(hadHeardSpeech)
-          : hadHeardSpeech
-            ? "We lost the last phrase. Try again, or speak a bit longer."
-            : "Nothing picked up yet. Speak again or tap Try again.",
-      );
-      return;
-    }
-
-    const transcript = isAndroidStableHost
-      ? squashAdjacentPhraseRepeats(transcriptRaw)
-      : transcriptRaw;
-
-    if (!transcript.trim()) {
-      speechSessionAnchorMsRef.current = null;
-      onPreviewTranscriptRef.current?.("");
-      setTranscriptionQualityHint(null);
-      setError(
-        isAndroidStableHost
-          ? androidEmptyFinalizeMessage(hadHeardSpeech)
-          : hadHeardSpeech
-            ? "We lost the last phrase. Try again, or speak a bit longer."
-            : "Nothing picked up yet. Speak again or tap Try again.",
-      );
-      return;
-    }
-
-    const startedMs = speechSessionAnchorMsRef.current;
-    speechSessionAnchorMsRef.current = null;
-    const durationSeconds =
-      startedMs != null ? Math.max(0, (Date.now() - startedMs) / 1000) : 0;
-
-    const wc = transcript.split(/\s+/).filter(Boolean).length;
-    const cleanedDuplicates =
-      isAndroidStableHost && transcriptRaw.length - transcript.length > 6;
-
-    if (isAndroidStableHost && cleanedDuplicates) {
-      setTranscriptionQualityHint(
-        "Android cleaned repeated words Chrome sometimes duplicates. Speak in shorter phrases if you still see echoes.",
-      );
-    } else if (isAndroidStableHost && hadHeardSpeech && wc >= 2 && wc < 5) {
-      setTranscriptionQualityHint(
-        "Android tip: if this looks shortened, pause briefly between tasks and speak closer to the mic.",
-      );
-    } else {
-      setTranscriptionQualityHint(null);
-    }
-
-    onTranscript({
-      transcript,
-      occurredAt: new Date().toISOString(),
-      durationSeconds,
-    });
-    onPreviewTranscriptRef.current?.("");
-  }, [clearTimers, isAndroidStableHost, onTranscript, setMicBusy]);
+    })();
+  }, [clearTimers, isAndroidStableHost, setMicBusy]);
 
   const stopRecognition = useCallback(
     (mode: "stop" | "abort", suppressSubmit: boolean) => {
@@ -560,11 +609,8 @@ export function useDeviceSpeechRecognition({
       const recognition = new Ctor();
       recognitionRef.current = recognition;
       recognition.continuous = true;
-      /**
-       * Final-only on Android (interim correlates with echoed / repeated wording in Chromium).
-       * Desktop / iOS still use caller `interimPreview` unchanged.
-       */
-      recognition.interimResults = !!(interimPreviewRef.current && !isAndroidHost);
+      /** When `interimPreview` is true, surface partial + final text on all hosts (incl. Android Chrome). */
+      recognition.interimResults = !!interimPreviewRef.current;
       recognition.lang = engineLang;
       recognition.maxAlternatives = 1;
       if (prepared.shouldProcessLocally && "processLocally" in recognition) {
@@ -626,7 +672,7 @@ export function useDeviceSpeechRecognition({
       };
 
       recognition.onresult = (event: SpeechRecognitionEvent) => {
-        const wantInterim = !!(interimPreviewRef.current && !isAndroidHost);
+        const wantInterim = !!interimPreviewRef.current;
         let heardSpeech = false;
         let interimPiece = "";
         const startIndex = Math.max(
