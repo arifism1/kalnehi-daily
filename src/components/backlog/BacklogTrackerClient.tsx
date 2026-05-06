@@ -28,6 +28,9 @@ import { trackMetaBacklogAdded, trackMetaBacklogPlanLocked } from "@/lib/analyti
 import { useAuthStore } from "@/store/useAuthStore";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { AiFeatureGate } from "@/components/subscription/AiFeatureGate";
+import { VoiceListeningHint } from "@/components/voice/VoiceListeningHint";
+import { useCapacitorSpeech } from "@/hooks/useCapacitorSpeech";
+import { useMediaRecorderVoice } from "@/hooks/useMediaRecorderVoice";
 
 type OrganizeItem = {
   title: string;
@@ -45,9 +48,10 @@ function clampMinutes(m: number): number {
 export function BacklogTrackerClient() {
   const user = useAuthStore((s) => s.user);
   const today = useCalendarDate();
-  const sttRouting = useVoiceSttRouting();
+  const routing = useVoiceSttRouting();
 
   const [transcript, setTranscript] = useState("");
+  const [voicePreview, setVoicePreview] = useState("");
   const [directTranscript, setDirectTranscript] = useState("");
   const [chips, setChips] = useState<string[]>([]);
   const [items, setItems] = useState<OrganizeItem[]>([]);
@@ -252,14 +256,117 @@ export function BacklogTrackerClient() {
     setTranscript((prev) => (prev ? `${prev} ${c}` : c));
   }, []);
 
-  const { isListening, isSupported, startListening, stopListening, error: recError } =
-    useDeviceSpeechRecognition({
-      lang: "en-IN",
-      maxSessionMs: VOICE_LONG_FORM_MAX_SESSION_MS,
-      silenceMs: VOICE_LONG_FORM_SILENCE_MS,
-      onTranscript: ({ transcript: tr }) => appendTranscript(tr),
-      reportUsage: sttRouting.useWebSpeechStt ? "onTranscript" : "none",
-    });
+  const handleVoiceTranscript = useCallback(
+    ({ transcript: tr }: { transcript: string; occurredAt: string; durationSeconds: number }) => {
+      appendTranscript(tr);
+      setVoicePreview("");
+    },
+    [appendTranscript],
+  );
+
+  const {
+    isListening,
+    isSupported: webSpeechSupported,
+    startListening,
+    stopListening,
+    error: voiceError,
+    clearError: clearVoiceError,
+  } = useDeviceSpeechRecognition({
+    lang: "en-IN",
+    maxSessionMs: VOICE_LONG_FORM_MAX_SESSION_MS,
+    silenceMs: VOICE_LONG_FORM_SILENCE_MS,
+    interimPreview: true,
+    onPreviewTranscript: setVoicePreview,
+    onTranscript: handleVoiceTranscript,
+    reportUsage: routing.useWebSpeechStt ? "onTranscript" : "none",
+  });
+
+  const {
+    clearError: clearCapError,
+    error: capError,
+    isRecording: isCapRecording,
+    isTranscribing: isCapTranscribing,
+    startRecording: startCapRecording,
+    stopRecording: stopCapRecording,
+  } = useCapacitorSpeech({
+    variant: "longForm",
+    onTranscript: handleVoiceTranscript,
+    onPartialTranscript: setVoicePreview,
+    maxMs: VOICE_LONG_FORM_MAX_SESSION_MS,
+  });
+
+  const {
+    clearError: clearWhisperError,
+    error: whisperError,
+    isRecording: isWhisperRecording,
+    isTranscribing: isWhisperTranscribing,
+    startRecording: startWhisperRecording,
+    stopRecording: stopWhisperRecording,
+    isSupported: whisperMicSupported,
+  } = useMediaRecorderVoice({
+    maxMs: VOICE_LONG_FORM_MAX_SESSION_MS,
+    onTranscript: handleVoiceTranscript,
+  });
+
+  const isSupported = routing.useNativeCapacitorStt
+    ? true
+    : routing.useBrowserWhisperStt
+      ? whisperMicSupported
+      : webSpeechSupported;
+
+  const isVoiceActive =
+    routing.useNativeCapacitorStt
+      ? isCapRecording || isCapTranscribing
+      : routing.useBrowserWhisperStt
+        ? isWhisperRecording || isWhisperTranscribing
+        : isListening;
+
+  const voiceMicError = routing.useNativeCapacitorStt
+    ? capError
+    : routing.useBrowserWhisperStt
+      ? whisperError
+      : voiceError;
+
+  const toggleSpeak = useCallback(() => {
+    if (routing.useNativeCapacitorStt) {
+      if (isCapRecording) {
+        stopCapRecording();
+      } else {
+        clearCapError();
+        setVoicePreview("");
+        void startCapRecording();
+      }
+    } else if (routing.useBrowserWhisperStt) {
+      if (isWhisperRecording) {
+        stopWhisperRecording();
+      } else {
+        clearWhisperError();
+        setVoicePreview("");
+        void startWhisperRecording();
+      }
+    } else if (isListening) {
+      stopListening();
+    } else {
+      clearVoiceError();
+      setVoicePreview("");
+      void startListening();
+    }
+  }, [
+    routing.useNativeCapacitorStt,
+    routing.useBrowserWhisperStt,
+    isCapRecording,
+    isWhisperRecording,
+    isListening,
+    stopCapRecording,
+    startCapRecording,
+    stopWhisperRecording,
+    startWhisperRecording,
+    stopListening,
+    startListening,
+    clearCapError,
+    clearWhisperError,
+    clearVoiceError,
+  ]);
 
   const onFinalReview = () => {
     void runOrganize("final", transcript);
@@ -410,7 +517,7 @@ export function BacklogTrackerClient() {
               sense — wording may change.
             </p>
             <textarea
-              value={transcript}
+              value={isVoiceActive && voicePreview ? voicePreview : transcript}
               onChange={(e) => setTranscript(e.target.value)}
               rows={5}
               className="w-full resize-y rounded-xl border border-kal-border bg-kal-card-muted px-3 py-2 text-sm text-kal-text placeholder:text-kal-muted focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/25"
@@ -421,11 +528,11 @@ export function BacklogTrackerClient() {
               <AiFeatureGate>
                 <button
                   type="button"
-                  onClick={() => (isListening ? stopListening() : startListening())}
-                  disabled={!isSupported}
+                  onClick={() => toggleSpeak()}
+                  disabled={!isSupported || isWhisperTranscribing || busy !== null}
                   className="inline-flex items-center gap-2 rounded-xl border border-kal-border bg-kal-accent px-4 py-2 text-sm font-semibold text-kal-accent-foreground disabled:opacity-50"
                 >
-                  {isListening ? (
+                  {isVoiceActive ? (
                     <>
                       <MicOff className="h-4 w-4" aria-hidden />
                       Stop
@@ -452,8 +559,26 @@ export function BacklogTrackerClient() {
                 Voice isn&apos;t supported in this browser — type instead.
               </p>
             ) : null}
-            {recError ? (
-              <p className="text-xs text-amber-800 dark:text-amber-200">{recError}</p>
+            {isVoiceActive ? (
+              <>
+                <p className="animate-pulse text-[11px] font-medium text-kal-muted">
+                  {isWhisperTranscribing
+                    ? "Transcribing…"
+                    : routing.useBrowserWhisperStt && isWhisperRecording
+                      ? "Recording…"
+                      : "Listening…"}
+                </p>
+                {!isWhisperTranscribing ? (
+                  <VoiceListeningHint
+                    visible
+                    className="!text-left"
+                    variant={routing.useBrowserWhisperStt ? "whisper" : "dictation"}
+                  />
+                ) : null}
+              </>
+            ) : null}
+            {voiceMicError ? (
+              <p className="text-xs text-amber-800 dark:text-amber-200">{voiceMicError}</p>
             ) : null}
             {chips.length > 0 ? (
               <div className="flex flex-wrap gap-2 pt-1">
