@@ -50,15 +50,17 @@ test("DailyReflectionClient + AddMistakeSheet: conditional onTranscript for Web 
   }
 });
 
-test("BacklogTrackerClient: Web Speech quota via useVoiceSttRouting", () => {
+test("BacklogTrackerClient: Web Speech quota via useVoiceSttRouting + Whisper branch", () => {
   const s = fs.readFileSync(
     path.join(repoRoot, "src/components/backlog/BacklogTrackerClient.tsx"),
     "utf8",
   );
   assert.ok(s.includes("useVoiceSttRouting"));
+  assert.ok(s.includes("useMediaRecorderVoice"));
+  assert.ok(s.includes("routing.useBrowserWhisperStt"));
   assert.match(
     s,
-    /reportUsage:\s*sttRouting\.useWebSpeechStt\s*\?\s*"onTranscript"\s*:\s*"none"/,
+    /reportUsage:\s*routing\.useWebSpeechStt\s*\?\s*"onTranscript"\s*:\s*"none"/,
   );
 });
 
