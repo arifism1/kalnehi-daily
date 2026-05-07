@@ -59,6 +59,16 @@ function tomorrowYmd(todayYmd: string): string {
   return format(addDays(parseISO(`${todayYmd}T12:00:00`), 1), "yyyy-MM-dd");
 }
 
+function headlineForChosenStart(todayYmd: string, startYmd: string): string {
+  if (startYmd === todayYmd) return "Starting today";
+  if (startYmd === tomorrowYmd(todayYmd)) return "Starting tomorrow";
+  try {
+    return `Starting ${format(parseISO(`${startYmd}T12:00:00`), "MMM d, yyyy")}`;
+  } catch {
+    return "Starting on your chosen date";
+  }
+}
+
 function roundRobinDates(startYmd: string, count: number, perDay: number): string[] {
   const start = parseISO(`${startYmd}T12:00:00`);
   const dates: string[] = [];
@@ -105,23 +115,38 @@ export function computeBacklogSchedule(args: {
   usedMinutesToday: number;
   /** Backlog-sourced daily tasks on today not done/skipped */
   backlogTaskCountToday: number;
+  /**
+   * First calendar day to place recovery tasks (yyyy-MM-dd, >= todayYmd).
+   * When omitted, uses automatic today vs tomorrow based on time and capacity.
+   */
+  scheduleStartYmd?: string | null;
 }): ComputedBacklogSchedule {
   const perDay = perDayFromIntensity(args.intensity);
   const sorted = sortForRetryPriority(args.items);
-  const firstMinutes = sorted[0]?.effort_estimate_minutes ?? 0;
+  const overrideRaw = (args.scheduleStartYmd ?? "").trim();
 
-  let startsToday = true;
-  let startYmd = args.todayYmd;
+  let startsToday: boolean;
+  let startYmd: string;
 
-  if (args.userLocalHour >= BACKLOG_RECOVERY_LATE_DAY_CUTOFF_HOUR) {
-    startsToday = false;
-    startYmd = tomorrowYmd(args.todayYmd);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(overrideRaw) && overrideRaw >= args.todayYmd) {
+    startYmd = overrideRaw;
+    startsToday = overrideRaw === args.todayYmd;
   } else {
-    const slotsLeft = perDay - args.backlogTaskCountToday;
-    const remaining = BACKLOG_RECOVERY_DAILY_CAPACITY_MINUTES - args.usedMinutesToday;
-    if (slotsLeft <= 0 || remaining < firstMinutes) {
+    const firstMinutes = sorted[0]?.effort_estimate_minutes ?? 0;
+
+    startsToday = true;
+    startYmd = args.todayYmd;
+
+    if (args.userLocalHour >= BACKLOG_RECOVERY_LATE_DAY_CUTOFF_HOUR) {
       startsToday = false;
       startYmd = tomorrowYmd(args.todayYmd);
+    } else {
+      const slotsLeft = perDay - args.backlogTaskCountToday;
+      const remaining = BACKLOG_RECOVERY_DAILY_CAPACITY_MINUTES - args.usedMinutesToday;
+      if (slotsLeft <= 0 || remaining < firstMinutes) {
+        startsToday = false;
+        startYmd = tomorrowYmd(args.todayYmd);
+      }
     }
   }
 
@@ -132,9 +157,14 @@ export function computeBacklogSchedule(args: {
     plan_date: rawDates[i]!,
   }));
 
-  const headline = startsToday
-    ? "We’ll start this today"
-    : "We’ll start from tomorrow";
+  const usedChosenStart =
+    /^\d{4}-\d{2}-\d{2}$/.test(overrideRaw) && overrideRaw >= args.todayYmd;
+
+  const headline = usedChosenStart
+    ? headlineForChosenStart(args.todayYmd, startYmd)
+    : startsToday
+      ? "Starting today"
+      : "Starting tomorrow";
 
   return {
     startYmd,
