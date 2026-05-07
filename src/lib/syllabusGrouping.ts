@@ -1,6 +1,9 @@
 import type { Tables } from "@/types/supabase";
 
-export type SyllabusRow = Tables<"syllabus_master">;
+export type SyllabusRow = Tables<"syllabus_master"> & {
+  /** From `chapter_marks` via `injectChapterMarksIntoRows`; not a column on syllabus_master. */
+  marks_2026?: number | null;
+};
 
 const SUBJECT_ORDER = ["Physics", "Chemistry", "Biology"];
 

@@ -16,9 +16,9 @@ import {
 export type { SyllabusRow };
 
 /** Default exam year for overall mastery, Reality Snapshot, and chapter labels. */
-export const NEET_PRIMARY_YEAR = 2025;
+export const NEET_PRIMARY_YEAR = 2026;
 
-const PROJECTION_YEARS = [2025, 2024, 2023] as const;
+const PROJECTION_YEARS = [2026, 2025, 2024, 2023] as const;
 
 /**
  * Chapter-level NEET weight: one value per chapter (deduped vs split weights).
@@ -105,13 +105,13 @@ export function aggregateRollupBySubject(
 }
 
 /**
- * Primary ring uses **2025** when that year has weights; else first available year.
- * Lines list every year with data (2025, 2024, 2023).
+ * Primary ring uses **2026** when that year has weights; else first available year.
+ * Lines list every year with data (2026, 2025, 2024, 2023).
  */
 export function buildSyllabusMultiYearCapture(
   projections: NeetYearProjection[],
   maxScore: number = 720,
-  /** Prefer this calendar year’s column for the main ring (e.g. 2025 for NEET / JEE Main 2025). */
+  /** Prefer this calendar year’s column for the main ring (e.g. 2026 for NEET / JEE Main 2026). */
   preferRingYear?: number,
   /**
    * When set (UPSC CSE Mains: 2350), ring % uses `totalMarksMastered ÷ this` instead of
@@ -258,10 +258,13 @@ function dataHasPositiveYear(rows: SyllabusRow[], year: number): boolean {
  * not show marks-year labels or fake “chapter pool” totals.
  */
 export function syllabusHasCatalogMarksData(
-  rows: Pick<SyllabusRow, "marks_2025" | "marks_2024" | "marks_2023">[],
+  rows: Pick<
+    SyllabusMarksRow,
+    "marks_2026" | "marks_2025" | "marks_2024" | "marks_2023"
+  >[],
 ): boolean {
   return rows.some((r) =>
-    [r.marks_2025, r.marks_2024, r.marks_2023].some(
+    [r.marks_2026, r.marks_2025, r.marks_2024, r.marks_2023].some(
       (m) => m != null && Number(m) > 0,
     ),
   );
@@ -290,8 +293,13 @@ export function chapterMarksPoolForYearRows(
 }
 
 /** Legacy: per-row weight like `syllabusMarksWeight` (default 1), then one chapter pool. */
-function chapterPoolFromLegacyMixedYearRows(list: SyllabusRow[]): number {
-  const ws = list.map((r) => syllabusMarksWeight(r));
+function chapterPoolFromLegacyMixedYearRows(
+  list: SyllabusRow[],
+  legacyMarksSkipYears?: readonly number[],
+): number {
+  const ws = list.map((r) =>
+    syllabusMarksWeight(r, legacyMarksSkipYears),
+  );
   if (ws.length === 0) return 0;
   const maxW = Math.max(...ws);
   const sumW = ws.reduce((a, b) => a + b, 0);
@@ -304,12 +312,13 @@ function chapterWeightPrimary(
   list: SyllabusRow[],
   hasPrimaryYearData: boolean,
   primaryMarksYear: number,
+  legacyMarksSkipYears?: readonly number[],
 ): number {
   if (hasPrimaryYearData) {
     const w = chapterMarksPoolForYearRows(list, primaryMarksYear);
     if (w > 0) return w;
   }
-  return chapterPoolFromLegacyMixedYearRows(list);
+  return chapterPoolFromLegacyMixedYearRows(list, legacyMarksSkipYears);
 }
 
 export function buildChapterBuckets(rows: SyllabusRow[]) {
@@ -328,6 +337,12 @@ function labelsForYear(year: number): {
   patternLabel: string;
   completionNote: string;
 } {
+  if (year === 2026) {
+    return {
+      patternLabel: "Based on 2026 exam pattern",
+      completionNote: "Projected based on your current completion",
+    };
+  }
   if (year === 2025) {
     return {
       patternLabel: "Based on 2025 exam pattern",
@@ -366,7 +381,9 @@ export function computeSyllabusRollup(
   rows: SyllabusRow[],
   statusBySyllabusMasterId: Record<string, string>,
   primaryMarksYear: number = NEET_PRIMARY_YEAR,
+  options?: { legacyMarksSkipYears?: readonly number[] },
 ): SyllabusRollup {
+  const legacySkip = options?.legacyMarksSkipYears;
   const hasPrimaryYearData = dataHasPositiveYear(rows, primaryMarksYear);
   const chapterBuckets = buildChapterBuckets(rows);
 
@@ -380,6 +397,7 @@ export function computeSyllabusRollup(
       list,
       hasPrimaryYearData,
       primaryMarksYear,
+      legacySkip,
     );
 
     let completedCount = 0;
@@ -438,15 +456,17 @@ export function computeNeetYearProjections(
   rows: SyllabusRow[],
   statusBySyllabusMasterId: Record<string, string>,
   maxScore: number = 720,
-  options?: { collapseDuplicateScores?: boolean },
+  options?: { collapseDuplicateScores?: boolean; omitYears?: readonly number[] },
 ): NeetYearProjection[] {
   const collapseDuplicateScores = options?.collapseDuplicateScores !== false;
+  const omit = new Set(options?.omitYears ?? []);
   if (maxScore <= 0) return [];
   const chapterBuckets = buildChapterBuckets(rows);
   const out: NeetYearProjection[] = [];
   const cap = maxScore;
 
   for (const year of PROJECTION_YEARS) {
+    if (omit.has(year)) continue;
     if (!dataHasPositiveYear(rows, year)) continue;
 
     let pool = 0;

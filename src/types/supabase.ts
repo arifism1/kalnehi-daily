@@ -339,6 +339,7 @@ export type Database = {
           marks_2023: number | null
           marks_2024: number | null
           marks_2025: number | null
+          marks_2026: number | null
           subject: string
         }
         Insert: {
@@ -347,6 +348,7 @@ export type Database = {
           marks_2023?: number | null
           marks_2024?: number | null
           marks_2025?: number | null
+          marks_2026?: number | null
           subject: string
         }
         Update: {
@@ -355,6 +357,7 @@ export type Database = {
           marks_2023?: number | null
           marks_2024?: number | null
           marks_2025?: number | null
+          marks_2026?: number | null
           subject?: string
         }
         Relationships: []
@@ -2640,6 +2643,7 @@ export type Database = {
           marks_2023: number | null
           marks_2024: number | null
           marks_2025: number | null
+          marks_2026: number | null
           syllabus_master_id: string
           updated_at: string
           user_id: string
@@ -2651,6 +2655,7 @@ export type Database = {
           marks_2023?: number | null
           marks_2024?: number | null
           marks_2025?: number | null
+          marks_2026?: number | null
           syllabus_master_id: string
           updated_at?: string
           user_id: string
@@ -2662,6 +2667,7 @@ export type Database = {
           marks_2023?: number | null
           marks_2024?: number | null
           marks_2025?: number | null
+          marks_2026?: number | null
           syllabus_master_id?: string
           updated_at?: string
           user_id?: string
@@ -3127,6 +3133,7 @@ export type Database = {
           exam_date: string | null
           exam_id: string | null
           exam_name: string | null
+          marks_2026: number | null
           marks_allocated: number | null
           microtopic_id: string | null
           microtopic_name: string | null
@@ -3323,6 +3330,7 @@ export type Database = {
           marks_2023: number
           marks_2024: number
           marks_2025: number
+          marks_2026: number
           subject: string
           total_topics: number
         }[]

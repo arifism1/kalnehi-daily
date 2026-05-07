@@ -3,6 +3,7 @@ import type { SyllabusRow } from "@/lib/syllabusGrouping";
 
 export type SyllabusMarksOverrideRow = {
   syllabus_master_id: string;
+  marks_2026: number | null;
   marks_2025: number | null;
   marks_2024: number | null;
   marks_2023: number | null;
@@ -27,6 +28,7 @@ export function applyMarksOverridesToRows<T extends SyllabusRow>(
     if (!o) return r;
     return {
       ...r,
+      marks_2026: o.marks_2026 != null ? o.marks_2026 : r.marks_2026,
       marks_2025: o.marks_2025 != null ? o.marks_2025 : r.marks_2025,
       marks_2024: o.marks_2024 != null ? o.marks_2024 : r.marks_2024,
       marks_2023: o.marks_2023 != null ? o.marks_2023 : r.marks_2023,

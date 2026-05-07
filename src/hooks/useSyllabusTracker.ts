@@ -10,6 +10,7 @@ import {
   CUET_MARKS_PER_SUBJECT,
   examScoreMax,
   isCuetExam,
+  isNeetUgExam,
   primaryMarksYearFromTargetExam,
 } from "@/lib/examProfile";
 import type { ExamTrack } from "@/lib/examTracks";
@@ -31,7 +32,8 @@ import { KALNEHI_PROFILE_UPDATED_EVENT } from "@/lib/profileEvents";
 import { toUserFacingMessage } from "@/lib/userFacingErrors";
 import { useAuthStore } from "@/store/useAuthStore";
 
-/** Keys are normalized `syllabus_master.id` strings. */
+const NEET_UG_HIDDEN_MARKS_YEARS = [2026] as const;
+
 type SyllabusTrackerCache = {
   userId: string;
   rows: MergedSyllabusRow[];
@@ -223,8 +225,11 @@ export function useSyllabusTracker() {
         rows,
         statusBySyllabusMasterId,
         primaryMarksYear,
+        isNeetUgExam(targetExamLabel)
+          ? { legacyMarksSkipYears: NEET_UG_HIDDEN_MARKS_YEARS }
+          : undefined,
       ),
-    [rows, statusBySyllabusMasterId, primaryMarksYear],
+    [rows, statusBySyllabusMasterId, primaryMarksYear, targetExamLabel],
   );
 
   const cuetScoringRollup = useMemo((): CuetScoringRollup | null => {
@@ -254,9 +259,14 @@ export function useSyllabusTracker() {
       rows,
       statusBySyllabusMasterId,
       maxScore,
-      { collapseDuplicateScores: false },
+      {
+        collapseDuplicateScores: false,
+        omitYears: isNeetUgExam(targetExamLabel)
+          ? [...NEET_UG_HIDDEN_MARKS_YEARS]
+          : undefined,
+      },
     );
-  }, [rows, statusBySyllabusMasterId, maxScore]);
+  }, [rows, statusBySyllabusMasterId, maxScore, targetExamLabel]);
 
   /**
    * Per-exam rollups for multi-exam tracks. When the user has more than one
@@ -277,12 +287,20 @@ export function useSyllabusTracker() {
         er.rows,
         statusBySyllabusMasterId,
         er.primaryMarksYear,
+        isNeetUgExam(er.examLabel)
+          ? { legacyMarksSkipYears: NEET_UG_HIDDEN_MARKS_YEARS }
+          : undefined,
       );
       const erProjections = computeNeetYearProjections(
         er.rows,
         statusBySyllabusMasterId,
         erMaxScore,
-        { collapseDuplicateScores: false },
+        {
+          collapseDuplicateScores: false,
+          omitYears: isNeetUgExam(er.examLabel)
+            ? [...NEET_UG_HIDDEN_MARKS_YEARS]
+            : undefined,
+        },
       );
       return {
         examLabel: er.examLabel,

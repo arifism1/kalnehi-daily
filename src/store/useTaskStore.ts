@@ -2,7 +2,9 @@ import { create } from "zustand";
 
 import type { Tables, TablesUpdate } from "@/types/supabase";
 
-export type Microtopic = Tables<"syllabus_master">;
+export type Microtopic = Tables<"syllabus_master"> & {
+  marks_2026?: number | null;
+};
 export type Task = Tables<"tasks">;
 
 export type TaskRecord = Record<string, Task>;

@@ -28,6 +28,7 @@ export type MarksIntelligenceRow = {
   marks_2023: number;
   marks_2024: number;
   marks_2025: number;
+  marks_2026: number;
   total_topics: number;
   done_topics: number;
   completion_pct: number;

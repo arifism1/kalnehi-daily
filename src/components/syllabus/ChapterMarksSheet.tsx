@@ -4,6 +4,7 @@ import { Loader2, SlidersHorizontal, X } from "lucide-react";
 import { useCallback, useEffect, useId, useState } from "react";
 
 import { upsertSyllabusMarksOverride } from "@/actions/syllabusMarks";
+import { type PrimaryMarksYear, isNeetUgExam } from "@/lib/examProfile";
 import { surfaceErrorForUi } from "@/lib/userFacingErrors";
 import type { MergedSyllabusRow } from "@/lib/userSyllabusMerge";
 
@@ -14,13 +15,13 @@ function parseMark(s: string): number | null {
   return Number.isFinite(n) && n >= 0 ? n : null;
 }
 
-type DraftRow = { y25: string; y24: string; y23: string };
+type DraftRow = { y26: string; y25: string; y24: string; y23: string };
 
 type Props = {
   open: boolean;
   onClose: () => void;
   examName: string;
-  primaryYear: 2023 | 2024 | 2025;
+  primaryYear: PrimaryMarksYear;
   chapterTitle: string;
   rows: MergedSyllabusRow[];
   onSaved: () => void;
@@ -35,6 +36,7 @@ export function ChapterMarksSheet({
   rows,
   onSaved,
 }: Props) {
+  const hide2026Marks = isNeetUgExam(examName);
   const baseId = useId();
   const [draft, setDraft] = useState<Record<string, DraftRow>>({});
   const [busy, setBusy] = useState(false);
@@ -45,6 +47,7 @@ export function ChapterMarksSheet({
     const next: Record<string, DraftRow> = {};
     for (const r of rows) {
       next[r.id] = {
+        y26: r.marks_2026 != null ? String(r.marks_2026) : "",
         y25: r.marks_2025 != null ? String(r.marks_2025) : "",
         y24: r.marks_2024 != null ? String(r.marks_2024) : "",
         y23: r.marks_2023 != null ? String(r.marks_2023) : "",
@@ -65,6 +68,7 @@ export function ChapterMarksSheet({
           const res = await upsertSyllabusMarksOverride({
             examName,
             syllabusMasterId: r.id,
+            marks_2026: hide2026Marks ? null : parseMark(d.y26),
             marks_2025: parseMark(d.y25),
             marks_2024: parseMark(d.y24),
             marks_2023: parseMark(d.y23),
@@ -79,7 +83,7 @@ export function ChapterMarksSheet({
     } finally {
       setBusy(false);
     }
-  }, [rows, draft, examName, onSaved, onClose]);
+  }, [rows, draft, examName, onSaved, onClose, hide2026Marks]);
 
   if (!open) return null;
 
@@ -125,10 +129,16 @@ export function ChapterMarksSheet({
         <p className="text-xs leading-relaxed text-kal-muted">
           Weights are stored for your account only and never change the shared
           syllabus catalog. Leave a year blank to use the catalog value for
-          that year. Multi-year projections use 2025 / 2024 / 2023 columns when
-          set.
+          that year. Multi-year projections use{" "}
+          {hide2026Marks
+            ? "2025 / 2024 / 2023 columns when set."
+            : "2026 / 2025 / 2024 / 2023 columns when set."}
         </p>
-        {primaryYear === 2025 ? (
+        {primaryYear === 2026 ? (
+          <p className="mt-1 text-[11px] font-medium text-kal-accent/90">
+            Primary pool for this exam uses marks_2026.
+          </p>
+        ) : primaryYear === 2025 ? (
           <p className="mt-1 text-[11px] font-medium text-kal-accent/90">
             Primary pool for this exam uses marks_2025.
           </p>
@@ -144,7 +154,7 @@ export function ChapterMarksSheet({
 
         <div className="mt-4 space-y-3">
           {rows.map((r) => {
-            const d = draft[r.id] ?? { y25: "", y24: "", y23: "" };
+            const d = draft[r.id] ?? { y26: "", y25: "", y24: "", y23: "" };
             return (
               <div
                 key={r.id}
@@ -153,7 +163,32 @@ export function ChapterMarksSheet({
                 <p className="text-[13px] font-medium leading-snug text-kal-text">
                   {r.microtopic}
                 </p>
-                <div className="mt-2 grid grid-cols-3 gap-2">
+                <div
+                  className={
+                    hide2026Marks
+                      ? "mt-2 grid grid-cols-3 gap-2"
+                      : "mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4"
+                  }
+                >
+                  {!hide2026Marks ? (
+                  <label className="block text-[10px] font-medium text-kal-muted">
+                    2026
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={d.y26}
+                      onChange={(e) =>
+                        setDraft((prev) => ({
+                          ...prev,
+                          [r.id]: { ...d, y26: e.target.value },
+                        }))
+                      }
+                      className="mt-1 w-full rounded-lg border border-kal-border bg-kal-input-bg px-2 py-2 text-base sm:text-sm text-kal-text tabular-nums placeholder:text-kal-muted"
+                      placeholder="—"
+                      autoComplete="off"
+                    />
+                  </label>
+                  ) : null}
                   <label className="block text-[10px] font-medium text-kal-muted">
                     2025
                     <input

@@ -99,7 +99,7 @@ export function NeetSyllabusReadOnly({ rows }: { rows: SyllabusRow[] }) {
                       </summary>
                       <ul className="divide-y divide-slate-800/80">
                         {list.map((row) => {
-                          const weight = syllabusMarksWeight(row);
+                          const weight = syllabusMarksWeight(row, [2026]);
                           const years = formatYearMarks(row);
                           return (
                             <li

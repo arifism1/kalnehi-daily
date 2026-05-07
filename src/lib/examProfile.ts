@@ -147,18 +147,21 @@ export function resolveSyllabusExam(profile: {
   return raw || null;
 }
 
+export type PrimaryMarksYear = 2026 | 2023 | 2024 | 2025;
+
 /**
  * Which `marks_20xx` column drives primary chapter pool, progress %, and main ring.
- * NEET UG / JEE Main 2025 → 2025; JEE Main 2024 → 2024; etc.
+ * NEET UG → 2025 in product (2026 weights hidden until release); NEET PG → 2025; etc.
  */
 export function primaryMarksYearFromTargetExam(
   exam: string | null | undefined,
-): 2023 | 2024 | 2025 {
+): PrimaryMarksYear {
   if (!exam?.trim()) return 2025;
   const trimmed = exam.trim();
   const n = normalizeExamLabel(trimmed);
 
-  if (n === "neet ug" || n === "neet pg") return 2025;
+  if (n === "neet ug") return 2025;
+  if (n === "neet pg") return 2025;
 
   const m = trimmed.match(/(\d{4})\s*$/);
   if (m) {
@@ -166,6 +169,7 @@ export function primaryMarksYearFromTargetExam(
     if (y === 2023) return 2023;
     if (y === 2024) return 2024;
     if (y === 2025) return 2025;
+    if (y === 2026) return 2026;
   }
 
   if (n.startsWith("jee main")) return 2025;

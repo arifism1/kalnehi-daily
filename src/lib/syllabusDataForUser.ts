@@ -6,6 +6,7 @@ import { trackById, trackForExamName } from "@/lib/examTracks";
 import {
   isCuetExam,
   primaryMarksYearFromTargetExam,
+  type PrimaryMarksYear,
   resolveSyllabusExam,
   syllabusCatalogExamName,
 } from "@/lib/examProfile";
@@ -74,7 +75,7 @@ export type SyllabusDataForUserResult = {
   upscOptionalSubject: string | null;
   rows: MergedSyllabusRow[];
   statusBySyllabusMasterId: Record<string, string>;
-  primaryMarksYear: number;
+  primaryMarksYear: PrimaryMarksYear;
 };
 
 /**
@@ -139,7 +140,7 @@ export async function loadSyllabusDataForUser(
       .eq("exam_name", examKey),
     supabase
       .from("user_syllabus_marks_overrides")
-      .select("syllabus_master_id, marks_2025, marks_2024, marks_2023")
+      .select("syllabus_master_id, marks_2026, marks_2025, marks_2024, marks_2023")
       .eq("user_id", userId)
       .eq("exam_name", examKey),
     fetchChapterMarks(supabase, examKey),
@@ -330,7 +331,7 @@ async function loadSyllabusDataForExamName(
       .eq("exam_name", examKey),
     supabase
       .from("user_syllabus_marks_overrides")
-      .select("syllabus_master_id, marks_2025, marks_2024, marks_2023")
+      .select("syllabus_master_id, marks_2026, marks_2025, marks_2024, marks_2023")
       .eq("user_id", userId)
       .eq("exam_name", examKey),
     fetchChapterMarks(supabase, examKey),

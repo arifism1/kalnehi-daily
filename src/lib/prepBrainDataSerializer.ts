@@ -6,6 +6,7 @@ import type {
   MarksIntelligenceRow,
   PrepbrainToolName,
 } from "@/lib/prepbrainToolQueries";
+import { isNeetUgExam } from "@/lib/examProfile";
 
 function isRecord(x: unknown): x is Record<string, unknown> {
   return x !== null && typeof x === "object" && !Array.isArray(x);
@@ -27,13 +28,16 @@ function groupMarksBySubject(rows: MarksIntelligenceRow[]): Map<string, MarksInt
   return m;
 }
 
-/** Average marks from available years (0 if no data). */
-function computeAvgMarks(r: MarksIntelligenceRow): number {
-  const validMarks = [r.marks_2023, r.marks_2024, r.marks_2025].filter(
-    (m) => m != null && m > 0,
-  );
-  if (validMarks.length === 0) return 0;
-  return validMarks.reduce((a, b) => a + b, 0) / validMarks.length;
+/** Average marks from available years (optionally ignore 2026 when not shown for NEET UG). */
+function computeAvgMarks(r: MarksIntelligenceRow, ignore2026: boolean): number {
+  const vals = [
+    ...(ignore2026 ? [] : [r.marks_2026]),
+    r.marks_2025,
+    r.marks_2024,
+    r.marks_2023,
+  ].filter((m): m is number => m != null && m > 0);
+  if (vals.length === 0) return 0;
+  return vals.reduce((a, b) => a + b, 0) / vals.length;
 }
 
 /**
@@ -91,18 +95,33 @@ export function formatMarksIntelligenceMarkdown(data: unknown): string {
   }
 
   const exam = typeof data.exam === "string" ? data.exam : "Exam";
+  const hide2026ForNeetUg = isNeetUgExam(exam);
 
   const rowsRaw = data.marks_rows;
   if (Array.isArray(rowsRaw) && rowsRaw.length > 0) {
     const rows = rowsRaw as MarksIntelligenceRow[];
 
-    // Derive ceiling from most-recent year's actual exam marks.
-    // sum(marks_2025) = total marks in that year's paper → accurate for any exam.
-    // Falls back to 2024 → 2023 → hardcoded map → omit (rather than show a wrong number).
+    const sum2026 = rows.reduce((s, r) => s + (r.marks_2026 ?? 0), 0);
     const sum2025 = rows.reduce((s, r) => s + (r.marks_2025 ?? 0), 0);
     const sum2024 = rows.reduce((s, r) => s + (r.marks_2024 ?? 0), 0);
     const sum2023 = rows.reduce((s, r) => s + (r.marks_2023 ?? 0), 0);
-    const derivedCeiling = sum2025 > 0 ? sum2025 : sum2024 > 0 ? sum2024 : sum2023 > 0 ? sum2023 : null;
+    const derivedCeiling = hide2026ForNeetUg
+      ? sum2025 > 0
+        ? sum2025
+        : sum2024 > 0
+          ? sum2024
+          : sum2023 > 0
+            ? sum2023
+            : null
+      : sum2026 > 0
+        ? sum2026
+        : sum2025 > 0
+          ? sum2025
+          : sum2024 > 0
+            ? sum2024
+            : sum2023 > 0
+              ? sum2023
+              : null;
     const ceiling = derivedCeiling ?? getKnownExamCeiling(exam);
 
     const bySubj = groupMarksBySubject(rows);
@@ -115,7 +134,7 @@ export function formatMarksIntelligenceMarkdown(data: unknown): string {
       lines.push(`**${subject}**`);
       for (const r of chRows) {
         const ch = r.chapter?.trim() || "Chapter";
-        const avgMarks = computeAvgMarks(r);
+        const avgMarks = computeAvgMarks(r, hide2026ForNeetUg);
         // Available = uncovered fraction of avg marks
         const available = Math.round(avgMarks * (1 - r.completion_pct / 100));
         const topicsLeft = r.total_topics - r.done_topics;

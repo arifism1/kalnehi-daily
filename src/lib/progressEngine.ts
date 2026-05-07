@@ -48,7 +48,7 @@ export function resolveTaskMarksWeight(
   if (!task.microtopic_id) return 1;
   const m = microtopicById[task.microtopic_id];
   if (!m) return 1;
-  const w = m.marks_2025 ?? m.marks_2024 ?? m.marks_2023 ?? null;
+  const w = m.marks_2026 ?? m.marks_2025 ?? m.marks_2024 ?? m.marks_2023 ?? null;
   return w != null && w > 0 ? w : 1;
 }
 

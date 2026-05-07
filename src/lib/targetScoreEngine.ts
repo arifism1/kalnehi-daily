@@ -112,8 +112,13 @@ function toHistoryItems(
   }));
 }
 
-function rowAverageMarks(row: SyllabusMasterRow): number | null {
-  const marks = [row.marks_2023, row.marks_2024, row.marks_2025].filter(
+function rowAverageMarks(row: {
+  marks_2023?: number | null;
+  marks_2024?: number | null;
+  marks_2025?: number | null;
+  marks_2026?: number | null;
+}): number | null {
+  const marks = [row.marks_2023, row.marks_2024, row.marks_2025, row.marks_2026].filter(
     (value): value is number => typeof value === "number" && Number.isFinite(value),
   );
   if (marks.length === 0) return null;
@@ -124,15 +129,15 @@ function rowAverageMarks(row: SyllabusMasterRow): number | null {
  * Efficient one-pass helper that folds syllabus rows into chapter-level effort aggregates.
  */
 export function fetchEffortRatingsByChapter(
-  rows: Pick<
-    SyllabusMasterRow,
-    | "subject"
-    | "chapter"
-    | "marks_2023"
-    | "marks_2024"
-    | "marks_2025"
-    | "relative_effort_score"
-  >[],
+  rows: {
+    subject?: string | null;
+    chapter?: string | null;
+    marks_2023?: number | null;
+    marks_2024?: number | null;
+    marks_2025?: number | null;
+    marks_2026?: number | null;
+    relative_effort_score?: number | null;
+  }[],
 ): ChapterEffortRating[] {
   const byChapter = new Map<string, ChapterAccumulator>();
 
@@ -151,7 +156,7 @@ export function fetchEffortRatingsByChapter(
       topicCount: 0,
     };
 
-    const avg = rowAverageMarks(row as SyllabusMasterRow);
+    const avg = rowAverageMarks(row);
     if (avg != null) {
       acc.marksSum += avg;
       acc.marksCount += 1;
@@ -212,7 +217,7 @@ export async function getAllChaptersWithEffortScores(
   const [chapterMarksRes, syllabusRes] = await Promise.all([
     client
       .from("chapter_marks")
-      .select("subject, chapter, marks_2023, marks_2024, marks_2025")
+      .select("subject, chapter, marks_2023, marks_2024, marks_2025, marks_2026")
       .eq("exam_name", normalizedExam),
     client
       .from("syllabus_master")
@@ -224,7 +229,12 @@ export async function getAllChaptersWithEffortScores(
   if (syllabusRes.error) throw syllabusRes.error;
 
   // Build a lookup: "subject\0chapter" → marks_*
-  type MarksEntry = { marks_2023: number | null; marks_2024: number | null; marks_2025: number | null };
+  type MarksEntry = {
+    marks_2023: number | null;
+    marks_2024: number | null;
+    marks_2025: number | null;
+    marks_2026: number | null;
+  };
   const marksMap = new Map<string, MarksEntry>();
   for (const cm of chapterMarksRes.data ?? []) {
     const key = `${cm.subject?.trim() || "Other"}\u0000${cm.chapter?.trim() || "General"}`;
@@ -232,13 +242,19 @@ export async function getAllChaptersWithEffortScores(
       marks_2023: cm.marks_2023 as number | null,
       marks_2024: cm.marks_2024 as number | null,
       marks_2025: cm.marks_2025 as number | null,
+      marks_2026: cm.marks_2026 as number | null,
     });
   }
 
   // Merge: each syllabus row gets chapter marks injected, keeping relative_effort_score
   const merged = (syllabusRes.data ?? []).map((row) => {
     const key = `${row.subject?.trim() || "Other"}\u0000${row.chapter?.trim() || "General"}`;
-    const marks = marksMap.get(key) ?? { marks_2023: null, marks_2024: null, marks_2025: null };
+    const marks = marksMap.get(key) ?? {
+      marks_2023: null,
+      marks_2024: null,
+      marks_2025: null,
+      marks_2026: null,
+    };
     return {
       subject: row.subject,
       chapter: row.chapter,
@@ -246,6 +262,7 @@ export async function getAllChaptersWithEffortScores(
       marks_2023: marks.marks_2023,
       marks_2024: marks.marks_2024,
       marks_2025: marks.marks_2025,
+      marks_2026: marks.marks_2026,
     };
   });
 

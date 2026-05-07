@@ -15,6 +15,7 @@ export function resolveMicrotopicForTask(
     chapter: "",
     microtopic: "",
     created_at: null,
+    marks_2026: null,
     marks_2023: null,
     marks_2024: null,
     marks_2025: null,

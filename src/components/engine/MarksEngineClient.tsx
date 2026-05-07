@@ -134,7 +134,7 @@ export function MarksEngineClient() {
           </p>
         ) : snap.neetByYear.length === 0 ? (
           <p className="text-sm text-kal-muted">
-            Load syllabus weights (2025–2023 columns) to unlock per-year
+            Load syllabus weights (recent-year columns from the catalog) to unlock per-year
             projections (scaled to your exam&apos;s max score).
           </p>
         ) : (

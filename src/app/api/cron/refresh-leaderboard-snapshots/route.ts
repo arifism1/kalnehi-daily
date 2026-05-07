@@ -6,6 +6,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { loadSyllabusDataForUser, cohortKeyForLeaderboard } from "@/lib/syllabusDataForUser";
 import { computeSyllabusRollup } from "@/lib/syllabusRollup";
+import { isNeetUgExam } from "@/lib/examProfile";
 import { getIstWeekBounds } from "@/lib/istWeek";
 import { computeLeaderboardComposite } from "@/lib/leaderboardComposite";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
@@ -90,6 +91,9 @@ export async function GET(req: NextRequest) {
           syl.rows,
           syl.statusBySyllabusMasterId,
           syl.primaryMarksYear,
+          isNeetUgExam(syl.examLabel)
+            ? { legacyMarksSkipYears: [2026] }
+            : undefined,
         );
         const weeklySeconds = await sumTaskSessionSecondsInRange(
           admin,

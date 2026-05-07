@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 
 import { displayNameForExamCatalog } from "@/lib/examsCatalog";
-import { examScoreMax } from "@/lib/examProfile";
+import { examScoreMax, isNeetUgExam } from "@/lib/examProfile";
 import {
   computeSyllabusRollup,
   computeNeetYearProjections,
@@ -105,10 +105,19 @@ export function useAllExamScopes(): {
       ? examScoreMax(examResults[0].examLabel, examResults[0].cuetDomainSubjects.length)
       : globalMaxScore;
     const singleRollup = singleRows.length > 0
-      ? computeSyllabusRollup(singleRows, statusBySyllabusMasterId, singlePrimaryMarksYear)
+      ? computeSyllabusRollup(
+          singleRows,
+          statusBySyllabusMasterId,
+          singlePrimaryMarksYear,
+          isNeetUgExam(label)
+            ? { legacyMarksSkipYears: [2026] }
+            : undefined,
+        )
       : globalRollup;
     const singleProjections = singleRows.length > 0
-      ? computeNeetYearProjections(singleRows, statusBySyllabusMasterId, singleMaxScore)
+      ? computeNeetYearProjections(singleRows, statusBySyllabusMasterId, singleMaxScore, {
+          omitYears: isNeetUgExam(label) ? [2026] : undefined,
+        })
       : globalProjections;
 
     return [

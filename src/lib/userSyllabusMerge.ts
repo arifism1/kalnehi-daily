@@ -147,6 +147,7 @@ export function mergeSyllabusWithUserCustomizations(
       marks_2023: null,
       marks_2024: null,
       marks_2025: 1,
+      marks_2026: 1,
       relative_effort_score: null,
       section: null,
       weightage_tag: null,

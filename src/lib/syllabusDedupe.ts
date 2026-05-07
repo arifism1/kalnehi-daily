@@ -42,6 +42,7 @@ function mergeMarksAcrossDuplicates(
   for (const o of others) {
     next = {
       ...next,
+      marks_2026: mergeNum(next.marks_2026 ?? null, o.marks_2026 ?? null),
       marks_2023: mergeNum(next.marks_2023, o.marks_2023),
       marks_2024: mergeNum(next.marks_2024, o.marks_2024),
       marks_2025: mergeNum(next.marks_2025, o.marks_2025),

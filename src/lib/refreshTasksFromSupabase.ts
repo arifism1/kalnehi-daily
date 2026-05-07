@@ -2,6 +2,7 @@ import { format, subDays } from "date-fns";
 
 import {
   isCuetExam,
+  isNeetUgExam,
   resolveSyllabusExam,
   syllabusCatalogExamName,
 } from "@/lib/examProfile";
@@ -116,7 +117,7 @@ async function refreshTasksFromSupabaseImpl(userId: string): Promise<void> {
     examKey
       ? supabase
           .from("user_syllabus_marks_overrides")
-          .select("syllabus_master_id, marks_2025, marks_2024, marks_2023")
+          .select("syllabus_master_id, marks_2026, marks_2025, marks_2024, marks_2023")
           .eq("user_id", userId)
           .eq("exam_name", examKey)
       : Promise.resolve({ data: [] as Record<string, unknown>[], error: null }),
@@ -164,6 +165,9 @@ async function refreshTasksFromSupabaseImpl(userId: string): Promise<void> {
       row;
     return rest as Microtopic;
   });
+  if (examLabel && isNeetUgExam(examLabel)) {
+    microtopics = microtopics.map((m) => ({ ...m, marks_2026: null }));
+  }
 
   const queue = await getAllOutboxMutations();
   const pendingDeleteIds = new Set(

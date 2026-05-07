@@ -6,6 +6,7 @@ import type { SyllabusRow } from "@/lib/syllabusGrouping";
 type Client = SupabaseClient<Database>;
 
 export type ChapterMarksEntry = {
+  marks_2026: number | null;
   marks_2025: number | null;
   marks_2024: number | null;
   marks_2023: number | null;
@@ -26,7 +27,7 @@ export async function fetchChapterMarks(
 ): Promise<Map<string, ChapterMarksEntry>> {
   const { data, error } = await supabase
     .from("chapter_marks")
-    .select("subject, chapter, marks_2025, marks_2024, marks_2023")
+    .select("subject, chapter, marks_2026, marks_2025, marks_2024, marks_2023")
     .eq("exam_name", examName);
 
   if (error) throw error;
@@ -34,6 +35,7 @@ export async function fetchChapterMarks(
   const map = new Map<string, ChapterMarksEntry>();
   for (const row of data ?? []) {
     map.set(chapterMarksKey(row.subject, row.chapter), {
+      marks_2026: row.marks_2026 as number | null,
       marks_2025: row.marks_2025 as number | null,
       marks_2024: row.marks_2024 as number | null,
       marks_2023: row.marks_2023 as number | null,
@@ -64,6 +66,7 @@ export function injectChapterMarksIntoRows<T extends SyllabusRow>(
     if (!entry) return row;
     return {
       ...row,
+      marks_2026: entry.marks_2026 ?? 0,
       marks_2025: entry.marks_2025 ?? 0,
       marks_2024: entry.marks_2024 ?? 0,
       marks_2023: entry.marks_2023 ?? 0,

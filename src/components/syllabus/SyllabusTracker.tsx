@@ -90,6 +90,7 @@ import { displayNameForExamCatalog } from "@/lib/examsCatalog";
 import {
   examHasPrevYearMarks,
   shouldShowSyllabusComingSoon,
+  type PrimaryMarksYear,
 } from "@/lib/examProfile";
 import {
   isUpscCseMainsExam,
@@ -567,7 +568,7 @@ export function SyllabusTracker() {
     /** When set (e.g. multi-exam), overrides `catalogExamKey` for ChapterMarksSheet saves */
     examName?: string;
     /** Per-exam primary marks column; falls back to hook `primaryMarksYear` */
-    primaryMarksYear?: 2023 | 2024 | 2025;
+    primaryMarksYear?: PrimaryMarksYear;
   } | null>(null);
   const [openSubject, setOpenSubject] = useState<string | null>(null);
   const [openChapterId, setOpenChapterId] = useState<string | null>(null);
@@ -1461,7 +1462,7 @@ export function SyllabusTracker() {
                                                         section.examLabel,
                                                     )?.primaryMarksYear ??
                                                     primaryMarksYear;
-                                                  return y as 2023 | 2024 | 2025;
+                                                  return y;
                                                 })(),
                                               });
                                             }}
@@ -1794,11 +1795,9 @@ export function SyllabusTracker() {
                                     subject,
                                     chapter,
                                     rows: list as MergedSyllabusRow[],
-                                    primaryMarksYear: (examResults[0]
-                                      ?.primaryMarksYear ?? primaryMarksYear) as
-                                      | 2023
-                                      | 2024
-                                      | 2025,
+                                    primaryMarksYear:
+                                      examResults[0]?.primaryMarksYear ??
+                                      primaryMarksYear,
                                   });
                                 }}
                               >
