@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mic, MicOff } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   appendPendingBacklogItems,
@@ -70,20 +70,6 @@ function ventSourceForOrganize(
   return t;
 }
 
-/** Partial chips: same idea with higher threshold. */
-function ventSourceForPartial(
-  transcript: string,
-  voicePreview: string,
-  voiceActive: boolean,
-): string {
-  const t = transcript.trim();
-  const p = voicePreview.trim();
-  if (t.length >= 8) return t;
-  if (voiceActive && p.length >= 8) return p;
-  const merged = `${t} ${p}`.trim();
-  return merged.length >= 8 ? merged : t.length >= p.length ? t : p;
-}
-
 export function BacklogTrackerClient() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
@@ -97,7 +83,6 @@ export function BacklogTrackerClient() {
   const [transcript, setTranscript] = useState("");
   const [voicePreview, setVoicePreview] = useState("");
   const [directTranscript, setDirectTranscript] = useState("");
-  const [chips, setChips] = useState<string[]>([]);
   const [items, setItems] = useState<OrganizeItem[]>([]);
   /** Parallel to `items`: user-set minutes, or from DB for existing rows */
   const [minutesList, setMinutesList] = useState<number[]>([]);
@@ -119,8 +104,7 @@ export function BacklogTrackerClient() {
   /** yyyy-MM-dd; empty = automatic first day (today vs tomorrow from capacity rules) */
   const [scheduleStartYmd, setScheduleStartYmd] = useState("");
   const [liveError, setLiveError] = useState<string | null>(null);
-  const [busy, setBusy] = useState<"partial" | "final" | "preview" | "commit" | null>(null);
-  const partialTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [busy, setBusy] = useState<"final" | "preview" | "commit" | null>(null);
 
   const userLocalHour = useMemo(() => new Date().getHours(), []);
 
@@ -156,17 +140,18 @@ export function BacklogTrackerClient() {
     setItemMeta((prev) => prev.filter((_, i) => i !== idx));
   }, [itemMeta]);
 
-  const runOrganize = useCallback(async (mode: "partial" | "final", text: string) => {
+  /** LLM split of messy notes — only called from "Turn into backlog items" (not while dictating). */
+  const runOrganize = useCallback(async (text: string) => {
     const t = text.trim();
     if (t.length < 4) return;
-    setBusy(mode);
+    setBusy("final");
     setLiveError(null);
     try {
       const res = await fetch("/api/backlog-organize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ transcript: t, mode }),
+        body: JSON.stringify({ transcript: t, mode: "final" }),
       });
       const data = (await res.json()) as
         | { ok: true; items: OrganizeItem[]; chips: string[] }
@@ -175,51 +160,46 @@ export function BacklogTrackerClient() {
         setLiveError(data.error);
         return;
       }
-      if (mode === "partial") {
-        setChips(data.chips ?? []);
-      } else {
-        setChips([]);
-        const batch = data.items ?? [];
-        if (batch.length === 0) {
-          setLiveError(
-            "Couldn't turn that into backlog rows. Try shorter phrases, or add items one line at a time below.",
-          );
-          return;
-        }
-        const inputs: OrganizedBacklogItemInput[] = batch.map((it) => ({
+      const batch = data.items ?? [];
+      if (batch.length === 0) {
+        setLiveError(
+          "Couldn't turn that into backlog rows. Try shorter phrases, or add items one line at a time below.",
+        );
+        return;
+      }
+      const inputs: OrganizedBacklogItemInput[] = batch.map((it) => ({
+        title: it.title,
+        syllabus_master_id: it.syllabus_master_id ?? null,
+        group_label: normalizeBacklogGroupLabel(it.group_label),
+        details: "",
+        effort_estimate_minutes: null,
+      }));
+      const persist = await appendPendingBacklogItems(inputs);
+      if (!persist.ok) {
+        setLiveError(persist.error);
+        return;
+      }
+      setItems((prev) => [
+        ...prev,
+        ...batch.map((it) => ({
           title: it.title,
           syllabus_master_id: it.syllabus_master_id ?? null,
           group_label: normalizeBacklogGroupLabel(it.group_label),
+        })),
+      ]);
+      setMinutesList((prev) => [...prev, ...batch.map(() => 60)]);
+      setItemMeta((prev) => [
+        ...prev,
+        ...batch.map((it, i) => ({
+          title: it.title,
+          syllabus_master_id: it.syllabus_master_id,
+          group_label: normalizeBacklogGroupLabel(it.group_label),
           details: "",
           effort_estimate_minutes: null,
-        }));
-        const persist = await appendPendingBacklogItems(inputs);
-        if (!persist.ok) {
-          setLiveError(persist.error);
-          return;
-        }
-        setItems((prev) => [
-          ...prev,
-          ...batch.map((it) => ({
-            title: it.title,
-            syllabus_master_id: it.syllabus_master_id ?? null,
-            group_label: normalizeBacklogGroupLabel(it.group_label),
-          })),
-        ]);
-        setMinutesList((prev) => [...prev, ...batch.map(() => 60)]);
-        setItemMeta((prev) => [
-          ...prev,
-          ...batch.map((it, i) => ({
-            title: it.title,
-            syllabus_master_id: it.syllabus_master_id,
-            group_label: normalizeBacklogGroupLabel(it.group_label),
-            details: "",
-            effort_estimate_minutes: null,
-            existing_backlog_id: persist.ids[i],
-          })),
-        ]);
-        trackMetaBacklogAdded();
-      }
+          existing_backlog_id: persist.ids[i],
+        })),
+      ]);
+      trackMetaBacklogAdded();
     } catch {
       setLiveError("Something went wrong. Try again.");
     } finally {
@@ -410,22 +390,6 @@ export function BacklogTrackerClient() {
     [transcript, voicePreview, isVoiceActive],
   );
 
-  useEffect(() => {
-    if (phase !== "vent") return;
-    const t = ventSourceForPartial(transcript, voicePreview, isVoiceActive);
-    if (t.length < 8) {
-      setChips([]);
-      return;
-    }
-    if (partialTimer.current) clearTimeout(partialTimer.current);
-    partialTimer.current = setTimeout(() => {
-      void runOrganize("partial", t);
-    }, 700);
-    return () => {
-      if (partialTimer.current) clearTimeout(partialTimer.current);
-    };
-  }, [transcript, voicePreview, isVoiceActive, runOrganize, phase]);
-
   const toggleSpeak = useCallback(() => {
     if (routing.useNativeCapacitorStt) {
       if (isCapRecording) {
@@ -468,7 +432,7 @@ export function BacklogTrackerClient() {
   ]);
 
   const onFinalReview = () => {
-    void runOrganize("final", ventOrganizeText);
+    void runOrganize(ventOrganizeText);
   };
 
   const flushDirectLines = async () => {
@@ -618,7 +582,6 @@ export function BacklogTrackerClient() {
       setItems([]);
       setMinutesList([]);
       setItemMeta([]);
-      setChips([]);
       setPreviewHeadline(null);
       setPreviewRows([]);
       setScheduleStartYmd("");
@@ -678,7 +641,11 @@ export function BacklogTrackerClient() {
                 <button
                   type="button"
                   onClick={() => toggleSpeak()}
-                  disabled={!isSupported || isWhisperTranscribing || busy !== null}
+                  disabled={
+                    !isSupported ||
+                    isWhisperTranscribing ||
+                    (!isVoiceActive && busy !== null)
+                  }
                   className="inline-flex items-center gap-2 rounded-xl border border-kal-border bg-kal-accent px-4 py-2 text-sm font-semibold text-kal-accent-foreground disabled:opacity-50"
                 >
                   {isVoiceActive ? (
@@ -730,21 +697,9 @@ export function BacklogTrackerClient() {
             {voiceMicError ? (
               <p className="text-xs text-amber-800 dark:text-amber-200">{voiceMicError}</p>
             ) : null}
-            {chips.length > 0 ? (
-              <div className="flex flex-wrap gap-2 pt-1">
-                {chips.map((c) => (
-                  <span
-                    key={c}
-                    className="rounded-full border border-kal-border/80 bg-kal-card-muted px-2.5 py-1 text-[11px] text-kal-muted"
-                  >
-                    {c}
-                  </span>
-                ))}
-              </div>
-            ) : null}
-            {busy === "partial" ? (
+            {busy === "final" ? (
               <p className="text-[11px] text-kal-muted" aria-live="polite">
-                Splitting your list…
+                Turning notes into backlog items…
               </p>
             ) : null}
           </section>

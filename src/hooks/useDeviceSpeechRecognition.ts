@@ -861,7 +861,11 @@ export function useDeviceSpeechRecognition({
   ]);
 
   const stopListening = useCallback(() => {
-    stopRecognition("stop", false);
+    // `recognition.stop()` often waits for the current phrase to finish when
+    // `continuous` is true (Chrome / Web Speech), so Stop feels broken while
+    // the user is still talking. `abort()` ends the session immediately;
+    // `finalizeSession` still merges `lastCombinedPreviewRef` + finals.
+    stopRecognition("abort", false);
   }, [stopRecognition]);
 
   useEffect(() => {
