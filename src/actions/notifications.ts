@@ -239,6 +239,49 @@ export async function listUserNotifications(
   }
 }
 
+export async function getNotificationUnreadTotal(): Promise<
+  { ok: true; total: number } | { ok: false; error: string }
+> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    if (userError || !user) return { ok: true, total: 0 };
+
+    let generalUnread = 0;
+    const { count: generalCount, error: generalError } = await supabase
+      .from("user_notifications")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("read", false);
+    if (generalError) {
+      if (!isUserNotificationsTableMissing(generalError)) throw generalError;
+    } else {
+      generalUnread = generalCount ?? 0;
+    }
+
+    const { count: totalUpdates, error: totalErr } = await supabase
+      .from("app_updates")
+      .select("*", { count: "exact", head: true });
+    if (totalErr) throw totalErr;
+
+    const { count: readUpdates, error: readErr } = await supabase
+      .from("user_app_update_reads")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id);
+    if (readErr) throw readErr;
+
+    const updatesUnread = Math.max(0, (totalUpdates ?? 0) - (readUpdates ?? 0));
+
+    return { ok: true, total: generalUnread + updatesUnread };
+  } catch (e) {
+    console.error("[getNotificationUnreadTotal] failed", e);
+    return { ok: false, error: formatSupabaseError(e) };
+  }
+}
+
 export async function clearAllUserNotifications(): Promise<
   { ok: true; deleted: number } | { ok: false; error: string }
 > {
