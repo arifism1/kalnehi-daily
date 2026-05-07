@@ -1,14 +1,18 @@
 "use client";
 
+import { X } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import {
   fetchBacklogRecoverySummaryForHome,
   rolloverMissedBacklogRecoveryTasks,
 } from "@/actions/backlogRecovery";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
+import * as storage from "@/lib/storage";
 import { useAuthStore } from "@/store/useAuthStore";
+
+const STORAGE_PREFIX = "kalnehi-backlog-home-nudge-dismissed";
 
 /**
  * Runs recovery rollover on mount, then nudges when there are pending backlog items.
@@ -17,15 +21,33 @@ export function BacklogRecoveryHomeNudge() {
   const user = useAuthStore((s) => s.user);
   const today = useCalendarDate();
   const [pending, setPending] = useState<number | null>(null);
+  const [dismissed, setDismissed] = useState(false);
+
+  const dismissKey = user?.id ? `${STORAGE_PREFIX}:${user.id}:${today}` : null;
+
+  const onDismiss = useCallback(() => {
+    if (!dismissKey) return;
+    void storage.setItem(dismissKey, "1");
+    setDismissed(true);
+  }, [dismissKey]);
 
   useEffect(() => {
     if (!user?.id) {
       setPending(null);
+      setDismissed(false);
       return;
     }
     let cancelled = false;
     void (async () => {
       await rolloverMissedBacklogRecoveryTasks(today);
+      if (cancelled) return;
+      const wasDismissed = (await storage.getItem(`${STORAGE_PREFIX}:${user.id}:${today}`)) === "1";
+      if (cancelled) return;
+      if (wasDismissed) {
+        setDismissed(true);
+        return;
+      }
+      setDismissed(false);
       const s = await fetchBacklogRecoverySummaryForHome();
       if (!cancelled && s.ok) setPending(s.pendingCount);
     })();
@@ -34,13 +56,21 @@ export function BacklogRecoveryHomeNudge() {
     };
   }, [user?.id, today]);
 
-  if (pending === null || pending === 0) return null;
+  if (dismissed || pending === null || pending === 0) return null;
 
   return (
     <div
       role="status"
-      className="rounded-2xl border border-violet-200/80 bg-gradient-to-br from-violet-50/95 to-white px-4 py-3.5 shadow-sm dark:border-violet-500/35 dark:from-violet-950/40 dark:to-stone-900/60"
+      className="relative rounded-2xl border border-violet-200/80 bg-gradient-to-br from-violet-50/95 to-white py-3.5 pl-4 pr-10 shadow-sm dark:border-violet-500/35 dark:from-violet-950/40 dark:to-stone-900/60"
     >
+      <button
+        type="button"
+        onClick={onDismiss}
+        aria-label="Dismiss"
+        className="absolute right-2 top-2 rounded-md p-1 text-kal-muted transition-colors hover:text-kal-text"
+      >
+        <X className="size-4" aria-hidden />
+      </button>
       <p className="text-sm font-semibold text-kal-text">
         You have{" "}
         <span className="tabular-nums text-violet-700 dark:text-violet-200">{pending}</span>{" "}
