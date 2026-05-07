@@ -1,9 +1,13 @@
 "use server";
 
-import { addDays, format } from "date-fns";
+import { addDays, differenceInCalendarDays, format, parseISO } from "date-fns";
 import { revalidatePath } from "next/cache";
 
-import { insertDailyTask } from "@/actions/dailyPlan";
+import {
+  insertDailyTask,
+  moveDailyTaskToPlanDate,
+  updateDailyTask,
+} from "@/actions/dailyPlan";
 import {
   computeBacklogSchedule,
   type BacklogScheduleIntensity,
@@ -160,16 +164,138 @@ export async function commitPendingBacklogFromOrganize(
   }
 }
 
+/** Append pending backlog rows (Backlog List unplanned) without deleting existing pending items. */
+export async function appendPendingBacklogItems(
+  items: OrganizedBacklogItemInput[],
+): Promise<{ ok: true; ids: string[] } | { ok: false; error: string }> {
+  if (!Array.isArray(items) || items.length === 0) {
+    return { ok: false, error: "Nothing to save." };
+  }
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return { ok: false, error: USER_ERROR.session };
+
+    const rows: TablesInsert<"user_syllabus_backlog">[] = [];
+    const ids: string[] = [];
+
+    for (const it of items) {
+      const title = String(it.title ?? "").trim().slice(0, 500);
+      if (!title) continue;
+      const id = crypto.randomUUID();
+      ids.push(id);
+      const mins =
+        typeof it.effort_estimate_minutes === "number" && Number.isFinite(it.effort_estimate_minutes)
+          ? Math.max(5, Math.min(480, Math.round(it.effort_estimate_minutes)))
+          : null;
+      rows.push({
+        id,
+        user_id: user.id,
+        title,
+        details: String(it.details ?? "").trim().slice(0, 8000),
+        syllabus_master_id: it.syllabus_master_id?.trim() || null,
+        group_label: it.group_label?.trim()?.slice(0, 120) || null,
+        difficulty: it.difficulty?.trim()?.slice(0, 32) || null,
+        effort_estimate_minutes: mins,
+        status: "pending",
+      } satisfies TablesInsert<"user_syllabus_backlog">);
+    }
+
+    if (rows.length === 0) return { ok: false, error: "Nothing to save." };
+
+    for (const r of rows) {
+      if (r.syllabus_master_id) {
+        try {
+          await assertSyllabusBelongsToUserExam(supabase, user.id, [
+            r.syllabus_master_id,
+          ]);
+        } catch {
+          r.syllabus_master_id = null;
+        }
+      }
+    }
+
+    const { error: insErr } = await supabase.from("user_syllabus_backlog").insert(rows);
+    if (insErr) return { ok: false, error: USER_ERROR.tryAgain };
+    revalidateBacklogPaths();
+    return { ok: true, ids };
+  } catch (e) {
+    return { ok: false, error: formatSupabaseError(e) };
+  }
+}
+
+export async function deletePendingBacklogRow(
+  backlogId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const id = String(backlogId ?? "").trim();
+  if (!id) return { ok: false, error: "Invalid item." };
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return { ok: false, error: USER_ERROR.session };
+
+    const { error } = await supabase
+      .from("user_syllabus_backlog")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", user.id)
+      .eq("status", "pending");
+    if (error) return { ok: false, error: USER_ERROR.tryAgain };
+    revalidateBacklogPaths();
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: formatSupabaseError(e) };
+  }
+}
+
+export async function updatePendingBacklogRowSubject(
+  backlogId: string,
+  group_label: string | null,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const id = String(backlogId ?? "").trim();
+  if (!id) return { ok: false, error: "Invalid item." };
+  const raw = group_label == null ? "" : String(group_label);
+  const label = raw.trim().slice(0, 120) || null;
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return { ok: false, error: USER_ERROR.session };
+
+    const { error } = await supabase
+      .from("user_syllabus_backlog")
+      .update({
+        group_label: label,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .eq("user_id", user.id)
+      .eq("status", "pending");
+    if (error) return { ok: false, error: USER_ERROR.tryAgain };
+    revalidateBacklogPaths();
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: formatSupabaseError(e) };
+  }
+}
+
 export async function previewBacklogSchedule(
   items: OrganizedBacklogItemInput[],
   todayYmd: string,
   userLocalHour: number,
   intensity: BacklogScheduleIntensity,
+  scheduleStartYmd?: string | null,
 ): Promise<
   | {
       ok: true;
       startsToday: boolean;
       headline: string;
+      startYmd: string;
       rows: {
         plan_date: string;
         title: string;
@@ -189,6 +315,16 @@ export async function previewBacklogSchedule(
   }
   if (schedulable.some((s) => s.effort_estimate_minutes < 15)) {
     return { ok: false, error: "Set time for each task (15+ min)." };
+  }
+
+  const startPick = typeof scheduleStartYmd === "string" ? scheduleStartYmd.trim() : "";
+  if (startPick) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(startPick)) {
+      return { ok: false, error: "Invalid start date." };
+    }
+    if (startPick < todayYmd.trim()) {
+      return { ok: false, error: "Start date can’t be in the past." };
+    }
   }
 
   try {
@@ -211,12 +347,14 @@ export async function previewBacklogSchedule(
       intensity,
       usedMinutesToday,
       backlogTaskCountToday,
+      scheduleStartYmd: startPick || null,
     });
 
     return {
       ok: true,
       startsToday: result.startsToday,
       headline: result.headline,
+      startYmd: result.startYmd,
       rows: result.rows,
       perDay: result.perDay,
     };
@@ -233,7 +371,7 @@ export async function commitBacklogSchedule(
   todayYmd: string,
   userLocalHour: number,
   intensity: BacklogScheduleIntensity,
-  options?: { ventRawText?: string | null },
+  options?: { ventRawText?: string | null; scheduleStartYmd?: string | null },
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(todayYmd.trim())) {
     return { ok: false, error: "Invalid date." };
@@ -244,6 +382,17 @@ export async function commitBacklogSchedule(
   }
   if (schedulable.some((s) => s.effort_estimate_minutes < 15)) {
     return { ok: false, error: "Set time for each task (15+ min)." };
+  }
+
+  const startPick =
+    typeof options?.scheduleStartYmd === "string" ? options.scheduleStartYmd.trim() : "";
+  if (startPick) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(startPick)) {
+      return { ok: false, error: "Invalid start date." };
+    }
+    if (startPick < todayYmd.trim()) {
+      return { ok: false, error: "Start date can’t be in the past." };
+    }
   }
 
   try {
@@ -275,6 +424,7 @@ export async function commitBacklogSchedule(
       intensity,
       usedMinutesToday,
       backlogTaskCountToday,
+      scheduleStartYmd: startPick || null,
     });
 
     const existingIds = schedulable
@@ -494,15 +644,150 @@ export type TaskListPlannedRow = {
   title: string;
   estimated_minutes: number | null;
   backlog_item_id: string | null;
+  /** Subject / grouping from linked backlog row */
+  group_label: string | null;
 };
 
-export async function fetchTaskListPayload(): Promise<
+const PLAN_FETCH_MAX_SPAN_DAYS = 400;
+
+export type FetchTaskListPayloadOptions = {
+  plannedFromYmd?: string | null;
+  plannedToYmd?: string | null;
+};
+
+/**
+ * Edit a backlog-linked planned daily task (title, duration, calendar day).
+ * Syncs matching fields on `user_syllabus_backlog`.
+ */
+export async function updateRecoveryPlannedTask(input: {
+  daily_task_id: string;
+  title?: string;
+  estimated_minutes?: number | null;
+  target_plan_date?: string | null;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  const taskId = input.daily_task_id?.trim() ?? "";
+  if (!taskId) return { ok: false, error: "Invalid task." };
+
+  const targetRaw = input.target_plan_date?.trim() ?? "";
+  const targetYmd =
+    targetRaw && /^\d{4}-\d{2}-\d{2}$/.test(targetRaw) ? targetRaw : null;
+  if (targetRaw && !targetYmd) {
+    return { ok: false, error: "Invalid date." };
+  }
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return { ok: false, error: USER_ERROR.session };
+
+    const { data: taskRow, error: taskErr } = await supabase
+      .from("daily_tasks")
+      .select("id, backlog_item_id, daily_plan_id")
+      .eq("id", taskId)
+      .maybeSingle();
+
+    if (taskErr || !taskRow) return { ok: false, error: USER_ERROR.tryAgain };
+
+    const { data: planRow, error: planErr } = await supabase
+      .from("daily_plans")
+      .select("user_id, plan_date")
+      .eq("id", taskRow.daily_plan_id)
+      .maybeSingle();
+
+    if (planErr || !planRow || planRow.user_id !== user.id) {
+      return { ok: false, error: USER_ERROR.tryAgain };
+    }
+
+    const backlogItemId = taskRow.backlog_item_id?.trim();
+    if (!backlogItemId) {
+      return {
+        ok: false,
+        error: "This planned row is not linked to backlog.",
+      };
+    }
+
+    const patch: Parameters<typeof updateDailyTask>[1] = {};
+
+    if (input.title !== undefined) {
+      const t = input.title.trim();
+      if (!t) return { ok: false, error: "Title cannot be empty." };
+      patch.title = t;
+    }
+
+    if (input.estimated_minutes !== undefined) {
+      if (
+        input.estimated_minutes !== null &&
+        !Number.isFinite(Number(input.estimated_minutes))
+      ) {
+        return { ok: false, error: "Invalid duration." };
+      }
+      patch.estimated_minutes =
+        input.estimated_minutes == null
+          ? null
+          : Math.max(0, Math.round(Number(input.estimated_minutes)));
+    }
+
+    if (Object.keys(patch).length > 0) {
+      const u = await updateDailyTask(taskId, patch);
+      if (!u.ok) return u;
+    }
+
+    const backlogUpdates: {
+      title?: string;
+      effort_estimate_minutes?: number | null;
+      updated_at?: string;
+    } = {};
+    if (input.title !== undefined) {
+      backlogUpdates.title = input.title.trim();
+      if (!backlogUpdates.title) {
+        return { ok: false, error: "Title cannot be empty." };
+      }
+    }
+    if (input.estimated_minutes !== undefined) {
+      backlogUpdates.effort_estimate_minutes =
+        input.estimated_minutes == null
+          ? null
+          : Math.max(0, Math.round(Number(input.estimated_minutes)));
+    }
+
+    if (Object.keys(backlogUpdates).length > 0) {
+      backlogUpdates.updated_at = new Date().toISOString();
+      const { error: bErr } = await supabase
+        .from("user_syllabus_backlog")
+        .update(backlogUpdates)
+        .eq("id", backlogItemId)
+        .eq("user_id", user.id);
+      if (bErr) return { ok: false, error: USER_ERROR.tryAgain };
+    }
+
+    const currentYmd =
+      typeof planRow.plan_date === "string"
+        ? planRow.plan_date.slice(0, 10)
+        : "";
+    if (targetYmd && targetYmd !== currentYmd) {
+      const m = await moveDailyTaskToPlanDate(taskId, targetYmd);
+      if (!m.ok) return m;
+    }
+
+    revalidateBacklogPaths();
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: formatSupabaseError(e) };
+  }
+}
+
+export async function fetchTaskListPayload(
+  options?: FetchTaskListPayloadOptions,
+): Promise<
   | {
       ok: true;
       unplanned: TaskListBacklogRow[];
       unplannedTotal: number;
       plannedByDate: Record<string, TaskListPlannedRow[]>;
       todayYmd: string;
+      plannedWindow: { fromYmd: string; toYmd: string };
     }
   | { ok: false; error: string }
 > {
@@ -536,8 +821,29 @@ export async function fetchTaskListPayload(): Promise<
       return String(a.created_at ?? "").localeCompare(String(b.created_at ?? ""));
     });
 
-    const fromYmd = format(addDays(new Date(), -1), "yyyy-MM-dd");
-    const toYmd = format(addDays(new Date(), 30), "yyyy-MM-dd");
+    const defaultFrom = format(addDays(new Date(), -1), "yyyy-MM-dd");
+    const defaultTo = format(addDays(new Date(), 30), "yyyy-MM-dd");
+    let fromYmd = defaultFrom;
+    let toYmd = defaultTo;
+    const rf = options?.plannedFromYmd?.trim();
+    const rt = options?.plannedToYmd?.trim();
+    if (rf && /^\d{4}-\d{2}-\d{2}$/.test(rf)) fromYmd = rf;
+    if (rt && /^\d{4}-\d{2}-\d{2}$/.test(rt)) toYmd = rt;
+    if (fromYmd > toYmd) {
+      const swap = fromYmd;
+      fromYmd = toYmd;
+      toYmd = swap;
+    }
+    const span = differenceInCalendarDays(
+      parseISO(`${toYmd}T12:00:00`),
+      parseISO(`${fromYmd}T12:00:00`),
+    );
+    if (span > PLAN_FETCH_MAX_SPAN_DAYS) {
+      toYmd = format(
+        addDays(parseISO(`${fromYmd}T12:00:00`), PLAN_FETCH_MAX_SPAN_DAYS),
+        "yyyy-MM-dd",
+      );
+    }
 
     const { data: plans, error: pErr } = await supabase
       .from("daily_plans")
@@ -549,7 +855,10 @@ export async function fetchTaskListPayload(): Promise<
           title,
           estimated_minutes,
           backlog_item_id,
-          status
+          status,
+          user_syllabus_backlog (
+            group_label
+          )
         )
       `,
       )
@@ -590,8 +899,16 @@ export async function fetchTaskListPayload(): Promise<
         estimated_minutes: number | null;
         backlog_item_id: string | null;
         status: string;
+        user_syllabus_backlog?: { group_label: string | null } | null;
       }[]) {
         if (!t?.backlog_item_id || t.status === "skipped") continue;
+        const emb = t.user_syllabus_backlog;
+        const group_label =
+          emb == null
+            ? null
+            : Array.isArray(emb)
+              ? (emb[0]?.group_label ?? null)
+              : (emb.group_label ?? null);
         const list = plannedByDate[ymd] ?? [];
         list.push({
           plan_date: ymd,
@@ -599,6 +916,7 @@ export async function fetchTaskListPayload(): Promise<
           title: t.title,
           estimated_minutes: t.estimated_minutes,
           backlog_item_id: t.backlog_item_id,
+          group_label,
         });
         plannedByDate[ymd] = list;
       }
@@ -610,6 +928,7 @@ export async function fetchTaskListPayload(): Promise<
       unplannedTotal,
       plannedByDate,
       todayYmd,
+      plannedWindow: { fromYmd, toYmd },
     };
   } catch (e) {
     return { ok: false, error: formatSupabaseError(e) };

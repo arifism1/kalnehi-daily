@@ -183,6 +183,17 @@ ${catalogJson}`;
     i.group_label ? `${i.group_label}: ${i.title}` : i.title,
   );
 
+  if (mode === "final" && items.length === 0) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error:
+          "Couldn't extract backlog tasks from that text. Try again, rephrase, or use Exact lines.",
+      },
+      { status: 422 },
+    );
+  }
+
   return NextResponse.json({
     ok: true,
     items,

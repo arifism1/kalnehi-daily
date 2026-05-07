@@ -192,6 +192,7 @@ export async function updateDailyTask(
     | "status"
     | "source_raw_text"
     | "syllabus_master_id"
+    | "estimated_minutes"
   >,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
@@ -205,6 +206,16 @@ export async function updateDailyTask(
       ...patch,
       updated_at: new Date().toISOString(),
     };
+    if ("estimated_minutes" in patch) {
+      const em = patch.estimated_minutes;
+      if (em == null) {
+        nextPatch.estimated_minutes = null;
+      } else if (!Number.isFinite(Number(em))) {
+        return { ok: false, error: "Invalid duration." };
+      } else {
+        nextPatch.estimated_minutes = Math.max(0, Math.round(Number(em)));
+      }
+    }
     if ("syllabus_master_id" in patch) {
       const sid = patch.syllabus_master_id;
       if (sid === null || sid === "") {

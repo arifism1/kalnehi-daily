@@ -25,6 +25,7 @@ export default async function BacklogListPage() {
       initialUnplannedTotal={data.unplannedTotal}
       initialPlannedByDate={data.plannedByDate}
       initialServerTodayYmd={data.todayYmd}
+      initialPlannedWindow={data.plannedWindow}
     />
   );
 }
