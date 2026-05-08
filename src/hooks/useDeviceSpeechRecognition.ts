@@ -347,6 +347,27 @@ export function useDeviceSpeechRecognition({
     setTranscriptionQualityHint(null);
   }, []);
 
+  /** Tear down Web Speech buffers and idle the hook without emitting `onTranscript` */
+  const purgeSpeechBuffersAndIdle = useCallback(() => {
+    clearTimers();
+    recognitionRef.current = null;
+    intentionalEngineEndRef.current = true;
+    androidRestartCountRef.current = 0;
+    setStatus("idle");
+    setMicBusy(false);
+    hadSpeechSegmentRef.current = false;
+    processedFinalCountRef.current = 0;
+    lastCombinedPreviewRef.current = "";
+    finalTranscriptRef.current = "";
+    speechSessionAnchorMsRef.current = null;
+    suppressSubmitRef.current = false;
+    ignoreAbortErrorRef.current = false;
+    lastRecognitionErrorKindRef.current = "";
+    setSpeechPausedAfterUtterance(false);
+    onPreviewTranscriptRef.current?.("");
+    setTranscriptionQualityHint(null);
+  }, [clearTimers, setMicBusy]);
+
   const finalizeSession = useCallback(() => {
     void (async () => {
       clearTimers();
@@ -868,6 +889,14 @@ export function useDeviceSpeechRecognition({
     stopRecognition("abort", false);
   }, [stopRecognition]);
 
+  /** Abort listening and discard captured text for this session (no `onTranscript`). */
+  const cancelListening = useCallback(() => {
+    if (recognitionRef.current) {
+      stopRecognition("abort", true);
+    }
+    purgeSpeechBuffersAndIdle();
+  }, [stopRecognition, purgeSpeechBuffersAndIdle]);
+
   useEffect(() => {
     return () => {
       stopRecognition("abort", true);
@@ -885,6 +914,7 @@ export function useDeviceSpeechRecognition({
     startListening,
     status,
     stopListening,
+    cancelListening,
     transcriptionQualityHint,
   };
 }

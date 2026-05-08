@@ -61,6 +61,8 @@ export function useMediaRecorderVoice({
   const mimeRef = useRef<string>("audio/webm");
   const startedAtRef = useRef<number | null>(null);
   const sessionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** When true, drop the result of the in-flight `/api/voice-transcribe` call. */
+  const ignoreNextTranscriptRef = useRef(false);
   const onTranscriptRef = useRef(onTranscript);
 
   useEffect(() => {
@@ -105,6 +107,11 @@ export function useMediaRecorderVoice({
         return;
       }
 
+      if (ignoreNextTranscriptRef.current) {
+        ignoreNextTranscriptRef.current = false;
+        return;
+      }
+
       // Use server-reported duration (from Groq's verbose_json) for accurate quota billing.
       const durationSeconds =
         typeof data.durationSeconds === "number" && data.durationSeconds > 0
@@ -129,6 +136,7 @@ export function useMediaRecorderVoice({
     clearTimer();
     const mr = mediaRecorderRef.current;
     if (!mr) return;
+    ignoreNextTranscriptRef.current = false;
     const startedAt = startedAtRef.current ?? Date.now();
     // Set transcribing immediately so the "On it…" spinner appears before the
     // MediaRecorder onstop event fires and the upload begins.
@@ -160,10 +168,44 @@ export function useMediaRecorderVoice({
     startedAtRef.current = null;
   }, [clearTimer, transcribeBlob]);
 
+  /** Stop the mic without uploading audio (discard this take). */
+  const discardRecording = useCallback(() => {
+    clearTimer();
+    const mr = mediaRecorderRef.current;
+    if (!mr) return;
+
+    ignoreNextTranscriptRef.current = false;
+    setIsRecording(false);
+
+    mr.onstop = () => {
+      mr.stream.getTracks().forEach((t) => t.stop());
+      chunksRef.current = [];
+      mediaRecorderRef.current = null;
+    };
+    try {
+      if (mr.state === "recording") mr.requestData();
+    } catch {
+      /* some WebViews omit requestData */
+    }
+    try {
+      mr.stop();
+    } catch {
+      mediaRecorderRef.current = null;
+    }
+    startedAtRef.current = null;
+  }, [clearTimer]);
+
+  /** After `stopRecording`, ignore the Whisper response user cancelled during “Transcribing…”. */
+  const cancelPendingTranscription = useCallback(() => {
+    ignoreNextTranscriptRef.current = true;
+    setIsTranscribing(false);
+  }, []);
+
   const startRecording = useCallback(async () => {
     if (mediaRecorderRef.current) return;
 
     setError(null);
+    ignoreNextTranscriptRef.current = false;
     chunksRef.current = [];
 
     let stream: MediaStream;
@@ -229,6 +271,8 @@ export function useMediaRecorderVoice({
     clearError,
     startRecording,
     stopRecording,
+    discardRecording,
+    cancelPendingTranscription,
     isSupported:
       typeof window !== "undefined" &&
       typeof navigator !== "undefined" &&

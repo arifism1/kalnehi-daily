@@ -60,12 +60,12 @@ function tomorrowYmd(todayYmd: string): string {
 }
 
 function headlineForChosenStart(todayYmd: string, startYmd: string): string {
-  if (startYmd === todayYmd) return "Starting today";
-  if (startYmd === tomorrowYmd(todayYmd)) return "Starting tomorrow";
+  if (startYmd === todayYmd) return "Begins today";
+  if (startYmd === tomorrowYmd(todayYmd)) return "Begins tomorrow";
   try {
-    return `Starting ${format(parseISO(`${startYmd}T12:00:00`), "MMM d, yyyy")}`;
+    return `Begins ${format(parseISO(`${startYmd}T12:00:00`), "MMM d, yyyy")}`;
   } catch {
-    return "Starting on your chosen date";
+    return "Begins on the date you picked";
   }
 }
 
@@ -163,8 +163,8 @@ export function computeBacklogSchedule(args: {
   const headline = usedChosenStart
     ? headlineForChosenStart(args.todayYmd, startYmd)
     : startsToday
-      ? "Starting today"
-      : "Starting tomorrow";
+      ? "Begins today"
+      : "Begins tomorrow";
 
   return {
     startYmd,

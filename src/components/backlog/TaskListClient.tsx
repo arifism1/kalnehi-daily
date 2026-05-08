@@ -226,11 +226,6 @@ export function TaskListClient({
     router.push("/backlog-tracker");
   };
 
-  const visibleUnplanned = filteredUnplanned.slice(0, 5);
-  const hiddenUnplanned = subjectFilter
-    ? Math.max(0, filteredUnplanned.length - visibleUnplanned.length)
-    : Math.max(0, unplannedTotal - visibleUnplanned.length);
-
   const unplannedHeadingCount = subjectFilter ? filteredUnplanned.length : unplannedTotal;
 
   const missedTodayLabel = (row: TaskListBacklogRow) =>
@@ -372,7 +367,7 @@ export function TaskListClient({
           <span className="text-[11px] text-kal-muted">Still pending</span>
         </div>
 
-        {visibleUnplanned.length === 0 ? (
+        {filteredUnplanned.length === 0 ? (
           <p className="text-sm text-kal-muted">
             {subjectFilter
               ? "No pending rows with this subject."
@@ -380,7 +375,7 @@ export function TaskListClient({
           </p>
         ) : (
           <ul className="space-y-2">
-            {visibleUnplanned.map((row) => (
+            {filteredUnplanned.map((row) => (
               <li
                 key={row.id}
                 className="flex flex-col gap-1 rounded-lg bg-kal-card px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
@@ -411,12 +406,6 @@ export function TaskListClient({
             ))}
           </ul>
         )}
-
-        {hiddenUnplanned > 0 ? (
-          <p className="text-[11px] text-kal-muted">
-            +{hiddenUnplanned} more — use Fix these.
-          </p>
-        ) : null}
 
         <button
           type="button"

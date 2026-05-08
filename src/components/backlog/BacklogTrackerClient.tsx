@@ -2,14 +2,13 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Mic, MicOff } from "lucide-react";
+import { Mic, Square, XCircle } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   appendPendingBacklogItems,
   commitBacklogSchedule,
   deletePendingBacklogRow,
-  previewBacklogSchedule,
   updatePendingBacklogRowSubject,
   type OrganizedBacklogItemInput,
 } from "@/actions/backlogRecovery";
@@ -20,7 +19,6 @@ import {
   BACKLOG_TIME_STEP_MINUTES,
   type BacklogTrackerPrefillV1,
 } from "@/lib/backlogRecoveryConstants";
-import type { BacklogScheduleIntensity } from "@/lib/backlogRecoveryScheduling";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useDoubtSyllabusSubjects } from "@/hooks/useDoubtSyllabusSubjects";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
@@ -43,7 +41,7 @@ type OrganizeItem = {
   group_label?: string | null;
 };
 
-type Phase = "vent" | "time" | "preview";
+type Phase = "vent" | "time";
 
 function clampMinutes(m: number): number {
   const s = Math.round(m / BACKLOG_TIME_STEP_MINUTES) * BACKLOG_TIME_STEP_MINUTES;
@@ -82,29 +80,19 @@ export function BacklogTrackerClient() {
 
   const [transcript, setTranscript] = useState("");
   const [voicePreview, setVoicePreview] = useState("");
-  const [directTranscript, setDirectTranscript] = useState("");
   const [items, setItems] = useState<OrganizeItem[]>([]);
   /** Parallel to `items`: user-set minutes, or from DB for existing rows */
   const [minutesList, setMinutesList] = useState<number[]>([]);
   const [itemMeta, setItemMeta] = useState<OrganizedBacklogItemInput[]>([]);
   const [timeIdx, setTimeIdx] = useState(0);
   const [phase, setPhase] = useState<Phase>("vent");
-  const [intensity, setIntensity] = useState<BacklogScheduleIntensity>("heavier");
 
-  const [previewHeadline, setPreviewHeadline] = useState<string | null>(null);
-  const [previewRows, setPreviewRows] = useState<
-    {
-      plan_date: string;
-      title: string;
-      estimated_minutes: number;
-      group_label: string | null;
-    }[]
-  >([]);
-  const [previewPerDay, setPreviewPerDay] = useState(3);
   /** yyyy-MM-dd; empty = automatic first day (today vs tomorrow from capacity rules) */
   const [scheduleStartYmd, setScheduleStartYmd] = useState("");
   const [liveError, setLiveError] = useState<string | null>(null);
-  const [busy, setBusy] = useState<"final" | "preview" | "commit" | null>(null);
+  const [busy, setBusy] = useState<"final" | "commit" | null>(null);
+  /** After tapping Done on voice controls, wait for mic/STT idle then POST backlog-organize. */
+  const [pendingOrganizeAfterVoiceDone, setPendingOrganizeAfterVoiceDone] = useState(false);
 
   const userLocalHour = useMemo(() => new Date().getHours(), []);
 
@@ -140,7 +128,7 @@ export function BacklogTrackerClient() {
     setItemMeta((prev) => prev.filter((_, i) => i !== idx));
   }, [itemMeta]);
 
-  /** LLM split of messy notes — only called from "Turn into backlog items" (not while dictating). */
+  /** LLM split of vent text — runs after voice Done when STT settles (`pendingOrganizeAfterVoiceDone`). */
   const runOrganize = useCallback(async (text: string) => {
     const t = text.trim();
     if (t.length < 4) return;
@@ -163,22 +151,11 @@ export function BacklogTrackerClient() {
       const batch = data.items ?? [];
       if (batch.length === 0) {
         setLiveError(
-          "Couldn't turn that into backlog rows. Try shorter phrases, or add items one line at a time below.",
+          "We couldn't pull separate tasks from that. Try shorter phrases, or add items one line at a time below.",
         );
         return;
       }
-      const inputs: OrganizedBacklogItemInput[] = batch.map((it) => ({
-        title: it.title,
-        syllabus_master_id: it.syllabus_master_id ?? null,
-        group_label: normalizeBacklogGroupLabel(it.group_label),
-        details: "",
-        effort_estimate_minutes: null,
-      }));
-      const persist = await appendPendingBacklogItems(inputs);
-      if (!persist.ok) {
-        setLiveError(persist.error);
-        return;
-      }
+      // Structure with AI: keep rows client-only until final confirm (commit inserts backlog + daily tasks).
       setItems((prev) => [
         ...prev,
         ...batch.map((it) => ({
@@ -190,16 +167,14 @@ export function BacklogTrackerClient() {
       setMinutesList((prev) => [...prev, ...batch.map(() => 60)]);
       setItemMeta((prev) => [
         ...prev,
-        ...batch.map((it, i) => ({
+        ...batch.map((it) => ({
           title: it.title,
           syllabus_master_id: it.syllabus_master_id,
           group_label: normalizeBacklogGroupLabel(it.group_label),
           details: "",
           effort_estimate_minutes: null,
-          existing_backlog_id: persist.ids[i],
         })),
       ]);
-      trackMetaBacklogAdded();
     } catch {
       setLiveError("Something went wrong. Try again.");
     } finally {
@@ -327,6 +302,7 @@ export function BacklogTrackerClient() {
     isSupported: webSpeechSupported,
     startListening,
     stopListening,
+    cancelListening,
     error: voiceError,
     clearError: clearVoiceError,
   } = useDeviceSpeechRecognition({
@@ -360,6 +336,8 @@ export function BacklogTrackerClient() {
     isTranscribing: isWhisperTranscribing,
     startRecording: startWhisperRecording,
     stopRecording: stopWhisperRecording,
+    discardRecording: discardWhisperRecording,
+    cancelPendingTranscription: cancelWhisperTranscription,
     isSupported: whisperMicSupported,
   } = useMediaRecorderVoice({
     maxMs: VOICE_LONG_FORM_MAX_SESSION_MS,
@@ -390,30 +368,74 @@ export function BacklogTrackerClient() {
     [transcript, voicePreview, isVoiceActive],
   );
 
-  const toggleSpeak = useCallback(() => {
+  useEffect(() => {
+    if (!pendingOrganizeAfterVoiceDone || isVoiceActive || busy !== null) return;
+
+    const merged = `${transcript.trim()} ${voicePreview.trim()}`.replace(/\s{2,}/g, " ").trim();
+    const candidate =
+      ventOrganizeText.trim().length >= 4 ? ventOrganizeText.trim() : merged;
+
+    if (candidate.length >= 4) {
+      setPendingOrganizeAfterVoiceDone(false);
+      void runOrganize(candidate);
+      return;
+    }
+
+    const id = window.setTimeout(() => {
+      setPendingOrganizeAfterVoiceDone(false);
+    }, 1600);
+    return () => window.clearTimeout(id);
+  }, [
+    pendingOrganizeAfterVoiceDone,
+    isVoiceActive,
+    busy,
+    transcript,
+    voicePreview,
+    ventOrganizeText,
+    runOrganize,
+  ]);
+
+  const cancelVoiceCapture = useCallback(() => {
+    setPendingOrganizeAfterVoiceDone(false);
+    clearCapError();
+    clearWhisperError();
+    clearVoiceError();
+    setVoicePreview("");
     if (routing.useNativeCapacitorStt) {
-      if (isCapRecording) {
-        stopCapRecording();
-      } else {
-        clearCapError();
-        setVoicePreview("");
-        void startCapRecording();
-      }
+      void stopCapRecording();
     } else if (routing.useBrowserWhisperStt) {
       if (isWhisperRecording) {
-        stopWhisperRecording();
-      } else {
-        clearWhisperError();
-        setVoicePreview("");
-        void startWhisperRecording();
+        discardWhisperRecording();
+      } else if (isWhisperTranscribing) {
+        cancelWhisperTranscription();
       }
-    } else if (isListening) {
-      stopListening();
     } else {
-      clearVoiceError();
-      setVoicePreview("");
-      void startListening();
+      cancelListening();
     }
+  }, [
+    routing.useNativeCapacitorStt,
+    routing.useBrowserWhisperStt,
+    clearCapError,
+    clearVoiceError,
+    clearWhisperError,
+    discardWhisperRecording,
+    cancelWhisperTranscription,
+    cancelListening,
+    isWhisperRecording,
+    isWhisperTranscribing,
+    stopCapRecording,
+  ]);
+
+  const finishVoiceCapture = useCallback(() => {
+    if (routing.useNativeCapacitorStt) {
+      if (isCapRecording) stopCapRecording();
+      return;
+    }
+    if (routing.useBrowserWhisperStt) {
+      if (isWhisperRecording) stopWhisperRecording();
+      return;
+    }
+    if (isListening) stopListening();
   }, [
     routing.useNativeCapacitorStt,
     routing.useBrowserWhisperStt,
@@ -421,22 +443,45 @@ export function BacklogTrackerClient() {
     isWhisperRecording,
     isListening,
     stopCapRecording,
-    startCapRecording,
     stopWhisperRecording,
-    startWhisperRecording,
     stopListening,
-    startListening,
+  ]);
+
+  const onVoiceDonePressed = useCallback(() => {
+    setPendingOrganizeAfterVoiceDone(true);
+    finishVoiceCapture();
+  }, [finishVoiceCapture]);
+
+  const startVoiceCapture = useCallback(() => {
+    setPendingOrganizeAfterVoiceDone(false);
+    if (routing.useNativeCapacitorStt) {
+      clearCapError();
+      setVoicePreview("");
+      void startCapRecording();
+      return;
+    }
+    if (routing.useBrowserWhisperStt) {
+      clearWhisperError();
+      setVoicePreview("");
+      void startWhisperRecording();
+      return;
+    }
+    clearVoiceError();
+    setVoicePreview("");
+    void startListening();
+  }, [
+    routing.useNativeCapacitorStt,
+    routing.useBrowserWhisperStt,
     clearCapError,
     clearWhisperError,
     clearVoiceError,
+    startCapRecording,
+    startWhisperRecording,
+    startListening,
   ]);
 
-  const onFinalReview = () => {
-    void runOrganize(ventOrganizeText);
-  };
-
   const flushDirectLines = async () => {
-    const lines = directTranscript
+    const lines = transcript
       .split(/\n/)
       .map((l) => l.trim())
       .filter(Boolean)
@@ -473,7 +518,7 @@ export function BacklogTrackerClient() {
         existing_backlog_id: persist.ids[i],
       })),
     ]);
-    setDirectTranscript("");
+    setTranscript("");
     trackMetaBacklogAdded();
   };
 
@@ -502,49 +547,44 @@ export function BacklogTrackerClient() {
     });
   }, [items, itemMeta, minutesList]);
 
-  const runPreview = useCallback(
-    async (levelOverride?: BacklogScheduleIntensity, scheduleStartOverride?: string) => {
-      const level = levelOverride ?? intensity;
-      const startRaw =
-        scheduleStartOverride !== undefined ? scheduleStartOverride : scheduleStartYmd;
-      const startPayload = startRaw.trim() || null;
-      const payload = itemsWithMinutesForServer();
-      if (payload.some((p) => (p.effort_estimate_minutes ?? 0) < BACKLOG_TIME_MIN_CAP)) {
-        setLiveError("Set at least 15 minutes per task.");
+  const onCommit = async () => {
+    const payload = itemsWithMinutesForServer();
+    setBusy("commit");
+    setLiveError(null);
+    try {
+      const res = await commitBacklogSchedule(payload, today, userLocalHour, "heavier", {
+        ventRawText: transcript.trim() || null,
+        scheduleStartYmd: scheduleStartYmd.trim() || null,
+      });
+      if (!res.ok) {
+        setLiveError(res.error);
         return;
       }
-      setBusy("preview");
-      setLiveError(null);
-      try {
-        const res = await previewBacklogSchedule(
-          payload,
-          today,
-          userLocalHour,
-          level,
-          startPayload,
-        );
-        if (!res.ok) {
-          setLiveError(res.error);
-          return;
-        }
-        setPreviewHeadline(res.headline);
-        setPreviewRows(res.rows);
-        setPreviewPerDay(res.perDay);
-        setScheduleStartYmd(res.startYmd);
-        setPhase("preview");
-      } finally {
-        setBusy(null);
-      }
-    },
-    [itemsWithMinutesForServer, today, userLocalHour, intensity, scheduleStartYmd],
-  );
+      trackMetaBacklogPlanLocked();
+      router.refresh();
+      setTranscript("");
+      setItems([]);
+      setMinutesList([]);
+      setItemMeta([]);
+      setScheduleStartYmd("");
+      setPhase("vent");
+      setTimeIdx(0);
+    } finally {
+      setBusy(null);
+    }
+  };
 
   const onTimeNext = () => {
     if (timeIdx < items.length - 1) {
       setTimeIdx((k) => k + 1);
-    } else {
-      void runPreview();
+      return;
     }
+    const payload = itemsWithMinutesForServer();
+    if (payload.some((p) => (p.effort_estimate_minutes ?? 0) < BACKLOG_TIME_MIN_CAP)) {
+      setLiveError("Give each task at least 15 minutes.");
+      return;
+    }
+    void onCommit();
   };
 
   const onTimeBack = () => {
@@ -561,37 +601,6 @@ export function BacklogTrackerClient() {
     });
   };
 
-  const onCommit = async () => {
-    const payload = itemsWithMinutesForServer();
-    setBusy("commit");
-    setLiveError(null);
-    try {
-      const res = await commitBacklogSchedule(payload, today, userLocalHour, intensity, {
-        ventRawText:
-          [transcript.trim(), directTranscript.trim()].filter(Boolean).join("\n\n") || null,
-        scheduleStartYmd: scheduleStartYmd.trim() || null,
-      });
-      if (!res.ok) {
-        setLiveError(res.error);
-        return;
-      }
-      trackMetaBacklogPlanLocked();
-      router.refresh();
-      setTranscript("");
-      setDirectTranscript("");
-      setItems([]);
-      setMinutesList([]);
-      setItemMeta([]);
-      setPreviewHeadline(null);
-      setPreviewRows([]);
-      setScheduleStartYmd("");
-      setPhase("vent");
-      setTimeIdx(0);
-    } finally {
-      setBusy(null);
-    }
-  };
-
   const curMinutes = minutesList[timeIdx] ?? 60;
   const curItem = items[timeIdx];
 
@@ -601,9 +610,9 @@ export function BacklogTrackerClient() {
         <p className="kal-category-label text-kal-accent">Backlog Tracker</p>
         <h1 className="kal-feature-title">Catch up on backlog</h1>
         <p className="text-sm text-kal-muted">
-          Jot everything in one place (or paste one item per line). Turn the messy box into separate
-          backlog lines if you want, set minutes, preview dates, then save. Nothing hits your daily
-          plan until you save the schedule at the end.
+          Put everything you&apos;re behind on in one place (or paste one task per line). Build a checklist, set
+          minutes for each item on the same screen as your start date, then confirm. Tasks aren&apos;t
+          added to your daily plan until you confirm at the end.
         </p>
       </header>
 
@@ -617,65 +626,107 @@ export function BacklogTrackerClient() {
         <div className="space-y-6">
           <section className="space-y-3 rounded-2xl border border-kal-border bg-kal-card p-4 kal-shadow-card">
             <label className="block text-xs font-semibold text-kal-muted">
-              Messy notes
+              Tell your Backlogs
             </label>
-            <p className="text-[11px] leading-snug text-kal-muted">
-              Speak or type whatever is on your mind in one go.
-            </p>
-            <p className="text-[11px] leading-snug text-kal-muted">
-              <strong className="text-kal-text">Turn into backlog items</strong> sends this text to the
-              server and adds <strong className="text-kal-text">several rows</strong> to your captured list.
-              Titles may be shortened or cleaned up; we sometimes guess a subject or syllabus link.
-              Afterward, set or adjust the subject on each row in <strong className="text-kal-text">Captured</strong>.
-            </p>
             <textarea
               value={isVoiceActive && voicePreview ? voicePreview : transcript}
               onChange={(e) => setTranscript(e.target.value)}
               rows={5}
               className="w-full resize-y rounded-xl border border-kal-border bg-kal-card-muted px-3 py-2 text-sm text-kal-text placeholder:text-kal-muted focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/25"
-              placeholder="Organic chem feels messy, mock 3 paper, electrostatics diagrams…"
+              placeholder="Type your backlog here or just speak it up"
             />
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <AiFeatureGate>
-                <button
-                  type="button"
-                  onClick={() => toggleSpeak()}
-                  disabled={
-                    !isSupported ||
-                    isWhisperTranscribing ||
-                    (!isVoiceActive && busy !== null)
-                  }
-                  className="inline-flex items-center gap-2 rounded-xl border border-kal-border bg-kal-accent px-4 py-2 text-sm font-semibold text-kal-accent-foreground disabled:opacity-50"
-                >
-                  {isVoiceActive ? (
-                    <>
-                      <MicOff className="h-4 w-4" aria-hidden />
-                      Stop
-                    </>
-                  ) : (
-                    <>
-                      <Mic className="h-4 w-4" aria-hidden />
-                      Speak
-                    </>
-                  )}
-                </button>
+                {!isVoiceActive ? (
+                  <button
+                    type="button"
+                    onClick={() => startVoiceCapture()}
+                    disabled={!isSupported || isWhisperTranscribing || busy !== null}
+                    className="inline-flex items-center gap-2 rounded-xl border border-kal-border bg-kal-accent px-4 py-2 text-sm font-semibold text-kal-accent-foreground disabled:opacity-50"
+                  >
+                    <Mic className="h-4 w-4" aria-hidden />
+                    Speak
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => onVoiceDonePressed()}
+                      disabled={
+                        !isSupported ||
+                        isWhisperTranscribing ||
+                        !(isListening || isWhisperRecording || isCapRecording)
+                      }
+                      className="inline-flex max-w-full items-center gap-2 rounded-xl border border-kal-border bg-kal-accent px-3 py-2 text-sm font-semibold leading-snug text-kal-accent-foreground disabled:opacity-50"
+                    >
+                      <Square className="h-4 w-4 shrink-0" aria-hidden />
+                      Structure with AI
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => cancelVoiceCapture()}
+                      disabled={
+                        !isSupported ||
+                        !(isListening ||
+                          isWhisperRecording ||
+                          isCapRecording ||
+                          isWhisperTranscribing ||
+                          isCapTranscribing)
+                      }
+                      className="inline-flex items-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-2 text-sm font-semibold text-kal-text disabled:opacity-50"
+                    >
+                      <XCircle className="h-4 w-4" aria-hidden />
+                      Cancel
+                    </button>
+                  </>
+                )}
               </AiFeatureGate>
               <button
                 type="button"
-                onClick={onFinalReview}
-                disabled={busy !== null || ventOrganizeText.trim().length < 4}
-                className="rounded-xl border border-kal-border bg-kal-card-muted px-4 py-2 text-sm font-semibold text-kal-text disabled:opacity-50"
-                aria-label="Turn notes into separate backlog items"
+                onClick={() => void flushDirectLines()}
+                disabled={
+                  busy !== null ||
+                  isVoiceActive ||
+                  !transcript
+                    .split(/\n/)
+                    .map((l) => l.trim())
+                    .some(Boolean)
+                }
+                className="inline-flex items-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-2 text-sm font-semibold text-kal-text disabled:opacity-50"
               >
-                Turn into backlog items
+                Direct Add
               </button>
             </div>
-            {!isSupported ? (
-              <p className="text-xs text-kal-muted">
-                Voice isn&apos;t supported in this browser — type instead.
-              </p>
-            ) : null}
+            {isSupported ? (
+              <div className="space-y-2 text-[11px] leading-snug text-kal-muted">
+                <p>
+                  Put whatever you&apos;re catching up on in this box—you can dictate or type. New tasks land under{" "}
+                  <strong className="text-kal-text">Captured</strong> below; tidy subjects there, then set time per
+                  item and start date—confirm when you&apos;re ready.
+                </p>
+                <p>
+                  <strong className="text-kal-text">Speak</strong> starts listening. When you&apos;re finished, tap{" "}
+                  <strong className="text-kal-text">Structure with AI</strong>—it stops the mic, keeps your words in
+                  this box, and turns them into separate tasks under{" "}
+                  <strong className="text-kal-text">Captured</strong> after they&apos;ve finished transferring.
+                </p>
+                <p>
+                  <strong className="text-kal-text">Cancel</strong> discards the current recording and does not create
+                  tasks. Typed one task per line? Tap <strong className="text-kal-text">Direct Add</strong>—each line is
+                  saved exactly as you typed, then appears under{" "}
+                  <strong className="text-kal-text">Captured</strong>.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2 text-[11px] leading-snug text-kal-muted">
+                <p>
+                  Add backlog items in the box: type one task per line, tap{" "}
+                  <strong className="text-kal-text">Direct Add</strong>, and set subjects under{" "}
+                  <strong className="text-kal-text">Captured</strong>. Voice isn&apos;t supported on this browser.
+                </p>
+              </div>
+            )}
             {isVoiceActive ? (
               <>
                 <p className="animate-pulse text-[11px] font-medium text-kal-muted">
@@ -690,6 +741,7 @@ export function BacklogTrackerClient() {
                     visible
                     className="!text-left"
                     variant={routing.useBrowserWhisperStt ? "whisper" : "dictation"}
+                    stopLabel="Structure with AI"
                   />
                 ) : null}
               </>
@@ -699,34 +751,9 @@ export function BacklogTrackerClient() {
             ) : null}
             {busy === "final" ? (
               <p className="text-[11px] text-kal-muted" aria-live="polite">
-                Turning notes into backlog items…
+                Organizing your tasks…
               </p>
             ) : null}
-          </section>
-
-          <section className="space-y-3 rounded-2xl border border-kal-border bg-kal-card p-4 kal-shadow-card">
-            <label className="block text-xs font-semibold text-kal-muted">
-              One line per item
-            </label>
-            <p className="text-[11px] leading-snug text-kal-muted">
-              Each line becomes its own backlog row. Text stays <strong className="text-kal-text">exactly</strong>{" "}
-              as you typed it. Then choose a subject per row under <strong className="text-kal-text">Captured</strong>.
-            </p>
-            <textarea
-              value={directTranscript}
-              onChange={(e) => setDirectTranscript(e.target.value)}
-              rows={4}
-              className="w-full resize-y rounded-xl border border-kal-border bg-kal-card-muted px-3 py-2 text-sm text-kal-text placeholder:text-kal-muted focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/25"
-              placeholder={"chemistry chapter 2 class notes\nmock 3 — essay outline"}
-            />
-            <button
-              type="button"
-              onClick={() => void flushDirectLines()}
-              disabled={busy !== null || !directTranscript.trim()}
-              className="rounded-xl border border-kal-border bg-kal-card-muted px-4 py-2 text-sm font-semibold text-kal-text disabled:opacity-50"
-            >
-              Add lines to list
-            </button>
           </section>
 
           {items.length > 0 ? (
@@ -736,7 +763,7 @@ export function BacklogTrackerClient() {
                   <p className="text-sm font-bold text-kal-text">
                     Captured ({items.length})
                   </p>
-                  <span className="text-[11px] text-kal-muted">From notes or lines</span>
+                  <span className="text-[11px] text-kal-muted">From notes, voice, or lines</span>
                 </div>
                 <p className="text-[11px] leading-snug text-kal-muted">
                   Set subject for each item below. Suggestions match your syllabus (same as Doubt Tracker).
@@ -809,6 +836,7 @@ export function BacklogTrackerClient() {
               </button>
             </section>
           ) : null}
+
         </div>
       ) : null}
 
@@ -818,7 +846,9 @@ export function BacklogTrackerClient() {
             <p className="text-xs font-semibold text-kal-muted">
               {timeIdx + 1} of {items.length}
             </p>
-            <p className="text-[11px] text-kal-muted">Minutes for this one?</p>
+            <p className="text-[11px] text-kal-muted">
+              Roughly how long will this block need?
+            </p>
           </div>
           <div>
             <p className="text-base font-semibold text-kal-text">{curItem.title}</p>
@@ -874,6 +904,22 @@ export function BacklogTrackerClient() {
               +
             </button>
           </div>
+
+          <div className="space-y-2 rounded-xl border border-kal-border/70 bg-kal-card-muted/40 px-3 py-3">
+            <label htmlFor="backlog-start-date" className="block text-xs font-semibold text-kal-muted">
+              When do you want to fix it?
+            </label>
+            <input
+              id="backlog-start-date"
+              type="date"
+              min={today}
+              value={scheduleStartYmd}
+              onChange={(e) => setScheduleStartYmd(e.target.value)}
+              disabled={busy !== null}
+              className="w-full rounded-lg border border-kal-border bg-kal-card px-2 py-1.5 text-sm text-kal-text disabled:opacity-50"
+            />
+          </div>
+
           <div className="flex gap-2">
             <button
               type="button"
@@ -888,118 +934,11 @@ export function BacklogTrackerClient() {
               disabled={busy !== null}
               className="flex-1 rounded-xl bg-kal-accent py-2 text-sm font-bold text-kal-accent-foreground disabled:opacity-50"
             >
-              {timeIdx < items.length - 1 ? "Next" : "Preview plan"}
-            </button>
-          </div>
-        </section>
-      ) : null}
-
-      {phase === "preview" ? (
-        <section className="space-y-4 rounded-2xl border border-kal-border bg-kal-card p-4">
-          <h2 className="text-sm font-bold text-kal-text">Draft schedule</h2>
-          {previewHeadline ? (
-            <p className="text-sm font-medium text-kal-accent">{previewHeadline}</p>
-          ) : null}
-          <p className="text-xs text-kal-muted">
-            Up to {previewPerDay} recovery tasks per day. Tasks spread across calendar days; when we
-            can, we space similar subjects apart on the same day.
-          </p>
-
-          <div className="space-y-2 rounded-xl border border-kal-border/70 bg-kal-card-muted/40 px-3 py-3">
-            <label
-              htmlFor="backlog-recovery-start"
-              className="block text-xs font-semibold text-kal-muted"
-            >
-              Start spreading from
-            </label>
-            <input
-              id="backlog-recovery-start"
-              type="date"
-              min={today}
-              value={scheduleStartYmd}
-              onChange={(e) => {
-                const v = e.target.value;
-                setScheduleStartYmd(v);
-                void runPreview(undefined, v);
-              }}
-              className="w-full rounded-lg border border-kal-border bg-kal-card px-2 py-1.5 text-sm text-kal-text"
-            />
-            <p className="text-[11px] leading-snug text-kal-muted">
-              First day tasks can land on. Change the date to refresh the preview (not in the past).
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              disabled={busy !== null}
-              className={`rounded-full border px-3 py-1 text-xs font-semibold disabled:opacity-50 ${
-                intensity === "lighter"
-                  ? "border-kal-accent bg-kal-accent/15 text-kal-accent"
-                  : "border-kal-border text-kal-muted"
-              }`}
-              onClick={() => {
-                setIntensity("lighter");
-                void runPreview("lighter");
-              }}
-            >
-              Lighter
-            </button>
-            <button
-              type="button"
-              disabled={busy !== null}
-              className={`rounded-full border px-3 py-1 text-xs font-semibold disabled:opacity-50 ${
-                intensity === "heavier"
-                  ? "border-kal-accent bg-kal-accent/15 text-kal-accent"
-                  : "border-kal-border text-kal-muted"
-              }`}
-              onClick={() => {
-                setIntensity("heavier");
-                void runPreview("heavier");
-              }}
-            >
-              Heavier
-            </button>
-          </div>
-          <p className="text-[11px] text-kal-muted">
-            Lighter: fewer recovery tasks per day. Heavier: more per day.
-          </p>
-
-          <ul className="space-y-2">
-            {previewRows.map((r, i) => (
-              <li
-                key={`${r.plan_date}-${r.title}-${i}`}
-                className="flex items-start justify-between gap-2 rounded-lg border border-kal-border/70 bg-kal-card-muted/50 px-3 py-2 text-sm"
-              >
-                <div className="min-w-0">
-                  <p className="font-medium">{r.title}</p>
-                  <p className="text-[11px] text-kal-muted">
-                    {r.plan_date} · {r.estimated_minutes}m
-                    {r.group_label ? ` · ${r.group_label}` : ""}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
-
-          <div className="flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={() => void onCommit()}
-              disabled={busy !== null || previewRows.length === 0}
-              className="w-full rounded-xl bg-kal-accent py-3 text-sm font-bold text-kal-accent-foreground disabled:opacity-50"
-            >
-              {busy === "commit" ? "Saving…" : "Save this schedule"}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setPhase("time");
-                setTimeIdx(items.length - 1);
-              }}
-              className="text-center text-xs font-semibold text-kal-muted hover:text-kal-accent"
-            >
-              Edit times
+              {busy === "commit"
+                ? "Saving…"
+                : timeIdx < items.length - 1
+                  ? "Next"
+                  : "Confirm and add to plan"}
             </button>
           </div>
         </section>

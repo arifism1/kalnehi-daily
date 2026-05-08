@@ -11,6 +11,8 @@ type VoiceListeningHintProps = {
   className?: string;
   /** When true, shows a subtle "Be loud and clear" reminder below the main hint. Defaults to false. */
   showClearVoiceHint?: boolean;
+  /** Replaces "Stop" in the hint line (e.g. "Structure with AI" on Backlog Tracker). */
+  stopLabel?: string;
 };
 
 /**
@@ -22,15 +24,18 @@ export function VoiceListeningHint({
   variant,
   className,
   showClearVoiceHint = false,
+  stopLabel,
 }: VoiceListeningHintProps) {
   if (!visible) return null;
+
+  const tap = stopLabel ?? "Stop";
 
   const line =
     variant === "command"
       ? "Up to 2 min · tap mic to stop anytime"
       : variant === "whisper"
-        ? "Tap Stop · audio uploads · long sessions OK"
-        : "Tap Stop when done · long pause ends phrase · sessions up to 30 min";
+        ? `Tap ${tap} · audio uploads · long sessions OK`
+        : `Tap ${tap} when done · long pause ends phrase · sessions up to 30 min`;
 
   return (
     <div className={clsx("flex flex-col items-center gap-0.5", className)}>

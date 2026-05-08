@@ -32,17 +32,23 @@ export type OrganizedBacklogItemInput = {
   last_attempt_date?: string | null;
 };
 
-const REVAL_PATHS = [
-  "/backlog-list",
-  "/backlog-tracker",
-  "/daily-plan",
-  "/",
-] as const;
+/**
+ * RSC paths shared by backlog mutations. Omits `/backlog-tracker` (client wizard) and `/` (too broad).
+ * Revalidating `/` from the Backlog Tracker caused the app shell to refresh and remount the wizard,
+ * wiping in-progress voice/organize state before `setState` from the server action landed.
+ */
+const REVAL_PATHS_NO_ROOT = ["/backlog-list", "/daily-plan"] as const;
 
-function revalidateBacklogPaths(): void {
-  for (const p of REVAL_PATHS) {
+function revalidateBacklogCachesOnly(): void {
+  for (const p of REVAL_PATHS_NO_ROOT) {
     revalidatePath(p);
   }
+}
+
+/** Full backlog-related cache bust: list, plan, and home summaries. */
+function revalidateBacklogPaths(): void {
+  revalidateBacklogCachesOnly();
+  revalidatePath("/");
 }
 
 async function loadTodayPlanTaskStats(
@@ -219,7 +225,7 @@ export async function appendPendingBacklogItems(
 
     const { error: insErr } = await supabase.from("user_syllabus_backlog").insert(rows);
     if (insErr) return { ok: false, error: USER_ERROR.tryAgain };
-    revalidateBacklogPaths();
+    revalidateBacklogCachesOnly();
     return { ok: true, ids };
   } catch (e) {
     return { ok: false, error: formatSupabaseError(e) };
@@ -245,7 +251,7 @@ export async function deletePendingBacklogRow(
       .eq("user_id", user.id)
       .eq("status", "pending");
     if (error) return { ok: false, error: USER_ERROR.tryAgain };
-    revalidateBacklogPaths();
+    revalidateBacklogCachesOnly();
     return { ok: true };
   } catch (e) {
     return { ok: false, error: formatSupabaseError(e) };
@@ -277,7 +283,7 @@ export async function updatePendingBacklogRowSubject(
       .eq("user_id", user.id)
       .eq("status", "pending");
     if (error) return { ok: false, error: USER_ERROR.tryAgain };
-    revalidateBacklogPaths();
+    revalidateBacklogCachesOnly();
     return { ok: true };
   } catch (e) {
     return { ok: false, error: formatSupabaseError(e) };
@@ -311,10 +317,16 @@ export async function previewBacklogSchedule(
   }
   const schedulable = toSchedulableItems(items).filter((s) => s.title.length > 0);
   if (schedulable.length === 0) {
-    return { ok: false, error: "Nothing to schedule." };
+    return {
+      ok: false,
+      error: "Nothing to preview yet — add at least one task with a time estimate first.",
+    };
   }
   if (schedulable.some((s) => s.effort_estimate_minutes < 15)) {
-    return { ok: false, error: "Set time for each task (15+ min)." };
+    return {
+      ok: false,
+      error: "Give each task at least 15 minutes before you preview.",
+    };
   }
 
   const startPick = typeof scheduleStartYmd === "string" ? scheduleStartYmd.trim() : "";
@@ -378,10 +390,16 @@ export async function commitBacklogSchedule(
   }
   const schedulable = toSchedulableItems(items).filter((s) => s.title.length > 0);
   if (schedulable.length === 0) {
-    return { ok: false, error: "Nothing to schedule." };
+    return {
+      ok: false,
+      error: "Nothing to save — add at least one task with a time estimate first.",
+    };
   }
   if (schedulable.some((s) => s.effort_estimate_minutes < 15)) {
-    return { ok: false, error: "Set time for each task (15+ min)." };
+    return {
+      ok: false,
+      error: "Give each task at least 15 minutes before you save.",
+    };
   }
 
   const startPick =
@@ -650,6 +668,9 @@ export type TaskListPlannedRow = {
 
 const PLAN_FETCH_MAX_SPAN_DAYS = 400;
 
+/** Pending rows fetched for Backlog List (raised from 40 so the UI can show the full pending set). */
+const TASK_LIST_UNPLANNED_MAX_ROWS = 2000;
+
 export type FetchTaskListPayloadOptions = {
   plannedFromYmd?: string | null;
   plannedToYmd?: string | null;
@@ -810,7 +831,7 @@ export async function fetchTaskListPayload(
       )
       .eq("user_id", user.id)
       .eq("status", "pending")
-      .limit(40);
+      .limit(TASK_LIST_UNPLANNED_MAX_ROWS);
 
     const sortedPending = [...(pendingRows ?? [])].sort((a, b) => {
       const rc = (b.retry_count ?? 0) - (a.retry_count ?? 0);
@@ -872,6 +893,15 @@ export async function fetchTaskListPayload(
     }
 
     const unplannedTotal = count ?? sortedPending.length;
+    if (
+      typeof count === "number" &&
+      count > sortedPending.length &&
+      sortedPending.length >= TASK_LIST_UNPLANNED_MAX_ROWS
+    ) {
+      console.warn(
+        "[fetchTaskListPayload] pending backlog rows exceed TASK_LIST_UNPLANNED_MAX_ROWS; raise cap or paginate.",
+      );
+    }
     const unplanned: TaskListBacklogRow[] = sortedPending.map((r) => ({
       id: r.id,
       title: r.title,

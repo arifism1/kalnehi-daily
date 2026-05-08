@@ -30,13 +30,13 @@ export type DailyTaskView = DailyTaskRow & {
   syllabus_master: DailyTaskSyllabusEmbed | null;
 };
 
+/** Daily plan related routes to revalidate. Omit `/backlog-tracker` — client wizard; revalidate can remount and lose in-progress state. */
 const REVAL_PATHS = [
   "/daily-plan",
   "/dictate-day",
   "/self-type-day",
   "/saved-plans",
   "/backlog-list",
-  "/backlog-tracker",
   "/",
 ] as const;
 
