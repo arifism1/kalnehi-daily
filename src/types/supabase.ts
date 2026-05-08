@@ -1077,7 +1077,9 @@ export type Database = {
           created_at: string
           id: string
           letter_date: string
+          open_date: string | null
           pinned: boolean
+          sealed: boolean
           updated_at: string
           user_id: string
         }
@@ -1086,7 +1088,9 @@ export type Database = {
           created_at?: string
           id?: string
           letter_date: string
+          open_date?: string | null
           pinned?: boolean
+          sealed?: boolean
           updated_at?: string
           user_id: string
         }
@@ -1095,7 +1099,9 @@ export type Database = {
           created_at?: string
           id?: string
           letter_date?: string
+          open_date?: string | null
           pinned?: boolean
+          sealed?: boolean
           updated_at?: string
           user_id?: string
         }

@@ -1,6 +1,6 @@
 "use client";
 
-import { addDays, format, parseISO } from "date-fns";
+import { addDays, differenceInCalendarDays, format, parseISO } from "date-fns";
 import {
   CalendarDays,
   Camera,
@@ -10,6 +10,7 @@ import {
   ImagePlus,
   LayoutGrid,
   Loader2,
+  Lock,
   Mic,
   Pin,
   Search,
@@ -45,9 +46,18 @@ import {
   type MotivationVoiceRow,
 } from "@/lib/motivationLocal";
 import { MOTIVATION_VOICE_TAGS } from "@/lib/motivationTypes";
+import {
+  isLetterRevealedInStorage,
+  isLetterSealedBeforeOpenDate,
+  sanitizeMotivationLettersForToday,
+  setLetterRevealedInStorage,
+  shouldExcludeLetterFromRandomPull,
+  shouldHideLetterBodyInTimeline,
+} from "@/lib/motivationLetterDisplay";
 import { flushMotivationOutbox } from "@/lib/motivationSync";
 import { useAuthStore } from "@/store/useAuthStore";
 import { surfaceErrorForUi } from "@/lib/userFacingErrors";
+import { ConfettiBurst } from "@/components/ui/ConfettiBurst";
 
 type TabId = "letter" | "voice" | "vision" | "timeline";
 
@@ -57,7 +67,10 @@ function letterStreakDays(
 ): number {
   const withLetter = new Set<string>();
   for (const l of letters) {
-    if (l.body.trim().length > 0) withLetter.add(l.letter_date);
+    const hasContent =
+      l.body.trim().length > 0 ||
+      (l.sealed === true && !!l.open_date);
+    if (hasContent) withLetter.add(l.letter_date);
   }
   let n = 0;
   let d = today;
@@ -102,7 +115,7 @@ export function PersonalMotivationPage() {
     if (fresh.ok) {
       const cached = await getMotivationBundleCached(userId);
       const merged = mergeBundleFromServer(cached, {
-        letters: fresh.letters,
+        letters: sanitizeMotivationLettersForToday(fresh.letters, today),
         voices: fresh.voices,
         photos: fresh.photos,
         prefs: fresh.prefs,
@@ -110,7 +123,7 @@ export function PersonalMotivationPage() {
       await saveMotivationBundleCached(merged);
       setBundle(merged);
     }
-  }, [userId]);
+  }, [userId, today]);
 
   useEffect(() => {
     if (!userId) {
@@ -122,7 +135,12 @@ export function PersonalMotivationPage() {
       setHydrating(true);
       try {
         const cached = await getMotivationBundleCached(userId);
-        if (!cancelled && cached) setBundle(cached);
+        if (!cancelled && cached) {
+          setBundle({
+            ...cached,
+            letters: sanitizeMotivationLettersForToday(cached.letters, today),
+          });
+        }
         await refreshFromRemote();
         await flushMotivationOutbox(userId);
         await refreshFromRemote();
@@ -133,7 +151,7 @@ export function PersonalMotivationPage() {
     return () => {
       cancelled = true;
     };
-  }, [userId, refreshFromRemote]);
+  }, [userId, refreshFromRemote, today]);
 
   const todayLetter = useMemo(
     () =>
@@ -143,28 +161,136 @@ export function PersonalMotivationPage() {
     [bundle?.letters, today, userId],
   );
 
-  const [letterBody, setLetterBody] = useState("");
-  const [letterSaving, setLetterSaving] = useState(false);
+  const storageLetterRevealed =
+    userId && todayLetter?.letter_date
+      ? isLetterRevealedInStorage(userId, todayLetter.letter_date)
+      : false;
+  const [letterRevealedOverride, setLetterRevealedOverride] = useState(false);
 
   useEffect(() => {
-    setLetterBody(todayLetter?.body ?? "");
-  }, [todayLetter?.body, today]);
+    setLetterRevealedOverride(false);
+  }, [todayLetter?.letter_date, userId]);
+
+  const revealedForLetter =
+    storageLetterRevealed || letterRevealedOverride;
+
+  const sealedBeforeOpen =
+    todayLetter && isLetterSealedBeforeOpenDate(todayLetter, today);
+  const openDay =
+    todayLetter?.open_date?.slice(0, 10) ?? "";
+  const sealedReadyToOpen =
+    todayLetter?.sealed === true &&
+    !!openDay &&
+    today >= openDay &&
+    !sealedBeforeOpen;
+
+  const [letterBody, setLetterBody] = useState("");
+  const [letterSaving, setLetterSaving] = useState(false);
+  const [showSealPanel, setShowSealPanel] = useState(false);
+  const [sealPickDate, setSealPickDate] = useState("");
+  const [sealUndoDeadline, setSealUndoDeadline] = useState<number | null>(null);
+  const bodyBeforeSealRef = useRef<string | null>(null);
+  const [showUnlockConfetti, setShowUnlockConfetti] = useState(false);
+
+  const minSealOpenDate = useMemo(
+    () => format(addDays(parseISO(today), 1), "yyyy-MM-dd"),
+    [today],
+  );
+
+  useEffect(() => {
+    setSealPickDate(minSealOpenDate);
+  }, [minSealOpenDate]);
+
+  useEffect(() => {
+    if (!todayLetter || todayLetter.user_id !== userId) {
+      setLetterBody("");
+      return;
+    }
+    if (isLetterSealedBeforeOpenDate(todayLetter, today)) {
+      setLetterBody("");
+      return;
+    }
+    if (
+      todayLetter.sealed === true &&
+      openDay &&
+      today >= openDay &&
+      !revealedForLetter
+    ) {
+      setLetterBody("");
+      return;
+    }
+    setLetterBody(todayLetter.body ?? "");
+  }, [
+    todayLetter,
+    today,
+    userId,
+    openDay,
+    revealedForLetter,
+  ]);
+
+  type SaveLetterOpts = {
+    pinned: boolean;
+    sealed?: boolean;
+    openDate?: string | null;
+    voidSeal?: boolean;
+    bodyOverride?: string;
+  };
 
   const saveLetter = useCallback(
-    async (pinned: boolean) => {
+    async (opts: SaveLetterOpts) => {
       if (!userId) return;
       setLetterSaving(true);
       setNotice(null);
+
+      const voidSeal = opts.voidSeal === true;
+      let sealed: boolean;
+      let openDate: string | null;
+      if (voidSeal) {
+        sealed = false;
+        openDate = null;
+      } else if (opts.sealed === true) {
+        sealed = true;
+        openDate = opts.openDate ?? null;
+      } else {
+        sealed = todayLetter?.sealed === true;
+        openDate = todayLetter?.open_date ?? null;
+      }
+
+      const rawBody = opts.bodyOverride ?? letterBody;
+      if (!voidSeal && !rawBody.trim() && !sealed) {
+        setNotice("Write something before saving.");
+        setLetterSaving(false);
+        return;
+      }
+      if (opts.sealed === true && !rawBody.trim()) {
+        setNotice("Write your letter before sealing it.");
+        setLetterSaving(false);
+        return;
+      }
+      if (opts.sealed === true) {
+        bodyBeforeSealRef.current = rawBody.slice(0, 50_000);
+      }
+
       const now = new Date().toISOString();
       const row: MotivationLetterRow = {
         id: todayLetter?.id ?? crypto.randomUUID(),
         user_id: userId,
         letter_date: today,
-        body: letterBody.slice(0, 50_000),
-        pinned,
+        body: voidSeal
+          ? (bodyBeforeSealRef.current ?? rawBody).slice(0, 50_000)
+          : rawBody.slice(0, 50_000),
+        pinned: opts.pinned,
+        sealed,
+        open_date: openDate,
         created_at: todayLetter?.created_at ?? now,
         updated_at: now,
       };
+
+      const displayRow =
+        sealed && openDate && today < openDate
+          ? { ...row, body: "" }
+          : row;
+
       const prev = bundle;
       const base: MotivationBundle = prev ?? {
         letters: [],
@@ -175,29 +301,74 @@ export function PersonalMotivationPage() {
       };
       const next: MotivationBundle = {
         ...base,
-        letters: upsertLetterInList(base.letters, row),
+        letters: upsertLetterInList(base.letters, displayRow),
         updatedAt: Date.now(),
       };
       setBundle(next);
       await saveMotivationBundleCached(next);
 
-      const res = await upsertMotivationLetter(today, row.body, pinned);
+      const res = await upsertMotivationLetter(
+        today,
+        row.body,
+        opts.pinned,
+        sealed,
+        openDate,
+      );
       if (!res.ok) {
+        if (opts.sealed === true) bodyBeforeSealRef.current = null;
         await enqueueMotivationOutbox(userId, {
           kind: "letter_upsert",
           letterDate: today,
           body: row.body,
-          pinned,
+          pinned: opts.pinned,
+          sealed,
+          openDate,
         });
         setNotice("Saved on this device — will sync when you're online.");
       } else {
-        setNotice(pinned ? "Letter saved and pinned." : "Letter saved.");
+        if (opts.sealed === true) {
+          setSealUndoDeadline(Date.now() + 60_000);
+          setShowSealPanel(false);
+          setNotice("Letter sealed. You won't read it until the open date.");
+        } else if (voidSeal) {
+          bodyBeforeSealRef.current = null;
+          setSealUndoDeadline(null);
+          setLetterBody(row.body);
+          setNotice("Seal removed — your letter is editable again.");
+        } else {
+          setNotice(opts.pinned ? "Letter saved and pinned." : "Letter saved.");
+        }
         void refreshFromRemote();
       }
       setLetterSaving(false);
     },
     [userId, today, todayLetter, letterBody, bundle, refreshFromRemote],
   );
+
+  const undoSeal = useCallback(() => {
+    if (!sealUndoDeadline || Date.now() > sealUndoDeadline) return;
+    void saveLetter({ pinned: todayLetter?.pinned ?? false, voidSeal: true });
+  }, [sealUndoDeadline, saveLetter, todayLetter?.pinned]);
+
+  const confirmSealLetter = useCallback(() => {
+    if (!sealPickDate || sealPickDate < minSealOpenDate) {
+      setNotice("Choose an open date at least one day from today.");
+      return;
+    }
+    void saveLetter({
+      pinned: todayLetter?.pinned ?? false,
+      sealed: true,
+      openDate: sealPickDate,
+    });
+  }, [sealPickDate, minSealOpenDate, saveLetter, todayLetter?.pinned]);
+
+  const unlockSealedLetter = useCallback(() => {
+    if (!userId || !todayLetter?.letter_date) return;
+    setLetterRevealedInStorage(userId, todayLetter.letter_date);
+    setLetterRevealedOverride(true);
+    setLetterBody(todayLetter.body ?? "");
+    setShowUnlockConfetti(true);
+  }, [userId, todayLetter]);
 
   /** Voice tab state */
   const [recording, setRecording] = useState(false);
@@ -454,7 +625,11 @@ export function PersonalMotivationPage() {
   >(null);
 
   const pullRandom = useCallback(() => {
-    const letters = (bundle?.letters ?? []).filter((l) => l.body.trim());
+    if (!userId) return;
+    const letters = (bundle?.letters ?? []).filter((l) => {
+      if (shouldExcludeLetterFromRandomPull(l, today, userId)) return false;
+      return l.body.trim().length > 0;
+    });
     const pinned = letters.filter((l) => l.pinned);
     const voices = (bundle?.voices ?? []).filter((v) => v.transcript.trim());
     type PoolItem =
@@ -507,7 +682,7 @@ export function PersonalMotivationPage() {
         return;
       }
     }
-  }, [bundle?.letters, bundle?.voices]);
+  }, [bundle?.letters, bundle?.voices, today, userId]);
 
   /** Timeline + search */
   const [search, setSearch] = useState("");
@@ -523,23 +698,47 @@ export function PersonalMotivationPage() {
       dateLabel: string;
     }> = [];
     for (const l of bundle?.letters ?? []) {
-      if (!l.body.trim()) continue;
-      const subtitle = l.body.slice(0, 160);
+      const hideBody =
+        !!userId && shouldHideLetterBodyInTimeline(l, today, userId);
+      const hasLetter =
+        l.body.trim().length > 0 ||
+        (l.sealed === true && !!l.open_date);
+      if (!hasLetter) continue;
       const dateLabel = format(
         parseISO(l.letter_date.slice(0, 10)),
         "MMM d, yyyy",
       );
+      let subtitle: string;
+      if (hideBody) {
+        if (isLetterSealedBeforeOpenDate(l, today)) {
+          const od = l.open_date?.slice(0, 10) ?? "";
+          subtitle = `Sealed · Opens ${format(parseISO(od), "MMM d, yyyy")}`;
+        } else {
+          subtitle = "Sealed · Open in Letter tab to read";
+        }
+      } else {
+        subtitle = l.body.slice(0, 160);
+      }
       if (
         q &&
         !subtitle.toLowerCase().includes(q) &&
         !l.letter_date.toLowerCase().includes(q) &&
-        !dateLabel.toLowerCase().includes(q)
+        !dateLabel.toLowerCase().includes(q) &&
+        !(q.includes("seal") && l.sealed)
       )
         continue;
+      const title =
+        l.sealed === true
+          ? l.pinned
+            ? "Sealed · Pinned letter"
+            : "Sealed letter"
+          : l.pinned
+            ? "Pinned letter"
+            : "Letter";
       items.push({
         id: l.id,
         kind: "letter",
-        title: l.pinned ? "Pinned letter" : "Letter",
+        title,
         subtitle,
         sort: l.updated_at,
         monthKey: format(parseISO(l.letter_date.slice(0, 10)), "MMMM yyyy"),
@@ -594,7 +793,7 @@ export function PersonalMotivationPage() {
     }
     items.sort((a, b) => (a.sort < b.sort ? 1 : -1));
     return items;
-  }, [bundle?.letters, bundle?.voices, bundle?.photos, search]);
+  }, [bundle?.letters, bundle?.voices, bundle?.photos, search, today, userId]);
 
   const tabs: { id: TabId; label: string; Icon: typeof Heart }[] = [
     { id: "letter", label: "Letter to Future Self", Icon: Heart },
@@ -712,48 +911,181 @@ export function PersonalMotivationPage() {
       </div>
 
       {tab === "letter" ? (
-        <section className="space-y-5 kal-glass-card rounded-2xl px-5 py-6 sm:px-8 sm:py-8">
+        <section className="relative space-y-5 kal-glass-card rounded-2xl px-5 py-6 sm:px-8 sm:py-8">
+          {showUnlockConfetti ? (
+            <ConfettiBurst onDone={() => setShowUnlockConfetti(false)} />
+          ) : null}
+
           <div className="flex items-baseline justify-between gap-2">
             <h2 className="text-sm font-bold text-kal-text">Letter to Future Self</h2>
             <span className="text-xs font-medium tabular-nums text-kal-muted">
               {today}
             </span>
           </div>
-          <p className="text-xs leading-relaxed text-kal-text-secondary sm:text-sm">
-            Write what you need your future self to remember — courage, patience,
-            why this season matters.
-          </p>
-          <textarea
-            value={letterBody}
-            onChange={(e) => setLetterBody(e.target.value)}
-            rows={14}
-            placeholder="Dear future me…"
-            className="min-h-[280px] w-full resize-y rounded-2xl border border-kal-border bg-kal-page px-4 py-4 text-base leading-relaxed text-kal-text placeholder:text-kal-muted/80 focus:border-kal-accent/50 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
-          />
-          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <button
-              type="button"
-              disabled={letterSaving}
-              onClick={() => void saveLetter(false)}
-              className="kal-btn-accent flex-1 min-h-[48px]"
-            >
-              {letterSaving ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+
+          {sealedBeforeOpen ? (
+            <>
+              <p className="text-xs leading-relaxed text-kal-text-secondary sm:text-sm">
+                This letter is sealed until the date you chose. The app won&apos;t show
+                the text until then.
+              </p>
+              <div className="flex flex-col items-center gap-4 rounded-2xl border border-kal-border bg-kal-page px-6 py-10 text-center">
+                <Lock
+                  className="h-12 w-12 text-kal-accent"
+                  strokeWidth={1.5}
+                  aria-hidden
+                />
+                <p className="text-sm font-semibold text-kal-text">
+                  Sealed on{" "}
+                  {format(parseISO(todayLetter?.letter_date ?? today), "MMM d, yyyy")}
+                </p>
+                <p className="text-sm text-kal-text-secondary">
+                  Opens on{" "}
+                  {openDay
+                    ? format(parseISO(openDay), "MMM d, yyyy")
+                    : ""}
+                </p>
+                {openDay ? (
+                  <p className="text-xs font-medium tabular-nums text-kal-muted">
+                    {differenceInCalendarDays(parseISO(openDay), parseISO(today))}{" "}
+                    day
+                    {differenceInCalendarDays(parseISO(openDay), parseISO(today)) === 1
+                      ? ""
+                      : "s"}{" "}
+                    to go
+                  </p>
+                ) : null}
+                {sealUndoDeadline && Date.now() < sealUndoDeadline ? (
+                  <button
+                    type="button"
+                    disabled={letterSaving}
+                    onClick={() => void undoSeal()}
+                    className="text-xs font-bold uppercase tracking-wide text-kal-accent underline-offset-2 hover:underline"
+                  >
+                    Undo seal (60s)
+                  </button>
+                ) : null}
+              </div>
+            </>
+          ) : sealedReadyToOpen && !revealedForLetter ? (
+            <>
+              <p className="text-xs leading-relaxed text-kal-text-secondary sm:text-sm">
+                You asked Past You to keep this private until today. When you&apos;re
+                ready, open it.
+              </p>
+              <div className="relative overflow-hidden rounded-2xl border-2 border-kal-accent/35 bg-gradient-to-br from-kal-accent-soft/90 to-kal-card px-6 py-8 text-center">
+                <p className="text-sm font-semibold text-kal-text">
+                  A letter from{" "}
+                  {format(parseISO(todayLetter?.letter_date ?? today), "MMM d, yyyy")}{" "}
+                  is ready.
+                </p>
+                <button
+                  type="button"
+                  disabled={letterSaving}
+                  onClick={() => void unlockSealedLetter()}
+                  className="kal-btn-accent mt-5 min-h-[52px] w-full max-w-sm text-base"
+                >
+                  Open your letter
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-xs leading-relaxed text-kal-text-secondary sm:text-sm">
+                Write what you need your future self to remember — courage, patience,
+                why this season matters. You can save as-is, pin for later, or{" "}
+                <span className="font-semibold text-kal-text">seal</span> it so you
+                can&apos;t read it until a date you pick.
+              </p>
+              <textarea
+                value={letterBody}
+                onChange={(e) => setLetterBody(e.target.value)}
+                rows={14}
+                placeholder="Dear future me…"
+                disabled={letterSaving}
+                className="min-h-[280px] w-full resize-y rounded-2xl border border-kal-border bg-kal-page px-4 py-4 text-base leading-relaxed text-kal-text placeholder:text-kal-muted/80 focus:border-kal-accent/50 focus:outline-none focus:ring-2 focus:ring-kal-accent/20 disabled:opacity-60"
+              />
+
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                <button
+                  type="button"
+                  disabled={letterSaving || !letterBody.trim()}
+                  onClick={() => void saveLetter({ pinned: false })}
+                  className="kal-btn-accent flex-1 min-h-[48px] disabled:opacity-50"
+                >
+                  {letterSaving ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Check className="h-4 w-4" />
+                  )}
+                  Save letter
+                </button>
+                <button
+                  type="button"
+                  disabled={letterSaving || !letterBody.trim()}
+                  onClick={() => void saveLetter({ pinned: true })}
+                  className="inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl border border-kal-accent/40 bg-kal-accent-soft/50 px-5 py-3 text-xs font-bold uppercase tracking-wide text-kal-accent transition-colors hover:bg-kal-accent-soft disabled:opacity-50"
+                >
+                  <Pin className="h-4 w-4" />
+                  Pin this letter
+                </button>
+              </div>
+
+              {!showSealPanel ? (
+                <button
+                  type="button"
+                  disabled={letterSaving || !letterBody.trim()}
+                  onClick={() => {
+                    setShowSealPanel(true);
+                    setNotice(null);
+                  }}
+                  className="flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-sm font-semibold text-kal-text transition-colors hover:bg-kal-card disabled:opacity-50"
+                >
+                  <Lock className="h-4 w-4 text-kal-accent" />
+                  Seal for a future date
+                </button>
               ) : (
-                <Check className="h-4 w-4" />
+                <div className="space-y-4 rounded-2xl border border-kal-accent/25 bg-kal-accent-soft/30 p-5">
+                  <p className="text-sm font-semibold text-kal-text">
+                    Choose when you&apos;re allowed to read this letter again
+                  </p>
+                  <label className="block text-xs font-bold uppercase tracking-wide text-kal-muted">
+                    Open date
+                    <input
+                      type="date"
+                      min={minSealOpenDate}
+                      value={sealPickDate}
+                      onChange={(e) => setSealPickDate(e.target.value)}
+                      className="mt-2 w-full rounded-xl border border-kal-border bg-kal-page px-3 py-2 text-base text-kal-text"
+                    />
+                  </label>
+                  <p className="text-xs text-kal-text-secondary">
+                    Until then, the letter stays hidden here and won&apos;t appear in
+                    random pulls or the timeline preview.
+                  </p>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <button
+                      type="button"
+                      disabled={letterSaving || !letterBody.trim()}
+                      onClick={() => void confirmSealLetter()}
+                      className="kal-btn-accent min-h-[48px] flex-1"
+                    >
+                      <Lock className="h-4 w-4" />
+                      Seal this letter
+                    </button>
+                    <button
+                      type="button"
+                      disabled={letterSaving}
+                      onClick={() => setShowSealPanel(false)}
+                      className="min-h-[48px] flex-1 rounded-xl border border-kal-border px-4 py-3 text-sm font-semibold text-kal-muted hover:text-kal-text"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
               )}
-              Save letter
-            </button>
-            <button
-              type="button"
-              disabled={letterSaving}
-              onClick={() => void saveLetter(true)}
-              className="inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl border border-kal-accent/40 bg-kal-accent-soft/50 px-5 py-3 text-xs font-bold uppercase tracking-wide text-kal-accent transition-colors hover:bg-kal-accent-soft disabled:opacity-50"
-            >
-              <Pin className="h-4 w-4" />
-              Pin this letter
-            </button>
-          </div>
+            </>
+          )}
         </section>
       ) : null}
 

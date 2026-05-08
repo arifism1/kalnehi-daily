@@ -130,8 +130,14 @@ export function mergeBundleFromServer(
   prev: MotivationBundle | null,
   next: Omit<MotivationBundle, "updatedAt">,
 ): MotivationBundle {
+  const letters = (next.letters ?? []).map((l) => ({
+    ...l,
+    sealed: Boolean(l.sealed),
+    open_date: l.open_date ?? null,
+  }));
   return {
     ...next,
+    letters,
     updatedAt: Date.now(),
   };
 }

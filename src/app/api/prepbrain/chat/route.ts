@@ -6,13 +6,16 @@ import { serializePrepBrainToolData } from "@/lib/prepBrainDataSerializer";
 import { PREPBRAIN_SYSTEM_PROMPT } from "@/lib/prepBrainPrompts";
 import {
   fetchSyllabusSubjectCompletion,
+  getDailyDebriefSnapshot,
   getHabitStreakSummary,
   getLatestMockScores,
   getMarksIntelligence,
   getMeditationConsistency,
   getMissedTasksContext,
+  getMockTrendBySubject,
   getRecentStudyCameraData,
   getRevisionQueueSnapshot,
+  getStudyTimerStats,
   getSyllabusBacklogSnapshot,
   getSyllabusOverview,
   getTargetScoreBlueprint,
@@ -119,6 +122,7 @@ function maxCompletionTokensForIntent(
     case "revision":
     case "mock_test":
     case "syllabus_backlog":
+    case "avoided_topics":
       return 1150;
     case "syllabus_progress":
     case "habits_or_meditation":
@@ -248,6 +252,12 @@ async function runToolByName(
       return getLatestMockScores(admin, userId);
     case "getSyllabusBacklogSnapshot":
       return getSyllabusBacklogSnapshot(admin, userId);
+    case "getDailyDebriefSnapshot":
+      return getDailyDebriefSnapshot(admin, userId);
+    case "getMockTrendBySubject":
+      return getMockTrendBySubject(admin, userId);
+    case "getStudyTimerStats":
+      return getStudyTimerStats(admin, userId);
     default:
       return null;
   }
@@ -642,7 +652,7 @@ export async function POST(request: Request) {
         }),
       );
       const toolData = Object.fromEntries(toolResultsRaw) as Record<string, unknown>;
-      const toolDataMarkdown = serializePrepBrainToolData(toolData);
+      const toolDataMarkdown = serializePrepBrainToolData(toolData, effectiveIntent);
       const toolDataChars = toolDataMarkdown.length;
       const toolDataEstTokens = Math.ceil(toolDataChars / 4);
       return { toolData, toolDataMarkdown, toolDataChars, toolDataEstTokens, toolCacheSources };

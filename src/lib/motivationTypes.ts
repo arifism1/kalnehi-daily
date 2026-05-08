@@ -6,6 +6,8 @@ export type MotivationOutboxOp =
       letterDate: string;
       body: string;
       pinned: boolean;
+      sealed: boolean;
+      openDate: string | null;
     }
   | {
       kind: "voice_create";

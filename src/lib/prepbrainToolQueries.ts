@@ -444,6 +444,8 @@ export async function getMarksIntelligence(
 }
 
 export async function getSyllabusBacklogSnapshot(admin: AdminClient, userId: string) {
+  const todayYmd = new Date().toISOString().slice(0, 10);
+
   const [{ data: profile }, { data: rows }] = await Promise.all([
     admin
       .from("user_profiles")
@@ -452,7 +454,7 @@ export async function getSyllabusBacklogSnapshot(admin: AdminClient, userId: str
       .maybeSingle(),
     admin
       .from("user_syllabus_backlog")
-      .select("id, title, status, group_label, effort_estimate_minutes, retry_count, created_at")
+      .select("id, title, status, group_label, effort_estimate_minutes, retry_count, created_at, last_attempt_date")
       .eq("user_id", userId)
       .in("status", ["pending", "scheduled", "draft"])
       .order("created_at", { ascending: false })
@@ -468,18 +470,149 @@ export async function getSyllabusBacklogSnapshot(admin: AdminClient, userId: str
     days_until_exam = ms > 0 ? Math.ceil(ms / (24 * 60 * 60 * 1000)) : 0;
   }
 
-  const list = (rows ?? []).map((r) => ({
-    title: r.title,
-    status: r.status,
-    group: r.group_label,
-    effort_min: r.effort_estimate_minutes,
-    retries: r.retry_count ?? 0,
-  }));
+  const list = (rows ?? []).map((r) => {
+    let days_since_last_attempt: number | null = null;
+    if (r.last_attempt_date && /^\d{4}-\d{2}-\d{2}$/.test(r.last_attempt_date)) {
+      const diff = new Date(todayYmd).getTime() - new Date(r.last_attempt_date).getTime();
+      days_since_last_attempt = Math.max(0, Math.round(diff / (24 * 60 * 60 * 1000)));
+    }
+    return {
+      title: r.title,
+      status: r.status,
+      group: r.group_label,
+      effort_min: r.effort_estimate_minutes,
+      retries: r.retry_count ?? 0,
+      days_since_last_attempt,
+    };
+  });
 
   return {
     days_until_exam,
     backlog_items: list,
     note: "Use with marks + syllabus tools for phased recovery; no calendar invention.",
+  };
+}
+
+export async function getDailyDebriefSnapshot(admin: AdminClient, userId: string) {
+  const since = ymdDaysAgo(6);
+  const { data, error } = await admin
+    .from("daily_reflections")
+    .select("reflection_date, skipped_today, finished_today, tomorrow_priority")
+    .eq("user_id", userId)
+    .gte("reflection_date", since)
+    .order("reflection_date", { ascending: false })
+    .limit(7);
+  if (error) throw error;
+  const entries = (data ?? []).map((r) => ({
+    date: r.reflection_date,
+    skipped_today: r.skipped_today ?? null,
+    finished_today: r.finished_today ?? null,
+    tomorrow_priority: r.tomorrow_priority ?? null,
+  }));
+  return { debrief_entries: entries };
+}
+
+export async function getMockTrendBySubject(admin: AdminClient, userId: string) {
+  const { data: tests, error: testErr } = await admin
+    .from("mock_tests")
+    .select("id, test_date")
+    .eq("user_id", userId)
+    .order("test_date", { ascending: false })
+    .limit(6);
+  if (testErr) throw testErr;
+  const testRows = tests ?? [];
+  if (testRows.length < 2) return null;
+
+  const testIds = testRows.map((t) => t.id);
+  const { data: scoresData, error: scoresErr } = await admin
+    .from("mock_test_subject_scores")
+    .select("mock_test_id, subject, score, max_score")
+    .in("mock_test_id", testIds);
+  if (scoresErr) throw scoresErr;
+
+  // Map test_id → date for chronological ordering
+  const testDateMap = new Map(testRows.map((t) => [t.id, t.test_date]));
+
+  // Group scores by subject, ordered oldest → newest
+  const subjectScores = new Map<string, Array<{ date: string; pct: number }>>();
+  for (const s of scoresData ?? []) {
+    if (s.score == null || s.max_score == null || s.max_score === 0) continue;
+    const date = testDateMap.get(s.mock_test_id) ?? "";
+    if (!date) continue;
+    const pct = Math.round((s.score / s.max_score) * 1000) / 10;
+    const arr = subjectScores.get(s.subject) ?? [];
+    arr.push({ date, pct });
+    subjectScores.set(s.subject, arr);
+  }
+
+  const trends: Array<{ subject: string; latest_pct: number; trend: "improving" | "declining" | "flat"; data_points: number }> = [];
+  for (const [subject, scores] of subjectScores) {
+    if (scores.length < 2) continue;
+    const sorted = scores.sort((a, b) => (a.date < b.date ? -1 : 1));
+    const first = sorted[0].pct;
+    const last = sorted[sorted.length - 1].pct;
+    const delta = last - first;
+    const trend: "improving" | "declining" | "flat" =
+      delta >= 3 ? "improving" : delta <= -3 ? "declining" : "flat";
+    trends.push({ subject, latest_pct: last, trend, data_points: sorted.length });
+  }
+
+  return { subject_trends: trends };
+}
+
+export async function getStudyTimerStats(admin: AdminClient, userId: string) {
+  const since = ymdDaysAgo(29);
+  const sinceIso = new Date(`${since}T00:00:00`).toISOString();
+  const today = new Date().toISOString().slice(0, 10);
+
+  const [sessionsRes, tasksRes] = await Promise.all([
+    admin
+      .from("study_sessions")
+      .select("started_at, duration_seconds")
+      .eq("user_id", userId)
+      .gte("started_at", sinceIso)
+      .limit(500),
+    admin
+      .from("tasks")
+      .select("assigned_date, estimated_time_minutes, status")
+      .eq("user_id", userId)
+      .gte("assigned_date", since)
+      .lt("assigned_date", today)
+      .limit(500),
+  ]);
+
+  if (sessionsRes.error) throw sessionsRes.error;
+  if (tasksRes.error) throw tasksRes.error;
+
+  const sessions = sessionsRes.data ?? [];
+  const totalSeconds = sessions.reduce((s, r) => s + Math.max(0, r.duration_seconds ?? 0), 0);
+  const totalMinutes = Math.round(totalSeconds / 60);
+
+  const studyDates = new Set(
+    sessions.map((r) => r.started_at?.slice(0, 10)).filter(Boolean),
+  );
+  const total_study_days_last_30d = studyDates.size;
+  const avg_daily_focused_minutes =
+    total_study_days_last_30d > 0
+      ? Math.round(totalMinutes / total_study_days_last_30d)
+      : 0;
+
+  const tasks = tasksRes.data ?? [];
+  const planned_minutes = tasks.reduce(
+    (s, r) => s + Math.max(0, r.estimated_time_minutes ?? 0),
+    0,
+  );
+  const efficiency_ratio: number | null =
+    planned_minutes > 0
+      ? Math.round((totalMinutes / planned_minutes) * 100) / 100
+      : null;
+
+  return {
+    total_study_days_last_30d,
+    total_focused_minutes_last_30d: totalMinutes,
+    avg_daily_focused_minutes,
+    planned_minutes_last_30d: planned_minutes,
+    efficiency_ratio,
   };
 }
 
@@ -495,5 +628,8 @@ export type PrepbrainToolName =
   | "getMissedTasksContext"
   | "getRevisionQueueSnapshot"
   | "getLatestMockScores"
-  | "getSyllabusBacklogSnapshot";
+  | "getSyllabusBacklogSnapshot"
+  | "getDailyDebriefSnapshot"
+  | "getMockTrendBySubject"
+  | "getStudyTimerStats";
 

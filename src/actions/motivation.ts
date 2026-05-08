@@ -83,6 +83,8 @@ export async function upsertMotivationLetter(
   letterDate: string,
   body: string,
   pinned: boolean,
+  sealed: boolean,
+  openDate: string | null,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
     const supabase = await createSupabaseServerClient();
@@ -95,11 +97,27 @@ export async function upsertMotivationLetter(
     if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) {
       return { ok: false, error: "Invalid date." };
     }
+    let open: string | null = null;
+    if (sealed) {
+      const od = openDate?.trim() ?? "";
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(od)) {
+        return { ok: false, error: "Choose a valid open date." };
+      }
+      if (od <= d) {
+        return {
+          ok: false,
+          error: "Open date must be after the letter date.",
+        };
+      }
+      open = od;
+    }
     const row: TablesInsert<"motivation_letters"> = {
       user_id: user.id,
       letter_date: d,
       body: body.slice(0, 50_000),
       pinned,
+      sealed,
+      open_date: open,
       updated_at: new Date().toISOString(),
     };
     const { error } = await supabase.from("motivation_letters").upsert(row, {
@@ -274,7 +292,13 @@ export async function applyMotivationOutboxOp(
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   switch (op.kind) {
     case "letter_upsert":
-      return upsertMotivationLetter(op.letterDate, op.body, op.pinned);
+      return upsertMotivationLetter(
+        op.letterDate,
+        op.body,
+        op.pinned,
+        op.sealed,
+        op.openDate,
+      );
     case "voice_create": {
       const r = await createMotivationVoiceEntry({
         id: op.id,

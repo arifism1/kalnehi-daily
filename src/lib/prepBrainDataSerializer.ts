@@ -411,7 +411,13 @@ export function formatBacklogSnapshotMarkdown(data: unknown): string {
   if (!Array.isArray(items) || items.length === 0) {
     return `${head}\n_No open backlog rows._`;
   }
-  const lines = items.slice(0, 20).map((raw) => {
+  const sorted = [...items].sort((a, b) => {
+    if (!isRecord(a) || !isRecord(b)) return 0;
+    const ra = typeof a.retries === "number" ? a.retries : 0;
+    const rb = typeof b.retries === "number" ? b.retries : 0;
+    return rb - ra;
+  });
+  const lines = sorted.slice(0, 20).map((raw) => {
     if (!isRecord(raw)) return "";
     const title = typeof raw.title === "string" ? raw.title : "?";
     const st = typeof raw.status === "string" ? raw.status : "";
@@ -420,9 +426,76 @@ export function formatBacklogSnapshotMarkdown(data: unknown): string {
       typeof raw.effort_min === "number" && Number.isFinite(raw.effort_min)
         ? `${raw.effort_min}m`
         : "—";
-    return `- [${st}] ${title}${g ? ` (${g})` : ""} · ~${em}`;
+    const retries = typeof raw.retries === "number" ? raw.retries : 0;
+    const repeatedLabel = retries >= 2 ? `[repeated ${retries}×] ` : "";
+    const daysSince =
+      typeof raw.days_since_last_attempt === "number"
+        ? ` · ${raw.days_since_last_attempt}d since last attempt`
+        : "";
+    return `- ${repeatedLabel}[${st}] ${title}${g ? ` (${g})` : ""} · ~${em}${daysSince}`;
   });
   return [head, "", ...lines].join("\n");
+}
+
+export function formatDailyDebriefMarkdown(data: unknown): string {
+  if (data === null || data === undefined) return "";
+  if (!isRecord(data)) return "";
+  if ("error" in data && data.error === "unavailable") return "";
+  const entries = data.debrief_entries;
+  if (!Array.isArray(entries) || entries.length === 0)
+    return "### Daily debrief\n_No debrief entries in the last 7 days._";
+  const lines = ["### Daily debrief (recent)"];
+  for (const raw of entries.slice(0, 3)) {
+    if (!isRecord(raw)) continue;
+    const date = typeof raw.date === "string" ? raw.date : "?";
+    const skipped = typeof raw.skipped_today === "string" && raw.skipped_today.trim()
+      ? `Skipped: ${raw.skipped_today.trim()}`
+      : null;
+    const finished = typeof raw.finished_today === "string" && raw.finished_today.trim()
+      ? `Done: ${raw.finished_today.trim()}`
+      : null;
+    const priority = typeof raw.tomorrow_priority === "string" && raw.tomorrow_priority.trim()
+      ? `Tomorrow priority: ${raw.tomorrow_priority.trim()}`
+      : null;
+    const parts = [skipped, finished, priority].filter(Boolean);
+    if (parts.length > 0) {
+      lines.push(`**${date}**: ${parts.join(" | ")}`);
+    }
+  }
+  return lines.join("\n");
+}
+
+export function formatMockTrendMarkdown(data: unknown): string {
+  if (data === null || data === undefined) return "";
+  if (!isRecord(data)) return "";
+  if ("error" in data && data.error === "unavailable") return "";
+  const trends = data.subject_trends;
+  if (!Array.isArray(trends) || trends.length === 0) return "";
+  const lines = ["### Mock score trends (per subject)"];
+  for (const raw of trends) {
+    if (!isRecord(raw)) continue;
+    const subj = typeof raw.subject === "string" ? raw.subject : "?";
+    const pct = typeof raw.latest_pct === "number" ? `${raw.latest_pct}%` : "—";
+    const trend = raw.trend === "improving" ? "↑ improving"
+      : raw.trend === "declining" ? "↓ declining"
+      : "→ flat";
+    const pts = typeof raw.data_points === "number" ? ` (${raw.data_points} tests)` : "";
+    lines.push(`- ${subj}: ${pct} latest${pts} — ${trend}`);
+  }
+  return lines.join("\n");
+}
+
+export function formatStudyTimerStatsMarkdown(data: unknown): string {
+  if (data === null || data === undefined) return "";
+  if (!isRecord(data)) return "";
+  if ("error" in data && data.error === "unavailable") return "";
+  const days = typeof data.total_study_days_last_30d === "number" ? data.total_study_days_last_30d : null;
+  const avgMin = typeof data.avg_daily_focused_minutes === "number" ? data.avg_daily_focused_minutes : null;
+  const totalMin = typeof data.total_focused_minutes_last_30d === "number" ? data.total_focused_minutes_last_30d : null;
+  const eff = typeof data.efficiency_ratio === "number" ? data.efficiency_ratio : null;
+  if (days === null && avgMin === null) return "";
+  const effStr = eff !== null ? ` | Efficiency: ${Math.round(eff * 100)}% of planned time used` : "";
+  return `### Study timer (30d)\n${days ?? "—"} study days, avg ${avgMin ?? "—"} min/day focused, ${totalMin ?? "—"} min total.${effStr}`;
 }
 
 function formatToolSection(name: PrepbrainToolName, payload: unknown): string {
@@ -451,6 +524,12 @@ function formatToolSection(name: PrepbrainToolName, payload: unknown): string {
       return formatMockScoresMarkdown(payload);
     case "getSyllabusBacklogSnapshot":
       return formatBacklogSnapshotMarkdown(payload);
+    case "getDailyDebriefSnapshot":
+      return formatDailyDebriefMarkdown(payload);
+    case "getMockTrendBySubject":
+      return formatMockTrendMarkdown(payload);
+    case "getStudyTimerStats":
+      return formatStudyTimerStatsMarkdown(payload);
     default:
       return "";
   }
@@ -460,12 +539,15 @@ function formatToolSection(name: PrepbrainToolName, payload: unknown): string {
 const TOOL_ORDER: PrepbrainToolName[] = [
   "getTodayPlan",
   "getMissedTasksContext",
+  "getDailyDebriefSnapshot",
+  "getStudyTimerStats",
   "getSyllabusOverview",
   "getWeakStrongSubjects",
   "getMarksIntelligence",
   "getRevisionQueueSnapshot",
   "getSyllabusBacklogSnapshot",
   "getLatestMockScores",
+  "getMockTrendBySubject",
   "getHabitStreakSummary",
   "getMeditationConsistency",
   "getRecentStudyCameraData",
@@ -473,10 +555,82 @@ const TOOL_ORDER: PrepbrainToolName[] = [
 ];
 
 /**
+ * Intent → allowed tool sections. Only sections in this list are rendered for that intent.
+ * Keeps the model context focused and prevents it from referencing unrelated data.
+ */
+const INTENT_SECTION_ALLOW: Record<string, PrepbrainToolName[]> = {
+  today_plan: [
+    "getSyllabusOverview",
+    "getTodayPlan",
+    "getMissedTasksContext",
+    "getDailyDebriefSnapshot",
+    "getStudyTimerStats",
+    "getWeakStrongSubjects",
+  ],
+  marks_score: [
+    "getMarksIntelligence",
+    "getWeakStrongSubjects",
+    "getMockTrendBySubject",
+    "getSyllabusOverview",
+  ],
+  syllabus_progress: [
+    "getSyllabusOverview",
+    "getWeakStrongSubjects",
+  ],
+  weak_vs_strong: [
+    "getSyllabusOverview",
+    "getWeakStrongSubjects",
+    "getMarksIntelligence",
+  ],
+  mock_test: [
+    "getLatestMockScores",
+    "getMockTrendBySubject",
+    "getWeakStrongSubjects",
+  ],
+  avoided_topics: [
+    "getSyllabusBacklogSnapshot",
+    "getMockTrendBySubject",
+    "getDailyDebriefSnapshot",
+  ],
+  revision: [
+    "getRevisionQueueSnapshot",
+    "getWeakStrongSubjects",
+    "getMissedTasksContext",
+  ],
+  syllabus_backlog: [
+    "getSyllabusBacklogSnapshot",
+    "getSyllabusOverview",
+    "getMissedTasksContext",
+  ],
+  target_score: [
+    "getTargetScoreBlueprint",
+    "getSyllabusOverview",
+    "getMarksIntelligence",
+  ],
+  habits_or_meditation: [
+    "getHabitStreakSummary",
+    "getMeditationConsistency",
+    "getDailyDebriefSnapshot",
+    "getStudyTimerStats",
+  ],
+  study_camera: [
+    "getRecentStudyCameraData",
+    "getMissedTasksContext",
+  ],
+  general: [
+    "getSyllabusOverview",
+    "getWeakStrongSubjects",
+    "getMarksIntelligence",
+  ],
+};
+
+/**
  * Converts the per-tool result map into a single condensed Markdown report (no JSON).
+ * Pass `intent` to suppress sections not relevant to the current query.
  */
 export function serializePrepBrainToolData(
   toolData: Record<string, unknown>,
+  intent?: string,
 ): string {
   const blocks: string[] = [];
 
@@ -489,6 +643,11 @@ export function serializePrepBrainToolData(
 
   for (const name of TOOL_ORDER) {
     if (!(name in toolData)) continue;
+
+    // Intent filter — only render sections relevant to this intent.
+    if (intent && INTENT_SECTION_ALLOW[intent] && !INTENT_SECTION_ALLOW[intent].includes(name)) {
+      continue;
+    }
 
     if (hasBothWellness && (name === "getHabitStreakSummary" || name === "getMeditationConsistency")) {
       if (name === "getHabitStreakSummary") {

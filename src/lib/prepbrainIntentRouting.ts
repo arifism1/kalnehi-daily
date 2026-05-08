@@ -37,6 +37,7 @@ export function detectConversationThread(
     "mock_test",
     "today_plan",
     "syllabus_backlog",
+    "avoided_topics",
     "habits_or_meditation",
     "study_camera",
   ];
@@ -86,6 +87,7 @@ export type PrepBrainIntent =
   | "revision"
   | "mock_test"
   | "syllabus_backlog"
+  | "avoided_topics"
   | "small_talk"
   | "no_data"
   | "general";
@@ -204,6 +206,18 @@ export function detectPrepBrainIntent(lastUserMessage: string): PrepBrainIntent 
   const t = lastUserMessage.toLowerCase();
 
   if (
+    /\bwhat\s+(have\s+i|am\s+i)\s+(been\s+)?avoiding\b/.test(t) ||
+    /\bwhat\s+am\s+i\s+not\s+studying\b/.test(t) ||
+    /\bkeep\s+(skipping|avoiding|postponing|pushing|putting\s+off)\b/.test(t) ||
+    /\bkeep\s+pushing\b.*\bbacklog\b/.test(t) ||
+    /\bpushing\s+to\s+backlog\b/.test(t) ||
+    /\b(topics?|subjects?|chapters?)\s+(i('?ve)?|have\s+been)\s+(been\s+)?avoiding\b/.test(t) ||
+    (t.includes("avoiding") && /\b(topic|subject|chapter|study)\b/.test(t))
+  ) {
+    return "avoided_topics";
+  }
+
+  if (
     t.includes("backlog") ||
     t.includes("backlog list") ||
     t.includes("task list") ||
@@ -318,15 +332,27 @@ export function selectToolsForIntent(
     case "no_data":
       return [];
     case "today_plan":
-      return ["getTodayPlan", "getMissedTasksContext", "getWeakStrongSubjects"];
+      return [
+        "getSyllabusOverview",
+        "getTodayPlan",
+        "getMissedTasksContext",
+        "getWeakStrongSubjects",
+        "getStudyTimerStats",
+        "getDailyDebriefSnapshot",
+      ];
     case "marks_score":
-      return ["getMarksIntelligence", "getWeakStrongSubjects"];
+      return [
+        "getSyllabusOverview",
+        "getMarksIntelligence",
+        "getWeakStrongSubjects",
+        "getMockTrendBySubject",
+      ];
     case "syllabus_progress":
       return ["getSyllabusOverview", "getWeakStrongSubjects"];
     case "weak_vs_strong":
-      return ["getWeakStrongSubjects", "getMarksIntelligence"];
+      return ["getSyllabusOverview", "getWeakStrongSubjects", "getMarksIntelligence"];
     case "habits_or_meditation":
-      return ["getHabitStreakSummary", "getMeditationConsistency"];
+      return ["getHabitStreakSummary", "getMeditationConsistency", "getDailyDebriefSnapshot", "getStudyTimerStats"];
     case "study_camera":
       return ["getRecentStudyCameraData", "getMissedTasksContext"];
     case "target_score":
@@ -334,13 +360,20 @@ export function selectToolsForIntent(
     case "revision":
       return ["getRevisionQueueSnapshot", "getWeakStrongSubjects", "getMissedTasksContext"];
     case "mock_test":
-      return ["getLatestMockScores", "getWeakStrongSubjects"];
+      return ["getLatestMockScores", "getWeakStrongSubjects", "getMockTrendBySubject"];
     case "syllabus_backlog":
       return [
         "getSyllabusBacklogSnapshot",
         "getMarksIntelligence",
         "getSyllabusOverview",
         "getMissedTasksContext",
+      ];
+    case "avoided_topics":
+      return [
+        "getSyllabusBacklogSnapshot",
+        "getMarksIntelligence",
+        "getMockTrendBySubject",
+        "getDailyDebriefSnapshot",
       ];
     // General: omit getTodayPlan — reduces token cost for non-today queries.
     case "general":
