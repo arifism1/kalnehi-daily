@@ -589,6 +589,39 @@ export type Database = {
         }
         Relationships: []
       }
+      doubts: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          status: string
+          subject: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          id?: string
+          status?: string
+          subject?: string | null
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          status?: string
+          subject?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       exam_phase_plans: {
         Row: {
           created_at: string

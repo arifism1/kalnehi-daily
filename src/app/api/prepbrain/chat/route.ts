@@ -7,12 +7,15 @@ import { PREPBRAIN_SYSTEM_PROMPT } from "@/lib/prepBrainPrompts";
 import {
   fetchSyllabusSubjectCompletion,
   getDailyDebriefSnapshot,
+  getDoubtsSnapshot,
   getHabitStreakSummary,
   getLatestMockScores,
   getMarksIntelligence,
   getMeditationConsistency,
   getMissedTasksContext,
+  getMistakeLogSnapshot,
   getMockTrendBySubject,
+  getMotivationContextSnapshot,
   getRecentStudyCameraData,
   getRevisionQueueSnapshot,
   getStudyTimerStats,
@@ -32,7 +35,9 @@ import {
 import { isFreeTrialWindowActive, isPaidSubscriptionAccess } from "@/lib/freeTrial";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
-import { resolvePrepbrainGroqModels } from "@/lib/groqPrepbrainModel";
+import { mastermindModelsForTier } from "@/lib/groqPrepbrainModel";
+import { GROQ_DEFAULT_CHAT_ID } from "@/lib/groqClient";
+import { computeMastermindTier } from "@/lib/mastermindModelTier";
 import {
   callChatCompletion,
   callStreamingChatCompletion,
@@ -97,11 +102,17 @@ function toolCacheSet(userId: string, tool: string, result: unknown): void {
 }
 
 const MAX_BODY_BYTES = 512_000;
-// We send last 7 messages + conversation summary for better continuity on 8B model
+// We send last 7 messages + conversation summary for better continuity with a limited context window.
 const MAX_CHAT_MESSAGES = 7;
 /** Max messages the client may send in one request (trimmed to the most recent). */
 const MAX_MESSAGES_IN_REQUEST = 200;
 const MAX_MESSAGE_CHARS = 2_500;
+
+/** Conversation summary never uses DeepInfra — Groq 8B only. */
+const MASTERMIND_SUMMARY_MODELS: ModelCandidate[] = [
+  { provider: "groq", model: GROQ_DEFAULT_CHAT_ID },
+];
+
 /** Short cooldown between chat completions (backed by `prepbrain_chat_cooldown` for multi-instance). */
 const MIN_MS_BETWEEN_REQUESTS = 1_200;
 
@@ -114,15 +125,19 @@ function maxCompletionTokensForIntent(
 ): number {
   switch (intent) {
     case "general":
-    case "no_data":
     case "marks_score":
     case "today_plan":
     case "target_score":
     case "weak_vs_strong":
-    case "revision":
     case "mock_test":
+      return 1400;
+    case "no_data":
+    case "revision":
     case "syllabus_backlog":
     case "avoided_topics":
+    case "doubt_tracker":
+    case "mistake_log":
+    case "personal_motivation":
       return 1150;
     case "syllabus_progress":
     case "habits_or_meditation":
@@ -258,6 +273,12 @@ async function runToolByName(
       return getMockTrendBySubject(admin, userId);
     case "getStudyTimerStats":
       return getStudyTimerStats(admin, userId);
+    case "getDoubtsSnapshot":
+      return getDoubtsSnapshot(admin, userId);
+    case "getMistakeLogSnapshot":
+      return getMistakeLogSnapshot(admin, userId);
+    case "getMotivationContextSnapshot":
+      return getMotivationContextSnapshot(admin, userId);
     default:
       return null;
   }
@@ -268,7 +289,7 @@ async function runToolByName(
  * Runs in parallel with tool fetching; failures are non-fatal (returns "").
  *
  * @param messages - Full conversation history from the client.
- * @param models - Model candidates (DeepInfra primary → Groq fallback).
+ * @param models - Must be Groq-only (8B); never DeepInfra — see `MASTERMIND_SUMMARY_MODELS`.
  * @returns Formatted summary block, or "" if conversation is short or summarisation fails.
  */
 async function createConversationSummary(
@@ -511,7 +532,13 @@ export async function POST(request: Request) {
   // Used to inherit the prior topic when the latest message is ambiguous
   // (e.g. "tell me more", "go deeper", "what about that specifically?").
   const { threadIntent, depth, focusSubject } = detectConversationThread(fullMessages);
-  const AMBIGUOUS_INTENTS: PrepBrainIntent[] = ["general", "weak_vs_strong"];
+  const AMBIGUOUS_INTENTS: PrepBrainIntent[] = [
+    "general",
+    "weak_vs_strong",
+    "doubt_tracker",
+    "mistake_log",
+    "personal_motivation",
+  ];
   const effectiveIntent: Exclude<PrepBrainIntent, "small_talk"> =
     intent !== "small_talk" &&
     AMBIGUOUS_INTENTS.includes(intent) &&
@@ -573,10 +600,7 @@ export async function POST(request: Request) {
     upsc_optional_subjects: profileAny.upsc_optional_subjects ?? null,
   };
 
-  // Resolve model candidates once — reused for both the summary call and the main call.
-  const models = resolvePrepbrainGroqModels({ request, user });
-
-  // Run tool fetching, conversation summarisation, and token reservation in parallel.
+  // Run tool fetching, Groq-only conversation summarisation, and token reservation in parallel.
   const [toolPack, conversationSummary, reserve] = await Promise.all([
     (async () => {
       if (selectedTools.length === 0) {
@@ -658,7 +682,7 @@ export async function POST(request: Request) {
       return { toolData, toolDataMarkdown, toolDataChars, toolDataEstTokens, toolCacheSources };
     })(),
     // Conversation summary: gives the model memory beyond the 4-message window.
-    createConversationSummary(fullMessages, models),
+    createConversationSummary(fullMessages, MASTERMIND_SUMMARY_MODELS),
     prepbrainAiTokenReserve(admin, user.id, monthKey),
   ]);
 
@@ -683,6 +707,25 @@ export async function POST(request: Request) {
   }
   const reservationId = reserve.reservationId;
   const { toolDataChars, toolDataEstTokens, toolCacheSources } = toolPack;
+
+  const mastermindRouting = computeMastermindTier({
+    intent: effectiveIntent,
+    depth,
+    lastUserContent: last.content,
+    toolDataEstTokens,
+  });
+  const models = mastermindModelsForTier(mastermindRouting.tier);
+  console.log(
+    JSON.stringify({
+      scope: "[prepbrain/chat] mastermind_routing",
+      tier: mastermindRouting.tier,
+      intent: effectiveIntent,
+      band: mastermindRouting.band,
+      depth,
+      tool_est_tokens: toolDataEstTokens,
+      reasons: mastermindRouting.reasons,
+    }),
+  );
 
   // Assemble the full system prompt:
   // intent prefix → depth/focus tags → core rules → summary → USER PREP DATA → last N messages.
@@ -840,7 +883,8 @@ ${fullMessages
         const conversationOut = persistResult.conversationId;
 
         console.log(
-          "[prepbrain/chat] model=%s intent=%s depth=%d max_completion_tokens=%d tools=%s cache=%s redis=%s prompt_tokens=%d completion_tokens=%d total_tokens=%d tool_chars=%d tool_est_tokens=%d summary=%s",
+          "[prepbrain/chat] mastermind_tier=%s model=%s intent=%s depth=%d max_completion_tokens=%d tools=%s cache=%s redis=%s prompt_tokens=%d completion_tokens=%d total_tokens=%d tool_chars=%d tool_est_tokens=%d summary=%s",
+          mastermindRouting.tier,
           u.modelUsed,
           effectiveIntent,
           depth,
@@ -870,6 +914,8 @@ ${fullMessages
             tool_chars: toolDataChars,
             tool_est_tokens: toolDataEstTokens,
           },
+          mastermind_tier: mastermindRouting.tier,
+          mastermind_routing_reasons: mastermindRouting.reasons,
         };
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(donePayload)}\n\n`));
         controller.close();

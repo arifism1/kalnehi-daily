@@ -616,6 +616,153 @@ export async function getStudyTimerStats(admin: AdminClient, userId: string) {
   };
 }
 
+const TEXT_PREVIEW_MAX = 500;
+const LETTER_BODY_MAX = 1200;
+
+function truncateForPrepBrain(s: string, max: number): string {
+  const t = s.trim();
+  if (t.length <= max) return t;
+  return `${t.slice(0, Math.max(0, max - 1))}…`;
+}
+
+function todayYmdUtc(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/** Doubt tracker (cloud-synced rows; local-only doubts may be absent). */
+export async function getDoubtsSnapshot(admin: AdminClient, userId: string) {
+  const { data, error } = await admin
+    .from("doubts")
+    .select("title, description, status, subject, updated_at")
+    .eq("user_id", userId)
+    .order("updated_at", { ascending: false })
+    .limit(25);
+  if (error) throw error;
+  const rows = (data ?? []).map((r) => ({
+    title: (r.title ?? "").trim() || "(untitled)",
+    description: truncateForPrepBrain((r.description ?? "").trim(), TEXT_PREVIEW_MAX),
+    status: r.status,
+    subject: r.subject?.trim() || null,
+    updated_at: typeof r.updated_at === "string" ? r.updated_at.slice(0, 10) : "",
+  }));
+  return {
+    doubts: rows,
+    note: "Rows sync from the Doubt Tracker when enabled; purely local doubts may not appear.",
+  };
+}
+
+export async function getMistakeLogSnapshot(admin: AdminClient, userId: string) {
+  const { data, error } = await admin
+    .from("mistake_logs")
+    .select(
+      "subject, topic_label, mistake_type, note, flag_for_revision, logged_at, source",
+    )
+    .eq("user_id", userId)
+    .order("logged_at", { ascending: false })
+    .limit(30);
+  if (error) throw error;
+  const entries = (data ?? []).map((r) => ({
+    subject: (r.subject ?? "").trim() || "—",
+    topic: (r.topic_label ?? "").trim() || null,
+    type: (r.mistake_type ?? "").trim() || "—",
+    note: r.note?.trim()
+      ? truncateForPrepBrain(r.note.trim(), TEXT_PREVIEW_MAX)
+      : null,
+    flag_revision: Boolean(r.flag_for_revision),
+    logged_at: typeof r.logged_at === "string" ? r.logged_at.slice(0, 10) : "",
+    source: (r.source ?? "").trim() || null,
+  }));
+  return { mistakes: entries };
+}
+
+export type MotivationLetterPrepRow = {
+  letter_date: string;
+  pinned: boolean;
+  sealed: boolean;
+  open_date: string | null;
+  body_excerpt: string | null;
+  privacy_note: string | null;
+};
+
+/**
+ * Personal Motivation: letters (respecting seal — no body until open_date), voice transcripts, vision captions.
+ * Never returns image bytes or voice audio.
+ */
+export async function getMotivationContextSnapshot(admin: AdminClient, userId: string) {
+  const today = todayYmdUtc();
+
+  const [lettersRes, voiceRes, visionRes] = await Promise.all([
+    admin
+      .from("motivation_letters")
+      .select("letter_date, body, sealed, open_date, pinned, created_at")
+      .eq("user_id", userId)
+      .order("letter_date", { ascending: false })
+      .limit(8),
+    admin
+      .from("motivation_voice_affirmations")
+      .select("transcript, tags, recorded_at")
+      .eq("user_id", userId)
+      .order("recorded_at", { ascending: false })
+      .limit(6),
+    admin
+      .from("motivation_vision_photos")
+      .select("caption, photo_date, is_wallpaper, created_at")
+      .eq("user_id", userId)
+      .order("photo_date", { ascending: false })
+      .limit(6),
+  ]);
+
+  if (lettersRes.error) throw lettersRes.error;
+  if (voiceRes.error) throw voiceRes.error;
+  if (visionRes.error) throw visionRes.error;
+
+  const letters: MotivationLetterPrepRow[] = (lettersRes.data ?? []).map((row) => {
+    const sealed = Boolean(row.sealed);
+    const openDate = row.open_date?.trim() || null;
+    let body_excerpt: string | null = null;
+    let privacy_note: string | null = null;
+    if (!sealed) {
+      body_excerpt = truncateForPrepBrain((row.body ?? "").trim(), LETTER_BODY_MAX) || null;
+    } else if (openDate && openDate <= today) {
+      body_excerpt = truncateForPrepBrain((row.body ?? "").trim(), LETTER_BODY_MAX) || null;
+    } else {
+      privacy_note = openDate
+        ? `Sealed letter — body hidden until ${openDate} (not shown to Mastermind before then).`
+        : "Sealed letter — body hidden until open date (not shown to Mastermind).";
+    }
+    return {
+      letter_date: row.letter_date ?? "",
+      pinned: Boolean(row.pinned),
+      sealed,
+      open_date: openDate,
+      body_excerpt,
+      privacy_note,
+    };
+  });
+
+  const voice_affirmations = (voiceRes.data ?? []).map((r) => ({
+    recorded_at:
+      typeof r.recorded_at === "string" ? r.recorded_at.slice(0, 10) : "",
+    tags: Array.isArray(r.tags) ? r.tags.slice(0, 8) : [],
+    transcript: truncateForPrepBrain((r.transcript ?? "").trim(), TEXT_PREVIEW_MAX),
+  }));
+
+  const vision_captions = (visionRes.data ?? []).map((r) => ({
+    photo_date: r.photo_date ?? "",
+    is_wallpaper: Boolean(r.is_wallpaper),
+    caption: r.caption?.trim()
+      ? truncateForPrepBrain(r.caption.trim(), 240)
+      : null,
+    note: "Wallpaper / vision image stored in app — Mastermind sees caption only.",
+  }));
+
+  return {
+    letters,
+    voice_affirmations,
+    vision_captions,
+  };
+}
+
 export type PrepbrainToolName =
   | "getTodayPlan"
   | "getSyllabusOverview"
@@ -631,5 +778,8 @@ export type PrepbrainToolName =
   | "getSyllabusBacklogSnapshot"
   | "getDailyDebriefSnapshot"
   | "getMockTrendBySubject"
-  | "getStudyTimerStats";
+  | "getStudyTimerStats"
+  | "getDoubtsSnapshot"
+  | "getMistakeLogSnapshot"
+  | "getMotivationContextSnapshot";
 

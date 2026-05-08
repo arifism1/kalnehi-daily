@@ -498,6 +498,122 @@ export function formatStudyTimerStatsMarkdown(data: unknown): string {
   return `### Study timer (30d)\n${days ?? "—"} study days, avg ${avgMin ?? "—"} min/day focused, ${totalMin ?? "—"} min total.${effStr}`;
 }
 
+export function formatDoubtsSnapshotMarkdown(data: unknown): string {
+  if (data === null || data === undefined) return "";
+  if (!isRecord(data)) return "";
+  if ("error" in data && data.error === "unavailable") {
+    return "*Doubt tracker data unavailable.*";
+  }
+  const doubts = data.doubts;
+  if (!Array.isArray(doubts) || doubts.length === 0) {
+    return "### Doubt tracker\n_No synced doubts in Kalnehi cloud (local-only entries may exist in the app)._";
+  }
+  const lines = ["### Doubt tracker (recent)"];
+  for (const raw of doubts) {
+    if (!isRecord(raw)) continue;
+    const title = typeof raw.title === "string" ? raw.title : "?";
+    const status = typeof raw.status === "string" ? raw.status : "?";
+    const subj = typeof raw.subject === "string" && raw.subject ? ` · ${raw.subject}` : "";
+    const desc = typeof raw.description === "string" && raw.description.trim() ? raw.description.trim() : "";
+    const ym = typeof raw.updated_at === "string" ? raw.updated_at : "";
+    const body = desc ? ` — ${desc}` : "";
+    lines.push(`- **${title}** (${status}${subj}, ${ym})${body}`);
+  }
+  const note = typeof data.note === "string" && data.note.trim() ? `\n_${data.note}_` : "";
+  return lines.join("\n") + note;
+}
+
+export function formatMistakeLogMarkdown(data: unknown): string {
+  if (data === null || data === undefined) return "";
+  if (!isRecord(data)) return "";
+  if ("error" in data && data.error === "unavailable") {
+    return "*Mistake log unavailable.*";
+  }
+  const mistakes = data.mistakes;
+  if (!Array.isArray(mistakes) || mistakes.length === 0) {
+    return "### Mistake log\n_No mistakes logged yet._";
+  }
+  const lines = ["### Mistake log (recent)"];
+  for (const raw of mistakes) {
+    if (!isRecord(raw)) continue;
+    const subject = typeof raw.subject === "string" ? raw.subject : "?";
+    const topic = typeof raw.topic === "string" && raw.topic ? ` · ${raw.topic}` : "";
+    const type = typeof raw.type === "string" ? raw.type : "?";
+    const flag = raw.flag_revision === true ? " [revision]" : "";
+    const note = typeof raw.note === "string" && raw.note.trim() ? `: ${raw.note.trim()}` : "";
+    const day = typeof raw.logged_at === "string" ? raw.logged_at : "";
+    lines.push(`- ${day} **${subject}**${topic} — ${type}${flag}${note}`);
+  }
+  return lines.join("\n");
+}
+
+export function formatMotivationContextMarkdown(data: unknown): string {
+  if (data === null || data === undefined) return "";
+  if (!isRecord(data)) return "";
+  if ("error" in data && data.error === "unavailable") {
+    return "*Personal Motivation data unavailable.*";
+  }
+  const letters = data.letters;
+  const voice = data.voice_affirmations;
+  const vision = data.vision_captions;
+
+  const blocks: string[] = [];
+
+  if (Array.isArray(letters) && letters.length > 0) {
+    const ls = ["### Motivation letters"];
+    for (const raw of letters) {
+      if (!isRecord(raw)) continue;
+      const d = typeof raw.letter_date === "string" ? raw.letter_date : "?";
+      const pin = raw.pinned === true ? " (pinned)" : "";
+      const priv =
+        typeof raw.privacy_note === "string" && raw.privacy_note.trim()
+          ? raw.privacy_note.trim()
+          : null;
+      const excerpt =
+        typeof raw.body_excerpt === "string" && raw.body_excerpt.trim()
+          ? raw.body_excerpt.trim()
+          : null;
+      if (priv) {
+        ls.push(`- **${d}**${pin}: ${priv}`);
+      } else if (excerpt) {
+        ls.push(`- **${d}**${pin}:\n  ${excerpt.replace(/\n+/g, "\n  ")}`);
+      } else {
+        ls.push(`- **${d}**${pin}: _(empty or unavailable)_`);
+      }
+    }
+    blocks.push(ls.join("\n"));
+  }
+
+  if (Array.isArray(voice) && voice.length > 0) {
+    const vs = ["### Voice affirmations (transcripts only)"];
+    for (const raw of voice) {
+      if (!isRecord(raw)) continue;
+      const day = typeof raw.recorded_at === "string" ? raw.recorded_at : "?";
+      const tags = Array.isArray(raw.tags) ? raw.tags.join(", ") : "";
+      const tr = typeof raw.transcript === "string" ? raw.transcript.trim() : "";
+      vs.push(`- **${day}**${tags ? ` [${tags}]` : ""}: ${tr || "—"}`);
+    }
+    blocks.push(vs.join("\n"));
+  }
+
+  if (Array.isArray(vision) && vision.length > 0) {
+    const ph = ["### Vision board (captions only — images not shown)"];
+    for (const raw of vision) {
+      if (!isRecord(raw)) continue;
+      const pd = typeof raw.photo_date === "string" ? raw.photo_date : "?";
+      const cap = typeof raw.caption === "string" && raw.caption.trim() ? raw.caption.trim() : "(no caption)";
+      const wp = raw.is_wallpaper === true ? " · wallpaper" : "";
+      ph.push(`- **${pd}**${wp}: ${cap}`);
+    }
+    blocks.push(ph.join("\n"));
+  }
+
+  if (blocks.length === 0) {
+    return "### Personal Motivation\n_No letters, voice affirmations, or vision captions in Kalnehi yet._";
+  }
+  return blocks.join("\n\n");
+}
+
 function formatToolSection(name: PrepbrainToolName, payload: unknown): string {
   switch (name) {
     case "getTodayPlan":
@@ -530,6 +646,12 @@ function formatToolSection(name: PrepbrainToolName, payload: unknown): string {
       return formatMockTrendMarkdown(payload);
     case "getStudyTimerStats":
       return formatStudyTimerStatsMarkdown(payload);
+    case "getDoubtsSnapshot":
+      return formatDoubtsSnapshotMarkdown(payload);
+    case "getMistakeLogSnapshot":
+      return formatMistakeLogMarkdown(payload);
+    case "getMotivationContextSnapshot":
+      return formatMotivationContextMarkdown(payload);
     default:
       return "";
   }
@@ -552,6 +674,9 @@ const TOOL_ORDER: PrepbrainToolName[] = [
   "getMeditationConsistency",
   "getRecentStudyCameraData",
   "getTargetScoreBlueprint",
+  "getDoubtsSnapshot",
+  "getMistakeLogSnapshot",
+  "getMotivationContextSnapshot",
 ];
 
 /**
@@ -621,6 +746,21 @@ const INTENT_SECTION_ALLOW: Record<string, PrepbrainToolName[]> = {
     "getSyllabusOverview",
     "getWeakStrongSubjects",
     "getMarksIntelligence",
+  ],
+  doubt_tracker: [
+    "getDoubtsSnapshot",
+    "getSyllabusOverview",
+    "getWeakStrongSubjects",
+  ],
+  mistake_log: [
+    "getMistakeLogSnapshot",
+    "getWeakStrongSubjects",
+    "getMarksIntelligence",
+  ],
+  personal_motivation: [
+    "getMotivationContextSnapshot",
+    "getSyllabusOverview",
+    "getWeakStrongSubjects",
   ],
 };
 

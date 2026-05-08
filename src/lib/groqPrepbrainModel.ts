@@ -1,12 +1,30 @@
 import type { User } from "@supabase/supabase-js";
 
-import { GROQ_DEFAULT_CHAT_ID } from "@/lib/groqClient";
 import { type ModelCandidate } from "@/lib/aiChatClient";
+import { type MastermindModelTier } from "@/lib/mastermindModelTier";
+import { GROQ_DEFAULT_CHAT_ID } from "@/lib/groqClient";
+
+/** Fixed DeepInfra model for Mastermind (`/api/prepbrain/chat` hard tier); not overridden by DEEPINFRA_CHAT_MODEL. */
+export const MASTERMIND_DEEPINFRA_MODEL =
+  "mistralai/Mistral-Small-24B-Instruct-2501" as const;
 
 export type ResolvePrepbrainGroqModelsInput = {
   request: Request;
   user: User;
 };
+
+/**
+ * Mastermind Chat routing: Groq-only for cheap turns; Mistral-first when tier is hard.
+ */
+export function mastermindModelsForTier(tier: MastermindModelTier): ModelCandidate[] {
+  if (tier === "easy") {
+    return [{ provider: "groq", model: GROQ_DEFAULT_CHAT_ID }];
+  }
+  return [
+    { provider: "deepinfra", model: MASTERMIND_DEEPINFRA_MODEL },
+    { provider: "groq", model: GROQ_DEFAULT_CHAT_ID },
+  ];
+}
 
 /**
  * PrepBrain model routing:

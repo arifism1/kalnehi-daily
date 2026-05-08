@@ -122,13 +122,29 @@ describe("detectPrepBrainIntent — no_data (generic strategy, no personal conte
   });
 });
 
+describe("detectPrepBrainIntent — cross-feature (intent-only tools)", () => {
+  it("'motivation letter' → personal_motivation", () => {
+    assert.equal(
+      detectPrepBrainIntent("what does my motivation letter say"),
+      "personal_motivation",
+    );
+  });
+
+  it("'doubt tracker' → doubt_tracker", () => {
+    assert.equal(detectPrepBrainIntent("summarize my doubt tracker"), "doubt_tracker");
+  });
+
+  it("'mistake log' → mistake_log", () => {
+    assert.equal(detectPrepBrainIntent("patterns in my mistake log"), "mistake_log");
+  });
+});
+
 describe("detectPrepBrainIntent — general (unclassified fallthrough)", () => {
   it("vague open-ended question → general", () => {
     assert.equal(detectPrepBrainIntent("how am I doing overall?"), "general");
   });
 
-  it("completely unrelated but not small_talk → general", () => {
-    // Not a greeting, not flattery, not study-topic — falls through to general
+  it("generic motivation ask → general (no Personal Motivation feature phrasing)", () => {
     assert.equal(detectPrepBrainIntent("please give me some motivation"), "general");
   });
 });
@@ -144,21 +160,17 @@ describe("selectToolsForIntent — tool lists", () => {
     assert.ok(tools.includes("getWeakStrongSubjects"));
   });
 
-  it("general now loads syllabus context (not just today's plan)", () => {
+  it("general loads syllabus + weak + marks (not today's plan)", () => {
     const tools = selectToolsForIntent("general");
-    assert.ok(tools.includes("getTodayPlan"));
     assert.ok(tools.includes("getSyllabusOverview"));
     assert.ok(tools.includes("getWeakStrongSubjects"));
     assert.ok(tools.includes("getMarksIntelligence"));
+    assert.ok(!tools.includes("getTodayPlan"));
   });
 
-  it("no_data now loads minimal syllabus snapshot", () => {
+  it("no_data loads no tools", () => {
     const tools = selectToolsForIntent("no_data");
-    assert.ok(tools.includes("getSyllabusOverview"));
-    assert.ok(tools.includes("getWeakStrongSubjects"));
-    // Should NOT load today's task list or marks for generic tips
-    assert.ok(!tools.includes("getTodayPlan"));
-    assert.ok(!tools.includes("getMarksIntelligence"));
+    assert.equal(tools.length, 0);
   });
 
   it("today_plan loads plan + weak subjects", () => {
@@ -172,6 +184,25 @@ describe("selectToolsForIntent — tool lists", () => {
     assert.ok(tools.includes("getHabitStreakSummary"));
     assert.ok(tools.includes("getMeditationConsistency"));
     assert.ok(!tools.includes("getMarksIntelligence"));
+  });
+
+  it("personal_motivation loads motivation snapshot + syllabus context", () => {
+    const tools = selectToolsForIntent("personal_motivation");
+    assert.ok(tools.includes("getMotivationContextSnapshot"));
+    assert.ok(tools.includes("getSyllabusOverview"));
+  });
+
+  it("doubt_tracker loads doubts + syllabus", () => {
+    const tools = selectToolsForIntent("doubt_tracker");
+    assert.ok(tools.includes("getDoubtsSnapshot"));
+    assert.ok(tools.includes("getWeakStrongSubjects"));
+  });
+
+  it("mistake_log loads mistakes + weak + marks", () => {
+    const tools = selectToolsForIntent("mistake_log");
+    assert.ok(tools.includes("getMistakeLogSnapshot"));
+    assert.ok(tools.includes("getWeakStrongSubjects"));
+    assert.ok(tools.includes("getMarksIntelligence"));
   });
 
   it("target_score loads blueprint + syllabus overview", () => {

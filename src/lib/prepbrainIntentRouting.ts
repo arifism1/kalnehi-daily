@@ -40,6 +40,9 @@ export function detectConversationThread(
     "avoided_topics",
     "habits_or_meditation",
     "study_camera",
+    "doubt_tracker",
+    "mistake_log",
+    "personal_motivation",
   ];
 
   // Map prior messages (all except the most recent) to intents.
@@ -88,6 +91,9 @@ export type PrepBrainIntent =
   | "mock_test"
   | "syllabus_backlog"
   | "avoided_topics"
+  | "doubt_tracker"
+  | "mistake_log"
+  | "personal_motivation"
   | "small_talk"
   | "no_data"
   | "general";
@@ -174,6 +180,35 @@ function isSmallTalk(msg: string): boolean {
   return false;
 }
 
+/** Routes to Doubt Tracker snapshots (not generic English "no doubt"). */
+function isDoubtTrackerIntent(t: string): boolean {
+  if (/\bno doubt\b/.test(t) || /\bwithout a doubt\b/.test(t)) return false;
+  if (/\bdoubt tracker\b/.test(t) || /\bdoubts?\s+tracker\b/.test(t)) return true;
+  if (/\bmy doubts\b/.test(t) || /\bdoubts i\s+(logged|have|wrote)\b/.test(t)) return true;
+  if (/\b(unsolved|pending|open)\s+doubts?\b/.test(t)) return true;
+  if (/\bdoubts?\b/.test(t) && /\b(list|log|logged|solve|clear|track|tracker)\b/.test(t)) return true;
+  if (/\b(i have|have) a doubt\b/.test(t) || /\bmy doubt\b/.test(t)) return true;
+  return false;
+}
+
+function isMistakeLogIntent(t: string): boolean {
+  if (/\bmock\s+test\b/.test(t) || /\bmock\s+score\b/.test(t)) return false;
+  if (/\bmistake\s+log\b/.test(t) || /\bmistakes?\s+i\s+logged\b/.test(t)) return true;
+  if (/\bmy mistakes\b/.test(t) && /\b(log|pattern|revise|from)\b/.test(t)) return true;
+  if (/\blogged\s+mistakes?\b/.test(t) || /\bmistakes?\s+in\s+(my\s+)?log\b/.test(t)) return true;
+  if (/\bmistakes?\b/.test(t) && /\b(log|logged|tracker|mistake log)\b/.test(t)) return true;
+  return false;
+}
+
+function isPersonalMotivationIntent(t: string): boolean {
+  if (/\bmotivation letter\b/.test(t) || /\bletter to (my )?future\b/.test(t)) return true;
+  if (/\bfuture self\b/.test(t) && /\bletter\b/.test(t)) return true;
+  if (/\bpersonal motivation\b/.test(t)) return true;
+  if (/\bvision\s+(board|photo)\b/.test(t)) return true;
+  if (/\b(voice\s+)?affirmation\b/.test(t) && /\b(my|record|logged|saved)\b/.test(t)) return true;
+  return false;
+}
+
 function isGenericStrategyQuestion(msg: string): boolean {
   const t = msg.trim().toLowerCase();
   if (!t) return false;
@@ -228,6 +263,16 @@ export function detectPrepBrainIntent(lastUserMessage: string): PrepBrainIntent 
     t.includes("clear my backlog")
   ) {
     return "syllabus_backlog";
+  }
+
+  if (isDoubtTrackerIntent(t)) {
+    return "doubt_tracker";
+  }
+  if (isMistakeLogIntent(t)) {
+    return "mistake_log";
+  }
+  if (isPersonalMotivationIntent(t)) {
+    return "personal_motivation";
   }
 
   // Focus/priority phrasing is checked BEFORE the "today" keyword so that
@@ -375,6 +420,12 @@ export function selectToolsForIntent(
         "getMockTrendBySubject",
         "getDailyDebriefSnapshot",
       ];
+    case "doubt_tracker":
+      return ["getDoubtsSnapshot", "getSyllabusOverview", "getWeakStrongSubjects"];
+    case "mistake_log":
+      return ["getMistakeLogSnapshot", "getWeakStrongSubjects", "getMarksIntelligence"];
+    case "personal_motivation":
+      return ["getMotivationContextSnapshot", "getSyllabusOverview", "getWeakStrongSubjects"];
     // General: omit getTodayPlan — reduces token cost for non-today queries.
     case "general":
       return ["getSyllabusOverview", "getWeakStrongSubjects", "getMarksIntelligence"];
