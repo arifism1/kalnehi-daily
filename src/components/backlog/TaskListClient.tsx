@@ -3,6 +3,7 @@
 import { addDays, format, parseISO } from "date-fns";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type {
@@ -10,6 +11,8 @@ import type {
   TaskListPlannedRow,
 } from "@/actions/backlogRecovery";
 import {
+  deletePendingBacklogRow,
+  deleteRecoveryPlannedTask,
   fetchTaskListPayload,
   rolloverMissedBacklogRecoveryTasks,
   updateRecoveryPlannedTask,
@@ -19,6 +22,7 @@ import {
   type BacklogTrackerPrefillV1,
 } from "@/lib/backlogRecoveryConstants";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 const PLANNED_FIX_VISIBLE_DAYS = 14;
 
@@ -56,6 +60,23 @@ function formatDayLabel(ymd: string, today: string): string {
   }
 }
 
+function formatBacklogAddedLabel(iso: string | null): string {
+  if (!iso) return "unknown";
+  try {
+    const d = parseISO(iso);
+    if (Number.isNaN(d.getTime())) {
+      const head = iso.slice(0, 10);
+      if (/^\d{4}-\d{2}-\d{2}$/.test(head)) {
+        return format(parseISO(`${head}T12:00:00`), "MMM d, yyyy");
+      }
+      return "unknown";
+    }
+    return format(d, "MMM d, yyyy");
+  } catch {
+    return "unknown";
+  }
+}
+
 type Props = {
   initialUnplanned: TaskListBacklogRow[];
   initialUnplannedTotal: number;
@@ -86,6 +107,13 @@ export function TaskListClient({
   const [editPlanDate, setEditPlanDate] = useState("");
   const [editBusy, setEditBusy] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
+
+  const [deleteUnplannedRow, setDeleteUnplannedRow] =
+    useState<TaskListBacklogRow | null>(null);
+  const [deletePlannedRow, setDeletePlannedRow] =
+    useState<TaskListPlannedRow | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteListError, setDeleteListError] = useState<string | null>(null);
 
   useEffect(() => {
     void rolloverMissedBacklogRecoveryTasks(today);
@@ -172,6 +200,43 @@ export function TaskListClient({
     router,
   ]);
 
+  const executeDeleteUnplanned = useCallback(async () => {
+    if (!deleteUnplannedRow) return;
+    setDeleteBusy(true);
+    setDeleteListError(null);
+    try {
+      const res = await deletePendingBacklogRow(deleteUnplannedRow.id);
+      if (!res.ok) {
+        setDeleteListError(res.error);
+        return;
+      }
+      setDeleteUnplannedRow(null);
+      await refresh();
+      router.refresh();
+    } finally {
+      setDeleteBusy(false);
+    }
+  }, [deleteUnplannedRow, refresh, router]);
+
+  const executeDeletePlanned = useCallback(async () => {
+    if (!deletePlannedRow) return;
+    setDeleteBusy(true);
+    setDeleteListError(null);
+    try {
+      const res = await deleteRecoveryPlannedTask(deletePlannedRow.task_id);
+      if (!res.ok) {
+        setDeleteListError(res.error);
+        return;
+      }
+      if (editRow?.task_id === deletePlannedRow.task_id) setEditRow(null);
+      setDeletePlannedRow(null);
+      await refresh();
+      router.refresh();
+    } finally {
+      setDeleteBusy(false);
+    }
+  }, [deletePlannedRow, editRow?.task_id, refresh, router]);
+
   const plannedByDateFiltered = useMemo(() => {
     if (!subjectFilter) return plannedByDate;
     const out: Record<string, TaskListPlannedRow[]> = {};
@@ -252,6 +317,12 @@ export function TaskListClient({
         </Link>
       </header>
 
+      {deleteListError ? (
+        <p className="rounded-xl border border-rose-500/35 bg-rose-500/10 px-4 py-2 text-sm text-rose-800 dark:text-rose-200">
+          {deleteListError}
+        </p>
+      ) : null}
+
       {/* Planned Fix — dominant */}
       <section className="space-y-3">
         <div className="flex items-baseline justify-between gap-2">
@@ -323,11 +394,12 @@ export function TaskListClient({
                 </p>
                 <ul className="space-y-2">
                   {(plannedByDateFiltered[ymd] ?? []).map((t) => (
-                    <li key={t.task_id}>
+                    <li key={t.task_id} className="flex gap-2">
                       <button
                         type="button"
                         onClick={() => openPlannedEdit(t)}
-                        className="flex w-full items-start justify-between gap-3 rounded-xl border border-kal-border/80 bg-kal-card px-3 py-2.5 text-left transition hover:border-kal-accent/40 hover:bg-kal-card-muted/30"
+                        disabled={deleteBusy}
+                        className="flex min-w-0 flex-1 items-start justify-between gap-3 rounded-xl border border-kal-border/80 bg-kal-card px-3 py-2.5 text-left transition hover:border-kal-accent/40 hover:bg-kal-card-muted/30 disabled:opacity-50"
                       >
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-kal-text">{t.title}</p>
@@ -339,6 +411,18 @@ export function TaskListClient({
                         <span className="shrink-0 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 dark:text-emerald-200/90">
                           Recovery
                         </span>
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={`Delete planned recovery: ${t.title}`}
+                        disabled={deleteBusy}
+                        onClick={() => {
+                          setDeleteListError(null);
+                          setDeletePlannedRow(t);
+                        }}
+                        className="kal-glass-subtle flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-kal-border text-kal-muted hover:border-rose-500/35 hover:bg-rose-500/10 hover:text-rose-700 disabled:opacity-50 dark:hover:text-rose-300 sm:h-[unset] sm:min-h-[2.875rem]"
+                      >
+                        <Trash2 className="h-4 w-4" aria-hidden />
                       </button>
                     </li>
                   ))}
@@ -364,14 +448,16 @@ export function TaskListClient({
           <h2 className="text-sm font-bold text-kal-text">
             Unplanned Fix ({unplannedHeadingCount} items)
           </h2>
-          <span className="text-[11px] text-kal-muted">Still pending</span>
+          <span className="text-[11px] text-kal-muted">
+            Still pending · oldest added first
+          </span>
         </div>
 
         {filteredUnplanned.length === 0 ? (
           <p className="text-sm text-kal-muted">
             {subjectFilter
               ? "No pending rows with this subject."
-              : "You&apos;re caught up — nothing waiting."}
+              : "You're caught up — nothing waiting."}
           </p>
         ) : (
           <ul className="space-y-2">
@@ -387,6 +473,10 @@ export function TaskListClient({
                       ? `${row.effort_estimate_minutes}m`
                       : "—"}
                     {row.group_label ? ` · ${row.group_label}` : ""}
+                    <span className="text-kal-text-secondary">
+                      {" "}
+                      · Added {formatBacklogAddedLabel(row.created_at)}
+                    </span>
                     {missedTodayLabel(row) ? (
                       <span className="text-amber-700 dark:text-amber-200">
                         {" "}
@@ -395,13 +485,28 @@ export function TaskListClient({
                     ) : null}
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => openTracker([row.id], [row.title], true)}
-                  className="shrink-0 self-start rounded-lg border border-kal-accent/30 bg-kal-accent/10 px-2.5 py-1 text-[11px] font-bold text-kal-accent sm:self-center"
-                >
-                  Plan
-                </button>
+                <div className="flex shrink-0 flex-wrap items-center gap-2 self-start sm:self-center">
+                  <button
+                    type="button"
+                    onClick={() => openTracker([row.id], [row.title], true)}
+                    disabled={deleteBusy}
+                    className="rounded-lg border border-kal-accent/30 bg-kal-accent/10 px-2.5 py-1 text-[11px] font-bold text-kal-accent disabled:opacity-50"
+                  >
+                    Plan
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Delete backlog: ${row.title}`}
+                    disabled={deleteBusy}
+                    onClick={() => {
+                      setDeleteListError(null);
+                      setDeleteUnplannedRow(row);
+                    }}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-kal-border text-kal-muted hover:border-rose-500/35 hover:bg-rose-500/10 hover:text-rose-700 disabled:opacity-50 dark:hover:text-rose-300"
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden />
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
@@ -416,7 +521,7 @@ export function TaskListClient({
               true,
             )
           }
-          disabled={filteredUnplanned.length === 0}
+          disabled={filteredUnplanned.length === 0 || deleteBusy}
           className="mt-2 w-full rounded-xl bg-kal-accent py-3 text-sm font-bold text-kal-accent-foreground disabled:opacity-40"
         >
           Fix these
@@ -512,6 +617,26 @@ export function TaskListClient({
           </div>
         </div>
       ) : null}
+
+      <ConfirmDialog
+        open={deleteUnplannedRow != null}
+        title="Remove this backlog item?"
+        description="This deletes the pending backlog row permanently. If you haven't scheduled it yet, it won't appear again. You can add a fresh item anytime in Backlog Tracker."
+        confirmLabel="Remove"
+        busy={deleteBusy}
+        onCancel={() => setDeleteUnplannedRow(null)}
+        onConfirm={() => void executeDeleteUnplanned()}
+      />
+
+      <ConfirmDialog
+        open={deletePlannedRow != null}
+        title="Remove planned recovery?"
+        description="Removes this task from your plan. If nothing else references the same backlog item, we remove that backlog record too."
+        confirmLabel="Remove"
+        busy={deleteBusy}
+        onCancel={() => setDeletePlannedRow(null)}
+        onConfirm={() => void executeDeletePlanned()}
+      />
 
       <div className="flex flex-wrap gap-3 text-sm">
         <Link href="/backlog-tracker" className="font-semibold text-kal-accent hover:underline">

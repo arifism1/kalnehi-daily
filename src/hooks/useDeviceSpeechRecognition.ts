@@ -450,7 +450,17 @@ export function useDeviceSpeechRecognition({
         setTranscriptionQualityHint(null);
       }
 
+      const transcriptPayload = {
+        transcript,
+        occurredAt: new Date().toISOString(),
+        durationSeconds,
+      };
+
       if (reportUsageRef.current === "onTranscript") {
+        // Deliver transcript before quota await so UIs that listen while the mic is idle
+        // (Backlog split-into-lines, reflection, mistake log) are not blocked on the network.
+        onTranscriptRef.current?.(transcriptPayload);
+
         try {
           const res = await fetch("/api/voice-usage/consume", {
             method: "POST",
@@ -483,13 +493,12 @@ export function useDeviceSpeechRecognition({
           onPreviewTranscriptRef.current?.("");
           return;
         }
+
+        onPreviewTranscriptRef.current?.("");
+        return;
       }
 
-      onTranscriptRef.current?.({
-        transcript,
-        occurredAt: new Date().toISOString(),
-        durationSeconds,
-      });
+      onTranscriptRef.current?.(transcriptPayload);
       onPreviewTranscriptRef.current?.("");
     })();
   }, [clearTimers, isAndroidStableHost, setMicBusy]);

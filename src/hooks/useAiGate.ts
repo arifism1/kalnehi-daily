@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 
-import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
+import { useSubscriptionAccess, type SubscriptionRefetchOpts } from "@/hooks/useSubscriptionAccess";
 import {
   FREE_TRIAL_VOICE_CAP_SECONDS,
   formatPaidVoiceQuotaStatus,
@@ -45,7 +45,7 @@ type AiGateResult = {
 
   freeTrialEndsAtIso: string | null;
 
-  refetch: () => void;
+  refetch: (opts?: SubscriptionRefetchOpts) => void;
 };
 
 export function useAiGate(): AiGateResult {

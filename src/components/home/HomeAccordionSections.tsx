@@ -269,8 +269,8 @@ export function HomeAccordionSections() {
       content: (
         <div className="kal-glass-subtle space-y-3 rounded-2xl border border-kal-border/60 p-4">
           <p className="text-sm leading-relaxed text-kal-text-secondary">
-            Paste or dictate a messy list, split it into tasks, set times, preview the day, and
-            commit items to your daily plan.
+            Paste or dictate a backlog, split into tasks in the box, set times and start date, then
+            confirm to add items to your daily plan.
           </p>
           <a
             href="/backlog-tracker"

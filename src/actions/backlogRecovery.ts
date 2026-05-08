@@ -258,6 +258,75 @@ export async function deletePendingBacklogRow(
   }
 }
 
+/**
+ * Removes a backlog-linked planned daily task. Deletes the backlog source row only when no
+ * remaining `daily_tasks` reference its `backlog_item_id`.
+ */
+export async function deleteRecoveryPlannedTask(dailyTaskId: string): Promise<
+  { ok: true } | { ok: false; error: string }
+> {
+  const taskId = String(dailyTaskId ?? "").trim();
+  if (!taskId) return { ok: false, error: "Invalid item." };
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return { ok: false, error: USER_ERROR.session };
+
+    const { data: taskRow, error: taskErr } = await supabase
+      .from("daily_tasks")
+      .select("id, backlog_item_id, daily_plan_id")
+      .eq("id", taskId)
+      .maybeSingle();
+
+    if (taskErr || !taskRow) return { ok: false, error: USER_ERROR.tryAgain };
+
+    const { data: planRow, error: planErr } = await supabase
+      .from("daily_plans")
+      .select("user_id")
+      .eq("id", taskRow.daily_plan_id)
+      .maybeSingle();
+
+    if (planErr || !planRow || planRow.user_id !== user.id) {
+      return { ok: false, error: USER_ERROR.tryAgain };
+    }
+
+    const backlogItemId = taskRow.backlog_item_id?.trim();
+    if (!backlogItemId) {
+      return {
+        ok: false,
+        error: "This planned row is not linked to backlog.",
+      };
+    }
+
+    const { error: delErr } = await supabase.from("daily_tasks").delete().eq("id", taskId);
+    if (delErr) return { ok: false, error: USER_ERROR.tryAgain };
+
+    const { count, error: countErr } = await supabase
+      .from("daily_tasks")
+      .select("id", { count: "exact", head: true })
+      .eq("backlog_item_id", backlogItemId);
+
+    if (countErr) return { ok: false, error: USER_ERROR.tryAgain };
+
+    if ((count ?? 0) === 0) {
+      const { error: bErr } = await supabase
+        .from("user_syllabus_backlog")
+        .delete()
+        .eq("id", backlogItemId)
+        .eq("user_id", user.id);
+      if (bErr) return { ok: false, error: USER_ERROR.tryAgain };
+    }
+
+    revalidateBacklogPaths();
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: formatSupabaseError(e) };
+  }
+}
+
 export async function updatePendingBacklogRowSubject(
   backlogId: string,
   group_label: string | null,
@@ -376,7 +445,8 @@ export async function previewBacklogSchedule(
 }
 
 /**
- * Commit recovery plan: optional vent audit row, cleans extra pending rows, creates / updates backlog + daily_tasks.
+ * Commit recovery plan: optional vent audit row, creates / updates backlog + daily_tasks for the submitted items only.
+ * Other pending backlog rows are left unchanged so partial scheduling from Backlog List does not delete the rest.
  */
 export async function commitBacklogSchedule(
   items: OrganizedBacklogItemInput[],
@@ -444,27 +514,6 @@ export async function commitBacklogSchedule(
       backlogTaskCountToday,
       scheduleStartYmd: startPick || null,
     });
-
-    const existingIds = schedulable
-      .map((s) => s.existing_backlog_id)
-      .filter((x): x is string => typeof x === "string" && x.length > 0);
-
-    const { data: pendingAll } = await supabase
-      .from("user_syllabus_backlog")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("status", "pending");
-
-    const toDeletePending = (pendingAll ?? [])
-      .map((r) => r.id)
-      .filter((id) => !existingIds.includes(id));
-    if (toDeletePending.length > 0) {
-      const { error: d0 } = await supabase
-        .from("user_syllabus_backlog")
-        .delete()
-        .in("id", toDeletePending);
-      if (d0) return { ok: false, error: USER_ERROR.tryAgain };
-    }
 
     for (const { item, plan_date } of computed.assignments) {
       let sid = item.syllabus_master_id;
@@ -654,6 +703,8 @@ export type TaskListBacklogRow = {
   group_label: string | null;
   last_attempt_date: string | null;
   retry_count: number;
+  /** ISO timestamp when the backlog row was created (for “added on” display / sort). */
+  created_at: string | null;
 };
 
 export type TaskListPlannedRow = {
@@ -834,12 +885,10 @@ export async function fetchTaskListPayload(
       .limit(TASK_LIST_UNPLANNED_MAX_ROWS);
 
     const sortedPending = [...(pendingRows ?? [])].sort((a, b) => {
-      const rc = (b.retry_count ?? 0) - (a.retry_count ?? 0);
-      if (rc !== 0) return rc;
-      const ad = a.last_attempt_date ?? "";
-      const bd = b.last_attempt_date ?? "";
-      if (ad !== bd) return bd.localeCompare(ad);
-      return String(a.created_at ?? "").localeCompare(String(b.created_at ?? ""));
+      const ac = String(a.created_at ?? "");
+      const bc = String(b.created_at ?? "");
+      if (ac !== bc) return ac.localeCompare(bc);
+      return String(a.title ?? "").localeCompare(String(b.title ?? ""));
     });
 
     const defaultFrom = format(addDays(new Date(), -1), "yyyy-MM-dd");
@@ -910,6 +959,10 @@ export async function fetchTaskListPayload(
       group_label: r.group_label,
       last_attempt_date: r.last_attempt_date ?? null,
       retry_count: r.retry_count ?? 0,
+      created_at:
+        typeof r.created_at === "string" && r.created_at.length > 0
+          ? r.created_at
+          : null,
     }));
 
     const plannedByDate: Record<string, TaskListPlannedRow[]> = {};

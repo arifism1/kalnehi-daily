@@ -11,7 +11,7 @@ type VoiceListeningHintProps = {
   className?: string;
   /** When true, shows a subtle "Be loud and clear" reminder below the main hint. Defaults to false. */
   showClearVoiceHint?: boolean;
-  /** Replaces "Stop" in the hint line (e.g. "Structure with AI" on Backlog Tracker). */
+  /** Replaces "Stop" in the hint line (e.g. "Split into lines" on Backlog Tracker). */
   stopLabel?: string;
 };
 

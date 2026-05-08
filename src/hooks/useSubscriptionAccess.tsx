@@ -8,6 +8,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -81,9 +82,14 @@ export type SubscriptionData = {
   freeTrialVoiceSecondsRemaining: number;
   /** Welcome trial clock ended, still no paid plan. */
   welcomeTrialExpiredNoPay: boolean;
-  refetch: () => void;
+  /** Pass `{ silent: true }` after lightweight DB updates (e.g. voice quota) to avoid global loading / AppShell freeze. */
+  refetch: (opts?: SubscriptionRefetchOpts) => void;
   /** Increments when `refetch()` runs — use to reload dependent data (e.g. PrepBrain usage). */
   refetchVersion: number;
+};
+
+export type SubscriptionRefetchOpts = {
+  silent?: boolean;
 };
 
 const EMPTY_USAGE: UsageData = {
@@ -167,8 +173,13 @@ function useSubscriptionAccessState(): SubscriptionData {
   const [trialVoiceSecondsUsed, setTrialVoiceSecondsUsed] = useState(0);
   const [hasUsedFreeTrial, setHasUsedFreeTrial] = useState(false);
   const [fetchKey, setFetchKey] = useState(0);
+  /** Next profile fetch skips `setLoading(true)` when true (read then clear in effect). */
+  const silentFetchRef = useRef(false);
 
-  const refetch = useCallback(() => setFetchKey((k) => k + 1), []);
+  const refetch = useCallback((opts?: SubscriptionRefetchOpts) => {
+    silentFetchRef.current = opts?.silent === true;
+    setFetchKey((k) => k + 1);
+  }, []);
 
   const freeTrialActive = useMemo(() => {
     if (hasPaidAccess) return false;
@@ -224,7 +235,9 @@ function useSubscriptionAccessState(): SubscriptionData {
     }
 
     void (async () => {
-      setLoading(true);
+      const silent = silentFetchRef.current;
+      silentFetchRef.current = false;
+      if (!silent) setLoading(true);
       setFetchError(false);
       try {
         const supabase = getSupabaseBrowserClient();
@@ -342,7 +355,7 @@ function useSubscriptionAccessState(): SubscriptionData {
   }, [user?.id, fetchKey]);
 
   useEffect(() => {
-    const onProfile = () => refetch();
+    const onProfile = () => refetch({ silent: true });
     window.addEventListener(KALNEHI_PROFILE_UPDATED_EVENT, onProfile);
     return () =>
       window.removeEventListener(KALNEHI_PROFILE_UPDATED_EVENT, onProfile);

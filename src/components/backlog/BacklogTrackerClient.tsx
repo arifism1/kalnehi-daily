@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mic, Square, XCircle } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   appendPendingBacklogItems,
@@ -55,6 +55,17 @@ function normalizeBacklogGroupLabel(label: string | null | undefined): string | 
   return t.length > 0 ? t : null;
 }
 
+/** Speech appended after Speak vs. transcript at session start — avoids re-parsing typed notes each time. */
+function voiceOrganizeCandidate(mergedFull: string, baselineTrimmed: string): string {
+  const full = mergedFull.trim();
+  const b = baselineTrimmed.trim();
+  if (!b) return full;
+  if (full === b) return "";
+  if (full.startsWith(`${b} `)) return full.slice(b.length + 1).trim();
+  if (full.startsWith(b)) return full.slice(b.length).trim();
+  return full;
+}
+
 /** Prefer committed transcript; while listening, allow interim preview for organize API. */
 function ventSourceForOrganize(
   transcript: string,
@@ -91,8 +102,22 @@ export function BacklogTrackerClient() {
   const [scheduleStartYmd, setScheduleStartYmd] = useState("");
   const [liveError, setLiveError] = useState<string | null>(null);
   const [busy, setBusy] = useState<"final" | "commit" | null>(null);
-  /** After tapping Done on voice controls, wait for mic/STT idle then POST backlog-organize. */
+  /** When true, next finalized voice transcript should queue backlog-organize (Done, silence stop, or Whisper complete). */
+  const organizeAfterVoiceSessionRef = useRef(false);
+  const voicePreviewRef = useRef("");
+  /** Transcript (trimmed) when the current Speak session started — organize uses the delta so typed notes aren’t re-split. */
+  const transcriptAtVoiceStartRef = useRef("");
+  const transcriptRef = useRef(transcript);
+  /** After voice finalizes, wait for mic/STT idle then POST backlog-organize (merged transcript). */
   const [pendingOrganizeAfterVoiceDone, setPendingOrganizeAfterVoiceDone] = useState(false);
+
+  useEffect(() => {
+    transcriptRef.current = transcript;
+  }, [transcript]);
+
+  useEffect(() => {
+    voicePreviewRef.current = voicePreview;
+  }, [voicePreview]);
 
   const userLocalHour = useMemo(() => new Date().getHours(), []);
 
@@ -128,7 +153,7 @@ export function BacklogTrackerClient() {
     setItemMeta((prev) => prev.filter((_, i) => i !== idx));
   }, [itemMeta]);
 
-  /** LLM split of vent text — runs after voice Done when STT settles (`pendingOrganizeAfterVoiceDone`). */
+  /** LLM structure from transcript → append rows to Captured (preview/edit subjects → set times & dates). Stays client-only until confirm. */
   const runOrganize = useCallback(async (text: string) => {
     const t = text.trim();
     if (t.length < 4) return;
@@ -151,15 +176,14 @@ export function BacklogTrackerClient() {
       const batch = data.items ?? [];
       if (batch.length === 0) {
         setLiveError(
-          "We couldn't pull separate tasks from that. Try shorter phrases, or add items one line at a time below.",
+          "We couldn't turn that into separate tasks. Try shorter phrases or type one task per line, then Direct Add.",
         );
         return;
       }
-      // Structure with AI: keep rows client-only until final confirm (commit inserts backlog + daily tasks).
       setItems((prev) => [
         ...prev,
         ...batch.map((it) => ({
-          title: it.title,
+          title: String(it.title ?? "").trim().slice(0, 500),
           syllabus_master_id: it.syllabus_master_id ?? null,
           group_label: normalizeBacklogGroupLabel(it.group_label),
         })),
@@ -168,10 +192,10 @@ export function BacklogTrackerClient() {
       setItemMeta((prev) => [
         ...prev,
         ...batch.map((it) => ({
-          title: it.title,
-          syllabus_master_id: it.syllabus_master_id,
-          group_label: normalizeBacklogGroupLabel(it.group_label),
+          title: String(it.title ?? "").trim().slice(0, 500),
           details: "",
+          syllabus_master_id: it.syllabus_master_id ?? null,
+          group_label: normalizeBacklogGroupLabel(it.group_label),
           effort_estimate_minutes: null,
         })),
       ]);
@@ -186,101 +210,130 @@ export function BacklogTrackerClient() {
     if (typeof window === "undefined") return;
     const raw = sessionStorage.getItem(BACKLOG_TRACKER_PREFILL_KEY);
     if (!raw) return;
-    sessionStorage.removeItem(BACKLOG_TRACKER_PREFILL_KEY);
-    try {
-      const p = JSON.parse(raw) as BacklogTrackerPrefillV1;
-      if (p.v !== 1) return;
 
-      if (Array.isArray(p.staged_items) && p.staged_items.length > 0) {
-        const rows = p.staged_items.map((s) => ({
+    let p: BacklogTrackerPrefillV1;
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      p = parsed as BacklogTrackerPrefillV1;
+      if (p?.v !== 1) {
+        sessionStorage.removeItem(BACKLOG_TRACKER_PREFILL_KEY);
+        return;
+      }
+    } catch {
+      sessionStorage.removeItem(BACKLOG_TRACKER_PREFILL_KEY);
+      return;
+    }
+
+    const clearPrefill = () =>
+      sessionStorage.removeItem(BACKLOG_TRACKER_PREFILL_KEY);
+
+    if (Array.isArray(p.staged_items) && p.staged_items.length > 0) {
+      clearPrefill();
+      const rows = p.staged_items
+        .map((s) => ({
           title: String(s.title ?? "").trim().slice(0, 500),
           syllabus_master_id: s.syllabus_master_id ?? null,
           group_label: s.group_label ?? null,
-        })).filter((r) => r.title.length > 0);
-        if (rows.length === 0) return;
+        }))
+        .filter((r) => r.title.length > 0);
+      if (rows.length === 0) return;
+      setItems(rows);
+      setMinutesList(rows.map(() => 60));
+      setItemMeta(
+        rows.map((r) => ({
+          title: r.title,
+          details: "",
+          syllabus_master_id: r.syllabus_master_id,
+          group_label: r.group_label,
+          effort_estimate_minutes: null,
+        })),
+      );
+      setTimeIdx(0);
+      setPhase("time");
+      return;
+    }
+
+    const loadExisting =
+      p.load_existing_rows &&
+      Array.isArray(p.backlog_ids) &&
+      p.backlog_ids.length > 0;
+
+    if (loadExisting) {
+      // Wait for auth: Backlog List always sends titles too; consuming prefill early would strand load_existing intent.
+      if (!user?.id) return;
+
+      clearPrefill();
+      const ids = p.backlog_ids;
+      if (!ids?.length) return;
+      void (async () => {
+        const supabase = getSupabaseBrowserClient();
+        const { data, error } = await supabase
+          .from("user_syllabus_backlog")
+          .select(
+            "id, title, details, group_label, syllabus_master_id, effort_estimate_minutes, retry_count, last_attempt_date",
+          )
+          .in("id", ids)
+          .eq("status", "pending");
+        if (error || !data?.length) {
+          if (p.titles?.length) setTranscript(p.titles.join("\n"));
+          return;
+        }
+        const rows = data.map((r) => ({
+          title: r.title,
+          syllabus_master_id: r.syllabus_master_id,
+          group_label: r.group_label,
+        }));
         setItems(rows);
-        setMinutesList(rows.map(() => 60));
+        setMinutesList(
+          data.map((r) =>
+            clampMinutes(
+              typeof r.effort_estimate_minutes === "number" &&
+                Number.isFinite(r.effort_estimate_minutes)
+                ? r.effort_estimate_minutes
+                : 60,
+            ),
+          ),
+        );
         setItemMeta(
-          rows.map((r) => ({
+          data.map((r) => ({
             title: r.title,
-            details: "",
+            details: r.details ?? "",
             syllabus_master_id: r.syllabus_master_id,
             group_label: r.group_label,
-            effort_estimate_minutes: null,
+            effort_estimate_minutes: r.effort_estimate_minutes,
+            existing_backlog_id: r.id,
+            retry_count: r.retry_count ?? 0,
+            last_attempt_date: r.last_attempt_date ?? null,
           })),
         );
         setTimeIdx(0);
         setPhase("time");
-        return;
-      }
-
-      if (p.load_existing_rows && user?.id && Array.isArray(p.backlog_ids) && p.backlog_ids.length > 0) {
-        const ids = p.backlog_ids;
-        void (async () => {
-          const supabase = getSupabaseBrowserClient();
-          const { data, error } = await supabase
-            .from("user_syllabus_backlog")
-            .select(
-              "id, title, details, group_label, syllabus_master_id, effort_estimate_minutes, retry_count, last_attempt_date",
-            )
-            .in("id", ids)
-            .eq("status", "pending");
-          if (error || !data?.length) {
-            if (p.titles?.length) setTranscript(p.titles.join("\n"));
-            return;
-          }
-          const rows = data.map((r) => ({
-            title: r.title,
-            syllabus_master_id: r.syllabus_master_id,
-            group_label: r.group_label,
-          }));
-          setItems(rows);
-          setMinutesList(
-            data.map((r) =>
-              clampMinutes(
-                typeof r.effort_estimate_minutes === "number" &&
-                  Number.isFinite(r.effort_estimate_minutes)
-                  ? r.effort_estimate_minutes
-                  : 60,
-              ),
-            ),
-          );
-          setItemMeta(
-            data.map((r) => ({
-              title: r.title,
-              details: r.details ?? "",
-              syllabus_master_id: r.syllabus_master_id,
-              group_label: r.group_label,
-              effort_estimate_minutes: r.effort_estimate_minutes,
-              existing_backlog_id: r.id,
-              retry_count: r.retry_count ?? 0,
-              last_attempt_date: r.last_attempt_date ?? null,
-            })),
-          );
-          setTimeIdx(0);
-          setPhase("time");
-        })();
-        return;
-      }
-
-      if (p.titles?.length) {
-        setTranscript(p.titles.join("\n"));
-        return;
-      }
-      if (!user?.id || !Array.isArray(p.backlog_ids) || p.backlog_ids.length === 0) return;
-      const backlogIdsForTitles = p.backlog_ids;
-      void (async () => {
-        const supabase = getSupabaseBrowserClient();
-        const { data } = await supabase
-          .from("user_syllabus_backlog")
-          .select("title")
-          .in("id", backlogIdsForTitles);
-        const titles = (data ?? []).map((r) => r.title).filter(Boolean);
-        if (titles.length) setTranscript(titles.join("\n"));
       })();
-    } catch {
-      /* ignore */
+      return;
     }
+
+    if (p.titles?.length) {
+      clearPrefill();
+      setTranscript(p.titles.join("\n"));
+      return;
+    }
+    if (!Array.isArray(p.backlog_ids) || p.backlog_ids.length === 0) {
+      clearPrefill();
+      return;
+    }
+    if (!user?.id) return;
+
+    clearPrefill();
+    const backlogIdsForTitles = p.backlog_ids;
+    void (async () => {
+      const supabase = getSupabaseBrowserClient();
+      const { data } = await supabase
+        .from("user_syllabus_backlog")
+        .select("title")
+        .in("id", backlogIdsForTitles);
+      const titles = (data ?? []).map((r) => r.title).filter(Boolean);
+      if (titles.length) setTranscript(titles.join("\n"));
+    })();
   }, [user?.id]);
 
   const appendTranscript = useCallback((chunk: string) => {
@@ -291,8 +344,15 @@ export function BacklogTrackerClient() {
 
   const handleVoiceTranscript = useCallback(
     ({ transcript: tr }: { transcript: string; occurredAt: string; durationSeconds: number }) => {
-      appendTranscript(tr);
+      const primary = tr.trim();
+      const fallback = voicePreviewRef.current.trim();
+      const toAppend = primary || fallback;
+      if (toAppend) appendTranscript(toAppend);
       setVoicePreview("");
+      if (organizeAfterVoiceSessionRef.current) {
+        organizeAfterVoiceSessionRef.current = false;
+        setPendingOrganizeAfterVoiceDone(true);
+      }
     },
     [appendTranscript],
   );
@@ -372,12 +432,32 @@ export function BacklogTrackerClient() {
     if (!pendingOrganizeAfterVoiceDone || isVoiceActive || busy !== null) return;
 
     const merged = `${transcript.trim()} ${voicePreview.trim()}`.replace(/\s{2,}/g, " ").trim();
-    const candidate =
-      ventOrganizeText.trim().length >= 4 ? ventOrganizeText.trim() : merged;
+    const vent = ventOrganizeText.trim();
+    // Prefer merged transcript+preview so fresh dictation after a long typed prefix is not skipped;
+    // fallback to vent-only when merge is still short (e.g. mid-finalize).
+    const candidate = merged.length >= 4 ? merged : vent;
 
-    if (candidate.length >= 4) {
+    const baseline = transcriptAtVoiceStartRef.current.trim();
+    const candidateTrim = candidate.trim();
+    const delta = voiceOrganizeCandidate(candidate, baseline);
+
+    let toParse = "";
+    if (delta.length >= 4) {
+      toParse = delta;
+    } else if (baseline.length === 0 && candidateTrim.length >= 4) {
+      toParse = candidateTrim;
+    } else if (
+      baseline.length > 0 &&
+      delta.length === 0 &&
+      candidateTrim === baseline
+    ) {
       setPendingOrganizeAfterVoiceDone(false);
-      void runOrganize(candidate);
+      return;
+    }
+
+    if (toParse.length >= 4) {
+      setPendingOrganizeAfterVoiceDone(false);
+      void runOrganize(toParse);
       return;
     }
 
@@ -396,6 +476,7 @@ export function BacklogTrackerClient() {
   ]);
 
   const cancelVoiceCapture = useCallback(() => {
+    organizeAfterVoiceSessionRef.current = false;
     setPendingOrganizeAfterVoiceDone(false);
     clearCapError();
     clearWhisperError();
@@ -448,11 +529,12 @@ export function BacklogTrackerClient() {
   ]);
 
   const onVoiceDonePressed = useCallback(() => {
-    setPendingOrganizeAfterVoiceDone(true);
     finishVoiceCapture();
   }, [finishVoiceCapture]);
 
   const startVoiceCapture = useCallback(() => {
+    organizeAfterVoiceSessionRef.current = true;
+    transcriptAtVoiceStartRef.current = transcriptRef.current.trim();
     setPendingOrganizeAfterVoiceDone(false);
     if (routing.useNativeCapacitorStt) {
       clearCapError();
@@ -661,7 +743,7 @@ export function BacklogTrackerClient() {
                       className="inline-flex max-w-full items-center gap-2 rounded-xl border border-kal-border bg-kal-accent px-3 py-2 text-sm font-semibold leading-snug text-kal-accent-foreground disabled:opacity-50"
                     >
                       <Square className="h-4 w-4 shrink-0" aria-hidden />
-                      Structure with AI
+                      Done
                     </button>
                     <button
                       type="button"
@@ -707,15 +789,15 @@ export function BacklogTrackerClient() {
                 </p>
                 <p>
                   <strong className="text-kal-text">Speak</strong> starts listening. When you&apos;re finished, tap{" "}
-                  <strong className="text-kal-text">Structure with AI</strong>—it stops the mic, keeps your words in
-                  this box, and turns them into separate tasks under{" "}
-                  <strong className="text-kal-text">Captured</strong> after they&apos;ve finished transferring.
+                  <strong className="text-kal-text">Done</strong> (or stay quiet to auto-stop)—your dictation is merged
+                  here, then we build a structured task list under{" "}
+                  <strong className="text-kal-text">Captured</strong> for you to preview and edit subjects. Use{" "}
+                  <strong className="text-kal-text">Set time for each</strong> when you&apos;re ready to fix minutes and
+                  start date.
                 </p>
                 <p>
-                  <strong className="text-kal-text">Cancel</strong> discards the current recording and does not create
-                  tasks. Typed one task per line? Tap <strong className="text-kal-text">Direct Add</strong>—each line is
-                  saved exactly as you typed, then appears under{" "}
-                  <strong className="text-kal-text">Captured</strong>.
+                  <strong className="text-kal-text">Cancel</strong> discards the current recording. Typed one task per
+                  line? Tap <strong className="text-kal-text">Direct Add</strong>—each line is saved as you typed.
                 </p>
               </div>
             ) : (
@@ -741,7 +823,7 @@ export function BacklogTrackerClient() {
                     visible
                     className="!text-left"
                     variant={routing.useBrowserWhisperStt ? "whisper" : "dictation"}
-                    stopLabel="Structure with AI"
+                    stopLabel="Done"
                   />
                 ) : null}
               </>
@@ -751,7 +833,7 @@ export function BacklogTrackerClient() {
             ) : null}
             {busy === "final" ? (
               <p className="text-[11px] text-kal-muted" aria-live="polite">
-                Organizing your tasks…
+                Building your task list…
               </p>
             ) : null}
           </section>

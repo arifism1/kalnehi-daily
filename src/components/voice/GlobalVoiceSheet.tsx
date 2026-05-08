@@ -29,8 +29,7 @@ import { slotFromStartEnd } from "@/lib/dailyPlanTime";
 import { toCalendarDateKey } from "@/lib/calendarDateKey";
 import { writeVoiceFocusHint, writeVoicePlanHint } from "@/lib/voiceBossModeHints";
 import {
-  VOICE_COMMAND_MAX_SESSION_MS,
-  VOICE_COMMAND_SILENCE_MS,
+  VOICE_GLOBAL_NAV_SPEECH_TIMING,
 } from "@/lib/voiceConstants";
 import type { DailyTaskView } from "@/actions/dailyPlan";
 import type { VoiceCommandIntent } from "@/lib/voiceCommandGroq";
@@ -501,6 +500,8 @@ export function GlobalVoiceSheet() {
   const [animatingOut, setAnimatingOut] = useState(false);
 
   const routing = useVoiceSttRouting();
+  const { silenceMs: speechSilenceMs, maxSessionMs: speechMaxSessionMs } =
+    VOICE_GLOBAL_NAV_SPEECH_TIMING;
 
   const {
     isOpen,
@@ -935,8 +936,8 @@ export function GlobalVoiceSheet() {
     clearError: clearSttError,
   } = useDeviceSpeechRecognition({
     lang: "en-IN",
-    silenceMs: VOICE_COMMAND_SILENCE_MS,
-    maxSessionMs: VOICE_COMMAND_MAX_SESSION_MS,
+    silenceMs: speechSilenceMs,
+    maxSessionMs: speechMaxSessionMs,
     interimPreview: true,
     onPreviewTranscript: (t) => {
       if (t) setTranscript(t);
@@ -954,9 +955,9 @@ export function GlobalVoiceSheet() {
     stopRecording: stopCapRecording,
   } = useCapacitorSpeech({
     onTranscript: handleTranscript,
-    maxMs: VOICE_COMMAND_MAX_SESSION_MS,
+    maxMs: speechMaxSessionMs,
     variant: "longForm",
-    silenceAfterSpeechMs: VOICE_COMMAND_SILENCE_MS,
+    silenceAfterSpeechMs: speechSilenceMs,
     onPartialTranscript: handleNativeCapPartialTranscript,
   });
 
@@ -971,7 +972,7 @@ export function GlobalVoiceSheet() {
     isSupported: whisperMicSupported,
   } = useMediaRecorderVoice({
     onTranscript: handleTranscript,
-    maxMs: VOICE_COMMAND_MAX_SESSION_MS,
+    maxMs: speechMaxSessionMs,
   });
 
   // Auto-start listening when sheet opens, with chime.

@@ -22,6 +22,15 @@ export const VOICE_MAX_SESSION_MS = 60_000;
 export const VOICE_COMMAND_MAX_SESSION_MS = 120_000;
 
 /**
+ * Web Speech + recorder limits aligned with the Global Voice Sheet (Hey Boss).
+ * Backlog Speak and similar surfaces use this for parity with global voice infra.
+ */
+export const VOICE_GLOBAL_NAV_SPEECH_TIMING = {
+  silenceMs: VOICE_COMMAND_SILENCE_MS,
+  maxSessionMs: VOICE_COMMAND_MAX_SESSION_MS,
+} as const;
+
+/**
  * Android Web Speech: longer trailing silence before auto-stop (phrase gaps, noisy mics).
  * Hook uses `Math.max(callerSilence, this)` on Android Chrome-like hosts.
  */
