@@ -1,11 +1,12 @@
+import { ALL_FEATURES_COUNT } from "@/components/landing/AllFeaturesSection";
 import { SMART_PLAN_MONTHLY_DISPLAY } from "@/lib/smartPlanPricing";
 
 function facts() {
   return [
   {
-    value: "18",
+    value: String(ALL_FEATURES_COUNT),
     label: "features in one app",
-    detail: "Plan, track, revise, and log — without juggling separate apps.",
+    detail: "Plan, syllabus-to-marks, backlog, mocks, debrief, Mastermind — without juggling separate apps.",
   },
   {
     value: "7",

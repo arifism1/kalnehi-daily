@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Script from "next/script";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CalendarClock, Check, Crown } from "lucide-react";
@@ -62,12 +63,16 @@ function AutopayDurationPanel({
   value,
   onChange,
   disabled,
+  mode = "new",
 }: {
   value: number;
   onChange: (months: number) => void;
   disabled: boolean;
+  /** `replaceMandate`: user already on monthly AutoPay and is replacing it before period ends. */
+  mode?: "new" | "replaceMandate";
 }) {
   const monthWord = value === 1 ? "month" : "months";
+  const replace = mode === "replaceMandate";
 
   return (
     <div className="mx-auto max-w-2xl space-y-2">
@@ -86,14 +91,25 @@ function AutopayDurationPanel({
                 Smart Plan subscription
               </p>
               <h2 className="kal-section-heading mt-0.5">
-                How long should AutoPay run?
+                {replace ? "Replace AutoPay — how many months?" : "How long should AutoPay run?"}
               </h2>
               <p className="mt-1 text-xs leading-snug text-kal-text-secondary sm:mt-1.5">
-                <span className="font-semibold text-kal-text">Monthly</span> billing at{" "}
-                {SMART_PLAN_MONTHLY_DISPLAY}/month. Set how many
-                monthly charges your UPI or card mandate may take. Cancel anytime
-                &mdash; even before all months are used &mdash; and keep access for what you&apos;ve
-                already paid.
+                {replace ? (
+                  <>
+                    You&apos;re switching to a{" "}
+                    <span className="font-semibold text-kal-text">new</span> monthly mandate at{" "}
+                    {SMART_PLAN_MONTHLY_DISPLAY}/month. The duration you pick below applies from this
+                    checkout onward. Cancel anytime — even before all months are used — and keep access
+                    for what you&apos;ve already paid.
+                  </>
+                ) : (
+                  <>
+                    <span className="font-semibold text-kal-text">Monthly</span> billing at{" "}
+                    {SMART_PLAN_MONTHLY_DISPLAY}/month. Set how many monthly charges your UPI or card
+                    mandate may take. Cancel anytime &mdash; even before all months are used &mdash;
+                    and keep access for what you&apos;ve already paid.
+                  </>
+                )}
               </p>
             </div>
           </div>
@@ -186,9 +202,19 @@ function AutopayDurationPanel({
               />
               <p className="text-[0.7rem] leading-snug text-kal-text sm:text-xs">
                 <span className="font-semibold text-kal-text">Summary:</span>{" "}
-                Up to{" "}
-                <span className="font-bold text-kal-accent tabular-nums">{value}</span> monthly
-                payment{value === 1 ? "" : "s"}, then stops unless you subscribe again.
+                {replace ? (
+                  <>
+                    New mandate: up to{" "}
+                    <span className="font-bold text-kal-accent tabular-nums">{value}</span> monthly
+                    payment{value === 1 ? "" : "s"}, then stops unless you subscribe again.
+                  </>
+                ) : (
+                  <>
+                    Up to{" "}
+                    <span className="font-bold text-kal-accent tabular-nums">{value}</span> monthly
+                    payment{value === 1 ? "" : "s"}, then stops unless you subscribe again.
+                  </>
+                )}
               </p>
             </div>
           </fieldset>
@@ -204,6 +230,7 @@ function AutopayDurationPanel({
 const pro = TIERS.pro;
 
 export function PricingPageClient() {
+  const router = useRouter();
   const {
     hasPaidAccess,
     status: subscriptionStatus,
@@ -521,8 +548,10 @@ export function PricingPageClient() {
         return (
           <div className="rounded-2xl border border-kal-accent/30 bg-kal-accent-soft/50 px-5 py-4 dark:border-kal-accent/25 dark:bg-kal-accent/10">
             <p className="text-sm font-medium text-kal-accent-dark dark:text-kal-accent">
-              Upgrading to Annual will cancel your monthly plan and give you 12 months of access for{" "}
-              {SMART_PLAN_ANNUAL_TOTAL_DISPLAY} — no further monthly charges.
+              After your payment succeeds, we end your existing monthly AutoPay first, then activate
+              Annual Smart Plan — {SMART_PLAN_ANNUAL_TOTAL_DISPLAY} for 12 months of access. No further
+              monthly charges on that mandate. If activation briefly fails, complete checkout again or use{" "}
+              <strong className="font-semibold text-kal-text">Payment help</strong> below &mdash; your payment is safe.
             </p>
           </div>
         );
@@ -531,8 +560,10 @@ export function PricingPageClient() {
         return (
           <div className="rounded-2xl border border-kal-accent/30 bg-kal-accent-soft/50 px-5 py-4 dark:border-kal-accent/25 dark:bg-kal-accent/10">
             <p className="text-sm font-medium text-kal-accent-dark dark:text-kal-accent">
-              Upgrading to 6 Months will cancel your monthly plan and give you 6 months of access for{" "}
-              {SMART_PLAN_SIX_MONTH_TOTAL_DISPLAY} — no further monthly charges.
+              After your payment succeeds, we end your existing monthly AutoPay first, then activate
+              6-Month Smart Plan — {SMART_PLAN_SIX_MONTH_TOTAL_DISPLAY} for 6 months of access. No further
+              monthly charges on that mandate. If activation briefly fails, complete checkout again or use{" "}
+              <strong className="font-semibold text-kal-text">Payment help</strong> below &mdash; your payment is safe.
             </p>
           </div>
         );
@@ -585,10 +616,23 @@ export function PricingPageClient() {
     !isCancelledWithAccess &&
     ((billingCycle === "annual" && plan !== "annual") ||
       (billingCycle === "six_month" && plan !== "six_month" && plan !== "annual"));
-  const lockedBySubscription = hasPaidAccess && !isCancelledWithAccess && !isUpgradeFromMonthly;
+  /** Razorpay monthly AutoPay (`trial`/`active`) — allow replacing mandate before period ends. */
+  const canReplaceMonthlyAutopay =
+    hasPaidAccess &&
+    !isCancelledWithAccess &&
+    billingCycle === "monthly" &&
+    plan !== "annual" &&
+    plan !== "six_month" &&
+    (subscriptionStatus === "trial" || subscriptionStatus === "active");
+  const lockedBySubscription =
+    hasPaidAccess &&
+    !isCancelledWithAccess &&
+    !isUpgradeFromMonthly &&
+    !canReplaceMonthlyAutopay;
   const isActiveProSubscription =
     hasPaidAccess &&
-    (subscriptionStatus === "trial" || subscriptionStatus === "active");
+    (subscriptionStatus === "trial" || subscriptionStatus === "active") &&
+    !canReplaceMonthlyAutopay;
 
   let buttonLabel: string;
   if (isUpgradeFromMonthly) {
@@ -599,6 +643,10 @@ export function PricingPageClient() {
     } else {
       buttonLabel = `Upgrade to 6 Months — ${SMART_PLAN_SIX_MONTH_TOTAL_DISPLAY}`;
     }
+  } else if (canReplaceMonthlyAutopay) {
+    buttonLabel = busy
+      ? "Opening checkout..."
+      : `Update AutoPay — ${pro.monthlyPriceDisplay}/month`;
   } else if (isActiveProSubscription) {
     buttonLabel = "Current plan";
   } else if (isCancelledWithAccess) {
@@ -825,32 +873,20 @@ export function PricingPageClient() {
               </span>
             </button>
           </div>
-          <div className="kal-glass-panel mx-auto mt-6 max-w-xl rounded-2xl border-2 border-kal-accent/40 px-4 py-4 shadow-[0_16px_40px_-24px_rgba(255,122,0,0.25)] sm:px-5">
-            <p className="text-sm font-semibold text-kal-text">New here? Take the feature tour first.</p>
-            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-              <Link
-                href="/what-can-kalnehi-do"
-                className="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-xl bg-kal-accent px-4 py-2.5 text-center text-sm font-bold text-kal-accent-foreground transition hover:brightness-105 active:scale-[0.99]"
-              >
-                What Can Kalnehi Do?
-              </Link>
-              <Link
-                href="/best-study-practices"
-                className="kal-btn-ghost inline-flex min-h-[44px] flex-1 items-center justify-center rounded-xl px-4 py-2.5 text-center text-sm font-semibold transition"
-              >
-                Why these practices work
-              </Link>
-            </div>
-          </div>
         </header>
 
         {statusBanner}
 
-        {(!hasPaidAccess || isCancelledWithAccess || isUpgradeFromMonthly) && billingCycle === "monthly" ? (
+        {(!hasPaidAccess ||
+          isCancelledWithAccess ||
+          isUpgradeFromMonthly ||
+          canReplaceMonthlyAutopay) &&
+        billingCycle === "monthly" ? (
           <AutopayDurationPanel
             value={autopayMonths}
             onChange={setAutopayMonths}
             disabled={busy}
+            mode={canReplaceMonthlyAutopay ? "replaceMandate" : "new"}
           />
         ) : null}
 
@@ -923,6 +959,10 @@ export function PricingPageClient() {
               type="button"
               onClick={() => {
                 if (lockedBySubscription) return;
+                if (!user?.id) {
+                  router.push("/auth?next=/pricing");
+                  return;
+                }
                 if (billingCycle === "annual") {
                   void startAnnualCheckout();
                 } else if (billingCycle === "six_month") {
@@ -931,6 +971,7 @@ export function PricingPageClient() {
                   void startCheckout();
                 }
               }}
+
               disabled={busy || lockedBySubscription}
               aria-disabled={lockedBySubscription || undefined}
               className={`mt-5 min-h-[48px] w-full shrink-0 text-center leading-snug disabled:opacity-60 ${
@@ -958,7 +999,7 @@ export function PricingPageClient() {
             {!user?.id ? (
               <div className="mt-2 flex justify-center">
                 <Link
-                  href="/auth"
+                  href="/auth?next=/pricing"
                   className="inline-flex items-center gap-1.5 rounded-lg bg-kal-accent px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:brightness-105"
                 >
                   Sign in →

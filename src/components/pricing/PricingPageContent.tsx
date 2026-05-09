@@ -365,6 +365,7 @@ function PlanCardsSection() {
         "Marks engine + rank prediction",
         "Revision Tracker + daily log + prep insights",
         "AutoPay: choose 1–12 months, stops on its own",
+        "Switch to 6-month or annual anytime — monthly AutoPay stops when upfront checkout completes",
         "Cancel anytime from settings — no calls, no forms",
       ],
     },

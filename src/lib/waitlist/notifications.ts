@@ -206,7 +206,9 @@ function annualPlanActivatedHtml(params: {
         <strong>Your monthly AutoPay has been cancelled.</strong><br>
         You will not be charged monthly going forward. Your ₹3,591 covers the full year.
        </p>`
-    : "";
+    : `<p style="color:#64748b;font-size:13px;margin:12px 0 0;line-height:1.45">
+        No monthly AutoPay was linked to this account, so nothing needed to be cancelled.
+       </p>`;
   const html = `
 <div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
   <h2 style="font-size:22px;font-weight:600;margin-bottom:8px">Your annual Smart Plan is live.</h2>
@@ -243,7 +245,9 @@ function sixMonthPlanActivatedHtml(params: {
         <strong>Your monthly AutoPay has been cancelled.</strong><br>
         You will not be charged monthly going forward. Your ₹2,154 covers the full 6 months.
        </p>`
-    : "";
+    : `<p style="color:#64748b;font-size:13px;margin:12px 0 0;line-height:1.45">
+        No monthly AutoPay was linked to this account, so nothing needed to be cancelled.
+       </p>`;
   const html = `
 <div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
   <h2 style="font-size:22px;font-weight:600;margin-bottom:8px">Your 6-month Smart Plan is live.</h2>

@@ -239,6 +239,12 @@ export function MyPlanPageClient() {
   const noActivePlan =
     !status || status === "expired" || (isCancelled && !hasPaidAccess);
 
+  const showUpfrontSwitchBlurb =
+    hasPaidAccess &&
+    !isUpfrontPlan &&
+    !isCancelledWithAccess &&
+    (status === "trial" || status === "active");
+
   const onWelcomeTrial = freeTrialActive && !hasPaidAccess;
 
   const welcomeEndsIn = useFreeTrialLiveEndsIn(freeTrialEndsAtIso, onWelcomeTrial);
@@ -650,6 +656,17 @@ export function MyPlanPageClient() {
                 ) : null}
               </div>
             </div>
+            {showUpfrontSwitchBlurb ? (
+              <div className="border-t border-kal-border bg-kal-card-muted/40 px-5 py-3 sm:px-6 dark:bg-kal-card-muted/20">
+                <p className="text-xs leading-relaxed text-kal-text-secondary">
+                  Prefer upfront billing?{" "}
+                  <Link href="/pricing" className="font-semibold text-kal-accent underline underline-offset-2">
+                    6-month and annual plans on Pricing
+                  </Link>{" "}
+                  are one-time payments. When checkout completes, your monthly AutoPay is stopped so there are no further monthly charges on that mandate.
+                </p>
+              </div>
+            ) : null}
           </div>
 
           <div className="kal-glass-panel overflow-hidden rounded-[1rem]">

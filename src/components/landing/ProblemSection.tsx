@@ -30,8 +30,8 @@ const PROBLEMS = [
         </g>
       </svg>
     ),
-    headline: "Mock scores don't turn into action.",
-    body: "You give a test, get a score, and the analysis dies in a PDF. No one tells you which chapter cost you 18 marks — again and again — until it's too late.",
+    headline: "Mock scores never meet your real plan.",
+    body: "Even when you log a mock, marks sit apart from today's tasks, syllabus gaps, and revision. Without one system, you repeat the same weak chapters while the calendar keeps moving.",
   },
   {
     icon: (

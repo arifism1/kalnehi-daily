@@ -1735,8 +1735,10 @@ export async function verifyExtraCreditsPayment(params: {
 // ---------------------------------------------------------------------------
 // No-trial monthly subscription (for users who have already used their trial)
 // ---------------------------------------------------------------------------
-// Blocks only Razorpay-backed plans with active end_date. Welcome-only users typically have no
-// subscription_end_date, so they can open checkout during the welcome trial window.
+// Welcome-only users typically have no subscription_end_date — they can open checkout anytime.
+// Razorpay-backed users on monthly AutoPay (`trial`/`active`, plan not annual/six_month) may
+// replace their mandate early: cancel the existing Razorpay subscription, then create a new one.
+// Upfront annual/six_month holders stay blocked here (use dedicated upfront flows / support).
 
 export async function createRazorpayMonthlySubscription(
   tier: SubscriptionTier = "pro",
@@ -1775,7 +1777,7 @@ export async function createRazorpayMonthlySubscription(
 
   const { data: existing } = await admin
     .from("user_profiles")
-    .select("subscription_status, subscription_end_date")
+    .select("subscription_status, subscription_end_date, subscription_plan, razorpay_subscription_id")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -1784,9 +1786,31 @@ export async function createRazorpayMonthlySubscription(
     const endDate = existing.subscription_end_date
       ? new Date(existing.subscription_end_date)
       : null;
-    const stillHasAccess = endDate && endDate.getTime() > Date.now();
+    const stillHasAccess = !!(endDate && endDate.getTime() > Date.now());
+    const plan = existing.subscription_plan?.trim() ?? "";
+    const upfrontPlan = plan === "annual" || plan === "six_month";
+
     if ((st === "trial" || st === "active") && stillHasAccess) {
-      return { ok: false, error: "You already have an active subscription." };
+      if (upfrontPlan) {
+        return { ok: false, error: "You already have an active subscription." };
+      }
+      const subscriptionId = existing.razorpay_subscription_id?.trim() ?? "";
+      if (!subscriptionId || !RAZORPAY_ID_RE.test(subscriptionId)) {
+        return { ok: false, error: "You already have an active subscription." };
+      }
+      try {
+        const rzCancel = getRazorpayClient(config);
+        await rzCancel.subscriptions.cancel(subscriptionId, false);
+      } catch (error) {
+        const msg = safeErrorMessage(error).toLowerCase();
+        const benign =
+          /already\s*cancel|subscription\s+already\s+cancel|inactive|invalid\s*subscription|not\s+found/.test(
+            msg,
+          );
+        if (!benign) {
+          return { ok: false, error: safeErrorMessage(error) };
+        }
+      }
     }
   }
 

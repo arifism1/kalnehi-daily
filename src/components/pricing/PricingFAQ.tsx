@@ -31,6 +31,10 @@ function buildFaqs(): { q: string; a: string }[] {
       a: "Yes. Subscribe anytime, including during the trial. Billing moves to Smart Plan on the schedule you pick.",
     },
     {
+      q: "I'm on monthly Smart Plan — can I switch to 6 months or annual?",
+      a: `Yes. On Pricing, pick 6 Months (${SMART_PLAN_SIX_MONTH_TOTAL_DISPLAY}) or Annual (${SMART_PLAN_ANNUAL_TOTAL_DISPLAY}) and complete checkout. After payment succeeds, your monthly AutoPay is stopped before your upfront plan turns on, so you won't be charged monthly on that mandate anymore. If activation briefly fails, retry checkout or use Payment help with your proof — your payment is recorded.`,
+    },
+    {
       q: "What does Mastermind actually do?",
       a: "It looks at what you've logged — syllabus, tasks, marks engine, habits — and answers in plain language: what to revise, how to order the week, what to worry about first. It does not replace a tutor for solving problems or teaching a chapter; use another chatbot for that. Smart Plan includes 2 million tokens per month.",
     },
@@ -40,7 +44,7 @@ function buildFaqs(): { q: string; a: string }[] {
     },
     {
       q: "Is there a discount for longer autopay?",
-      a: `The monthly rate is still ${m}/month. On AutoPay you choose how many monthly charges to allow (1–12); the mandate stops after that. Or pay upfront for 6 months (${SMART_PLAN_SIX_MONTH_BILLING_LABEL} — 10% off) or 12 months (${SMART_PLAN_ANNUAL_BILLING_LABEL} — 25% off). Cancel from settings anytime.`,
+      a: `The monthly rate is still ${m}/month. On AutoPay you choose how many monthly charges to allow (1–12); the mandate stops after that. Or pay upfront for 6 months (${SMART_PLAN_SIX_MONTH_BILLING_LABEL} — 10% off) or 12 months (${SMART_PLAN_ANNUAL_BILLING_LABEL} — 25% off); moving from monthly to upfront stops monthly AutoPay when payment completes. Cancel from settings anytime.`,
     },
   ];
 }
