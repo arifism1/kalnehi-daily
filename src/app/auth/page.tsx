@@ -202,17 +202,21 @@ export default function AuthPage() {
     setBusy(true);
     setError(null);
     try {
+      const params = new URLSearchParams(window.location.search);
+      const nextRaw = params.get("next");
+      const nextPath =
+        nextRaw && nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "/home";
       const supabase = getSupabaseBrowserClient();
       const { error: oErr } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: buildAuthCallbackUrl("/home") },
+        options: { redirectTo: buildAuthCallbackUrl(nextPath) },
       });
       if (oErr) throw oErr;
     } catch (e) {
       setError(formatSupabaseError(e));
       setBusy(false);
     }
-  }, [redirectAfterAuth]);
+  }, []);
 
   if (view === "forgot-sent") {
     return (

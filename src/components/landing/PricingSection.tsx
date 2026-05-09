@@ -36,7 +36,7 @@ function plans() {
       "Voice control — 100 minutes/month",
     ],
     cta: `Subscribe — ${m}/month`,
-    ctaHref: "/pricing",
+    ctaHref: "/auth?next=/pricing",
     ctaClass:
       "bg-kal-accent text-white shadow-[0_4px_16px_rgba(255,122,0,0.28)] hover:brightness-105",
   },

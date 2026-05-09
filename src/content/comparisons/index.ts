@@ -2,6 +2,8 @@ export interface ComparisonRow {
   feature: string;
   kalnehi: "yes" | "no" | "partial" | string;
   competitor: "yes" | "no" | "partial" | string;
+  /** Shown under the feature label (scope nuance for both products). */
+  note?: string;
 }
 
 export interface ComparisonData {
@@ -180,7 +182,12 @@ const todoist: ComparisonData = {
     { feature: "Voice study commands", kalnehi: "yes", competitor: "partial" },
     { feature: "On-camera accountability", kalnehi: "yes", competitor: "no" },
     { feature: "Cross-platform sync", kalnehi: "yes", competitor: "yes" },
-    { feature: "Natural language task entry", kalnehi: "partial", competitor: "yes" },
+    {
+      feature: "Natural language task entry",
+      kalnehi: "yes",
+      competitor: "yes",
+      note: "Kalnehi: plain-language typed quick-add on your daily plan (preview tasks before adding); Todoist: quick-add across projects and inbox.",
+    },
     { feature: "Third-party integrations", kalnehi: "no", competitor: "yes" },
     { feature: "Free plan", kalnehi: "partial", competitor: "yes" },
   ],
@@ -193,6 +200,10 @@ const todoist: ComparisonData = {
   limitations: "If you need deep task management with project hierarchies, inbox capture, and third-party integrations (calendar, email, Slack), Todoist is more powerful. Many students use Todoist for general life tasks and Kalnehi Daily specifically for exam preparation.",
   faqs: [
     { q: "Can I use Kalnehi Daily alongside Todoist?", a: "Yes. Many students use Todoist for general task management and Kalnehi Daily as their dedicated exam preparation system. They're complementary, not competitive." },
+    {
+      q: "Can I add tasks in plain English without picking every field manually?",
+      a: "Yes. On your daily plan, use typed quick-add: describe blocks in natural language and Kalnehi turns them into task previews you can edit before adding. Voice planning does something similar from speech. Todoist's natural-language quick-add is more ubiquitous across projects and devices — Kalnehi focuses parsing on exam-day planning.",
+    },
     { q: "Does Kalnehi Daily have a task inbox like Todoist?", a: "Kalnehi Daily has a Doubt Tracker and Daily Log for capturing exam-related items quickly. For general inbox capture, Todoist or a simple notes app works better." },
     { q: "Why not just add exam prep to my Todoist projects?", a: "You can — many aspirants try this. The limitation is that Todoist can't adapt your study plan based on performance data, doesn't understand revision scheduling, and provides no AI guidance specific to competitive exams." },
   ],

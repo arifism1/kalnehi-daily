@@ -9,6 +9,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
+import { cancelRazorpayMonthlyBeforeUpfrontPlan } from "@/lib/razorpayCancelMonthlyForUpfront";
 import { SMART_PLAN_ANNUAL_PRICE_PAISE } from "@/lib/smartPlanPricing";
 import { sendAnnualPlanActivatedEmail } from "@/lib/waitlist/notifications";
 
@@ -138,16 +139,14 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    let autopayWasCancelled = false;
-    try {
-      const subId = p?.razorpay_subscription_id?.trim();
-      if (subId && /^sub_[a-zA-Z0-9]+$/.test(subId)) {
-        await razorpay.subscriptions.cancel(subId, false);
-        autopayWasCancelled = true;
-      }
-    } catch (cancelErr) {
-      console.warn("[annual-plan/verify] monthly subscription cancel failed (non-fatal)", cancelErr);
+    const cancelResult = await cancelRazorpayMonthlyBeforeUpfrontPlan(
+      razorpay,
+      p?.razorpay_subscription_id,
+    );
+    if (!cancelResult.ok) {
+      return NextResponse.json({ ok: false, error: cancelResult.error }, { status: 502 });
     }
+    const autopayWasCancelled = cancelResult.cancelled;
 
     const now = new Date();
     const endsAt = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString();
@@ -159,6 +158,7 @@ export async function POST(req: NextRequest) {
       subscription_start_date: now.toISOString(),
       subscription_end_date: endsAt,
       razorpay_subscription_id: null,
+      subscription_cancelled_at: null,
       ai_tokens_used: 0,
       ai_tokens_month: null,
       updated_at: now.toISOString(),

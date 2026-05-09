@@ -33,7 +33,7 @@ export function HeroSection() {
         {/* Left — text */}
         <div className="flex flex-1 flex-col items-start justify-center pb-8 pt-24 lg:pb-0 lg:pt-0 lg:max-w-[50%]">
           <p className="mb-5 text-[10px] font-bold uppercase tracking-[0.25em] text-kal-muted">
-            For all Indian &amp; international competitive exam aspirants
+            Prep OS for Indian &amp; international competitive exams
           </p>
 
           <h1
@@ -46,7 +46,7 @@ export function HeroSection() {
           </h1>
 
           <p className="mb-8 max-w-lg text-lg leading-relaxed text-kal-text-secondary">
-            Kalnehi Daily is a voice-first prep tracker for JEE, NEET, UPSC, and other competitive exams. Dictate today&apos;s work, update syllabus, and keep a steadier routine.
+            Kalnehi Daily connects your dashboard, syllabus at microtopic level, and marks you should expect from recent exam weightages — then powers your day with voice or typed planning, timers, backlog, and Mastermind as your strategic coach.
           </p>
 
           <div className="flex flex-col gap-3 sm:flex-row">
@@ -177,7 +177,10 @@ function DashboardMockup() {
           </div>
           <div className="flex-1">
             <p className="text-xs font-semibold text-kal-text">Predicted: 438 / 720</p>
-            <p className="mt-0.5 text-[10px] text-kal-muted">Syllabus coverage: 61%</p>
+            <p className="mt-0.5 text-[10px] text-kal-muted">Microtopic syllabus · 61% covered</p>
+            <p className="mt-0.5 text-[9px] leading-snug text-kal-muted/90">
+              Lines for recent years&apos; patterns (where your exam has data)
+            </p>
             <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-kal-border">
               <div className="h-full w-[61%] rounded-full bg-kal-accent" aria-hidden />
             </div>

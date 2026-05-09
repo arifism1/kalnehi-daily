@@ -10,14 +10,14 @@ const BEATS = [
     num: "02",
     label: "Execute",
     headline: "Focus timer runs. Tasks tick off. Doubts get logged.",
-    body: "Start a timed block for any task. The timer tracks real minutes, not time in the room. Hit pause when you hit a doubt — log it, come back later. When the block ends, the task closes.",
+    body: "Start a timed block for any task — real minutes on real topics. Hit a doubt, log it, keep going. Whatever slips rolls into missed tasks or backlog instead of vanishing. When the block ends, mark honest progress.",
     mockup: <ExecuteMockup />,
   },
   {
     num: "03",
     label: "Recover",
-    headline: "Brain Yoga reset. Daily Log. You're done.",
-    body: "A 5-minute guided reset between hard sessions keeps you fresh through 6-hour days. At night, two minutes in the Daily Log turns today's experience into tomorrow's edge.",
+    headline: "Brain Yoga, debrief, recap. Close the loop.",
+    body: "A short guided reset keeps long study days sustainable. Daily Debrief asks three honest questions (speak or type). Today's Recap shows hours and streaks in Wrapped-style summaries — plus your saved plans stay searchable months later.",
     mockup: <RecoverMockup />,
   },
 ] as const;
@@ -239,14 +239,22 @@ function RecoverMockup() {
         </div>
       </div>
 
-      {/* Daily log */}
-      <div className="rounded-xl border border-kal-border bg-kal-card-muted p-3 backdrop-blur-sm">
-        <div className="mb-2 flex items-center justify-between">
-          <p className="text-[10px] font-bold text-kal-text">Daily Log</p>
-          <span className="text-[10px] text-kal-muted">2 min</span>
+      {/* Daily debrief + recap */}
+      <div className="space-y-2">
+        <div className="rounded-xl border border-kal-border bg-kal-card-muted p-3 backdrop-blur-sm">
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-[10px] font-bold text-kal-text">Daily Debrief</p>
+            <span className="text-[10px] text-kal-muted">Speak or type</span>
+          </div>
+          <ul className="space-y-1 text-[10px] leading-snug text-kal-muted">
+            <li>· What did you finish today?</li>
+            <li>· What did you skip?</li>
+            <li>· Tomorrow&apos;s one priority?</li>
+          </ul>
         </div>
-        <div className="rounded-lg bg-kal-page px-3 py-2 text-[11px] leading-snug text-kal-muted italic">
-          "Electrochemistry clicked today. Optics revision needed — felt shaky..."
+        <div className="flex items-center justify-between rounded-xl border border-kal-accent/20 bg-kal-accent-soft/40 px-3 py-2.5">
+          <p className="text-[10px] font-bold text-kal-text">Today&apos;s Recap</p>
+          <span className="text-[10px] font-semibold text-kal-accent">4h 12m · 14-day streak</span>
         </div>
       </div>
     </div>

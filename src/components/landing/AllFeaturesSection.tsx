@@ -35,7 +35,7 @@ const ALL_FEATURES = [
     emoji: "📈",
     title: "Progress Tracker",
     tagline: "Stop guessing how prepared you are. See it.",
-    detail: "Prep health in one view — syllabus coverage, tasks done, days spent. Numbers don't lie.",
+    detail: "Syllabus coverage, execution, and efficiency in one place — plus anonymous weekly cohort bands (top X% of your exam on Kalnehi) when enough peers are active.",
   },
   {
     emoji: "🏆",
@@ -53,7 +53,7 @@ const ALL_FEATURES = [
     emoji: "🔥",
     title: "Consistency Tracker & Heatmap",
     tagline: "One missed day is fine. Ten missed days with no record of it is how ranks slip.",
-    detail: "A heatmap of every day you showed up. Green squares don't lie.",
+    detail: "A calendar-style view colored by how much of your plan you actually finished — so consistency stops being a feeling.",
   },
   {
     emoji: "💪",
@@ -83,7 +83,7 @@ const ALL_FEATURES = [
     emoji: "🎁",
     title: "AI Voice Dictation",
     tagline: "Your voice, your ideas — structured into tasks in seconds.",
-    detail: "Talk out your day. Edit before committing. Free trial includes voice time.",
+    detail: "Talk out your day and edit before committing. Global voice navigation can jump screens or append work mid-session. Trial includes shared voice minutes.",
   },
   {
     emoji: "💛",
@@ -106,10 +106,54 @@ const ALL_FEATURES = [
   {
     emoji: "📝",
     title: "Daily Log",
-    tagline: "A 2-minute note tonight is the reason you'll understand week 8 when it feels impossible.",
-    detail: "Record what you did, what felt hard, what to carry forward. Pattern into decisions. Decisions into rank.",
+    tagline: "A 2-minute free-form note is the reason week eight still makes sense.",
+    detail: "Capture narrative notes — different from Daily Debrief's three prompts. What was hard, what to carry forward; patterns become decisions.",
+  },
+  {
+    emoji: "🪞",
+    title: "Daily Debrief",
+    tagline: "End the day with three honest questions.",
+    detail: "What you finished, what you skipped, tomorrow's one priority — speak or type. Keeps you honest when motivation dips.",
+  },
+  {
+    emoji: "🎊",
+    title: "Today's Recap",
+    tagline: "Wrapped-style rollups — day, week, month.",
+    detail: "Study hours, streaks, and how often you executed the plan. Skim what actually happened, not what you remember.",
+  },
+  {
+    emoji: "⏪",
+    title: "Missed tasks",
+    tagline: "What didn't happen today doesn't get memory-holed.",
+    detail: "Automatically gathers unfinished work so you drag it to a real date instead of guilt-stashing it.",
+  },
+  {
+    emoji: "📥",
+    title: "Backlog list & tracker",
+    tagline: "Capture what you owe yourself — voice or keys — then schedule it.",
+    detail: "Items get hours and a target day; they drop into that day's plan automatically. Still undone? They roll back to backlog.",
+  },
+  {
+    emoji: "📋",
+    title: "Mock test tracker",
+    tagline: "Log papers with subject-wise marks.",
+    detail: "Track series next to syllabus and Marks Engine predictions — complementary views, not the same model.",
+  },
+  {
+    emoji: "🎚️",
+    title: "Target Score Blueprint",
+    tagline: "Name a target; get a ranked chapter payload from what's left.",
+    detail: "Uses syllabus progress and effort-vs-marks heuristics to stack what still moves the needle highest first.",
+  },
+  {
+    emoji: "⚠️",
+    title: "Mistake log",
+    tagline: "The silly errors you repeat until you don't.",
+    detail: "Speak or jot recurring mistakes; revisit before tests so panic doesn't recycle them.",
   },
 ] as const;
+
+export const ALL_FEATURES_COUNT = ALL_FEATURES.length;
 
 export function AllFeaturesSection() {
   return (
@@ -121,7 +165,7 @@ export function AllFeaturesSection() {
               className="mb-3 text-3xl font-normal leading-tight tracking-tight text-kal-text sm:text-4xl"
               style={{ fontFamily: "var(--font-display)" }}
             >
-              All 18 features. One app.
+              All {ALL_FEATURES_COUNT} features. One app.
             </h2>
             <p className="max-w-lg text-lg text-kal-text-secondary">
               Every feature built for one thing — helping you show up, stay sharp, and actually finish what you started.
@@ -161,7 +205,7 @@ export function AllFeaturesSection() {
         </div>
 
         <div className="mt-12 flex flex-col items-center gap-4 text-center">
-          <p className="text-sm text-kal-muted">All 18 features included in Smart Plan. One price. No tiers.</p>
+          <p className="text-sm text-kal-muted">All {ALL_FEATURES_COUNT} features included in Smart Plan. One price. No tiers.</p>
           <Link
             href="/auth"
             className="inline-flex min-h-[48px] items-center justify-center rounded-full bg-kal-accent px-8 text-sm font-bold text-white shadow-[0_4px_16px_rgba(255,122,0,0.28)] transition hover:brightness-105"
