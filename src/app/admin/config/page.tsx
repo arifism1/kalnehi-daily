@@ -7,7 +7,8 @@ export const dynamic = "force-dynamic";
 const CONFIG_DESCRIPTIONS: Record<string, string> = {
   batch_size: "Max users per batch",
   batch_cycle_days: "Days between batch openings",
-  trial_duration_days: "Free trial duration (days)",
+  trial_duration_days:
+    "Free trial duration (days) — enforced in DB migrations + src/lib/freeTrial.ts; displayed only, not editable",
   free_token_allocation: "AI tokens for free trial",
   free_voice_seconds: "Voice seconds for free trial (300 = 5 min)",
   smart_trial_price_inr: "₹19 waitlist skip price (INR)",

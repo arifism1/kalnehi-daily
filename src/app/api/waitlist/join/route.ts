@@ -9,6 +9,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 import { ensureJoinableBatch, countUsersAhead } from "@/lib/waitlist/batchEngine";
+import { resolveAuthenticatedWaitlistContactEmail } from "@/lib/waitlist/joinContactEmail";
 import { sendWaitlistConfirm } from "@/lib/waitlist/notifications";
 
 // Max 5 join attempts per IP per 10-minute window.
@@ -86,7 +87,24 @@ export async function POST(req: NextRequest) {
     { p_ip_hash: ipHash, p_window_start: windowStart } as never,
   );
 
-  if (!rlErr && (attemptCount as number) > RATE_LIMIT_MAX) {
+  if (rlErr) {
+    console.error("[waitlist/join] rate-limit RPC error", rlErr.message);
+    return NextResponse.json(
+      { ok: false, error: "Service unavailable." },
+      { status: 503 },
+    );
+  }
+
+  const count = attemptCount as number | null;
+  if (count == null || Number.isNaN(count)) {
+    console.error("[waitlist/join] rate-limit RPC returned no count");
+    return NextResponse.json(
+      { ok: false, error: "Service unavailable." },
+      { status: 503 },
+    );
+  }
+
+  if (count > RATE_LIMIT_MAX) {
     return NextResponse.json(
       { ok: false, error: "Too many requests. Please try again later." },
       { status: 429, headers: { "Retry-After": "600" } },
@@ -97,6 +115,15 @@ export async function POST(req: NextRequest) {
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   const userId = user?.id;
+
+  let contactEmailForAuth: string | null = null;
+  if (userId) {
+    const resolved = resolveAuthenticatedWaitlistContactEmail(email, user.email);
+    if (!resolved.ok) {
+      return NextResponse.json({ ok: false, error: resolved.error }, { status: 400 });
+    }
+    contactEmailForAuth = resolved.contactEmail;
+  }
 
   // Ensure a scheduled batch exists (creates one if the table is empty).
   const batch = await ensureJoinableBatch();
@@ -153,12 +180,17 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // Authenticated: use RPC for atomic position assignment.
+  if (!contactEmailForAuth) {
+    return NextResponse.json({ ok: false, error: "Service unavailable." }, { status: 500 });
+  }
+  const authContactEmail = contactEmailForAuth;
+
+  // Authenticated: use RPC for atomic position assignment (contact email = session only).
   const { data: rpcResult, error: rpcErr } = await admin.rpc("assign_waitlist_position", {
     p_user_id: userId,
     p_batch_id: batch.id,
     p_notification_ch: channel,
-    p_contact_email: email,
+    p_contact_email: authContactEmail,
     p_contact_phone: phone,
   });
 
@@ -192,7 +224,7 @@ export async function POST(req: NextRequest) {
   }
 
   await sendWaitlistConfirm({
-    email,
+    email: authContactEmail,
     position,
     batchNumber: result.batch_number ?? batch.batch_number,
     opensAt: result.opens_at ?? batch.opens_at,

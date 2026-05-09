@@ -25,7 +25,8 @@
     "test:leaderboard": "node --import tsx --test src/lib/leaderboardComposite.test.ts",
     "test:prepbrain": "node --import tsx --test src/lib/prepbrainIntentRouting.test.ts src/lib/mastermindModelTier.test.ts",
     "test:doubt-voice": "node --import tsx --test src/components/doubts/doubtVoicePopupWiring.test.ts",
-    "test:voice-quota-wiring": "node --import tsx --test src/hooks/voiceQuotaWiring.test.ts"
+    "test:voice-quota-wiring": "node --import tsx --test src/hooks/voiceQuotaWiring.test.ts",
+    "test:waitlist": "node --import tsx --test src/lib/waitlist/joinContactEmail.test.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

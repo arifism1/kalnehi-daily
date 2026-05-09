@@ -18,4 +18,5 @@ console.log(`Supabase security checklist:
 — Run SQL migrations so local/staging/prod stay aligned; verify advisors show no unexpected ERROR/WARN.
 — Server-only tables use explicit deny policies for anon/authenticated (service_role bypasses RLS).
 — SECURITY DEFINER RPCs: prefer GRANT EXECUTE … TO service_role only unless auth.uid() is enforced inside the function.
+— assign_waitlist_position: re-check grants after deploy — SELECT grantee FROM information_schema.routine_privileges WHERE routine_schema = 'public' AND routine_name = 'assign_waitlist_position'; expect service_role (and postgres), not anon/authenticated.
 `);

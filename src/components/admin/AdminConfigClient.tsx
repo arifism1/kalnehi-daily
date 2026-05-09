@@ -5,6 +5,9 @@ import { Check, Pencil, RefreshCw, X } from "lucide-react";
 
 import { syncDeepInfraPricing, type DeepInfraSyncedModel } from "@/lib/admin/syncDeepInfraPricing";
 
+/** Shown in admin table but cannot be changed via API (DB-enforced or code constants). */
+const READ_ONLY_CONFIG_KEYS = new Set(["trial_duration_days"]);
+
 const DEEPINFRA_SYNC_KEYS = new Set([
   "ai_deepinfra_input_inr_per_m",
   "ai_deepinfra_output_inr_per_m",
@@ -152,10 +155,17 @@ export function AdminConfigClient({ config, descriptions, userId }: Props) {
               const isEditing = editing?.key === key;
               const wasSaved = savedKeys.has(key);
 
+              const readOnly = READ_ONLY_CONFIG_KEYS.has(key);
+
               return (
                 <tr key={key} className={i % 2 === 0 ? "bg-kal-card/20" : ""}>
                   <td className="px-4 py-3 font-mono text-xs text-kal-text">
                     {key}
+                    {readOnly && (
+                      <span className="ml-1.5 rounded bg-kal-muted/20 px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-kal-muted">
+                        read-only
+                      </span>
+                    )}
                     {DEEPINFRA_SYNC_KEYS.has(key) && (
                       <span className="ml-1.5 rounded bg-kal-accent/15 px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-kal-accent">
                         auto
@@ -166,7 +176,7 @@ export function AdminConfigClient({ config, descriptions, userId }: Props) {
                     {descriptions[key] ?? "—"}
                   </td>
                   <td className="px-4 py-3">
-                    {isEditing ? (
+                    {!readOnly && isEditing && editing ? (
                       <input
                         type="text"
                         value={editing.value}
@@ -186,7 +196,9 @@ export function AdminConfigClient({ config, descriptions, userId }: Props) {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    {isEditing ? (
+                    {readOnly ? (
+                      <span className="text-[10px] text-kal-muted">—</span>
+                    ) : isEditing ? (
                       <div className="flex gap-1">
                         <button
                           type="button"

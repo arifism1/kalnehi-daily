@@ -10,19 +10,25 @@ const EXAM_OPTIONS = EXAMS_CATALOG_FALLBACK
 
 type Props = {
   batchNumber: number;
-  opensAt: string | null;
   opensAtFormatted: string | null;
   totalInQueue: number;
+  /** When set, email field is pre-filled and must match this address when signed in. */
+  accountEmail?: string | null;
 };
 
 function normalizePhone(raw: string): string {
   return raw.replace(/[\s\-().+]/g, "").replace(/^(0|91)/, "");
 }
 
-export function WaitlistJoinClient({ batchNumber, opensAt: _opensAt, opensAtFormatted, totalInQueue }: Props) {
+export function WaitlistJoinClient({
+  batchNumber,
+  opensAtFormatted,
+  totalInQueue,
+  accountEmail = null,
+}: Props) {
   const router = useRouter();
   const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => (accountEmail ?? "").trim());
   const [phone, setPhone] = useState("");
   const [exam, setExam] = useState("");
   const [channel, setChannel] = useState<"email" | "push" | "both">("email");

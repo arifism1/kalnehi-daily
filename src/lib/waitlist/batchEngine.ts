@@ -335,7 +335,8 @@ export async function getAdminConfig(key: string, defaultValue: string): Promise
 export const VALID_ADMIN_CONFIG_KEYS = new Set([
   "batch_size",
   "batch_cycle_days",
-  "trial_duration_days",
+  // trial_duration_days: not writable — welcome trial window is enforced by DB RPCs
+  // (interval 'N days') and src/lib/freeTrial.ts. Shown as read-only in admin UI.
   "free_token_allocation",
   "free_voice_seconds",
   "smart_trial_price_inr",

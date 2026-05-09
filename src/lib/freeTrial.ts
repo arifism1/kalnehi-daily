@@ -1,4 +1,4 @@
-/** Number of full calendar days from `trial_started_at` for welcome (non-Razorpay) access. Keep in sync with DB RPCs (`interval 'N days'`) and `admin_config.trial_duration_days`. */
+/** Number of full calendar days from `trial_started_at` for welcome (non-Razorpay) access. Keep in sync with DB RPCs (`interval 'N days'`). The `admin_config.trial_duration_days` row is display-only; do not use it for enforcement until RPCs read it dynamically. */
 export const FREE_TRIAL_DAYS = 7;
 
 export const FREE_TRIAL_MS = FREE_TRIAL_DAYS * 24 * 60 * 60 * 1000;
