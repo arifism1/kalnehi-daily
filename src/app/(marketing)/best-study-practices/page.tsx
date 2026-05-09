@@ -33,7 +33,7 @@ export default function BestStudyPracticesPage() {
           {
             question: "Is there a free trial to experience all these features?",
             answer:
-              `Yes. You get 3 days with the full app, 60,000 Mastermind tokens, and 5 minutes of voice — no card. After that it's ${SMART_PLAN_MONTHLY_DISPLAY}/month on Smart Plan if you stay.`,
+              `Yes. You get 7 days with the full app, 60,000 Mastermind tokens, and 5 minutes of voice — no card. After that it's ${SMART_PLAN_MONTHLY_DISPLAY}/month on Smart Plan if you stay.`,
           },
           {
             question: "Which exams is Kalnehi Daily designed for?",

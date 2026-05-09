@@ -67,18 +67,18 @@ export type SubscriptionData = {
   /** Razorpay `total_count` (monthly charges) for the current subscription, when known. */
   autopayMonthsTotal: number | null;
   usage: UsageData;
-  /** 3-day free trial start timestamp (not Razorpay). */
+  /** Welcome trial start timestamp (not Razorpay). */
   trialStartedAt: string | null;
   trialPhotoScansUsed: number;
   trialVoiceSecondsUsed: number;
   hasUsedFreeTrial: boolean;
-  /** True while the 3-day free trial window is open and the user has no paid access. */
+  /** True while the welcome free trial window is open and the user has no paid access. */
   freeTrialActive: boolean;
   /** Eligible new account before `ensureFreeTrialStarted` runs (has_used_free_trial = false). */
   welcomeTrialEligibleUnstarted: boolean;
   freeTrialEndsAtIso: string | null;
   freeTrialPhotoRemaining: number;
-  /** Seconds of voice remaining in the 3-day free trial (0–300). */
+  /** Seconds of voice remaining in the welcome free trial (0–300). */
   freeTrialVoiceSecondsRemaining: number;
   /** Welcome trial clock ended, still no paid plan. */
   welcomeTrialExpiredNoPay: boolean;

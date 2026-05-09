@@ -176,7 +176,7 @@ export default async function UseCasePage({ params }: Props) {
 
         <CTABanner
           headline={`Start free — built for ${data.audienceLabel.toLowerCase()}`}
-          subtext="3-day free trial. No credit card. Your exam syllabus ready on day one."
+          subtext="7-day free trial. No credit card. Your exam syllabus ready on day one."
         />
       </div>
     </>

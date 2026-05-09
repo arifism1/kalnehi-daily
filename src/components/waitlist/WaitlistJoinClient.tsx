@@ -107,7 +107,7 @@ export function WaitlistJoinClient({ batchNumber, opensAt: _opensAt, opensAtForm
               <br />
               Your batch.
               <br />
-              Your 3 days.
+              Your 7 days.
             </h1>
 
             <p className="mt-6 text-lg font-medium text-kal-text-secondary">

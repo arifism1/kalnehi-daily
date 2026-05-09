@@ -2,7 +2,7 @@
  * GET /api/cron/notification-sequences
  * Vercel Cron: runs every 30 minutes.
  * Handles all waitlist lifecycle notifications:
- *   BATCH_TOMORROW, DAY2_NUDGE, DAY3_MORNING, DAY3_EVENING,
+ *   BATCH_TOMORROW, TRIAL_DAY6_NUDGE, TRIAL_DAY7_MORNING, TRIAL_DAY7_EVENING,
  *   PAUSED, RETARGETING_D7, RETARGETING_D14
  *
  * Uses IST for all wall-clock comparisons.
@@ -28,6 +28,8 @@ export const maxDuration = 300;
 
 const LOG = "[cron/notification-sequences]";
 
+type ServiceRoleClient = NonNullable<ReturnType<typeof getSupabaseServiceRoleClient>>;
+
 /** Current IST hour (0-23). */
 function istHour(): number {
   const now = new Date();
@@ -42,7 +44,7 @@ function istHour(): number {
 function trialDayNumber(trialStartedAt: string, now: Date): number {
   const startMs = new Date(trialStartedAt).getTime();
   const diffMs = now.getTime() - startMs;
-  return Math.floor(diffMs / (24 * 60 * 60 * 1000)) + 1; // Day 1, 2, 3
+  return Math.floor(diffMs / (24 * 60 * 60 * 1000)) + 1; // calendar day index from trial_started_at (1 = first day)
 }
 
 type ProfileRow = {
@@ -55,17 +57,7 @@ type ProfileRow = {
   has_had_trial?: boolean | null;
 };
 
-export async function GET(req: NextRequest) {
-  if (!verifyCronSecret(req)) {
-    console.warn(`${LOG} unauthorized`);
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const admin = getSupabaseServiceRoleClient();
-  if (!admin) {
-    return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
-  }
-
+async function runNotificationSequencesCron(admin: ServiceRoleClient): Promise<NextResponse> {
   const now = new Date();
   const nowIso = now.toISOString();
   const hour = istHour();
@@ -109,17 +101,16 @@ export async function GET(req: NextRequest) {
     stats.batch_tomorrow = tomorrowSent;
   }
 
-  /* ── 2. Trial lifecycle: DAY2_NUDGE (10 AM), DAY3_MORNING (8 AM), DAY3_EVENING (7 PM) ─ */
+  /* ── 2. Trial lifecycle: TRIAL_DAY6_NUDGE (10 AM IST), TRIAL_DAY7_MORNING (8 AM IST) ─ */
   // Only run during the right IST hours.
   if (hour >= 8 && hour < 11) {
-    // Find users in Day 2 (10 AM nudge) and Day 3 morning (8 AM).
     const { data: activatedEntries } = await admin
       .from("waitlist_entries")
       .select("user_id")
       .eq("status", "activated");
 
-    let day2Sent = 0;
-    let day3MorningSent = 0;
+    let trialDay6NudgeSent = 0;
+    let trialDay7MorningSent = 0;
 
     for (const entry of activatedEntries ?? []) {
       const uid = (entry as { user_id: string }).user_id;
@@ -143,28 +134,24 @@ export async function GET(req: NextRequest) {
 
       const dayNum = trialDayNumber(p.trial_started_at, now);
 
-      if (dayNum === 2 && hour >= 10 && hour < 11) {
-        const { data: authUser } = await admin.auth.admin.getUserById(uid);
+      if (dayNum === 6 && hour >= 10 && hour < 11) {
         const hasUsedPrepbrain = (p.welcome_ai_tokens_used ?? 0) > 0;
         const { count: streakCount } = await admin
           .from("study_sessions")
           .select("id", { count: "exact", head: true })
           .eq("user_id", uid);
         await sendDay2Nudge({ userId: uid, streakDays: streakCount ?? 0, hasUsedPrepbrain });
-        day2Sent++;
+        trialDay6NudgeSent++;
       }
 
-      if (dayNum === 3 && hour >= 8 && hour < 9) {
+      if (dayNum === 7 && hour >= 8 && hour < 9) {
         const { data: authUser } = await admin.auth.admin.getUserById(uid);
-        const email = (prof as { contact_email?: string | null } | null)?.contact_email
-          ?? authUser?.user?.email ?? null;
+        const email =
+          (prof as { contact_email?: string | null } | null)?.contact_email ??
+          authUser?.user?.email ??
+          null;
         const { count: streakCount } = await admin
           .from("study_sessions")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", uid);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { count: doubtsCount } = await (admin as any)
-          .from("doubts")
           .select("id", { count: "exact", head: true })
           .eq("user_id", uid);
         await sendDay3Morning({
@@ -174,21 +161,21 @@ export async function GET(req: NextRequest) {
           syllabusPercent: 0, // Approximation — could join user_syllabus_customizations
           prepbrainConversations: Math.floor((p.welcome_ai_tokens_used ?? 0) / 1000),
         });
-        day3MorningSent++;
+        trialDay7MorningSent++;
       }
     }
-    stats.day2_nudge = day2Sent;
-    stats.day3_morning = day3MorningSent;
+    stats.trial_day6_nudge = trialDay6NudgeSent;
+    stats.trial_day7_morning = trialDay7MorningSent;
   }
 
-  /* ── 3. DAY3_EVENING (7 PM IST) ──────────────────────────────────── */
+  /* ── 3. TRIAL_DAY7_EVENING (7 PM IST) ─────────────────────────────── */
   if (hour >= 19 && hour < 20) {
     const { data: activatedEntries } = await admin
       .from("waitlist_entries")
       .select("user_id")
       .eq("status", "activated");
 
-    let day3EveningSent = 0;
+    let trialDay7EveningSent = 0;
     for (const entry of activatedEntries ?? []) {
       const uid = (entry as { user_id: string }).user_id;
       const { data: prof } = await admin
@@ -203,20 +190,21 @@ export async function GET(req: NextRequest) {
 
       const isSubscribed =
         (p.subscription_status === "active" || p.subscription_status === "cancelled") &&
-        p.subscription_end_date && new Date(p.subscription_end_date) > now;
+        p.subscription_end_date &&
+        new Date(p.subscription_end_date) > now;
       if (isSubscribed) continue;
 
       const dayNum = trialDayNumber(p.trial_started_at, now);
-      if (dayNum === 3) {
+      if (dayNum === 7) {
         const { count: streakCount } = await admin
           .from("study_sessions")
           .select("id", { count: "exact", head: true })
           .eq("user_id", uid);
         await sendDay3Evening({ userId: uid, streakDays: streakCount ?? 0 });
-        day3EveningSent++;
+        trialDay7EveningSent++;
       }
     }
-    stats.day3_evening = day3EveningSent;
+    stats.trial_day7_evening = trialDay7EveningSent;
   }
 
   /* ── 4. PAUSED: trial just expired, no subscription ──────────────── */
@@ -249,7 +237,9 @@ export async function GET(req: NextRequest) {
         streakDays: streakCount ?? 0,
         syllabusPercent: 0,
         doubtsLogged: doubtsCount ?? 0,
-        prepbrainConversations: Math.floor(((prof as { welcome_ai_tokens_used?: number } | null)?.welcome_ai_tokens_used ?? 0) / 1000),
+        prepbrainConversations: Math.floor(
+          ((prof as { welcome_ai_tokens_used?: number } | null)?.welcome_ai_tokens_used ?? 0) / 1000,
+        ),
       });
       pausedSent++;
     }
@@ -331,6 +321,51 @@ export async function GET(req: NextRequest) {
     stats.retargeting_d14 = d14Sent;
   }
 
+  // Every run: all counters present so log/JSON parsers never see missing keys (IST windows skip trial blocks).
+  stats.batch_tomorrow ??= 0;
+  stats.trial_day6_nudge ??= 0;
+  stats.trial_day7_morning ??= 0;
+  stats.trial_day7_evening ??= 0;
+  stats.paused ??= 0;
+  stats.retargeting_d7 ??= 0;
+  stats.retargeting_d14 ??= 0;
+
+  // Deprecated: legacy drains/dashboards keyed day2/day3. Values mirror trial_day6_* / trial_day7_*;
+  // semantics are 7-day calendar trial (day 6 / 7), not historical 3-day trial day indices.
+  stats.day2_nudge = stats.trial_day6_nudge;
+  stats.day3_morning = stats.trial_day7_morning;
+  stats.day3_evening = stats.trial_day7_evening;
+
   console.info(`${LOG} run complete nowIso=${nowIso} istHour=${hour}`, JSON.stringify(stats));
   return NextResponse.json({ ok: true, nowIso, istHour: hour, ...stats });
+}
+
+export async function GET(req: NextRequest) {
+  if (!verifyCronSecret(req)) {
+    console.warn(`${LOG} unauthorized`);
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const admin = getSupabaseServiceRoleClient();
+  if (!admin) {
+    console.warn(`${LOG} service_unavailable`);
+    return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
+  }
+
+  try {
+    return await runNotificationSequencesCron(admin);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    const stack = err instanceof Error ? err.stack : undefined;
+    console.error(
+      `${LOG} failed`,
+      JSON.stringify({
+        message,
+        stack,
+        nowIso: new Date().toISOString(),
+        istHour: istHour(),
+      }),
+    );
+    return NextResponse.json({ error: "Cron job failed", message }, { status: 500 });
+  }
 }

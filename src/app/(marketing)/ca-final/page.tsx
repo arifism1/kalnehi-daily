@@ -62,7 +62,7 @@ export default function CaFinalPage() {
         </section>
 
         <FAQBlock items={FAQS} />
-        <CTABanner headline="Track your CA Final prep — all 8 papers" subtext="3 days free. Mastermind. No credit card." />
+        <CTABanner headline="Track your CA Final prep — all 8 papers" subtext="7 days free. Mastermind. No credit card." />
       </article>
     </>
   );

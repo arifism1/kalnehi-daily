@@ -73,7 +73,7 @@ const FAQS = [
   {
     question: "How much does it cost for a JEE aspirant?",
     answer:
-      "Start completely free for 3 days with full access including Mastermind (60,000 tokens) and 5 minutes of voice — no card required. After your trial, Smart Plan is " +
+      "Start completely free for 7 days with full access including Mastermind (60,000 tokens) and 5 minutes of voice — no card required. After your trial, Smart Plan is " +
       `${MONTHLY}/month with 2 million tokens and 100 minutes of voice per month.`,
   },
 ];
@@ -109,7 +109,7 @@ export default function JeePage() {
           stats={[
             { value: "720+", label: "JEE topics tracked" },
             { value: "3 exams", label: "Main + Advanced + Boards" },
-            { value: "₹0", label: "to start — 3 days free" },
+            { value: "₹0", label: "to start — 7 days free" },
           ]}
         />
 
@@ -215,7 +215,7 @@ export default function JeePage() {
 
         <CTABanner
           headline="Start your JEE prep system today"
-          subtext={`3 days free. Full access. No credit card. Then ${MONTHLY}/month.`}
+          subtext={`7 days free. Full access. No credit card. Then ${MONTHLY}/month.`}
         />
       </article>
     </>

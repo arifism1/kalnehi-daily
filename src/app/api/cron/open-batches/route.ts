@@ -4,10 +4,11 @@
  * 1. Finds batches whose opens_at has passed and status = 'scheduled'
  * 2. Activates users (sets trial_started_at)
  * 3. Sends BATCH_OPEN notifications
- * 4. Schedules closes_at = opens_at + 3 days (trial window)
+ * 4. Schedules closes_at = opens_at + FREE_TRIAL_MS (trial window)
  */
 import { type NextRequest, NextResponse } from "next/server";
 
+import { FREE_TRIAL_MS } from "@/lib/freeTrial";
 import { verifyCronSecret } from "@/lib/verifyCronSecret";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 import { openBatch } from "@/lib/waitlist/batchEngine";
@@ -63,8 +64,7 @@ export async function GET(req: NextRequest) {
       totalActivated += result.activated;
       openedBatches.push(b.batch_number);
 
-      // Set closes_at = opens_at + 3 days.
-      const closesAt = new Date(new Date(b.opens_at).getTime() + 3 * 24 * 60 * 60 * 1000).toISOString();
+      const closesAt = new Date(new Date(b.opens_at).getTime() + FREE_TRIAL_MS).toISOString();
       await admin.from("batches").update({ closes_at: closesAt }).eq("id", b.id);
 
       // Send BATCH_OPEN notifications to all activated users.

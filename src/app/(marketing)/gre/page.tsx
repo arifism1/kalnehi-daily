@@ -61,7 +61,7 @@ export default function GrePage() {
         </section>
 
         <FAQBlock items={FAQS} />
-        <CTABanner headline="Build your GRE prep system" subtext="3 days free. Mastermind. No credit card." />
+        <CTABanner headline="Build your GRE prep system" subtext="7 days free. Mastermind. No credit card." />
       </article>
     </>
   );

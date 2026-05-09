@@ -38,7 +38,7 @@ const notion: ComparisonData = {
     { feature: "Team collaboration", kalnehi: "partial", competitor: "yes" },
     { feature: "No setup required to start studying", kalnehi: "yes", competitor: "no" },
     { feature: "Works offline", kalnehi: "partial", competitor: "partial" },
-    { feature: "Free / trial access", kalnehi: "3-day trial", competitor: "yes" },
+    { feature: "Free / trial access", kalnehi: "7-day trial", competitor: "yes" },
   ],
   whyKalnehi: [
     "Notion requires you to build your study system from scratch — templates, databases, views, properties. Most students spend 3-4 hours just setting up, then maintain the setup instead of studying.",
@@ -87,7 +87,7 @@ const googleCalendar: ComparisonData = {
   faqs: [
     { q: "Can I sync Kalnehi Daily with Google Calendar?", a: "This is on our roadmap. Currently, Kalnehi Daily and Google Calendar work independently. Many students use Google Calendar for fixed commitments (coaching, school) and Kalnehi Daily for their self-study system." },
     { q: "Why not just use Google Calendar for timetables?", a: "A timetable tells you when to study. A study operating system tells you what to study, tracks your progress, adapts to your performance, and helps you revise at the right time. They're different tools." },
-    { q: "Is Kalnehi Daily free like Google Calendar?", a: "Kalnehi Daily has a 3-day free trial. After that, it's a paid subscription. Google Calendar is free but does not replace a purpose-built study system." },
+    { q: "Is Kalnehi Daily free like Google Calendar?", a: "Kalnehi Daily has a 7-day free trial. After that, it's a paid subscription. Google Calendar is free but does not replace a purpose-built study system." },
   ],
   relatedExams: ["jee", "neet", "upsc", "gate", "cat"],
 };

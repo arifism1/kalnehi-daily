@@ -35,7 +35,7 @@ export function PrepBrainPageClient() {
         </span>
         <h1 className="kal-feature-title">Mastermind is part of Smart Plan</h1>
         <p className="max-w-sm text-sm text-kal-text-secondary">
-          Start your 3-day free trial or subscribe to Smart Plan for a personalized coach that
+          Start your 7-day free trial or subscribe to Smart Plan for a personalized coach that
           understands your syllabus, daily planner, habits, and more.
         </p>
         <Link

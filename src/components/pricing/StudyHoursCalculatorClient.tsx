@@ -168,7 +168,7 @@ export function StudyHoursCalculatorClient() {
               For a daily syllabus tracker and AI-powered study strategy:
             </p>
             <Link href="/auth" className="mt-2 inline-flex min-h-[40px] items-center justify-center rounded-xl bg-kal-accent px-5 text-sm font-bold text-white transition hover:brightness-105">
-              Start free — 3 days on us
+              Start free — 7 days on us
             </Link>
           </div>
         </div>

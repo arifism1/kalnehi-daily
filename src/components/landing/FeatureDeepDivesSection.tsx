@@ -64,7 +64,7 @@ const FEATURES: Feature[] = [
     bullets: [
       "Ask questions in the context of what you're actually preparing for, not generically.",
       "Answers connected to your syllabus coverage, so advice is specific, not generic.",
-      "Smart Plan includes 2 million Mastermind tokens and 100 minutes of voice per month. 3-day free trial included with every new account.",
+      "Smart Plan includes 2 million Mastermind tokens and 100 minutes of voice per month. 7-day free trial included with every new account.",
     ],
     illustration: <PrepBrainIllustration />,
   },

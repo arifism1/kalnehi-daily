@@ -3,6 +3,7 @@
  * All functions use the service-role client (must only be called from trusted server context).
  */
 
+import { FREE_TRIAL_MS } from "@/lib/freeTrial";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 
 export type BatchRow = {
@@ -295,7 +296,7 @@ export async function checkExpiredTrials(): Promise<string[]> {
     const trialStart = prof.trial_started_at;
     if (!trialStart) continue;
 
-    const trialEnd = new Date(new Date(trialStart).getTime() + 3 * 24 * 60 * 60 * 1000);
+    const trialEnd = new Date(new Date(trialStart).getTime() + FREE_TRIAL_MS);
     if (trialEnd.toISOString() > cutoff) continue; // Trial not yet expired
 
     // Check if they subscribed.

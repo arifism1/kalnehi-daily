@@ -166,7 +166,7 @@ export function AllFeaturesSection() {
             href="/auth"
             className="inline-flex min-h-[48px] items-center justify-center rounded-full bg-kal-accent px-8 text-sm font-bold text-white shadow-[0_4px_16px_rgba(255,122,0,0.28)] transition hover:brightness-105"
           >
-            Start free — 3 days on us
+            Start free — 7 days on us
           </Link>
         </div>
       </div>

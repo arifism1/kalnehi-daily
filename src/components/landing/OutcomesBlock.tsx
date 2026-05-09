@@ -8,9 +8,9 @@ function facts() {
     detail: "Plan, track, revise, and log — without juggling separate apps.",
   },
   {
-    value: "3",
+    value: "7",
     label: "days free, no card",
-    detail: "You get the full app for 3 days. Start the trial when you're ready.",
+    detail: "You get the full app for 7 days. Start the trial when you're ready.",
   },
   {
     value: SMART_PLAN_MONTHLY_DISPLAY,
@@ -67,7 +67,7 @@ export function OutcomesBlock() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
             {[
-              { label: "3-day free trial", voice: "5 min total", tokens: "60k tokens" },
+              { label: "7-day free trial", voice: "5 min total", tokens: "60k tokens" },
               { label: `Smart Plan (${SMART_PLAN_MONTHLY_DISPLAY}/mo)`, voice: "100 min/month", tokens: "2M tokens/month" },
             ].map(({ label, voice, tokens }) => (
               <div key={label} className="text-center">

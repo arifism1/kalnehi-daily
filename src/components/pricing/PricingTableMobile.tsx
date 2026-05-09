@@ -39,7 +39,7 @@ function plans(): {
     key: "trial",
     label: "Free Trial",
     price: "₹0",
-    duration: "3 days",
+    duration: "7 days",
     cta: "Start free trial",
     ctaHref: "/auth",
     highlight: false,

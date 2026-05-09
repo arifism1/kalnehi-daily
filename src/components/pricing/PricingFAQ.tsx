@@ -15,11 +15,11 @@ function buildFaqs(): { q: string; a: string }[] {
   const m = SMART_PLAN_MONTHLY_DISPLAY;
   return [
     {
-      q: "What is included in the 3-day free trial?",
-      a: "All product features for three days: voice planning, syllabus tracker, focus timer, study camera, streaks, doubts, marks engine, revision queue, daily log, Mastermind Strategy Coach, plus 60,000 Mastermind tokens and 5 minutes of voice.",
+      q: "What is included in the 7-day free trial?",
+      a: "All product features for seven days: voice planning, syllabus tracker, focus timer, study camera, streaks, doubts, marks engine, revision queue, daily log, Mastermind Strategy Coach, plus 60,000 Mastermind tokens and 5 minutes of voice.",
     },
     {
-      q: "What happens after the 3-day free trial ends?",
+      q: "What happens after the 7-day free trial ends?",
       a: `You need Smart Plan to keep using the app (${m}/month, or 6 months upfront at ${SMART_PLAN_SIX_MONTH_TOTAL_DISPLAY} with 10% off, or 12 months at ${SMART_PLAN_ANNUAL_TOTAL_DISPLAY} with 25% off). Your data and progress stay put. Subscribe from pricing or subscription settings whenever you're ready.`,
     },
     {

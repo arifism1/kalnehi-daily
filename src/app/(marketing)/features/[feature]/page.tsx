@@ -74,7 +74,7 @@ export default async function FeaturePage({ params }: Props) {
               href="/auth"
               className="inline-flex min-h-[48px] items-center justify-center rounded-full bg-kal-accent px-6 text-sm font-bold text-white shadow-[0_4px_16px_rgba(255,122,0,0.28)] transition hover:brightness-105"
             >
-              Start free — 3 days on us
+              Start free — 7 days on us
             </Link>
             <Link
               href="/features"
@@ -153,7 +153,7 @@ export default async function FeaturePage({ params }: Props) {
         <FAQBlock items={feature.faqs} title={`${feature.name} — FAQ`} />
 
         <CTABanner
-          headline={`Try ${feature.name} free for 3 days`}
+          headline={`Try ${feature.name} free for 7 days`}
           subtext="Full access to every feature. No credit card required."
         />
       </article>

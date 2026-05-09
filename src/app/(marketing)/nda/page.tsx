@@ -60,7 +60,7 @@ export default function NdaPage() {
         </section>
 
         <FAQBlock items={FAQS} />
-        <CTABanner headline="Build your NDA prep system" subtext="3 days free. Mastermind. No credit card." />
+        <CTABanner headline="Build your NDA prep system" subtext="7 days free. Mastermind. No credit card." />
       </article>
     </>
   );

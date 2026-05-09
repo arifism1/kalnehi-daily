@@ -63,7 +63,7 @@ function batchTomorrowHtml(params: {
   const subject = `Tomorrow is your day — Batch ${batchNumber} opens at ${timeStr}`;
   const html = `
 <div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
-  <h2 style="font-size:22px;font-weight:600">Your free 3-day trial starts tomorrow.</h2>
+  <h2 style="font-size:22px;font-weight:600">Your free 7-day trial starts tomorrow.</h2>
   <p>Batch ${batchNumber} opens: <strong>${timeStr} IST</strong></p>
   <p>Be ready. Spots fill fast.</p>
   <p style="color:#888;font-size:14px;margin-top:20px">
@@ -81,7 +81,7 @@ function batchOpenHtml(params: { batchNumber: number }): { subject: string; html
   const html = `
 <div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
   <h2 style="font-size:22px;font-weight:600">You're in. Batch ${batchNumber} is live.</h2>
-  <p>Your 3-day free trial starts now.</p>
+  <p>Your 7-day free trial starts now.</p>
   <a href="${process.env.NEXT_PUBLIC_APP_URL ?? SITE_URL}"
      style="display:inline-block;background:#ff7a00;color:#fff;padding:12px 24px;border-radius:99px;text-decoration:none;font-weight:700;margin:8px 0">
     Start Kalnehi →
@@ -177,7 +177,7 @@ function trialActivationHtml(): { subject: string; html: string } {
 <div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
   <h2 style="font-size:22px;font-weight:600;margin-bottom:8px">Your free trial is live.</h2>
   <p style="color:#444;margin:0 0 16px">
-    You were on our list for a free spot — it just opened. You now have <strong>3 days of full access</strong>
+    You were on our list for a free spot — it just opened. You now have <strong>7 days of full access</strong>
     to every feature on Kalnehi Daily.
   </p>
   <a href="${process.env.NEXT_PUBLIC_APP_URL ?? SITE_URL}"
@@ -185,7 +185,7 @@ function trialActivationHtml(): { subject: string; html: string } {
     Start now →
   </a>
   <p style="color:#888;font-size:14px;margin-top:24px">
-    Your 3-day timer starts from the moment you open the app.
+    Your 7-day timer starts from the moment you open the app.
   </p>
 </div>`;
   return { subject, html };
@@ -284,7 +284,7 @@ function trialQueuedHtml(params: {
     Today's free trial slots are full. That's the only reason you're waiting.
   </p>
   <p style="color:#666;margin:0 0 20px">
-    Your 3-day trial begins on <strong>${date}</strong> at <strong>12:00 AM IST</strong>.<br>
+    Your 7-day trial begins on <strong>${date}</strong> at <strong>12:00 AM IST</strong>.<br>
     No action needed — just sign in at midnight and you're good to go.
   </p>
   <p style="font-size:14px;color:#888;margin:0 0 20px">
@@ -297,7 +297,7 @@ function trialQueuedHtml(params: {
     Start right now for ₹19 →
   </a>
   <p style="color:#aaa;font-size:13px;margin:0">
-    Same 3 days. Instant access. Your profile and exam goals are all saved.
+    Same 7 days. Instant access. Your profile and exam goals are all saved.
   </p>
 </div>`;
   return { subject, html };
@@ -370,7 +370,7 @@ export async function sendBatchTomorrow(params: {
     await sendPush(
       params.userId,
       `Tomorrow: Batch ${params.batchNumber} opens`,
-      "Your free 3-day trial starts tomorrow. Be ready.",
+      "Your free 7-day trial starts tomorrow. Be ready.",
       "/",
     );
   }
@@ -386,7 +386,7 @@ export async function sendBatchOpen(params: {
     await sendPush(
       params.userId,
       `Batch ${params.batchNumber} is live`,
-      "You're in. Your 3-day free trial starts now.",
+      "You're in. Your 7-day free trial starts now.",
       "/",
     );
   }
@@ -415,9 +415,9 @@ export async function sendDay2Nudge(params: {
   streakDays: number;
   hasUsedPrepbrain: boolean;
 }): Promise<void> {
-  const title = "24 hours left in your trial";
+  const title = "Two days left in your trial";
   const body = params.hasUsedPrepbrain
-    ? `You have 24 hours left. Your ${params.streakDays}-day streak is building.`
+    ? `You have two days left on your trial. Your ${params.streakDays}-day streak is building.`
     : "Have you asked Mastermind what to focus on this week?";
   await sendPush(params.userId, title, body, params.hasUsedPrepbrain ? "/" : "/mastermind");
 }
@@ -686,21 +686,21 @@ function subscriptionCompletedHtml(params: {
 
 function waitlistSkipTrialStartedHtml(): { subject: string; html: string } {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? SITE_URL;
-  const subject = "You're in — your 3-day trial has started";
+  const subject = "You're in — your 7-day trial has started";
   const html = `
 <div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
   <h2 style="font-size:22px;font-weight:600;margin-bottom:8px">Waitlist skipped. Your free trial is live.</h2>
   <p style="color:#444;margin:0 0 16px">
-    Your ₹19 waitlist skip is confirmed. Your <strong>3-day free trial</strong> has started — every feature, no restrictions.
+    Your ₹19 waitlist skip is confirmed. Your <strong>7-day free trial</strong> has started — every feature, no restrictions.
   </p>
   <ul style="color:#444;line-height:1.8;margin:0 0 16px;padding-left:20px">
     <li><strong>5 minutes</strong> of voice dictation for the trial</li>
-    <li><strong>60,000 Mastermind tokens</strong> for the 3-day trial</li>
+    <li><strong>60,000 Mastermind tokens</strong> for the 7-day trial</li>
     <li><strong>5 photo scans</strong> for the trial</li>
     <li>Full syllabus, planner, and habit tracker access</li>
   </ul>
   <p style="color:#666;font-size:14px;margin:0 0 16px">
-    Your 3-day timer started the moment you skipped the queue. Make the most of it.
+    Your 7-day timer started the moment you skipped the queue. Make the most of it.
   </p>
   <a href="${appUrl}"
      style="display:inline-block;background:#ff7a00;color:#fff;padding:12px 24px;border-radius:99px;text-decoration:none;font-weight:700;margin:8px 0">

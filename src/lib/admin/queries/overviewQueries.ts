@@ -1,3 +1,4 @@
+import { FREE_TRIAL_MS } from "@/lib/freeTrial";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 
 import { listAllAuthUsers } from "@/lib/admin/authUsers";
@@ -35,8 +36,6 @@ export type OverviewSnapshot = {
   alerts: OverviewAlert[];
 };
 
-const TRIAL_DAYS = 3;
-
 function isPayingActive(p: {
   subscription_status: string | null;
   subscription_end_date: string | null;
@@ -47,9 +46,7 @@ function isPayingActive(p: {
 }
 
 function trialEndIso(trialStartedAt: string): string {
-  return new Date(
-    new Date(trialStartedAt).getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000,
-  ).toISOString();
+  return new Date(new Date(trialStartedAt).getTime() + FREE_TRIAL_MS).toISOString();
 }
 
 export async function getOverviewSnapshot(): Promise<OverviewSnapshot | null> {
@@ -239,7 +236,7 @@ export async function getOverviewSnapshot(): Promise<OverviewSnapshot | null> {
   if (activeFreeTrialUsers > 5 && trialHitCap / activeFreeTrialUsers > 0.65) {
     alerts.push({
       level: "warn",
-      message: `High trial token limit hit rate (~${((trialHitCap / activeFreeTrialUsers) * 100).toFixed(0)}%) — users may churn before Day 3.`,
+      message: `High trial token limit hit rate (~${((trialHitCap / activeFreeTrialUsers) * 100).toFixed(0)}%) — users may churn before Day 7.`,
     });
   }
 

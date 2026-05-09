@@ -1,6 +1,6 @@
 /**
  * PrepBrain Groq token budgets by subscription phase.
- * Welcome (3-day free trial): 60k — welcome_ai_tokens_used
+ * Welcome (7-day free trial): 60k — welcome_ai_tokens_used
  * Monthly Pro (Smart Plan): 2M — ai_tokens_used + ai_tokens_month
  * Bonus: bonus_ai_tokens_ledger (30-day pools)
  */
@@ -18,7 +18,7 @@ export const MONTHLY_AI_TOKEN_CAP = 2_000_000;
 export const PREPBRAIN_LIMIT_MESSAGE_MONTHLY =
   "You have reached your monthly Mastermind token limit of 2 million. Your allowance refreshes on the same date each month as your Smart Plan started.";
 export const PREPBRAIN_LIMIT_MESSAGE_WELCOME =
-  `You have used all 60,000 Mastermind tokens included in your 3-day free trial. Upgrade to Smart Plan (${SMART_PLAN_MONTHLY_DISPLAY}/month) for 2 million tokens per month.`;
+  `You have used all 60,000 Mastermind tokens included in your 7-day free trial. Upgrade to Smart Plan (${SMART_PLAN_MONTHLY_DISPLAY}/month) for 2 million tokens per month.`;
 /** @deprecated paid trial removed */
 export const PREPBRAIN_LIMIT_MESSAGE_PAID_TRIAL =
   `You have used all Mastermind tokens included in your trial. Upgrade to Smart Plan (${SMART_PLAN_MONTHLY_DISPLAY}/month) for 2 million tokens per month.`;

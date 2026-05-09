@@ -13,7 +13,7 @@ export function ExamHero({
   badge,
   headline,
   subheadline,
-  ctaLabel = "Start free — 3 days on us",
+  ctaLabel = "Start free — 7 days on us",
   ctaHref = "/auth",
   stats,
 }: ExamHeroProps) {

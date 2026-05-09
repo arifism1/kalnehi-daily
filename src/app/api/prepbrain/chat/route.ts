@@ -491,7 +491,7 @@ export async function POST(request: Request) {
       {
         ok: false,
         error:
-          "Mastermind is available during your 3-day free trial and with an active Smart Plan subscription.",
+          "Mastermind is available during your 7-day free trial and with an active Smart Plan subscription.",
       },
       { status: 403 },
     );

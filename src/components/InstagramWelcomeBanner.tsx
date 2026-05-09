@@ -55,7 +55,7 @@ export function InstagramWelcomeBanner() {
             Welcome from Instagram
           </p>
           <p className="mt-0.5 text-xs leading-relaxed text-kal-text-secondary">
-            Sign up to claim your 3-day free trial.
+            Sign up to claim your 7-day free trial.
             {ref ? (
               <span className="ml-1 font-medium text-kal-accent">
                 Code: {ref}

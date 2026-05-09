@@ -34,10 +34,10 @@ export const ORGANIZATION_LOGO_PATH = "/icon-512x512.png" as const;
 
 export const PRICING_OFFERS = [
   {
-    name: "3-Day Free Trial",
+    name: "7-Day Free Trial",
     price: "0",
     priceCurrency: "INR",
-    description: "3 days full access — every feature, 60k Mastermind tokens, 5 min voice. No card required.",
+    description: "7 days full access — every feature, 60k Mastermind tokens, 5 min voice. No card required.",
   },
   {
     name: "Smart Plan",

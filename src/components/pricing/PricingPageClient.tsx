@@ -488,7 +488,7 @@ export function PricingPageClient() {
           : `${freeTrialVoiceSecondsRemaining}s`;
       return (
         <div className="rounded-2xl border border-kal-accent/35 bg-gradient-to-br from-kal-accent/12 to-kal-card-muted px-5 py-4 shadow-sm dark:border-kal-accent/25">
-          <p className="text-sm font-semibold text-kal-text">Your 3-day free trial is active</p>
+          <p className="text-sm font-semibold text-kal-text">Your 7-day free trial is active</p>
           <p className="mt-2 text-sm leading-relaxed text-kal-text-secondary">
             You have <span className="font-semibold text-kal-text">{voiceStr} of voice time</span> remaining
             {freeTrialEndsAtIso ? (
@@ -664,7 +664,7 @@ export function PricingPageClient() {
                 Start right now for ₹19 →
               </Link>
               <p className="mt-2 text-[11px] text-kal-text-secondary">
-                Same 3 days. Instant access.
+                Same 7 days. Instant access.
               </p>
             </div>
           ) : capStatus?.capEnabled && capStatus.isFull ? (
@@ -707,7 +707,7 @@ export function PricingPageClient() {
             /* ── State A / B: cap off or spots available ─────────────────────── */
             <div className="kal-glass-panel rounded-2xl border-2 border-emerald-500/35 bg-emerald-500/[0.06] px-5 py-5 text-center dark:border-emerald-500/25 dark:bg-emerald-500/[0.08]">
               <p className="text-sm font-semibold text-kal-text">
-                Start your 3-day free trial — every feature, no card required.
+                Start your 7-day free trial — every feature, no card required.
               </p>
               <p className="mt-1 text-xs leading-relaxed text-kal-text-secondary">
                 Your trial timer starts only after you tap this button.
@@ -720,7 +720,7 @@ export function PricingPageClient() {
                 disabled={welcomeFreeBusy || busy}
                 className="kal-btn-accent mt-4 inline-flex min-h-[48px] w-full max-w-md items-center justify-center rounded-xl px-6 py-3 text-sm font-bold transition disabled:opacity-60 sm:w-auto"
               >
-                {welcomeFreeBusy ? "Starting…" : "Start free — 3 days on us →"}
+                {welcomeFreeBusy ? "Starting…" : "Start free — 7 days on us →"}
               </button>
               {/* State B: spot counter when cap is enabled and spots remain */}
               {capStatus?.capEnabled && !capStatus.isFull ? (
@@ -760,7 +760,7 @@ export function PricingPageClient() {
             One plan. Everything included.
           </h1>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-kal-text-secondary">
-            <span className="font-semibold text-kal-text">3-day free trial:</span> all features, 60,000 Mastermind tokens, 5 minutes voice — no card needed.{" "}
+            <span className="font-semibold text-kal-text">7-day free trial:</span> all features, 60,000 Mastermind tokens, 5 minutes voice — no card needed.{" "}
             <span className="font-semibold text-kal-text">
               Smart Plan ({pro.monthlyPriceDisplay}/month):
             </span>{" "}

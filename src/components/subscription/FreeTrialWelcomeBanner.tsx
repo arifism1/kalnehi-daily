@@ -83,7 +83,7 @@ export function FreeTrialWelcomeBanner() {
               Welcome
             </p>
             <p className="mt-0.5 text-sm font-bold leading-snug text-kal-text sm:text-base">
-              Your 3-day free trial has started!
+              Your 7-day free trial has started!
             </p>
             {endsIn ? (
               <p className="mt-1 text-xs font-semibold tabular-nums text-kal-accent sm:text-sm">

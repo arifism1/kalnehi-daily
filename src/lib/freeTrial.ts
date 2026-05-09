@@ -1,9 +1,12 @@
-/** 3-day free trial from trial_started_at: full access to all features. */
-export const FREE_TRIAL_MS = 3 * 24 * 60 * 60 * 1000;
-/** 5 minutes of voice during the 3-day free trial, stored as seconds in the database (RPC cap 300). */
+/** Number of full calendar days from `trial_started_at` for welcome (non-Razorpay) access. Keep in sync with DB RPCs (`interval 'N days'`) and `admin_config.trial_duration_days`. */
+export const FREE_TRIAL_DAYS = 7;
+
+export const FREE_TRIAL_MS = FREE_TRIAL_DAYS * 24 * 60 * 60 * 1000;
+
+/** 5 minutes of voice during the welcome free trial, stored as seconds in the database (RPC cap 300). */
 export const FREE_TRIAL_VOICE_CAP_SECONDS = 5 * 60;
 export const FREE_TRIAL_VOICE_CAP_MINUTES = 5;
-/** Photo scans are fully accessible during the 3-day trial. */
+/** Photo scans are fully accessible during the welcome trial (soft cap enforced in RPC). */
 export const FREE_TRIAL_PHOTO_CAP = 5;
 
 export function isFreeTrialWindowActive(
@@ -112,7 +115,7 @@ export function isPaidSubscriptionAccess(
 }
 
 /**
- * True when the 3-day welcome trial window has ended (started and past end), and user is not on paid access.
+ * True when the welcome trial window has ended (started and past end), and user is not on paid access.
  */
 export function isWelcomeTrialExpired(
   trialStartedAt: string | null | undefined,

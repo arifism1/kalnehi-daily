@@ -49,7 +49,7 @@ export async function POST(req: Request) {
   if (!headroom.ok) {
     const msg = headroom.error;
     const quotaLike =
-      /limit|trial ended|Upgrade|free trial|not configured|voice included|Start your 3-day/i.test(
+      /limit|trial ended|Upgrade|free trial|not configured|voice included|Start your 7-day/i.test(
         msg,
       );
     return NextResponse.json(

@@ -73,7 +73,7 @@ export default async function CategoryPage({ params }: Props) {
         </div>
 
         <CTABanner
-          headline="Apply what you read — start free for 3 days"
+          headline="Apply what you read — start free for 7 days"
           subtext="Full Mastermind, syllabus tracker, daily planner. No credit card."
         />
       </div>

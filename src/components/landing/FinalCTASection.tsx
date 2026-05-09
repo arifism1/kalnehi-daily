@@ -21,7 +21,7 @@ export function FinalCTASection() {
             Try Kalnehi Daily for free
           </Link>
           <p className="text-sm text-kal-muted">
-            3 days fully free · No card needed · Then {SMART_PLAN_MONTHLY_DISPLAY}/month · Cancel anytime.
+            7 days fully free · No card needed · Then {SMART_PLAN_MONTHLY_DISPLAY}/month · Cancel anytime.
           </p>
         </div>
       </div>

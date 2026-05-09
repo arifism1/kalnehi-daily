@@ -178,7 +178,7 @@ export function Day3Paywall() {
                 className="text-2xl font-normal leading-tight text-kal-text sm:text-3xl"
                 style={{ fontFamily: "var(--font-display)" }}
               >
-                Your 3-day trial has ended.
+                Your 7-day trial has ended.
               </h1>
               <p className="mt-2 text-sm text-kal-text-secondary">
                 Your streak is paused. Your data is safe.

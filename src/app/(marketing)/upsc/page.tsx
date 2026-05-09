@@ -101,7 +101,7 @@ export default function UpscPage() {
           stats={[
             { value: "9 papers", label: "Prelims + Mains + Interview" },
             { value: "2,000+", label: "hours of prep over 12-18 months" },
-            { value: "₹0", label: "to start — 3 days free" },
+            { value: "₹0", label: "to start — 7 days free" },
           ]}
         />
 
@@ -211,7 +211,7 @@ export default function UpscPage() {
 
         <CTABanner
           headline="Build the UPSC preparation system that actually lasts"
-          subtext="3 days free. Full access. No credit card required."
+          subtext="7 days free. Full access. No credit card required."
         />
       </article>
     </>

@@ -7,7 +7,7 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 
 export const metadata: Metadata = {
   title: `Get Started — ${SITE_NAME}`,
-  description: "Sign up for your 3-day free trial of Kalnehi Daily.",
+  description: "Sign up for your 7-day free trial of Kalnehi Daily.",
   robots: { index: false },
 };
 
