@@ -67,6 +67,11 @@ const SITES = [
     file: "src/app/api/prepbrain/usage/route.ts",
     scope: "After getUser(); usage rows for current user.",
   },
+  {
+    file: "src/app/api/waitlist/join/route.ts",
+    scope:
+      "assign_waitlist_position RPC: service_role only; EXECUTE revoked for authenticated in DB migration 20260710120000.",
+  },
 ];
 
 console.log("Service-role scope checklist (manual review; keep in sync with code):\n");

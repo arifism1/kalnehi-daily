@@ -2,14 +2,14 @@
 
 **Status:** All 4 todos complete. Here's what was done and what you need to do next.
 
+**Engineering / full-stack onboarding** (Next.js `proxy`, Supabase auth, trials, Razorpay, cron, AI APIs): see **[docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md)**.
+
 ---
 
 ## What Was Completed ✅
 
 - [x] **Environment Documentation** (`SEO_ENVIRONMENT_GUIDE.md`)
-  - Documented current state (missing `NEXT_PUBLIC_SITE_URL` in production)
-  - Explained www vs apex host alignment issue
-  - Provided 3 production config options with step-by-step setup
+  - Documents `getSiteUrl()` / `getSitemapBaseUrl()`, apex → **www** redirect in `next.config.ts`, and GSC alignment (no host logic in `proxy.ts`)
 
 - [x] **Diagnostics Tools** (`GSC_DIAGNOSTICS_GUIDE.md` + `scripts/gsc-diagnostics.js`)
   - Manual canonical consistency checks
@@ -36,7 +36,7 @@
 
 - [ ] **Set `NEXT_PUBLIC_SITE_URL` in Vercel**
   - Go to Vercel Dashboard → kalnehi-daily → Settings → Environment Variables
-  - Add `NEXT_PUBLIC_SITE_URL` = `https://kalnehi.com` (or `https://www.kalnehi.com`)
+  - Add `NEXT_PUBLIC_SITE_URL` = `https://www.kalnehi.com` (recommended; apex → www is enforced in `next.config.ts` — see `SEO_ENVIRONMENT_GUIDE.md`)
   - Redeploy your app
   - ⏱️ Time: 5 minutes
 
