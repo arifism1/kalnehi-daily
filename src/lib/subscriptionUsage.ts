@@ -1,7 +1,7 @@
 /**
  * Subscription-anniversary usage boundaries (IST): voice, photo scans, and Mastermind base
  * tokens roll on the same calendar day-of-month as `subscription_start_date`, not on the 1st.
- * Trial / welcome quotas use separate counters (3-day window / RPCs) — never tied here.
+ * Trial / welcome quotas use separate counters (7-day window / RPCs) — never tied here.
  */
 
 const USAGE_MONTH_TZ = "Asia/Kolkata";

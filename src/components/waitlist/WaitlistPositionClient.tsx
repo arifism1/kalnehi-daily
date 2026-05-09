@@ -229,7 +229,7 @@ export function WaitlistPositionClient() {
               </p>
               <p className="mt-3 text-sm leading-relaxed text-kal-text-secondary">
                 We open a limited number of spots each day so the app stays fast for everyone.
-                Yours unlocks at midnight — sign in then and your 3 days start immediately.
+                Yours unlocks at midnight — sign in then and your 7 days start immediately.
               </p>
 
               {/* Countdown */}

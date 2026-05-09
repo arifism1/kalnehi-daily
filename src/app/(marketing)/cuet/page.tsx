@@ -61,7 +61,7 @@ export default function CuetPage() {
         </section>
 
         <FAQBlock items={FAQS} />
-        <CTABanner headline="Track your CUET domain subjects in Kalnehi Daily" subtext="3 days free. Mastermind. No credit card." />
+        <CTABanner headline="Track your CUET domain subjects in Kalnehi Daily" subtext="7 days free. Mastermind. No credit card." />
       </article>
     </>
   );

@@ -92,9 +92,9 @@ const PAGE_SEO: Record<
   },
   pricing: {
     path: "/pricing",
-    title: `Pricing — 3-Day Free Trial & Smart Plan | ${SITE_NAME}`,
+    title: `Pricing — 7-Day Free Trial & Smart Plan | ${SITE_NAME}`,
     description:
-      `Start with a 3-day free trial — every feature, no card required. Then ${SMART_PLAN_MONTHLY_DISPLAY}/month with Smart Plan: 2 million Mastermind tokens, 100 minutes voice, marks engine, and rank prediction.`,
+      `Start with a 7-day free trial — every feature, no card required. Then ${SMART_PLAN_MONTHLY_DISPLAY}/month with Smart Plan: 2 million Mastermind tokens, 100 minutes voice, marks engine, and rank prediction.`,
   },
   about: {
     path: "/about",
@@ -172,7 +172,7 @@ const PAGE_SEO: Record<
     path: "/waitlist",
     title: `Join the Waitlist — ${SITE_NAME}`,
     description:
-      `Join the Kalnehi Daily waitlist. Your spot is locked the moment you sign up. Full access for 3 days when your batch opens.`,
+      `Join the Kalnehi Daily waitlist. Your spot is locked the moment you sign up. Full access for 7 days when your batch opens.`,
   },
   "waitlist-position": {
     path: "/waitlist/position",

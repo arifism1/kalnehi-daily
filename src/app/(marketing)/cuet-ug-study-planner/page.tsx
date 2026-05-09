@@ -40,7 +40,7 @@ export default function CuetUgStudyPlannerPage() {
           {
             question: "Is there a free tier?",
             answer:
-              `${SITE_NAME} offers a 3-day free trial (no card required), then Smart Plan at ${SMART_PLAN_MONTHLY_DISPLAY}/month — see pricing. These public guides stay free to read.`,
+              `${SITE_NAME} offers a 7-day free trial (no card required), then Smart Plan at ${SMART_PLAN_MONTHLY_DISPLAY}/month — see pricing. These public guides stay free to read.`,
           },
         ]}
       />

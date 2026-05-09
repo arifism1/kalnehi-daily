@@ -15,7 +15,7 @@ import { TIERS } from "@/lib/subscriptionTiers";
 export function SubscriptionPaywallInterstitial({
   freeTrialEnded = false,
 }: {
-  /** After the 3-day free trial ended without a paid plan. */
+  /** After the 7-day free trial ended without a paid plan. */
   freeTrialEnded?: boolean;
 }) {
   const router = useRouter();
@@ -66,7 +66,7 @@ export function SubscriptionPaywallInterstitial({
           id={titleId}
           className="text-center text-lg font-bold tracking-tight text-kal-text"
         >
-          {freeTrialEnded ? "Your 3-day trial has ended" : "Smart Plan required"}
+          {freeTrialEnded ? "Your 7-day trial has ended" : "Smart Plan required"}
         </h2>
         <p
           id={descId}
@@ -74,7 +74,7 @@ export function SubscriptionPaywallInterstitial({
         >
           {freeTrialEnded ? (
             <>
-              Your 3-day free trial is over. Subscribe to{" "}
+              Your 7-day free trial is over. Subscribe to{" "}
               <span className="font-semibold text-kal-text">Smart Plan</span> for{" "}
               <span className="font-semibold text-kal-text">{TIERS.pro.monthlyPriceDisplay}/month</span> — 2 million Mastermind tokens and 100 minutes of voice every month. Cancel anytime.
             </>

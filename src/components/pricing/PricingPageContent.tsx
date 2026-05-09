@@ -105,7 +105,7 @@ function HeroSection({ capStatus }: { capStatus: DailyCapStatus }) {
               href="/#subscribe"
               className="inline-flex min-h-[52px] w-full items-center justify-center rounded-full bg-kal-accent px-8 text-base font-bold text-white shadow-[0_4px_16px_rgba(255,122,0,0.32)] transition hover:brightness-105 active:scale-[0.98] sm:w-auto"
             >
-              Start free — 3 days on us →
+              Start free — 7 days on us →
             </Link>
             <a
               href="#pricing-table"
@@ -148,7 +148,7 @@ function HowItWorksSection() {
     {
       num: "③",
       title: "Try free, then decide",
-      body: "3 days of full access. Subscribe to Smart Plan if you want to continue.",
+      body: "7 days of full access. Subscribe to Smart Plan if you want to continue.",
     },
   ];
 
@@ -209,10 +209,10 @@ function PricingTableSection() {
                     </span>
                   </th>
 
-                  {/* 3-Day Free Trial */}
+                  {/* 7-Day Free Trial */}
                   <th className="w-[28%] bg-kal-card/80 px-3 py-5 text-center align-top">
                     <p className="text-xs font-bold uppercase tracking-wider text-kal-text-secondary">
-                      3-Day Free Trial
+                      7-Day Free Trial
                     </p>
                     <p
                       className="mt-1 text-2xl font-normal text-kal-text"
@@ -322,7 +322,7 @@ function PlanCardsSection() {
     {
       name: "Free Trial",
       price: "₹0",
-      duration: "3-day trial",
+      duration: "7-day trial",
       tag: "Start here",
       borderClass: "border-kal-border",
       badgeBg: "bg-kal-card-muted",
@@ -385,7 +385,7 @@ function PlanCardsSection() {
     intro: "Don't want to wait for a batch? ₹19 gets you in right now.",
     bullets: [
       "Immediate access — no queue",
-      "Same 3-day free trial as batch users",
+      "Same 7-day free trial as batch users",
       "60,000 Mastermind tokens included",
       "5 minutes voice included",
       "One-time payment, no recurring charge",
@@ -559,7 +559,7 @@ function ExamFooterStrip() {
             href="/#subscribe"
             className="inline-flex min-h-[48px] w-full items-center justify-center rounded-full bg-kal-accent px-8 text-base font-bold text-white shadow-[0_4px_16px_rgba(255,122,0,0.28)] transition hover:brightness-105 active:scale-[0.98] sm:w-auto"
           >
-            Start free — 3 days on us →
+            Start free — 7 days on us →
           </Link>
           <Link
             href="#subscribe"

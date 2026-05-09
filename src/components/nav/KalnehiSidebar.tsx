@@ -32,7 +32,6 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { usePlatform } from "@/hooks/usePlatform";
 import { PwaUpdateCallout } from "@/components/pwa/PwaUpdateCallout";
 import { VISIBLE_FEATURE_CATEGORIES } from "@/lib/dashboardFeatures";
 
@@ -106,10 +105,7 @@ const SIDEBAR_CATEGORIES: SidebarCategory[] = VISIBLE_FEATURE_CATEGORIES.map((ca
 
 export function KalnehiSidebar() {
   const pathname = usePathname();
-  const { isApp } = usePlatform();
-  const accountItems = isApp
-    ? ACCOUNT_ITEMS.filter((item) => item.href !== "/my-subscription")
-    : ACCOUNT_ITEMS;
+  const accountItems = ACCOUNT_ITEMS;
   return (
     <nav
       role="navigation"

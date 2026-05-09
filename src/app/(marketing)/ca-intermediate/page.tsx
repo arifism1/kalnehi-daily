@@ -67,7 +67,7 @@ export default function CaIntermediatePage() {
         </section>
 
         <FAQBlock items={FAQS} />
-        <CTABanner headline="Track all 8 CA Intermediate papers in one place" subtext="3 days free. Mastermind. No credit card." />
+        <CTABanner headline="Track all 8 CA Intermediate papers in one place" subtext="7 days free. Mastermind. No credit card." />
       </article>
     </>
   );

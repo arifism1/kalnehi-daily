@@ -62,7 +62,7 @@ export default function SbiPoPage() {
         </section>
 
         <FAQBlock items={FAQS} />
-        <CTABanner headline="Build your SBI PO prep system" subtext="3 days free. Mastermind. No credit card." />
+        <CTABanner headline="Build your SBI PO prep system" subtext="7 days free. Mastermind. No credit card." />
       </article>
     </>
   );

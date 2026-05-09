@@ -54,7 +54,7 @@ export default function ComparisonsIndexPage() {
         </ul>
 
         <CTABanner
-          headline="Try Kalnehi Daily free for 3 days"
+          headline="Try Kalnehi Daily free for 7 days"
           subtext="No credit card. Full access. See the difference in your first week of prep."
         />
       </div>

@@ -28,7 +28,7 @@ export default function WhatCanKalnehiDoPage() {
           {
             question: "Is there a trial?",
             answer:
-              `New accounts get 3 days free — no card. After that, Smart Plan is ${SMART_PLAN_MONTHLY_DISPLAY}/month if you want to continue.`,
+              `New accounts get 7 days free — no card. After that, Smart Plan is ${SMART_PLAN_MONTHLY_DISPLAY}/month if you want to continue.`,
           },
           {
             question: "Can I install Kalnehi Daily like an app?",

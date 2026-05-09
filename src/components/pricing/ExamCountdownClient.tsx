@@ -146,7 +146,7 @@ export function ExamCountdownClient() {
       <div className="border-t border-kal-border pt-4 text-center space-y-2">
         <p className="text-xs text-kal-muted">Track your daily progress and syllabus completion in Kalnehi Daily</p>
         <Link href="/auth" className="inline-flex min-h-[40px] items-center justify-center rounded-full bg-kal-accent px-6 text-sm font-bold text-white transition hover:brightness-105">
-          Start free — 3 days on us
+          Start free — 7 days on us
         </Link>
       </div>
     </div>

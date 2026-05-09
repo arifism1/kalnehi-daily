@@ -85,13 +85,13 @@ export default function ToolsPage() {
             href="/auth"
             className="inline-flex min-h-[44px] items-center justify-center rounded-full bg-kal-accent px-6 text-sm font-bold text-white transition hover:brightness-105"
           >
-            Start free — 3 days on us
+            Start free — 7 days on us
           </Link>
         </div>
 
         <CTABanner
           headline="These tools are free. The full system is better."
-          subtext="Start free for 3 days — Mastermind, syllabus tracker, voice control, and everything else."
+          subtext="Start free for 7 days — Mastermind, syllabus tracker, voice control, and everything else."
         />
       </div>
     </>

@@ -138,7 +138,7 @@ export default async function ComparisonPage({ params }: Props) {
         </div>
 
         <CTABanner
-          headline="Try Kalnehi Daily free for 3 days"
+          headline="Try Kalnehi Daily free for 7 days"
           subtext="No credit card. Full access. See why students choose it over alternatives."
         />
       </div>

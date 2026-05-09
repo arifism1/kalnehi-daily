@@ -84,7 +84,7 @@ export default function GatePage() {
           stats={[
             { value: "10+", label: "technical subjects for GATE CSE" },
             { value: "6 months", label: "typical focused prep window" },
-            { value: "₹0", label: "to start — 3 days free" },
+            { value: "₹0", label: "to start — 7 days free" },
           ]}
         />
 
@@ -177,7 +177,7 @@ export default function GatePage() {
         </section>
 
         <FAQBlock items={FAQS} />
-        <CTABanner headline="Build your GATE prep system today" subtext="3 days free. Full access. No credit card." />
+        <CTABanner headline="Build your GATE prep system today" subtext="7 days free. Full access. No credit card." />
       </article>
     </>
   );

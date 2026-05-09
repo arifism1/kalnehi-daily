@@ -1024,7 +1024,7 @@ async function logReferralTrialStartedIfNeeded(
   }
 }
 
-/** Idempotent: starts the one-time 3-day welcome trial for eligible new accounts. */
+/** Idempotent: starts the one-time 7-day welcome trial for eligible new accounts. */
 export async function ensureFreeTrialStarted(): Promise<
   | { ok: true; started: boolean }
   | { ok: false; error: string }
@@ -1349,13 +1349,13 @@ export async function ensureVoiceMinuteHeadroom(
   if (!data.trial_started_at) {
     return {
       ok: false,
-      error: "Start your 3-day free trial to use voice.",
+      error: "Start your 7-day free trial to use voice.",
     };
   }
   if (!isFreeTrialWindowActive(data.trial_started_at, now)) {
     return {
       ok: false,
-      error: `Your 3-day free trial has ended. Subscribe to Smart Plan (${SMART_PLAN_MONTHLY_DISPLAY}/month) to continue.`,
+      error: `Your 7-day free trial has ended. Subscribe to Smart Plan (${SMART_PLAN_MONTHLY_DISPLAY}/month) to continue.`,
     };
   }
 
@@ -1366,7 +1366,7 @@ export async function ensureVoiceMinuteHeadroom(
     return {
       ok: false,
       error:
-        "You've used all 5 minutes of voice included in your 3-day free trial. Upgrade to Smart Plan for 100 minutes/month.",
+        "You've used all 5 minutes of voice included in your 7-day free trial. Upgrade to Smart Plan for 100 minutes/month.",
     };
   }
 
@@ -1735,6 +1735,8 @@ export async function verifyExtraCreditsPayment(params: {
 // ---------------------------------------------------------------------------
 // No-trial monthly subscription (for users who have already used their trial)
 // ---------------------------------------------------------------------------
+// Blocks only Razorpay-backed plans with active end_date. Welcome-only users typically have no
+// subscription_end_date, so they can open checkout during the welcome trial window.
 
 export async function createRazorpayMonthlySubscription(
   tier: SubscriptionTier = "pro",

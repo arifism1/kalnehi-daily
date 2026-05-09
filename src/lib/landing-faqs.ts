@@ -15,7 +15,7 @@ export const LANDING_FAQ_ITEMS = [
   {
     question: "How does the trial work?",
     answer:
-      `First 3 days are free with no card. After that, Smart Plan is ${m}/month on AutoPay. You choose 1–12 monthly charges up front; the mandate stops when that number is reached. Cancel from settings anytime — no forms or calls.`,
+      `First 7 days are free with no card. After that, Smart Plan is ${m}/month on AutoPay. You choose 1–12 monthly charges up front; the mandate stops when that number is reached. Cancel from settings anytime — no forms or calls.`,
   },
   {
     question: "What exams does Kalnehi Daily support?",
@@ -30,7 +30,7 @@ export const LANDING_FAQ_ITEMS = [
   {
     question: "How much AI (Mastermind) do I get?",
     answer:
-      `The 3-day free trial includes 60,000 Mastermind tokens and 5 minutes of voice dictation — shared across all 3 days. Smart Plan (${m}/month) includes 2 million tokens and 100 minutes of voice every month, both resetting each billing cycle.`,
+      `The 7-day free trial includes 60,000 Mastermind tokens and 5 minutes of voice dictation — shared across all 7 days. Smart Plan (${m}/month) includes 2 million tokens and 100 minutes of voice every month, both resetting each billing cycle.`,
   },
   {
     question: "Can I cancel at any time?",

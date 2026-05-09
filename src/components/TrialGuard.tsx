@@ -46,9 +46,8 @@ export function TrialGuard({ children }: TrialGuardProps) {
                   Initial Calibration Complete
                 </h2>
                 <p id="trial-guard-desc" className="text-sm leading-relaxed text-kal-text">
-                  Your 72-hour voice and syllabus calibration phase has concluded. To keep your
-                  study logs synced and maintain your daily preparation streak, please update your
-                  access status.
+                  Your welcome trial period has ended. To keep your study logs synced and maintain your
+                  daily preparation streak, please update your access status.
                 </p>
                 <button
                   type="button"

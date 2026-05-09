@@ -67,7 +67,7 @@ export default function CaFoundationPage() {
         </section>
 
         <FAQBlock items={FAQS} />
-        <CTABanner headline="Track all 4 CA Foundation papers in one place" subtext="3 days free. Mastermind. No credit card." />
+        <CTABanner headline="Track all 4 CA Foundation papers in one place" subtext="7 days free. Mastermind. No credit card." />
       </article>
     </>
   );

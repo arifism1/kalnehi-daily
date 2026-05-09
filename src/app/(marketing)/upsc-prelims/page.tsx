@@ -63,7 +63,7 @@ export default function UpscPrelimsPage() {
         </section>
 
         <FAQBlock items={FAQS} />
-        <CTABanner headline="Start your UPSC Prelims prep system" subtext="3 days free. Mastermind. No credit card." />
+        <CTABanner headline="Start your UPSC Prelims prep system" subtext="7 days free. Mastermind. No credit card." />
       </article>
     </>
   );

@@ -502,7 +502,7 @@ export function MyPlanPageClient() {
             <div className="kal-glass-panel overflow-hidden rounded-2xl border border-kal-accent/35 bg-gradient-to-br from-kal-accent/10 to-kal-card-muted shadow-md dark:border-kal-accent/25">
               <div className="border-b border-kal-border px-5 py-3 sm:px-6">
                 <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
-                  3-day free trial
+                  7-day free trial
                 </p>
                 <p className="mt-1 text-sm font-medium text-kal-text">
                   {formatWelcomeVoiceTimeLeft(freeTrialVoiceSecondsRemaining)} of welcome voice time
@@ -513,7 +513,7 @@ export function MyPlanPageClient() {
                   </p>
                 ) : null}
                 <p className="mt-1 text-xs text-kal-text-secondary">
-                  Voice (5 min) and Mastermind tokens (60,000) are for the entire 3-day trial — use them within this window. After the trial ends, subscribe to Smart Plan ({TIERS.pro.monthlyPriceDisplay}/month) for 100 minutes of voice and 2 million tokens every month.
+                  Voice (5 min) and Mastermind tokens (60,000) are for the entire 7-day trial — use them within this window. After the trial ends, subscribe to Smart Plan ({TIERS.pro.monthlyPriceDisplay}/month) for 100 minutes of voice and 2 million tokens every month.
                 </p>
               </div>
               <UsageBar
@@ -537,7 +537,7 @@ export function MyPlanPageClient() {
             <div className="kal-glass-panel rounded-2xl border border-kal-accent/30 bg-kal-accent-soft/40 px-5 py-5 dark:bg-kal-accent/10">
               <h3 className="text-base font-bold text-kal-text">Upgrade to Smart Plan</h3>
               <p className="mt-2 text-sm text-kal-text-secondary">
-                You&apos;re on your 3-day free trial. Subscribe now to keep full access after your trial —{" "}
+                You&apos;re on your 7-day free trial. Subscribe now to keep full access after your trial —{" "}
                 <span className="font-semibold text-kal-text">{TIERS.pro.monthlyPriceDisplay}/month</span>{" "}
                 for 2 million Mastermind tokens and 100 minutes of voice per month.
               </p>
@@ -582,7 +582,7 @@ export function MyPlanPageClient() {
 
           {welcomeTrialExpiredNoPay && !hasPaidAccess ? (
             <div className="kal-glass-panel rounded-2xl border border-kal-accent/30 bg-kal-accent-soft/40 px-5 py-5 dark:bg-kal-accent/10">
-              <h3 className="text-base font-bold text-kal-text">Your 3-day trial has ended</h3>
+              <h3 className="text-base font-bold text-kal-text">Your 7-day trial has ended</h3>
               <p className="mt-2 text-sm text-kal-text-secondary">
                 Subscribe to Smart Plan to continue —{" "}
                 <span className="font-semibold text-kal-text">{TIERS.pro.monthlyPriceDisplay}/month</span>{" "}
@@ -627,7 +627,7 @@ export function MyPlanPageClient() {
                 </h2>
                 <p className="mt-1 text-sm text-kal-text-secondary">
                   {onWelcomeTrial
-                    ? "You're on your 3-day free trial with 60,000 Mastermind tokens and 5 minutes of voice. Subscribe to Smart Plan anytime for the full monthly quota."
+                    ? "You're on your 7-day free trial with 60,000 Mastermind tokens and 5 minutes of voice. Subscribe to Smart Plan anytime for the full monthly quota."
                     : noActivePlan
                       ? `Pick a plan to keep using ${SITE_NAME}.`
                       : tierConfig.tagline}
@@ -697,7 +697,7 @@ export function MyPlanPageClient() {
                     <span className="font-medium text-kal-text">
                       {TIERS.pro.voiceMinutesPerMonth} voice minutes per month
                     </span>{" "}
-                    after your first monthly charge — during this 3-day trial you have{" "}
+                    after your first monthly charge — during this 7-day trial you have{" "}
                     <span className="font-medium text-kal-text">
                       {TIERS.pro.trialVoiceMinutesLimit} minutes
                     </span>{" "}

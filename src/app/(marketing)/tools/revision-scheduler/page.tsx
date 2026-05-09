@@ -98,7 +98,7 @@ export default function RevisionSchedulerPage() {
 
         <CTABanner
           headline="Track the same intervals inside Kalnehi Daily"
-          subtext="Revision Tracker keeps your due list next to your syllabus and daily plan. Start free for 3 days."
+          subtext="Revision Tracker keeps your due list next to your syllabus and daily plan. Start free for 7 days."
         />
       </div>
     </>

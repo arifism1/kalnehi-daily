@@ -138,7 +138,7 @@ export default async function SyllabusPage({ params }: Props) {
               href="/auth/signup"
               className="inline-flex min-h-[44px] items-center justify-center rounded-full bg-kal-accent px-6 text-sm font-bold text-white transition hover:brightness-105"
             >
-              Start free — 3 days on us
+              Start free — 7 days on us
             </Link>
             <Link
               href="/features/syllabus-tracker"

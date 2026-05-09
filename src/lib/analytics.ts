@@ -132,7 +132,7 @@ export function trackMetaAuthSuccess(event: "login" | "sign_up"): void {
   fbq("trackCustom", "Auth Success");
 }
 
-/** Meta Pixel custom event when the 3-day welcome trial is newly started (not idempotent no-op). */
+/** Meta Pixel custom event when the welcome (7-day) trial is newly started (not idempotent no-op). */
 export function trackMetaFreeTrialStarted(): void {
   if (typeof window === "undefined") return;
   window.fbq?.("trackCustom", "Free Trial Started");

@@ -17,7 +17,7 @@ const MONTHLY = SMART_PLAN_MONTHLY_DISPLAY;
 export const metadata = marketingPageMetadata({
   path: "/neet",
   title: `Daily Planner for NEET Preparation | ${SITE_NAME}`,
-  description: `Track Biology, Physics and Chemistry at the chapter level. Mastermind identifies which NEET topics have the highest weightage vs your current completion. Start free for 3 days.`,
+  description: `Track Biology, Physics and Chemistry at the chapter level. Mastermind identifies which NEET topics have the highest weightage vs your current completion. Start free for 7 days.`,
 });
 
 const SYLLABUS = [
@@ -79,7 +79,7 @@ const FAQS = [
   {
     question: "What is the pricing for NEET aspirants?",
     answer:
-      `Start free for 3 days with full access. Smart Plan is ${MONTHLY}/month or ${SMART_PLAN_ANNUAL_BILLING_LABEL}. For a 12-month NEET prep cycle, the annual plan costs less than ₹300/month — less than a single coaching batch's monthly fee for just notes.`,
+      `Start free for 7 days with full access. Smart Plan is ${MONTHLY}/month or ${SMART_PLAN_ANNUAL_BILLING_LABEL}. For a 12-month NEET prep cycle, the annual plan costs less than ₹300/month — less than a single coaching batch's monthly fee for just notes.`,
   },
 ];
 
@@ -111,7 +111,7 @@ export default function NeetPage() {
           stats={[
             { value: "97", label: "NEET chapters tracked" },
             { value: "3 subjects", label: "Biology · Physics · Chemistry" },
-            { value: "₹0", label: "to start — 3 days free" },
+            { value: "₹0", label: "to start — 7 days free" },
           ]}
         />
 
@@ -214,7 +214,7 @@ export default function NeetPage() {
 
         <CTABanner
           headline="Start your NEET prep system today"
-          subtext="3 days free. Full access including Mastermind. No credit card."
+          subtext="7 days free. Full access including Mastermind. No credit card."
         />
       </article>
     </>

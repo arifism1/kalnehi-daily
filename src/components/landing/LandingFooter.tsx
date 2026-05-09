@@ -42,7 +42,7 @@ const FOOTER_LINKS = {
     { href: "/syllabus/jee-main", label: "JEE Main Syllabus" },
     { href: "/syllabus/neet", label: "NEET Syllabus" },
     { href: "/syllabus/upsc-cse", label: "UPSC Syllabus" },
-    { href: "/auth", label: "Start free — 3 days on us" },
+    { href: "/auth", label: "Start free — 7 days on us" },
   ],
   Legal: [
     { href: "/privacy", label: "Privacy Policy" },

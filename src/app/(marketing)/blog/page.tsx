@@ -139,7 +139,7 @@ async function BlogIndex({ searchParams }: { searchParams: Promise<BlogSearch> }
 
         <CTABanner
           headline="Put what you read into practice"
-          subtext="Start free for 3 days. Full access to Mastermind, syllabus tracker, and all planning tools."
+          subtext="Start free for 7 days. Full access to Mastermind, syllabus tracker, and all planning tools."
         />
       </div>
     </>

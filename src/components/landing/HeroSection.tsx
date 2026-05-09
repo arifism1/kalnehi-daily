@@ -54,7 +54,7 @@ export function HeroSection() {
               href="/auth"
               className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-kal-accent px-8 text-base font-bold text-white shadow-[0_4px_20px_rgba(255,122,0,0.35)] transition hover:brightness-105 active:scale-[0.99]"
             >
-              Start free — 3 days on us
+              Start free — 7 days on us
             </Link>
             <Link
               href="/what-can-kalnehi-do"
@@ -66,7 +66,7 @@ export function HeroSection() {
           </div>
 
           <p className="mt-3 text-xs text-kal-muted">
-            No card · 3 days fully free · Then {SMART_PLAN_MONTHLY_DISPLAY}/month · Cancel anytime
+            No card · 7 days fully free · Then {SMART_PLAN_MONTHLY_DISPLAY}/month · Cancel anytime
           </p>
         </div>
 

@@ -111,7 +111,7 @@ export function useAiGate(): AiGateResult {
   const voiceMinuteStatus = paidAi
     ? formatPaidVoiceQuotaStatus(voiceMinutesRemaining, voiceMinutesLimit)
     : inWelcomeTrialFlow
-      ? `${formatWelcomeVoiceTimeLeft(freeTrialVoiceSecondsRemaining)} • 3-day trial`
+      ? `${formatWelcomeVoiceTimeLeft(freeTrialVoiceSecondsRemaining)} • 7-day trial`
       : "Upgrade to Smart Plan for voice dictation";
 
   return {

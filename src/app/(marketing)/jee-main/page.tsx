@@ -56,7 +56,7 @@ export default function JeeMainPage() {
         </section>
 
         <FAQBlock items={FAQS} />
-        <CTABanner headline="Start your JEE Main prep system" subtext="3 days free. Full Mastermind access. No card needed." />
+        <CTABanner headline="Start your JEE Main prep system" subtext="7 days free. Full Mastermind access. No card needed." />
       </article>
     </>
   );

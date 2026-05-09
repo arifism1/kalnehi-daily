@@ -149,7 +149,7 @@ export function PathFlowchart() {
         </svg>
       )}
 
-      {/* 3-Day Free Trial node */}
+      {/* 7-Day Free Trial node */}
       <div
         ref={trialRef}
         className="rounded-2xl border-2 border-kal-border bg-kal-card p-5 text-center shadow-sm"
@@ -161,7 +161,7 @@ export function PathFlowchart() {
           className="mt-2 text-xl font-bold text-kal-text"
           style={{ fontFamily: "var(--font-display)" }}
         >
-          3-Day Free Trial
+          7-Day Free Trial
         </p>
         <p
           className="text-2xl font-normal text-kal-text"
@@ -172,7 +172,7 @@ export function PathFlowchart() {
         <p className="text-xs text-kal-muted">No credit card needed</p>
         <div className="mt-3 space-y-1.5 text-left">
           {[
-            "Full app for 3 days",
+            "Full app for 7 days",
             "Mastermind — 60,000 tokens",
             "Voice control — 5 minutes",
           ].map((f) => (

@@ -101,7 +101,7 @@ export default function CatPage() {
           stats={[
             { value: "3 sections", label: "VARC · DILR · Quant" },
             { value: "6 months", label: "typical serious prep window" },
-            { value: "₹0", label: "to start — 3 days free" },
+            { value: "₹0", label: "to start — 7 days free" },
           ]}
         />
 
@@ -191,7 +191,7 @@ export default function CatPage() {
         </section>
 
         <FAQBlock items={FAQS} />
-        <CTABanner headline="Build your CAT prep system today" subtext="3 days free. Full access. No credit card." />
+        <CTABanner headline="Build your CAT prep system today" subtext="7 days free. Full access. No credit card." />
       </article>
     </>
   );

@@ -64,7 +64,7 @@ export default function JeeAdvancedPage() {
         </section>
 
         <FAQBlock items={FAQS} />
-        <CTABanner headline="Build your JEE Advanced execution system" subtext="3 days free. Mastermind. No credit card." />
+        <CTABanner headline="Build your JEE Advanced execution system" subtext="7 days free. Mastermind. No credit card." />
       </article>
     </>
   );

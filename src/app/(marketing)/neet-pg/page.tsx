@@ -63,7 +63,7 @@ export default function NeetPgPage() {
         </section>
 
         <FAQBlock items={FAQS} />
-        <CTABanner headline="Build your NEET PG prep system" subtext="3 days free. Full Mastermind. No credit card." />
+        <CTABanner headline="Build your NEET PG prep system" subtext="7 days free. Full Mastermind. No credit card." />
       </article>
     </>
   );

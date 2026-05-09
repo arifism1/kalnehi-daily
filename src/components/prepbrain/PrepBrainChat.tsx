@@ -107,7 +107,7 @@ function RobotSendIcon({ sending }: { sending: boolean }) {
 function prepbrainUsagePeriodLabel(phase: AiUsagePhase): string {
   switch (phase) {
     case "welcome":
-      return "3-day free trial";
+      return "7-day free trial";
     case "paid_trial":
       return "Smart Plan (trial)";
     case "monthly":
