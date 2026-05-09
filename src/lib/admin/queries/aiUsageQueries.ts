@@ -1,12 +1,44 @@
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 
+import {
+  MISTRAL_DEEPINFRA_PRICE_REVALIDATE_SEC,
+  resolveMastermindMistralInrRates,
+} from "@/lib/admin/deepInfraPublicPricing";
 import { dateKeyIST } from "@/lib/admin/istDates";
-import { loadAdminPricingInr, computeAiCostInr } from "@/lib/admin/pricing";
+import {
+  loadAdminPricingInr,
+  computeAiCostInr,
+  computePrepbrainReservationCostInr,
+} from "@/lib/admin/pricing";
+import { MASTERMIND_DEEPINFRA_MODEL } from "@/lib/groqPrepbrainModel";
+import { getAllAdminConfig } from "@/lib/waitlist/batchEngine";
 
 export type AiProviderBreakdown = {
   inputTokens: number;
   outputTokens: number;
   costInr: number;
+};
+
+/** PrepBrain finalized rows only, provider `deepinfra` split by Mastermind Mistral vs other models. */
+export type AiPrepbrainDeepinfraWindow = {
+  inputTokens: number;
+  outputTokens: number;
+  billedTokens: number;
+  finalizedCount: number;
+  costInr: number;
+};
+
+export type AiPrepbrainDeepinfraSplit = {
+  mastermindMistral: {
+    today: AiPrepbrainDeepinfraWindow;
+    week: AiPrepbrainDeepinfraWindow;
+    month: AiPrepbrainDeepinfraWindow;
+  };
+  otherDeepinfra: {
+    today: AiPrepbrainDeepinfraWindow;
+    week: AiPrepbrainDeepinfraWindow;
+    month: AiPrepbrainDeepinfraWindow;
+  };
 };
 
 export type AiUsageSnapshot = {
@@ -23,13 +55,43 @@ export type AiUsageSnapshot = {
   trialTokenHitRatePct: number;
   mrrInr: number;
   providerBreakdownToday: { deepinfra: AiProviderBreakdown; groq: AiProviderBreakdown };
+  prepbrainDeepinfraSplit: AiPrepbrainDeepinfraSplit;
+  /** Mastermind Mistral ₹/M used for cost rows; prefers live DeepInfra public list price (see cache). */
+  mastermindMistralPricing: {
+    source: "deepinfra_live" | "admin_config";
+    inputInrPerM: number;
+    outputInrPerM: number;
+    liveFetchError?: string;
+    cacheRevalidateSeconds: number;
+  };
 };
 
 export async function getAiUsageSnapshot(): Promise<AiUsageSnapshot | null> {
   const admin = getSupabaseServiceRoleClient();
   if (!admin) return null;
 
-  const pricing = await loadAdminPricingInr();
+  const [pricingBase, cfg] = await Promise.all([loadAdminPricingInr(), getAllAdminConfig()]);
+  const usdToInr = parseFloat(cfg.ai_usd_to_inr_rate ?? "95");
+  const usdToInrRate = Number.isFinite(usdToInr) && usdToInr > 0 ? usdToInr : 95;
+
+  const mistralResolved = await resolveMastermindMistralInrRates(usdToInrRate, {
+    inputInrPerM: pricingBase.deepinfraMistralInputInrPerM,
+    outputInrPerM: pricingBase.deepinfraMistralOutputInrPerM,
+  });
+
+  const pricing = {
+    ...pricingBase,
+    deepinfraMistralInputInrPerM: mistralResolved.inputInrPerM,
+    deepinfraMistralOutputInrPerM: mistralResolved.outputInrPerM,
+  };
+
+  const mastermindMistralPricing = {
+    source: mistralResolved.source,
+    inputInrPerM: mistralResolved.inputInrPerM,
+    outputInrPerM: mistralResolved.outputInrPerM,
+    liveFetchError: mistralResolved.liveFetchError,
+    cacheRevalidateSeconds: MISTRAL_DEEPINFRA_PRICE_REVALIDATE_SEC,
+  };
 
   const since = new Date(Date.now() - 40 * 24 * 3600 * 1000).toISOString();
 
@@ -112,6 +174,41 @@ export async function getAiUsageSnapshot(): Promise<AiUsageSnapshot | null> {
     groq: { inputTokens: 0, outputTokens: 0, costInr: 0 },
   };
 
+  const emptyDeepinfraWindow = (): AiPrepbrainDeepinfraWindow => ({
+    inputTokens: 0,
+    outputTokens: 0,
+    billedTokens: 0,
+    finalizedCount: 0,
+    costInr: 0,
+  });
+
+  const prepbrainDeepinfraSplit: AiPrepbrainDeepinfraSplit = {
+    mastermindMistral: {
+      today: emptyDeepinfraWindow(),
+      week: emptyDeepinfraWindow(),
+      month: emptyDeepinfraWindow(),
+    },
+    otherDeepinfra: {
+      today: emptyDeepinfraWindow(),
+      week: emptyDeepinfraWindow(),
+      month: emptyDeepinfraWindow(),
+    },
+  };
+
+  const addDeepinfraSplit = (
+    target: AiPrepbrainDeepinfraWindow,
+    r: PrepRow,
+    inputTok: number,
+    outputTok: number,
+    rowCost: number,
+  ) => {
+    target.inputTokens += inputTok;
+    target.outputTokens += outputTok;
+    target.billedTokens += r.estimate;
+    target.finalizedCount += 1;
+    target.costInr += rowCost;
+  };
+
   // PrepBrain rows
   for (const r of rows) {
     const t = new Date(r.finalized_at).getTime();
@@ -121,7 +218,7 @@ export async function getAiUsageSnapshot(): Promise<AiUsageSnapshot | null> {
     const inputTok = r.input_tokens ?? r.estimate;
     const outputTok = r.output_tokens ?? 0;
     const provider = r.provider ?? "deepinfra";
-    const rowCost = computeAiCostInr(inputTok, outputTok, provider, pricing);
+    const rowCost = computePrepbrainReservationCostInr(inputTok, outputTok, provider, r.model, pricing);
 
     const existing = byDay.get(k) ?? { tokens: 0, costInr: 0 };
     byDay.set(k, { tokens: existing.tokens + r.estimate, costInr: existing.costInr + rowCost });
@@ -136,6 +233,21 @@ export async function getAiUsageSnapshot(): Promise<AiUsageSnapshot | null> {
     }
     if (now - t <= 7 * dayMs) { tokensThisWeek += r.estimate; costThisWeekInr += rowCost; }
     if (now - t <= 30 * dayMs) { tokensThisMonth += r.estimate; costThisMonthInr += rowCost; }
+
+    if (provider === "deepinfra") {
+      const isMistral = r.model === MASTERMIND_DEEPINFRA_MODEL;
+      const mistralBuckets = prepbrainDeepinfraSplit.mastermindMistral;
+      const otherBuckets = prepbrainDeepinfraSplit.otherDeepinfra;
+      if (isMistral) {
+        if (k === tKey) addDeepinfraSplit(mistralBuckets.today, r, inputTok, outputTok, rowCost);
+        if (now - t <= 7 * dayMs) addDeepinfraSplit(mistralBuckets.week, r, inputTok, outputTok, rowCost);
+        if (now - t <= 30 * dayMs) addDeepinfraSplit(mistralBuckets.month, r, inputTok, outputTok, rowCost);
+      } else {
+        if (k === tKey) addDeepinfraSplit(otherBuckets.today, r, inputTok, outputTok, rowCost);
+        if (now - t <= 7 * dayMs) addDeepinfraSplit(otherBuckets.week, r, inputTok, outputTok, rowCost);
+        if (now - t <= 30 * dayMs) addDeepinfraSplit(otherBuckets.month, r, inputTok, outputTok, rowCost);
+      }
+    }
   }
 
   // Voice rows (Groq only)
@@ -199,5 +311,7 @@ export async function getAiUsageSnapshot(): Promise<AiUsageSnapshot | null> {
     trialTokenHitRatePct,
     mrrInr: mrrContribution,
     providerBreakdownToday: providerToday,
+    prepbrainDeepinfraSplit,
+    mastermindMistralPricing,
   };
 }

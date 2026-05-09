@@ -1,4 +1,5 @@
 import { getAllAdminConfig } from "@/lib/waitlist/batchEngine";
+import { MASTERMIND_DEEPINFRA_MODEL } from "@/lib/groqPrepbrainModel";
 
 export type AdminPricingInr = {
   smartTrialInr: number;
@@ -8,6 +9,9 @@ export type AdminPricingInr = {
   /** Per-provider input/output rates (INR per 1M tokens). */
   deepinfraInputInrPerM: number;
   deepinfraOutputInrPerM: number;
+  /** Mastermind hard-tier DeepInfra model (`MASTERMIND_DEEPINFRA_MODEL`); defaults to chat DeepInfra rates if unset. */
+  deepinfraMistralInputInrPerM: number;
+  deepinfraMistralOutputInrPerM: number;
   groqInputInrPerM: number;
   groqOutputInrPerM: number;
 };
@@ -26,6 +30,14 @@ export async function loadAdminPricingInr(): Promise<AdminPricingInr> {
     smartAnnualInr: num(cfg.smart_plan_annual_price_inr, 3591),
     deepinfraInputInrPerM: num(cfg.ai_deepinfra_input_inr_per_m, 2.82),
     deepinfraOutputInrPerM: num(cfg.ai_deepinfra_output_inr_per_m, 13.15),
+    deepinfraMistralInputInrPerM: num(
+      cfg.ai_deepinfra_mistral_input_inr_per_m,
+      num(cfg.ai_deepinfra_input_inr_per_m, 2.82),
+    ),
+    deepinfraMistralOutputInrPerM: num(
+      cfg.ai_deepinfra_mistral_output_inr_per_m,
+      num(cfg.ai_deepinfra_output_inr_per_m, 13.15),
+    ),
     groqInputInrPerM: num(cfg.ai_groq_input_inr_per_m, 4.70),
     groqOutputInrPerM: num(cfg.ai_groq_output_inr_per_m, 7.51),
   };
@@ -50,6 +62,28 @@ export function computeAiCostInr(
   const inputRate = isDeepInfra ? config.deepinfraInputInrPerM : config.groqInputInrPerM;
   const outputRate = isDeepInfra ? config.deepinfraOutputInrPerM : config.groqOutputInrPerM;
   return (inputTokens / 1_000_000) * inputRate + (outputTokens / 1_000_000) * outputRate;
+}
+
+/**
+ * Cost for a finalized PrepBrain reservation row: Groq rate, Mastermind Mistral rate, or default DeepInfra rate.
+ */
+export function computePrepbrainReservationCostInr(
+  inputTokens: number,
+  outputTokens: number,
+  provider: string,
+  model: string | null | undefined,
+  config: AdminPricingInr,
+): number {
+  if (provider === "groq") {
+    return computeAiCostInr(inputTokens, outputTokens, "groq", config);
+  }
+  if (provider === "deepinfra" && model === MASTERMIND_DEEPINFRA_MODEL) {
+    return (
+      (inputTokens / 1_000_000) * config.deepinfraMistralInputInrPerM +
+      (outputTokens / 1_000_000) * config.deepinfraMistralOutputInrPerM
+    );
+  }
+  return computeAiCostInr(inputTokens, outputTokens, "deepinfra", config);
 }
 
 export function paymentKindToInr(

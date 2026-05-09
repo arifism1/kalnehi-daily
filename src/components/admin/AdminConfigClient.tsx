@@ -3,20 +3,30 @@
 import { useState } from "react";
 import { Check, Pencil, RefreshCw, X } from "lucide-react";
 
-import { syncDeepInfraPricing } from "@/lib/admin/syncDeepInfraPricing";
+import { syncDeepInfraPricing, type DeepInfraSyncedModel } from "@/lib/admin/syncDeepInfraPricing";
 
-const DEEPINFRA_SYNC_KEYS = new Set(["ai_deepinfra_input_inr_per_m", "ai_deepinfra_output_inr_per_m"]);
+const DEEPINFRA_SYNC_KEYS = new Set([
+  "ai_deepinfra_input_inr_per_m",
+  "ai_deepinfra_output_inr_per_m",
+  "ai_deepinfra_mistral_input_inr_per_m",
+  "ai_deepinfra_mistral_output_inr_per_m",
+]);
 
 type Props = {
   config: Record<string, string>;
   descriptions: Record<string, string>;
   userId: string;
-  deepinfraModelSlug?: string;
 };
 
 type EditState = { key: string; value: string } | null;
 
-export function AdminConfigClient({ config, descriptions, userId, deepinfraModelSlug }: Props) {
+function formatSyncLine(s: DeepInfraSyncedModel): string {
+  const label = s.kind === "mastermind_mistral" ? "Mastermind Mistral" : "DeepInfra chat";
+  const short = s.modelSlug.includes("/") ? s.modelSlug.split("/").pop() ?? s.modelSlug : s.modelSlug;
+  return `${label} (${short}): ₹${s.inputInrPerM}/M in · ₹${s.outputInrPerM}/M out`;
+}
+
+export function AdminConfigClient({ config, descriptions, userId }: Props) {
   const [editing, setEditing] = useState<EditState>(null);
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -34,13 +44,29 @@ export function AdminConfigClient({ config, descriptions, userId, deepinfraModel
       if (!result.ok) {
         setError(`Sync failed: ${result.error}`);
       } else {
-        setLocalConfig((prev) => ({
-          ...prev,
-          ai_deepinfra_input_inr_per_m: String(result.inputInrPerM),
-          ai_deepinfra_output_inr_per_m: String(result.outputInrPerM),
-        }));
-        setSavedKeys((s) => new Set([...s, "ai_deepinfra_input_inr_per_m", "ai_deepinfra_output_inr_per_m"]));
-        setSyncStatus(`Synced ${result.modelSlug}: ₹${result.inputInrPerM}/M in, ₹${result.outputInrPerM}/M out`);
+        const next: Record<string, string> = { ...localConfig };
+        const saved = new Set(savedKeys);
+        for (const s of result.synced) {
+          if (s.kind === "deepinfra_chat") {
+            next.ai_deepinfra_input_inr_per_m = String(s.inputInrPerM);
+            next.ai_deepinfra_output_inr_per_m = String(s.outputInrPerM);
+            saved.add("ai_deepinfra_input_inr_per_m");
+            saved.add("ai_deepinfra_output_inr_per_m");
+          } else {
+            next.ai_deepinfra_mistral_input_inr_per_m = String(s.inputInrPerM);
+            next.ai_deepinfra_mistral_output_inr_per_m = String(s.outputInrPerM);
+            saved.add("ai_deepinfra_mistral_input_inr_per_m");
+            saved.add("ai_deepinfra_mistral_output_inr_per_m");
+          }
+        }
+        setLocalConfig(next);
+        setSavedKeys(saved);
+        const lines = result.synced.map((s) => formatSyncLine(s));
+        let msg = lines.join("\n");
+        if (result.partialErrors?.length) {
+          msg += `\n\nPartial errors:\n${result.partialErrors.join("\n")}`;
+        }
+        setSyncStatus(msg);
       }
     } catch {
       setError("Sync request failed. Please try again.");
@@ -87,21 +113,19 @@ export function AdminConfigClient({ config, descriptions, userId, deepinfraModel
             Changes are logged with your user ID and timestamp. All changes take effect immediately.
           </p>
         </div>
-        {deepinfraModelSlug && (
-          <button
-            type="button"
-            onClick={handleSyncDeepInfra}
-            disabled={syncing}
-            className="flex shrink-0 items-center gap-1.5 rounded-lg bg-kal-accent/15 px-3 py-2 text-xs font-medium text-kal-accent hover:bg-kal-accent/25 disabled:opacity-50"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${syncing ? "animate-spin" : ""}`} />
-            {syncing ? "Syncing…" : "Sync DeepInfra prices"}
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={handleSyncDeepInfra}
+          disabled={syncing}
+          className="flex shrink-0 items-center gap-1.5 rounded-lg bg-kal-accent/15 px-3 py-2 text-xs font-medium text-kal-accent hover:bg-kal-accent/25 disabled:opacity-50"
+        >
+          <RefreshCw className={`h-3.5 w-3.5 ${syncing ? "animate-spin" : ""}`} />
+          {syncing ? "Syncing…" : "Sync DeepInfra prices"}
+        </button>
       </div>
 
       {syncStatus && (
-        <div className="mb-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-500">
+        <div className="mb-4 whitespace-pre-wrap rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-500">
           {syncStatus}
         </div>
       )}

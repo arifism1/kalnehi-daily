@@ -350,6 +350,8 @@ export const VALID_ADMIN_CONFIG_KEYS = new Set([
   // AI model pricing (INR per 1 million tokens)
   "ai_deepinfra_input_inr_per_m",
   "ai_deepinfra_output_inr_per_m",
+  "ai_deepinfra_mistral_input_inr_per_m",
+  "ai_deepinfra_mistral_output_inr_per_m",
   "ai_groq_input_inr_per_m",
   "ai_groq_output_inr_per_m",
   "ai_usd_to_inr_rate",
