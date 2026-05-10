@@ -64,7 +64,7 @@ function SourceBadge({ source }: { source: string }) {
   const label = source === "voice"
     ? "Voice"
     : isBacklog
-      ? "Recovery"
+      ? "Backlog"
       : isLegacyPlanImport
         ? "Added from plan"
         : isRevision

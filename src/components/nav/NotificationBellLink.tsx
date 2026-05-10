@@ -3,12 +3,18 @@
 import clsx from "clsx";
 import { Bell } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { getNotificationUnreadTotal } from "@/actions/notifications";
+import {
+  ensureUserNotificationsFirstPageCached,
+  prefetchUserNotificationsList,
+} from "@/lib/userNotificationsListCache";
 import { useAuthStore } from "@/store/useAuthStore";
 
 export function NotificationBellLink({ pathname }: { pathname: string | null }) {
+  const router = useRouter();
   const userId = useAuthStore((s) => s.user?.id);
   const [total, setTotal] = useState(0);
 
@@ -35,6 +41,33 @@ export function NotificationBellLink({ pathname }: { pathname: string | null }) 
     return () => document.removeEventListener("visibilitychange", onVis);
   }, [refresh]);
 
+  const maybePrefetchList = useCallback(() => {
+    if (!userId || pathname === "/notifications") return;
+    prefetchUserNotificationsList(userId);
+  }, [userId, pathname]);
+
+  const handleBellClick = useCallback(
+    async (e: React.MouseEvent<HTMLAnchorElement>) => {
+      if (pathname === "/notifications") return;
+      // Let the browser handle new tab / modified clicks; still warm cache in the background.
+      if (
+        e.metaKey ||
+        e.ctrlKey ||
+        e.shiftKey ||
+        e.altKey ||
+        e.button !== 0
+      ) {
+        if (userId) prefetchUserNotificationsList(userId);
+        return;
+      }
+      if (!userId) return;
+      e.preventDefault();
+      await ensureUserNotificationsFirstPageCached(userId);
+      router.push("/notifications");
+    },
+    [userId, pathname, router],
+  );
+
   const label =
     total > 0 ? `Notifications, ${total} unread` : "Notifications";
   const badgeText = total > 99 ? "99+" : String(total);
@@ -42,6 +75,10 @@ export function NotificationBellLink({ pathname }: { pathname: string | null }) 
   return (
     <Link
       href="/notifications"
+      onClick={handleBellClick}
+      onPointerEnter={maybePrefetchList}
+      onPointerDown={maybePrefetchList}
+      onFocus={maybePrefetchList}
       className={clsx(
         "relative flex h-8 w-8 min-h-[32px] min-w-[32px] items-center justify-center rounded-xl border backdrop-blur-md transition-colors active:scale-[0.98]",
         pathname === "/notifications"

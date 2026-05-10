@@ -180,25 +180,55 @@ export async function ensureAutomatedNotifications(): Promise<
   }
 }
 
-export async function listUserNotifications(
-  limit = 40,
-): Promise<{ ok: true; notifications: UserNotification[] } | { ok: false; error: string }> {
+function mapUserNotificationRows(rows: unknown[]): UserNotification[] {
+  return rows.map((row) => {
+    const r = row as {
+      id: string;
+      title: string;
+      message: string;
+      kind: string;
+      created_at: string;
+      read: boolean;
+    };
+    return {
+      ...r,
+      kind: r.kind as NotificationKind,
+      feature: resolveNotificationFeature(r.title, r.kind),
+    };
+  });
+}
+
+/**
+ * Paginated list: fetches `take + 1` rows to detect `hasMore`, returns at most `take` items.
+ * Ordering is `created_at` descending; `offset` is the skip count in that order.
+ */
+export async function listUserNotificationsPage(
+  offset: number,
+  take: number,
+): Promise<
+  { ok: true; items: UserNotification[]; hasMore: boolean } | { ok: false; error: string }
+> {
   try {
+    const safeOffset = Math.max(0, Math.floor(offset));
+    const safeTake = Math.min(50, Math.max(1, Math.floor(take)));
+    const fetchSize = safeTake + 1;
+    const rangeEnd = safeOffset + fetchSize - 1;
+
     const supabase = await createSupabaseServerClient();
     const {
       data: { user },
       error: userError,
     } = await supabase.auth.getUser();
-    if (userError || !user) return { ok: true, notifications: [] };
+    if (userError || !user) return { ok: true, items: [], hasMore: false };
 
     const { data, error } = await supabase
       .from("user_notifications")
       .select("id, title, message, kind, created_at, read")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
-      .limit(Math.max(1, Math.min(100, limit)));
+      .range(safeOffset, rangeEnd);
     if (error) {
-      console.log("[listUserNotifications] query error", {
+      console.log("[listUserNotificationsPage] query error", {
         message: error.message,
         code: error.code,
         details: error.details,
@@ -207,34 +237,23 @@ export async function listUserNotifications(
       });
       if (isUserNotificationsTableMissing(error)) {
         console.log(
-          "[listUserNotifications] user_notifications not in DB yet — returning empty list (apply supabase migration)",
+          "[listUserNotificationsPage] user_notifications not in DB yet — returning empty list (apply supabase migration)",
         );
-        return { ok: true, notifications: [] };
+        return { ok: true, items: [], hasMore: false };
       }
       throw error;
     }
 
     const rows = data ?? [];
+    const hasMore = rows.length > safeTake;
+    const slice = hasMore ? rows.slice(0, safeTake) : rows;
     return {
       ok: true,
-      notifications: rows.map((row) => {
-        const r = row as {
-          id: string;
-          title: string;
-          message: string;
-          kind: string;
-          created_at: string;
-          read: boolean;
-        };
-        return {
-          ...r,
-          kind: r.kind as NotificationKind,
-          feature: resolveNotificationFeature(r.title, r.kind),
-        };
-      }),
+      items: mapUserNotificationRows(slice),
+      hasMore,
     };
   } catch (e) {
-    console.error("[listUserNotifications] failed", e);
+    console.error("[listUserNotificationsPage] failed", e);
     return { ok: false, error: formatSupabaseError(e) };
   }
 }

@@ -2,8 +2,9 @@
 
 import clsx from "clsx";
 import { format, isToday, isYesterday } from "date-fns";
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { NotificationsEmptyIllustration } from "@/components/illustrations/NotificationsEmptyIllustration";
 
@@ -11,7 +12,7 @@ import {
   clearAllUserNotifications,
   ensureAutomatedNotifications,
   listAppUpdates,
-  listUserNotifications,
+  listUserNotificationsPage,
   markAllAppUpdatesRead,
   markAllGeneralNotificationsRead,
   type AppUpdate,
@@ -24,6 +25,11 @@ import {
   NOTIFICATION_FILTER_CHIPS,
   type NotificationFilterId,
 } from "@/lib/notificationFeatureTags";
+import {
+  invalidateUserNotificationsListCache,
+  peekValidUserNotificationsList,
+  primeUserNotificationsListCache,
+} from "@/lib/userNotificationsListCache";
 import { surfaceErrorForUi, toUserFacingMessage } from "@/lib/userFacingErrors";
 import { useAuthStore } from "@/store/useAuthStore";
 
@@ -82,8 +88,25 @@ export default function NotificationsPage() {
   const userId = useAuthStore((s) => s.user?.id);
 
   // --- General tab state ---
-  const [notifications, setNotifications] = useState<UserNotification[]>([]);
-  const [loadingGeneral, setLoadingGeneral] = useState(true);
+  const [notifications, setNotifications] = useState<UserNotification[]>(() => {
+    const uid = useAuthStore.getState().user?.id;
+    if (!uid) return [];
+    const p = peekValidUserNotificationsList(uid);
+    return p.status === "hit" ? p.notifications : [];
+  });
+  const [loadingGeneral, setLoadingGeneral] = useState(() => {
+    const uid = useAuthStore.getState().user?.id;
+    if (!uid) return true;
+    return peekValidUserNotificationsList(uid).status !== "hit";
+  });
+  const [hasMoreGeneral, setHasMoreGeneral] = useState(() => {
+    const uid = useAuthStore.getState().user?.id;
+    if (!uid) return false;
+    const p = peekValidUserNotificationsList(uid);
+    return p.status === "hit" ? p.hasMore : false;
+  });
+  const [loadingMoreGeneral, setLoadingMoreGeneral] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [clearing, setClearing] = useState(false);
   const [clearError, setClearError] = useState<string | null>(null);
@@ -100,31 +123,93 @@ export default function NotificationsPage() {
   // --- Active segment ---
   const [segment, setSegment] = useState<Segment>("general");
 
+  const notificationsRef = useRef(notifications);
+  notificationsRef.current = notifications;
+  const hasMoreGeneralRef = useRef(hasMoreGeneral);
+  hasMoreGeneralRef.current = hasMoreGeneral;
+  const loadingMoreGeneralRef = useRef(loadingMoreGeneral);
+  loadingMoreGeneralRef.current = loadingMoreGeneral;
+  const loadMoreLockRef = useRef(false);
+  const loadMoreSentinelRef = useRef<HTMLDivElement | null>(null);
+
+  const loadMoreGeneral = useCallback(async () => {
+    if (
+      !userId ||
+      loadMoreLockRef.current ||
+      loadingMoreGeneralRef.current ||
+      !hasMoreGeneralRef.current
+    ) {
+      return;
+    }
+    loadMoreLockRef.current = true;
+    setLoadingMoreGeneral(true);
+    setLoadMoreError(null);
+    const offset = notificationsRef.current.length;
+    try {
+      const res = await listUserNotificationsPage(offset, 10);
+      if (!res.ok) {
+        setLoadMoreError(surfaceErrorForUi(res.error));
+        return;
+      }
+      setNotifications((prev) => {
+        const seen = new Set(prev.map((n) => n.id));
+        const merged = [...prev];
+        for (const n of res.items) {
+          if (!seen.has(n.id)) {
+            seen.add(n.id);
+            merged.push(n);
+          }
+        }
+        return merged;
+      });
+      setHasMoreGeneral(res.hasMore);
+    } catch (e) {
+      setLoadMoreError(toUserFacingMessage(e));
+    } finally {
+      loadMoreLockRef.current = false;
+      setLoadingMoreGeneral(false);
+    }
+  }, [userId]);
+
   // Load list first; do not block paint on ensureAutomatedNotifications (task scans + inserts).
   // After ensure completes, refetch once so today’s auto-inserted rows appear without a full reload.
   useEffect(() => {
     if (!userId) {
       setNotifications([]);
+      setHasMoreGeneral(false);
       setLoadingGeneral(false);
       return;
     }
     let cancelled = false;
-    setLoadingGeneral(true);
+    const primed = peekValidUserNotificationsList(userId);
+    if (primed.status === "hit") {
+      setNotifications(primed.notifications);
+      setHasMoreGeneral(primed.hasMore);
+      setLoadingGeneral(false);
+    } else {
+      setLoadingGeneral(true);
+      setNotifications([]);
+      setHasMoreGeneral(false);
+    }
     setGeneralError(null);
+    setLoadMoreError(null);
     void (async () => {
       try {
         const ensureP = ensureAutomatedNotifications();
 
-        const listRes = await listUserNotifications();
+        const listRes = await listUserNotificationsPage(0, 5);
         if (cancelled) return;
         if (!listRes.ok) {
           setGeneralError(surfaceErrorForUi(listRes.error));
           setNotifications([]);
+          setHasMoreGeneral(false);
           setLoadingGeneral(false);
           void ensureP.catch(() => {});
           return;
         }
-        setNotifications(listRes.notifications);
+        setNotifications(listRes.items);
+        setHasMoreGeneral(listRes.hasMore);
+        primeUserNotificationsListCache(userId, listRes.items, listRes.hasMore);
         setLoadingGeneral(false);
 
         const ensureRes = await ensureP;
@@ -132,19 +217,51 @@ export default function NotificationsPage() {
         if (!ensureRes.ok) {
           console.warn("[notifications] ensureAutomatedNotifications failed", ensureRes.error);
         } else {
-          const refreshRes = await listUserNotifications();
+          const refreshRes = await listUserNotificationsPage(0, 5);
           if (cancelled || !refreshRes.ok) return;
-          setNotifications(refreshRes.notifications);
+          setNotifications(refreshRes.items);
+          setHasMoreGeneral(refreshRes.hasMore);
+          primeUserNotificationsListCache(userId, refreshRes.items, refreshRes.hasMore);
         }
       } catch (e) {
         if (cancelled) return;
         setGeneralError(toUserFacingMessage(e));
         setNotifications([]);
+        setHasMoreGeneral(false);
         setLoadingGeneral(false);
       }
     })();
     return () => { cancelled = true; };
   }, [userId]);
+
+  useEffect(() => {
+    if (segment !== "general" || loadingGeneral || !hasMoreGeneral || !userId) return;
+    const el = loadMoreSentinelRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((e) => e.isIntersecting)) return;
+        if (
+          loadMoreLockRef.current ||
+          loadingMoreGeneralRef.current ||
+          !hasMoreGeneralRef.current
+        ) {
+          return;
+        }
+        void loadMoreGeneral();
+      },
+      { root: null, rootMargin: "120px", threshold: 0 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [
+    segment,
+    loadingGeneral,
+    hasMoreGeneral,
+    userId,
+    notifications.length,
+    loadMoreGeneral,
+  ]);
 
   // Lazy-load updates when the tab is first activated
   useEffect(() => {
@@ -228,7 +345,9 @@ export default function NotificationsPage() {
     const res = await clearAllUserNotifications();
     setClearing(false);
     if (!res.ok) { setClearError(surfaceErrorForUi(res.error)); return; }
+    invalidateUserNotificationsListCache();
     setNotifications([]);
+    setHasMoreGeneral(false);
   }
 
   async function handleMarkGeneralRead() {
@@ -237,7 +356,17 @@ export default function NotificationsPage() {
     const res = await markAllGeneralNotificationsRead();
     setMarkingRead(false);
     if (!res.ok) return;
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setNotifications((prev) => {
+      const next = prev.map((n) => ({ ...n, read: true }));
+      if (userId) {
+        primeUserNotificationsListCache(
+          userId,
+          next.slice(0, 5),
+          hasMoreGeneralRef.current,
+        );
+      }
+      return next;
+    });
   }
 
   async function handleMarkUpdatesRead() {
@@ -371,7 +500,9 @@ export default function NotificationsPage() {
                 const active = chip.id === filter;
                 const count =
                   chip.id === "all"
-                    ? notifications.length
+                    ? hasMoreGeneral
+                      ? `${notifications.length}+`
+                      : String(notifications.length)
                     : chip.id === "general"
                       ? featureCounts.general
                       : (featureCounts[chip.id] ?? 0);
@@ -405,6 +536,10 @@ export default function NotificationsPage() {
             </section>
           ) : null}
 
+          {loadMoreError ? (
+            <p className="text-xs text-[var(--kal-warn-text)]">{loadMoreError}</p>
+          ) : null}
+
           {/* Loading */}
           {loadingGeneral ? (
             <section className="kal-glass-panel rounded-[1.25rem] p-6 text-center sm:p-8">
@@ -424,6 +559,23 @@ export default function NotificationsPage() {
               <p className="mt-2 text-sm text-kal-muted">
                 Try a different feature tag, or choose All to see every notification.
               </p>
+              {hasMoreGeneral && notifications.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => { void loadMoreGeneral(); }}
+                  disabled={loadingMoreGeneral}
+                  className="kal-btn-ghost mx-auto mt-4 flex min-h-[44px] items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold disabled:opacity-40"
+                >
+                  {loadingMoreGeneral ? (
+                    <>
+                      <Loader2 className="h-4 w-4 shrink-0 animate-spin text-kal-accent" aria-hidden />
+                      Loading…
+                    </>
+                  ) : (
+                    "Load more"
+                  )}
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={() => { setFilter("all"); }}
@@ -488,6 +640,21 @@ export default function NotificationsPage() {
                   </section>
                 ))}
               </div>
+              {hasMoreGeneral ? (
+                <div
+                  ref={loadMoreSentinelRef}
+                  className="flex min-h-[52px] items-center justify-center gap-2 border-t border-kal-border/80 py-3"
+                >
+                  {loadingMoreGeneral ? (
+                    <>
+                      <Loader2 className="h-4 w-4 shrink-0 animate-spin text-kal-accent" aria-hidden />
+                      <span className="text-sm text-kal-muted">Loading…</span>
+                    </>
+                  ) : (
+                    <span className="text-xs text-kal-muted">Scroll for more</span>
+                  )}
+                </div>
+              ) : null}
             </div>
           )}
         </div>
