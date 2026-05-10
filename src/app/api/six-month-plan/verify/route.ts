@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Invalid request body." }, { status: 400 });
   }
 
-  const paymentId
+  const paymentId = (body.razorpay_payment_id ?? "").trim();
   const orderId = (body.razorpay_order_id ?? "").trim();
   const signature = (body.razorpay_signature ?? "").trim();
 
