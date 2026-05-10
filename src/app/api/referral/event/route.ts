@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 import { getClientIpFromRequest } from "@/lib/authRateLimit";
+import { distributedRateLimit } from "@/lib/distributedRateLimit";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 
 const ALLOWED_EVENT_TYPES = new Set([
@@ -31,30 +32,17 @@ function stripPii(obj: unknown): Record<string, unknown> {
   return safe;
 }
 
-// ── Per-IP in-memory rate limit ───────────────────────────────────────────
-// 10 requests per IP per 60 seconds.
-// Module-level Map is acceptable for this low-stakes analytics endpoint — the
-// worst outcome of a multi-instance bypass is extra DB rows, not a security risk.
-const ipWindows = new Map<string, { count: number; windowStart: number }>();
+// ── Per-IP distributed rate limit ─────────────────────────────────────────
+// 10 requests per IP per 60 seconds, shared across all Vercel instances.
 const WINDOW_MS = 60_000;
 const MAX_PER_WINDOW = 10;
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const entry = ipWindows.get(ip);
-  if (!entry || now - entry.windowStart >= WINDOW_MS) {
-    ipWindows.set(ip, { count: 1, windowStart: now });
-    return false;
-  }
-  entry.count += 1;
-  return entry.count > MAX_PER_WINDOW;
-}
 
 const OK = NextResponse.json({ success: true });
 
 export async function POST(request: NextRequest) {
   const ip = getClientIpFromRequest(request);
-  if (isRateLimited(ip)) return OK; // silently drop — never expose errors
+  const rl = await distributedRateLimit(`rl:referral_event:${ip}`, WINDOW_MS, MAX_PER_WINDOW);
+  if (!rl.allowed) return OK; // silently drop — never expose errors
 
   let body: unknown;
   try {
