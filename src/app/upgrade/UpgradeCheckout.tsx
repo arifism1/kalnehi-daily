@@ -4,7 +4,7 @@ import Script from "next/script";
 import { Check, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   activateRazorpayMonthlySubscription,
@@ -43,12 +43,45 @@ export function UpgradeCheckout() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const initialized = useAuthStore((s) => s.initialized);
-  const { refetch } = useSubscriptionAccess();
+  const { refetch, hasPaidAccess } = useSubscriptionAccess();
 
   const [months, setMonths] = useState(DEFAULT_AUTOPAY_MONTHS);
   const [busy, setBusy] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [confirmingPayment, setConfirmingPayment] = useState(false);
   const [checkoutReady, setCheckoutReady] = useState(false);
+
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollDeadlineRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const webhookPollFallbackErrorRef = useRef<string>("");
+  /** True while client polls profile after server asked to wait for webhook capture. */
+  const awaitingPaidProfileRef = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+      if (pollDeadlineRef.current) clearTimeout(pollDeadlineRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!hasPaidAccess || !awaitingPaidProfileRef.current) return;
+    awaitingPaidProfileRef.current = false;
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
+    if (pollDeadlineRef.current) {
+      clearTimeout(pollDeadlineRef.current);
+      pollDeadlineRef.current = null;
+    }
+    window.setTimeout(() => {
+      setConfirmingPayment(false);
+      setErrorMsg(null);
+      setBusy(false);
+      navigateHomeAfterPurchase();
+    }, 0);
+  }, [hasPaidAccess]);
 
   useEffect(() => {
     if (initialized && !user) {
@@ -58,6 +91,16 @@ export function UpgradeCheckout() {
 
   const handleSubscribe = useCallback(async () => {
     if (!window.Razorpay || !user) return;
+    setConfirmingPayment(false);
+    awaitingPaidProfileRef.current = false;
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
+    if (pollDeadlineRef.current) {
+      clearTimeout(pollDeadlineRef.current);
+      pollDeadlineRef.current = null;
+    }
     setBusy(true);
     setErrorMsg(null);
 
@@ -82,12 +125,40 @@ export function UpgradeCheckout() {
       },
       handler: async (response: RazorpayCheckoutResponse) => {
         setBusy(true);
+        setConfirmingPayment(false);
         const activateRes = await activateRazorpayMonthlySubscription({
           razorpay_payment_id: response.razorpay_payment_id,
           razorpay_subscription_id: response.razorpay_subscription_id,
           razorpay_signature: response.razorpay_signature,
         });
         if (!activateRes.ok) {
+          if (activateRes.suggestWebhookPoll) {
+            webhookPollFallbackErrorRef.current = activateRes.error;
+            awaitingPaidProfileRef.current = true;
+            setConfirmingPayment(true);
+            setBusy(true);
+            setErrorMsg(
+              "Confirming payment with our servers… This usually finishes in a few seconds.",
+            );
+            refetch({ silent: true });
+            if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+            pollIntervalRef.current = setInterval(() => {
+              refetch({ silent: true });
+            }, 1200);
+            if (pollDeadlineRef.current) clearTimeout(pollDeadlineRef.current);
+            pollDeadlineRef.current = setTimeout(() => {
+              if (pollIntervalRef.current) {
+                clearInterval(pollIntervalRef.current);
+                pollIntervalRef.current = null;
+              }
+              pollDeadlineRef.current = null;
+              awaitingPaidProfileRef.current = false;
+              setConfirmingPayment(false);
+              setBusy(false);
+              setErrorMsg(webhookPollFallbackErrorRef.current);
+            }, 24_000);
+            return;
+          }
           setErrorMsg(activateRes.error);
           setBusy(false);
           return;
@@ -183,13 +254,18 @@ export function UpgradeCheckout() {
                     clampAutopayMonths(Number.parseInt(e.target.value, 10) || DEFAULT_AUTOPAY_MONTHS),
                   )
                 }
-                className="rounded-xl border border-kal-border bg-white px-4 py-3 text-kal-text"
+                className="min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-input-bg px-4 py-3 text-base text-kal-text caret-kal-accent transition-colors duration-200 [color-scheme:light] focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20 dark:[color-scheme:dark]"
               />
             </label>
           </div>
 
           {errorMsg ? (
-            <p className="text-sm text-red-600" role="alert">
+            <p
+              className={
+                confirmingPayment ? "text-sm text-kal-text-secondary" : "text-sm text-red-600"
+              }
+              role={confirmingPayment ? "status" : "alert"}
+            >
               {errorMsg}
             </p>
           ) : null}
@@ -201,7 +277,11 @@ export function UpgradeCheckout() {
             className="kal-btn-accent flex min-h-[52px] w-full items-center justify-center gap-2 disabled:opacity-60"
           >
             <Check className="h-5 w-5" aria-hidden />
-            {busy ? "Opening checkout…" : "Pay with Razorpay"}
+            {busy
+              ? confirmingPayment
+                ? "Confirming payment…"
+                : "Opening checkout…"
+              : "Pay with Razorpay"}
           </button>
 
           <p className="text-center text-xs text-kal-muted">

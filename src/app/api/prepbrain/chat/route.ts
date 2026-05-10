@@ -73,6 +73,7 @@ import {
   selectToolsForIntent,
   type PrepBrainIntent,
 } from "@/lib/prepbrainIntentRouting";
+import { resolvePrepbrainExamLabels } from "@/lib/syllabusDataForUser";
 
 export const runtime = "nodejs";
 
@@ -359,6 +360,8 @@ type ChatProfileRow = Pick<
   | "bonus_ai_tokens_ledger"
   | "primary_exam"
   | "target_exam"
+  | "selected_track"
+  | "enabled_exams_in_track"
   | "cuet_domain_subjects"
   | "upsc_optional_subjects"
 >;
@@ -435,7 +438,7 @@ export async function POST(request: Request) {
     admin
       .from("user_profiles")
       .select(
-        "subscription_status,subscription_start_date,subscription_end_date,payment_grace_until,trial_started_at,ai_tokens_used,ai_tokens_month,welcome_ai_tokens_used,paid_trial_ai_tokens_used,bonus_ai_tokens_ledger,primary_exam,target_exam,cuet_domain_subjects,upsc_optional_subjects",
+        "subscription_status,subscription_start_date,subscription_end_date,payment_grace_until,trial_started_at,ai_tokens_used,ai_tokens_month,welcome_ai_tokens_used,paid_trial_ai_tokens_used,bonus_ai_tokens_ledger,primary_exam,target_exam,selected_track,enabled_exams_in_track,cuet_domain_subjects,upsc_optional_subjects",
       )
       .eq("user_id", user.id)
       .maybeSingle(),
@@ -599,6 +602,8 @@ export async function POST(request: Request) {
   const prefetchedProfile: PrepbrainPrefetchedProfile = {
     primary_exam: (profileAny.primary_exam as string | null | undefined) ?? null,
     target_exam: (profileAny.target_exam as string | null | undefined) ?? null,
+    selected_track: (profileAny.selected_track as string | null | undefined) ?? null,
+    enabled_exams_in_track: profileAny.enabled_exams_in_track ?? null,
     cuet_domain_subjects: (profileAny.cuet_domain_subjects as string | null | undefined) ?? null,
     upsc_optional_subjects: profileAny.upsc_optional_subjects ?? null,
   };
@@ -620,7 +625,7 @@ export async function POST(request: Request) {
       const syllabusToolsNeeded = selectedTools.filter((t) => syllabusToolNames.includes(t));
       let prefetchedSyllabusStats: SyllabusStats | undefined;
       if (syllabusToolsNeeded.length >= 2) {
-        const syllabusStatsCacheKey = "getSyllabusStats";
+        const syllabusStatsCacheKey = `getSyllabusStats:${resolvePrepbrainExamLabels(prefetchedProfile).join("|")}`;
         const memHit = toolCacheGet(user.id, syllabusStatsCacheKey);
         if (memHit !== undefined) {
           prefetchedSyllabusStats = memHit as SyllabusStats;

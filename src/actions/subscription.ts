@@ -93,7 +93,7 @@ type CreateSubscriptionResult =
 
 type ActivateSubscriptionResult =
   | { ok: true; subscriptionId: string }
-  | { ok: false; error: string };
+  | { ok: false; error: string; /** Client may poll profile — webhook may still activate. */ suggestWebhookPoll?: boolean };
 
 
 /** Legacy default for Razorpay fetches / upgrades when counts are missing. */
@@ -1920,6 +1920,55 @@ export async function createRazorpayMonthlySubscription(
   }
 }
 
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+/**
+ * Checkout success handler often runs before Razorpay's Payments API reports `captured`.
+ * Poll until captured, a terminal failure, or timeout (webhook may complete afterward).
+ */
+async function waitForRazorpayPaymentCaptured(
+  razorpay: InstanceType<typeof Razorpay>,
+  paymentId: string,
+): Promise<{ ok: true } | { ok: false; error: string; suggestWebhookPoll?: boolean }> {
+  const POLL_MS = 500;
+  const TIMEOUT_MS = 28_000;
+  const deadline = Date.now() + TIMEOUT_MS;
+
+  while (Date.now() < deadline) {
+    let paymentRecord: { status?: string };
+    try {
+      paymentRecord = (await razorpay.payments.fetch(paymentId)) as { status?: string };
+    } catch {
+      return {
+        ok: false,
+        error: "Unable to verify payment status.",
+        suggestWebhookPoll: true,
+      };
+    }
+    const status = paymentRecord.status ?? "";
+    if (status === "captured") return { ok: true };
+    if (status === "failed") {
+      return {
+        ok: false,
+        error:
+          "Payment failed. If money was debited, it is usually reversed automatically within a few days.",
+      };
+    }
+    await delay(POLL_MS);
+  }
+
+  return {
+    ok: false,
+    error:
+      "Payment confirmation is taking longer than usual. You can refresh this page or open Home — your plan may already be active.",
+    suggestWebhookPoll: true,
+  };
+}
+
 export async function activateRazorpayMonthlySubscription(params: {
   razorpay_payment_id: string;
   razorpay_subscription_id: string;
@@ -1974,10 +2023,13 @@ export async function activateRazorpayMonthlySubscription(params: {
     tier = tierFromRazorpayNote(sub.notes?.kalnehi_tier);
     autopayMonthsTotal = autopayMonthsFromSubscriptionEntity(sub);
 
-    // Verify the payment is actually captured before activating.
-    const paymentRecord = (await razorpay.payments.fetch(paymentId)) as { status?: string };
-    if (paymentRecord.status !== "captured") {
-      return { ok: false, error: "Payment has not been captured yet." };
+    const captureWait = await waitForRazorpayPaymentCaptured(razorpay, paymentId);
+    if (!captureWait.ok) {
+      return {
+        ok: false,
+        error: captureWait.error,
+        ...(captureWait.suggestWebhookPoll ? { suggestWebhookPoll: true as const } : {}),
+      };
     }
   } catch {
     return { ok: false, error: "Unable to verify subscription ownership." };

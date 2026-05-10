@@ -36,6 +36,50 @@ import {
   shouldKeepUpscMainsRow,
 } from "@/lib/upscMainsOptionalSubjects";
 
+/**
+ * Profile fields needed to resolve the same ordered exam list as the Syllabus Tracker
+ * ({@link loadMultiExamSyllabusDataForUser}) and Mastermind prep tools.
+ *
+ * @returns `null` when the user is on the legacy single-exam path (no track and no
+ * `enabled_exams_in_track`) — callers should use {@link loadSyllabusDataForUser} or
+ * {@link resolvePrepbrainExamLabels} instead of treating this as an empty list.
+ */
+export function resolveExamNamesToLoadFromProfile(
+  profile: {
+    primary_exam?: string | null;
+    target_exam?: string | null;
+    selected_track?: string | null;
+    enabled_exams_in_track?: unknown;
+  } | null,
+): string[] | null {
+  if (!profile) return null;
+  const trackId = profile.selected_track?.trim();
+  const dbEnabled = Array.isArray(profile.enabled_exams_in_track)
+    ? (profile.enabled_exams_in_track as unknown[]).filter(
+        (e): e is string => typeof e === "string" && Boolean(e.trim()),
+      )
+    : [];
+  const primaryExamRaw =
+    profile.target_exam?.trim() || profile.primary_exam?.trim() || "";
+  const track = trackId
+    ? (trackById(trackId) ?? trackForExamName(primaryExamRaw))
+    : trackForExamName(primaryExamRaw);
+
+  if (dbEnabled.length > 0) return dbEnabled.map((e) => e.trim());
+  if (track) return [...track.examNames];
+  return null;
+}
+
+/** Ordered exam labels for PrepBrain / Mastermind (always a concrete list, possibly empty). */
+export function resolvePrepbrainExamLabels(
+  profile: Parameters<typeof resolveExamNamesToLoadFromProfile>[0],
+): string[] {
+  const multi = resolveExamNamesToLoadFromProfile(profile);
+  if (multi !== null) return multi;
+  const single = resolveSyllabusExam(profile)?.trim();
+  return single ? [single] : [];
+}
+
 function progressRowsToMap(
   rows: { syllabus_master_id: unknown; status: unknown }[] | null,
 ): Record<string, string> {
@@ -255,27 +299,14 @@ export async function loadMultiExamSyllabusDataForUser(
   if (profileErr) throw profileErr;
 
   const trackId = profile?.selected_track?.trim();
-  const dbEnabled = Array.isArray(profile?.enabled_exams_in_track)
-    ? (profile.enabled_exams_in_track as string[]).filter((e) => e?.trim())
-    : [];
-
-  // Resolve the track object
   const primaryExamRaw =
     profile?.target_exam?.trim() || profile?.primary_exam?.trim() || null;
   const track = trackId
     ? (trackById(trackId) ?? trackForExamName(primaryExamRaw ?? ""))
     : trackForExamName(primaryExamRaw ?? "");
 
-  // Determine the ordered list of exam names to load
-  let examNamesToLoad: string[];
-  if (dbEnabled.length > 0) {
-    // Respect DB order (track order is enforced at write time)
-    examNamesToLoad = dbEnabled;
-  } else if (track) {
-    // New user just onboarded — load all exams in track
-    examNamesToLoad = track.examNames;
-  } else {
-    // Legacy user without a track: fall back to single-exam load
+  const examNamesToLoad = resolveExamNamesToLoadFromProfile(profile);
+  if (examNamesToLoad === null) {
     const singleResult = await loadSyllabusDataForUser(supabase, userId);
     return { track: null, examResults: [singleResult] };
   }

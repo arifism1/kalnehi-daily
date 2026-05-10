@@ -54,6 +54,11 @@ const TOOL_TTL_SECONDS: Record<string, number> = {
 const DEFAULT_TTL_SECONDS = 180;
 const KEY_VERSION = "v1";
 
+function ttlSecondsForTool(tool: string): number {
+  const base = tool.includes(":") ? tool.slice(0, tool.indexOf(":")) : tool;
+  return TOOL_TTL_SECONDS[base] ?? TOOL_TTL_SECONDS[tool] ?? DEFAULT_TTL_SECONDS;
+}
+
 function cacheKey(userId: string, tool: string): string {
   return `pb:${userId}:${tool}:${KEY_VERSION}`;
 }
@@ -86,7 +91,7 @@ export async function redisToolSet(
 ): Promise<void> {
   if (!redis) return;
   try {
-    const ttl = TOOL_TTL_SECONDS[tool] ?? DEFAULT_TTL_SECONDS;
+    const ttl = ttlSecondsForTool(tool);
     await redis.set(cacheKey(userId, tool), value, { ex: ttl });
   } catch {
     // Silently ignore — in-memory cache still covers the session.

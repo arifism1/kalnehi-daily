@@ -4,17 +4,17 @@ import {
   parseCuetDomainSubjectsJson,
   syllabusSubjectInCuetDomains,
 } from "@/lib/cuetDomainSubjects";
-import {
-  resolveSyllabusExam,
-  syllabusCatalogExamName,
-} from "@/lib/examProfile";
+import { syllabusCatalogExamName } from "@/lib/examProfile";
 import { fetchSyllabusMasterRowsForExam } from "@/lib/syllabusMasterQuery";
+import { resolvePrepbrainExamLabels } from "@/lib/syllabusDataForUser";
 import type { Database } from "@/types/supabase";
 
 /** Minimal profile shape used by syllabus/marks tool queries. Pass this in to avoid a redundant DB round-trip. */
 export type PrepbrainPrefetchedProfile = {
   primary_exam?: string | null;
   target_exam?: string | null;
+  selected_track?: string | null;
+  enabled_exams_in_track?: unknown;
   /** Stored as JSON in Supabase — `parseCuetDomainSubjectsJson` handles all shapes. */
   cuet_domain_subjects?: unknown;
   /** First optional paper base name for UPSC CSE Mains RPC parity. */
@@ -61,27 +61,28 @@ function computeDateStreakFromToday(completedDatesDesc: string[]): number {
   return streak;
 }
 
-export async function fetchSyllabusSubjectCompletion(
-  admin: AdminClient,
-  userId: string,
-  prefetchedProfile?: PrepbrainPrefetchedProfile,
-): Promise<{
+export type SyllabusSubjectCompletionExam = {
   exam_label: string;
   overall_completion_percent: number;
-  by_subject: Array<{ subject: string; completion_percent: number; done: number; total: number }>;
-}> {
-  let profile: PrepbrainPrefetchedProfile | null = prefetchedProfile ?? null;
-  if (!profile) {
-    const { data, error: profileErr } = await admin
-      .from("user_profiles")
-      .select("primary_exam, target_exam, cuet_domain_subjects, upsc_optional_subjects")
-      .eq("user_id", userId)
-      .maybeSingle();
-    if (profileErr) throw profileErr;
-    profile = data ?? null;
-  }
+  by_subject: Array<{
+    subject: string;
+    completion_percent: number;
+    done: number;
+    total: number;
+  }>;
+};
 
-  const examLabel = resolveSyllabusExam(profile ?? null) ?? "Exam preparation";
+/** One entry per enabled / track exam (same order as the Syllabus Tracker). */
+export type SyllabusSubjectCompletionPayload = {
+  exams: SyllabusSubjectCompletionExam[];
+};
+
+async function syllabusSubjectCompletionForExamLabel(
+  admin: AdminClient,
+  userId: string,
+  examLabel: string,
+  profile: PrepbrainPrefetchedProfile | null,
+): Promise<SyllabusSubjectCompletionExam> {
   const examKey = syllabusCatalogExamName(examLabel);
   if (!examKey) {
     return { exam_label: examLabel, overall_completion_percent: 0, by_subject: [] };
@@ -91,11 +92,7 @@ export async function fetchSyllabusSubjectCompletion(
     ? (profile.upsc_optional_subjects[0]?.trim() || null)
     : null;
 
-  const fullRows = await fetchSyllabusMasterRowsForExam(
-    admin,
-    examKey,
-    upscOptional,
-  );
+  const fullRows = await fetchSyllabusMasterRowsForExam(admin, examKey, upscOptional);
   const syllabusRows = fullRows.map((r) => ({
     id: r.id,
     subject: r.subject,
@@ -104,10 +101,10 @@ export async function fetchSyllabusSubjectCompletion(
   const domains = parseCuetDomainSubjectsJson(profile?.cuet_domain_subjects ?? null);
   const filtered =
     examKey === "CUET" && domains.length > 0
-      ? syllabusRows.filter((r) =>
-          syllabusSubjectInCuetDomains(r.subject, domains),
-        )
-      : syllabusRows;
+      ? syllabusRows.filter((r) => syllabusSubjectInCuetDomains(r.subject, domains))
+      : examKey === "CUET"
+        ? []
+        : syllabusRows;
 
   if (filtered.length === 0) {
     return { exam_label: examLabel, overall_completion_percent: 0, by_subject: [] };
@@ -154,6 +151,43 @@ export async function fetchSyllabusSubjectCompletion(
   return { exam_label: examLabel, overall_completion_percent, by_subject };
 }
 
+export async function fetchSyllabusSubjectCompletion(
+  admin: AdminClient,
+  userId: string,
+  prefetchedProfile?: PrepbrainPrefetchedProfile,
+): Promise<SyllabusSubjectCompletionPayload> {
+  let profile: PrepbrainPrefetchedProfile | null = prefetchedProfile ?? null;
+  if (!profile) {
+    const { data, error: profileErr } = await admin
+      .from("user_profiles")
+      .select(
+        "primary_exam, target_exam, selected_track, enabled_exams_in_track, cuet_domain_subjects, upsc_optional_subjects",
+      )
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (profileErr) throw profileErr;
+    profile = data ?? null;
+  }
+
+  const labels = resolvePrepbrainExamLabels(profile);
+  if (labels.length === 0) {
+    return {
+      exams: [
+        {
+          exam_label: "Exam preparation",
+          overall_completion_percent: 0,
+          by_subject: [],
+        },
+      ],
+    };
+  }
+
+  const exams = await Promise.all(
+    labels.map((label) => syllabusSubjectCompletionForExamLabel(admin, userId, label, profile)),
+  );
+  return { exams };
+}
+
 export async function getTodayPlan(admin: AdminClient, userId: string) {
   const today = new Date().toISOString().slice(0, 10);
   const { data, error } = await admin
@@ -197,11 +231,13 @@ export async function getSyllabusOverview(
   prefetchedProfile?: PrepbrainPrefetchedProfile,
   prefetchedStats?: Awaited<ReturnType<typeof fetchSyllabusSubjectCompletion>>,
 ) {
-  const stats = prefetchedStats ?? await fetchSyllabusSubjectCompletion(admin, userId, prefetchedProfile);
+  const stats = prefetchedStats ?? (await fetchSyllabusSubjectCompletion(admin, userId, prefetchedProfile));
   return {
-    exam: stats.exam_label,
-    overall_completion_percent: stats.overall_completion_percent,
-    subjects_covered: stats.by_subject.length,
+    exams: stats.exams.map((e) => ({
+      exam: e.exam_label,
+      overall_completion_percent: e.overall_completion_percent,
+      subjects_covered: e.by_subject.length,
+    })),
   };
 }
 
@@ -211,21 +247,25 @@ export async function getWeakStrongSubjects(
   prefetchedProfile?: PrepbrainPrefetchedProfile,
   prefetchedStats?: Awaited<ReturnType<typeof fetchSyllabusSubjectCompletion>>,
 ) {
-  const stats = prefetchedStats ?? await fetchSyllabusSubjectCompletion(admin, userId, prefetchedProfile);
-  const strong = stats.by_subject.slice(0, 3).map((s) => ({
-    subject: s.subject,
-    completion_percent: s.completion_percent,
-    topics_remaining: s.total - s.done,
-  }));
-  const weak = [...stats.by_subject]
-    .sort((a, b) => a.completion_percent - b.completion_percent)
-    .slice(0, 3)
-    .map((s) => ({
-      subject: s.subject,
-      completion_percent: s.completion_percent,
-      topics_remaining: s.total - s.done,
-    }));
-  return { weak_top_3: weak, strong_top_3: strong };
+  const stats = prefetchedStats ?? (await fetchSyllabusSubjectCompletion(admin, userId, prefetchedProfile));
+  return {
+    exams: stats.exams.map((e) => {
+      const strong = e.by_subject.slice(0, 3).map((s) => ({
+        subject: s.subject,
+        completion_percent: s.completion_percent,
+        topics_remaining: s.total - s.done,
+      }));
+      const weak = [...e.by_subject]
+        .sort((a, b) => a.completion_percent - b.completion_percent)
+        .slice(0, 3)
+        .map((s) => ({
+          subject: s.subject,
+          completion_percent: s.completion_percent,
+          topics_remaining: s.total - s.done,
+        }));
+      return { exam: e.exam_label, weak_top_3: weak, strong_top_3: strong };
+    }),
+  };
 }
 
 export async function getMissedTasksContext(admin: AdminClient, userId: string) {
@@ -417,30 +457,59 @@ export async function getMarksIntelligence(
   if (!profile) {
     const { data } = await admin
       .from("user_profiles")
-      .select("primary_exam, target_exam")
+      .select("primary_exam, target_exam, selected_track, enabled_exams_in_track")
       .eq("user_id", userId)
       .maybeSingle();
     profile = data ?? null;
   }
 
-  const examLabel = resolveSyllabusExam(profile ?? null) ?? null;
-  const examKey = examLabel ? syllabusCatalogExamName(examLabel) : null;
-  if (!examKey) return null;
+  const labels = resolvePrepbrainExamLabels(profile ?? null);
+  if (labels.length === 0) return null;
 
-  // Cast required until supabase types are regenerated after migration is applied.
-  const { data, error } = await (admin as unknown as { rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }> }).rpc(
-    "prepbrain_marks_intelligence",
-    { p_user_id: userId, p_exam_name: examKey, p_limit: limit },
-  );
-  if (error || !Array.isArray(data) || data.length === 0) return null;
+  const n = labels.length;
+  const perLimit = n <= 1 ? limit : Math.max(4, Math.floor(limit / n));
 
-  const marks_rows = data as MarksIntelligenceRow[];
-
-  return {
-    exam: examLabel,
-    note: "approx marks from past-year catalog; not official",
-    marks_rows,
+  const rpc = admin as unknown as {
+    rpc: (
+      fn: string,
+      args: Record<string, unknown>,
+    ) => Promise<{ data: unknown; error: unknown }>;
   };
+
+  const exams = await Promise.all(
+    labels.map(async (examLabel) => {
+      const examKey = syllabusCatalogExamName(examLabel);
+      if (!examKey) {
+        return {
+          exam: examLabel,
+          note: "approx marks from past-year catalog; not official",
+          marks_rows: [] as MarksIntelligenceRow[],
+        };
+      }
+      const { data, error } = await rpc.rpc("prepbrain_marks_intelligence", {
+        p_user_id: userId,
+        p_exam_name: examKey,
+        p_limit: perLimit,
+      });
+      if (error || !Array.isArray(data) || data.length === 0) {
+        return {
+          exam: examLabel,
+          note: "approx marks from past-year catalog; not official",
+          marks_rows: [] as MarksIntelligenceRow[],
+        };
+      }
+      return {
+        exam: examLabel,
+        note: "approx marks from past-year catalog; not official",
+        marks_rows: data as MarksIntelligenceRow[],
+      };
+    }),
+  );
+
+  const anyRows = exams.some((e) => e.marks_rows.length > 0);
+  if (!anyRows) return null;
+
+  return { exams };
 }
 
 export async function getSyllabusBacklogSnapshot(admin: AdminClient, userId: string) {

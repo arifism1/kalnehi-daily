@@ -94,58 +94,29 @@ export function formatMarksIntelligenceMarkdown(data: unknown): string {
     return "*Marks intelligence unavailable this turn.*";
   }
 
+  const examsField = data.exams;
+  if (Array.isArray(examsField) && examsField.length > 0) {
+    const blocks: string[] = [];
+    for (const rawExam of examsField) {
+      if (!isRecord(rawExam)) continue;
+      const exam = typeof rawExam.exam === "string" ? rawExam.exam : "Exam";
+      const rowsRaw = rawExam.marks_rows;
+      if (!Array.isArray(rowsRaw) || rowsRaw.length === 0) {
+        blocks.push(`### Marks intelligence (${exam})\n_No chapter rows for this exam this turn._`);
+        continue;
+      }
+      blocks.push(formatMarksIntelligenceSingleExam(exam, rowsRaw as MarksIntelligenceRow[]));
+    }
+    const joined = blocks.filter(Boolean).join("\n\n");
+    return joined.length > 0 ? joined : missingMsg;
+  }
+
   const exam = typeof data.exam === "string" ? data.exam : "Exam";
   const hide2026ForNeetUg = isNeetUgExam(exam);
 
   const rowsRaw = data.marks_rows;
   if (Array.isArray(rowsRaw) && rowsRaw.length > 0) {
-    const rows = rowsRaw as MarksIntelligenceRow[];
-
-    const sum2026 = rows.reduce((s, r) => s + (r.marks_2026 ?? 0), 0);
-    const sum2025 = rows.reduce((s, r) => s + (r.marks_2025 ?? 0), 0);
-    const sum2024 = rows.reduce((s, r) => s + (r.marks_2024 ?? 0), 0);
-    const sum2023 = rows.reduce((s, r) => s + (r.marks_2023 ?? 0), 0);
-    const derivedCeiling = hide2026ForNeetUg
-      ? sum2025 > 0
-        ? sum2025
-        : sum2024 > 0
-          ? sum2024
-          : sum2023 > 0
-            ? sum2023
-            : null
-      : sum2026 > 0
-        ? sum2026
-        : sum2025 > 0
-          ? sum2025
-          : sum2024 > 0
-            ? sum2024
-            : sum2023 > 0
-              ? sum2023
-              : null;
-    const ceiling = derivedCeiling ?? getKnownExamCeiling(exam);
-
-    const bySubj = groupMarksBySubject(rows);
-    const lines: string[] = [`### Marks intelligence (${exam})`];
-    if (ceiling !== null) {
-      lines.push(`Exam marks ceiling: ${Math.round(ceiling)} marks total`);
-    }
-    lines.push("");
-    for (const [subject, chRows] of bySubj) {
-      lines.push(`**${subject}**`);
-      for (const r of chRows) {
-        const ch = r.chapter?.trim() || "Chapter";
-        const avgMarks = computeAvgMarks(r, hide2026ForNeetUg);
-        // Available = uncovered fraction of avg marks
-        const available = Math.round(avgMarks * (1 - r.completion_pct / 100));
-        const topicsLeft = r.total_topics - r.done_topics;
-
-        lines.push(
-          `- ${ch}: ~${available} marks available (${fmtNum(r.completion_pct)}% done, ${topicsLeft} of ${fmtNum(r.total_topics)} topics remaining)`,
-        );
-      }
-      lines.push("");
-    }
-    return lines.join("\n").trimEnd();
+    return formatMarksIntelligenceSingleExam(exam, rowsRaw as MarksIntelligenceRow[]);
   }
 
   // Cached legacy shape: preformatted lines only
@@ -160,6 +131,59 @@ export function formatMarksIntelligenceMarkdown(data: unknown): string {
   }
 
   return missingMsg;
+}
+
+function formatMarksIntelligenceSingleExam(
+  exam: string,
+  rows: MarksIntelligenceRow[],
+): string {
+  const hide2026ForNeetUg = isNeetUgExam(exam);
+
+  const sum2026 = rows.reduce((s, r) => s + (r.marks_2026 ?? 0), 0);
+  const sum2025 = rows.reduce((s, r) => s + (r.marks_2025 ?? 0), 0);
+  const sum2024 = rows.reduce((s, r) => s + (r.marks_2024 ?? 0), 0);
+  const sum2023 = rows.reduce((s, r) => s + (r.marks_2023 ?? 0), 0);
+  const derivedCeiling = hide2026ForNeetUg
+    ? sum2025 > 0
+      ? sum2025
+      : sum2024 > 0
+        ? sum2024
+        : sum2023 > 0
+          ? sum2023
+          : null
+    : sum2026 > 0
+      ? sum2026
+      : sum2025 > 0
+        ? sum2025
+        : sum2024 > 0
+          ? sum2024
+          : sum2023 > 0
+            ? sum2023
+            : null;
+  const ceiling = derivedCeiling ?? getKnownExamCeiling(exam);
+
+  const bySubj = groupMarksBySubject(rows);
+  const lines: string[] = [`### Marks intelligence (${exam})`];
+  if (ceiling !== null) {
+    lines.push(`Exam marks ceiling: ${Math.round(ceiling)} marks total`);
+  }
+  lines.push("");
+  for (const [subject, chRows] of bySubj) {
+    lines.push(`**${subject}**`);
+    for (const r of chRows) {
+      const ch = r.chapter?.trim() || "Chapter";
+      const avgMarks = computeAvgMarks(r, hide2026ForNeetUg);
+      // Available = uncovered fraction of avg marks
+      const available = Math.round(avgMarks * (1 - r.completion_pct / 100));
+      const topicsLeft = r.total_topics - r.done_topics;
+
+      lines.push(
+        `- ${ch}: ~${available} marks available (${fmtNum(r.completion_pct)}% done, ${topicsLeft} of ${fmtNum(r.total_topics)} topics remaining)`,
+      );
+    }
+    lines.push("");
+  }
+  return lines.join("\n").trimEnd();
 }
 
 export function formatTodayPlanMarkdown(data: unknown): string {
@@ -207,6 +231,23 @@ export function formatSyllabusOverviewMarkdown(data: unknown): string {
   if ("error" in data && data.error === "unavailable") {
     return "*Syllabus overview unavailable.*";
   }
+
+  const multi = data.exams;
+  if (Array.isArray(multi) && multi.length > 0) {
+    const lines = ["### Syllabus snapshot"];
+    for (const raw of multi) {
+      if (!isRecord(raw)) continue;
+      const exam = typeof raw.exam === "string" ? raw.exam : "your exam";
+      const overall =
+        typeof raw.overall_completion_percent === "number" ? raw.overall_completion_percent : 0;
+      const n = typeof raw.subjects_covered === "number" ? raw.subjects_covered : 0;
+      lines.push(
+        `- **${exam}**: about **${overall}%** overall across **${n}** subjects with tracked progress.`,
+      );
+    }
+    return lines.join("\n");
+  }
+
   const exam = typeof data.exam === "string" ? data.exam : "your exam";
   const overall =
     typeof data.overall_completion_percent === "number" ? data.overall_completion_percent : 0;
@@ -231,15 +272,36 @@ export function formatWeakStrongMarkdown(data: unknown): string {
     return `${row.subject} (${pct}%${rem})`;
   }
 
+  const multiExams = data.exams;
+  if (Array.isArray(multiExams) && multiExams.length > 0) {
+    const parts: string[] = ["### Strong vs weak (by subject completion)"];
+    for (const block of multiExams) {
+      if (!isRecord(block)) continue;
+      const examName = typeof block.exam === "string" ? block.exam : "Exam";
+      const weak = block.weak_top_3;
+      const strong = block.strong_top_3;
+      const weakStr =
+        Array.isArray(weak) && weak.length > 0
+          ? weak.map((r) => fmtSubjectRow(r)).filter(Boolean).join("; ")
+          : "none listed";
+      const strongStr =
+        Array.isArray(strong) && strong.length > 0
+          ? strong.map((r) => fmtSubjectRow(r)).filter(Boolean).join("; ")
+          : "none listed";
+      parts.push(`**${examName}** — Weakest: ${weakStr}. Strongest: ${strongStr}.`);
+    }
+    return parts.join("\n");
+  }
+
   const weak = data.weak_top_3;
   const strong = data.strong_top_3;
   const weakStr =
     Array.isArray(weak) && weak.length > 0
-      ? weak.map(fmtSubjectRow).filter(Boolean).join("; ")
+      ? weak.map((r) => fmtSubjectRow(r)).filter(Boolean).join("; ")
       : "none listed";
   const strongStr =
     Array.isArray(strong) && strong.length > 0
-      ? strong.map(fmtSubjectRow).filter(Boolean).join("; ")
+      ? strong.map((r) => fmtSubjectRow(r)).filter(Boolean).join("; ")
       : "none listed";
   return `### Strong vs weak (by subject completion)\nWeakest: ${weakStr}.\nStrongest: ${strongStr}.`;
 }
