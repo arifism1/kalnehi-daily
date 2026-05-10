@@ -41,6 +41,14 @@ export type AiPrepbrainDeepinfraSplit = {
   };
 };
 
+export type AiUsageTopUserRow = {
+  userId: string;
+  prepbrainTokens: number;
+  voiceTokens: number;
+  totalTokens: number;
+  costInr: number;
+};
+
 export type AiUsageSnapshot = {
   tokensFinalizedByDay: { day: string; tokens: number; costInr: number }[];
   tokensToday: number;
@@ -64,6 +72,8 @@ export type AiUsageSnapshot = {
     liveFetchError?: string;
     cacheRevalidateSeconds: number;
   };
+  /** Top users by PrepBrain billed + voice tokens in the same snapshot window (~40d). */
+  topUsersByAiTokens: AiUsageTopUserRow[];
 };
 
 export async function getAiUsageSnapshot(): Promise<AiUsageSnapshot | null> {
@@ -195,6 +205,17 @@ export async function getAiUsageSnapshot(): Promise<AiUsageSnapshot | null> {
     },
   };
 
+  type UserAgg = { prepbrainTokens: number; voiceTokens: number; costInr: number };
+  const userAgg = new Map<string, UserAgg>();
+  const bumpUser = (uid: string) => {
+    let a = userAgg.get(uid);
+    if (!a) {
+      a = { prepbrainTokens: 0, voiceTokens: 0, costInr: 0 };
+      userAgg.set(uid, a);
+    }
+    return a;
+  };
+
   const addDeepinfraSplit = (
     target: AiPrepbrainDeepinfraWindow,
     r: PrepRow,
@@ -219,6 +240,10 @@ export async function getAiUsageSnapshot(): Promise<AiUsageSnapshot | null> {
     const outputTok = r.output_tokens ?? 0;
     const provider = r.provider ?? "deepinfra";
     const rowCost = computePrepbrainReservationCostInr(inputTok, outputTok, provider, r.model, pricing);
+
+    const uAgg = bumpUser(r.user_id);
+    uAgg.prepbrainTokens += r.estimate;
+    uAgg.costInr += rowCost;
 
     const existing = byDay.get(k) ?? { tokens: 0, costInr: 0 };
     byDay.set(k, { tokens: existing.tokens + r.estimate, costInr: existing.costInr + rowCost });
@@ -256,6 +281,10 @@ export async function getAiUsageSnapshot(): Promise<AiUsageSnapshot | null> {
     const k = dateKeyIST(new Date(v.created_at));
     const voiceTokens = v.input_tokens + v.output_tokens;
     const rowCost = computeAiCostInr(v.input_tokens, v.output_tokens, "groq", pricing);
+
+    const uAgg = bumpUser(v.user_id);
+    uAgg.voiceTokens += voiceTokens;
+    uAgg.costInr += rowCost;
 
     const existing = byDay.get(k) ?? { tokens: 0, costInr: 0 };
     byDay.set(k, { tokens: existing.tokens + voiceTokens, costInr: existing.costInr + rowCost });
@@ -295,6 +324,18 @@ export async function getAiUsageSnapshot(): Promise<AiUsageSnapshot | null> {
   const trialHits = trialUsers.filter((p) => (p.welcome_ai_tokens_used ?? 0) >= 55_000).length;
   const trialTokenHitRatePct = trialUsers.length > 0 ? (trialHits / trialUsers.length) * 100 : 0;
 
+  const topUsersByAiTokens: AiUsageTopUserRow[] = [...userAgg.entries()]
+    .map(([userId, a]) => ({
+      userId,
+      prepbrainTokens: a.prepbrainTokens,
+      voiceTokens: a.voiceTokens,
+      totalTokens: a.prepbrainTokens + a.voiceTokens,
+      costInr: a.costInr,
+    }))
+    .filter((r) => r.totalTokens > 0)
+    .sort((a, b) => b.totalTokens - a.totalTokens)
+    .slice(0, 30);
+
   return {
     tokensFinalizedByDay: [...byDay.entries()]
       .sort((a, b) => a[0].localeCompare(b[0]))
@@ -313,5 +354,6 @@ export async function getAiUsageSnapshot(): Promise<AiUsageSnapshot | null> {
     providerBreakdownToday: providerToday,
     prepbrainDeepinfraSplit,
     mastermindMistralPricing,
+    topUsersByAiTokens,
   };
 }

@@ -8,6 +8,114 @@ import { adminSegmentLabelFromProfile } from "@/lib/profileTrackSegment";
 
 const PER_PAGE = 50;
 
+function formatProfileNumber(value: unknown): string {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value.toLocaleString("en-IN");
+  }
+  return "—";
+}
+
+function formatProfileString(value: unknown): string {
+  if (typeof value === "string" && value.trim()) return value;
+  return "—";
+}
+
+function SubscriptionUsagePanel({ profile }: { profile: Record<string, unknown> | null }) {
+  if (!profile) {
+    return (
+      <div className="rounded-lg border border-kal-border/60 bg-kal-card/30 px-3 py-2.5 text-sm text-kal-muted">
+        No profile row.
+      </div>
+    );
+  }
+
+  const rows: { label: string; value: string }[] = [
+    { label: "Subscription", value: formatProfileString(profile.subscription_status) },
+    { label: "Plan", value: formatProfileString(profile.subscription_plan) },
+    { label: "Tier", value: formatProfileString(profile.subscription_tier) },
+    { label: "Ends", value: formatProfileString(profile.subscription_end_date) },
+    { label: "Payment grace until", value: formatProfileString(profile.payment_grace_until) },
+    { label: "Usage reset date", value: formatProfileString(profile.usage_reset_date) },
+    { label: "Photo scans (this month)", value: formatProfileNumber(profile.photo_scans_used_this_month) },
+    { label: "Voice minutes (this month)", value: formatProfileNumber(profile.voice_minutes_used_this_month) },
+    { label: "Welcome AI tokens used", value: formatProfileNumber(profile.welcome_ai_tokens_used) },
+    { label: "Monthly AI tokens used", value: formatProfileNumber(profile.ai_tokens_used) },
+    { label: "Bonus photo scans", value: formatProfileNumber(profile.bonus_photo_scans) },
+    { label: "Bonus voice minutes", value: formatProfileNumber(profile.bonus_voice_minutes) },
+    { label: "Bonus AI tokens", value: formatProfileNumber(profile.bonus_ai_tokens) },
+    { label: "Trial photo scans used", value: formatProfileNumber(profile.trial_photo_scans_used) },
+    { label: "Trial voice seconds used", value: formatProfileNumber(profile.trial_voice_seconds_used) },
+    { label: "Has used free trial", value: typeof profile.has_used_free_trial === "boolean" ? (profile.has_used_free_trial ? "Yes" : "No") : "—" },
+    { label: "Has had trial", value: typeof profile.has_had_trial === "boolean" ? (profile.has_had_trial ? "Yes" : "No") : "—" },
+  ];
+
+  return (
+    <div className="rounded-lg border border-kal-border/60 bg-kal-card/30 px-3 py-2.5 text-sm">
+      <p className="text-[10px] font-bold uppercase text-kal-muted">Subscription / quota (profile)</p>
+      <dl className="mt-2 grid gap-x-4 gap-y-2 sm:grid-cols-2 text-xs">
+        {rows.map((r) => (
+          <div key={r.label}>
+            <dt className="text-kal-muted">{r.label}</dt>
+            <dd className="font-medium text-kal-text">{r.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
+
+function AiProviderUsagePanel({
+  ai,
+}: {
+  ai: UserLookupBundle["aiUsage"];
+}) {
+  const fmt = (n: number) => n.toLocaleString("en-IN");
+  return (
+    <div className="rounded-lg border border-kal-border/60 bg-kal-card/30 px-3 py-2.5 text-sm">
+      <p className="text-[10px] font-bold uppercase text-kal-muted">AI provider usage</p>
+      <p className="mt-1 text-[11px] text-kal-muted">
+        PrepBrain = billed <span className="font-mono">estimate</span> on finalized reservations; voice = Groq in+out
+        tokens. Same ~40d rolling window as Admin → AI usage.
+      </p>
+      <div className="mt-2 overflow-x-auto">
+        <table className="w-full min-w-[320px] border-collapse text-left text-xs">
+          <thead>
+            <tr className="border-b border-kal-border text-[10px] font-bold uppercase tracking-wider text-kal-muted">
+              <th className="py-1.5 pr-2">Source</th>
+              <th className="py-1.5 pr-2">7d</th>
+              <th className="py-1.5 pr-2">30d</th>
+              <th className="py-1.5">Window</th>
+            </tr>
+          </thead>
+          <tbody className="text-kal-text">
+            <tr className="border-b border-kal-border/50">
+              <td className="py-1.5 pr-2 font-medium">PrepBrain billed tok</td>
+              <td className="py-1.5 pr-2 tabular-nums">{fmt(ai.prepbrainBilledTokens7d)}</td>
+              <td className="py-1.5 pr-2 tabular-nums">{fmt(ai.prepbrainBilledTokens30d)}</td>
+              <td className="py-1.5 tabular-nums">{fmt(ai.prepbrainBilledTokensWindow)}</td>
+            </tr>
+            <tr className="border-b border-kal-border/50">
+              <td className="py-1.5 pr-2 font-medium">Voice tokens</td>
+              <td className="py-1.5 pr-2 tabular-nums">{fmt(ai.voiceTokens7d)}</td>
+              <td className="py-1.5 pr-2 tabular-nums">{fmt(ai.voiceTokens30d)}</td>
+              <td className="py-1.5 tabular-nums">{fmt(ai.voiceTokensWindow)}</td>
+            </tr>
+            <tr>
+              <td className="py-1.5 pr-2 font-medium text-kal-muted">Counts (30d)</td>
+              <td className="py-1.5 pr-2 text-kal-muted" colSpan={2}>
+                PrepBrain reservations: <span className="tabular-nums text-kal-text">{ai.reservationCount30d}</span>
+              </td>
+              <td className="py-1.5 text-kal-muted">
+                Voice calls: <span className="tabular-nums text-kal-text">{ai.voiceCallCount30d}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 function profileTrackSummary(profile: Record<string, unknown> | null): string {
   if (!profile) return "—";
   const label = adminSegmentLabelFromProfile({
@@ -245,6 +353,9 @@ function UserCard({
           {profileTrackSummary(u.profile)}
         </p>
       </div>
+
+      <SubscriptionUsagePanel profile={u.profile} />
+      <AiProviderUsagePanel ai={u.aiUsage} />
 
       <div className="grid gap-3 md:grid-cols-2 text-sm">
         <div>

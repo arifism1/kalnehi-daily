@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Area, AreaChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 
 import type { AiPrepbrainDeepinfraWindow, AiUsageSnapshot } from "@/lib/admin/queries/aiUsageQueries";
@@ -67,6 +68,53 @@ export function AdminAiUsageClient({ data }: { data: AiUsageSnapshot }) {
           label="Avg tokens / trial user (window)"
           value={Math.round(data.avgTokensPerTrialUser).toLocaleString("en-IN")}
         />
+      </div>
+
+      <div className="rounded-2xl border border-kal-border bg-kal-card/40 p-4">
+        <h2 className="mb-1 text-sm font-semibold text-kal-text">Top users by AI tokens</h2>
+        <p className="mb-3 text-xs text-kal-muted">
+          PrepBrain billed + voice (same ~40d window as charts above). Open user lookup for detail.
+        </p>
+        {data.topUsersByAiTokens.length === 0 ? (
+          <p className="text-xs text-kal-muted">No usage in this window.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[480px] border-collapse text-left text-sm">
+              <thead>
+                <tr className="border-b border-kal-border text-[10px] font-bold uppercase tracking-wider text-kal-muted">
+                  <th className="py-2 pr-2">#</th>
+                  <th className="py-2 pr-2">User</th>
+                  <th className="py-2 pr-2 text-right">PrepBrain</th>
+                  <th className="py-2 pr-2 text-right">Voice</th>
+                  <th className="py-2 pr-2 text-right">Total</th>
+                  <th className="py-2 text-right">Est. ₹</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.topUsersByAiTokens.map((row, idx) => (
+                  <tr key={row.userId} className="border-b border-kal-border/50 align-middle last:border-0">
+                    <td className="py-2 pr-2 text-kal-muted tabular-nums">{idx + 1}</td>
+                    <td className="py-2 pr-2">
+                      <Link
+                        href={`/admin/users?q=${encodeURIComponent(row.userId)}`}
+                        className="font-mono text-xs text-kal-accent hover:underline"
+                        title={row.userId}
+                      >
+                        {row.userId.slice(0, 8)}…
+                      </Link>
+                    </td>
+                    <td className="py-2 pr-2 text-right tabular-nums">{row.prepbrainTokens.toLocaleString("en-IN")}</td>
+                    <td className="py-2 pr-2 text-right tabular-nums">{row.voiceTokens.toLocaleString("en-IN")}</td>
+                    <td className="py-2 pr-2 text-right font-medium tabular-nums text-kal-text">
+                      {row.totalTokens.toLocaleString("en-IN")}
+                    </td>
+                    <td className="py-2 text-right tabular-nums text-kal-muted">₹{row.costInr.toFixed(0)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <div className="rounded-2xl border border-kal-border bg-kal-card/40 p-4">

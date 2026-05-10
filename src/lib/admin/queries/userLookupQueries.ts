@@ -1,5 +1,6 @@
 import type { User } from "@supabase/supabase-js";
 
+import { getUserAiUsageRollups, type UserAiUsageRollups } from "@/lib/admin/queries/userAiUsageQueries";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 import { adminSegmentLabelFromProfile } from "@/lib/profileTrackSegment";
 
@@ -82,6 +83,7 @@ export type UserLookupBundle = {
   payments: { kind: string; created_at: string; razorpay_payment_id: string }[];
   prepbrainConversations: number;
   supportNotes: { note: string; created_at: string }[];
+  aiUsage: UserAiUsageRollups;
 };
 
 async function findAuthUserIdByEmail(
@@ -154,27 +156,34 @@ async function loadBundleForUserId(
   userId: string,
   authUser: { email?: string | null; phone?: string | null; created_at?: string; last_sign_in_at?: string },
 ): Promise<UserLookupBundle | null> {
-  const [{ data: profile }, { data: waitlist }, { data: payments }, convRes, { data: notes }] =
-    await Promise.all([
-      admin.from("user_profiles").select("*").eq("user_id", userId).maybeSingle(),
-      admin.from("waitlist_entries").select("*").eq("user_id", userId).maybeSingle(),
-      admin
-        .from("razorpay_processed_payments")
-        .select("kind, created_at, razorpay_payment_id")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(50),
-      admin
-        .from("prepbrain_conversations")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", userId),
-      admin
-        .from("admin_user_support_notes")
-        .select("note, created_at")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(30),
-    ]);
+  const [
+    { data: profile },
+    { data: waitlist },
+    { data: payments },
+    convRes,
+    { data: notes },
+    aiUsage,
+  ] = await Promise.all([
+    admin.from("user_profiles").select("*").eq("user_id", userId).maybeSingle(),
+    admin.from("waitlist_entries").select("*").eq("user_id", userId).maybeSingle(),
+    admin
+      .from("razorpay_processed_payments")
+      .select("kind, created_at, razorpay_payment_id")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(50),
+    admin
+      .from("prepbrain_conversations")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId),
+    admin
+      .from("admin_user_support_notes")
+      .select("note, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(30),
+    getUserAiUsageRollups(userId),
+  ]);
 
   return {
     userId,
@@ -187,5 +196,6 @@ async function loadBundleForUserId(
     payments: (payments ?? []) as UserLookupBundle["payments"],
     prepbrainConversations: convRes.count ?? 0,
     supportNotes: (notes ?? []) as UserLookupBundle["supportNotes"],
+    aiUsage,
   };
 }
