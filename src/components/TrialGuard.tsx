@@ -43,18 +43,18 @@ export function TrialGuard({ children }: TrialGuardProps) {
                   id="trial-guard-title"
                   className="font-display text-lg font-semibold leading-snug text-kal-text"
                 >
-                  Initial Calibration Complete
+                  Your trial has ended
                 </h2>
-                <p id="trial-guard-desc" className="text-sm leading-relaxed text-kal-text">
-                  Your welcome trial period has ended. To keep your study logs synced and maintain your
-                  daily preparation streak, please update your access status.
+                <p id="trial-guard-desc" className="text-sm leading-relaxed text-kal-text-secondary">
+                  To keep using Kalnehi — study logs, streak, and the rest of the app — subscribe to the{" "}
+                  <span className="font-semibold text-kal-text">Smart Plan</span>.
                 </p>
                 <button
                   type="button"
                   onClick={() => router.push("/upgrade")}
                   className="kal-btn-accent min-h-[48px] w-full max-w-xs"
                 >
-                  Manage Account Status
+                  Upgrade to Smart Plan
                 </button>
               </div>
             </div>

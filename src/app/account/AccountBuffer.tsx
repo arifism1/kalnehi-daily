@@ -33,7 +33,7 @@ export function AccountBuffer() {
   const statusLabel = useMemo(() => {
     if (subscriptionLoading && user) return "Loading…";
     if (hasPaidAccess) return "Active Plan";
-    if (welcomeTrialExpiredNoPay) return "Calibration Concluded";
+    if (welcomeTrialExpiredNoPay) return "Trial ended — upgrade required";
     return "Trial";
   }, [hasPaidAccess, subscriptionLoading, user, welcomeTrialExpiredNoPay]);
 
