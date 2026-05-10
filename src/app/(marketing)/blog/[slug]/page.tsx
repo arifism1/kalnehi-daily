@@ -39,6 +39,21 @@ function renderMarkdown(content: string): React.ReactNode[] {
   const elements: React.ReactNode[] = [];
   let i = 0;
 
+  // Escape HTML entities before any inline rendering to prevent XSS.
+  // The bold replacement below is the only HTML we intentionally allow.
+  function escapeHtml(s: string): string {
+    return s
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function renderInline(s: string): string {
+    return escapeHtml(s).replace(/\*\*(.*?)\*\*/g, '<strong class="text-kal-text">$1</strong>');
+  }
+
   while (i < lines.length) {
     const line = lines[i];
 
@@ -83,7 +98,7 @@ function renderMarkdown(content: string): React.ReactNode[] {
         <ul key={`ul-${i}`} className="mt-3 space-y-1.5 pl-4">
           {items.map((item, j) => (
             <li key={j} className="text-sm text-kal-text-secondary leading-relaxed list-disc"
-              dangerouslySetInnerHTML={{ __html: item.replace(/\*\*(.*?)\*\*/g, '<strong class="text-kal-text">$1</strong>') }}
+              dangerouslySetInnerHTML={{ __html: renderInline(item) }}
             />
           ))}
         </ul>
@@ -99,7 +114,7 @@ function renderMarkdown(content: string): React.ReactNode[] {
         <ol key={`ol-${i}`} className="mt-3 space-y-1.5 pl-4">
           {items.map((item, j) => (
             <li key={j} className="text-sm text-kal-text-secondary leading-relaxed list-decimal"
-              dangerouslySetInnerHTML={{ __html: item.replace(/\*\*(.*?)\*\*/g, '<strong class="text-kal-text">$1</strong>') }}
+              dangerouslySetInnerHTML={{ __html: renderInline(item) }}
             />
           ))}
         </ol>
@@ -108,7 +123,7 @@ function renderMarkdown(content: string): React.ReactNode[] {
     } else if (line.trim() !== "") {
       elements.push(
         <p key={i} className="mt-3 text-sm leading-relaxed text-kal-text-secondary"
-          dangerouslySetInnerHTML={{ __html: line.replace(/\*\*(.*?)\*\*/g, '<strong class="text-kal-text">$1</strong>') }}
+          dangerouslySetInnerHTML={{ __html: renderInline(line) }}
         />
       );
     }
