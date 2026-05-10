@@ -50,6 +50,21 @@ import {
 } from "@/lib/autopayMonths";
 import { RAZORPAY_PAYMENT_OR_SUB_ID_RE } from "@/lib/razorpayIds";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { headers } from "next/headers";
+import { SITE_URL } from "@/lib/site";
+
+/**
+ * Defense-in-depth CSRF check for payment Server Actions.
+ * Mirrors assertSameOrigin() but throws (which Next.js converts to an error boundary)
+ * since Server Actions cannot return a Response directly.
+ * Requests without an Origin header (non-browser callers) are passed through.
+ */
+function assertServerActionOrigin(): void {
+  const origin = headers().get("origin");
+  if (!origin) return;
+  const allowed = new Set([SITE_URL, "http://localhost:3000", "http://localhost:3001"]);
+  if (!allowed.has(origin)) throw new Error("Forbidden.");
+}
 
 type SubscriptionStatus = "trial" | "active" | "expired" | "cancelled";
 
@@ -678,6 +693,7 @@ async function mergeResubscribeBonusesAfterMonthlyActivate(userId: string) {
 export async function cancelSubscription(): Promise<
   { ok: true } | { ok: false; error: string }
 > {
+  assertServerActionOrigin();
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   const userId = user?.id ?? null;
@@ -1640,6 +1656,7 @@ export async function verifyExtraCreditsPayment(params: {
   razorpay_order_id: string;
   razorpay_signature: string;
 }): Promise<VerifyExtraCreditsResult> {
+  assertServerActionOrigin();
   const userId = await getAuthedUserId();
   if (!userId) return { ok: false, error: "Session expired. Please sign in again." };
 
@@ -1744,6 +1761,7 @@ export async function createRazorpayMonthlySubscription(
   tier: SubscriptionTier = "pro",
   autopayMonths?: unknown,
 ): Promise<CreateSubscriptionResult> {
+  assertServerActionOrigin();
   if (!isCheckoutTier(tier)) {
     return { ok: false, error: "Invalid subscription tier." };
   }
@@ -1907,6 +1925,7 @@ export async function activateRazorpayMonthlySubscription(params: {
   razorpay_subscription_id: string;
   razorpay_signature: string;
 }): Promise<ActivateSubscriptionResult> {
+  assertServerActionOrigin();
   const userId = await getAuthedUserId();
   if (!userId) return { ok: false, error: "Session expired. Please sign in again." };
 

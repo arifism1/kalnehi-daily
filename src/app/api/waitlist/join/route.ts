@@ -49,7 +49,11 @@ export async function POST(req: NextRequest) {
   const email = (body.email ?? "").slice(0, MAX_EMAIL).trim().toLowerCase();
   const phone = normalizePhone((body.phone ?? "").slice(0, MAX_PHONE));
   const exam = (body.exam ?? "").slice(0, MAX_EXAM).trim();
-  const channel = (body.notificationChannel ?? "email") as "email" | "push" | "both";
+  const rawChannel = body.notificationChannel ?? "email";
+  if (!["email", "push", "both"].includes(rawChannel)) {
+    return NextResponse.json({ ok: false, error: "Invalid notification channel." }, { status: 400 });
+  }
+  const channel = rawChannel as "email" | "push" | "both";
 
   if (!fullName) {
     return NextResponse.json({ ok: false, error: "Full name is required." }, { status: 400 });

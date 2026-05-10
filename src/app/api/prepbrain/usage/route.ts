@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { isFreeTrialWindowActive } from "@/lib/freeTrial";
+import { isFreeTrialWindowActive, isPaidSubscriptionAccess } from "@/lib/freeTrial";
 import { buildPrepbrainUsageDisplayPayload } from "@/lib/prepbrainTokenAccounting";
 import { prepbrainMonthKeyFromSubscriptionStart } from "@/lib/subscriptionUsage";
 import {
@@ -22,29 +22,13 @@ type UsageProfileRow = Pick<
   | "subscription_start_date"
   | "subscription_end_date"
   | "trial_started_at"
+  | "payment_grace_until"
   | "ai_tokens_used"
   | "ai_tokens_month"
   | "welcome_ai_tokens_used"
   | "paid_trial_ai_tokens_used"
   | "bonus_ai_tokens_ledger"
 >;
-
-function isCurrentlyPaid(
-  status: string | null,
-  endDate: string | null,
-): boolean {
-  if (
-    status !== "trial" &&
-    status !== "active" &&
-    status !== "cancelled"
-  ) {
-    return false;
-  }
-  if (!endDate) return false;
-  const end = new Date(endDate);
-  if (Number.isNaN(end.getTime())) return false;
-  return end.getTime() > Date.now();
-}
 
 /**
  * GET /api/prepbrain/usage — token usage for welcome trial, paid trial, or monthly Pro.
@@ -72,7 +56,7 @@ export async function GET() {
   const { data: profileRaw, error } = await admin
     .from("user_profiles")
     .select(
-      "subscription_status,subscription_start_date,subscription_end_date,trial_started_at,ai_tokens_used,ai_tokens_month,welcome_ai_tokens_used,paid_trial_ai_tokens_used,bonus_ai_tokens_ledger",
+      "subscription_status,subscription_start_date,subscription_end_date,trial_started_at,payment_grace_until,ai_tokens_used,ai_tokens_month,welcome_ai_tokens_used,paid_trial_ai_tokens_used,bonus_ai_tokens_ledger",
     )
     .eq("user_id", user.id)
     .maybeSingle();
@@ -99,9 +83,10 @@ export async function GET() {
     );
   }
 
-  const paid = isCurrentlyPaid(
+  const paid = isPaidSubscriptionAccess(
     profile.subscription_status ?? null,
     profile.subscription_end_date ?? null,
+    profile.payment_grace_until ?? null,
   );
   const trialStarted =
     typeof profile.trial_started_at === "string" ? profile.trial_started_at : null;

@@ -7,6 +7,7 @@ import {
   otpVerifyBucketKey,
   retryMinutesFromResult,
 } from "@/lib/authRateLimit";
+import { assertSameOrigin } from "@/lib/assertSameOrigin";
 import { formatSupabaseError } from "@/lib/supabase";
 import { createSupabaseRouteHandlerClient } from "@/lib/supabase/routeHandler";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
@@ -29,6 +30,8 @@ const OTP_TYPES = new Set<EmailOtpType>([
 ]);
 
 export async function POST(request: NextRequest) {
+  const denied = assertSameOrigin(request);
+  if (denied) return denied;
   const svc = getSupabaseServiceRoleClient();
   if (!svc) {
     return NextResponse.json(

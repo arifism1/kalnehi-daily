@@ -12,6 +12,7 @@ import { revalidateTag } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 import { assertSameOrigin } from "@/lib/assertSameOrigin";
+import { distributedRateLimit } from "@/lib/distributedRateLimit";
 import { DAILY_CAP_STATUS_TAG } from "@/lib/daily-trial-cap";
 
 export const runtime = "nodejs";
@@ -42,6 +43,14 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ ok: false, error: "Session expired." }, { status: 401 });
+  }
+
+  const rl = await distributedRateLimit(`rl:waitlist_skip_verify:${user.id}`, 60 * 60 * 1000, 10);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { ok: false, error: "Too many requests. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) } },
+    );
   }
 
   let body: { razorpay_payment_id?: string; razorpay_order_id?: string; razorpay_signature?: string };

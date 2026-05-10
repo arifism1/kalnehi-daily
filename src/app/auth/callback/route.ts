@@ -40,7 +40,8 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) {
-    return errRedirect(error.message);
+    console.error("[auth/callback] exchangeCodeForSession failed:", error.message);
+    return errRedirect("Authentication failed. Please try again.");
   }
 
   const createdMs =

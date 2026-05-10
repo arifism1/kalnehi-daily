@@ -10,6 +10,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 import { assertSameOrigin } from "@/lib/assertSameOrigin";
+import { distributedRateLimit } from "@/lib/distributedRateLimit";
 
 export const runtime = "nodejs";
 
@@ -29,6 +30,14 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ ok: false, error: "Please sign in to skip the waitlist." }, { status: 401 });
+  }
+
+  const rl = await distributedRateLimit(`rl:waitlist_skip:${user.id}`, 60 * 60 * 1000, 5);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { ok: false, error: "Too many requests. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) } },
+    );
   }
 
   const admin = getSupabaseServiceRoleClient();

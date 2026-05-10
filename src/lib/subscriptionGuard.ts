@@ -7,7 +7,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/types/supabase";
-import { isFreeTrialWindowActive } from "@/lib/freeTrial";
+import { isFreeTrialWindowActive, isPaidSubscriptionAccess } from "@/lib/freeTrial";
 
 type AccessResult = { ok: true } | { ok: false; error: string };
 
@@ -25,7 +25,7 @@ export async function requirePaidOrTrialAccess(
 ): Promise<AccessResult> {
   const { data, error } = await supabase
     .from("user_profiles")
-    .select("subscription_status, subscription_end_date, trial_started_at")
+    .select("subscription_status, subscription_end_date, trial_started_at, payment_grace_until")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -41,14 +41,9 @@ export async function requirePaidOrTrialAccess(
   const status = data.subscription_status as string | null;
   const endDate = data.subscription_end_date as string | null;
   const trialStartedAt = data.trial_started_at as string | null;
+  const paymentGraceUntil = (data as { payment_grace_until?: string | null }).payment_grace_until ?? null;
 
-  // Check paid access: status must be trial/active/cancelled AND end_date in the future.
-  const isPaid =
-    (status === "trial" || status === "active" || status === "cancelled") &&
-    endDate != null &&
-    new Date(endDate).getTime() > Date.now();
-
-  if (isPaid) return { ok: true };
+  if (isPaidSubscriptionAccess(status, endDate, paymentGraceUntil)) return { ok: true };
 
   // Check free trial window.
   if (isFreeTrialWindowActive(trialStartedAt)) return { ok: true };

@@ -6,6 +6,7 @@ import {
   getClientIpFromRequest,
   retryMinutesFromResult,
 } from "@/lib/authRateLimit";
+import { assertSameOrigin } from "@/lib/assertSameOrigin";
 import { formatSupabaseError } from "@/lib/supabase";
 import { createSupabaseRouteHandlerClient } from "@/lib/supabase/routeHandler";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
@@ -17,6 +18,8 @@ function authCallbackUrl(request: NextRequest, nextPath: string): string {
 }
 
 export async function POST(request: NextRequest) {
+  const denied = assertSameOrigin(request);
+  if (denied) return denied;
   const svc = getSupabaseServiceRoleClient();
   if (!svc) {
     return NextResponse.json(
@@ -56,6 +59,12 @@ export async function POST(request: NextRequest) {
     );
   }
   if (check.allowed === false) {
+    if (check.error === "invalid email" || check.error === "invalid ip") {
+      return NextResponse.json(
+        { error: "Invalid request.", code: "invalid_input" },
+        { status: 400 },
+      );
+    }
     const m = retryMinutesFromResult(check);
     return NextResponse.json(
       {
