@@ -49,13 +49,15 @@ export function TrialGuard({ children }: TrialGuardProps) {
                   To keep using Kalnehi — study logs, streak, and the rest of the app — subscribe to the{" "}
                   <span className="font-semibold text-kal-text">Smart Plan</span>.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => router.push("/upgrade")}
-                  className="kal-btn-accent min-h-[48px] w-full max-w-xs"
-                >
-                  Upgrade to Smart Plan
-                </button>
+                <div className="mx-auto w-full max-w-xs">
+                  <button
+                    type="button"
+                    onClick={() => router.push("/upgrade")}
+                    className="kal-btn-accent min-h-[48px] w-full"
+                  >
+                    Upgrade to Smart Plan
+                  </button>
+                </div>
               </div>
             </div>
           </>
