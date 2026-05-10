@@ -366,6 +366,6 @@ export async function GET(req: NextRequest) {
         istHour: istHour(),
       }),
     );
-    return NextResponse.json({ error: "Cron job failed", message }, { status: 500 });
+    return NextResponse.json({ error: "Cron job failed." }, { status: 500 });
   }
 }

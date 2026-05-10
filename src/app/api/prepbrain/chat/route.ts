@@ -429,7 +429,7 @@ export async function POST(request: Request) {
       "[prepbrain/chat] profile read failed",
       profileErr.code,
       profileErr.message,
-      profileErr.details,
+      ...(process.env.NODE_ENV !== "production" ? [profileErr.details] : []),
     );
     return NextResponse.json(
       { ok: false, error: "Could not load your account. Please try again." },
@@ -841,22 +841,24 @@ ${fullMessages
 
         const conversationOut = persistResult.conversationId;
 
-        console.log(
-          "[prepbrain/chat] model=%s intent=%s depth=%d max_completion_tokens=%d tools=%s cache=%s redis=%s prompt_tokens=%d completion_tokens=%d total_tokens=%d tool_chars=%d tool_est_tokens=%d summary=%s",
-          u.modelUsed,
-          effectiveIntent,
-          depth,
-          maxCompletionTokens,
-          selectedTools.join(","),
-          selectedTools.map((t) => toolCacheSources[t] ?? "?").join(","),
-          isRedisConfigured() ? "yes" : "no",
-          groqPromptTokens,
-          groqCompletionTokens,
-          groqTotalTokens,
-          toolDataChars,
-          toolDataEstTokens,
-          conversationSummary.text ? "yes" : "no",
-        );
+        if (process.env.NODE_ENV !== "production") {
+          console.log(
+            "[prepbrain/chat] model=%s intent=%s depth=%d max_completion_tokens=%d tools=%s cache=%s redis=%s prompt_tokens=%d completion_tokens=%d total_tokens=%d tool_chars=%d tool_est_tokens=%d summary=%s",
+            u.modelUsed,
+            effectiveIntent,
+            depth,
+            maxCompletionTokens,
+            selectedTools.join(","),
+            selectedTools.map((t) => toolCacheSources[t] ?? "?").join(","),
+            isRedisConfigured() ? "yes" : "no",
+            groqPromptTokens,
+            groqCompletionTokens,
+            groqTotalTokens,
+            toolDataChars,
+            toolDataEstTokens,
+            conversationSummary.text ? "yes" : "no",
+          );
+        }
 
         const donePayload: Record<string, unknown> = {
           type: "done",
