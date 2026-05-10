@@ -51,6 +51,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "userId and action required." }, { status: 400 });
   }
 
+  // Validate userId is a well-formed UUID to prevent unexpected DB queries.
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  if (!UUID_RE.test(userId)) {
+    return NextResponse.json({ ok: false, error: "Invalid userId format." }, { status: 400 });
+  }
+
   try {
     if (action === "extend_trial") {
       const days = Math.min(30, Math.max(1, Math.floor(body.extendTrialDays ?? 1)));
