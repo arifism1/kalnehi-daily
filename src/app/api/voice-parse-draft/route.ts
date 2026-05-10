@@ -8,8 +8,11 @@ import { runVoiceParseDraft } from "@/lib/runVoiceParseDraft";
 import { clampVoiceBillingDurationSeconds } from "@/lib/voiceDurationBilling";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
+import { assertSameOrigin } from "@/lib/assertSameOrigin";
 
 export async function POST(req: Request) {
+  const denied = assertSameOrigin(req);
+  if (denied) return denied;
   let body: unknown;
   try {
     body = await req.json();

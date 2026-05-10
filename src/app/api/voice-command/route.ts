@@ -9,8 +9,11 @@ import { clampVoiceBillingDurationSeconds } from "@/lib/voiceDurationBilling";
 import { runVoiceCommand } from "@/lib/voiceCommandGroq";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
+import { assertSameOrigin } from "@/lib/assertSameOrigin";
 
 export async function POST(req: Request) {
+  const denied = assertSameOrigin(req);
+  if (denied) return denied;
   let body: unknown;
   try {
     body = await req.json();

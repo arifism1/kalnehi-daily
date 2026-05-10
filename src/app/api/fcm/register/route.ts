@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
+import { assertSameOrigin } from "@/lib/assertSameOrigin";
 
 export const runtime = "nodejs";
 
@@ -9,6 +10,8 @@ const MAX_TOKEN_LEN = 4096;
 const MIN_TOKEN_LEN = 80;
 
 export async function POST(req: Request) {
+  const denied = assertSameOrigin(req);
+  if (denied) return denied;
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },

@@ -7,6 +7,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
+import { assertSameOrigin } from "@/lib/assertSameOrigin";
 import { SMART_PLAN_ANNUAL_PRICE_PAISE } from "@/lib/smartPlanPricing";
 
 export const runtime = "nodejs";
@@ -19,6 +20,8 @@ function getRazorpayConfig() {
 }
 
 export async function POST(req: NextRequest) {
+  const denied = assertSameOrigin(req);
+  if (denied) return denied;
   void req;
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();

@@ -32,6 +32,7 @@ import {
 import { isFreeTrialWindowActive, isPaidSubscriptionAccess } from "@/lib/freeTrial";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
+import { assertSameOrigin } from "@/lib/assertSameOrigin";
 import { resolvePrepbrainGroqModels } from "@/lib/groqPrepbrainModel";
 import {
   callChatCompletion,
@@ -347,11 +348,12 @@ type ChatProfileRow = Pick<
  * Only the last few messages are sent to the model; the full array is used for summarisation.
  */
 export async function POST(request: Request) {
+  const denied = assertSameOrigin(request);
+  if (denied) return denied;
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) {
     return NextResponse.json(
       { ok: false, error: USER_ERROR.session },
       { status: 401 },

@@ -9,6 +9,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
+import { assertSameOrigin } from "@/lib/assertSameOrigin";
 import { cancelRazorpayMonthlyBeforeUpfrontPlan } from "@/lib/razorpayCancelMonthlyForUpfront";
 import { SMART_PLAN_ANNUAL_PRICE_PAISE } from "@/lib/smartPlanPricing";
 import { sendAnnualPlanActivatedEmail } from "@/lib/waitlist/notifications";
@@ -44,6 +45,8 @@ function hasActiveAnnualAccess(profile: {
 }
 
 export async function POST(req: NextRequest) {
+  const denied = assertSameOrigin(req);
+  if (denied) return denied;
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {

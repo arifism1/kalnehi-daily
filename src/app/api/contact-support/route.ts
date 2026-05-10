@@ -8,6 +8,7 @@ import {
   type ContactSupportSubjectValue,
 } from "@/lib/contactSupport";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { assertSameOrigin } from "@/lib/assertSameOrigin";
 import { SITE_NAME } from "@/lib/seo-metadata";
 
 export const runtime = "nodejs";
@@ -74,6 +75,8 @@ function trimStr(v: unknown, max: number): string {
 }
 
 export async function POST(req: Request) {
+  const denied = assertSameOrigin(req);
+  if (denied) return denied;
   const rawLen = Number(req.headers.get("content-length") ?? 0);
   if (rawLen > MAX_BODY_BYTES) {
     return NextResponse.json(
