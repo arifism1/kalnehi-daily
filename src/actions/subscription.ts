@@ -59,8 +59,8 @@ import { SITE_URL } from "@/lib/site";
  * since Server Actions cannot return a Response directly.
  * Requests without an Origin header (non-browser callers) are passed through.
  */
-function assertServerActionOrigin(): void {
-  const origin = headers().get("origin");
+async function assertServerActionOrigin(): Promise<void> {
+  const origin = (await headers()).get("origin");
   if (!origin) return;
   const allowed = new Set([SITE_URL, "http://localhost:3000", "http://localhost:3001"]);
   if (!allowed.has(origin)) throw new Error("Forbidden.");
@@ -693,7 +693,7 @@ async function mergeResubscribeBonusesAfterMonthlyActivate(userId: string) {
 export async function cancelSubscription(): Promise<
   { ok: true } | { ok: false; error: string }
 > {
-  assertServerActionOrigin();
+  await assertServerActionOrigin();
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   const userId = user?.id ?? null;
@@ -1656,7 +1656,7 @@ export async function verifyExtraCreditsPayment(params: {
   razorpay_order_id: string;
   razorpay_signature: string;
 }): Promise<VerifyExtraCreditsResult> {
-  assertServerActionOrigin();
+  await assertServerActionOrigin();
   const userId = await getAuthedUserId();
   if (!userId) return { ok: false, error: "Session expired. Please sign in again." };
 
@@ -1761,7 +1761,7 @@ export async function createRazorpayMonthlySubscription(
   tier: SubscriptionTier = "pro",
   autopayMonths?: unknown,
 ): Promise<CreateSubscriptionResult> {
-  assertServerActionOrigin();
+  await assertServerActionOrigin();
   if (!isCheckoutTier(tier)) {
     return { ok: false, error: "Invalid subscription tier." };
   }
@@ -1925,7 +1925,7 @@ export async function activateRazorpayMonthlySubscription(params: {
   razorpay_subscription_id: string;
   razorpay_signature: string;
 }): Promise<ActivateSubscriptionResult> {
-  assertServerActionOrigin();
+  await assertServerActionOrigin();
   const userId = await getAuthedUserId();
   if (!userId) return { ok: false, error: "Session expired. Please sign in again." };
 
