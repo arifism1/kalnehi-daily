@@ -9,6 +9,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
+import { assertSameOrigin } from "@/lib/assertSameOrigin";
 import { cancelRazorpayMonthlyBeforeUpfrontPlan } from "@/lib/razorpayCancelMonthlyForUpfront";
 import { SMART_PLAN_SIX_MONTH_PRICE_PAISE } from "@/lib/smartPlanPricing";
 import { sendSixMonthPlanActivatedEmail } from "@/lib/waitlist/notifications";
@@ -44,6 +45,8 @@ function hasActiveSixMonthAccess(profile: {
 }
 
 export async function POST(req: NextRequest) {
+  const denied = assertSameOrigin(req);
+  if (denied) return denied;
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
@@ -55,7 +58,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Invalid request body." }, { status: 400 });
   }
 
-  const paymentId = (body.razorpay_payment_id ?? "").trim();
+  const paymentId
   const orderId = (body.razorpay_order_id ?? "").trim();
   const signature = (body.razorpay_signature ?? "").trim();
 

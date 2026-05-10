@@ -89,7 +89,9 @@ export async function POST() {
       );
     }
 
-    console.info(`[fcm/test] userId=${user.id} sent=${sent}`);
+    if (process.env.NODE_ENV !== "production") {
+      console.info(`[fcm/test] userId=${user.id} sent=${sent}`);
+    }
     return NextResponse.json({
       ok: true,
       sent,

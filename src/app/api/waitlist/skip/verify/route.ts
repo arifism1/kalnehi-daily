@@ -11,6 +11,7 @@ import { revalidateTag } from "next/cache";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
+import { assertSameOrigin } from "@/lib/assertSameOrigin";
 import { DAILY_CAP_STATUS_TAG } from "@/lib/daily-trial-cap";
 
 export const runtime = "nodejs";
@@ -35,6 +36,8 @@ function getRazorpayConfig() {
 }
 
 export async function POST(req: NextRequest) {
+  const denied = assertSameOrigin(req);
+  if (denied) return denied;
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {

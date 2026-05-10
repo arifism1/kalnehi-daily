@@ -74,18 +74,12 @@ export function BacklogRecoveryHomeNudge() {
       <p className="text-sm font-semibold text-kal-text">
         You have{" "}
         <span className="tabular-nums text-violet-700 dark:text-violet-200">{pending}</span>{" "}
-        pending topic{pending === 1 ? "" : "s"}
+        missed/unplanned backlog{pending === 1 ? "" : "s"}
       </p>
       <p className="mt-1 text-xs text-kal-muted">
         Nothing disappears — keep them in motion with a short recovery pass.
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
-        <Link
-          href="/backlog-tracker"
-          className="inline-flex rounded-xl bg-kal-accent px-3 py-2 text-xs font-bold text-kal-accent-foreground"
-        >
-          Open Backlog Tracker
-        </Link>
         <Link
           href="/backlog-list"
           className="inline-flex rounded-xl border border-kal-border px-3 py-2 text-xs font-semibold text-kal-text"

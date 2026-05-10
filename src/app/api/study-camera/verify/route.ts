@@ -117,33 +117,40 @@ export async function POST(request: Request) {
   }
 
   // DB-backed rate limiting shared across all serverless instances.
+  // Fail hard if the service-role client is unavailable — we must never skip
+  // the cooldown check and allow an unbounded call to DeepInfra.
   const admin = getSupabaseServiceRoleClient();
-  if (admin) {
-    const now = new Date().toISOString();
-    const { data: cooldown } = await admin
-      .from("study_camera_cooldown" as never)
-      .select("last_request_at")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    const last = (cooldown as { last_request_at?: string } | null)?.last_request_at;
-    if (last) {
-      const elapsed = Date.now() - new Date(last).getTime();
-      if (elapsed < RATE_LIMIT_MS) {
-        const retryAfterSec = Math.max(1, Math.ceil((RATE_LIMIT_MS - elapsed) / 1000));
-        return NextResponse.json(
-          { ok: false, error: "Too many requests. Please wait before the next check." },
-          { status: 429, headers: { "Retry-After": String(retryAfterSec) } },
-        );
-      }
-    }
-
-    await admin
-      .from("study_camera_cooldown" as never)
-      .upsert({ user_id: user.id, last_request_at: now } as never, {
-        onConflict: "user_id",
-      });
+  if (!admin) {
+    return NextResponse.json(
+      { ok: false, error: "Service temporarily unavailable." },
+      { status: 503 },
+    );
   }
+
+  const now = new Date().toISOString();
+  const { data: cooldown } = await admin
+    .from("study_camera_cooldown" as never)
+    .select("last_request_at")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const last = (cooldown as { last_request_at?: string } | null)?.last_request_at;
+  if (last) {
+    const elapsed = Date.now() - new Date(last).getTime();
+    if (elapsed < RATE_LIMIT_MS) {
+      const retryAfterSec = Math.max(1, Math.ceil((RATE_LIMIT_MS - elapsed) / 1000));
+      return NextResponse.json(
+        { ok: false, error: "Too many requests. Please wait before the next check." },
+        { status: 429, headers: { "Retry-After": String(retryAfterSec) } },
+      );
+    }
+  }
+
+  await admin
+    .from("study_camera_cooldown" as never)
+    .upsert({ user_id: user.id, last_request_at: now } as never, {
+      onConflict: "user_id",
+    });
 
   try {
     const resp = await fetch(DEEPINFRA_API_URL, {

@@ -21,6 +21,7 @@ import { createClient } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 
 import { ANDROID_APP_UA_MARKER } from "@/lib/androidAppUa";
+import { distributedRateLimit } from "@/lib/distributedRateLimit";
 import { isLegalPath } from "@/lib/legal-paths";
 import { isPublicMarketingPath } from "@/lib/public-paths";
 import { getSupabaseConfig } from "@/lib/supabase";
@@ -28,6 +29,8 @@ import { readAppStatus, type AppStatus } from "@/lib/edgeConfig";
 
 // ── Rate limiting ─────────────────────────────────────────────────────────────
 // Per-IP, per-minute limits on public payment and waitlist endpoints.
+// Uses Upstash Redis (distributed) so limits are shared across all Vercel
+// function instances rather than being per-isolate in-memory counters.
 const RATE_LIMITS: Record<string, number> = {
   "/api/waitlist/join":        10,
   "/api/waitlist/skip":        5,
@@ -39,8 +42,6 @@ const RATE_LIMITS: Record<string, number> = {
   "/api/admin/config":         20,  // Mutations only; low limit to deter abuse
 };
 const WINDOW_MS = 60_000;
-type RLCounter = { count: number; resetAt: number };
-const rlCounters = new Map<string, RLCounter>();
 
 function getRealIp(req: NextRequest): string {
   return (
@@ -50,26 +51,22 @@ function getRealIp(req: NextRequest): string {
   );
 }
 
-function applyRateLimit(req: NextRequest): NextResponse | null {
+async function applyRateLimit(req: NextRequest): Promise<NextResponse | null> {
   const limit = RATE_LIMITS[req.nextUrl.pathname];
   if (!limit) return null;
 
-  const key = `${getRealIp(req)}:${req.nextUrl.pathname}`;
-  const now = Date.now();
-  let entry = rlCounters.get(key);
-  if (!entry || now > entry.resetAt) {
-    entry = { count: 0, resetAt: now + WINDOW_MS };
-    rlCounters.set(key, entry);
-  }
-  entry.count += 1;
+  const ip = getRealIp(req);
+  const key = `rl:proxy:${ip}:${req.nextUrl.pathname}`;
+  const result = await distributedRateLimit(key, WINDOW_MS, limit);
 
-  if (entry.count > limit) {
+  if (!result.allowed) {
+    const retryAfterSec = Math.ceil(result.retryAfterMs / 1000);
     return NextResponse.json(
       { ok: false, error: "Too many requests. Please try again in a minute." },
       {
         status: 429,
         headers: {
-          "Retry-After": String(Math.ceil((entry.resetAt - now) / 1000)),
+          "Retry-After": String(retryAfterSec),
           "X-RateLimit-Limit": String(limit),
           "X-RateLimit-Remaining": "0",
         },
@@ -268,7 +265,7 @@ function isAndroidAppBillingBlockedPath(pathname: string): boolean {
  * from app routes (defense in depth — RLS + getUser() in APIs remains authoritative).
  */
 export async function proxy(request: NextRequest) {
-  const rateLimited = applyRateLimit(request);
+  const rateLimited = await applyRateLimit(request);
   if (rateLimited) return rateLimited;
 
   const ua = request.headers.get("user-agent") ?? "";
