@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CalendarClock, Check, Crown } from "lucide-react";
 
 import {
@@ -258,6 +258,10 @@ export function PricingPageClient() {
   const [capStatus, setCapStatus] = useState<DailyCapStatus | null>(null);
   const [queuedState, setQueuedState] = useState<{ queuedFor: string; resetsAt: string } | null>(null);
 
+  const pricingMonthlyHandlerEnteredRef = useRef(false);
+  const pricingAnnualHandlerEnteredRef = useRef(false);
+  const pricingSixMonthHandlerEnteredRef = useRef(false);
+
   // Fetch daily cap status on mount; refresh every 60 s.
   useEffect(() => {
     let cancelled = false;
@@ -317,6 +321,7 @@ export function PricingPageClient() {
     subscriptionStatus === "trial" || subscriptionStatus === "active";
 
   const startCheckout = useCallback(async () => {
+    pricingMonthlyHandlerEnteredRef.current = false;
     setBusy(true);
     setCheckoutError(null);
     try {
@@ -326,6 +331,7 @@ export function PricingPageClient() {
           text: created.error,
           debugHint: created.debugHint,
         });
+        setBusy(false);
         return;
       }
 
@@ -333,6 +339,7 @@ export function PricingPageClient() {
         setCheckoutError({
           text: "Unable to load payment window. Refresh and try again.",
         });
+        setBusy(false);
         return;
       }
 
@@ -350,18 +357,38 @@ export function PricingPageClient() {
           ? { readonly: { email: true, contact: true } }
           : { readonly: { email: true } }),
         handler: async (response: RazorpayCheckoutResponse) => {
-          const updated = await activateRazorpayMonthlySubscription({ ...response });
-          if (!updated.ok) {
-            setCheckoutError({
-              text: updated.error,
-              proof: {
-                paymentId: response.razorpay_payment_id,
-                subscriptionId: response.razorpay_subscription_id,
-              },
-            });
-            return;
+          pricingMonthlyHandlerEnteredRef.current = true;
+          try {
+            const updated = await activateRazorpayMonthlySubscription({ ...response });
+            if (!updated.ok) {
+              setCheckoutError({
+                text: updated.error,
+                proof: {
+                  paymentId: response.razorpay_payment_id,
+                  subscriptionId: response.razorpay_subscription_id,
+                },
+              });
+              setBusy(false);
+              return;
+            }
+            window.location.assign("/home");
+          } catch (error) {
+            const raw = error instanceof Error ? error.message : String(error);
+            const text =
+              raw === "Forbidden."
+                ? "Billing could not verify this page (origin). Refresh or open https://www.kalnehi.com/pricing and try again."
+                : toUserFacingMessage(error);
+            setCheckoutError({ text });
+            setBusy(false);
           }
-          window.location.assign("/home");
+        },
+        modal: {
+          ondismiss: () => {
+            window.setTimeout(() => {
+              if (pricingMonthlyHandlerEnteredRef.current) return;
+              setBusy(false);
+            }, 120);
+          },
         },
       });
       rzp.open();
@@ -372,12 +399,12 @@ export function PricingPageClient() {
       setCheckoutError({
         text: toUserFacingMessage(error),
       });
-    } finally {
       setBusy(false);
     }
   }, [autopayMonths]);
 
   const startAnnualCheckout = useCallback(async () => {
+    pricingAnnualHandlerEnteredRef.current = false;
     setBusy(true);
     setCheckoutError(null);
     try {
@@ -392,11 +419,13 @@ export function PricingPageClient() {
       };
       if (!created.ok) {
         setCheckoutError({ text: created.error ?? "Could not create annual order." });
+        setBusy(false);
         return;
       }
 
       if (typeof window === "undefined" || !window.Razorpay) {
         setCheckoutError({ text: "Unable to load payment window. Refresh and try again." });
+        setBusy(false);
         return;
       }
 
@@ -413,21 +442,36 @@ export function PricingPageClient() {
           ? { readonly: { email: true } }
           : {}),
         handler: async (response: { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }) => {
-          const verified = await fetch("/api/annual-plan/verify", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_signature: response.razorpay_signature,
-            }),
-          });
-          const result = (await verified.json()) as { ok: boolean; error?: string };
-          if (!result.ok) {
-            setCheckoutError({ text: result.error ?? "Payment verification failed. Contact support." });
-            return;
+          pricingAnnualHandlerEnteredRef.current = true;
+          try {
+            const verified = await fetch("/api/annual-plan/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+            const result = (await verified.json()) as { ok: boolean; error?: string };
+            if (!result.ok) {
+              setCheckoutError({ text: result.error ?? "Payment verification failed. Contact support." });
+              setBusy(false);
+              return;
+            }
+            window.location.assign("/home");
+          } catch (error) {
+            setCheckoutError({ text: toUserFacingMessage(error) });
+            setBusy(false);
           }
-          window.location.assign("/home");
+        },
+        modal: {
+          ondismiss: () => {
+            window.setTimeout(() => {
+              if (pricingAnnualHandlerEnteredRef.current) return;
+              setBusy(false);
+            }, 120);
+          },
         },
       });
       rzp.open();
@@ -436,12 +480,12 @@ export function PricingPageClient() {
         console.error("[pricing] startAnnualCheckout failed", error);
       }
       setCheckoutError({ text: toUserFacingMessage(error) });
-    } finally {
       setBusy(false);
     }
   }, []);
 
   const startSixMonthCheckout = useCallback(async () => {
+    pricingSixMonthHandlerEnteredRef.current = false;
     setBusy(true);
     setCheckoutError(null);
     try {
@@ -456,11 +500,13 @@ export function PricingPageClient() {
       };
       if (!created.ok) {
         setCheckoutError({ text: created.error ?? "Could not create 6-month order." });
+        setBusy(false);
         return;
       }
 
       if (typeof window === "undefined" || !window.Razorpay) {
         setCheckoutError({ text: "Unable to load payment window. Refresh and try again." });
+        setBusy(false);
         return;
       }
 
@@ -477,21 +523,36 @@ export function PricingPageClient() {
           ? { readonly: { email: true } }
           : {}),
         handler: async (response: { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }) => {
-          const verified = await fetch("/api/six-month-plan/verify", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_signature: response.razorpay_signature,
-            }),
-          });
-          const result = (await verified.json()) as { ok: boolean; error?: string };
-          if (!result.ok) {
-            setCheckoutError({ text: result.error ?? "Payment verification failed. Contact support." });
-            return;
+          pricingSixMonthHandlerEnteredRef.current = true;
+          try {
+            const verified = await fetch("/api/six-month-plan/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+            const result = (await verified.json()) as { ok: boolean; error?: string };
+            if (!result.ok) {
+              setCheckoutError({ text: result.error ?? "Payment verification failed. Contact support." });
+              setBusy(false);
+              return;
+            }
+            window.location.assign("/home");
+          } catch (error) {
+            setCheckoutError({ text: toUserFacingMessage(error) });
+            setBusy(false);
           }
-          window.location.assign("/home");
+        },
+        modal: {
+          ondismiss: () => {
+            window.setTimeout(() => {
+              if (pricingSixMonthHandlerEnteredRef.current) return;
+              setBusy(false);
+            }, 120);
+          },
         },
       });
       rzp.open();
@@ -500,7 +561,6 @@ export function PricingPageClient() {
         console.error("[pricing] startSixMonthCheckout failed", error);
       }
       setCheckoutError({ text: toUserFacingMessage(error) });
-    } finally {
       setBusy(false);
     }
   }, []);

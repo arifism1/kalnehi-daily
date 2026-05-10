@@ -1,7 +1,7 @@
 "use client";
 
 import Script from "next/script";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CalendarClock, Check, ShieldCheck } from "lucide-react";
 
 import {
@@ -49,12 +49,16 @@ export function Day3Paywall() {
   const [skipBusy, setSkipBusy] = useState(false);
   const [skipError, setSkipError] = useState<string | null>(null);
 
+  const razorpayMonthlyHandlerEnteredRef = useRef(false);
+  const razorpaySkipHandlerEnteredRef = useRef(false);
+
   const showSkipOption = !hasHadTrial && !hasUsedFreeTrial;
 
   const visible = !loading && welcomeTrialExpiredNoPay;
 
   const handleSubscribe = useCallback(async () => {
     if (!window.Razorpay) return;
+    razorpayMonthlyHandlerEnteredRef.current = false;
     setBusy(true);
     setErrorMsg(null);
 
@@ -72,12 +76,25 @@ export function Day3Paywall() {
       description: `Smart Plan · ${months} month${months === 1 ? "" : "s"}`,
       prefill: { email: user?.email ?? "" },
       handler: async (response: RazorpayCheckoutResponse) => {
+        razorpayMonthlyHandlerEnteredRef.current = true;
         setBusy(true);
-        const activateRes = await activateRazorpayMonthlySubscription({
-          razorpay_payment_id: response.razorpay_payment_id,
-          razorpay_subscription_id: response.razorpay_subscription_id,
-          razorpay_signature: response.razorpay_signature,
-        });
+        let activateRes: Awaited<ReturnType<typeof activateRazorpayMonthlySubscription>>;
+        try {
+          activateRes = await activateRazorpayMonthlySubscription({
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_subscription_id: response.razorpay_subscription_id,
+            razorpay_signature: response.razorpay_signature,
+          });
+        } catch (e) {
+          const raw = e instanceof Error ? e.message : String(e);
+          const msg =
+            raw === "Forbidden."
+              ? "Billing could not verify this page (origin). Refresh or open https://www.kalnehi.com/pricing and try again."
+              : raw || "Could not activate your plan. Please try again.";
+          setErrorMsg(msg);
+          setBusy(false);
+          return;
+        }
         if (!activateRes.ok) {
           setErrorMsg(activateRes.error);
           setBusy(false);
@@ -87,7 +104,12 @@ export function Day3Paywall() {
         setBusy(false);
       },
       modal: {
-        ondismiss: () => setBusy(false),
+        ondismiss: () => {
+          window.setTimeout(() => {
+            if (razorpayMonthlyHandlerEnteredRef.current) return;
+            setBusy(false);
+          }, 120);
+        },
       },
     });
     rzp.open();
@@ -95,6 +117,7 @@ export function Day3Paywall() {
 
   const handleSkip = useCallback(async () => {
     if (!window.Razorpay) return;
+    razorpaySkipHandlerEnteredRef.current = false;
     setSkipBusy(true);
     setSkipError(null);
 
@@ -119,22 +142,35 @@ export function Day3Paywall() {
         description: "Skip the waitlist — ₹19",
         prefill: data.prefill ?? {},
         handler: async (response: RazorpayOrderResponse) => {
+          razorpaySkipHandlerEnteredRef.current = true;
           setSkipBusy(true);
-          const verifyRes = await fetch("/api/waitlist/skip/verify", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(response),
-          });
-          const verifyData = await verifyRes.json() as { ok: boolean; error?: string };
-          if (!verifyData.ok) {
-            setSkipError(verifyData.error ?? "Verification failed.");
+          try {
+            const verifyRes = await fetch("/api/waitlist/skip/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(response),
+            });
+            const verifyData = await verifyRes.json() as { ok: boolean; error?: string };
+            if (!verifyData.ok) {
+              setSkipError(verifyData.error ?? "Verification failed.");
+              setSkipBusy(false);
+              return;
+            }
+            refetch();
             setSkipBusy(false);
-            return;
+          } catch {
+            setSkipError("Something went wrong. Please try again.");
+            setSkipBusy(false);
           }
-          refetch();
-          setSkipBusy(false);
         },
-        modal: { ondismiss: () => setSkipBusy(false) },
+        modal: {
+          ondismiss: () => {
+            window.setTimeout(() => {
+              if (razorpaySkipHandlerEnteredRef.current) return;
+              setSkipBusy(false);
+            }, 120);
+          },
+        },
       });
       rzp.open();
     } catch {

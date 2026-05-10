@@ -24,6 +24,37 @@ export function getSiteUrl(): string {
 export const SITE_URL = "https://www.kalnehi.com";
 
 /**
+ * Browser `Origin` values allowed for CSRF checks on cookie/session mutations
+ * (Server Actions, selected API routes). Includes `SITE_URL`, `getSiteUrl()`,
+ * localhost, and apex/www pair for kalnehi.com when either host appears.
+ */
+export function getTrustedBrowserOrigins(): string[] {
+  const set = new Set<string>([
+    SITE_URL.replace(/\/+$/, ""),
+    "http://localhost:3000",
+    "http://localhost:3001",
+  ]);
+  const primary = getSiteUrl().replace(/\/+$/, "");
+  if (primary) set.add(primary);
+
+  const addWwwApexKalnehiPair = (origin: string) => {
+    try {
+      const u = new URL(origin);
+      if (u.protocol !== "http:" && u.protocol !== "https:") return;
+      const host = u.hostname;
+      if (host === "www.kalnehi.com") set.add("https://kalnehi.com");
+      else if (host === "kalnehi.com") set.add("https://www.kalnehi.com");
+    } catch {
+      /* ignore invalid URL */
+    }
+  };
+  addWwwApexKalnehiPair(SITE_URL);
+  addWwwApexKalnehiPair(primary);
+
+  return [...set];
+}
+
+/**
  * Base URL for all sitemap `loc` entries and the sitemap index.
  * Defaults to `getSiteUrl()` so canonical and sitemap hosts are always in sync.
  * Override with `SITEMAP_BASE_URL` / `NEXT_PUBLIC_SITEMAP_BASE_URL` only if you need

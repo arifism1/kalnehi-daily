@@ -56,6 +56,8 @@ export function UpgradeCheckout() {
   const webhookPollFallbackErrorRef = useRef<string>("");
   /** True while client polls profile after server asked to wait for webhook capture. */
   const awaitingPaidProfileRef = useRef(false);
+  /** Set synchronously when Razorpay success `handler` runs so `modal.ondismiss` does not clear `busy` early. */
+  const razorpayMonthlyHandlerEnteredRef = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -103,6 +105,7 @@ export function UpgradeCheckout() {
     }
     setBusy(true);
     setErrorMsg(null);
+    razorpayMonthlyHandlerEnteredRef.current = false;
 
     const res = await createRazorpayMonthlySubscription("pro", months);
     if (!res.ok) {
@@ -124,13 +127,27 @@ export function UpgradeCheckout() {
         wallet: true,
       },
       handler: async (response: RazorpayCheckoutResponse) => {
+        razorpayMonthlyHandlerEnteredRef.current = true;
         setBusy(true);
         setConfirmingPayment(false);
-        const activateRes = await activateRazorpayMonthlySubscription({
-          razorpay_payment_id: response.razorpay_payment_id,
-          razorpay_subscription_id: response.razorpay_subscription_id,
-          razorpay_signature: response.razorpay_signature,
-        });
+        let activateRes: Awaited<ReturnType<typeof activateRazorpayMonthlySubscription>>;
+        try {
+          activateRes = await activateRazorpayMonthlySubscription({
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_subscription_id: response.razorpay_subscription_id,
+            razorpay_signature: response.razorpay_signature,
+          });
+        } catch (e) {
+          const raw = e instanceof Error ? e.message : String(e);
+          const msg =
+            raw === "Forbidden."
+              ? "Billing could not verify this page (origin). Refresh or open https://www.kalnehi.com/upgrade and try again."
+              : raw || "Could not activate your plan. Please try again.";
+          setErrorMsg(msg);
+          setBusy(false);
+          setConfirmingPayment(false);
+          return;
+        }
         if (!activateRes.ok) {
           if (activateRes.suggestWebhookPoll) {
             webhookPollFallbackErrorRef.current = activateRes.error;
@@ -168,7 +185,12 @@ export function UpgradeCheckout() {
         navigateHomeAfterPurchase();
       },
       modal: {
-        ondismiss: () => setBusy(false),
+        ondismiss: () => {
+          window.setTimeout(() => {
+            if (razorpayMonthlyHandlerEnteredRef.current) return;
+            setBusy(false);
+          }, 120);
+        },
       },
     });
     rzp.open();

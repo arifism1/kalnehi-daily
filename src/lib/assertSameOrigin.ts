@@ -1,4 +1,4 @@
-import { SITE_URL } from "@/lib/site";
+import { getTrustedBrowserOrigins } from "@/lib/site";
 
 /**
  * Defense-in-depth CSRF protection for cookie-authenticated mutating routes.
@@ -25,11 +25,7 @@ export function assertSameOrigin(req: Request): Response | null {
   // No Origin header → non-browser caller (cron, webhook, server-to-server) — allow.
   if (!origin) return null;
 
-  const allowed = new Set([
-    SITE_URL,                    // https://www.kalnehi.com
-    "http://localhost:3000",     // local dev
-    "http://localhost:3001",     // alternate local port
-  ]);
+  const allowed = new Set(getTrustedBrowserOrigins());
 
   if (!allowed.has(origin)) {
     return new Response(

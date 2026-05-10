@@ -51,7 +51,7 @@ import {
 import { RAZORPAY_PAYMENT_OR_SUB_ID_RE } from "@/lib/razorpayIds";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { headers } from "next/headers";
-import { SITE_URL } from "@/lib/site";
+import { getTrustedBrowserOrigins } from "@/lib/site";
 
 /**
  * Defense-in-depth CSRF check for payment Server Actions.
@@ -62,7 +62,7 @@ import { SITE_URL } from "@/lib/site";
 async function assertServerActionOrigin(): Promise<void> {
   const origin = (await headers()).get("origin");
   if (!origin) return;
-  const allowed = new Set([SITE_URL, "http://localhost:3000", "http://localhost:3001"]);
+  const allowed = new Set(getTrustedBrowserOrigins());
   if (!allowed.has(origin)) throw new Error("Forbidden.");
 }
 
