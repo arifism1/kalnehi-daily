@@ -13,6 +13,7 @@ import {
   FCM_NO_TOKENS_SELF_TEST,
   FCM_STALE_TOKEN_USER_MESSAGE,
 } from "@/lib/fcm/messages";
+import { assertSameOrigin } from "@/lib/assertSameOrigin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { SITE_NAME } from "@/lib/seo-metadata";
 
@@ -22,7 +23,10 @@ export const runtime = "nodejs";
  * Sends a test notification to the signed-in user's registered devices only.
  * Dev/admin only (same gate as the Settings "Send test notification" button).
  */
-export async function POST() {
+export async function POST(req: Request) {
+  const denied = assertSameOrigin(req);
+  if (denied) return denied;
+
   try {
     const supabase = await createSupabaseServerClient();
     const {

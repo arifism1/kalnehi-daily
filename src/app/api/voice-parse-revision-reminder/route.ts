@@ -4,11 +4,15 @@ import {
   ensureVoiceMinuteHeadroom,
   incrementVoiceMinuteUsage,
 } from "@/actions/subscription";
+import { assertSameOrigin } from "@/lib/assertSameOrigin";
 import { runVoiceParseRevisionReminder } from "@/lib/runVoiceParseRevisionReminder";
 import { clampVoiceBillingDurationSeconds } from "@/lib/voiceDurationBilling";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function POST(req: Request) {
+  const denied = assertSameOrigin(req);
+  if (denied) return denied;
+
   let body: unknown;
   try {
     body = await req.json();

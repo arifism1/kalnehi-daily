@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { assertSameOrigin } from "@/lib/assertSameOrigin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 
@@ -73,6 +74,9 @@ function normalizeVerdict(raw: {
  * Uses Qwen2.5-VL-32B-Instruct via DeepInfra to classify whether the student is studying.
  */
 export async function POST(request: Request) {
+  const denied = assertSameOrigin(request);
+  if (denied) return denied;
+
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },

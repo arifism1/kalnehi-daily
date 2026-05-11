@@ -22,6 +22,7 @@ import {
 } from "@/lib/systemPush/dedupe";
 import { getIstCalendarDateString } from "@/lib/systemPush/istCalendarDate";
 import { resolveMasterTodayMetrics } from "@/lib/systemPush/masterTodayServer";
+import { assertSameOrigin } from "@/lib/assertSameOrigin";
 
 export const runtime = "nodejs";
 
@@ -31,7 +32,10 @@ const DANGER_THRESHOLD = 25;
  * Called from the home client when Master Today is below the danger threshold.
  * Idempotent: at most one danger push per user per IST calendar day.
  */
-export async function POST() {
+export async function POST(req: Request) {
+  const denied = assertSameOrigin(req);
+  if (denied) return denied;
+
   try {
     const supabase = await createSupabaseServerClient();
     const {

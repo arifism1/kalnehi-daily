@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { assertSameOrigin } from "@/lib/assertSameOrigin";
 import { getIstCalendarDateString } from "@/lib/customReminders/istClock";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -50,6 +51,9 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const denied = assertSameOrigin(req);
+  if (denied) return denied;
+
   try {
     const supabase = await createSupabaseServerClient();
     const {

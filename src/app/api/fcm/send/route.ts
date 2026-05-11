@@ -16,6 +16,7 @@ import {
   getDistinctUserIdsWithPushTokens,
   sendFcmToUserTokens,
 } from "@/lib/fcm/sendNotifications";
+import { assertSameOrigin } from "@/lib/assertSameOrigin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 
@@ -42,6 +43,9 @@ type Body = {
  * Admin / dev: send FCM to one user (by id or email) or broadcast to every user with stored tokens.
  */
 export async function POST(req: Request) {
+  const denied = assertSameOrigin(req);
+  if (denied) return denied;
+
   try {
     const supabase = await createSupabaseServerClient();
     const {

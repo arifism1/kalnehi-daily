@@ -356,12 +356,15 @@ export async function GET(req: NextRequest) {
     return await runNotificationSequencesCron(admin);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    const stack = err instanceof Error ? err.stack : undefined;
+    const stackLine =
+      err instanceof Error && err.stack
+        ? err.stack.split("\n")[0] ?? ""
+        : "";
     console.error(
       `${LOG} failed`,
       JSON.stringify({
         message,
-        stack,
+        stackLine,
         nowIso: new Date().toISOString(),
         istHour: istHour(),
       }),

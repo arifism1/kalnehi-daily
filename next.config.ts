@@ -6,7 +6,11 @@ import bundleAnalyzer from "@next/bundle-analyzer";
  * Still allows inline/eval for third-party scripts (GA, Razorpay, MediaPipe); tighten with
  * nonces/hashes in a follow-up when feasible.
  * Covers Supabase, Firebase, Vercel Analytics, GA4, Meta Pixel, Razorpay checkout, MediaPipe CDNs.
+ *
+ * CSP violation reporting: set CSP_REPORT_URI env var to enable (e.g. a sentry/report-uri endpoint).
  */
+const CSP_REPORT_URI = process.env.CSP_REPORT_URI ?? "";
+
 const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
   // NOTE: "upgrade-insecure-requests" is valid here (enforced header) but
@@ -29,7 +33,22 @@ const CONTENT_SECURITY_POLICY = [
     " ",
   ),
   ["font-src", "'self'", "data:", "https://fonts.gstatic.com"].join(" "),
-  ["img-src", "'self'", "data:", "blob:", "https:"].join(" "),
+  // Narrowed from wildcard "https:" — covers Supabase storage, Google (OG/avatar),
+  // Facebook CDN, and GA/GTM pixel beacons.
+  [
+    "img-src",
+    "'self'",
+    "data:",
+    "blob:",
+    "https://*.supabase.co",
+    "https://*.googleapis.com",
+    "https://*.googleusercontent.com",
+    "https://*.gstatic.com",
+    "https://*.fbcdn.net",
+    "https://www.facebook.com",
+    "https://www.google-analytics.com",
+    "https://www.googletagmanager.com",
+  ].join(" "),
   [
     "connect-src",
     "'self'",
@@ -64,6 +83,7 @@ const CONTENT_SECURITY_POLICY = [
   "form-action 'self'",
   "object-src 'none'",
   "upgrade-insecure-requests",
+  ...(CSP_REPORT_URI ? [`report-uri ${CSP_REPORT_URI}`] : []),
 ].join("; ");
 
 /**

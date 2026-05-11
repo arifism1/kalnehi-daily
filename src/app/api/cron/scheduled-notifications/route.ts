@@ -16,8 +16,6 @@ import { verifyCronSecret } from "@/lib/verifyCronSecret";
 
 const LOG_PREFIX = "[cron/scheduled-notifications]";
 
-/** Cap how many due row ids we print in one log line (avoid huge payloads). */
-const MAX_IDS_IN_SCAN_LOG = 40;
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -85,14 +83,9 @@ export async function GET(req: NextRequest) {
   }
 
   const list = rows ?? [];
-  const dueIds = list.map((r) => (r as ScheduledRow).id);
-  const idsForLog =
-    dueIds.length <= MAX_IDS_IN_SCAN_LOG
-      ? dueIds
-      : dueIds.slice(0, MAX_IDS_IN_SCAN_LOG);
 
   console.info(
-    `${LOG_PREFIX} run start nowIso=${nowIso} istDate=${istYmd} scanned=${list.length} dueIds=${JSON.stringify(idsForLog)}${dueIds.length > MAX_IDS_IN_SCAN_LOG ? ` (+${dueIds.length - MAX_IDS_IN_SCAN_LOG} more)` : ""}`,
+    `${LOG_PREFIX} run start nowIso=${nowIso} istDate=${istYmd} scanned=${list.length}`,
   );
 
   let sent = 0;
@@ -108,7 +101,7 @@ export async function GET(req: NextRequest) {
       .eq("user_id", r.user_id);
     if (tokErr || !tokenCount) {
       console.info(
-        `${LOG_PREFIX} skip notification_id=${r.id} user_id=${r.user_id} reason=no_push_tokens tokErr=${tokErr?.message ?? "none"}`,
+        `${LOG_PREFIX} skip nid=${r.id.slice(0, 8)} reason=no_push_tokens tokErr=${tokErr?.message ?? "none"}`,
       );
       logAutomatedPushSkipped({
         channel: "scheduled_notification",
@@ -136,7 +129,7 @@ export async function GET(req: NextRequest) {
         sent += result.sent;
         fired += 1;
         console.info(
-          `${LOG_PREFIX} sent notification_id=${r.id} user_id=${r.user_id} devices=${result.sent}`,
+          `${LOG_PREFIX} sent nid=${r.id.slice(0, 8)} devices=${result.sent}`,
         );
         logAutomatedPushSent({
           channel: "scheduled_notification",
@@ -166,7 +159,7 @@ export async function GET(req: NextRequest) {
         }
       } else {
         console.warn(
-          `${LOG_PREFIX} skip notification_id=${r.id} user_id=${r.user_id} reason=fcm_zero_sent failures=${JSON.stringify(result.failures)}`,
+          `${LOG_PREFIX} skip nid=${r.id.slice(0, 8)} reason=fcm_zero_sent failures=${JSON.stringify(result.failures)}`,
         );
         logAutomatedPushSkipped({
           channel: "scheduled_notification",
@@ -179,7 +172,7 @@ export async function GET(req: NextRequest) {
     } catch (e) {
       const msg = e instanceof Error ? e.message : "unknown";
       console.error(
-        `${LOG_PREFIX} send_error notification_id=${r.id} user_id=${r.user_id}`,
+        `${LOG_PREFIX} send_error nid=${r.id.slice(0, 8)}`,
         msg,
       );
       logAutomatedPushSkipped({

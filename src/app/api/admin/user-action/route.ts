@@ -3,6 +3,7 @@
  */
 import { type NextRequest, NextResponse } from "next/server";
 
+import { assertSameOrigin } from "@/lib/assertSameOrigin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 import { isAdminUser } from "@/lib/waitlist/batchEngine";
@@ -19,6 +20,9 @@ type Body = {
 };
 
 export async function POST(req: NextRequest) {
+  const denied = assertSameOrigin(req);
+  if (denied) return denied;
+
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },

@@ -12,6 +12,7 @@ import {
   fetchDoubtVoiceTagSyllabusRows,
 } from "@/lib/doubtVoiceTagSyllabus";
 import { runDoubtVoiceTagGroq } from "@/lib/runDoubtVoiceTag";
+import { assertSameOrigin } from "@/lib/assertSameOrigin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -21,6 +22,9 @@ function isRecord(x: unknown): x is Record<string, unknown> {
 }
 
 export async function POST(req: Request) {
+  const denied = assertSameOrigin(req);
+  if (denied) return denied;
+
   let body: unknown;
   try {
     body = await req.json();
