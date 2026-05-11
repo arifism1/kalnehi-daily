@@ -10,6 +10,7 @@ import {
   commitBacklogSchedule,
   deletePendingBacklogRow,
   updatePendingBacklogRowSubject,
+  updatePendingBacklogRowTimeDraft,
   type OrganizedBacklogItemInput,
 } from "@/actions/backlogRecovery";
 import {
@@ -101,7 +102,7 @@ export function BacklogTrackerClient() {
   /** yyyy-MM-dd; empty = automatic first day (today vs tomorrow from capacity rules) */
   const [scheduleStartYmd, setScheduleStartYmd] = useState("");
   const [liveError, setLiveError] = useState<string | null>(null);
-  const [busy, setBusy] = useState<"final" | "commit" | null>(null);
+  const [busy, setBusy] = useState<"final" | "commit" | "saveStep" | "saveExit" | null>(null);
   /** When true, next finalized voice transcript should queue backlog-organize (Done, silence stop, or Whisper complete). */
   const organizeAfterVoiceSessionRef = useRef(false);
   const voicePreviewRef = useRef("");
@@ -656,9 +657,64 @@ export function BacklogTrackerClient() {
     }
   };
 
-  const onTimeNext = () => {
+  /**
+   * Persist the current scheduling card's minutes + subject so leaving the wizard
+   * does not lose user edits. Inserts a pending row on first save when an
+   * AI-organized item has no `existing_backlog_id` yet, then attaches that id so
+   * subsequent saves update in place.
+   */
+  const persistTimeStep = useCallback(
+    async (idx: number): Promise<boolean> => {
+      const payload = itemsWithMinutesForServer();
+      const slice = payload[idx];
+      if (!slice) return false;
+      if ((slice.effort_estimate_minutes ?? 0) < BACKLOG_TIME_MIN_CAP) {
+        setLiveError("Give each task at least 15 minutes.");
+        return false;
+      }
+      setLiveError(null);
+      const existingId = itemMeta[idx]?.existing_backlog_id?.trim();
+      if (existingId) {
+        const res = await updatePendingBacklogRowTimeDraft(
+          existingId,
+          slice.effort_estimate_minutes ?? null,
+          slice.group_label ?? null,
+        );
+        if (!res.ok) {
+          setLiveError(res.error);
+          return false;
+        }
+        return true;
+      }
+      const res = await appendPendingBacklogItems([slice]);
+      if (!res.ok) {
+        setLiveError(res.error);
+        return false;
+      }
+      const newId = res.ids[0];
+      if (newId) {
+        setItemMeta((prev) => {
+          const next = [...prev];
+          if (next[idx]) next[idx] = { ...next[idx], existing_backlog_id: newId };
+          return next;
+        });
+      }
+      return true;
+    },
+    [itemsWithMinutesForServer, itemMeta],
+  );
+
+  const onTimeNext = async () => {
+    if (busy !== null) return;
     if (timeIdx < items.length - 1) {
-      setTimeIdx((k) => k + 1);
+      setBusy("saveStep");
+      try {
+        const ok = await persistTimeStep(timeIdx);
+        if (!ok) return;
+        setTimeIdx((k) => k + 1);
+      } finally {
+        setBusy((b) => (b === "saveStep" ? null : b));
+      }
       return;
     }
     const payload = itemsWithMinutesForServer();
@@ -669,7 +725,20 @@ export function BacklogTrackerClient() {
     void onCommit();
   };
 
+  const onSaveAndExit = async () => {
+    if (busy !== null) return;
+    setBusy("saveExit");
+    try {
+      const ok = await persistTimeStep(timeIdx);
+      if (!ok) return;
+      router.push("/backlog-list");
+    } finally {
+      setBusy((b) => (b === "saveExit" ? null : b));
+    }
+  };
+
   const onTimeBack = () => {
+    if (busy !== null) return;
     if (timeIdx > 0) setTimeIdx((k) => k - 1);
     else setPhase("vent");
   };
@@ -1002,25 +1071,36 @@ export function BacklogTrackerClient() {
             />
           </div>
 
-          <div className="flex gap-2">
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={onTimeBack}
+                disabled={busy !== null}
+                className="flex-1 rounded-xl border border-kal-border bg-kal-card-muted py-2 text-sm font-semibold disabled:opacity-50"
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={() => void onTimeNext()}
+                disabled={busy !== null}
+                className="flex-1 rounded-xl bg-kal-accent py-2 text-sm font-bold text-kal-accent-foreground disabled:opacity-50"
+              >
+                {busy === "commit" || busy === "saveStep"
+                  ? "Saving…"
+                  : timeIdx < items.length - 1
+                    ? "Save & next"
+                    : "Confirm and add to plan"}
+              </button>
+            </div>
             <button
               type="button"
-              onClick={onTimeBack}
-              className="flex-1 rounded-xl border border-kal-border bg-kal-card-muted py-2 text-sm font-semibold"
-            >
-              Back
-            </button>
-            <button
-              type="button"
-              onClick={onTimeNext}
+              onClick={() => void onSaveAndExit()}
               disabled={busy !== null}
-              className="flex-1 rounded-xl bg-kal-accent py-2 text-sm font-bold text-kal-accent-foreground disabled:opacity-50"
+              className="w-full rounded-xl border border-kal-border bg-kal-card-muted py-2 text-sm font-semibold text-kal-text disabled:opacity-50"
             >
-              {busy === "commit"
-                ? "Saving…"
-                : timeIdx < items.length - 1
-                  ? "Next"
-                  : "Confirm and add to plan"}
+              {busy === "saveExit" ? "Saving…" : "Save and exit"}
             </button>
           </div>
         </section>

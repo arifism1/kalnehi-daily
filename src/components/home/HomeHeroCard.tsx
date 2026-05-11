@@ -50,6 +50,10 @@ export type HomeHeroCardProps = {
    * Defaults to true for backward compatibility.
    */
   showProjScore?: boolean;
+  /**
+   * When true, projected score and today/yesterday plan % show pulse placeholders.
+   */
+  loading?: boolean;
 };
 
 function computeDaysToExam(dateStr: string): number | null {
@@ -79,6 +83,19 @@ function StatCell({
   );
 }
 
+function StatNumberSkeleton({ compact }: { compact?: boolean }) {
+  return (
+    <span
+      className={
+        compact
+          ? "inline-block h-[1.1rem] w-14 animate-pulse rounded-md bg-black/10 dark:bg-white/15 sm:h-[1.25rem] sm:w-16"
+          : "kal-home-stat-value inline-block h-[1.25rem] min-w-[3.75rem] animate-pulse rounded-md bg-black/10 dark:bg-white/15 sm:h-7 sm:min-w-[4.25rem]"
+      }
+      aria-hidden
+    />
+  );
+}
+
 export function HomeHeroCard({
   firstName,
   greetingLead,
@@ -94,6 +111,7 @@ export function HomeHeroCard({
   examRollups,
   examDates,
   showProjScore = true,
+  loading = false,
 }: HomeHeroCardProps) {
   const { examDate } = useTargetExamDate();
   const { rows: catalogRows } = useExamsCatalogRows();
@@ -158,6 +176,7 @@ export function HomeHeroCard({
   return (
     <section
       aria-label="Overview"
+      aria-busy={loading}
       className="relative overflow-hidden rounded-[12px] bg-[#FFF3E4] px-5 py-5 dark:bg-kal-bg-elevated dark:ring-1 dark:ring-kal-border sm:px-6 sm:py-5"
     >
       {/* Subtle background blobs */}
@@ -278,49 +297,64 @@ export function HomeHeroCard({
           {shouldShowProjScore && (
             isMultiExam ? (
               <div className="flex flex-1 flex-col items-center gap-1.5 px-1 py-3 text-center">
-                {(projScoreRollups ?? []).map((er) => {
-                  const name =
-                    displayNameForExamCatalog(er.examLabel, catalogRows) ||
-                    er.examLabel;
-                  const proj = er.projections[0];
-                  const scoreStr = proj
-                    ? `${proj.projectedOutOf720}/${er.maxScore}`
-                    : er.rollup.totalMarksPool > 0
-                      ? `${er.rollup.totalMarksMastered.toFixed(0)}/${er.rollup.totalMarksPool.toFixed(0)}`
-                      : "—";
-                  return (
-                    <div key={er.examLabel} className="flex flex-col items-center gap-0">
-                      <span className="text-sm font-bold tabular-nums leading-tight text-kal-text">
-                        {scoreStr}
-                      </span>
-                      <span className="text-[9px] leading-tight text-kal-muted">
-                        {name}
-                      </span>
-                    </div>
-                  );
-                })}
-                <span className="mt-0.5 text-[10px] leading-tight text-kal-muted">
-                  Proj. score
-                </span>
+                {loading ? (
+                  <>
+                    <StatNumberSkeleton />
+                    <span className="mt-0.5 text-[10px] leading-tight text-kal-muted">
+                      Proj. score
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    {(projScoreRollups ?? []).map((er) => {
+                      const name =
+                        displayNameForExamCatalog(er.examLabel, catalogRows) ||
+                        er.examLabel;
+                      const proj = er.projections[0];
+                      const scoreStr = proj
+                        ? `${proj.projectedOutOf720}/${er.maxScore}`
+                        : er.rollup.totalMarksPool > 0
+                          ? `${er.rollup.totalMarksMastered.toFixed(0)}/${er.rollup.totalMarksPool.toFixed(0)}`
+                          : "—";
+                      return (
+                        <div key={er.examLabel} className="flex flex-col items-center gap-0">
+                          <span className="text-sm font-bold tabular-nums leading-tight text-kal-text">
+                            {scoreStr}
+                          </span>
+                          <span className="text-[9px] leading-tight text-kal-muted">
+                            {name}
+                          </span>
+                        </div>
+                      );
+                    })}
+                    <span className="mt-0.5 text-[10px] leading-tight text-kal-muted">
+                      Proj. score
+                    </span>
+                  </>
+                )}
               </div>
             ) : (
               <div className="flex flex-1 flex-col items-center gap-0.5 px-2 py-3 text-center">
-                <span
-                  className="kal-home-stat-value"
-                  aria-label={
-                    marksTotal > 0
-                      ? `Projected score ${Math.round(marksMastered)} out of ${Math.round(marksTotal)}${
-                          projectedScoreCaption ? `. ${projectedScoreCaption}` : ""
-                        }`
-                      : "Projected score unavailable"
-                  }
-                >
-                  {projScoreDisplay}
-                </span>
+                {loading ? (
+                  <StatNumberSkeleton />
+                ) : (
+                  <span
+                    className="kal-home-stat-value"
+                    aria-label={
+                      marksTotal > 0
+                        ? `Projected score ${Math.round(marksMastered)} out of ${Math.round(marksTotal)}${
+                            projectedScoreCaption ? `. ${projectedScoreCaption}` : ""
+                          }`
+                        : "Projected score unavailable"
+                    }
+                  >
+                    {projScoreDisplay}
+                  </span>
+                )}
                 <span className="text-[10px] leading-tight text-kal-muted">
                   Proj. score
                 </span>
-                {projectedScoreCaption ? (
+                {!loading && projectedScoreCaption ? (
                   <span className="min-w-0 max-w-full px-0.5 text-[9px] leading-snug text-kal-muted sm:whitespace-nowrap sm:px-1">
                     {projectedScoreCaption}
                   </span>
@@ -333,31 +367,39 @@ export function HomeHeroCard({
 
           <div className="flex min-w-0 flex-1 flex-col justify-center gap-2 px-1 py-2 text-center sm:gap-2.5 sm:py-3">
             <div className="flex flex-col items-center gap-0.5">
-              <span
-                className="kal-home-stat-value text-[18px] sm:text-[20px]"
-                aria-label={
-                  todayTaskCount > 0
-                    ? `Today's plan ${Math.round(todayPercent)} percent done`
-                    : "No plan created today"
-                }
-              >
-                {todayPlanDisplay}
-              </span>
+              {loading ? (
+                <StatNumberSkeleton compact />
+              ) : (
+                <span
+                  className="kal-home-stat-value text-[18px] sm:text-[20px]"
+                  aria-label={
+                    todayTaskCount > 0
+                      ? `Today's plan ${Math.round(todayPercent)} percent done`
+                      : "No plan created today"
+                  }
+                >
+                  {todayPlanDisplay}
+                </span>
+              )}
               <span className="text-[10px] leading-tight text-kal-muted">
                 Today&apos;s plan
               </span>
             </div>
             <div className="flex flex-col items-center gap-0.5">
-              <span
-                className="kal-home-stat-value text-[18px] sm:text-[20px]"
-                aria-label={
-                  yesterdayTaskCount > 0
-                    ? `Yesterday's plan ${Math.round(yesterdayPercent)} percent done`
-                    : "No plan yesterday"
-                }
-              >
-                {yesterdayPlanDisplay}
-              </span>
+              {loading ? (
+                <StatNumberSkeleton compact />
+              ) : (
+                <span
+                  className="kal-home-stat-value text-[18px] sm:text-[20px]"
+                  aria-label={
+                    yesterdayTaskCount > 0
+                      ? `Yesterday's plan ${Math.round(yesterdayPercent)} percent done`
+                      : "No plan yesterday"
+                  }
+                >
+                  {yesterdayPlanDisplay}
+                </span>
+              )}
               <span className="text-[10px] leading-tight text-kal-muted">
                 Yesterday&apos;s plan
               </span>

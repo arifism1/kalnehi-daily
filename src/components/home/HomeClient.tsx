@@ -1,18 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 
 import { ensureAutomatedNotifications } from "@/actions/notifications";
-import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useProfileDisplayName } from "@/hooks/useProfileDisplayName";
 import { useRefreshTasksOnHomeFocus } from "@/hooks/useRefreshTasksOnHomeFocus";
-import {
-  pickDailyPhraseIndex,
-  type DailyMotivationalPhraseRow,
-} from "@/lib/dailyMotivationalPhrase";
-import { getSupabaseBrowserClient } from "@/lib/supabase";
+import type { DailyMotivationalPhraseRow } from "@/lib/dailyMotivationalPhrase";
 
 import { InstagramWelcomeBanner } from "@/components/InstagramWelcomeBanner";
 import { MotivationWallpaper } from "./MotivationWallpaper";
@@ -40,7 +35,11 @@ const HomeDashboardBody = dynamic(
   },
 );
 
-export function HomeClient() {
+export type HomeClientProps = {
+  dailyPhrase: DailyMotivationalPhraseRow | null;
+};
+
+export function HomeClient({ dailyPhrase }: HomeClientProps) {
   const router = useRouter();
   const { displayName: welcomeName } = useProfileDisplayName();
 
@@ -69,21 +68,19 @@ export function HomeClient() {
 
   useEffect(() => {
     let cancelled = false;
-    void (async () => {
-      try {
-        await ensureAutomatedNotifications();
-      } catch (error) {
+    const t = window.setTimeout(() => {
+      if (cancelled) return;
+      void ensureAutomatedNotifications().catch((error) => {
         if (!cancelled) {
           console.warn("[HomeClient] ensureAutomatedNotifications failed", error);
         }
-      }
-    })();
+      });
+    }, 3000);
     return () => {
       cancelled = true;
+      clearTimeout(t);
     };
   }, []);
-
-  const today = useCalendarDate();
 
   const firstName = useMemo(() => {
     const part = welcomeName.split(/\s+/)[0]?.trim();
@@ -97,45 +94,11 @@ export function HomeClient() {
     return "Good evening";
   }, []);
 
-  const [dailyPhrase, setDailyPhrase] = useState<DailyMotivationalPhraseRow | null>(
-    null,
-  );
-  const [dailyPhraseLoading, setDailyPhraseLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      setDailyPhraseLoading(true);
-      try {
-        const supabase = getSupabaseBrowserClient();
-        const { data, error } = await supabase
-          .from("daily_motivational_phrases")
-          .select("id, phrase, author, category")
-          .eq("active", true)
-          .order("phrase", { ascending: true });
-        if (cancelled) return;
-        if (error || !data?.length) {
-          setDailyPhrase(null);
-          return;
-        }
-        const idx = pickDailyPhraseIndex(today, data.length);
-        setDailyPhrase(data[idx] ?? null);
-      } catch {
-        if (!cancelled) setDailyPhrase(null);
-      } finally {
-        if (!cancelled) setDailyPhraseLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [today]);
-
   const bodyProps: HomeDashboardBodyProps = {
     firstName,
     greetingLead,
     dailyPhrase,
-    dailyPhraseLoading,
+    dailyPhraseLoading: false,
   };
 
   return (

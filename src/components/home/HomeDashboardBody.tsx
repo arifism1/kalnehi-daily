@@ -381,6 +381,7 @@ export function HomeDashboardBody({
             examRollups={examRollups ?? undefined}
             examDates={examDates}
             showProjScore={showProjScore}
+            loading={syllabusLoading}
           />
         </motion.div>
 

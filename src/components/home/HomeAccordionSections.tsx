@@ -33,7 +33,6 @@ import { useState, type ReactNode } from "react";
 
 import { isAiStudyPartnerUiEnabled } from "@/lib/aiStudyPartnerUi";
 
-import { MissedTasks } from "@/components/home/MissedTasks";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useEnabledFeaturesStore } from "@/store/useEnabledFeaturesStore";
 
@@ -114,6 +113,11 @@ const MeditationPageLazy = dynamic(
     import("@/components/meditation/MeditationPage").then((m) => ({ default: m.MeditationPage })),
   { ssr: false },
 );
+const MissedTasksLazy = dynamic(
+  () =>
+    import("@/components/home/MissedTasks").then((m) => ({ default: m.MissedTasks })),
+  { ssr: false },
+);
 const MyTargetClientLazy = dynamic(
   () =>
     import("@/components/myTarget/MyTargetClient").then((m) => ({ default: m.MyTargetClient })),
@@ -188,7 +192,7 @@ export function HomeAccordionSections() {
       id: "missed-tasks",
       title: "Missed Tasks",
       icon: LineChart,
-      content: <MissedTasks />,
+      content: <MissedTasksLazy />,
     },
     {
       id: "daily-debrief",

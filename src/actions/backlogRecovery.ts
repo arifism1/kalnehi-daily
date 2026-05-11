@@ -359,6 +359,49 @@ export async function updatePendingBacklogRowSubject(
   }
 }
 
+/**
+ * Mid-wizard draft save for one pending backlog row: persist the latest minutes
+ * (and subject) so users can leave Backlog Tracker without losing edits. Mirrors
+ * the clamps used by `toSchedulableItems` / final commit.
+ */
+export async function updatePendingBacklogRowTimeDraft(
+  backlogId: string,
+  effort_estimate_minutes: number | null,
+  group_label: string | null,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const id = String(backlogId ?? "").trim();
+  if (!id) return { ok: false, error: "Invalid item." };
+  const minutes =
+    typeof effort_estimate_minutes === "number" && Number.isFinite(effort_estimate_minutes)
+      ? Math.max(15, Math.min(480, Math.round(effort_estimate_minutes)))
+      : null;
+  const rawLabel = group_label == null ? "" : String(group_label);
+  const label = rawLabel.trim().slice(0, 120) || null;
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return { ok: false, error: USER_ERROR.session };
+
+    const { error } = await supabase
+      .from("user_syllabus_backlog")
+      .update({
+        effort_estimate_minutes: minutes,
+        group_label: label,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .eq("user_id", user.id)
+      .eq("status", "pending");
+    if (error) return { ok: false, error: USER_ERROR.tryAgain };
+    revalidateBacklogCachesOnly();
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: formatSupabaseError(e) };
+  }
+}
+
 export async function previewBacklogSchedule(
   items: OrganizedBacklogItemInput[],
   todayYmd: string,
