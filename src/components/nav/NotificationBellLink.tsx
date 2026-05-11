@@ -7,10 +7,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { getNotificationUnreadTotal } from "@/actions/notifications";
-import {
-  ensureUserNotificationsFirstPageCached,
-  prefetchUserNotificationsList,
-} from "@/lib/userNotificationsListCache";
+import { prefetchUserNotificationsList } from "@/lib/userNotificationsListCache";
 import { useAuthStore } from "@/store/useAuthStore";
 
 export function NotificationBellLink({ pathname }: { pathname: string | null }) {
@@ -47,7 +44,7 @@ export function NotificationBellLink({ pathname }: { pathname: string | null }) 
   }, [userId, pathname]);
 
   const handleBellClick = useCallback(
-    async (e: React.MouseEvent<HTMLAnchorElement>) => {
+    (e: React.MouseEvent<HTMLAnchorElement>) => {
       if (pathname === "/notifications") return;
       // Let the browser handle new tab / modified clicks; still warm cache in the background.
       if (
@@ -62,7 +59,7 @@ export function NotificationBellLink({ pathname }: { pathname: string | null }) 
       }
       if (!userId) return;
       e.preventDefault();
-      await ensureUserNotificationsFirstPageCached(userId);
+      prefetchUserNotificationsList(userId);
       router.push("/notifications");
     },
     [userId, pathname, router],
