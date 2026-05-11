@@ -36,12 +36,14 @@ const NAV_GROUPS: {
       { label: "Feature health", href: "/admin/feature-health" },
       { label: "Notifications", href: "/admin/notifications" },
       { label: "Batch analytics", href: "/admin/batches" },
+      { label: "PWA installs", href: "/admin/pwa" },
     ],
   },
   {
     label: "Support",
     items: [
       { label: "User lookup", href: "/admin/users" },
+      { label: "User activity", href: "/admin/user-activity" },
       { label: "Exam segments", href: "/admin/exam-segments" },
     ],
   },

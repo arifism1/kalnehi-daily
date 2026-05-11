@@ -18,6 +18,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { usePrepBrainAI } from "@/hooks/usePrepBrainAI";
+import { trackActivity } from "@/lib/activity";
 import { useAllExamScopes } from "@/hooks/useAllExamScopes";
 import { PREPBRAIN_UI_DISCLAIMER } from "@/lib/prepBrainPrompts";
 import {
@@ -328,6 +329,7 @@ export function PrepBrainChat() {
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!draft.trim() || isSending || atTokenLimit) return;
+    trackActivity("ai_chat_sent", { feature: "prepbrain" });
     void sendMessage(draft);
     setDraft("");
   };

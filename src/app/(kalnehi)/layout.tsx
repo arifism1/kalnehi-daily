@@ -2,6 +2,8 @@ import { KalnehiChrome } from "@/components/KalnehiChrome";
 import { ProtectedLayout } from "@/components/ProtectedLayout";
 import { ContactSupportProvider } from "@/components/support/ContactSupportProvider";
 import { SyncProvider } from "@/components/SyncProvider";
+import { PwaTracker } from "@/components/PwaTracker";
+import { ActivityTracker } from "@/components/ActivityTracker";
 
 export default function KalnehiLayout({
   children,
@@ -12,6 +14,8 @@ export default function KalnehiLayout({
     <ProtectedLayout>
       <SyncProvider>
         <ContactSupportProvider>
+          <PwaTracker />
+          <ActivityTracker />
           <KalnehiChrome>{children}</KalnehiChrome>
         </ContactSupportProvider>
       </SyncProvider>

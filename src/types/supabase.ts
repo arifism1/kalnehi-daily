@@ -2080,6 +2080,10 @@ export type Database = {
           trial_photo_scans_used: number
           trial_started_at: string | null
           trial_voice_seconds_used: number
+          pwa_first_opened_at: string | null
+          pwa_install_platform: string | null
+          pwa_install_status: string | null
+          pwa_last_opened_at: string | null
           ui_prefs: Json | null
           updated_at: string | null
           upsc_optional_subject: string | null
@@ -2151,6 +2155,10 @@ export type Database = {
           trial_photo_scans_used?: number
           trial_started_at?: string | null
           trial_voice_seconds_used?: number
+          pwa_first_opened_at?: string | null
+          pwa_install_platform?: string | null
+          pwa_install_status?: string | null
+          pwa_last_opened_at?: string | null
           ui_prefs?: Json | null
           updated_at?: string | null
           upsc_optional_subject?: string | null
@@ -2222,6 +2230,10 @@ export type Database = {
           trial_photo_scans_used?: number
           trial_started_at?: string | null
           trial_voice_seconds_used?: number
+          pwa_first_opened_at?: string | null
+          pwa_install_platform?: string | null
+          pwa_install_status?: string | null
+          pwa_last_opened_at?: string | null
           ui_prefs?: Json | null
           updated_at?: string | null
           upsc_optional_subject?: string | null
@@ -2233,6 +2245,50 @@ export type Database = {
           xp?: number
         }
         Relationships: []
+      }
+      user_activity_logs: {
+        Row: {
+          id: string
+          user_id: string
+          session_id: string
+          page: string
+          feature: string | null
+          action: string
+          metadata: Json
+          platform: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          session_id: string
+          page: string
+          feature?: string | null
+          action: string
+          metadata?: Json
+          platform?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          session_id?: string
+          page?: string
+          feature?: string | null
+          action?: string
+          metadata?: Json
+          platform?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_activity_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       user_progress: {
         Row: {

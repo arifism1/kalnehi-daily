@@ -19,6 +19,7 @@ import {
 } from "react";
 
 import { trackMetaTaskCompleted, trackMetaTimerStarted } from "@/lib/analytics";
+import { trackActivity } from "@/lib/activity";
 import {
   applyOptimisticTaskUpdate,
   undoRestoreTaskUpdate,
@@ -324,6 +325,7 @@ export function TaskCard({
       );
       if (res.ok) {
         trackMetaTaskCompleted();
+        trackActivity("task_completed", { feature: "tasks" });
         useUndoStore.getState().offerUndo({
           message: "Task completed",
           runUndo: async () => {

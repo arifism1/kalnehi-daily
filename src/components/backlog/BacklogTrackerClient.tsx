@@ -29,6 +29,7 @@ import {
   VOICE_LONG_FORM_SILENCE_MS,
 } from "@/lib/voiceConstants";
 import { trackMetaBacklogAdded, trackMetaBacklogPlanLocked } from "@/lib/analytics";
+import { trackActivity } from "@/lib/activity";
 import { useAuthStore } from "@/store/useAuthStore";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { AiFeatureGate } from "@/components/subscription/AiFeatureGate";
@@ -603,6 +604,7 @@ export function BacklogTrackerClient() {
     ]);
     setTranscript("");
     trackMetaBacklogAdded();
+    trackActivity("backlog_started", { feature: "backlog", metadata: { item_count: organizeItems.length } });
   };
 
   const continueToSetTimes = () => {
@@ -644,6 +646,7 @@ export function BacklogTrackerClient() {
         return;
       }
       trackMetaBacklogPlanLocked();
+      trackActivity("backlog_plan_locked", { feature: "backlog", metadata: { item_count: payload.length } });
       router.refresh();
       setTranscript("");
       setItems([]);

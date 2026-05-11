@@ -12,7 +12,7 @@ export default async function AdminUsersPage({
   const isListView = view === "list";
   const pageNum = Math.max(1, parseInt(page, 10) || 1);
   const initial = !isListView && q.trim().length >= 2 ? await searchUsersForAdmin(q) : [];
-  const listData = isListView ? await listUsersForAdmin(pageNum) : { rows: [], total: 0 };
+  const listData = isListView ? await listUsersForAdmin(pageNum, 25) : { rows: [], total: 0 };
   return (
     <AdminUsersClient
       initial={initial}

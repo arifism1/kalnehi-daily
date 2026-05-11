@@ -6,7 +6,7 @@ import { useState } from "react";
 import type { UserListRow, UserLookupBundle } from "@/lib/admin/queries/userLookupQueries";
 import { adminSegmentLabelFromProfile } from "@/lib/profileTrackSegment";
 
-const PER_PAGE = 50;
+const PER_PAGE = 25;
 
 function formatProfileNumber(value: unknown): string {
   if (typeof value === "number" && Number.isFinite(value)) {

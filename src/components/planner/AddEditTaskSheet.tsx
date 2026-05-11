@@ -18,6 +18,7 @@ import {
   applyOptimisticTaskUpdate,
 } from "@/lib/taskMutations";
 import { trackMetaTaskCompleted } from "@/lib/analytics";
+import { trackActivity } from "@/lib/activity";
 import { quickCreateEmptyTask } from "@/lib/quickTaskCreate";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useTaskStore, type Task } from "@/store/useTaskStore";
@@ -157,6 +158,7 @@ export function AddEditTaskSheet({
         setDraftError(null);
         setDraftTaskId(r.id);
         draftTaskIdRef.current = r.id;
+        trackActivity("task_created", { feature: "tasks" });
         return r.id;
       } finally {
         ensureDraftPromiseRef.current = null;
@@ -306,6 +308,7 @@ export function AddEditTaskSheet({
       patch.status === "completed"
     ) {
       trackMetaTaskCompleted();
+      trackActivity("task_completed", { feature: "tasks" });
     }
   }, [userId, task?.id, ensureDraftTaskId]);
 
