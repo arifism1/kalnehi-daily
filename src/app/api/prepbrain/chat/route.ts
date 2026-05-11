@@ -163,6 +163,31 @@ function isRecord(x: unknown): x is Record<string, unknown> {
   return x !== null && typeof x === "object" && !Array.isArray(x);
 }
 
+const INJECTION_PATTERNS: RegExp[] = [
+  /ignore\s+(all\s+)?(previous|prior|above|earlier)\s+(instructions?|rules?|prompt|context)/i,
+  /disregard\s+(all\s+)?(previous|prior|above|earlier)/i,
+  /forget\s+(everything|all|what|your|previous)/i,
+  /you\s+are\s+now\s+(a|an)\s+/i,
+  /\bact\s+as\s+(a|an)\s+/i,
+  /\bnew\s+(instructions?|rules?|persona|role)\b/i,
+  /reveal\s+(your\s+)?(system\s+)?(prompt|instructions?)/i,
+  /what\s+(are|is)\s+your\s+(system\s+)?prompt/i,
+  /print\s+(your\s+)?(system\s+|above\s+)?prompt/i,
+  /repeat\s+(the\s+)?(above|system|instructions?|prompt)/i,
+  /show\s+(me\s+)?(your\s+)?(system\s+)?prompt/i,
+  /override\s+(your\s+)?(instructions?|rules?|prompt|system)/i,
+  /jailbreak/i,
+  /pretend\s+(you\s+are|to\s+be)\s+(a|an)\s+/i,
+  /you\s+have\s+no\s+(restrictions?|rules?|guidelines?|limits?)/i,
+  /\bdan\b.*\bmode\b/i,
+  /developer\s+mode/i,
+];
+
+/** Returns true if the content contains a prompt injection attempt. */
+function containsInjectionAttempt(content: string): boolean {
+  return INJECTION_PATTERNS.some((p) => p.test(content));
+}
+
 async function prepbrainCooldownRemainMs(
   admin: NonNullable<ReturnType<typeof getSupabaseServiceRoleClient>>,
   userId: string,
@@ -420,6 +445,20 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { ok: false, error: "Last message must be from the user." },
       { status: 400 },
+    );
+  }
+
+  if (containsInjectionAttempt(last.content)) {
+    return NextResponse.json(
+      {
+        ok: true,
+        message:
+          "I'm here to help with your exam prep strategy using your Kalnehi data. Ask me about your syllabus, weak chapters, mock scores, or daily plan.",
+        intent: "small_talk",
+        tools_used: [],
+        cache_sources: {},
+      },
+      { status: 200 },
     );
   }
 
@@ -736,9 +775,10 @@ export async function POST(request: Request) {
   );
 
   // Assemble the full system prompt:
-  // intent prefix → depth/focus tags → core rules → summary → USER PREP DATA → last N messages.
-  // USER PREP DATA sits immediately before the conversation so the model grounds
-  // its answer in current data right before reading the user's question.
+  // intent prefix → depth/focus tags → core rules → summary → USER PREP DATA.
+  // Conversation turns are passed as role-separated messages in aiMessages (not inlined
+  // into the system prompt) to reduce injection surface — user content never sits inside
+  // the highest-authority context block.
   const depthTag = depth > 1
     ? ` [DEPTH: ${depth}]${focusSubject ? ` [FOCUS: ${focusSubject}]` : ""}`
     : "";
@@ -749,13 +789,7 @@ ${PREPBRAIN_SYSTEM_PROMPT}
 ${conversationSummary.text}
 --- USER PREP DATA ---
 ${toolPack.toolDataMarkdown}
---- END USER PREP DATA ---
-
---- LAST ${MAX_CHAT_MESSAGES} MESSAGES ---
-${fullMessages
-  .slice(-MAX_CHAT_MESSAGES)
-  .map((m) => `${m.role}: ${m.content}`)
-  .join("\n\n")}`.trim();
+--- END USER PREP DATA ---`.trim();
 
   const modelMessages = messagesForModel(fullMessages);
   const aiMessages: AiChatMessage[] = [
