@@ -1,26 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Minus } from "lucide-react";
 import Link from "next/link";
 
+import { FeatureCell, PRICING_FEATURES } from "@/lib/pricingFeatures";
 import { SMART_PLAN_MONTHLY_DISPLAY } from "@/lib/smartPlanPricing";
-
-type FeatureValue = boolean | string | null;
-
-const FEATURES: { name: string; trial: FeatureValue; smart: FeatureValue }[] = [
-  { name: "Plan your day with voice", trial: true, smart: true },
-  { name: "Syllabus tracker", trial: true, smart: true },
-  { name: "Focus timer + study camera", trial: true, smart: true },
-  { name: "Streak + consistency heatmap", trial: true, smart: true },
-  { name: "Doubt tracker", trial: true, smart: true },
-  { name: "Marks engine + rank prediction", trial: true, smart: true },
-  { name: "Revision Tracker", trial: true, smart: true },
-  { name: "Daily log & prep insights", trial: true, smart: true },
-  { name: "Mastermind Strategy Coach", trial: true, smart: true },
-  { name: "Voice control", trial: "5 min total", smart: "100 min/month" },
-  { name: "Mastermind tokens", trial: "60,000 total", smart: "20,00,000/month" },
-];
 
 type PlanKey = "trial" | "smart";
 
@@ -35,33 +19,25 @@ function plans(): {
 }[] {
   const m = SMART_PLAN_MONTHLY_DISPLAY;
   return [
-  {
-    key: "trial",
-    label: "Free Trial",
-    price: "₹0",
-    duration: "7 days",
-    cta: "Start free trial",
-    ctaHref: "/auth",
-    highlight: false,
-  },
-  {
-    key: "smart",
-    label: "Smart Plan",
-    price: m,
-    duration: "/month",
-    cta: `Subscribe — ${m}/month`,
-    ctaHref: "#subscribe",
-    highlight: true,
-  },
-];
-}
-
-function FeatureRow({ value }: { value: FeatureValue }) {
-  if (value === true)
-    return <Check className="h-4 w-4 text-emerald-500 dark:text-emerald-400" strokeWidth={2.5} aria-label="Included" />;
-  if (value === false || value === null)
-    return <Minus className="h-4 w-4 text-kal-muted/50" strokeWidth={2} aria-label="Not included" />;
-  return <span className="text-xs font-semibold tabular-nums text-kal-text">{value}</span>;
+    {
+      key: "trial",
+      label: "Free Trial",
+      price: "₹0",
+      duration: "7 days",
+      cta: "Start free trial",
+      ctaHref: "/auth",
+      highlight: false,
+    },
+    {
+      key: "smart",
+      label: "Smart Plan",
+      price: m,
+      duration: "/month",
+      cta: `Subscribe — ${m}/month`,
+      ctaHref: "#subscribe",
+      highlight: true,
+    },
+  ];
 }
 
 export function PricingTableMobile() {
@@ -132,7 +108,7 @@ export function PricingTableMobile() {
             )}
             {!plan.highlight && (
               <span className="mb-1 inline-block rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                3 Days Free
+                7 Days Free
               </span>
             )}
             <p
@@ -154,11 +130,11 @@ export function PricingTableMobile() {
 
         {/* Feature rows */}
         <div className="divide-y divide-kal-border/60">
-          {FEATURES.map((f) => (
+          {PRICING_FEATURES.map((f) => (
             <div key={f.name} className="flex items-center justify-between px-5 py-3">
               <span className="text-sm text-kal-text-secondary">{f.name}</span>
               <span className="flex shrink-0 items-center justify-end pl-4">
-                <FeatureRow value={f[plan.key]} />
+                <FeatureCell value={f[plan.key]} variant="mobile" />
               </span>
             </div>
           ))}

@@ -73,8 +73,8 @@ export const TIERS: Record<SubscriptionTier, TierConfig> = {
   pro: {
     id: "pro",
     name: "Smart Plan",
-    monthlyPricePaise: 39900,
-    monthlyPriceDisplay: "₹399",
+    monthlyPricePaise: 29900,
+    monthlyPriceDisplay: "₹299",
     trialPricePaise: 1900,
     trialDays: 3,
     trialPhotoScansLimit: 5,

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Check, Minus } from "lucide-react";
 
 import type { DailyCapStatus } from "@/lib/daily-trial-cap";
 import {
@@ -7,54 +6,10 @@ import {
   SMART_PLAN_ANNUAL_BILLING_LABEL,
   SMART_PLAN_SIX_MONTH_BILLING_LABEL,
 } from "@/lib/smartPlanPricing";
-import { PathFlowchart } from "./PathFlowchart";
+import { FeatureCell, PRICING_FEATURES } from "@/lib/pricingFeatures";
 import { PricingFAQ } from "./PricingFAQ";
 import { PricingPageClient } from "./PricingPageClient";
 import { PricingTableMobile } from "./PricingTableMobile";
-
-/* ─────────────────────────────── Data ─────────────────────────────── */
-
-type FeatureValue = boolean | string | null;
-
-const FEATURES: { name: string; trial: FeatureValue; smart: FeatureValue }[] = [
-  { name: "Plan your day with voice", trial: true, smart: true },
-  { name: "Syllabus tracker", trial: true, smart: true },
-  { name: "Focus timer + study camera", trial: true, smart: true },
-  { name: "Streak + consistency heatmap", trial: true, smart: true },
-  { name: "Doubt tracker", trial: true, smart: true },
-  { name: "Marks engine + rank prediction", trial: true, smart: true },
-  { name: "Revision Tracker", trial: true, smart: true },
-  { name: "Daily log & prep insights", trial: true, smart: true },
-  { name: "Mastermind Strategy Coach", trial: true, smart: true },
-  { name: "Voice control", trial: "5 min total", smart: "100 min/month" },
-  { name: "Mastermind tokens", trial: "60,000 total", smart: "20,00,000/month" },
-];
-
-/* ─────────────────────────────── Helpers ───────────────────────────── */
-
-function FeatureCell({ value }: { value: FeatureValue }) {
-  if (value === true)
-    return (
-      <span className="flex justify-center">
-        <Check
-          className="h-5 w-5 text-emerald-500 dark:text-emerald-400"
-          strokeWidth={2.5}
-          aria-label="Included"
-        />
-      </span>
-    );
-  if (value === false || value === null)
-    return (
-      <span className="flex justify-center">
-        <Minus className="h-4 w-4 text-kal-muted/50" strokeWidth={2} aria-label="Not included" />
-      </span>
-    );
-  return (
-    <span className="block text-center text-xs font-semibold tabular-nums text-kal-text">
-      {value}
-    </span>
-  );
-}
 
 /* ────────────────────────────── Sections ───────────────────────────── */
 
@@ -254,7 +209,7 @@ function PricingTableSection() {
               </thead>
 
               <tbody>
-                {FEATURES.map(({ name, trial, smart }, i) => (
+                {PRICING_FEATURES.map(({ name, trial, smart }, i) => (
                   <tr
                     key={name}
                     className={i % 2 === 0 ? "bg-kal-card/30" : "bg-transparent"}
@@ -303,7 +258,7 @@ function PricingTableSection() {
 
 function PlanCardsSection() {
   const m = SMART_PLAN_MONTHLY_DISPLAY;
-  const upfrontNote = `or ${SMART_PLAN_SIX_MONTH_BILLING_LABEL} (10% off) · ${SMART_PLAN_ANNUAL_BILLING_LABEL} (25% off)`;
+  const upfrontNote = `or ${SMART_PLAN_SIX_MONTH_BILLING_LABEL} (Save ₹895) · ${SMART_PLAN_ANNUAL_BILLING_LABEL} (Save ₹2,400)`;
   const cards: {
     name: string;
     price: string;
@@ -480,28 +435,6 @@ function PlanCardsSection() {
     </section>
   );
 }
-
-function PathSection() {
-  return (
-    <section className="py-16 sm:py-20">
-      <div className="mx-auto max-w-4xl px-6">
-        <div className="mb-10 text-center">
-          <h2
-            className="text-2xl font-normal tracking-tight text-kal-text sm:text-3xl"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            Your path forward.
-          </h2>
-          <p className="mt-2 text-sm text-kal-muted">
-            Three days free. One plan after that.
-          </p>
-        </div>
-        <PathFlowchart />
-      </div>
-    </section>
-  );
-}
-
 
 function CheckoutSection() {
   return (

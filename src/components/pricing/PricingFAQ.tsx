@@ -20,7 +20,7 @@ function buildFaqs(): { q: string; a: string }[] {
     },
     {
       q: "What happens after the 7-day free trial ends?",
-      a: `You need Smart Plan to keep using the app (${m}/month, or 6 months upfront at ${SMART_PLAN_SIX_MONTH_TOTAL_DISPLAY} with 10% off, or 12 months at ${SMART_PLAN_ANNUAL_TOTAL_DISPLAY} with 25% off). Your data and progress stay put. Subscribe from pricing or subscription settings whenever you're ready.`,
+      a: `You need Smart Plan to keep using the app (${m}/month, or 6 months upfront at ${SMART_PLAN_SIX_MONTH_TOTAL_DISPLAY} — save ₹895, or 12 months at ${SMART_PLAN_ANNUAL_TOTAL_DISPLAY} — save ₹2,400). Your data and progress stay put. Subscribe from pricing or subscription settings whenever you're ready.`,
     },
     {
       q: "Is a credit card required to start the trial?",
@@ -44,7 +44,7 @@ function buildFaqs(): { q: string; a: string }[] {
     },
     {
       q: "Is there a discount for longer autopay?",
-      a: `The monthly rate is still ${m}/month. On AutoPay you choose how many monthly charges to allow (1–12); the mandate stops after that. Or pay upfront for 6 months (${SMART_PLAN_SIX_MONTH_BILLING_LABEL} — 10% off) or 12 months (${SMART_PLAN_ANNUAL_BILLING_LABEL} — 25% off); moving from monthly to upfront stops monthly AutoPay when payment completes. Cancel from settings anytime.`,
+      a: `The monthly rate is still ${m}/month. On AutoPay you choose how many monthly charges to allow (1–12); the mandate stops after that. Or pay upfront for 6 months (${SMART_PLAN_SIX_MONTH_BILLING_LABEL} — save ₹895) or 12 months (${SMART_PLAN_ANNUAL_BILLING_LABEL} — save ₹2,400); moving from monthly to upfront stops monthly AutoPay when payment completes. Cancel from settings anytime.`,
     },
   ];
 }

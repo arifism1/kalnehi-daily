@@ -26,11 +26,17 @@ import {
 import { SITE_NAME } from "@/lib/seo-metadata";
 import {
   SMART_PLAN_ANNUAL_BILLING_LABEL,
+  SMART_PLAN_ANNUAL_MRP_DISPLAY,
   SMART_PLAN_ANNUAL_PRICE_PAISE,
+  SMART_PLAN_ANNUAL_SAVINGS_DISPLAY,
   SMART_PLAN_ANNUAL_TOTAL_DISPLAY,
   SMART_PLAN_MONTHLY_DISPLAY,
+  SMART_PLAN_MONTHLY_MRP_DISPLAY,
+  SMART_PLAN_MONTHLY_SAVINGS_DISPLAY,
   SMART_PLAN_SIX_MONTH_BILLING_LABEL,
+  SMART_PLAN_SIX_MONTH_MRP_DISPLAY,
   SMART_PLAN_SIX_MONTH_PRICE_PAISE,
+  SMART_PLAN_SIX_MONTH_SAVINGS_DISPLAY,
   SMART_PLAN_SIX_MONTH_TOTAL_DISPLAY,
   smartPlanEffectiveMonthlyMoLabel,
 } from "@/lib/smartPlanPricing";
@@ -57,8 +63,6 @@ declare global {
   }
 }
 
-const AUTOPAY_PRESET_MONTHS = [1, 2, 3, 6, 12] as const;
-
 function AutopayDurationPanel({
   value,
   onChange,
@@ -71,8 +75,33 @@ function AutopayDurationPanel({
   /** `replaceMandate`: user already on monthly AutoPay and is replacing it before period ends. */
   mode?: "new" | "replaceMandate";
 }) {
-  const monthWord = value === 1 ? "month" : "months";
   const replace = mode === "replaceMandate";
+  /** Local string so users can type 1–12 (e.g. clear field, type "12") without clamp fighting each keystroke. */
+  const [draft, setDraft] = useState(() => String(value));
+
+  useEffect(() => {
+    setDraft(String(value));
+  }, [value]);
+
+  const commitDraft = useCallback(() => {
+    const clamped = clampAutopayMonths(draft);
+    onChange(clamped);
+    setDraft(String(clamped));
+  }, [draft, onChange]);
+
+  const onMonthsInputChange = (raw: string) => {
+    if (!/^\d{0,2}$/.test(raw)) return;
+    setDraft(raw);
+    if (raw === "") return;
+    const n = Number.parseInt(raw, 10);
+    if (
+      Number.isFinite(n) &&
+      n >= AUTOPAY_MONTHS_MIN &&
+      n <= AUTOPAY_MONTHS_MAX
+    ) {
+      onChange(n);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-2xl space-y-2">
@@ -90,22 +119,22 @@ function AutopayDurationPanel({
               <p className="text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-kal-accent">
                 Smart Plan subscription
               </p>
-              <h2 className="kal-section-heading mt-0.5">
-                {replace ? "Replace AutoPay — how many months?" : "How long should AutoPay run?"}
+              <h2 id="autopay-months-heading" className="kal-section-heading mt-0.5">
+                How many months do you want to use the app?
               </h2>
               <p className="mt-1 text-xs leading-snug text-kal-text-secondary sm:mt-1.5">
                 {replace ? (
                   <>
                     You&apos;re switching to a{" "}
                     <span className="font-semibold text-kal-text">new</span> monthly mandate at{" "}
-                    {SMART_PLAN_MONTHLY_DISPLAY}/month. The duration you pick below applies from this
-                    checkout onward. Cancel anytime — even before all months are used — and keep access
-                    for what you&apos;ve already paid.
+                    {SMART_PLAN_MONTHLY_DISPLAY}/month. The number you enter sets how many monthly
+                    charges AutoPay may take. Cancel anytime — even before all months are used — and
+                    keep access for what you&apos;ve already paid.
                   </>
                 ) : (
                   <>
                     <span className="font-semibold text-kal-text">Monthly</span> billing at{" "}
-                    {SMART_PLAN_MONTHLY_DISPLAY}/month. Set how many monthly charges your UPI or card
+                    {SMART_PLAN_MONTHLY_DISPLAY}/month. Enter how many monthly charges your UPI or card
                     mandate may take. Cancel anytime &mdash; even before all months are used &mdash;
                     and keep access for what you&apos;ve already paid.
                   </>
@@ -114,84 +143,39 @@ function AutopayDurationPanel({
             </div>
           </div>
 
-          <fieldset className="mt-3 space-y-2.5 sm:mt-3.5" disabled={disabled}>
+          <fieldset className="mt-4 space-y-2 sm:mt-5" disabled={disabled}>
             <legend className="sr-only">
-              Number of months to authorize for AutoPay, from {AUTOPAY_MONTHS_MIN} to{" "}
+              Months of app use and AutoPay authorization, from {AUTOPAY_MONTHS_MIN} to{" "}
               {AUTOPAY_MONTHS_MAX}
             </legend>
 
-            <div>
-              <p
-                className="mb-1 text-[0.65rem] font-semibold uppercase tracking-wide text-kal-text-secondary"
-                id="autopay-preset-legend"
-              >
-                Quick picks
-              </p>
-              <div
-                className="kal-glass-subtle grid grid-cols-3 gap-1 rounded-xl border border-white/50 p-1 sm:grid-cols-6 dark:border-white/10"
-                role="group"
-                aria-labelledby="autopay-preset-legend"
-              >
-                {AUTOPAY_PRESET_MONTHS.map((m) => {
-                  const selected = value === m;
-                  return (
-                    <button
-                      key={m}
-                      type="button"
-                      aria-pressed={selected}
-                      onClick={() => onChange(m)}
-                      className={`flex min-h-[40px] flex-col items-center justify-center rounded-lg px-0.5 py-1 text-center transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kal-accent sm:min-h-[44px] ${
-                        selected
-                          ? "bg-kal-accent text-kal-accent-foreground shadow-sm ring-1 ring-kal-accent/30"
-                          : "text-kal-text-secondary hover:bg-kal-card-muted hover:text-kal-text"
-                      }`}
-                    >
-                      <span className="text-base font-bold tabular-nums leading-none sm:text-lg">{m}</span>
-                      <span className="mt-0.5 text-[0.6rem] font-semibold leading-none opacity-90">
-                        {m === 1 ? "month" : "months"}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div>
-              <div className="mb-1 flex items-center justify-between gap-2">
+            <div className="flex flex-wrap items-end gap-2 sm:gap-3">
+              <div className="min-w-0 flex-1 sm:max-w-[12rem]">
                 <label
-                  htmlFor="autopay-months-range"
-                  className="min-w-0 text-[0.7rem] font-semibold leading-tight text-kal-text-secondary sm:text-xs"
+                  htmlFor="autopay-months-input"
+                  className="mb-1 block text-[0.7rem] font-semibold text-kal-text-secondary sm:text-xs"
                 >
-                  Or drag ({AUTOPAY_MONTHS_MIN}–{AUTOPAY_MONTHS_MAX} months)
+                  Months
                 </label>
-                <span
-                  className="flex shrink-0 items-baseline gap-1 tabular-nums"
-                  aria-live="polite"
-                  aria-atomic="true"
-                >
-                  <span className="text-2xl font-bold leading-none text-kal-accent sm:text-3xl">
-                    {value}
-                  </span>
-                  <span className="text-[0.65rem] font-medium capitalize text-kal-text-secondary">
-                    {monthWord}
-                  </span>
-                </span>
+                <input
+                  id="autopay-months-input"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  spellCheck={false}
+                  maxLength={2}
+                  value={draft}
+                  aria-labelledby="autopay-months-heading"
+                  aria-describedby="autopay-months-hint"
+                  placeholder={`${AUTOPAY_MONTHS_MIN}–${AUTOPAY_MONTHS_MAX}`}
+                  onChange={(e) => onMonthsInputChange(e.target.value)}
+                  onBlur={commitDraft}
+                  className="w-full rounded-lg border border-kal-border bg-kal-card px-3 py-2.5 text-center text-lg font-bold tabular-nums text-kal-text outline-none ring-kal-accent/30 transition placeholder:font-normal placeholder:text-kal-muted focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
+                />
               </div>
-              <input
-                id="autopay-months-range"
-                type="range"
-                min={AUTOPAY_MONTHS_MIN}
-                max={AUTOPAY_MONTHS_MAX}
-                step={1}
-                value={value}
-                onChange={(e) => onChange(clampAutopayMonths(e.target.value))}
-                className="h-2.5 w-full cursor-pointer appearance-none rounded-full bg-kal-card-muted accent-kal-accent disabled:cursor-not-allowed disabled:opacity-50 sm:h-3"
-              />
-              <div className="mt-1 flex justify-between text-[0.6rem] font-medium tabular-nums text-kal-text-secondary/90">
-                <span>{AUTOPAY_MONTHS_MIN}</span>
-                <span aria-hidden>·</span>
-                <span>{AUTOPAY_MONTHS_MAX}</span>
-              </div>
+              <p id="autopay-months-hint" className="pb-2 text-xs text-kal-muted">
+                Type {AUTOPAY_MONTHS_MIN}–{AUTOPAY_MONTHS_MAX} (months of AutoPay).
+              </p>
             </div>
 
             <div className="flex gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/[0.07] px-2.5 py-2 backdrop-blur-sm dark:border-emerald-500/20 dark:bg-emerald-500/[0.08]">
@@ -259,8 +243,7 @@ export function PricingPageClient() {
   const [queuedState, setQueuedState] = useState<{ queuedFor: string; resetsAt: string } | null>(null);
 
   const pricingMonthlyHandlerEnteredRef = useRef(false);
-  const pricingAnnualHandlerEnteredRef = useRef(false);
-  const pricingSixMonthHandlerEnteredRef = useRef(false);
+  const upfrontHandlerEnteredRef = useRef(false);
 
   // Fetch daily cap status on mount; refresh every 60 s.
   useEffect(() => {
@@ -403,12 +386,27 @@ export function PricingPageClient() {
     }
   }, [autopayMonths]);
 
-  const startAnnualCheckout = useCallback(async () => {
-    pricingAnnualHandlerEnteredRef.current = false;
+  const startUpfrontCheckout = useCallback(async (kind: "annual" | "six_month") => {
+    const config =
+      kind === "annual"
+        ? {
+            apiPath: "/api/annual-plan",
+            verifyPath: "/api/annual-plan/verify",
+            description: `Smart Plan Annual · ${SMART_PLAN_ANNUAL_BILLING_LABEL}`,
+            orderError: "Could not create annual order.",
+          }
+        : {
+            apiPath: "/api/six-month-plan",
+            verifyPath: "/api/six-month-plan/verify",
+            description: `Smart Plan 6 Months · ${SMART_PLAN_SIX_MONTH_BILLING_LABEL}`,
+            orderError: "Could not create 6-month order.",
+          };
+
+    upfrontHandlerEnteredRef.current = false;
     setBusy(true);
     setCheckoutError(null);
     try {
-      const res = await fetch("/api/annual-plan", { method: "POST" });
+      const res = await fetch(config.apiPath, { method: "POST" });
       const created = (await res.json()) as {
         ok: boolean;
         error?: string;
@@ -418,7 +416,7 @@ export function PricingPageClient() {
         prefill?: { name: string; email: string };
       };
       if (!created.ok) {
-        setCheckoutError({ text: created.error ?? "Could not create annual order." });
+        setCheckoutError({ text: created.error ?? config.orderError });
         setBusy(false);
         return;
       }
@@ -432,7 +430,7 @@ export function PricingPageClient() {
       const rzp = new window.Razorpay({
         key: created.keyId,
         name: SITE_NAME,
-        description: `Smart Plan Annual · ${SMART_PLAN_ANNUAL_BILLING_LABEL}`,
+        description: config.description,
         order_id: created.orderId,
         amount: created.amountPaise,
         currency: "INR",
@@ -442,9 +440,9 @@ export function PricingPageClient() {
           ? { readonly: { email: true } }
           : {}),
         handler: async (response: { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }) => {
-          pricingAnnualHandlerEnteredRef.current = true;
+          upfrontHandlerEnteredRef.current = true;
           try {
-            const verified = await fetch("/api/annual-plan/verify", {
+            const verified = await fetch(config.verifyPath, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -468,7 +466,7 @@ export function PricingPageClient() {
         modal: {
           ondismiss: () => {
             window.setTimeout(() => {
-              if (pricingAnnualHandlerEnteredRef.current) return;
+              if (upfrontHandlerEnteredRef.current) return;
               setBusy(false);
             }, 120);
           },
@@ -477,88 +475,7 @@ export function PricingPageClient() {
       rzp.open();
     } catch (error) {
       if (process.env.NODE_ENV === "development") {
-        console.error("[pricing] startAnnualCheckout failed", error);
-      }
-      setCheckoutError({ text: toUserFacingMessage(error) });
-      setBusy(false);
-    }
-  }, []);
-
-  const startSixMonthCheckout = useCallback(async () => {
-    pricingSixMonthHandlerEnteredRef.current = false;
-    setBusy(true);
-    setCheckoutError(null);
-    try {
-      const res = await fetch("/api/six-month-plan", { method: "POST" });
-      const created = (await res.json()) as {
-        ok: boolean;
-        error?: string;
-        keyId?: string;
-        orderId?: string;
-        amountPaise?: number;
-        prefill?: { name: string; email: string };
-      };
-      if (!created.ok) {
-        setCheckoutError({ text: created.error ?? "Could not create 6-month order." });
-        setBusy(false);
-        return;
-      }
-
-      if (typeof window === "undefined" || !window.Razorpay) {
-        setCheckoutError({ text: "Unable to load payment window. Refresh and try again." });
-        setBusy(false);
-        return;
-      }
-
-      const rzp = new window.Razorpay({
-        key: created.keyId,
-        name: SITE_NAME,
-        description: `Smart Plan 6 Months · ${SMART_PLAN_SIX_MONTH_BILLING_LABEL}`,
-        order_id: created.orderId,
-        amount: created.amountPaise,
-        currency: "INR",
-        theme: { color: "#FF7A00" },
-        prefill: created.prefill,
-        ...(created.prefill?.email
-          ? { readonly: { email: true } }
-          : {}),
-        handler: async (response: { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }) => {
-          pricingSixMonthHandlerEnteredRef.current = true;
-          try {
-            const verified = await fetch("/api/six-month-plan/verify", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_signature: response.razorpay_signature,
-              }),
-            });
-            const result = (await verified.json()) as { ok: boolean; error?: string };
-            if (!result.ok) {
-              setCheckoutError({ text: result.error ?? "Payment verification failed. Contact support." });
-              setBusy(false);
-              return;
-            }
-            window.location.assign("/home");
-          } catch (error) {
-            setCheckoutError({ text: toUserFacingMessage(error) });
-            setBusy(false);
-          }
-        },
-        modal: {
-          ondismiss: () => {
-            window.setTimeout(() => {
-              if (pricingSixMonthHandlerEnteredRef.current) return;
-              setBusy(false);
-            }, 120);
-          },
-        },
-      });
-      rzp.open();
-    } catch (error) {
-      if (process.env.NODE_ENV === "development") {
-        console.error("[pricing] startSixMonthCheckout failed", error);
+        console.error(`[pricing] startUpfrontCheckout(${kind}) failed`, error);
       }
       setCheckoutError({ text: toUserFacingMessage(error) });
       setBusy(false);
@@ -909,7 +826,7 @@ export function PricingPageClient() {
               <span className={`mt-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide leading-none ${
                 billingCycle === "six_month" ? "bg-white/25 text-white" : "bg-kal-accent/15 text-kal-accent"
               }`}>
-                Save 10%
+                Save {SMART_PLAN_SIX_MONTH_SAVINGS_DISPLAY}
               </span>
             </button>
             <button
@@ -929,7 +846,7 @@ export function PricingPageClient() {
               <span className={`mt-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide leading-none ${
                 billingCycle === "annual" ? "bg-white/25 text-white" : "bg-kal-accent/15 text-kal-accent"
               }`}>
-                Save 25%
+                Save {SMART_PLAN_ANNUAL_SAVINGS_DISPLAY}
               </span>
             </button>
           </div>
@@ -967,10 +884,16 @@ export function PricingPageClient() {
             <div className="mt-4 rounded-xl border border-kal-accent/40 bg-kal-accent/10 px-3 py-3">
               {billingCycle === "annual" ? (
                 <>
+                  <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-kal-accent">
+                    Introductory Offer — Save {SMART_PLAN_ANNUAL_SAVINGS_DISPLAY}
+                  </p>
                   <p className="text-lg font-bold leading-snug text-kal-text">
+                    <span className="mr-1.5 text-sm font-normal text-kal-muted line-through">
+                      {SMART_PLAN_ANNUAL_MRP_DISPLAY}
+                    </span>
                     {SMART_PLAN_ANNUAL_BILLING_LABEL}
                     <span className="ml-2 text-xs font-semibold text-kal-accent">
-                      {smartPlanEffectiveMonthlyMoLabel(SMART_PLAN_ANNUAL_PRICE_PAISE, 12)} · Save 25%
+                      {smartPlanEffectiveMonthlyMoLabel(SMART_PLAN_ANNUAL_PRICE_PAISE, 12)}
                     </span>
                   </p>
                   <p className="mt-1 text-xs font-medium leading-snug text-kal-text-secondary">
@@ -979,10 +902,16 @@ export function PricingPageClient() {
                 </>
               ) : billingCycle === "six_month" ? (
                 <>
+                  <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-kal-accent">
+                    Introductory Offer — Save {SMART_PLAN_SIX_MONTH_SAVINGS_DISPLAY}
+                  </p>
                   <p className="text-lg font-bold leading-snug text-kal-text">
+                    <span className="mr-1.5 text-sm font-normal text-kal-muted line-through">
+                      {SMART_PLAN_SIX_MONTH_MRP_DISPLAY}
+                    </span>
                     {SMART_PLAN_SIX_MONTH_BILLING_LABEL}
                     <span className="ml-2 text-xs font-semibold text-kal-accent">
-                      {smartPlanEffectiveMonthlyMoLabel(SMART_PLAN_SIX_MONTH_PRICE_PAISE, 6)} · Save 10%
+                      {smartPlanEffectiveMonthlyMoLabel(SMART_PLAN_SIX_MONTH_PRICE_PAISE, 6)}
                     </span>
                   </p>
                   <p className="mt-1 text-xs font-medium leading-snug text-kal-text-secondary">
@@ -991,7 +920,13 @@ export function PricingPageClient() {
                 </>
               ) : (
                 <>
+                  <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-kal-accent">
+                    Introductory Offer — Save {SMART_PLAN_MONTHLY_SAVINGS_DISPLAY}
+                  </p>
                   <p className="text-lg font-bold leading-snug text-kal-text">
+                    <span className="mr-1.5 text-sm font-normal text-kal-muted line-through">
+                      {SMART_PLAN_MONTHLY_MRP_DISPLAY}
+                    </span>
                     {pro.monthlyPriceDisplay}/month
                   </p>
                   <p className="mt-1 text-xs font-medium leading-snug text-kal-text-secondary">
@@ -1024,9 +959,9 @@ export function PricingPageClient() {
                   return;
                 }
                 if (billingCycle === "annual") {
-                  void startAnnualCheckout();
+                  void startUpfrontCheckout("annual");
                 } else if (billingCycle === "six_month") {
-                  void startSixMonthCheckout();
+                  void startUpfrontCheckout("six_month");
                 } else {
                   void startCheckout();
                 }

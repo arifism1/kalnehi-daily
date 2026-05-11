@@ -6,10 +6,24 @@
 import { TIERS } from "@/lib/subscriptionTiers";
 
 /** Paise — same as `/api/six-month-plan` and verify route. */
-export const SMART_PLAN_SIX_MONTH_PRICE_PAISE = 215400;
+export const SMART_PLAN_SIX_MONTH_PRICE_PAISE = 149900;
 
 /** Paise — same as `/api/annual-plan` and verify route. */
-export const SMART_PLAN_ANNUAL_PRICE_PAISE = 359100;
+export const SMART_PLAN_ANNUAL_PRICE_PAISE = 238800;
+
+/** Introductory offer — original (MRP) monthly price for strikethrough display. */
+export const SMART_PLAN_MONTHLY_MRP_DISPLAY = "₹399";
+
+/** Introductory offer — MRP for 6 months (₹399 × 6) for strikethrough display. */
+export const SMART_PLAN_SIX_MONTH_MRP_DISPLAY = "₹2,394";
+
+/** Introductory offer — MRP for 12 months (₹399 × 12) for strikethrough display. */
+export const SMART_PLAN_ANNUAL_MRP_DISPLAY = "₹4,788";
+
+/** Introductory offer — savings vs MRP (marketing copy; keep aligned with MRP vs paid totals). */
+export const SMART_PLAN_MONTHLY_SAVINGS_DISPLAY = "₹100";
+export const SMART_PLAN_SIX_MONTH_SAVINGS_DISPLAY = "₹895";
+export const SMART_PLAN_ANNUAL_SAVINGS_DISPLAY = "₹2,400";
 
 export const SMART_PLAN_MONTHLY_DISPLAY = TIERS.pro.monthlyPriceDisplay;
 
