@@ -1,12 +1,17 @@
 /**
- * PWA launcher icons: wordmark from `public/brand/launcher-source.png` on cream; navy splashes.
+ * PWA launcher icons: wordmark from `public/brand/launcher-source.png` on cream; navy splashes with the same wordmark centered.
  * Also writes Android `mipmap-*dpi/ic_launcher*.png` — adaptive foregrounds must be **108×108 dp**
  * per density (not legacy 48dp icon sizes) or installed builds look blurry.
  *
  * Run: node scripts/rebuild-pwa-assets.mjs
  *   or: node scripts/rebuild-pwa-assets.mjs --icons  (icons + source only, no splashes)
  */
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -43,8 +48,11 @@ const BRAND_SOURCE = join(ROOT, "public/brand/launcher-source.png");
 /** Written on each `generate:icons` run — 1024×1024, matches pipeline input. */
 const SRC = join(ROOT, "public/app-icon-source.png");
 
-const BRAND_HEX = "#FF7A00";
 const NAVY_HEX = "#0f172a";
+const NAVY_RGBA = (() => {
+  const n = Number.parseInt(NAVY_HEX.slice(1), 16);
+  return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255, alpha: 1 };
+})();
 
 /** theme background for launcher tiles — matches src/app/manifest.ts */
 const BG = { r: 250, g: 247, b: 242, alpha: 1 };
@@ -150,16 +158,27 @@ function splashFilename(w, h) {
   return `apple-${w}x${h}.png`;
 }
 
-async function writeSplashPng(w, h) {
-  const r = Math.max(1, Math.round(0.12 * Math.min(w, h)));
-  const cx = w / 2;
-  const cy = h / 2;
-  const svg = `<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">
-  <rect width="100%" height="100%" fill="${NAVY_HEX}"/>
-  <circle cx="${cx}" cy="${cy}" r="${r}" fill="${BRAND_HEX}"/>
-</svg>`;
+async function writeSplashPng(w, h, markBuf) {
+  const inner = Math.max(1, Math.round(CONTENT_SCALE * Math.min(w, h)));
+  const resized = await sharp(markBuf)
+    .resize(inner, inner, {
+      fit: "contain",
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+      kernel: sharp.kernel.lanczos3,
+    })
+    .ensureAlpha()
+    .toBuffer();
+
   const out = join(ROOT, "public", "splash", splashFilename(w, h));
-  const buf = await sharp(Buffer.from(svg))
+  const buf = await sharp({
+    create: {
+      width: w,
+      height: h,
+      channels: 4,
+      background: NAVY_RGBA,
+    },
+  })
+    .composite([{ input: resized, gravity: "center" }])
     .png({ compressionLevel: 9 })
     .toBuffer();
   writeFileSync(out, buf);
@@ -186,38 +205,54 @@ export async function buildIcons() {
 }
 
 export async function buildSplashes() {
+  const markRaw = await readBrandMasterPng();
+  const markBuf = await stripNearWhitePlatePng(markRaw);
   for (const [w, h] of SPLASH_SIZES) {
-    await writeSplashPng(w, h);
+    await writeSplashPng(w, h, markBuf);
   }
 }
 
 /** Regenerate Play Store / launcher mipmaps from the same master as PWA icons. */
 export async function buildAndroidLauncherMipmaps() {
+  if (!existsSync(ANDROID_RES)) {
+    console.warn(
+      `Skipping Android launcher mipmaps: missing ${ANDROID_RES} (web-only clone or native tree not checked out).`
+    );
+    return false;
+  }
+
   const markRaw = await readBrandMasterPng();
   const toUse = await stripNearWhitePlatePng(markRaw);
 
   for (const [folder, px] of Object.entries(ANDROID_ADAPTIVE_FG_PX)) {
+    const dir = join(ANDROID_RES, folder);
+    mkdirSync(dir, { recursive: true });
     const buf = await paddedSquare(px, toUse);
-    writeFileSync(join(ANDROID_RES, folder, "ic_launcher_foreground.png"), buf);
+    writeFileSync(join(dir, "ic_launcher_foreground.png"), buf);
   }
 
   for (const [folder, px] of Object.entries(ANDROID_LEGACY_PX)) {
-    const buf = await paddedSquare(px, toUse);
     const dir = join(ANDROID_RES, folder);
+    mkdirSync(dir, { recursive: true });
+    const buf = await paddedSquare(px, toUse);
     writeFileSync(join(dir, "ic_launcher.png"), buf);
     writeFileSync(join(dir, "ic_launcher_round.png"), buf);
   }
+
+  return true;
 }
 
 export async function runPwaAssetBuild({ splashes = true } = {}) {
   await buildIcons();
-  await buildAndroidLauncherMipmaps();
+  const androidWrote = await buildAndroidLauncherMipmaps();
   if (splashes) {
     await buildSplashes();
   }
   console.log("PWA assets OK:", {
     icons: "public/brand/launcher-source.png → app-icon-source.png + icon-*.png + apple-touch-icon.png",
-    android: "android/app/src/main/res/mipmap-*/ic_launcher*.png (adaptive + legacy)",
+    android: androidWrote
+      ? "android/app/src/main/res/mipmap-*/ic_launcher*.png (adaptive + legacy)"
+      : "skipped (no android/app/src/main/res)",
     splashes: splashes ? "public/splash/apple-*.png" : "skipped",
   });
 }

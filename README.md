@@ -48,7 +48,7 @@ For architecture, auth, proxy behavior, cron, and troubleshooting, use **[docs/D
 | `npm run verify:service-role` | Service role scope |
 | `npm run verify:dast-staging` | DAST staging hints |
 | `npm run verify:security` | Audit + Supabase + service-role + DAST hints |
-| `npm run generate:pwa-assets` | PWA asset rebuild |
+| `npm run generate:pwa-assets` | Rebuild PWA icons + iOS splashes + Android launcher mipmaps when `android/app/src/main/res` exists; otherwise skips Android and still refreshes web assets. Use `npm run generate:icons` for icons only (no splashes). |
 | `npm run test:rollup` | Syllabus rollup tests |
 | `npm run test:leaderboard` | Leaderboard tests |
 | `npm run test:prepbrain` | PrepBrain / Mastermind routing tests |
