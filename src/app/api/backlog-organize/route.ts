@@ -25,8 +25,12 @@ type OrganizeItem = {
 function stripJsonFence(raw: string): string {
   const t = raw.trim();
   const fence = /^```(?:json)?\s*([\s\S]*?)```$/m.exec(t);
-  if (fence) return fence[1]!.trim();
-  return t;
+  const candidate = fence ? fence[1]!.trim() : t;
+  // Extract the outermost JSON object even when prose surrounds it
+  const first = candidate.indexOf("{");
+  const last = candidate.lastIndexOf("}");
+  if (first !== -1 && last > first) return candidate.slice(first, last + 1);
+  return candidate;
 }
 
 function parseOrganizeResponse(text: string): OrganizeItem[] {
@@ -146,6 +150,7 @@ Rules:
 - title: short actionable line (subject – topic) when possible.
 - group_label: subject / track label for grouping (e.g. Organic Chemistry). May be null.
 - Do NOT output durations, time estimates, schedules, or study suggestions — only titles and syllabus mapping.
+- Ignore conversational filler ("Hi", "okay so", "I need to", etc.) — extract only the study tasks.
 - No markdown, no prose outside JSON.
 Catalog microtopics (id, subject, chapter, microtopic) — use id as syllabus_master_id when matched:
 ${catalogJson}`;
