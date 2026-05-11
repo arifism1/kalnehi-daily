@@ -110,98 +110,82 @@ function AutopayDurationPanel({
           className="pointer-events-none absolute -right-10 -top-12 h-28 w-28 rounded-full bg-kal-accent/12 blur-2xl dark:bg-kal-accent/10"
           aria-hidden
         />
-        <div className="relative p-3 sm:p-4">
+        <div className="relative p-3">
           <div className="flex gap-2.5 sm:gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-kal-accent/15 text-kal-accent ring-1 ring-kal-accent/20 sm:h-10 sm:w-10">
-              <CalendarClock className="h-4 w-4 sm:h-[1.125rem] sm:w-[1.125rem]" strokeWidth={2} aria-hidden />
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-kal-accent/15 text-kal-accent ring-1 ring-kal-accent/20">
+              <CalendarClock className="h-4 w-4" strokeWidth={2} aria-hidden />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-kal-accent">
                 Smart Plan subscription
               </p>
-              <h2 id="autopay-months-heading" className="kal-section-heading mt-0.5">
-                How many months do you want to use the app?
-              </h2>
-              <p className="mt-1 text-xs leading-snug text-kal-text-secondary sm:mt-1.5">
+              <div className="mt-0.5 flex items-center justify-between gap-3">
+                <h2 id="autopay-months-heading" className="kal-section-heading">
+                  How many months?
+                </h2>
+                <fieldset disabled={disabled} className="shrink-0">
+                  <legend className="sr-only">
+                    Months of AutoPay authorization, {AUTOPAY_MONTHS_MIN}–{AUTOPAY_MONTHS_MAX}
+                  </legend>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      id="autopay-months-input"
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="off"
+                      spellCheck={false}
+                      maxLength={2}
+                      value={draft}
+                      aria-labelledby="autopay-months-heading"
+                      aria-label={`Months of AutoPay (${AUTOPAY_MONTHS_MIN}–${AUTOPAY_MONTHS_MAX})`}
+                      placeholder={`${AUTOPAY_MONTHS_MIN}–${AUTOPAY_MONTHS_MAX}`}
+                      onChange={(e) => onMonthsInputChange(e.target.value)}
+                      onBlur={commitDraft}
+                      className="w-14 rounded-lg border border-kal-border bg-kal-card px-2 py-1.5 text-center text-lg font-bold tabular-nums text-kal-text outline-none ring-kal-accent/30 transition placeholder:font-normal placeholder:text-kal-muted focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    />
+                    <span className="text-xs text-kal-muted">mo</span>
+                  </div>
+                </fieldset>
+              </div>
+              <p className="mt-1 text-xs leading-snug text-kal-text-secondary">
                 {replace ? (
                   <>
-                    You&apos;re switching to a{" "}
-                    <span className="font-semibold text-kal-text">new</span> monthly mandate at{" "}
-                    {SMART_PLAN_MONTHLY_DISPLAY}/month. The number you enter sets how many monthly
-                    charges AutoPay may take. Cancel anytime — even before all months are used — and
-                    keep access for what you&apos;ve already paid.
+                    New mandate at {SMART_PLAN_MONTHLY_DISPLAY}/mo — cancel anytime, keep access for
+                    paid months.
                   </>
                 ) : (
                   <>
-                    <span className="font-semibold text-kal-text">Monthly</span> billing at{" "}
-                    {SMART_PLAN_MONTHLY_DISPLAY}/month. Enter how many monthly charges your UPI or card
-                    mandate may take. Cancel anytime &mdash; even before all months are used &mdash;
-                    and keep access for what you&apos;ve already paid.
+                    Monthly at {SMART_PLAN_MONTHLY_DISPLAY}/mo — cancel anytime, keep access for paid
+                    months.
                   </>
                 )}
               </p>
             </div>
           </div>
 
-          <fieldset className="mt-4 space-y-2 sm:mt-5" disabled={disabled}>
-            <legend className="sr-only">
-              Months of app use and AutoPay authorization, from {AUTOPAY_MONTHS_MIN} to{" "}
-              {AUTOPAY_MONTHS_MAX}
-            </legend>
-
-            <div className="flex flex-wrap items-end gap-2 sm:gap-3">
-              <div className="min-w-0 flex-1 sm:max-w-[12rem]">
-                <label
-                  htmlFor="autopay-months-input"
-                  className="mb-1 block text-[0.7rem] font-semibold text-kal-text-secondary sm:text-xs"
-                >
-                  Months
-                </label>
-                <input
-                  id="autopay-months-input"
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="off"
-                  spellCheck={false}
-                  maxLength={2}
-                  value={draft}
-                  aria-labelledby="autopay-months-heading"
-                  aria-describedby="autopay-months-hint"
-                  placeholder={`${AUTOPAY_MONTHS_MIN}–${AUTOPAY_MONTHS_MAX}`}
-                  onChange={(e) => onMonthsInputChange(e.target.value)}
-                  onBlur={commitDraft}
-                  className="w-full rounded-lg border border-kal-border bg-kal-card px-3 py-2.5 text-center text-lg font-bold tabular-nums text-kal-text outline-none ring-kal-accent/30 transition placeholder:font-normal placeholder:text-kal-muted focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
-                />
-              </div>
-              <p id="autopay-months-hint" className="pb-2 text-xs text-kal-muted">
-                Type {AUTOPAY_MONTHS_MIN}–{AUTOPAY_MONTHS_MAX} (months of AutoPay).
-              </p>
-            </div>
-
-            <div className="flex gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/[0.07] px-2.5 py-2 backdrop-blur-sm dark:border-emerald-500/20 dark:bg-emerald-500/[0.08]">
-              <Check
-                className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400"
-                strokeWidth={2.5}
-                aria-hidden
-              />
-              <p className="text-[0.7rem] leading-snug text-kal-text sm:text-xs">
-                <span className="font-semibold text-kal-text">Summary:</span>{" "}
-                {replace ? (
-                  <>
-                    New mandate: up to{" "}
-                    <span className="font-bold text-kal-accent tabular-nums">{value}</span> monthly
-                    payment{value === 1 ? "" : "s"}, then stops unless you subscribe again.
-                  </>
-                ) : (
-                  <>
-                    Up to{" "}
-                    <span className="font-bold text-kal-accent tabular-nums">{value}</span> monthly
-                    payment{value === 1 ? "" : "s"}, then stops unless you subscribe again.
-                  </>
-                )}
-              </p>
-            </div>
-          </fieldset>
+          <div className="mt-2 flex gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/[0.07] px-2.5 py-2 backdrop-blur-sm dark:border-emerald-500/20 dark:bg-emerald-500/[0.08]">
+            <Check
+              className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400"
+              strokeWidth={2.5}
+              aria-hidden
+            />
+            <p className="text-[0.7rem] leading-snug text-kal-text sm:text-xs">
+              <span className="font-semibold text-kal-text">Summary:</span>{" "}
+              {replace ? (
+                <>
+                  New mandate: up to{" "}
+                  <span className="font-bold text-kal-accent tabular-nums">{value}</span> monthly
+                  payment{value === 1 ? "" : "s"}, then stops unless you subscribe again.
+                </>
+              ) : (
+                <>
+                  Up to{" "}
+                  <span className="font-bold text-kal-accent tabular-nums">{value}</span> monthly
+                  payment{value === 1 ? "" : "s"}, then stops unless you subscribe again.
+                </>
+              )}
+            </p>
+          </div>
         </div>
       </div>
       <p className="text-center text-[0.65rem] font-medium uppercase tracking-[0.12em] text-kal-text-secondary">
@@ -816,7 +800,7 @@ export function PricingPageClient() {
               className={`flex flex-col items-center justify-center rounded-xl px-2 py-2.5 text-center transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kal-accent ${
                 billingCycle === "six_month"
                   ? "bg-kal-accent text-white shadow-sm"
-                  : "text-kal-text-secondary hover:text-kal-text"
+                  : "bg-amber-500/10 text-kal-text-secondary hover:text-kal-text dark:bg-amber-500/14"
               }`}
             >
               <span className="text-[11px] font-bold leading-tight">6 Months</span>
@@ -836,7 +820,7 @@ export function PricingPageClient() {
               className={`flex flex-col items-center justify-center rounded-xl px-2 py-2.5 text-center transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kal-accent ${
                 billingCycle === "annual"
                   ? "bg-kal-accent text-white shadow-sm"
-                  : "text-kal-text-secondary hover:text-kal-text"
+                  : "bg-amber-500/[0.18] text-kal-text-secondary hover:text-kal-text dark:bg-amber-500/[0.22]"
               }`}
             >
               <span className="text-[11px] font-bold leading-tight">Annual</span>
@@ -934,20 +918,6 @@ export function PricingPageClient() {
                   </p>
                 </>
               )}
-            </div>
-
-            <div className="mt-4 flex min-h-0 flex-1 flex-col">
-              <ul className="space-y-2">
-                {pro.benefits.map((b) => (
-                  <li
-                    key={b}
-                    className="flex items-start gap-2 text-xs leading-snug text-kal-text-secondary sm:text-sm"
-                  >
-                    <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
-                    <span>{b}</span>
-                  </li>
-                ))}
-              </ul>
             </div>
 
             <button
