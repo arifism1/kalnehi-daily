@@ -1,11 +1,7 @@
 import Link from "next/link";
 
 import type { DailyCapStatus } from "@/lib/daily-trial-cap";
-import {
-  SMART_PLAN_MONTHLY_DISPLAY,
-  SMART_PLAN_ANNUAL_BILLING_LABEL,
-  SMART_PLAN_SIX_MONTH_BILLING_LABEL,
-} from "@/lib/smartPlanPricing";
+import { SMART_PLAN_MONTHLY_DISPLAY } from "@/lib/smartPlanPricing";
 import { FeatureCell, PRICING_FEATURES } from "@/lib/pricingFeatures";
 import { PricingFAQ } from "./PricingFAQ";
 import { PricingPageClient } from "./PricingPageClient";
@@ -71,18 +67,6 @@ function HeroSection({ capStatus }: { capStatus: DailyCapStatus }) {
           </div>
         )}
 
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-          {[
-            "UPI & cards accepted",
-            "Cancel anytime",
-            "Works on Android, iOS, desktop",
-          ].map((s) => (
-            <span key={s} className="flex items-center gap-1.5 text-xs text-kal-muted">
-              <span className="h-1 w-1 rounded-full bg-kal-accent/50" aria-hidden />
-              {s}
-            </span>
-          ))}
-        </div>
       </div>
     </section>
   );
@@ -135,7 +119,7 @@ function HowItWorksSection() {
 
 function PricingTableSection() {
   return (
-    <section id="pricing-table" className="py-16 sm:py-20">
+    <section id="pricing-table" className="scroll-mt-16 py-16 sm:py-20">
       <div className="mx-auto max-w-4xl px-4 sm:px-6">
         <div className="mb-10 text-center">
           <h2
@@ -227,231 +211,14 @@ function PricingTableSection() {
                 ))}
               </tbody>
 
-              <tfoot>
-                <tr className="border-t border-kal-border">
-                  <td className="px-4 py-4 sm:px-6" />
-                  <td className="px-3 py-4 text-center">
-                    <Link
-                      href="/#subscribe"
-                      className="inline-flex min-h-[40px] items-center justify-center rounded-full border border-kal-border px-4 text-sm font-semibold text-kal-text-secondary transition hover:border-kal-accent/40 hover:text-kal-accent"
-                    >
-                      Start free today
-                    </Link>
-                  </td>
-                  <td className="bg-kal-accent/[0.04] px-3 py-4 text-center ring-2 ring-inset ring-kal-accent/30">
-                    <Link
-                      href="#subscribe"
-                      className="inline-flex min-h-[40px] items-center justify-center rounded-full bg-kal-accent px-5 text-sm font-bold text-white shadow-[0_4px_16px_rgba(255,122,0,0.28)] transition hover:brightness-105"
-                    >
-                      Subscribe — {SMART_PLAN_MONTHLY_DISPLAY}/mo
-                    </Link>
-                  </td>
-                </tr>
-              </tfoot>
+
             </table>
           </div>
         </div>
-      </div>
-    </section>
-  );
-}
 
-function PlanCardsSection() {
-  const m = SMART_PLAN_MONTHLY_DISPLAY;
-  const upfrontNote = `or ${SMART_PLAN_SIX_MONTH_BILLING_LABEL} (Save ₹895) · ${SMART_PLAN_ANNUAL_BILLING_LABEL} (Save ₹2,400)`;
-  const cards: {
-    name: string;
-    price: string;
-    duration: string;
-    annualNote?: string;
-    tag: string | null;
-    borderClass: string;
-    badgeBg: string;
-    badgeText: string;
-    cta: string;
-    ctaHref: string;
-    ctaClass: string;
-    intro: string;
-    bullets: string[];
-  }[] = [
-    {
-      name: "Free Trial",
-      price: "₹0",
-      duration: "7-day trial",
-      tag: "Start here",
-      borderClass: "border-kal-border",
-      badgeBg: "bg-kal-card-muted",
-      badgeText: "text-kal-muted",
-      cta: "Start free today →",
-      ctaHref: "/#subscribe",
-      ctaClass:
-        "border border-kal-border bg-kal-card text-kal-text hover:border-kal-accent/40 hover:text-kal-accent",
-      intro: "Limited free spots each day. Spots reset at midnight IST.",
-      bullets: [
-        "Plan your day with voice + syllabus tracker",
-        "Focus timer + study camera",
-        "Streak + consistency heatmap",
-        "Doubt tracker",
-        "Marks engine + rank prediction",
-        "Revision Tracker + daily log",
-        "Mastermind Strategy Coach",
-        "Voice control — 5 minutes total",
-        "Mastermind tokens — 60,000 total",
-      ],
-    },
-    {
-      name: "Smart Plan",
-      price: m,
-      duration: "per month",
-      annualNote: upfrontNote,
-      tag: "Most popular",
-      borderClass: "border-kal-accent/60",
-      badgeBg: "bg-kal-accent",
-      badgeText: "text-white",
-      cta: `Subscribe — ${m}/month`,
-      ctaHref: "#subscribe",
-      ctaClass:
-        "bg-kal-accent text-white shadow-[0_4px_16px_rgba(255,122,0,0.28)] hover:brightness-105",
-      intro: "The full system, every month. 20 lakh Mastermind tokens. 100 minutes of voice.",
-      bullets: [
-        "Everything in the free trial, every month",
-        "Mastermind — 20 lakh tokens/month",
-        "Voice control — 100 minutes/month",
-        "Marks engine + rank prediction",
-        "Revision Tracker + daily log + prep insights",
-        "AutoPay: choose 1–12 months, stops on its own",
-        "Switch to 6-month or annual anytime — monthly AutoPay stops when upfront checkout completes",
-        "Cancel anytime from settings — no calls, no forms",
-      ],
-    },
-  ];
-
-  const skipCard: (typeof cards)[number] = {
-    name: "Skip the queue",
-    price: "₹19",
-    duration: "one time",
-    tag: "Fastest",
-    borderClass: "border-kal-accent/40",
-    badgeBg: "bg-kal-accent/15",
-    badgeText: "text-kal-accent",
-    cta: "Start today →",
-    ctaHref: "/waitlist/position",
-    ctaClass:
-      "border border-kal-accent/60 bg-kal-accent/10 text-kal-accent hover:bg-kal-accent/15",
-    intro: "Don't want to wait for a batch? ₹19 gets you in right now.",
-    bullets: [
-      "Immediate access — no queue",
-      "Same 7-day free trial as batch users",
-      "60,000 Mastermind tokens included",
-      "5 minutes voice included",
-      "One-time payment, no recurring charge",
-    ],
-  };
-
-  return (
-    <section className="bg-kal-page-end py-16 sm:py-20">
-      <div className="mx-auto max-w-5xl px-6 sm:px-8">
-        <div className="mb-10 text-center">
-          <h2
-            className="text-2xl font-normal tracking-tight text-kal-text sm:text-3xl"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            Three simple options.
-          </h2>
-          <p className="mt-2 text-sm text-kal-muted">
-            Start free today, skip the wait, or subscribe directly.
-          </p>
+        <div id="subscribe" className="mt-10 scroll-mt-16">
+          <PricingPageClient />
         </div>
-
-        <div className="grid gap-6 md:grid-cols-3">
-          {[...cards.slice(0, 1), skipCard, ...cards.slice(1)].map((card) => (
-            <div
-              key={card.name}
-              className={`kal-glass-panel flex flex-col rounded-2xl border-2 ${card.borderClass} p-6 transition-shadow hover:shadow-[var(--kal-shadow-card-hover)]`}
-            >
-              <div className="mb-5 flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-kal-muted">
-                    Plan
-                  </p>
-                  <h3
-                    className="mt-0.5 text-xl font-normal text-kal-text"
-                    style={{ fontFamily: "var(--font-display)" }}
-                  >
-                    {card.name}
-                  </h3>
-                </div>
-                <div className="text-right">
-                  <p
-                    className="text-2xl font-normal text-kal-text"
-                    style={{ fontFamily: "var(--font-display)" }}
-                  >
-                    {card.price}
-                  </p>
-                  <p className="text-xs text-kal-muted">{card.duration}</p>
-                  {card.annualNote && (
-                    <a
-                      href="#subscribe"
-                      className="mt-1 block text-[10px] font-semibold text-kal-accent hover:underline"
-                    >
-                      {card.annualNote}
-                    </a>
-                  )}
-                </div>
-              </div>
-
-              {card.tag && (
-                <span
-                  className={`mb-4 inline-flex self-start rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${card.badgeBg} ${card.badgeText}`}
-                >
-                  {card.tag}
-                </span>
-              )}
-
-              <p className="mb-4 text-sm font-medium text-kal-text">{card.intro}</p>
-
-              <ul className="flex-1 space-y-2">
-                {card.bullets.map((point) => (
-                  <li key={point} className="flex items-start gap-2.5">
-                    <span
-                      className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-kal-accent/70"
-                      aria-hidden
-                    />
-                    <span className="text-sm leading-snug text-kal-text-secondary">{point}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <Link
-                href={card.ctaHref}
-                className={`mt-6 inline-flex min-h-[48px] items-center justify-center rounded-full px-6 text-sm font-bold transition ${card.ctaClass}`}
-              >
-                {card.cta}
-              </Link>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function CheckoutSection() {
-  return (
-    <section id="subscribe" className="py-16 sm:py-20 scroll-mt-16">
-      <div className="mx-auto max-w-5xl px-6">
-        <div className="mb-10 text-center">
-          <h2
-            className="text-2xl font-normal tracking-tight text-kal-text sm:text-3xl"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            Subscribe to Smart Plan.
-          </h2>
-          <p className="mt-2 text-sm text-kal-muted">
-            {SMART_PLAN_MONTHLY_DISPLAY}/month · cancel anytime · AutoPay for the duration you choose.
-          </p>
-        </div>
-        <PricingPageClient />
       </div>
     </section>
   );
@@ -488,18 +255,12 @@ function ExamFooterStrip() {
         <p className="mt-3 text-xs text-kal-muted/70">
           One system. Every serious exam.
         </p>
-        <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+        <div className="mt-6 flex justify-center">
           <Link
             href="/#subscribe"
             className="inline-flex min-h-[48px] w-full items-center justify-center rounded-full bg-kal-accent px-8 text-base font-bold text-white shadow-[0_4px_16px_rgba(255,122,0,0.28)] transition hover:brightness-105 active:scale-[0.98] sm:w-auto"
           >
             Start free — 7 days on us →
-          </Link>
-          <Link
-            href="#subscribe"
-            className="inline-flex min-h-[48px] w-full items-center justify-center rounded-full border border-kal-border bg-kal-card/70 px-8 text-base font-semibold text-kal-text backdrop-blur-sm transition hover:border-kal-accent/40 hover:text-kal-accent sm:w-auto"
-          >
-            Subscribe — {SMART_PLAN_MONTHLY_DISPLAY}/month
           </Link>
         </div>
       </div>
@@ -515,8 +276,6 @@ export function PricingPageContent({ capStatus }: { capStatus: DailyCapStatus })
       <HeroSection capStatus={capStatus} />
       <HowItWorksSection />
       <PricingTableSection />
-      <PlanCardsSection />
-      <CheckoutSection />
       <FAQSection />
       <ExamFooterStrip />
     </div>

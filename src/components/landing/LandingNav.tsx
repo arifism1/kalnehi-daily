@@ -86,7 +86,6 @@ export function LandingNav() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [examsOpen, setExamsOpen] = useState(false);
-  const [stickyBarVisible, setStickyBarVisible] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const examsRef = useRef<HTMLDivElement>(null);
 
@@ -98,7 +97,6 @@ export function LandingNav() {
       requestAnimationFrame(() => {
         const y = window.scrollY;
         setScrolled(y > 40);
-        setStickyBarVisible(y > 600);
         ticking = false;
       });
     };
@@ -328,20 +326,6 @@ export function LandingNav() {
         )}
       </header>
 
-      {/* Sticky bottom CTA bar — mobile only, appears after hero scroll */}
-      <div
-        className={clsx(
-          "fixed bottom-0 left-0 right-0 z-50 border-t border-kal-border bg-kal-card/95 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl transition-transform duration-300 lg:hidden",
-          stickyBarVisible ? "translate-y-0" : "translate-y-full",
-        )}
-      >
-        <Link
-          href="/auth"
-          className="flex min-h-[52px] w-full items-center justify-center rounded-full bg-kal-accent text-sm font-bold text-white shadow-[0_4px_16px_rgba(255,122,0,0.28)]"
-        >
-          Start free — no card · 7 days on us
-        </Link>
-      </div>
     </>
   );
 }

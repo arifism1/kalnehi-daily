@@ -77,7 +77,7 @@ export function BacklogRecoveryHomeNudge() {
         missed/unplanned backlog{pending === 1 ? "" : "s"}
       </p>
       <p className="mt-1 text-xs text-kal-muted">
-        Nothing disappears — keep them in motion with a short recovery pass.
+        Plan a fix now
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         <Link
