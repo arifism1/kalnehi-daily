@@ -55,9 +55,6 @@ export function PrepOperatingSystemSection() {
           >
             Syllabus, marks, execution, and coaching — wired together.
           </h2>
-          <p className="text-lg text-kal-text-secondary">
-            Kalnehi is built so your dashboard, planner, backlog, revision, and AI coach all read the same reality. Deeper syllabus and weightage-backed projections today for JEE Main, NEET UG, and Class 11/12 Boards; the same workflows travel with you across 27 exam profiles.
-          </p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">

@@ -66,71 +66,16 @@ function HeroSection({ capStatus }: { capStatus: DailyCapStatus }) {
             </a>
           </div>
         )}
-
       </div>
     </section>
   );
 }
 
-function HowItWorksSection() {
-  const steps = [
-    {
-      num: "①",
-      title: "Sign up",
-      body: "Create your account in 60 seconds.",
-    },
-    {
-      num: "②",
-      title: "Claim a free spot",
-      body: "Limited free spots each day. Spots reset at midnight IST.",
-    },
-    {
-      num: "③",
-      title: "Try free, then decide",
-      body: "7 days of full access. Subscribe to Smart Plan if you want to continue.",
-    },
-  ];
-
-  return (
-    <section className="py-12 sm:py-16">
-      <div className="mx-auto max-w-4xl px-6">
-        <div className="grid gap-4 sm:grid-cols-3">
-          {steps.map((step) => (
-            <div
-              key={step.num}
-              className="kal-glass-panel rounded-2xl border border-kal-border p-6"
-            >
-              <p
-                className="mb-2 text-3xl font-normal text-kal-accent"
-                style={{ fontFamily: "var(--font-display)" }}
-                aria-hidden
-              >
-                {step.num}
-              </p>
-              <h3 className="text-base font-semibold text-kal-text">{step.title}</h3>
-              <p className="mt-1 text-sm leading-snug text-kal-text-secondary">{step.body}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
 
 function PricingTableSection() {
   return (
-    <section id="pricing-table" className="scroll-mt-16 py-16 sm:py-20">
+    <section id="pricing-table" className="scroll-mt-16 pb-16 pt-6 sm:pb-20 sm:pt-8">
       <div className="mx-auto max-w-4xl px-4 sm:px-6">
-        <div className="mb-10 text-center">
-          <h2
-            className="text-2xl font-normal tracking-tight text-kal-text sm:text-3xl"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            What you get
-          </h2>
-          <p className="mt-2 text-sm text-kal-muted">All features during the trial; Smart Plan keeps them after that.</p>
-        </div>
-
         {/* Mobile: tab switcher (hidden on md+) */}
         <div className="md:hidden">
           <PricingTableMobile />
@@ -274,7 +219,6 @@ export function PricingPageContent({ capStatus }: { capStatus: DailyCapStatus })
   return (
     <div className="w-full">
       <HeroSection capStatus={capStatus} />
-      <HowItWorksSection />
       <PricingTableSection />
       <FAQSection />
       <ExamFooterStrip />
