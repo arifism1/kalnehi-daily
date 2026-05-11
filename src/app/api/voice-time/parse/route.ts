@@ -9,6 +9,7 @@ import {
   runVoiceNotificationParse,
   type VoiceNotificationParseFailureReason,
 } from "@/lib/runVoiceNotificationParse";
+import { assertSameOrigin } from "@/lib/assertSameOrigin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -26,6 +27,9 @@ function httpStatusForParseFailure(reason: VoiceNotificationParseFailureReason):
 }
 
 export async function POST(req: Request) {
+  const denied = assertSameOrigin(req);
+  if (denied) return denied;
+
   try {
     let body: unknown;
     try {

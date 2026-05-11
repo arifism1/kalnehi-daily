@@ -7,6 +7,7 @@ import {
   estimateMaxVoiceAudioDurationSeconds,
   VOICE_BILLING_DURATION_SEC_MIN,
 } from "@/lib/voiceDurationBilling";
+import { assertSameOrigin } from "@/lib/assertSameOrigin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 /** `verbose_json` adds `duration` (seconds); groq-sdk's Transcription type only declares `text`. */
@@ -18,6 +19,9 @@ const WHISPER_MODEL = "distil-whisper-large-v3-en";
 const MAX_AUDIO_BYTES = 4 * 1024 * 1024; // 4 MB
 
 export async function POST(req: Request) {
+  const denied = assertSameOrigin(req);
+  if (denied) return denied;
+
   // Auth check — must be signed in before we'll accept audio.
   const supabase = await createSupabaseServerClient();
   const {

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { assertSameOrigin } from "@/lib/assertSameOrigin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 
@@ -27,6 +28,9 @@ const DEEPINFRA_MODEL = "Qwen/Qwen2.5-VL-32B-Instruct";
  * Returns: { ok: true, feedback: string } | { ok: false, error: string }
  */
 export async function POST(request: Request) {
+  const denied = assertSameOrigin(request);
+  if (denied) return denied;
+
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -111,12 +115,6 @@ export async function POST(request: Request) {
     }
   }
 
-  await admin
-    .from("study_partner_cooldown" as never)
-    .upsert({ user_id: user.id, last_request_at: now } as never, {
-      onConflict: "user_id",
-    });
-
   try {
     const resp = await fetch(DEEPINFRA_API_URL, {
       method: "POST",
@@ -161,6 +159,12 @@ export async function POST(request: Request) {
         { status: 502 },
       );
     }
+
+    await admin
+      .from("study_partner_cooldown" as never)
+      .upsert({ user_id: user.id, last_request_at: now } as never, {
+        onConflict: "user_id",
+      });
 
     return NextResponse.json({ ok: true, feedback });
   } catch (e) {

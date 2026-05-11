@@ -6,6 +6,7 @@ import {
 } from "@/actions/subscription";
 import { clampVoiceBillingDurationSeconds } from "@/lib/voiceDurationBilling";
 import { USER_ERROR } from "@/lib/userFacingErrors";
+import { assertSameOrigin } from "@/lib/assertSameOrigin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -20,6 +21,9 @@ function isRecord(x: unknown): x is Record<string, unknown> {
  * Deduction for browser Web Speech sessions that do not call parse/command routes.
  */
 export async function POST(req: Request) {
+  const denied = assertSameOrigin(req);
+  if (denied) return denied;
+
   let body: unknown;
   try {
     body = await req.json();

@@ -140,7 +140,7 @@ async function isAdminInProxy(userId: string, email?: string | null): Promise<bo
       }
     }
   } catch {
-    // Fail open — if admin check fails, return false (show maintenance screen).
+    // Fail closed — if admin check throws, deny admin bypass and show maintenance screen.
   }
 
   _adminCache.set(userId, { result: false, expiresAt: now + ADMIN_CACHE_TTL_MS });

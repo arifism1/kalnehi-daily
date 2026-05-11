@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { assertSameOrigin } from "@/lib/assertSameOrigin";
 import { getIstCalendarDateString } from "@/lib/customReminders/istClock";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -21,6 +22,9 @@ function normalizeTime(hhmm: string): string | null {
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function PATCH(req: Request, ctx: Ctx) {
+  const denied = assertSameOrigin(req);
+  if (denied) return denied;
+
   try {
     const { id } = await ctx.params;
     if (!id || typeof id !== "string") {
@@ -150,7 +154,10 @@ export async function PATCH(req: Request, ctx: Ctx) {
   }
 }
 
-export async function DELETE(_req: Request, ctx: Ctx) {
+export async function DELETE(req: Request, ctx: Ctx) {
+  const denied = assertSameOrigin(req);
+  if (denied) return denied;
+
   try {
     const { id } = await ctx.params;
     if (!id || typeof id !== "string") {

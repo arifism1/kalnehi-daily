@@ -8,6 +8,7 @@
  */
 import { type NextRequest, NextResponse } from "next/server";
 
+import { assertSameOrigin } from "@/lib/assertSameOrigin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 import { isAdminUser, openBatch } from "@/lib/waitlist/batchEngine";
@@ -18,6 +19,9 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const denied = assertSameOrigin(req);
+  if (denied) return denied;
+
   const { id } = await params;
 
   const supabase = await createSupabaseServerClient();

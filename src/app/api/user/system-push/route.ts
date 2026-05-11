@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { assertSameOrigin } from "@/lib/assertSameOrigin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 
@@ -38,6 +39,9 @@ export async function GET() {
 
 /** Enable or disable automated system pushes. */
 export async function PATCH(req: Request) {
+  const denied = assertSameOrigin(req);
+  if (denied) return denied;
+
   try {
     const supabase = await createSupabaseServerClient();
     const {

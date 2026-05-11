@@ -8,6 +8,7 @@ import {
 import { resolvePrepbrainGroqModels } from "@/lib/groqPrepbrainModel";
 import { parseCuetDomainSubjectsJson, syllabusSubjectInCuetDomains } from "@/lib/cuetDomainSubjects";
 import { fetchSyllabusMasterRowsForExam } from "@/lib/syllabusMasterQuery";
+import { assertSameOrigin } from "@/lib/assertSameOrigin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { USER_ERROR } from "@/lib/userFacingErrors";
 
@@ -65,6 +66,9 @@ function parseOrganizeResponse(text: string): OrganizeItem[] {
  * Body: { transcript: string, mode?: "partial" | "final" }
  */
 export async function POST(request: Request) {
+  const denied = assertSameOrigin(request);
+  if (denied) return denied;
+
   let raw: string;
   try {
     raw = await request.text();

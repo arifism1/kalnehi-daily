@@ -5,6 +5,7 @@
  * not from the client payload.
  */
 import { type NextRequest, NextResponse } from "next/server";
+import { assertSameOrigin } from "@/lib/assertSameOrigin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 import type { Json } from "@/types/supabase";
@@ -12,6 +13,7 @@ import type { Json } from "@/types/supabase";
 export const runtime = "nodejs";
 
 const MAX_EVENTS = 50;
+const MAX_METADATA_BYTES = 2048;
 const VALID_PLATFORMS = new Set(["web", "ios_pwa", "android_pwa"]);
 const ACTION_RE = /^[a-z][a-z0-9_]{0,63}$/;
 const FEATURE_RE = /^[a-z][a-z0-9_]{0,63}$/;
@@ -61,6 +63,9 @@ function sanitizeMetadata(raw: unknown): Record<string, unknown> {
 }
 
 export async function POST(req: NextRequest) {
+  const denied = assertSameOrigin(req);
+  if (denied) return denied;
+
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -96,13 +101,16 @@ export async function POST(req: NextRequest) {
     const action = sanitizeAction(raw.action);
     if (!action) continue;
 
+    const metadata = sanitizeMetadata(raw.metadata);
+    if (JSON.stringify(metadata).length > MAX_METADATA_BYTES) continue;
+
     rows.push({
       user_id: user.id,
       session_id: sanitizeSessionId(raw.session_id),
       page: sanitizePath(raw.page),
       feature: sanitizeFeature(raw.feature),
       action,
-      metadata: sanitizeMetadata(raw.metadata) as Json,
+      metadata: metadata as Json,
       platform: sanitizePlatform(raw.platform),
       created_at:
         typeof raw.created_at === "string" && !isNaN(Date.parse(raw.created_at))

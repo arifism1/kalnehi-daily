@@ -7,6 +7,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 
+import { assertSameOrigin } from "@/lib/assertSameOrigin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 import { isAdminUser } from "@/lib/waitlist/batchEngine";
@@ -95,6 +96,9 @@ export async function GET(req: NextRequest) {
 // ── POST: toggle / update_cap ─────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
+  const denied = assertSameOrigin(req);
+  if (denied) return denied;
+
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
