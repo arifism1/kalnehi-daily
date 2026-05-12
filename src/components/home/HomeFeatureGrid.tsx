@@ -319,6 +319,7 @@ function FeatureCard({
     <Link
       href={item.href}
       aria-label={`${item.label} — ${hint}`}
+      data-tour={item.id}
       className={clsx(
         "flex min-h-[80px] flex-col rounded-[10px] border border-kal-border/70 bg-white p-3",
         "outline-none transition-colors",

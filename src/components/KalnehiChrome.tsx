@@ -13,6 +13,7 @@ import {
 } from "react";
 
 import { GlobalVoiceSheet } from "@/components/voice/GlobalVoiceSheet";
+import { TourGate } from "@/components/tour/TourGate";
 import { useVoiceCommandStore } from "@/store/useVoiceCommandStore";
 
 import { KalnehiMark } from "@/components/KalnehiMark";
@@ -247,6 +248,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
       <TimerVisibilityBridge />
       <PwaInstallPromptDeferred />
       <GlobalVoiceSheet />
+      <TourGate />
     </div>
   );
 }
