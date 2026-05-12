@@ -1,243 +1,242 @@
 "use client";
 
 import { Download, X } from "lucide-react";
-import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-import { isPublicMarketingPath } from "@/lib/public-paths";
-import { SITE_NAME } from "@/lib/seo-metadata";
+import { PwaIosInstallModal } from "@/components/PwaIosInstallModal";
+import { usePwaInstall } from "@/hooks/usePwaInstall";
+import { SITE_BRAND } from "@/lib/seo-metadata";
 
-const STORAGE_DISMISS_UNTIL = "kalnehi-pwa-dismiss-until";
-const STORAGE_VISIT_COUNT = "kalnehi-pwa-visits";
-const STORAGE_ENGAGED = "kalnehi-pwa-engaged";
+const STORAGE_PERMANENT_DISMISS = "has_dismissed_a2hs";
+const STORAGE_TEMP_DISMISS_UNTIL = "kalnehi-pwa-dismiss-until";
+const TEMP_DISMISS_DAYS = 7;
 
-function isStandalone(): boolean {
-  if (typeof window === "undefined") return true;
+function readPermanentDismiss(): boolean {
+  try {
+    return localStorage.getItem(STORAGE_PERMANENT_DISMISS) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writePermanentDismiss() {
+  try {
+    localStorage.setItem(STORAGE_PERMANENT_DISMISS, "1");
+  } catch {
+    /* ignore */
+  }
+}
+
+function readTempDismiss(): boolean {
+  try {
+    const until = parseInt(localStorage.getItem(STORAGE_TEMP_DISMISS_UNTIL) ?? "0", 10);
+    return until > Date.now();
+  } catch {
+    return false;
+  }
+}
+
+function writeTempDismiss(days: number) {
+  try {
+    localStorage.setItem(
+      STORAGE_TEMP_DISMISS_UNTIL,
+      String(Date.now() + days * 24 * 60 * 60 * 1000),
+    );
+  } catch {
+    /* ignore */
+  }
+}
+
+/** iOS Share button — square with arrow pointing up (SF Symbols style). */
+function IosShareIcon({ className }: { className?: string }) {
   return (
-    window.matchMedia("(display-mode: standalone)").matches ||
-    (window.navigator as Navigator & { standalone?: boolean }).standalone === true
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
+      <path d="M8.5 8.5 12 5l3.5 3.5" />
+      <path d="M12 5v10" />
+      <path d="M4 13v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5" />
+    </svg>
   );
 }
 
-function isMobileViewport(): boolean {
-  if (typeof window === "undefined") return false;
-  return window.matchMedia("(max-width: 767px)").matches;
-}
-
-/** True when Chrome/Android can fire `beforeinstallprompt` (not iOS Safari). */
-function mightSupportNativeInstall(): boolean {
-  if (typeof window === "undefined") return false;
-  return "BeforeInstallPromptEvent" in window || /Android/i.test(navigator.userAgent);
-}
-
 export function PwaInstallPrompt() {
-  const pathname = usePathname() ?? "";
-  const marketingLanding = isPublicMarketingPath(pathname);
-  const [visible, setVisible] = useState(false);
-  const [iosHint, setIosHint] = useState(false);
-  const deferred = useRef<{
-    prompt: () => Promise<void>;
-    userChoice: Promise<{ outcome: string }>;
-  } | null>(null);
-  useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem("kalnehi-route-count");
-      const n = raw ? parseInt(raw, 10) : 0;
-      sessionStorage.setItem("kalnehi-route-count", String(n + 1));
-    } catch {
-      /* ignore */
-    }
-  }, [pathname]);
+  const {
+    installed,
+    canPromptInstall,
+    iosDevice,
+    installEligibilityKnown,
+    promptInstall,
+  } = usePwaInstall();
 
-  const dismissForDays = useCallback((days: number) => {
-    const until = Date.now() + days * 24 * 60 * 60 * 1000;
-    try {
-      localStorage.setItem(STORAGE_DISMISS_UNTIL, String(until));
-    } catch {
-      /* ignore */
+  const [visible, setVisible] = useState(false);
+  const [iosModalOpen, setIosModalOpen] = useState(false);
+  const [entered, setEntered] = useState(false);
+
+  useEffect(() => {
+    if (!installEligibilityKnown) return;
+    if (installed) return;
+    if (readPermanentDismiss()) return;
+    if (readTempDismiss()) return;
+    if (!canPromptInstall && !iosDevice) return;
+
+    const id = window.setTimeout(() => setVisible(true), 1200);
+    return () => window.clearTimeout(id);
+  }, [installEligibilityKnown, installed, canPromptInstall, iosDevice]);
+
+  useEffect(() => {
+    if (!visible) {
+      setEntered(false);
+      return;
     }
+    const id = requestAnimationFrame(() => setEntered(true));
+    return () => cancelAnimationFrame(id);
+  }, [visible]);
+
+  const handleDontRemind = useCallback(() => {
+    writePermanentDismiss();
     setVisible(false);
   }, []);
 
-  const tryShow = useCallback(() => {
-    if (typeof window === "undefined") return;
-    if (!isMobileViewport()) return;
-    if (isStandalone()) return;
+  const handleNotNow = useCallback(() => {
+    writeTempDismiss(TEMP_DISMISS_DAYS);
+    setVisible(false);
+  }, []);
 
-    let dismissUntil = 0;
-    try {
-      dismissUntil = parseInt(localStorage.getItem(STORAGE_DISMISS_UNTIL) ?? "0", 10);
-    } catch {
-      /* ignore */
+  const handleInstall = useCallback(async () => {
+    const result = await promptInstall();
+    if (result.ok && result.outcome === "accepted") {
+      writePermanentDismiss();
+      setVisible(false);
+    } else {
+      writeTempDismiss(TEMP_DISMISS_DAYS);
+      setVisible(false);
     }
-    if (dismissUntil > Date.now()) return;
-
-    let visits = 0;
-    try {
-      visits = parseInt(localStorage.getItem(STORAGE_VISIT_COUNT) ?? "0", 10);
-    } catch {
-      /* ignore */
-    }
-
-    let routeCount = 0;
-    try {
-      routeCount = parseInt(sessionStorage.getItem("kalnehi-route-count") ?? "0", 10);
-    } catch {
-      /* ignore */
-    }
-
-    let engaged = false;
-    try {
-      engaged = localStorage.getItem(STORAGE_ENGAGED) === "1";
-    } catch {
-      /* ignore */
-    }
-
-    const firstVisit = visits <= 1;
-    const routesNeeded = marketingLanding ? 2 : 3;
-    const afterEngagement = engaged || routeCount >= routesNeeded;
-
-    if (!firstVisit && !afterEngagement) return;
-
-    if (mightSupportNativeInstall() && deferred.current) {
-      setIosHint(false);
-      setVisible(true);
-      return;
-    }
-
-    if (/iPhone|iPad|iPod/i.test(navigator.userAgent) && !mightSupportNativeInstall()) {
-      setIosHint(true);
-      setVisible(true);
-    }
-  }, [marketingLanding]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (isStandalone()) return;
-
-    try {
-      const v = parseInt(localStorage.getItem(STORAGE_VISIT_COUNT) ?? "0", 10);
-      localStorage.setItem(STORAGE_VISIT_COUNT, String(v + 1));
-    } catch {
-      /* ignore */
-    }
-
-    const onBeforeInstall = (e: Event) => {
-      e.preventDefault();
-      deferred.current = e as unknown as typeof deferred.current;
-      window.setTimeout(tryShow, 800);
-    };
-
-    const onPointerUp = () => {
-      try {
-        localStorage.setItem(STORAGE_ENGAGED, "1");
-      } catch {
-        /* ignore */
-      }
-    };
-
-    const onScroll = () => {
-      if (typeof document === "undefined") return;
-      const doc = document.documentElement;
-      const scrollable = doc.scrollHeight - window.innerHeight;
-      if (scrollable <= 0) return;
-      if (window.scrollY / scrollable < 0.12) return;
-      try {
-        localStorage.setItem(STORAGE_ENGAGED, "1");
-      } catch {
-        /* ignore */
-      }
-    };
-
-    window.addEventListener("beforeinstallprompt", onBeforeInstall);
-    window.addEventListener("pointerup", onPointerUp, { passive: true });
-    window.addEventListener("scroll", onScroll, { passive: true });
-
-    const delayA = marketingLanding ? 6000 : 12000;
-    const delayB = marketingLanding ? 22000 : 35000;
-    const t1 = window.setTimeout(tryShow, delayA);
-    const t2 = window.setTimeout(tryShow, delayB);
-
-    return () => {
-      window.removeEventListener("beforeinstallprompt", onBeforeInstall);
-      window.removeEventListener("pointerup", onPointerUp);
-      window.removeEventListener("scroll", onScroll);
-      window.clearTimeout(t1);
-      window.clearTimeout(t2);
-    };
-  }, [tryShow, marketingLanding]);
-
-  useEffect(() => {
-    const id = window.setTimeout(tryShow, 600);
-    return () => window.clearTimeout(id);
-  }, [pathname, tryShow]);
-
-  const onInstall = async () => {
-    const d = deferred.current;
-    if (!d) {
-      dismissForDays(14);
-      return;
-    }
-    try {
-      await d.prompt();
-      await d.userChoice;
-    } catch {
-      /* ignore */
-    }
-    deferred.current = null;
-    dismissForDays(120);
-  };
+  }, [promptInstall]);
 
   if (!visible) return null;
 
+  const isIos = iosDevice && !canPromptInstall;
+
   return (
-    <div
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-[100] flex justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden"
-      role="region"
-      aria-label="Install app"
-    >
-      <div className="pointer-events-auto flex max-w-md flex-col gap-2 rounded-2xl border border-kal-border bg-kal-card/95 px-4 py-3 shadow-kal-card backdrop-blur-md">
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-kal-accent-soft text-kal-accent">
-            <Download className="h-5 w-5" aria-hidden />
+    <>
+      {/*
+       * Mobile  (< md): full-width bottom sheet sliding up from the screen edge.
+       * Desktop (≥ md): compact floating card anchored to the bottom-right corner.
+       */}
+      <div
+        className="pointer-events-none fixed bottom-0 left-0 right-0 z-[100] flex justify-center md:left-auto md:right-6 md:bottom-6"
+        role="region"
+        aria-label="Install app"
+      >
+        <div
+          className={[
+            // Shared base
+            "pointer-events-auto w-full border border-kal-border bg-kal-card/95 px-4 pt-3 backdrop-blur-md transition-all duration-300 ease-out motion-reduce:transition-none",
+            // Mobile shape — full-width sheet with rounded top corners + safe-area bottom
+            "max-w-md rounded-t-2xl pb-[max(1rem,env(safe-area-inset-bottom))] shadow-[0_-4px_24px_rgba(0,0,0,0.10)]",
+            // Desktop shape — narrow floating card, fully rounded
+            "md:w-80 md:max-w-none md:rounded-2xl md:pb-4 md:shadow-2xl md:shadow-black/15",
+            // Entrance animation: slide-up on mobile, fade+lift on desktop
+            entered
+              ? "translate-y-0 opacity-100"
+              : "translate-y-full opacity-0 md:translate-y-3",
+          ].join(" ")}
+        >
+          {/* Drag handle — mobile only */}
+          <div className="mb-3 flex justify-center md:hidden" aria-hidden>
+            <span className="h-1 w-10 rounded-full bg-kal-border" />
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-kal-text">Install {SITE_NAME}</p>
-            <p className="mt-0.5 text-xs leading-snug text-kal-text-secondary">
-              {iosHint ? (
-                <>
-                  On iPhone: tap <span className="font-medium">Share</span>, then{" "}
-                  <span className="font-medium">Add to Home Screen</span> for a full-screen app
-                  experience.
-                </>
+
+          {/* Header row */}
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-kal-accent-soft text-kal-accent">
+              <Download className="h-5 w-5" aria-hidden />
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold leading-snug text-kal-text">
+                Install {SITE_BRAND} for the best experience
+              </p>
+
+              {isIos ? (
+                <div className="mt-2 flex items-start gap-2 rounded-xl border border-kal-border/60 bg-kal-accent-soft/40 px-3 py-2.5">
+                  <IosShareIcon className="mt-0.5 h-4 w-4 shrink-0 text-kal-accent" />
+                  <p className="text-xs leading-relaxed text-kal-text-secondary">
+                    Tap the{" "}
+                    <span className="font-semibold text-kal-text">Share</span>{" "}
+                    icon at the bottom, then scroll down and tap{" "}
+                    <span className="font-semibold text-kal-text">
+                      Add to Home Screen
+                    </span>
+                    .
+                  </p>
+                </div>
               ) : (
-                <>
-                  Add to your home screen for faster load, offline-friendly pages you have visited,
-                  and a distraction-free study shell for Smart Exam Prep.
-                </>
+                <p className="mt-0.5 text-xs leading-snug text-kal-text-secondary">
+                  Add to your home screen for faster load, offline-friendly
+                  pages, and a distraction-free study experience.
+                </p>
               )}
-            </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleNotNow}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-kal-muted transition-colors hover:bg-kal-card-muted hover:text-kal-text"
+              aria-label="Dismiss for now"
+            >
+              <X className="h-4.5 w-4.5" strokeWidth={2} />
+            </button>
           </div>
-          <button
-            type="button"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-kal-muted hover:bg-kal-card-muted hover:text-kal-text"
-            aria-label="Dismiss install prompt"
-            onClick={() => dismissForDays(7)}
-          >
-            <X className="h-5 w-5" />
-          </button>
+
+          {/* Action row */}
+          <div className="mt-3 flex flex-col gap-2">
+            {isIos ? (
+              <button
+                type="button"
+                onClick={() => setIosModalOpen(true)}
+                className="kal-btn-accent w-full"
+              >
+                Show Instructions
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleInstall}
+                className="kal-btn-accent w-full"
+              >
+                <Download className="h-4 w-4" aria-hidden />
+                Install App
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={handleDontRemind}
+              className="py-1 text-xs text-kal-muted underline-offset-2 transition-colors hover:text-kal-text"
+            >
+              Don&apos;t remind me
+            </button>
+          </div>
         </div>
-        {!iosHint && deferred.current && (
-          <button
-            type="button"
-            onClick={onInstall}
-            className="kal-btn-accent w-full"
-          >
-            <Download className="h-4 w-4" aria-hidden />
-            Install app
-          </button>
-        )}
       </div>
-    </div>
+
+      <PwaIosInstallModal
+        open={iosModalOpen}
+        onClose={() => {
+          setIosModalOpen(false);
+          writeTempDismiss(TEMP_DISMISS_DAYS);
+          setVisible(false);
+        }}
+      />
+    </>
   );
 }
