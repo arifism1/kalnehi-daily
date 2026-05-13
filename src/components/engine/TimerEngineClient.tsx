@@ -433,7 +433,7 @@ export function TimerEngineClient() {
         await applyOptimisticTaskUpdate(taskId, { status }, userId);
         if (prev !== "completed" && status === TASK_STATUS.completed) {
           trackMetaTaskCompleted();
-          trackActivity("task_completed", { feature: "tasks", task_id: taskId, task_title: taskData?.name ?? taskId });
+          trackActivity("task_completed", { feature: "tasks", metadata: { task_id: taskId, task_title: taskData?.name ?? taskId } });
         }
       };
 
@@ -513,7 +513,7 @@ export function TimerEngineClient() {
       await commitTimerToServer(st.taskId, "auto");
     }
     activeSessionMetaRef.current = sessionMeta;
-    trackActivity("timer_started", { feature: "tasks", task_id: task.id, task_title: task.name ?? task.id });
+    trackActivity("timer_started", { feature: "tasks", metadata: { task_id: task.id, task_title: task.name ?? task.id } });
     if (task.status === TASK_STATUS.pending) {
       await applyOptimisticTaskUpdate(
         task.id,
@@ -556,7 +556,7 @@ export function TimerEngineClient() {
       .getState()
       .start(row.id, row.actual_worked_minutes ?? 0);
     trackMetaTimerStarted();
-    trackActivity("timer_started", { feature: "daily_plan", task_id: row.id, task_title: row.title });
+    trackActivity("timer_started", { feature: "daily_plan", metadata: { task_id: row.id, task_title: row.title } });
   };
 
   const finishSessionMarkDone = async () => {

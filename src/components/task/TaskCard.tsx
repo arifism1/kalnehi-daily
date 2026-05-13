@@ -324,7 +324,7 @@ export function TaskCard({
       );
       if (res.ok) {
         trackMetaTaskCompleted();
-        trackActivity("task_completed", { feature: "tasks", task_id: task.id, task_title: task.name ?? task.id });
+        trackActivity("task_completed", { feature: "tasks", metadata: { task_id: task.id, task_title: task.name ?? task.id } });
         useUndoStore.getState().offerUndo({
           message: "Task completed",
           runUndo: async () => {

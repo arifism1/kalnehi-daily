@@ -601,7 +601,7 @@ export function GlobalVoiceSheet() {
           if (matched) {
             await updateDailyTask(matched.id, { status: "done" });
             trackMetaTaskCompleted();
-            trackActivity("task_completed", { feature: "daily_plan", task_id: matched.id, task_title: matched.title });
+            trackActivity("task_completed", { feature: "daily_plan", metadata: { task_id: matched.id, task_title: matched.title } });
             router.push(voiceDailyPlanHref(planDate));
           } else {
             writeVoicePlanHint({
@@ -726,7 +726,7 @@ export function GlobalVoiceSheet() {
         } else if (action_type === "mark_done") {
           await updateDailyTask(matched.id, { status: "done" });
           trackMetaTaskCompleted();
-          trackActivity("task_completed", { feature: "daily_plan", task_id: matched.id, task_title: matched.title });
+          trackActivity("task_completed", { feature: "daily_plan", metadata: { task_id: matched.id, task_title: matched.title } });
           if (duration_logged != null && duration_logged > 0) {
             const add = await updateDailyTaskWorkedTime(
               matched.id,

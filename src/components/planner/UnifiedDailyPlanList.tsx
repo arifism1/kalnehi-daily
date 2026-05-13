@@ -697,7 +697,7 @@ export function UnifiedDailyPlanList({
         if (next === "done") {
           setConfettiTaskId(t.id);
           trackMetaTaskCompleted();
-          trackActivity("task_completed", { feature: "daily_plan", task_id: t.id, task_title: t.title });
+          trackActivity("task_completed", { feature: "daily_plan", metadata: { task_id: t.id, task_title: t.title } });
         }
       }
     } finally {
