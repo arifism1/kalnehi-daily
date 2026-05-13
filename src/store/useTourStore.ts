@@ -7,10 +7,12 @@ type TourState = {
   tourCompleted: boolean;
   tourDismissed: boolean;
   currentStep: number;
+  voiceNudgeShown: boolean;
   nextStep: () => void;
   skipTour: () => void;
   completeTour: () => void;
   resetTour: () => void;
+  setVoiceNudgeShown: () => void;
 };
 
 export const useTourStore = create<TourState>()(
@@ -19,11 +21,13 @@ export const useTourStore = create<TourState>()(
       tourCompleted: false,
       tourDismissed: false,
       currentStep: 0,
+      voiceNudgeShown: false,
       nextStep: () => set({ currentStep: get().currentStep + 1 }),
       skipTour: () => set({ tourDismissed: true, tourCompleted: true }),
       completeTour: () => set({ tourCompleted: true }),
       resetTour: () =>
-        set({ tourCompleted: false, tourDismissed: false, currentStep: 0 }),
+        set({ tourCompleted: false, tourDismissed: false, currentStep: 0, voiceNudgeShown: false }),
+      setVoiceNudgeShown: () => set({ voiceNudgeShown: true }),
     }),
     {
       name: "kalnehi-tour-v1",
@@ -31,6 +35,7 @@ export const useTourStore = create<TourState>()(
       partialize: (s) => ({
         tourCompleted: s.tourCompleted,
         tourDismissed: s.tourDismissed,
+        voiceNudgeShown: s.voiceNudgeShown,
       }),
     },
   ),

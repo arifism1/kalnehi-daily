@@ -11,6 +11,7 @@ import { TourCelebration } from "./TourCelebration";
 import { TourSpotlight } from "./TourSpotlight";
 import { TourStepCard } from "./TourStepCard";
 import { TourWelcomeModal } from "./TourWelcomeModal";
+import { VoiceNudgeModal } from "./VoiceNudgeModal";
 import { TOTAL_STEPS, TOUR_STEPS } from "./tourSteps";
 
 const CELEBRATION_STEP = TOTAL_STEPS - 1; // 13
@@ -32,7 +33,7 @@ export function TourGate() {
   const { onboardingDone, hasPaidAccess, freeTrialActive } = useSubscriptionAccess();
   const allowAppWithoutPaid = hasPaidAccess || freeTrialActive;
 
-  const { tourCompleted, currentStep, nextStep, skipTour, completeTour, resetTour } =
+  const { tourCompleted, currentStep, nextStep, skipTour, completeTour, resetTour, voiceNudgeShown } =
     useTourStore();
 
   // Dev-only reset via ?reset_tour=1
@@ -47,8 +48,9 @@ export function TourGate() {
 
   const isHome = pathname === "/home";
   const shouldShow = onboardingDone && allowAppWithoutPaid && !tourCompleted && isHome;
+  const showVoiceNudge = onboardingDone && allowAppWithoutPaid && tourCompleted && !voiceNudgeShown;
 
-  if (!shouldShow) return null;
+  if (!shouldShow && !showVoiceNudge) return null;
 
   const step = TOUR_STEPS[currentStep];
 
@@ -66,32 +68,39 @@ export function TourGate() {
 
   return (
     <>
-      {/* ── Full-screen welcome ─────────────────────────────────────────── */}
-      <AnimatePresence>
-        {isWelcome && (
-          <TourWelcomeModal onStart={() => nextStep()} onSkip={skipTour} />
-        )}
-      </AnimatePresence>
+      {shouldShow && (
+        <>
+          {/* ── Full-screen welcome ───────────────────────────────────────── */}
+          <AnimatePresence>
+            {isWelcome && (
+              <TourWelcomeModal onStart={() => nextStep()} onSkip={skipTour} />
+            )}
+          </AnimatePresence>
 
-      {/* ── Feature spotlight steps ─────────────────────────────────────── */}
-      <AnimatePresence>
-        {isFeatureStep && (
-          <TourSpotlight tourTarget={step?.tourTarget ?? null} />
-        )}
-      </AnimatePresence>
+          {/* ── Feature spotlight steps ───────────────────────────────────── */}
+          <AnimatePresence>
+            {isFeatureStep && (
+              <TourSpotlight tourTarget={step?.tourTarget ?? null} />
+            )}
+          </AnimatePresence>
 
-      {isFeatureStep && (
-        <TourStepCard
-          currentStep={currentStep}
-          onNext={handleNext}
-          onSkip={skipTour}
-        />
+          {isFeatureStep && (
+            <TourStepCard
+              currentStep={currentStep}
+              onNext={handleNext}
+              onSkip={skipTour}
+            />
+          )}
+
+          {/* ── Celebration ───────────────────────────────────────────────── */}
+          <AnimatePresence>
+            {isCelebration && <TourCelebration onFinish={completeTour} />}
+          </AnimatePresence>
+        </>
       )}
 
-      {/* ── Celebration ─────────────────────────────────────────────────── */}
-      <AnimatePresence>
-        {isCelebration && <TourCelebration onFinish={completeTour} />}
-      </AnimatePresence>
+      {/* ── Voice nudge (shown once after tour completes or is skipped) ─── */}
+      {showVoiceNudge && <VoiceNudgeModal />}
     </>
   );
 }
