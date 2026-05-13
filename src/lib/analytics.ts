@@ -52,7 +52,7 @@ export function getFirstTouch(): FirstTouch | null {
 export function isProbablyOrganicSearch(ft: FirstTouch | null): boolean {
   if (!ft) return false;
   const ref = ft.referrer.toLowerCase();
-  if (ref.includes("google.") && ref.includes("yahoo.") === false) return true;
+  if (ref.includes("google.") || ref.includes("yahoo.")) return true;
   if (ref.includes("bing.com") || ref.includes("duckduckgo.")) return true;
   if (ft.utm["utm_medium"] === "organic") return true;
   return false;

@@ -39,6 +39,8 @@ import {
 } from "@/lib/voiceCommandGroq";
 import { VoiceListeningHint } from "@/components/voice/VoiceListeningHint";
 import { CommandPreviewToast } from "@/components/voice/CommandPreviewToast";
+import { trackMetaTaskCompleted } from "@/lib/analytics";
+import { trackActivity } from "@/lib/activity";
 
 // Example commands shown to the user while idle, to teach discoverability.
 const COMMAND_HINTS = [
@@ -598,6 +600,8 @@ export function GlobalVoiceSheet() {
           const matched = fuzzyMatchTask(tasksRes.tasks, intent.subject);
           if (matched) {
             await updateDailyTask(matched.id, { status: "done" });
+            trackMetaTaskCompleted();
+            trackActivity("task_completed", { feature: "daily_plan", task_id: matched.id, task_title: matched.title });
             router.push(voiceDailyPlanHref(planDate));
           } else {
             writeVoicePlanHint({
@@ -721,6 +725,8 @@ export function GlobalVoiceSheet() {
           }
         } else if (action_type === "mark_done") {
           await updateDailyTask(matched.id, { status: "done" });
+          trackMetaTaskCompleted();
+          trackActivity("task_completed", { feature: "daily_plan", task_id: matched.id, task_title: matched.title });
           if (duration_logged != null && duration_logged > 0) {
             const add = await updateDailyTaskWorkedTime(
               matched.id,

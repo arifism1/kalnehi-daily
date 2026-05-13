@@ -25,6 +25,7 @@ import { fetchDailyPlanTasksForClient } from "@/lib/fetchDailyPlanTasksForClient
 import { quickCreatePlannedTask } from "@/lib/quickTaskCreate";
 import { normalizeSyllabusMasterId } from "@/lib/syllabusIds";
 import { trackMetaTaskCompleted, trackMetaTimerStarted } from "@/lib/analytics";
+import { trackActivity } from "@/lib/activity";
 import { applyOptimisticTaskUpdate } from "@/lib/taskMutations";
 import { formatElapsedSeconds } from "@/lib/taskTime";
 import {
@@ -383,6 +384,9 @@ export function TimerEngineClient() {
               r.id === taskId ? { ...r, status: "done" } : r,
             ),
           );
+          trackMetaTaskCompleted();
+          const doneTask = dailyPlanTasksRef.current.find((r) => r.id === taskId);
+          trackActivity("task_completed", { feature: "daily_plan", task_id: taskId, task_title: doneTask?.title ?? taskId });
         }
       } else if (mode === "mark_undone") {
         const cur = dailyPlanTasksRef.current.find((r) => r.id === taskId);
@@ -425,9 +429,11 @@ export function TimerEngineClient() {
 
       const patchStatus = async (status: Task["status"]) => {
         const prev = useTaskStore.getState().tasks[taskId]?.status;
+        const taskData = useTaskStore.getState().tasks[taskId];
         await applyOptimisticTaskUpdate(taskId, { status }, userId);
         if (prev !== "completed" && status === TASK_STATUS.completed) {
           trackMetaTaskCompleted();
+          trackActivity("task_completed", { feature: "tasks", task_id: taskId, task_title: taskData?.name ?? taskId });
         }
       };
 
@@ -507,6 +513,7 @@ export function TimerEngineClient() {
       await commitTimerToServer(st.taskId, "auto");
     }
     activeSessionMetaRef.current = sessionMeta;
+    trackActivity("timer_started", { feature: "tasks", task_id: task.id, task_title: task.name ?? task.id });
     if (task.status === TASK_STATUS.pending) {
       await applyOptimisticTaskUpdate(
         task.id,
@@ -549,6 +556,7 @@ export function TimerEngineClient() {
       .getState()
       .start(row.id, row.actual_worked_minutes ?? 0);
     trackMetaTimerStarted();
+    trackActivity("timer_started", { feature: "daily_plan", task_id: row.id, task_title: row.title });
   };
 
   const finishSessionMarkDone = async () => {

@@ -53,6 +53,8 @@ import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { suggestSyllabusIdFromTitle } from "@/lib/suggestDailyTaskSyllabus";
 import { formatIstSlotRange12h } from "@/lib/voiceIst";
 import { surfaceErrorForUi } from "@/lib/userFacingErrors";
+import { trackMetaTaskCompleted } from "@/lib/analytics";
+import { trackActivity } from "@/lib/activity";
 
 // ─── Source badge ────────────────────────────────────────────────────────────
 
@@ -692,7 +694,11 @@ export function UnifiedDailyPlanList({
         setError(surfaceErrorForUi(res.error));
       } else {
         dispatchDailyPlanSynced();
-        if (next === "done") setConfettiTaskId(t.id);
+        if (next === "done") {
+          setConfettiTaskId(t.id);
+          trackMetaTaskCompleted();
+          trackActivity("task_completed", { feature: "daily_plan", task_id: t.id, task_title: t.title });
+        }
       }
     } finally {
       setBusyId(null);
