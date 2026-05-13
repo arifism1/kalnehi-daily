@@ -1097,14 +1097,16 @@ export function BacklogTrackerClient() {
                     : "Confirm and add to plan"}
               </button>
             </div>
-            <button
-              type="button"
-              onClick={() => void onSaveAndExit()}
-              disabled={busy !== null}
-              className="w-full rounded-xl border border-kal-border bg-kal-card-muted py-2 text-sm font-semibold text-kal-text disabled:opacity-50"
-            >
-              {busy === "saveExit" ? "Saving…" : "Save and exit"}
-            </button>
+            {items.length > 1 && (
+              <button
+                type="button"
+                onClick={() => void onSaveAndExit()}
+                disabled={busy !== null}
+                className="w-full rounded-xl border border-kal-border bg-kal-card-muted py-2 text-sm font-semibold text-kal-text disabled:opacity-50"
+              >
+                {busy === "saveExit" ? "Saving…" : "Save and exit"}
+              </button>
+            )}
           </div>
         </section>
       ) : null}

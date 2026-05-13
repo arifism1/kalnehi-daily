@@ -213,7 +213,7 @@ export function AdminUsersClient({
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="email, name, or phone…"
-              className="flex-1 rounded-lg border border-kal-border bg-kal-card/50 px-3 py-2 text-sm"
+              className="flex-1 min-w-0 rounded-lg border border-kal-border bg-kal-card/50 px-3 py-2 text-sm"
             />
             <button type="submit" className="rounded-lg bg-kal-accent px-4 py-2 text-sm font-medium text-white">
               Search
@@ -233,15 +233,15 @@ export function AdminUsersClient({
       {isListView && (
         <div className="space-y-4">
           <div className="overflow-x-auto rounded-xl border border-kal-border">
-            <table className="w-full text-sm">
+            <table className="w-full min-w-[580px] text-sm">
               <thead>
                 <tr className="border-b border-kal-border bg-kal-card/60 text-left text-[11px] uppercase tracking-wide text-kal-muted">
-                  <th className="px-4 py-2.5">Name</th>
-                  <th className="px-4 py-2.5">Track / exam</th>
-                  <th className="px-4 py-2.5">Phone</th>
-                  <th className="px-4 py-2.5">Trial started</th>
+                  <th className="px-4 py-2.5 min-w-[120px]">Name</th>
+                  <th className="px-4 py-2.5 min-w-[100px]">Track / exam</th>
+                  <th className="px-4 py-2.5 min-w-[100px] whitespace-nowrap">Phone</th>
+                  <th className="px-4 py-2.5 whitespace-nowrap">Trial started</th>
                   <th className="px-4 py-2.5">Trial</th>
-                  <th className="px-4 py-2.5">Plan</th>
+                  <th className="px-4 py-2.5 min-w-[80px]">Plan</th>
                   <th className="px-4 py-2.5"></th>
                 </tr>
               </thead>
@@ -253,16 +253,23 @@ export function AdminUsersClient({
                 )}
                 {listData.rows.map((row) => (
                   <tr key={row.userId} className="border-b border-kal-border/50 last:border-0 hover:bg-kal-card/30">
-                    <td className="px-4 py-2.5">
-                      <p className="font-medium text-kal-text">{row.fullName ?? <span className="text-kal-muted italic">—</span>}</p>
+                    <td className="px-4 py-2.5 min-w-[120px]">
+                      <p className="font-medium text-kal-text whitespace-nowrap">{row.fullName ?? <span className="text-kal-muted italic">—</span>}</p>
                       <p className="text-[10px] font-mono text-kal-muted">{row.userId.slice(0, 8)}…</p>
                     </td>
                     <td className="px-4 py-2.5 text-xs text-kal-text-secondary max-w-[9rem] truncate" title={row.trackOrExam}>
                       {row.trackOrExam}
                     </td>
-                    <td className="px-4 py-2.5 text-kal-muted">{row.phone ?? "—"}</td>
+                    <td className="px-4 py-2.5 text-kal-muted whitespace-nowrap">{row.phone ?? "—"}</td>
                     <td className="px-4 py-2.5 text-kal-muted whitespace-nowrap">
-                      {row.trialStartedAt ? new Date(row.trialStartedAt).toLocaleDateString() : "—"}
+                      {row.trialStartedAt ? (
+                        <>
+                          <span>{new Date(row.trialStartedAt).toLocaleDateString()}</span>
+                          <p className="text-[10px] text-kal-muted mt-0.5">
+                            {new Date(row.trialStartedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </>
+                      ) : "—"}
                     </td>
                     <td className="px-4 py-2.5">
                       {row.hasHadTrial
@@ -293,7 +300,7 @@ export function AdminUsersClient({
             </table>
           </div>
 
-          <div className="flex items-center justify-between text-sm text-kal-muted">
+          <div className="flex flex-wrap items-center justify-between gap-y-2 text-sm text-kal-muted">
             <p>Page {listPage} of {totalPages} · {listData.total} users total</p>
             <div className="flex gap-2">
               <button
@@ -476,7 +483,7 @@ function UserCard({
               placeholder={u.email ?? u.userId}
               className="w-full rounded border border-red-500/40 bg-kal-card/50 px-2 py-1 text-xs font-mono"
             />
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 disabled={busy !== null || deleteConfirmText !== (u.email ?? u.userId)}

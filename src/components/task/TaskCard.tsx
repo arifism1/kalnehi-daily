@@ -278,7 +278,6 @@ export function TaskCard({
           trackMetaTimerStarted();
         } else if (!cur.resumeAt) {
           cur.resume();
-          trackMetaTimerStarted();
         }
       }
     } finally {
@@ -325,7 +324,7 @@ export function TaskCard({
       );
       if (res.ok) {
         trackMetaTaskCompleted();
-        trackActivity("task_completed", { feature: "tasks" });
+        trackActivity("task_completed", { feature: "tasks", task_id: task.id, task_title: task.name ?? task.id });
         useUndoStore.getState().offerUndo({
           message: "Task completed",
           runUndo: async () => {

@@ -117,20 +117,33 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               App
             </Link>
           </div>
-          <div className="flex gap-1 overflow-x-auto border-t border-kal-border px-2 py-2">
-            {NAV_GROUPS.flatMap((g) => g.items).map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={clsx(
-                  "shrink-0 rounded-md px-2 py-1 text-[11px] font-medium",
-                  pathname === item.href || pathname.startsWith(`${item.href}/`)
-                    ? "bg-kal-accent text-white"
-                    : "bg-kal-card text-kal-text-secondary",
-                )}
-              >
-                {item.label}
-              </Link>
+          <div className="border-t border-kal-border divide-y divide-kal-border/50">
+            {NAV_GROUPS.map((group) => (
+              <div key={group.label} className="flex items-center overflow-x-auto px-3 py-1.5 gap-1.5">
+                <span className="shrink-0 w-14 text-[10px] font-bold uppercase tracking-wider text-kal-muted">
+                  {group.label}
+                </span>
+                {group.items.map((item) => {
+                  const active =
+                    item.href === "/admin/overview"
+                      ? pathname === item.href
+                      : pathname === item.href || pathname.startsWith(`${item.href}/`);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={clsx(
+                        "shrink-0 rounded-md px-2.5 py-1 text-xs font-medium whitespace-nowrap",
+                        active
+                          ? "bg-kal-accent text-white"
+                          : "bg-kal-card text-kal-text-secondary",
+                      )}
+                    >
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </div>
             ))}
           </div>
         </header>

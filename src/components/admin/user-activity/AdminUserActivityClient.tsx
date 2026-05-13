@@ -5,6 +5,7 @@ import type {
   ActivitySnapshot,
   UserActivitySummary,
 } from "@/lib/admin/queries/activityQueries";
+import type { AdminTaskRow, UserDailyTaskHistory } from "@/lib/admin/queries/taskHistoryQueries";
 import type { UserListRow } from "@/lib/admin/queries/userLookupQueries";
 import { AdminKpiCard } from "@/components/admin/AdminKpiCard";
 
@@ -59,7 +60,7 @@ function BarChart({ items }: { items: { label: string; count: number }[] }) {
     <ul className="space-y-1.5">
       {items.map((item) => (
         <li key={item.label} className="flex items-center gap-2 text-xs">
-          <span className="w-40 shrink-0 truncate text-kal-muted" title={item.label}>
+          <span className="w-24 sm:w-40 shrink-0 truncate text-kal-muted" title={item.label}>
             {item.label}
           </span>
           <div className="flex-1 rounded-full bg-kal-border h-2">
@@ -68,7 +69,7 @@ function BarChart({ items }: { items: { label: string; count: number }[] }) {
               style={{ width: `${(item.count / max) * 100}%` }}
             />
           </div>
-          <span className="w-12 text-right tabular-nums text-kal-text">
+          <span className="w-10 sm:w-12 text-right tabular-nums text-kal-text">
             {item.count.toLocaleString("en-IN")}
           </span>
         </li>
@@ -78,7 +79,47 @@ function BarChart({ items }: { items: { label: string; count: number }[] }) {
 }
 
 const DAY_OPTIONS = [7, 14, 30] as const;
+const TASK_DAY_OPTIONS = [7, 14, 30, 60, 90] as const;
 const PER_PAGE = 25;
+
+function TaskStatusBadge({ status }: { status: string }) {
+  const styles: Record<string, string> = {
+    done: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
+    completed: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
+    in_progress: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+    pending: "bg-kal-muted/20 text-kal-muted",
+    skipped: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300",
+  };
+  return (
+    <span
+      className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${
+        styles[status] ?? styles.pending
+      }`}
+    >
+      {status}
+    </span>
+  );
+}
+
+function fmtMinutes(mins: number | null): string {
+  if (!mins || mins <= 0) return "—";
+  if (mins < 60) return `${mins}m`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+}
+
+function groupTasksByDate(rows: AdminTaskRow[]): { date: string; tasks: AdminTaskRow[] }[] {
+  const map = new Map<string, AdminTaskRow[]>();
+  for (const r of rows) {
+    const d = r.plan_date || "unknown";
+    if (!map.has(d)) map.set(d, []);
+    map.get(d)!.push(r);
+  }
+  return [...map.entries()]
+    .sort((a, b) => b[0].localeCompare(a[0]))
+    .map(([date, tasks]) => ({ date, tasks }));
+}
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -103,10 +144,17 @@ export function AdminUserActivityClient() {
   const [activityError, setActivityError] = useState<string | null>(null);
   const activityPanelRef = useRef<HTMLDivElement>(null);
 
+  // ── Per-user task history state ──────────────────────────────────────────────
+  const [activeTab, setActiveTab] = useState<"activity" | "tasks">("activity");
+  const [taskHistory, setTaskHistory] = useState<UserDailyTaskHistory | null>(null);
+  const [taskDays, setTaskDays] = useState<7 | 14 | 30 | 60 | 90>(30);
+  const [taskLoading, setTaskLoading] = useState(false);
+  const [taskError, setTaskError] = useState<string | null>(null);
+
   useEffect(() => {
     if (!selectedUser) return;
     const id = setTimeout(() => {
-      activityPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      activityPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }, 50);
     return () => clearTimeout(id);
   }, [selectedUser]);
@@ -158,6 +206,9 @@ export function AdminUserActivityClient() {
 
   async function loadActivityForUser(row: UserListRow) {
     setSelectedUser(row);
+    setActiveTab("activity");
+    setTaskHistory(null);
+    setTaskError(null);
     setActivityLoading(true);
     setActivityError(null);
     setUserActivity(null);
@@ -176,6 +227,28 @@ export function AdminUserActivityClient() {
       setActivityError(e instanceof Error ? e.message : "Unknown error.");
     } finally {
       setActivityLoading(false);
+    }
+  }
+
+  async function loadTasksForUser(uid: string, days: number) {
+    setTaskLoading(true);
+    setTaskError(null);
+    setTaskHistory(null);
+    try {
+      const res = await fetch(
+        `/api/admin/user-tasks?uid=${encodeURIComponent(uid)}&days=${days}`,
+      );
+      const json = (await res.json()) as {
+        ok: boolean;
+        data?: UserDailyTaskHistory;
+        error?: string;
+      };
+      if (!json.ok || !json.data) throw new Error(json.error ?? "Failed to load tasks.");
+      setTaskHistory(json.data);
+    } catch (e) {
+      setTaskError(e instanceof Error ? e.message : "Unknown error.");
+    } finally {
+      setTaskLoading(false);
     }
   }
 
@@ -277,7 +350,7 @@ export function AdminUserActivityClient() {
                           className="w-full rounded-sm bg-kal-primary/70 group-hover:bg-kal-primary transition-colors"
                           style={{ height: `${Math.max(4, (d.count / max) * 80)}px` }}
                         />
-                        <span className="mt-1 text-[9px] text-kal-muted">
+                        <span className="mt-1 text-[10px] text-kal-muted">
                           {d.date.slice(5)}
                         </span>
                         <div className="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 rounded bg-kal-overlay px-1.5 py-0.5 text-[10px] text-kal-text opacity-0 group-hover:opacity-100 whitespace-nowrap z-10">
@@ -356,7 +429,7 @@ export function AdminUserActivityClient() {
         {userRows && (
           <div className="space-y-3">
             {/* Pagination controls */}
-            <div className="flex items-center justify-between text-xs text-kal-muted">
+            <div className="flex flex-wrap items-center justify-between gap-y-2 text-xs text-kal-muted">
               <span>
                 Page {userPage} of {totalPages} &nbsp;·&nbsp;{" "}
                 {userTotal.toLocaleString("en-IN")} users total
@@ -464,78 +537,275 @@ export function AdminUserActivityClient() {
             </div>
           </div>
         )}
-      </div>
 
-      {/* ── Activity panel ── */}
-      {selectedUser && (
-        <div ref={activityPanelRef} className="rounded-2xl border border-kal-border bg-kal-card/40 p-4 space-y-3">
-          <div>
-            <h2 className="text-sm font-semibold text-kal-text">
-              Activity — {selectedUser.fullName ?? "User"}
-            </h2>
-            <p className="text-[10px] text-kal-muted mt-0.5 font-mono">
-              {selectedUser.userId}
-            </p>
+        {/* ── Activity / Tasks panel ── */}
+        {selectedUser && (
+        <div ref={activityPanelRef} className="border-t border-kal-border pt-4 mt-2 space-y-3">
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div>
+              <h2 className="text-sm font-semibold text-kal-text">
+                {selectedUser.fullName ?? "User"}
+              </h2>
+              <p className="text-[10px] text-kal-muted mt-0.5 font-mono">
+                {selectedUser.userId}
+              </p>
+            </div>
+
+            {/* Tab switcher */}
+            <div className="flex rounded-lg border border-kal-border overflow-hidden text-xs">
+              <button
+                type="button"
+                onClick={() => setActiveTab("activity")}
+                className={`px-3 py-1.5 transition-colors ${
+                  activeTab === "activity"
+                    ? "bg-kal-primary text-white"
+                    : "bg-kal-bg text-kal-muted hover:bg-kal-card"
+                }`}
+              >
+                Activity log
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("tasks");
+                  if (!taskHistory && !taskLoading) {
+                    loadTasksForUser(selectedUser.userId, taskDays);
+                  }
+                }}
+                className={`px-3 py-1.5 transition-colors ${
+                  activeTab === "tasks"
+                    ? "bg-kal-primary text-white"
+                    : "bg-kal-bg text-kal-muted hover:bg-kal-card"
+                }`}
+              >
+                Tasks
+              </button>
+            </div>
           </div>
 
-          {activityLoading && (
-            <p className="text-sm text-kal-muted text-center py-6">Loading activity…</p>
-          )}
-
-          {activityError && <p className="text-xs text-red-500">{activityError}</p>}
-
-          {userActivity && !activityLoading && (
+          {/* ── Activity tab ── */}
+          {activeTab === "activity" && (
             <>
-              <p className="text-xs text-kal-muted">
-                Showing {userActivity.rows.length} of{" "}
-                {userActivity.totalCount.toLocaleString("en-IN")} events
-              </p>
-              {userActivity.rows.length === 0 ? (
-                <p className="text-sm text-kal-muted text-center py-4">
-                  No activity recorded for this user yet.
-                </p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="border-b border-kal-border text-left text-kal-muted">
-                        <th className="pb-2 pr-3 font-medium">Time</th>
-                        <th className="pb-2 pr-3 font-medium">Page</th>
-                        <th className="pb-2 pr-3 font-medium">Feature</th>
-                        <th className="pb-2 pr-3 font-medium">Action</th>
-                        <th className="pb-2 pr-3 font-medium">Platform</th>
-                        <th className="pb-2 font-medium">Meta</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-kal-border/40">
-                      {userActivity.rows.map((row) => (
-                        <tr key={row.id} className="hover:bg-kal-card/60">
-                          <td className="py-1.5 pr-3 whitespace-nowrap text-kal-muted">
-                            {fmtDate(row.created_at)}
-                          </td>
-                          <td className="py-1.5 pr-3 font-mono text-kal-text">{row.page}</td>
-                          <td className="py-1.5 pr-3 text-kal-muted">{row.feature ?? "—"}</td>
-                          <td className="py-1.5 pr-3 font-medium text-kal-text">
-                            {row.action}
-                          </td>
-                          <td className="py-1.5 pr-3">
-                            <PlatformBadge platform={row.platform} />
-                          </td>
-                          <td className="py-1.5 max-w-[200px] truncate text-kal-muted">
-                            {Object.keys(row.metadata).length > 0
-                              ? JSON.stringify(row.metadata)
-                              : "—"}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+              {activityLoading && (
+                <p className="text-sm text-kal-muted text-center py-6">Loading activity…</p>
+              )}
+              {activityError && <p className="text-xs text-red-500">{activityError}</p>}
+              {userActivity && !activityLoading && (
+                <>
+                  <p className="text-xs text-kal-muted">
+                    Showing {userActivity.rows.length} of{" "}
+                    {userActivity.totalCount.toLocaleString("en-IN")} events
+                  </p>
+                  {userActivity.rows.length === 0 ? (
+                    <p className="text-sm text-kal-muted text-center py-4">
+                      No activity recorded for this user yet.
+                    </p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="border-b border-kal-border text-left text-kal-muted">
+                            <th className="pb-2 pr-3 font-medium">Time</th>
+                            <th className="pb-2 pr-3 font-medium">Page</th>
+                            <th className="pb-2 pr-3 font-medium">Feature</th>
+                            <th className="pb-2 pr-3 font-medium">Action</th>
+                            <th className="pb-2 pr-3 font-medium">Platform</th>
+                            <th className="pb-2 font-medium">Meta</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-kal-border/40">
+                          {userActivity.rows.map((row) => (
+                            <tr key={row.id} className="hover:bg-kal-card/60">
+                              <td className="py-1.5 pr-3 whitespace-nowrap text-kal-muted">
+                                {fmtDate(row.created_at)}
+                              </td>
+                              <td className="py-1.5 pr-3 font-mono text-kal-text">{row.page}</td>
+                              <td className="py-1.5 pr-3 text-kal-muted">{row.feature ?? "—"}</td>
+                              <td className="py-1.5 pr-3 font-medium text-kal-text">
+                                {row.action}
+                              </td>
+                              <td className="py-1.5 pr-3">
+                                <PlatformBadge platform={row.platform} />
+                              </td>
+                              <td className="py-1.5 max-w-[200px] truncate text-kal-muted">
+                                {Object.keys(row.metadata).length > 0
+                                  ? JSON.stringify(row.metadata)
+                                  : "—"}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}
+
+          {/* ── Tasks tab ── */}
+          {activeTab === "tasks" && (
+            <div className="space-y-3">
+              {/* Day range picker */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-kal-muted">Last</span>
+                <div className="flex rounded-lg border border-kal-border overflow-hidden text-xs">
+                  {TASK_DAY_OPTIONS.map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => {
+                        setTaskDays(d);
+                        loadTasksForUser(selectedUser.userId, d);
+                      }}
+                      className={`px-2.5 py-1 transition-colors ${
+                        taskDays === d
+                          ? "bg-kal-primary text-white"
+                          : "bg-kal-bg text-kal-muted hover:bg-kal-card"
+                      }`}
+                    >
+                      {d}d
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => loadTasksForUser(selectedUser.userId, taskDays)}
+                  disabled={taskLoading}
+                  className="rounded-lg bg-kal-card border border-kal-border px-3 py-1 text-xs text-kal-muted hover:text-kal-text transition-colors disabled:opacity-50"
+                >
+                  {taskLoading ? "Loading…" : "Refresh"}
+                </button>
+              </div>
+
+              {taskError && <p className="text-xs text-red-500">{taskError}</p>}
+
+              {taskLoading && (
+                <p className="text-sm text-kal-muted text-center py-6">Loading tasks…</p>
+              )}
+
+              {taskHistory && !taskLoading && (
+                <>
+                  {/* Summary KPIs */}
+                  {(() => {
+                    const total = taskHistory.totalCount;
+                    const done = taskHistory.rows.filter(
+                      (r) => r.status === "done" || r.status === "completed",
+                    ).length;
+                    const inProgress = taskHistory.rows.filter(
+                      (r) => r.status === "in_progress",
+                    ).length;
+                    const totalMins = taskHistory.rows.reduce(
+                      (s, r) => s + (r.actual_worked_minutes ?? 0),
+                      0,
+                    );
+                    return (
+                      <div className="grid grid-cols-2 gap-2 md:grid-cols-4 text-xs">
+                        <div className="rounded-xl border border-kal-border bg-kal-bg p-3">
+                          <p className="text-kal-muted">Total tasks</p>
+                          <p className="text-xl font-semibold text-kal-text mt-1">{total}</p>
+                        </div>
+                        <div className="rounded-xl border border-kal-border bg-kal-bg p-3">
+                          <p className="text-kal-muted">Completed</p>
+                          <p className="text-xl font-semibold text-green-600 dark:text-green-400 mt-1">
+                            {done}
+                          </p>
+                          <p className="text-[10px] text-kal-muted mt-0.5">
+                            {total > 0 ? `${Math.round((done / total) * 100)}%` : "—"}
+                          </p>
+                        </div>
+                        <div className="rounded-xl border border-kal-border bg-kal-bg p-3">
+                          <p className="text-kal-muted">In progress</p>
+                          <p className="text-xl font-semibold text-blue-600 dark:text-blue-400 mt-1">
+                            {inProgress}
+                          </p>
+                        </div>
+                        <div className="rounded-xl border border-kal-border bg-kal-bg p-3">
+                          <p className="text-kal-muted">Time logged</p>
+                          <p className="text-xl font-semibold text-kal-text mt-1">
+                            {fmtMinutes(totalMins)}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {taskHistory.rows.length === 0 ? (
+                    <p className="text-sm text-kal-muted text-center py-4">
+                      No tasks found in the last {taskDays} days.
+                    </p>
+                  ) : (
+                    <div className="space-y-4">
+                      {groupTasksByDate(taskHistory.rows).map(({ date, tasks }) => {
+                        const doneCount = tasks.filter(
+                          (t) => t.status === "done" || t.status === "completed",
+                        ).length;
+                        return (
+                          <div key={date}>
+                            <div className="flex items-center gap-2 mb-1.5">
+                              <p className="text-xs font-medium text-kal-text">{date}</p>
+                              <span className="text-[10px] text-kal-muted">
+                                {doneCount}/{tasks.length} done
+                              </span>
+                            </div>
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-xs">
+                                <thead>
+                                  <tr className="border-b border-kal-border text-left text-kal-muted">
+                                    <th className="pb-1.5 pr-3 font-medium">Task</th>
+                                    <th className="pb-1.5 pr-3 font-medium">Status</th>
+                                    <th className="pb-1.5 pr-3 font-medium">Priority</th>
+                                    <th className="pb-1.5 pr-3 font-medium">Time spent</th>
+                                    <th className="pb-1.5 pr-3 font-medium">Estimated</th>
+                                    <th className="pb-1.5 font-medium">Source</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-kal-border/40">
+                                  {tasks.map((t) => (
+                                    <tr key={t.id} className="hover:bg-kal-card/60">
+                                      <td className="py-1.5 pr-3 text-kal-text max-w-[240px]">
+                                        <span
+                                          className="block truncate"
+                                          title={t.title}
+                                        >
+                                          {t.title}
+                                        </span>
+                                        {t.time_slot && (
+                                          <span className="text-[10px] text-kal-muted">
+                                            {t.time_slot}
+                                          </span>
+                                        )}
+                                      </td>
+                                      <td className="py-1.5 pr-3">
+                                        <TaskStatusBadge status={t.status} />
+                                      </td>
+                                      <td className="py-1.5 pr-3 text-kal-muted capitalize">
+                                        {t.priority}
+                                      </td>
+                                      <td className="py-1.5 pr-3 tabular-nums text-kal-text">
+                                        {fmtMinutes(t.actual_worked_minutes)}
+                                      </td>
+                                      <td className="py-1.5 pr-3 tabular-nums text-kal-muted">
+                                        {fmtMinutes(t.estimated_minutes)}
+                                      </td>
+                                      <td className="py-1.5 text-kal-muted">{t.source}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
         </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
