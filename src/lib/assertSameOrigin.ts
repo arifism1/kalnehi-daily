@@ -12,6 +12,7 @@ import { getTrustedBrowserOrigins } from "@/lib/site";
  *   - GET  /api/cron/*            (bearer secret; no cookie session)
  *   - POST /api/waitlist/join     (anonymous-capable; non-browser callers expected)
  *   - POST /api/referral/event    (anonymous analytics; no session)
+ *   - POST /api/public/landing-visit (anonymous beacon; origin-checked)
  *
  * Returns a Response when the request should be rejected, null otherwise.
  * Call this at the very top of the handler before reading the body.

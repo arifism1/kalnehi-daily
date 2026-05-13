@@ -1,3 +1,4 @@
+import { ActiveTimeTracker } from "@/components/ActiveTimeTracker";
 import { KalnehiChrome } from "@/components/KalnehiChrome";
 import { ProtectedLayout } from "@/components/ProtectedLayout";
 import { ContactSupportProvider } from "@/components/support/ContactSupportProvider";
@@ -16,6 +17,7 @@ export default function KalnehiLayout({
         <ContactSupportProvider>
           <PwaTracker />
           <ActivityTracker />
+          <ActiveTimeTracker />
           <KalnehiChrome>{children}</KalnehiChrome>
         </ContactSupportProvider>
       </SyncProvider>

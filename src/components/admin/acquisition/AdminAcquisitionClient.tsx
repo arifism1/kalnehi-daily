@@ -3,10 +3,17 @@
 import { Bar, BarChart, CartesianGrid, Legend, Tooltip, XAxis, YAxis } from "recharts";
 
 import type { AcquisitionSnapshot } from "@/lib/admin/queries/acquisitionQueries";
+import type { LandingVisitSnapshot } from "@/lib/admin/queries/landingVisitQueries";
 import { AdminChart } from "@/components/admin/AdminChart";
 import { AdminKpiCard } from "@/components/admin/AdminKpiCard";
 
-export function AdminAcquisitionClient({ data }: { data: AcquisitionSnapshot }) {
+export function AdminAcquisitionClient({
+  data,
+  landing,
+}: {
+  data: AcquisitionSnapshot;
+  landing: LandingVisitSnapshot | null;
+}) {
   return (
     <div className="space-y-8">
       <div>
@@ -16,6 +23,47 @@ export function AdminAcquisitionClient({ data }: { data: AcquisitionSnapshot }) 
           {data.totalAuthUsers.toLocaleString("en-IN")}.
         </p>
       </div>
+
+      {landing && (
+        <>
+          <div>
+            <h2 className="text-lg font-semibold text-kal-text">Landing traffic</h2>
+            <p className="mt-1 text-sm text-kal-muted">
+              First-party beacon on `/`, `/kalnehi-daily`, `/pricing` (one row per visitor session per path per IST day).
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <AdminKpiCard label="Landing visits (7d)" value={landing.totalLast7d.toLocaleString("en-IN")} />
+            <AdminKpiCard label="Landing visits (30d)" value={landing.totalLast30d.toLocaleString("en-IN")} />
+          </div>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="rounded-2xl border border-kal-border bg-kal-card/40 p-4">
+              <h2 className="text-sm font-semibold text-kal-text mb-2">Landing visits by day (7d)</h2>
+              <AdminChart height={260}>
+                <BarChart data={landing.visitsByDay}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--kal-border)" />
+                  <XAxis dataKey="day" tick={{ fontSize: 9 }} angle={-45} textAnchor="end" height={60} />
+                  <YAxis tick={{ fontSize: 10 }} />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="var(--kal-accent)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </AdminChart>
+            </div>
+            <div className="rounded-2xl border border-kal-border bg-kal-card/40 p-4">
+              <h2 className="text-sm font-semibold text-kal-text mb-2">Landing visits by path (30d)</h2>
+              <AdminChart height={260}>
+                <BarChart data={landing.visitsByPath} layout="vertical" margin={{ left: 8 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--kal-border)" />
+                  <XAxis type="number" tick={{ fontSize: 10 }} />
+                  <YAxis type="category" dataKey="path" width={100} tick={{ fontSize: 10 }} />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="oklch(0.55 0.14 250)" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </AdminChart>
+            </div>
+          </div>
+        </>
+      )}
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
         <AdminKpiCard label="Profiles w/ attribution" value={data.profilesWithAttribution} />

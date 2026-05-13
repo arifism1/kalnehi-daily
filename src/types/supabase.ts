@@ -918,6 +918,34 @@ export type Database = {
         }
         Relationships: []
       }
+      landing_page_visits: {
+        Row: {
+          created_at: string
+          id: string
+          path: string
+          referrer: string | null
+          utm: Json
+          visit_date_ist: string
+          visitor_session_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          path: string
+          referrer?: string | null
+          utm?: Json
+          visitor_session_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          path?: string
+          referrer?: string | null
+          utm?: Json
+          visitor_session_id?: string
+        }
+        Relationships: []
+      }
       meditation_sessions: {
         Row: {
           created_at: string
@@ -2290,6 +2318,35 @@ export type Database = {
           }
         ]
       }
+      user_app_active_time_daily: {
+        Row: {
+          active_seconds: number
+          date_ist: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active_seconds?: number
+          date_ist: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active_seconds?: number
+          date_ist?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_app_active_time_daily_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       user_progress: {
         Row: {
           id: string
@@ -3329,6 +3386,10 @@ export type Database = {
             }
             Returns: Json
           }
+      admin_active_time_summary: {
+        Args: { p_from: string; p_to: string }
+        Returns: Json
+      }
       attach_referral_to_user: {
         Args: {
           p_code: string
@@ -3393,6 +3454,10 @@ export type Database = {
       increment_daily_trial_count: {
         Args: { p_user_id: string }
         Returns: Json
+      }
+      increment_user_app_active_seconds: {
+        Args: { p_date_ist: string; p_delta: number; p_user_id: string }
+        Returns: undefined
       }
       join_trial_queue: { Args: { p_user_id: string }; Returns: Json }
       prepbrain_ai_token_cancel_reservation: {

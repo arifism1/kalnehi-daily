@@ -99,6 +99,10 @@ const ALLOWLIST = {
   // ── Analytics / referral (anonymous, no user session) ───────────────────
   "src/app/api/referral/event/route.ts":
     "Anonymous analytics endpoint; no user session. Per-IP rate limited. Inserts referral events with null user_id.",
+  "src/app/api/public/landing-visit/route.ts":
+    "Anonymous landing beacon; same-origin + IP rate limit; inserts allowlisted landing_page_visits rows.",
+  "src/app/api/activity/active-time/route.ts":
+    "After getUser(); RPC increments user_app_active_time_daily scoped to session user.id.",
 
   // ── Admin API routes (admin gate checked before service-role access) ──────
   "src/app/api/admin/app-config/route.ts":
@@ -139,6 +143,8 @@ const ALLOWLIST = {
     "Called from admin-gated routes only.",
   "src/lib/admin/queries/featureHealthQueries.ts":
     "Called from admin-gated routes only.",
+  "src/lib/admin/queries/landingVisitQueries.ts":
+    "Called from admin-gated Acquisition page; landing_page_visits aggregates.",
   "src/lib/admin/queries/notificationQueries.ts":
     "Called from admin-gated routes only.",
   "src/lib/admin/queries/overviewQueries.ts":

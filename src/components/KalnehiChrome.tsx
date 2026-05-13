@@ -13,6 +13,7 @@ import {
 } from "react";
 
 import { GlobalVoiceSheet } from "@/components/voice/GlobalVoiceSheet";
+import { DailyVoiceNudge } from "@/components/voice/DailyVoiceNudge";
 import { TourGate } from "@/components/tour/TourGate";
 import { useVoiceCommandStore } from "@/store/useVoiceCommandStore";
 
@@ -249,6 +250,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
       <PwaInstallPromptDeferred />
       <GlobalVoiceSheet />
       <TourGate />
+      <DailyVoiceNudge />
     </div>
   );
 }

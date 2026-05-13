@@ -163,6 +163,8 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
   const [voiceQuotaNote, setVoiceQuotaNote] = useState<string | null>(null);
   /** Live partial transcript from native Capacitor STT (shell only). */
   const [nativeSpeechDraft, setNativeSpeechDraft] = useState("");
+  /** Live interim + finalized text while Web Speech is active (desktop / Chrome). */
+  const [liveTranscript, setLiveTranscript] = useState("");
 
   const previewRowsRef = useRef(previewRows);
   previewRowsRef.current = previewRows;
@@ -282,9 +284,12 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
     lang,
     maxSessionMs: VOICE_LONG_FORM_MAX_SESSION_MS,
     silenceMs: VOICE_LONG_FORM_SILENCE_MS,
+    interimPreview: true,
+    onPreviewTranscript: (t) => setLiveTranscript(t),
     onStart: () => {
       setError(null);
       setFallbackPanel(null);
+      setLiveTranscript("");
     },
     onTranscript: ({ transcript, occurredAt, durationSeconds }) => {
       void sendTranscript(transcript, occurredAt, durationSeconds);
@@ -723,9 +728,17 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
               Brief pause—we&apos;re still listening. Continue when you&apos;re ready, or tap Stop.
             </p>
           ) : null}
-{phase === "listening" && nativeSpeechDraft && routing.useNativeCapacitorStt ? (
+          {phase === "listening" &&
+          routing.useNativeCapacitorStt &&
+          nativeSpeechDraft ? (
             <p className="max-w-md rounded-lg border border-kal-border/40 bg-kal-surface/60 px-3 py-2 text-left text-xs leading-snug text-kal-text">
               {nativeSpeechDraft}
+            </p>
+          ) : phase === "listening" &&
+              routing.useWebSpeechStt &&
+              liveTranscript ? (
+            <p className="max-w-md rounded-lg border border-kal-border/40 bg-kal-surface/60 px-3 py-2 text-left text-xs leading-snug text-kal-text">
+              {liveTranscript}
             </p>
           ) : null}
           {phase === "listening" ? (

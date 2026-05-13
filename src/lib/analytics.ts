@@ -105,6 +105,16 @@ export function trackAuthSuccess(event: "login" | "sign_up"): void {
   trackMetaAuthSuccess(event);
 }
 
+/** Meta Pixel: landing funnel signal for custom audiences (marketing routes). */
+export function trackMetaLandingPageView(path: string): void {
+  if (typeof window === "undefined") return;
+  const fbq = window.fbq;
+  if (typeof fbq !== "function") return;
+  fbq("trackCustom", "Landing Page View", {
+    path: path.slice(0, 120),
+  });
+}
+
 /** Meta Pixel custom events — use when `fbq` may be unavailable (warn in dev). */
 function callMetaTrackCustom(eventName: string): void {
   if (typeof window === "undefined") return;
