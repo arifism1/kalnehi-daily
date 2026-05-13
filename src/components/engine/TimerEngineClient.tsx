@@ -386,7 +386,7 @@ export function TimerEngineClient() {
           );
           trackMetaTaskCompleted();
           const doneTask = dailyPlanTasksRef.current.find((r) => r.id === taskId);
-          trackActivity("task_completed", { feature: "daily_plan", task_id: taskId, task_title: doneTask?.title ?? taskId });
+          trackActivity("task_completed", { feature: "daily_plan", metadata: { task_id: taskId, task_title: doneTask?.title ?? taskId } });
         }
       } else if (mode === "mark_undone") {
         const cur = dailyPlanTasksRef.current.find((r) => r.id === taskId);
