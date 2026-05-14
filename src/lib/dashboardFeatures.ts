@@ -21,6 +21,7 @@ import {
   Target,
   TestTube2,
   TrendingUp,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 
@@ -79,6 +80,7 @@ export const FEATURE_CATEGORIES: FeatureCategoryDef[] = [
       "revision-tracker",
       "doubt-tracker",
       "mistake-log",
+      "study-squad",
       "study-sessions",
     ] as const,
   },
@@ -212,6 +214,12 @@ export const DASHBOARD_FEATURES: DashboardFeature[] = [
     icon: ClipboardList,
     description:
       "Log errors by type (knowledge, application, careless, time) and spot patterns.",
+  },
+  {
+    id: "study-squad",
+    title: "Study Squad",
+    icon: Users,
+    description: "A lightweight live-style feed of peer study activity to stay motivated.",
   },
   {
     id: "study-sessions",

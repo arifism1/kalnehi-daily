@@ -38,6 +38,12 @@
   --kal-accent-dark: #B35200;
   --kal-accent-glow: rgba(255, 122, 0, 0.22);
 
+  /* Filled CTAs / selected segments (Tailwind `kal-primary` — was missing from @theme) */
+  --kal-primary: var(--kal-accent);
+  --kal-primary-foreground: var(--kal-accent-foreground);
+  /* Neutral inset surface for segmented controls (`bg-kal-bg`) */
+  --kal-bg: var(--kal-page);
+
   /* ── Effects ──────────────────────────────────────────────────────── */
   --kal-overlay: rgba(28, 23, 16, 0.42);
   --kal-shadow-card:
@@ -101,6 +107,10 @@
   --kal-accent-dark: #FFB86C;
   --kal-accent-glow: rgba(255, 140, 26, 0.28);
 
+  --kal-primary: var(--kal-accent);
+  --kal-primary-foreground: var(--kal-accent-foreground);
+  --kal-bg: var(--kal-page);
+
   --kal-overlay: rgba(0, 0, 0, 0.58);
   --kal-shadow-card:
     0 1px 3px rgba(0, 0, 0, 0.3),
@@ -155,6 +165,9 @@
   --color-kal-accent-foreground: var(--kal-accent-foreground);
   --color-kal-accent-dark: var(--kal-accent-dark);
   --color-kal-accent-glow: var(--kal-accent-glow);
+  --color-kal-primary: var(--kal-primary);
+  --color-kal-primary-foreground: var(--kal-primary-foreground);
+  --color-kal-bg: var(--kal-bg);
   --color-kal-input-bg: var(--kal-input-bg);
   --color-kal-bg-elevated: var(--kal-bg-elevated);
   --color-kal-danger-soft: var(--kal-danger-soft);

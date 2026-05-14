@@ -71,16 +71,30 @@ export function trackActivity(
     feature?: string;
     metadata?: Record<string, unknown>;
     page?: string;
+    /** Shorthand merged into `metadata` for task-related events */
+    task_id?: string;
+    task_title?: string;
   },
 ): void {
   if (typeof window === "undefined") return;
   if (buffer.length >= MAX_BUFFER) return; // drop if overfull (flush lag)
 
+  let metadata: Record<string, unknown> | undefined;
+  if (
+    opts?.metadata ||
+    opts?.task_id !== undefined ||
+    opts?.task_title !== undefined
+  ) {
+    metadata = { ...(opts.metadata ?? {}) };
+    if (opts.task_id !== undefined) metadata.task_id = opts.task_id;
+    if (opts.task_title !== undefined) metadata.task_title = opts.task_title;
+  }
+
   buffer.push({
     page: opts?.page ?? window.location.pathname,
     feature: opts?.feature,
     action,
-    metadata: opts?.metadata,
+    metadata,
     platform: resolvePlatform(),
     session_id: getSessionId(),
     ts: Date.now(),

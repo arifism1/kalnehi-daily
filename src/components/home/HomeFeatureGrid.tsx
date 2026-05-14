@@ -23,6 +23,7 @@ import {
   Target,
   TestTube2,
   TrendingUp,
+  Users,
   Bookmark,
   CalendarDays,
 } from "lucide-react";
@@ -230,6 +231,14 @@ const FEATURE_ITEM_BY_ID: Record<string, FeatureItem> = {
     icon: ClipboardList,
     staticHint: "Error pattern taxonomy",
     fallback: "Log a mistake",
+  },
+  "study-squad": {
+    id: "study-squad",
+    href: "/study-squad",
+    label: "Study Squad",
+    icon: Users,
+    staticHint: "Peer-style activity feed",
+    fallback: "See who's studying what",
   },
   "study-sessions": {
     id: "study-sessions",
