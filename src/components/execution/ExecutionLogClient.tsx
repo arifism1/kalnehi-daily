@@ -13,7 +13,6 @@ import {
 } from "date-fns";
 import { CalendarRange, ChevronLeft, ChevronRight, ScrollText } from "lucide-react";
 
-import { isAiStudyPartnerUiEnabled } from "@/lib/aiStudyPartnerUi";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useCalendarDate } from "@/hooks/useCalendarDate";
@@ -361,21 +360,7 @@ export function ExecutionLogClient() {
           >
             <h3 className="text-sm font-bold text-kal-text">Study sessions</h3>
             <p className="mt-1 text-xs leading-relaxed text-kal-muted">
-              {isAiStudyPartnerUiEnabled ? (
-                <>
-                  Claimed or on-camera time from{" "}
-                  <a
-                    href="/study-sessions"
-                    className="font-medium text-violet-400 underline-offset-2 hover:underline"
-                  >
-                    On-camera study sessions
-                  </a>
-                  . On-camera entries use on-device processing only; logs never
-                  include video or images.
-                </>
-              ) : (
-                "Logged study sessions for this day."
-              )}
+              Logged study sessions for this day.
             </p>
             <ul className="mt-4 space-y-2">
               <StudySessionsLog

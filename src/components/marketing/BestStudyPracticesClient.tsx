@@ -2,8 +2,6 @@
 
 import Link from "next/link";
 
-import { isAiStudyPartnerUiEnabled } from "@/lib/aiStudyPartnerUi";
-
 type ResearchSection = {
   id: string;
   emoji: string;
@@ -375,7 +373,7 @@ export function BestStudyPracticesClient() {
         </div>
 
         <ol className="list-none space-y-7">
-          {RESEARCH_SECTIONS.filter((s) => isAiStudyPartnerUiEnabled || s.id !== "study-sessions").map((s, idx) => (
+          {RESEARCH_SECTIONS.filter((s) => s.id !== "study-sessions").map((s, idx) => (
             <li key={s.id}>
               <article className="group relative overflow-hidden rounded-2xl border border-white/45 bg-white/35 shadow-[0_16px_40px_-24px_rgba(0,0,0,0.18)] backdrop-blur-md transition-shadow duration-300 hover:shadow-[0_24px_56px_-20px_rgba(255,122,0,0.2)] dark:border-white/10 dark:bg-zinc-900/40">
                 <div

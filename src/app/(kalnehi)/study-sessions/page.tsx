@@ -2,13 +2,9 @@ import { redirect } from "next/navigation";
 
 import { kalnehiPageMetadata } from "@/lib/seo-metadata";
 
-import StudySessionsRouteLazy from "./StudySessionsRouteLazy";
-
 export const metadata = kalnehiPageMetadata("studySessions");
 
+/** Route kept for backwards compatibility; on-camera sessions UI is launch-hidden. */
 export default function StudySessionsPage() {
-  if (process.env.NEXT_PUBLIC_ENABLE_AI_STUDY_PARTNER !== "true") {
-    redirect("/home");
-  }
-  return <StudySessionsRouteLazy />;
+  redirect("/home");
 }

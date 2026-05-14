@@ -30,6 +30,8 @@ import {
   Users,
 } from "lucide-react";
 
+import { LAUNCH_HIDDEN_DASHBOARD_FEATURE_IDS } from "@/lib/dashboardFeatures";
+
 export function navActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -240,8 +242,18 @@ export function filterNavByEnabledFeatures(
   sections: MainNavSection[],
   enabledFeatures: string[] | null,
 ): MainNavSection[] {
-  if (enabledFeatures === null) return sections;
-  return sections
+  const withoutLaunchHidden = sections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter(
+        (item) =>
+          !item.featureId || !LAUNCH_HIDDEN_DASHBOARD_FEATURE_IDS.has(item.featureId),
+      ),
+    }))
+    .filter((section) => section.items.length > 0);
+
+  if (enabledFeatures === null) return withoutLaunchHidden;
+  return withoutLaunchHidden
     .map((section) => ({
       ...section,
       items: section.items.filter(
@@ -304,6 +316,7 @@ export function getDefaultQuickNavItemsInOrder(
     (item) =>
       !item.menuAction &&
       !QUICK_NAV_EXCLUDED_HREFS.has(item.href) &&
+      (!item.featureId || !LAUNCH_HIDDEN_DASHBOARD_FEATURE_IDS.has(item.featureId)) &&
       (enabledFeatures === null || !item.featureId || enabledFeatures.includes(item.featureId)),
   );
   return [...flat].sort(

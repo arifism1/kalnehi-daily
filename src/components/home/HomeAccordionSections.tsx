@@ -32,7 +32,7 @@ import clsx from "clsx";
 import dynamic from "next/dynamic";
 import { useState, type ReactNode } from "react";
 
-import { isAiStudyPartnerUiEnabled } from "@/lib/aiStudyPartnerUi";
+import { LAUNCH_HIDDEN_DASHBOARD_FEATURE_IDS } from "@/lib/dashboardFeatures";
 
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useEnabledFeaturesStore } from "@/store/useEnabledFeaturesStore";
@@ -386,10 +386,9 @@ export function HomeAccordionSections() {
     },
   ];
 
-  // Remove any sections for features that are currently launch-gated.
-  const availableSections = isAiStudyPartnerUiEnabled
-    ? allSections
-    : allSections.filter((s) => s.id !== "study-sessions");
+  const availableSections = allSections.filter(
+    (s) => !LAUNCH_HIDDEN_DASHBOARD_FEATURE_IDS.has(s.id),
+  );
 
   // null = all features enabled (no customisation set)
   const hasCustomisation = enabledFeatures !== null;

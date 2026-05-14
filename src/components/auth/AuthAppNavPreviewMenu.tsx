@@ -6,7 +6,7 @@ import { Bell, CheckCircle2, Download, LockKeyhole, Menu } from "lucide-react";
 import { Fragment, useEffect, useState } from "react";
 
 import { PwaIosInstallModal } from "@/components/PwaIosInstallModal";
-import { MAIN_NAV_SECTIONS } from "@/config/mainNavigation";
+import { filterNavByEnabledFeatures, MAIN_NAV_SECTIONS } from "@/config/mainNavigation";
 import { isStandalonePwa, usePwaInstall } from "@/hooks/usePwaInstall";
 import { SITE_NAME } from "@/lib/seo-metadata";
 
@@ -17,6 +17,7 @@ import { SITE_NAME } from "@/lib/seo-metadata";
  */
 export function AuthAppNavPreviewMenu() {
   const [open, setOpen] = useState(false);
+  const navSections = filterNavByEnabledFeatures(MAIN_NAV_SECTIONS, null);
   const { installed, canPromptInstall, needsIosInstallModal, promptInstall, iosDevice } =
     usePwaInstall();
   const [installBusy, setInstallBusy] = useState(false);
@@ -189,7 +190,7 @@ export function AuthAppNavPreviewMenu() {
                 <LockedNavRow label="Notifications (Alerts)" Icon={Bell} />
               </li>
 
-              {MAIN_NAV_SECTIONS.map((section, sectionIndex) => (
+              {navSections.map((section, sectionIndex) => (
                 <Fragment key={section.title}>
                   <li
                     className={clsx(
