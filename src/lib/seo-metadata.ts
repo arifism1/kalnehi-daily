@@ -32,6 +32,7 @@ export type KalnehiPageSeoKey =
   | "prepbrain"
   | "mastermind"
   | "studySessions"
+  | "studySquad"
   | "planner"
   | "pricing"
   | "about"
@@ -83,6 +84,12 @@ const PAGE_SEO: Record<
     title: `On-camera study sessions — camera on-device | ${SITE_NAME}`,
     description:
       `Log study time with optional on-camera verification: processing stays on your device — no video upload. Focus tracking for JEE, NEET, and Boards in ${SITE_NAME}.`,
+  },
+  studySquad: {
+    path: "/study-squad",
+    title: `Study Squad — watch peer-style study activity | ${SITE_NAME}`,
+    description:
+      `See a gentle simulated live feed of what others are studying — tuned to your target exam for Indian competitive prep. Observation-only room inside ${SITE_NAME}.`,
   },
   planner: {
     path: "/planner",

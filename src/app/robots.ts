@@ -78,6 +78,7 @@ export default function robots(): MetadataRoute.Robots {
           "/mastermind",
           "/marks-engine",
           "/study-sessions",
+          "/study-squad",
           "/habits",
           "/heatmap",
           "/calendar",

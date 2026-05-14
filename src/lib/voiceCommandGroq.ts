@@ -98,6 +98,7 @@ const VALID_NAV_PATHS = new Set([
   "/calendar",
   "/timer",
   "/study-sessions",
+  "/study-squad",
   "/study-camera",
   // Planner sub-pages
   "/planner",
@@ -260,7 +261,7 @@ Parse the user voice command and return ONLY a valid JSON object — no markdown
 
 Valid paths:
   Core: /home, /settings (profile and app preferences), /notifications, /my-subscription, /feedback
-  Planning: /daily-plan, /daily-debrief (/daily-log redirects to debrief), /recap (Today's Recap), /recap/weekly, /recap/monthly, /daily-engine, /dictate-day, /saved-plans, /missed-tasks, /calendar, /timer, /study-sessions, /study-camera
+  Planning: /daily-plan, /daily-debrief (/daily-log redirects to debrief), /recap (Today's Recap), /recap/weekly, /recap/monthly, /daily-engine, /dictate-day, /saved-plans, /missed-tasks, /calendar, /timer, /study-squad, /study-sessions, /study-camera
   Planner: /planner, /planner/habits, /planner/schedule, /planner/weekly, /planner/todos, /planner/routine, /planner/productivity
   Track: /progress, /consistency-tracker, /heatmap, /marks-engine, /my-target, /target-score-blueprint, /mock-tests, /mistake-log
   Revise: /revision-tracker, /syllabus, /doubts, /mastermind, /prepbrain (same AI coach as Mastermind — prefer /mastermind)
