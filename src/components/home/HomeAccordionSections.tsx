@@ -25,6 +25,7 @@ import {
   Target,
   TestTube2,
   TrendingUp,
+  Users,
   X,
 } from "lucide-react";
 import clsx from "clsx";
@@ -339,6 +340,25 @@ export function HomeAccordionSections() {
       title: "Mistake Log",
       icon: ClipboardList,
       content: <MistakeLogClientLazy />,
+    },
+    {
+      id: "study-squad",
+      title: "Study Squad",
+      icon: Users,
+      content: (
+        <div className="kal-glass-subtle space-y-3 rounded-2xl border border-kal-border/60 p-4">
+          <p className="text-sm leading-relaxed text-kal-text-secondary">
+            A playful simulated feed of peers using Kalnehi — activity lines pull from your real
+            syllabus rows when you have them in Syllabus Tracker.
+          </p>
+          <a
+            href="/study-squad"
+            className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-kal-accent px-5 text-sm font-semibold text-white transition-opacity hover:opacity-95"
+          >
+            Open Study Squad
+          </a>
+        </div>
+      ),
     },
     {
       id: "study-sessions",

@@ -28,6 +28,7 @@ import {
   Bookmark,
   CalendarDays,
   TestTube2,
+  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -82,6 +83,7 @@ const SIDEBAR_LINK_BY_ID: Record<string, SidebarItem> = {
   "revision-tracker": { href: "/revision-tracker", label: "Revision Tracker", icon: AlarmClock },
   "doubt-tracker": { href: "/doubts", label: "Doubt Tracker", icon: HelpCircle },
   "mistake-log": { href: "/mistake-log", label: "Mistake Log", icon: ClipboardList },
+  "study-squad": { href: "/study-squad", label: "Study Squad", icon: Users },
   "study-sessions": { href: "/study-sessions", label: "On-camera sessions", icon: Camera },
   "habit-maker": { href: "/habits", label: "Habit Maker", icon: CheckCircle },
   "personal-motivation": { href: "/motivation", label: "Personal Motivation", icon: MessageSquare },
