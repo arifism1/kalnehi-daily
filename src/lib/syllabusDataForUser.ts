@@ -412,3 +412,38 @@ async function loadSyllabusDataForExamName(
     primaryMarksYear: primaryMarksYearFromTargetExam(examName),
   };
 }
+
+/**
+ * Merged syllabus rows for Study Squad labels: same merge/dedupe path as the
+ * Syllabus Tracker, including multi-exam tracks (union of enabled exams).
+ */
+export async function loadMergedSyllabusRowsForStudySquad(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+): Promise<{ rows: MergedSyllabusRow[]; examLabel: string | null }> {
+  const { data: profile, error: profileErr } = await supabase
+    .from("user_profiles")
+    .select(
+      "primary_exam, target_exam, selected_track, enabled_exams_in_track, cuet_domain_subjects, upsc_optional_subjects",
+    )
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (profileErr) throw profileErr;
+
+  const examNamesToLoad = resolveExamNamesToLoadFromProfile(profile);
+
+  if (examNamesToLoad === null) {
+    const single = await loadSyllabusDataForUser(supabase, userId);
+    return { rows: single.rows, examLabel: single.examLabel };
+  }
+
+  const examResults = await Promise.all(
+    examNamesToLoad.map((examName) =>
+      loadSyllabusDataForExamName(supabase, userId, examName, profile),
+    ),
+  );
+
+  const examLabel = resolveSyllabusExam(profile);
+  return { rows: examResults.flatMap((r) => r.rows), examLabel };
+}

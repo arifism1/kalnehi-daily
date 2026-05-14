@@ -20,7 +20,6 @@ import {
   LifeBuoy,
   LineChart,
   ListChecks,
-  Mic,
   NotebookPen,
   Settings,
   Shield,
@@ -28,6 +27,7 @@ import {
   Target,
   TestTube2,
   TrendingUp,
+  Users,
 } from "lucide-react";
 
 export function navActive(pathname: string, href: string): boolean {
@@ -180,6 +180,12 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
       { href: "/doubts", label: "Doubt Tracker", shortLabel: "Doubts", Icon: HelpCircle, featureId: "doubt-tracker" },
       { href: "/mistake-log", label: "Mistake Log", Icon: ClipboardList, featureId: "mistake-log" },
       {
+        href: "/study-squad",
+        label: "Study Squad",
+        shortLabel: "Squad",
+        Icon: Users,
+      },
+      {
         href: "/study-sessions",
         label: "On-camera sessions",
         shortLabel: "Camera",
@@ -267,6 +273,7 @@ const QUICK_NAV_HREF_ORDER: readonly string[] = [
   "/mastermind",
   "/doubts",
   "/mistake-log",
+  "/study-squad",
   "/study-sessions",
   "/habits",
   "/motivation",
