@@ -70,7 +70,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <nav className="flex-1 overflow-y-auto p-3 space-y-5">
           {NAV_GROUPS.map((group) => (
             <div key={group.label}>
-              <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-kal-muted mb-1.5">
+              <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-kal-text-secondary mb-1.5">
                 {group.label}
               </p>
               <ul className="space-y-0.5">
@@ -120,7 +120,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           <div className="border-t border-kal-border divide-y divide-kal-border/50">
             {NAV_GROUPS.map((group) => (
               <div key={group.label} className="flex items-center overflow-x-auto px-3 py-1.5 gap-1.5">
-                <span className="shrink-0 w-14 text-[10px] font-bold uppercase tracking-wider text-kal-muted">
+                <span className="shrink-0 w-14 text-[10px] font-bold uppercase tracking-wider text-kal-text-secondary">
                   {group.label}
                 </span>
                 {group.items.map((item) => {

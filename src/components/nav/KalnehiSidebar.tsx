@@ -24,6 +24,7 @@ import {
   Sparkles,
   Target,
   TrendingUp,
+  Users,
   ListTodo,
   Bookmark,
   CalendarDays,

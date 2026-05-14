@@ -71,6 +71,7 @@ export function trackActivity(
     feature?: string;
     metadata?: Record<string, unknown>;
     page?: string;
+    /** Shorthand merged into `metadata` for task-related events */
     task_id?: string;
     task_title?: string;
   },
