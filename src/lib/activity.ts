@@ -71,16 +71,26 @@ export function trackActivity(
     feature?: string;
     metadata?: Record<string, unknown>;
     page?: string;
+    task_id?: string;
+    task_title?: string;
   },
 ): void {
   if (typeof window === "undefined") return;
   if (buffer.length >= MAX_BUFFER) return; // drop if overfull (flush lag)
 
+  const taskMeta: Record<string, unknown> = {};
+  if (opts?.task_id !== undefined) taskMeta.task_id = opts.task_id;
+  if (opts?.task_title !== undefined) taskMeta.task_title = opts.task_title;
+  const mergedMetadata =
+    opts?.metadata !== undefined || Object.keys(taskMeta).length > 0
+      ? { ...opts?.metadata, ...taskMeta }
+      : undefined;
+
   buffer.push({
     page: opts?.page ?? window.location.pathname,
     feature: opts?.feature,
     action,
-    metadata: opts?.metadata,
+    metadata: mergedMetadata,
     platform: resolvePlatform(),
     session_id: getSessionId(),
     ts: Date.now(),
