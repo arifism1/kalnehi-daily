@@ -4,10 +4,13 @@ import bundleAnalyzer from "@next/bundle-analyzer";
 /**
  * App CSP (enforced + report-only duplicate for tuning in devtools).
  * Still allows inline/eval for third-party scripts (GA, Razorpay, MediaPipe); tighten with
- * nonces/hashes in a follow-up when feasible.
+ * nonces/hashes in a follow-up when feasible (see Next.js `headers()` + `script` nonce docs).
+ * Long-term: drop `'unsafe-inline'` for script-src where third parties allow nonce-based loading;
+ * keep report-only duplicate to tune violations before enforcing stricter directives.
  * Covers Supabase, Firebase, Vercel Analytics, GA4, Meta Pixel, Razorpay checkout, MediaPipe CDNs.
  *
- * CSP violation reporting: set CSP_REPORT_URI env var to enable (e.g. a sentry/report-uri endpoint).
+ * CSP violation reporting: set CSP_REPORT_URI in production (see .env.example) to send
+ * violation reports (e.g. Sentry ingest or report-uri.io).
  */
 const CSP_REPORT_URI = process.env.CSP_REPORT_URI ?? "";
 

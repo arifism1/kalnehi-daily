@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { CookieSettingsTrigger } from "@/components/consent/CookieSettingsTrigger";
 import { KalnehiMark } from "@/components/KalnehiMark";
 import { PwaInstallPromptDeferred } from "@/components/PwaInstallPromptDeferred";
 import { SITE_NAME } from "@/lib/seo-metadata";
@@ -35,6 +36,8 @@ export function MarketingPublicShell({ children }: { children: React.ReactNode }
           <Link href="/terms" className="underline-offset-2 hover:underline">
             Terms
           </Link>
+          {" · "}
+          <CookieSettingsTrigger className="text-kal-muted underline-offset-2 hover:underline" />
         </p>
         <p className="mt-2">© {new Date().getFullYear()} {SITE_NAME}</p>
       </footer>

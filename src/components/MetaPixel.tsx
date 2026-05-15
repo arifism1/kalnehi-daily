@@ -1,9 +1,12 @@
+import Script from "next/script";
+
 export { MetaPixelRouteTracker } from "./MetaPixelRouteTracker";
 
 const META_PIXEL_ID = "820742390658477";
 
 /**
- * Meta Pixel base code — official IIFE string only (no Next.js `Script` wrapper).
+ * Meta Pixel base code — official IIFE as inline script via `next/script` so Next.js 16
+ * executes it on the client (raw `<script>` in a client component is not supported).
  * CSP must allow `https://connect.facebook.net` in script-src (see next.config.ts).
  */
 const META_PIXEL_BASE_SNIPPET = `!function(f,b,e,v,n,t,s)
@@ -19,9 +22,9 @@ fbq('track', 'PageView');`;
 
 export function MetaPixelScript() {
   return (
-    <script
+    <Script
       id="meta-pixel-base-snippet"
-      // eslint-disable-next-line react/no-danger -- Meta’s official inline bootstrap; must run as a classic script tag.
+      strategy="afterInteractive"
       dangerouslySetInnerHTML={{ __html: META_PIXEL_BASE_SNIPPET }}
     />
   );
