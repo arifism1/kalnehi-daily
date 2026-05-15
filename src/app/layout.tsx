@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Suspense } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { DM_Sans, DM_Serif_Display, Syne } from "next/font/google";
@@ -8,7 +7,6 @@ import { AppShell } from "@/components/AppShell";
 import { AuthProvider } from "@/components/AuthProvider";
 import { SubscriptionAccessProvider } from "@/hooks/useSubscriptionAccess";
 import { FcmForegroundListener } from "@/components/FcmForegroundListener";
-import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { OrganicEntryCapture } from "@/components/OrganicEntryCapture";
 import { ReferralCapture } from "@/components/ReferralCapture";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -23,16 +21,8 @@ import {
   SITE_NAME,
 } from "@/lib/seo-metadata";
 import { KillSwitchGuard } from "@/components/KillSwitchGuard";
-import {
-  GoogleTagManagerHead,
-  GoogleTagManagerNoScript,
-} from "@/components/GoogleTagManager";
-import {
-  MetaPixelNoScript,
-  MetaPixelRouteTracker,
-  MetaPixelScript,
-} from "@/components/MetaPixel";
 import { OAuthAuthAnalytics } from "@/components/OAuthAuthAnalytics";
+import { CookieConsentProvider } from "@/components/consent/CookieConsentProvider";
 
 import "./globals.css";
 
@@ -201,34 +191,28 @@ export default function RootLayout({
       className={`${dmSans.variable} ${dmSerifDisplay.variable} ${syne.variable} h-full min-h-dvh min-h-[-webkit-fill-available] antialiased`}
     >
       <body className="flex min-h-dvh min-h-[-webkit-fill-available] flex-col bg-kal-page font-sans text-kal-text">
-        <MetaPixelNoScript />
-        <MetaPixelScript />
-        <GoogleTagManagerNoScript />
-        <GoogleTagManagerHead />
-        <Suspense fallback={null}>
-          <MetaPixelRouteTracker />
-        </Suspense>
-        <OAuthAuthAnalytics />
-        <PwaServiceWorkerUpdateProvider>
-          <JsonLd />
-          <OrganicEntryCapture />
-          <ReferralCapture />
-          <GoogleAnalytics />
-          <ThemeSync />
-          <ServiceWorkerRegister />
-          <KillSwitchGuard>
-            <AuthProvider>
-              <SubscriptionAccessProvider>
-                <UiPrefsRemoteSync />
-                <StoragePersistenceInit />
-                <FcmForegroundListener />
-                <AppShell>{children}</AppShell>
-              </SubscriptionAccessProvider>
-            </AuthProvider>
-          </KillSwitchGuard>
-          <Analytics />
-          <SpeedInsights sampleRate={0.5} />
-        </PwaServiceWorkerUpdateProvider>
+        <CookieConsentProvider>
+          <OAuthAuthAnalytics />
+          <PwaServiceWorkerUpdateProvider>
+            <JsonLd />
+            <OrganicEntryCapture />
+            <ReferralCapture />
+            <ThemeSync />
+            <ServiceWorkerRegister />
+            <KillSwitchGuard>
+              <AuthProvider>
+                <SubscriptionAccessProvider>
+                  <UiPrefsRemoteSync />
+                  <StoragePersistenceInit />
+                  <FcmForegroundListener />
+                  <AppShell>{children}</AppShell>
+                </SubscriptionAccessProvider>
+              </AuthProvider>
+            </KillSwitchGuard>
+            <Analytics />
+            <SpeedInsights sampleRate={0.5} />
+          </PwaServiceWorkerUpdateProvider>
+        </CookieConsentProvider>
       </body>
     </html>
   );

@@ -11,11 +11,18 @@ export default function TermsPage() {
         Terms &amp; Conditions
       </h1>
       <p>
-        <strong>Last updated:</strong> April 08, 2026
+        <strong>Last updated:</strong> May 16, 2026
       </p>
       <p>
         These Terms &amp; Conditions govern your use of {SITE_NAME} operated
-        by Neven Academy Assam.
+        by Neven Academy Assam. Our{" "}
+        <a
+          href="/privacy"
+          className="font-medium text-kal-accent underline underline-offset-2 hover:text-kal-accent/90"
+        >
+          Privacy Policy
+        </a>{" "}
+        explains how we process personal data and cookies.
       </p>
       <p>
         <strong>Acceptance of Terms</strong>
@@ -80,6 +87,24 @@ export default function TermsPage() {
       <p>
         All content and features belong to Neven Academy Assam. You may not copy
         or distribute any part of the app.
+      </p>
+      <p>
+        <strong>Cookies and marketing technologies</strong>
+      </p>
+      <p>
+        Optional analytics and marketing tags (for example Google Analytics / Tag
+        Manager and Meta Pixel) load only if you opt in via the cookie banner or{" "}
+        <strong>Cookie settings</strong>. Essential cookies needed for sign-in and
+        security may still be set. See the Privacy Policy for details.
+      </p>
+      <p>
+        <strong>Statutory rights</strong>
+      </p>
+      <p>
+        Nothing in these Terms excludes or limits any consumer, data-protection, or
+        other rights that applicable law guarantees you and that cannot lawfully be
+        waived. If a court or regulator finds part of these Terms unenforceable, the
+        remainder stays in effect to the fullest extent permitted.
       </p>
       <p>
         <strong>Governing Law</strong>

@@ -3,6 +3,7 @@
 import { Database } from "lucide-react";
 import Link from "next/link";
 
+import { CookieSettingsTrigger } from "@/components/consent/CookieSettingsTrigger";
 import { SettingsExpandableSection } from "@/components/settings/SettingsExpandableSection";
 
 export function DataAndThisDeviceSection() {
@@ -44,6 +45,8 @@ export function DataAndThisDeviceSection() {
           >
             Privacy policy
           </Link>
+          . Optional analytics &amp; marketing:{" "}
+          <CookieSettingsTrigger className="font-semibold text-kal-accent underline underline-offset-2" />
           . For a full export of account data or deletion, email{" "}
           <a
             href="mailto:curioversitylearning@gmail.com"

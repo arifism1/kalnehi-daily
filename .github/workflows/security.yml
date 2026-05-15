@@ -28,3 +28,6 @@ jobs:
 
       - name: Service-role scope checklist (static)
         run: npm run verify:service-role
+
+      - name: Public API PII smoke (production)
+        run: npm run verify:api-pii

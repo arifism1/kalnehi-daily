@@ -1,4 +1,6 @@
 import Link from "next/link";
+
+import { CookieSettingsTrigger } from "@/components/consent/CookieSettingsTrigger";
 import { KalnehiMark } from "@/components/KalnehiMark";
 
 const FOOTER_LINKS = {
@@ -74,6 +76,13 @@ export function LandingFooter() {
                       </Link>
                     </li>
                   ))}
+                  {section === "Legal" ? (
+                    <li key="cookie-settings">
+                      <CookieSettingsTrigger className="text-left text-sm font-medium text-kal-text-secondary transition-colors hover:text-kal-text">
+                        Cookie settings
+                      </CookieSettingsTrigger>
+                    </li>
+                  ) : null}
                 </ul>
               </div>
             ),
