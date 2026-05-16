@@ -7,6 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { useMemo, useState, useEffect } from "react";
 
 import { ShareYourDayCard } from "@/components/daily/ShareYourDayCard";
+import { EndOfDayNudgeFlow } from "@/components/planner/EndOfDayNudgeFlow";
 import { TaskInputModal, type TaskInputMode } from "@/components/planner/TaskInputModal";
 import { UnifiedDailyPlanList } from "@/components/planner/UnifiedDailyPlanList";
 import { DailyReflectionClient } from "@/components/reflection/DailyReflectionClient";
@@ -40,7 +41,11 @@ export function DailyPlanPageContent() {
   const [voicePlanBanner, setVoicePlanBanner] = useState<string | null>(null);
 
   useEffect(() => {
-    if (urlPlanDate) setLogDate(urlPlanDate);
+    if (!urlPlanDate) return;
+    const id = window.setTimeout(() => {
+      setLogDate(urlPlanDate);
+    }, 0);
+    return () => window.clearTimeout(id);
   }, [urlPlanDate]);
 
   useEffect(() => {
@@ -51,11 +56,17 @@ export function DailyPlanPageContent() {
     try {
       const hint = JSON.parse(raw) as VoicePlanHintV1;
       if (hint.v !== 1) return;
-      setLogDate(hint.target_date);
-      setVoicePlanBanner(
-        `Couldn't find “${hint.task_name}”. Search your plan below.`,
-      );
-      window.setTimeout(() => setVoicePlanBanner(null), 12_000);
+      const hydrateId = window.setTimeout(() => {
+        setLogDate(hint.target_date);
+        setVoicePlanBanner(
+          `Couldn't find “${hint.task_name}”. Search your plan below.`,
+        );
+      }, 0);
+      const bannerId = window.setTimeout(() => setVoicePlanBanner(null), 12_000);
+      return () => {
+        window.clearTimeout(hydrateId);
+        window.clearTimeout(bannerId);
+      };
     } catch {
       // ignore
     }
@@ -180,11 +191,20 @@ export function DailyPlanPageContent() {
         showScheduleRevision
       />
 
+      {logDate === today ? (
+        <EndOfDayNudgeFlow planDate={logDate} todayCalendar={today} />
+      ) : null}
+
+      <div className="mt-6">
+        <ShareYourDayCard />
+      </div>
+
       <FeatureGate feature="daily_log">
-        <div className="mt-6 space-y-4 sm:space-y-6">
-          <ShareYourDayCard />
-          {logDate === today ? <DailyReflectionClient collapsible /> : null}
-        </div>
+        {logDate === today ? (
+          <div className="mt-6">
+            <DailyReflectionClient collapsible />
+          </div>
+        ) : null}
       </FeatureGate>
 
       <TaskInputModal

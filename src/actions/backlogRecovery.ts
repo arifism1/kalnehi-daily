@@ -33,11 +33,11 @@ export type OrganizedBacklogItemInput = {
 };
 
 /**
- * RSC paths shared by backlog mutations. Omits `/backlog-tracker` (client wizard) and `/` (too broad).
- * Revalidating `/` from the Backlog Tracker caused the app shell to refresh and remount the wizard,
- * wiping in-progress voice/organize state before `setState` from the server action landed.
+ * RSC paths shared by backlog mutations. Omits `/backlogs` — list and tracker share one route;
+ * revalidating it can remount BacklogTrackerClient and wipe in-progress voice/wizard state.
+ * `/daily-plan` is still invalidated so plan surfaces stay fresh.
  */
-const REVAL_PATHS_NO_ROOT = ["/backlog-list", "/daily-plan"] as const;
+const REVAL_PATHS_NO_ROOT = ["/daily-plan"] as const;
 
 function revalidateBacklogCachesOnly(): void {
   for (const p of REVAL_PATHS_NO_ROOT) {

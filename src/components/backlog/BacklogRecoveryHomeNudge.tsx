@@ -81,10 +81,10 @@ export function BacklogRecoveryHomeNudge() {
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         <Link
-          href="/backlog-list"
+          href="/backlogs"
           className="inline-flex rounded-xl border border-kal-border px-3 py-2 text-xs font-semibold text-kal-text"
         >
-          Backlog List
+          Backlogs
         </Link>
       </div>
     </div>

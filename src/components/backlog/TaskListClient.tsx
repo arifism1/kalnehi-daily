@@ -21,6 +21,7 @@ import {
   BACKLOG_TRACKER_PREFILL_KEY,
   type BacklogTrackerPrefillV1,
 } from "@/lib/backlogRecoveryConstants";
+import { backlogsScheduleHref } from "@/lib/backlogsRoutes";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
@@ -288,7 +289,7 @@ export function TaskListClient({
       load_existing_rows: loadExistingRows,
     };
     sessionStorage.setItem(BACKLOG_TRACKER_PREFILL_KEY, JSON.stringify(payload));
-    router.push("/backlog-tracker");
+    router.push(backlogsScheduleHref());
   };
 
   const unplannedHeadingCount = subjectFilter ? filteredUnplanned.length : unplannedTotal;
@@ -300,22 +301,14 @@ export function TaskListClient({
 
   return (
     <div className="mx-auto max-w-lg space-y-8 pb-20">
-      <header className="space-y-3">
-        <div>
-          <p className="kal-category-label text-kal-accent">Backlog List</p>
-          <h1 className="kal-feature-title mt-1">Backlog List</h1>
-          <p className="mt-1 text-sm text-kal-muted">
-            See what&apos;s scheduled, plan from pending rows, and reopen items in Backlog Tracker.
-            Nothing pending is buried.
-          </p>
-        </div>
+      <div className="flex justify-end">
         <Link
-          href="/backlog-tracker"
-          className="inline-flex w-full items-center justify-center rounded-xl bg-kal-accent py-3 text-sm font-bold text-kal-accent-foreground sm:w-auto sm:px-6"
+          href={backlogsScheduleHref()}
+          className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-kal-accent px-4 py-2 text-sm font-bold text-kal-accent-foreground"
         >
-          Add new backlog — Backlog Tracker
+          Add new backlog
         </Link>
-      </header>
+      </div>
 
       {deleteListError ? (
         <p className="rounded-xl border border-rose-500/35 bg-rose-500/10 px-4 py-2 text-sm text-rose-800 dark:text-rose-200">
@@ -380,8 +373,8 @@ export function TaskListClient({
         {agendaDates.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-kal-border bg-kal-card-muted/50 px-4 py-6 text-center text-sm text-kal-muted">
             Nothing scheduled yet. Add items in{" "}
-            <Link href="/backlog-tracker" className="font-semibold text-kal-accent underline">
-              Backlog Tracker
+            <Link href={backlogsScheduleHref()} className="font-semibold text-kal-accent underline">
+              Schedule
             </Link>
             , then use <strong className="text-kal-text">Unplanned Fix</strong> here to plan.
           </p>
@@ -621,7 +614,7 @@ export function TaskListClient({
       <ConfirmDialog
         open={deleteUnplannedRow != null}
         title="Remove this backlog item?"
-        description="This deletes the pending backlog row permanently. If you haven't scheduled it yet, it won't appear again. You can add a fresh item anytime in Backlog Tracker."
+        description="This deletes the pending backlog row permanently. If you haven't scheduled it yet, it won't appear again. You can add a fresh item anytime from the Schedule tab."
         confirmLabel="Remove"
         busy={deleteBusy}
         onCancel={() => setDeleteUnplannedRow(null)}
@@ -639,8 +632,8 @@ export function TaskListClient({
       />
 
       <div className="flex flex-wrap gap-3 text-sm">
-        <Link href="/backlog-tracker" className="font-semibold text-kal-accent hover:underline">
-          Backlog Tracker
+        <Link href={backlogsScheduleHref()} className="font-semibold text-kal-accent hover:underline">
+          Schedule
         </Link>
         <Link href="/syllabus" className="font-semibold text-kal-muted hover:text-kal-accent hover:underline">
           Syllabus Tracker

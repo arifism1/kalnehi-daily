@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
 
+import { EnabledDashboardFeatureGate } from "@/components/features/EnabledDashboardFeatureGate";
 import { RoutePageSkeleton } from "@/components/loading/RoutePageSkeleton";
 
 const HabitsPlannerView = dynamic(
@@ -15,8 +16,10 @@ const HabitsPlannerView = dynamic(
 
 export default function HabitsPlannerRouteLazy() {
   return (
-    <Suspense fallback={<RoutePageSkeleton />}>
-      <HabitsPlannerView />
-    </Suspense>
+    <EnabledDashboardFeatureGate featureId="habit-maker" title="Planner habits">
+      <Suspense fallback={<RoutePageSkeleton />}>
+        <HabitsPlannerView />
+      </Suspense>
+    </EnabledDashboardFeatureGate>
   );
 }

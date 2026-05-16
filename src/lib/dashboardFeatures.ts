@@ -17,7 +17,6 @@ import {
   MessageSquare,
   Mic,
   NotebookPen,
-  Sparkles,
   Target,
   TestTube2,
   TrendingUp,
@@ -66,8 +65,7 @@ export const FEATURE_CATEGORIES: FeatureCategoryDef[] = [
       "mock-test-tracker",
       "progress",
       "syllabus-tracker",
-      "backlog-tracker",
-      "backlog-list",
+      "backlogs",
       "target-score-blueprint",
       "my-target",
     ] as const,
@@ -166,16 +164,11 @@ export const DASHBOARD_FEATURES: DashboardFeature[] = [
     description: "Track chapter and microtopic progress with weight-aware precision.",
   },
   {
-    id: "backlog-tracker",
-    title: "Backlog Tracker",
-    icon: Sparkles,
-    description: "Capture, split, and turn backlog text into time-boxed tasks for your plan.",
-  },
-  {
-    id: "backlog-list",
-    title: "Backlog List",
+    id: "backlogs",
+    title: "Backlogs",
     icon: ListChecks,
-    description: "See planned vs unplanned backlog items and jump to scheduling when ready.",
+    description:
+      "See planned vs unplanned items, capture backlog by voice or text, and schedule into your daily plan.",
   },
   {
     id: "target-score-blueprint",
@@ -251,6 +244,55 @@ export const DASHBOARD_FEATURES: DashboardFeature[] = [
 
 export const ALL_FEATURE_IDS: string[] = DASHBOARD_FEATURES.map((f) => f.id);
 
+/** Opt-in only until toggled on in Settings → Customize My Features (new profiles with NULL enabled_features). */
+export const SETTINGS_OPT_IN_DEFAULT_OFF_IDS = [
+  "habit-maker",
+  "personal-motivation",
+  "brain-yoga",
+] as const;
+
+const SETTINGS_OPT_IN_DEFAULT_OFF_SET = new Set<string>(SETTINGS_OPT_IN_DEFAULT_OFF_IDS);
+
+/** Visible palette when `enabled_features` is NULL (never customised). Preserves registry order. */
+export const DEFAULT_ENABLED_FEATURE_IDS: readonly string[] = ALL_FEATURE_IDS.filter(
+  (id) => !SETTINGS_OPT_IN_DEFAULT_OFF_SET.has(id),
+);
+
+/** Effective dashboard/nav ids after applying default-opt-out semantics for uncustomised profiles. */
+export function resolveEffectiveEnabledFeatures(stored: string[] | null): string[] {
+  if (stored === null) return [...DEFAULT_ENABLED_FEATURE_IDS];
+  return stored;
+}
+
+/** Multiset equality for persisted feature id arrays (order-independent). */
+export function featureIdSetsEqual(a: readonly string[], b: readonly string[]): boolean {
+  if (a.length !== b.length) return false;
+  const counts = new Map<string, number>();
+  for (const id of b) counts.set(id, (counts.get(id) ?? 0) + 1);
+  for (const id of a) {
+    const next = (counts.get(id) ?? 0) - 1;
+    if (next < 0) return false;
+    counts.set(id, next);
+  }
+  return true;
+}
+
+/** Keeps registry order; drops ids not in {@link ALL_FEATURE_IDS}. */
+export function normalizeEnabledFeatureSelection(ids: readonly string[]): string[] {
+  const want = new Set(ids);
+  return ALL_FEATURE_IDS.filter((id) => want.has(id));
+}
+
+/**
+ * Maps Customize UI selection → DB column.
+ * NULL means “default palette” (no opt-in trio). Explicit array otherwise (including full ALL_FEATURE_IDS).
+ */
+export function serializeEnabledFeaturesForPersist(rawSelected: readonly string[]): string[] | null {
+  const selected = normalizeEnabledFeatureSelection(rawSelected);
+  if (featureIdSetsEqual(selected, DEFAULT_ENABLED_FEATURE_IDS)) return null;
+  return selected;
+}
+
 /**
  * Dashboard feature IDs hidden from nav/discovery (and often the matching route).
  * Add an id here to suppress it across sidebar, grids, FeatureSelector, and main nav.
@@ -278,7 +320,6 @@ if (process.env.NODE_ENV === "development") {
   const fromCategories = FEATURE_CATEGORIES.flatMap((c) => [...c.featureIds]);
   const fromRegistry = DASHBOARD_FEATURES.map((f) => f.id);
   if (fromCategories.join() !== fromRegistry.join()) {
-    // eslint-disable-next-line no-console -- dev-only sync guard
     console.error(
       "[dashboardFeatures] FEATURE_CATEGORIES and DASHBOARD_FEATURES id order are out of sync",
       { fromCategories, fromRegistry },

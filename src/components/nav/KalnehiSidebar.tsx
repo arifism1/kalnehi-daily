@@ -21,7 +21,6 @@ import {
   Mic,
   NotebookPen,
   Settings,
-  Sparkles,
   Target,
   TrendingUp,
   Users,
@@ -32,9 +31,11 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useMemo } from "react";
 
 import { PwaUpdateCallout } from "@/components/pwa/PwaUpdateCallout";
-import { VISIBLE_FEATURE_CATEGORIES } from "@/lib/dashboardFeatures";
+import { resolveEffectiveEnabledFeatures, VISIBLE_FEATURE_CATEGORIES } from "@/lib/dashboardFeatures";
+import { useEnabledFeaturesStore } from "@/store/useEnabledFeaturesStore";
 
 type SidebarItem = {
   href: string;
@@ -71,8 +72,7 @@ const SIDEBAR_LINK_BY_ID: Record<string, SidebarItem> = {
   "mock-test-tracker": { href: "/mock-tests", label: "Mock Test Tracker", icon: TestTube2 },
   progress: { href: "/progress", label: "Progress", icon: TrendingUp },
   "syllabus-tracker": { href: "/syllabus", label: "Syllabus Tracker", icon: BookOpen },
-  "backlog-list": { href: "/backlog-list", label: "Backlog List", icon: ListChecks },
-  "backlog-tracker": { href: "/backlog-tracker", label: "Backlog Tracker", icon: Sparkles },
+  "backlogs": { href: "/backlogs", label: "Backlogs", icon: ListChecks },
   "target-score-blueprint": {
     href: "/target-score-blueprint",
     label: "Target Score Blueprint",
@@ -90,23 +90,29 @@ const SIDEBAR_LINK_BY_ID: Record<string, SidebarItem> = {
   "brain-yoga": { href: "/meditation", label: "Brain Yoga / Meditation", icon: Flower2 },
 };
 
-const SIDEBAR_CATEGORIES: SidebarCategory[] = VISIBLE_FEATURE_CATEGORIES.map((cat) => ({
-  title: cat.title,
-  dotColor: cat.dotColor,
-  items: cat.featureIds.flatMap((id) => {
-    const item = SIDEBAR_LINK_BY_ID[id];
-    if (!item) {
-      if (process.env.NODE_ENV !== "production") {
-        console.error(`KalnehiSidebar: missing SIDEBAR_LINK_BY_ID["${id}"] — skipping entry`);
-      }
-      return [];
-    }
-    return [item];
-  }),
-}));
-
 export function KalnehiSidebar() {
   const pathname = usePathname();
+  const storedFeatures = useEnabledFeaturesStore((s) => s.enabledFeatures);
+
+  const sidebarCategories = useMemo(() => {
+    const effective = resolveEffectiveEnabledFeatures(storedFeatures);
+    return VISIBLE_FEATURE_CATEGORIES.map((cat) => ({
+      title: cat.title,
+      dotColor: cat.dotColor,
+      items: cat.featureIds.flatMap((id) => {
+        if (!effective.includes(id)) return [];
+        const item = SIDEBAR_LINK_BY_ID[id];
+        if (!item) {
+          if (process.env.NODE_ENV !== "production") {
+            console.error(`KalnehiSidebar: missing SIDEBAR_LINK_BY_ID["${id}"] — skipping entry`);
+          }
+          return [];
+        }
+        return [item];
+      }),
+    })).filter((cat) => cat.items.length > 0);
+  }, [storedFeatures]);
+
   const accountItems = ACCOUNT_ITEMS;
   return (
     <nav
@@ -148,7 +154,7 @@ export function KalnehiSidebar() {
         </li>
       </ul>
 
-      {SIDEBAR_CATEGORIES.map((cat) => (
+      {sidebarCategories.map((cat) => (
         <div key={cat.title} className="mb-4">
           <div className="flex items-center gap-2 px-4 pb-1 pt-4">
             <span

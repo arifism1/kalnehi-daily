@@ -1,9 +1,5 @@
-import { kalnehiPageMetadata } from "@/lib/seo-metadata";
+import { permanentRedirect } from "next/navigation";
 
-import { BacklogTrackerClient } from "@/components/backlog/BacklogTrackerClient";
-
-export const metadata = kalnehiPageMetadata("backlogTracker");
-
-export default function BacklogTrackerPage() {
-  return <BacklogTrackerClient />;
+export default function BacklogTrackerRedirectPage() {
+  permanentRedirect("/backlogs?tab=schedule");
 }

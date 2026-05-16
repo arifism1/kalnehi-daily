@@ -20,6 +20,7 @@ import {
   BACKLOG_TIME_STEP_MINUTES,
   type BacklogTrackerPrefillV1,
 } from "@/lib/backlogRecoveryConstants";
+import { backlogsListHref } from "@/lib/backlogsRoutes";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useDoubtSyllabusSubjects } from "@/hooks/useDoubtSyllabusSubjects";
 import { useDeviceSpeechRecognition } from "@/hooks/useDeviceSpeechRecognition";
@@ -734,7 +735,7 @@ export function BacklogTrackerClient() {
     try {
       const ok = await persistTimeStep(timeIdx);
       if (!ok) return;
-      router.push("/backlog-list");
+      router.push(backlogsListHref());
     } finally {
       setBusy((b) => (b === "saveExit" ? null : b));
     }
@@ -760,16 +761,6 @@ export function BacklogTrackerClient() {
 
   return (
     <div className="mx-auto max-w-lg space-y-6 pb-20">
-      <header className="space-y-1">
-        <p className="kal-category-label text-kal-accent">Backlog Tracker</p>
-        <h1 className="kal-feature-title">Catch up on backlog</h1>
-        <p className="text-sm text-kal-muted">
-          Put everything you&apos;re behind on in one place (or paste one task per line). Build a checklist, set
-          minutes for each item on the same screen as your start date, then confirm. Tasks aren&apos;t
-          added to your daily plan until you confirm at the end.
-        </p>
-      </header>
-
       <datalist id="backlog-tracker-subject-suggestions">
         {syllabusSubjectOptions.map((s) => (
           <option key={s} value={s} />
@@ -1118,8 +1109,8 @@ export function BacklogTrackerClient() {
       ) : null}
 
       <div className="flex flex-wrap gap-3 text-sm">
-        <Link href="/backlog-list" className="font-semibold text-kal-accent hover:underline">
-          Backlog List
+        <Link href={backlogsListHref()} className="font-semibold text-kal-accent hover:underline">
+          Backlog list
         </Link>
         <Link
           href="/daily-plan"

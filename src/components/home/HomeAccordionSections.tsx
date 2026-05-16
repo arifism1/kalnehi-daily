@@ -21,7 +21,6 @@ import {
   MessageSquare,
   Mic,
   NotebookPen,
-  Sparkles,
   Target,
   TestTube2,
   TrendingUp,
@@ -32,7 +31,10 @@ import clsx from "clsx";
 import dynamic from "next/dynamic";
 import { useState, type ReactNode } from "react";
 
-import { LAUNCH_HIDDEN_DASHBOARD_FEATURE_IDS } from "@/lib/dashboardFeatures";
+import {
+  LAUNCH_HIDDEN_DASHBOARD_FEATURE_IDS,
+  resolveEffectiveEnabledFeatures,
+} from "@/lib/dashboardFeatures";
 
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useEnabledFeaturesStore } from "@/store/useEnabledFeaturesStore";
@@ -88,6 +90,13 @@ const UnifiedDailyPlanListLazy = dynamic(
   () =>
     import("@/components/planner/UnifiedDailyPlanList").then((m) => ({
       default: m.UnifiedDailyPlanList,
+    })),
+  { ssr: false },
+);
+const EndOfDayNudgeFlowLazy = dynamic(
+  () =>
+    import("@/components/planner/EndOfDayNudgeFlow").then((m) => ({
+      default: m.EndOfDayNudgeFlow,
     })),
   { ssr: false },
 );
@@ -170,11 +179,16 @@ export function HomeAccordionSections() {
       title: "Today's Plan",
       icon: ListTodo,
       content: (
-        <UnifiedDailyPlanListLazy
-          planDate={today}
-          title="Today's Plan"
-          className="kal-glass-subtle rounded-2xl border-kal-border/60 p-4"
-        />
+        <div className="space-y-4">
+          <UnifiedDailyPlanListLazy
+            planDate={today}
+            title="Today's Plan"
+            className="kal-glass-subtle rounded-2xl border-kal-border/60 p-4"
+          />
+          {openSectionId === "daily-planner" ? (
+            <EndOfDayNudgeFlowLazy planDate={today} todayCalendar={today} />
+          ) : null}
+        </div>
       ),
     },
     {
@@ -268,39 +282,20 @@ export function HomeAccordionSections() {
       content: <SyllabusTrackerLazy />,
     },
     {
-      id: "backlog-tracker",
-      title: "Backlog Tracker",
-      icon: Sparkles,
-      content: (
-        <div className="kal-glass-subtle space-y-3 rounded-2xl border border-kal-border/60 p-4">
-          <p className="text-sm leading-relaxed text-kal-text-secondary">
-            Paste or dictate a backlog, split into tasks in the box, set times and start date, then
-            confirm to add items to your daily plan.
-          </p>
-          <a
-            href="/backlog-tracker"
-            className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-kal-accent px-5 text-sm font-semibold text-white transition-opacity hover:opacity-95"
-          >
-            Open Backlog Tracker
-          </a>
-        </div>
-      ),
-    },
-    {
-      id: "backlog-list",
-      title: "Backlog List",
+      id: "backlogs",
+      title: "Backlogs",
       icon: ListChecks,
       content: (
         <div className="kal-glass-subtle space-y-3 rounded-2xl border border-kal-border/60 p-4">
           <p className="text-sm leading-relaxed text-kal-text-secondary">
-            See everything on your syllabus backlog — what is already on today&apos;s plan and
-            what is still unplanned — then open the tracker when you want to schedule.
+            See planned vs unplanned recovery tasks on your list, capture backlog by voice or text,
+            then schedule items into your daily plan — without jumping between separate screens.
           </p>
           <a
-            href="/backlog-list"
+            href="/backlogs"
             className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-kal-accent px-5 text-sm font-semibold text-white transition-opacity hover:opacity-95"
           >
-            Open Backlog List
+            Open Backlogs
           </a>
         </div>
       ),
@@ -390,13 +385,11 @@ export function HomeAccordionSections() {
     (s) => !LAUNCH_HIDDEN_DASHBOARD_FEATURE_IDS.has(s.id),
   );
 
-  // null = all features enabled (no customisation set)
-  const hasCustomisation = enabledFeatures !== null;
+  const effectiveIds = resolveEffectiveEnabledFeatures(enabledFeatures);
 
-  const visibleSections =
-    showAll || !hasCustomisation
-      ? availableSections
-      : availableSections.filter((s) => enabledFeatures.includes(s.id));
+  const visibleSections = showAll
+    ? availableSections
+    : availableSections.filter((s) => effectiveIds.includes(s.id));
 
   const hiddenCount = availableSections.length - visibleSections.length;
 
@@ -418,7 +411,7 @@ export function HomeAccordionSections() {
           </p>
         </div>
 
-        {hasCustomisation && (
+        {hiddenCount > 0 && (
           <div className="shrink-0">
             {showAll ? (
               <button
@@ -515,7 +508,7 @@ export function HomeAccordionSections() {
       })}
 
       {/* When showing My Features and some are hidden, show a hint */}
-      {hasCustomisation && !showAll && hiddenCount > 0 && (
+      {!showAll && hiddenCount > 0 && (
         <div className="rounded-2xl border border-dashed border-kal-border/60 bg-transparent px-4 py-3.5 text-center">
           <p className="text-xs text-kal-muted">
             {hiddenCount} feature{hiddenCount > 1 ? "s" : ""} hidden.{" "}
