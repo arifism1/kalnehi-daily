@@ -19,7 +19,6 @@ import {
   MessageSquare,
   Mic,
   NotebookPen,
-  Sparkles,
   Target,
   TestTube2,
   TrendingUp,
@@ -35,7 +34,10 @@ import {
   filterTasksForDate,
   findMissedIncompleteTasks,
 } from "@/lib/progressEngine";
-import { VISIBLE_FEATURE_CATEGORIES } from "@/lib/dashboardFeatures";
+import {
+  resolveEffectiveEnabledFeatures,
+  VISIBLE_FEATURE_CATEGORIES,
+} from "@/lib/dashboardFeatures";
 import { useEnabledFeaturesStore } from "@/store/useEnabledFeaturesStore";
 import { useTaskStore } from "@/store/useTaskStore";
 
@@ -165,21 +167,13 @@ const FEATURE_ITEM_BY_ID: Record<string, FeatureItem> = {
         : null,
     fallback: "Track your syllabus",
   },
-  "backlog-list": {
-    id: "backlog-list",
-    href: "/backlog-list",
-    label: "Backlog List",
+  backlogs: {
+    id: "backlogs",
+    href: "/backlogs",
+    label: "Backlogs",
     icon: ListChecks,
-    staticHint: "Planned vs unplanned items",
-    fallback: "View your backlog",
-  },
-  "backlog-tracker": {
-    id: "backlog-tracker",
-    href: "/backlog-tracker",
-    label: "Backlog Tracker",
-    icon: Sparkles,
-    staticHint: "Capture text and schedule into your plan",
-    fallback: "Organize backlog into tasks",
+    staticHint: "List, capture, and schedule recovery tasks",
+    fallback: "Manage your backlog",
   },
   "target-score-blueprint": {
     id: "target-score-blueprint",
@@ -289,16 +283,16 @@ const CATEGORIES: Category[] = VISIBLE_FEATURE_CATEGORIES.map((cat) => ({
   }),
 }));
 
-/** Same rule as HomeAccordionSections: null = show all; else only listed ids. */
+/** Same rule as HomeAccordionSections: resolve DB NULL → default palette; filter items. */
 function filterCategoriesByEnabledFeatures(
   categories: Category[],
   enabledFeatures: string[] | null,
 ): Category[] {
-  if (enabledFeatures === null) return categories;
+  const effective = resolveEffectiveEnabledFeatures(enabledFeatures);
   return categories
     .map((cat) => ({
       ...cat,
-      items: cat.items.filter((item) => enabledFeatures.includes(item.id)),
+      items: cat.items.filter((item) => effective.includes(item.id)),
     }))
     .filter((cat) => cat.items.length > 0);
 }

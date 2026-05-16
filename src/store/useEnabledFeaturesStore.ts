@@ -5,10 +5,10 @@ import { create } from "zustand";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 
 /**
- * Align with nav / home filtering:
- * - `null` or missing = show every feature (no customisation in DB).
- * - `[]` = user explicitly selected none (persisted empty `text[]`).
- * - non-empty = only those feature ids.
+ * Raw `user_profiles.enabled_features`:
+ * - `null` / missing = never customised → UI resolves via {@link DEFAULT_ENABLED_FEATURE_IDS} (see dashboardFeatures).
+ * - `[]` = explicitly disabled everything that participates in filtering (persisted empty `text[]`).
+ * - non-empty array = explicit enabled ids only.
  */
 export function normalizeEnabledFeaturesRow(raw: unknown): string[] | null {
   if (raw == null) return null;
@@ -21,15 +21,17 @@ export function normalizeEnabledFeaturesRow(raw: unknown): string[] | null {
     .map((id) => {
       if (id === "syllabus-mastery-tracker") return "syllabus-tracker";
       if (id === "revision-reminders") return "revision-tracker";
+      if (id === "backlog-tracker" || id === "backlog-list") return "backlogs";
       return id;
     });
-  return ids.length > 0 ? ids : [];
+  const deduped = [...new Set(ids)];
+  return deduped.length > 0 ? deduped : [];
 }
 
 type EnabledFeaturesState = {
   /**
-   * Before first profile fetch: often `null` (treat as show all).
-   * After load: `null` = no customisation (show all); `[]` = none enabled; else explicit ids.
+   * Raw DB column value (before resolving defaults). Before profile fetch this stays `null`;
+   * callers that need stable filtering should wait for `hydratedFromProfile` or resolve explicitly.
    */
   enabledFeatures: string[] | null;
   /** True after `SubscriptionAccessProvider` / `useSubscriptionAccess` (or `fetch`) applied a profile row for the signed-in user. */

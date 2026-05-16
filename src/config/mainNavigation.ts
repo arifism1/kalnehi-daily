@@ -23,14 +23,16 @@ import {
   NotebookPen,
   Settings,
   Shield,
-  Sparkles,
   Target,
   TestTube2,
   TrendingUp,
   Users,
 } from "lucide-react";
 
-import { LAUNCH_HIDDEN_DASHBOARD_FEATURE_IDS } from "@/lib/dashboardFeatures";
+import {
+  LAUNCH_HIDDEN_DASHBOARD_FEATURE_IDS,
+  resolveEffectiveEnabledFeatures,
+} from "@/lib/dashboardFeatures";
 
 export function navActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
@@ -133,18 +135,11 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
       { href: "/progress", label: "Progress", Icon: TrendingUp, featureId: "progress" },
       { href: "/syllabus", label: "Syllabus Tracker", shortLabel: "Syllabus", Icon: BookOpen, featureId: "syllabus-tracker" },
       {
-        href: "/backlog-tracker",
-        label: "Backlog Tracker",
-        shortLabel: "Backlog",
-        Icon: Sparkles,
-        featureId: "backlog-tracker",
-      },
-      {
-        href: "/backlog-list",
-        label: "Backlog List",
-        shortLabel: "Tasks",
+        href: "/backlogs",
+        label: "Backlogs",
+        shortLabel: "Backlogs",
         Icon: ListChecks,
-        featureId: "backlog-list",
+        featureId: "backlogs",
       },
       {
         href: "/target-score-blueprint",
@@ -234,9 +229,10 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
 ];
 
 /**
- * Returns only the nav sections/items that are enabled given the user's feature
- * selection. Items without a featureId are always included.
- * Pass `null` to get everything (no customisation applied).
+ * Returns only the nav sections/items that are enabled given the user's stored
+ * `enabled_features` row (`NULL` resolves to the default palette without Mind &
+ * Motivation opt-ins — see `resolveEffectiveEnabledFeatures`).
+ * Items without a featureId are always included.
  */
 export function filterNavByEnabledFeatures(
   sections: MainNavSection[],
@@ -252,12 +248,12 @@ export function filterNavByEnabledFeatures(
     }))
     .filter((section) => section.items.length > 0);
 
-  if (enabledFeatures === null) return withoutLaunchHidden;
+  const effective = resolveEffectiveEnabledFeatures(enabledFeatures);
   return withoutLaunchHidden
     .map((section) => ({
       ...section,
       items: section.items.filter(
-        (item) => !item.featureId || enabledFeatures.includes(item.featureId),
+        (item) => !item.featureId || effective.includes(item.featureId),
       ),
     }))
     .filter((section) => section.items.length > 0);
@@ -278,8 +274,7 @@ const QUICK_NAV_HREF_ORDER: readonly string[] = [
   "/mock-tests",
   "/progress",
   "/syllabus",
-  "/backlog-tracker",
-  "/backlog-list",
+  "/backlogs",
   "/target-score-blueprint",
   "/my-target",
   "/mastermind",
@@ -312,12 +307,13 @@ function quickNavOrderIndex(href: string): number {
 export function getDefaultQuickNavItemsInOrder(
   enabledFeatures: string[] | null = null,
 ): MainNavItem[] {
+  const effective = resolveEffectiveEnabledFeatures(enabledFeatures);
   const flat = MAIN_NAV_SECTIONS.flatMap((s) => s.items).filter(
     (item) =>
       !item.menuAction &&
       !QUICK_NAV_EXCLUDED_HREFS.has(item.href) &&
       (!item.featureId || !LAUNCH_HIDDEN_DASHBOARD_FEATURE_IDS.has(item.featureId)) &&
-      (enabledFeatures === null || !item.featureId || enabledFeatures.includes(item.featureId)),
+      (!item.featureId || effective.includes(item.featureId)),
   );
   return [...flat].sort(
     (a, b) => quickNavOrderIndex(a.href) - quickNavOrderIndex(b.href),

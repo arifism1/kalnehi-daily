@@ -1,12 +1,18 @@
 "use client";
 
 import clsx from "clsx";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { ChevronDown, LayoutDashboard, Save } from "lucide-react";
 
 import { saveEnabledFeatures } from "@/actions/profile";
 import { FeatureSelector } from "@/components/features/FeatureSelector";
-import { ALL_FEATURE_IDS } from "@/lib/dashboardFeatures";
+import {
+  DEFAULT_ENABLED_FEATURE_IDS,
+  normalizeEnabledFeatureSelection,
+  resolveEffectiveEnabledFeatures,
+  serializeEnabledFeaturesForPersist,
+  VISIBLE_DASHBOARD_FEATURES,
+} from "@/lib/dashboardFeatures";
 import { useEnabledFeaturesStore } from "@/store/useEnabledFeaturesStore";
 import { surfaceOptionalString } from "@/lib/userFacingErrors";
 
@@ -17,13 +23,23 @@ export function CustomizeFeaturesSection() {
 
   const [open, setOpen] = useState(false);
 
-  // Sync local selection once profile data has populated the store (avoids treating
-  // initial null as "all features" before AppShell's subscription fetch finishes).
-  const [selected, setSelected] = useState<string[]>(ALL_FEATURE_IDS);
+  const selectableCatalogIds = useMemo(
+    () =>
+      VISIBLE_DASHBOARD_FEATURES.filter((f) => f.id !== "daily-log").map((f) => f.id),
+    [],
+  );
+  const selectableCatalogCount = selectableCatalogIds.length;
+
+  const [selected, setSelected] = useState<string[]>(() => [...DEFAULT_ENABLED_FEATURE_IDS]);
   useEffect(() => {
     if (!hydratedFromProfile) return;
-    setSelected(storedFeatures ?? ALL_FEATURE_IDS);
+    setSelected(
+      storedFeatures === null
+        ? [...DEFAULT_ENABLED_FEATURE_IDS]
+        : normalizeEnabledFeatureSelection(storedFeatures),
+    );
   }, [storedFeatures, hydratedFromProfile]);
+
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -31,8 +47,7 @@ export function CustomizeFeaturesSection() {
   function handleSave() {
     setSaved(false);
     setSaveError(null);
-    const toSave =
-      selected.length === ALL_FEATURE_IDS.length ? null : selected;
+    const toSave = serializeEnabledFeaturesForPersist(selected);
 
     startTransition(async () => {
       const res = await saveEnabledFeatures(toSave);
@@ -51,7 +66,18 @@ export function CustomizeFeaturesSection() {
     });
   }
 
-  const activeCount = storedFeatures?.length ?? ALL_FEATURE_IDS.length;
+  const persistedEffective = hydratedFromProfile
+    ? resolveEffectiveEnabledFeatures(storedFeatures)
+    : [...DEFAULT_ENABLED_FEATURE_IDS];
+
+  const activeSelectableCount = selectableCatalogIds.filter((id) =>
+    persistedEffective.includes(id),
+  ).length;
+
+  const subtitle =
+    activeSelectableCount === selectableCatalogCount
+      ? "All listed tools visible · tap to customise"
+      : `${activeSelectableCount} of ${selectableCatalogCount} listed tools visible · tap to edit`;
 
   return (
     <section aria-labelledby="customize-features-heading">
@@ -75,11 +101,7 @@ export function CustomizeFeaturesSection() {
               >
                 Customize My Features
               </h2>
-              <p className="text-xs leading-relaxed text-kal-text-secondary">
-                {activeCount === ALL_FEATURE_IDS.length
-                  ? "All features visible · tap to customise"
-                  : `${activeCount} of ${ALL_FEATURE_IDS.length} features selected · tap to edit`}
-              </p>
+              <p className="text-xs leading-relaxed text-kal-text-secondary">{subtitle}</p>
             </div>
           </div>
           <ChevronDown

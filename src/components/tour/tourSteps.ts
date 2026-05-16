@@ -77,7 +77,7 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: "backlog-tracker",
     group: "workflow",
-    tourTarget: "backlog-tracker",
+    tourTarget: "backlogs",
     title: "Backlog List & Tracker",
     description:
       "Captures everything you 'owe' yourself. Schedule it later instead of feeling overwhelmed — nothing falls through the cracks.",
