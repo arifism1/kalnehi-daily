@@ -1,5 +1,6 @@
 import type { User } from "@supabase/supabase-js";
 
+import { getJourneyMetricsForUser } from "@/lib/admin/queries/journeyQueries";
 import { getUserAiUsageRollups, type UserAiUsageRollups } from "@/lib/admin/queries/userAiUsageQueries";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 import { adminSegmentLabelFromProfile } from "@/lib/profileTrackSegment";
@@ -84,6 +85,7 @@ export type UserLookupBundle = {
   prepbrainConversations: number;
   supportNotes: { note: string; created_at: string }[];
   aiUsage: UserAiUsageRollups;
+  journey: Awaited<ReturnType<typeof getJourneyMetricsForUser>>;
 };
 
 async function findAuthUserIdByEmail(
@@ -163,6 +165,7 @@ async function loadBundleForUserId(
     convRes,
     { data: notes },
     aiUsage,
+    journey,
   ] = await Promise.all([
     admin.from("user_profiles").select("*").eq("user_id", userId).maybeSingle(),
     admin.from("waitlist_entries").select("*").eq("user_id", userId).maybeSingle(),
@@ -183,6 +186,7 @@ async function loadBundleForUserId(
       .order("created_at", { ascending: false })
       .limit(30),
     getUserAiUsageRollups(userId),
+    getJourneyMetricsForUser(userId),
   ]);
 
   return {
@@ -197,5 +201,6 @@ async function loadBundleForUserId(
     prepbrainConversations: convRes.count ?? 0,
     supportNotes: (notes ?? []) as UserLookupBundle["supportNotes"],
     aiUsage,
+    journey,
   };
 }

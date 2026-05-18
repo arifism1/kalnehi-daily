@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 
 import { incrementPhotoScanUsage } from "@/actions/subscription";
+import { JourneyAction } from "@/lib/analytics/journeyEvents";
+import { recordJourneyMilestoneServer } from "@/lib/journey/milestones";
 import { formatSupabaseError } from "@/lib/supabase";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { TablesInsert } from "@/types/supabase";
@@ -57,6 +59,7 @@ export async function createStudySession(
       }
       throw error;
     }
+    void recordJourneyMilestoneServer(userId, JourneyAction.FIRST_STUDY_SESSION);
     revalidatePath("/study-sessions");
     revalidatePath("/daily-debrief");
     revalidatePath("/daily-log");

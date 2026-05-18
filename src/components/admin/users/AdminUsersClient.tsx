@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import type { UserListRow, UserLookupBundle } from "@/lib/admin/queries/userLookupQueries";
+import { formatVoiceDuration } from "@/lib/admin/queries/journeyQueries";
 import { adminSegmentLabelFromProfile } from "@/lib/profileTrackSegment";
 
 const PER_PAGE = 25;
@@ -360,6 +361,60 @@ function UserCard({
           {profileTrackSummary(u.profile)}
         </p>
       </div>
+
+      {u.journey ? (
+        <div className="rounded-lg border border-kal-border/60 bg-kal-card/30 px-3 py-2.5 text-sm">
+          <p className="text-[10px] font-bold uppercase text-kal-muted">Journey</p>
+          <dl className="mt-2 grid gap-x-4 gap-y-1.5 sm:grid-cols-2 text-xs">
+            <div>
+              <dt className="text-kal-muted">Segment</dt>
+              <dd className="font-medium capitalize">{u.journey.segment.replace("_", " ")}</dd>
+            </div>
+            <div>
+              <dt className="text-kal-muted">Activated</dt>
+              <dd className="font-medium">{u.journey.activated ? "Yes" : "No"}</dd>
+            </div>
+            <div>
+              <dt className="text-kal-muted">Last active</dt>
+              <dd className="font-medium">
+                {u.journey.lastActiveAt
+                  ? new Date(u.journey.lastActiveAt).toLocaleString("en-IN")
+                  : "—"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-kal-muted">Sessions</dt>
+              <dd className="font-medium tabular-nums">{u.journey.totalSessions}</dd>
+            </div>
+            <div>
+              <dt className="text-kal-muted">Streak</dt>
+              <dd className="font-medium tabular-nums">{u.journey.currentStreak}d</dd>
+            </div>
+            <div>
+              <dt className="text-kal-muted">Active time (7d)</dt>
+              <dd className="font-medium tabular-nums">
+                {Math.round(u.journey.studySeconds7d / 60)} min
+              </dd>
+            </div>
+            <div>
+              <dt className="text-kal-muted">Returned D1 / D7</dt>
+              <dd className="font-medium">
+                {u.journey.returnedDay1 ? "D1 ✓" : "D1 —"} · {u.journey.returnedDay7 ? "D7 ✓" : "D7 —"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-kal-muted">Voice (7d)</dt>
+              <dd className="font-medium tabular-nums">
+                {formatVoiceDuration(u.journey.voiceSeconds7d)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-kal-muted">Voice instructions (7d)</dt>
+              <dd className="font-medium tabular-nums">{u.journey.voiceInstructions7d}</dd>
+            </div>
+          </dl>
+        </div>
+      ) : null}
 
       <SubscriptionUsagePanel profile={u.profile} />
       <AiProviderUsagePanel ai={u.aiUsage} />

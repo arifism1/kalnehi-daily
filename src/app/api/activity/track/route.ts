@@ -7,6 +7,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { assertSameOrigin } from "@/lib/assertSameOrigin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { processJourneyMilestones } from "@/lib/journey/milestones";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 import type { Json } from "@/types/supabase";
 
@@ -132,6 +133,19 @@ export async function POST(req: NextRequest) {
   if (error) {
     console.warn("[activity/track] insert error:", error.message);
     return NextResponse.json({ ok: false, error: "Insert failed" }, { status: 500 });
+  }
+
+  try {
+    await processJourneyMilestones(
+      user.id,
+      rows.map((r) => ({
+        action: r.action,
+        created_at: r.created_at,
+        metadata: (r.metadata ?? {}) as Record<string, unknown>,
+      })),
+    );
+  } catch (e) {
+    console.warn("[activity/track] journey milestones:", e);
   }
 
   return NextResponse.json({ ok: true, inserted: rows.length });

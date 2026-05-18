@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import type { ActivationSnapshot } from "@/lib/admin/queries/featureEventQueries";
 import { AdminKpiCard } from "@/components/admin/AdminKpiCard";
 
@@ -9,7 +11,11 @@ export function AdminActivationClient({ data }: { data: ActivationSnapshot }) {
       <div>
         <h1 className="text-2xl font-semibold text-kal-text">Activation</h1>
         <p className="mt-1 text-sm text-kal-muted">
-          Mix of user_profiles + feature_events (instrument the app to populate events).
+          Profile milestones + activity logs. Full funnels:{" "}
+          <Link href="/admin/journey" className="text-kal-accent underline">
+            Journey
+          </Link>
+          .
         </p>
       </div>
 

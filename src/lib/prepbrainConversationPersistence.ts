@@ -192,6 +192,10 @@ export async function persistPrepbrainTurn(params: {
     return { ok: false, error: "Could not save chat. Try again.", status: 500 };
   }
 
+  const { recordJourneyMilestoneServer } = await import("@/lib/journey/milestones");
+  const { JourneyAction } = await import("@/lib/analytics/journeyEvents");
+  void recordJourneyMilestoneServer(userId, JourneyAction.FIRST_AI_INSIGHT);
+
   const { error: updErr } = await admin
     .from("prepbrain_conversations")
     .update({

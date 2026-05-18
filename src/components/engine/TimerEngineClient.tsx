@@ -25,6 +25,7 @@ import { fetchDailyPlanTasksForClient } from "@/lib/fetchDailyPlanTasksForClient
 import { quickCreatePlannedTask } from "@/lib/quickTaskCreate";
 import { normalizeSyllabusMasterId } from "@/lib/syllabusIds";
 import { trackMetaTaskCompleted, trackMetaTimerStarted } from "@/lib/analytics";
+import { JourneyAction } from "@/lib/analytics/journeyEvents";
 import { trackActivity } from "@/lib/activity";
 import { applyOptimisticTaskUpdate } from "@/lib/taskMutations";
 import { formatElapsedSeconds } from "@/lib/taskTime";
@@ -425,6 +426,10 @@ export function TimerEngineClient() {
         }
       } else {
         await finalizeActiveTimerForTask(userId, taskId);
+        trackActivity(JourneyAction.TIMER_COMPLETED, {
+          feature: "tasks",
+          metadata: { task_id: taskId },
+        });
       }
 
       const patchStatus = async (status: Task["status"]) => {

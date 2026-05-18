@@ -86,6 +86,7 @@ export async function getEngagementSnapshot(): Promise<EngagementSnapshot | null
 
   const [
     events,
+    { data: activityLogs },
     { count: sessCount },
     { count: voiceCount },
     { count: convCount },
@@ -94,6 +95,11 @@ export async function getEngagementSnapshot(): Promise<EngagementSnapshot | null
     res30,
   ] = await Promise.all([
     fetchFeatureEventsSince(since),
+    admin
+      .from("user_activity_logs")
+      .select("feature, action, created_at, user_id")
+      .gte("created_at", since)
+      .limit(8000),
     admin
       .from("study_sessions")
       .select("id", { count: "exact", head: true })
@@ -166,7 +172,18 @@ export async function getEngagementSnapshot(): Promise<EngagementSnapshot | null
     studySessionsLast7d: sessCount ?? 0,
     voiceEntriesLast7d: voiceCount ?? 0,
     prepbrainConversationsLast7d: convCount ?? 0,
-    featureSummary: events.length ? summarizeEventsLocal(events) : null,
+    featureSummary: (() => {
+      const activityAsEvents = ((activityLogs ?? []) as { feature: string | null; action: string; created_at: string; user_id: string }[]).map(
+        (r) => ({
+          feature: r.feature ?? "app",
+          event: r.action,
+          created_at: r.created_at,
+          user_id: r.user_id,
+        }),
+      );
+      const merged = [...events, ...activityAsEvents];
+      return merged.length ? summarizeEventsLocal(merged) : null;
+    })(),
     tokenHitRateTrialPct: activeTrials.length > 0 ? (hits / activeTrials.length) * 100 : 0,
     activeTime,
   };

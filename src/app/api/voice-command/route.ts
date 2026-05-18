@@ -9,6 +9,7 @@ import { clampVoiceBillingDurationSeconds } from "@/lib/voiceDurationBilling";
 import { runVoiceCommand } from "@/lib/voiceCommandGroq";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
+import { recordVoiceUsageEvent } from "@/lib/journey/recordVoiceUsage";
 import { assertSameOrigin } from "@/lib/assertSameOrigin";
 
 export async function POST(req: Request) {
@@ -95,6 +96,11 @@ export async function POST(req: Request) {
       { status: isUnauth ? 401 : 429 },
     );
   }
+
+  void recordVoiceUsageEvent(user.id, {
+    feature: "voice_command",
+    secondsCharged: voiceSecondsCharged,
+  });
 
   return NextResponse.json({
     ok: true,

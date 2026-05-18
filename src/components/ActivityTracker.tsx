@@ -2,27 +2,41 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
+import { JourneyAction, featureOpenForPath } from "@/lib/analytics/journeyEvents";
 import { trackActivity, flushActivity, FLUSH_INTERVAL_MS } from "@/lib/activity";
 
 /**
  * Mounts in the protected (kalnehi) layout.
- * - Tracks a page_view event on every route change.
+ * - Tracks app_opened once per browser session.
+ * - Tracks page_view + feature-open events on route change.
  * - Flushes the event buffer every FLUSH_INTERVAL_MS.
- * - Flushes on tab-hide (visibilitychange) and before unload.
- * Renders nothing.
  */
 export function ActivityTracker() {
   const pathname = usePathname();
   const prevPathname = useRef<string | null>(null);
+  const appOpenedRef = useRef(false);
+  const featureOpenedRef = useRef<Set<string>>(new Set());
 
-  // Track page views on route change.
   useEffect(() => {
-    if (pathname === prevPathname.current) return;
-    prevPathname.current = pathname;
-    trackActivity("page_view", { page: pathname });
+    if (!appOpenedRef.current) {
+      appOpenedRef.current = true;
+      trackActivity(JourneyAction.APP_OPENED, { page: pathname ?? "/" });
+    }
   }, [pathname]);
 
-  // Periodic flush + visibility + unload.
+  useEffect(() => {
+    if (!pathname || pathname === prevPathname.current) return;
+    prevPathname.current = pathname;
+
+    trackActivity(JourneyAction.PAGE_VIEW, { page: pathname });
+
+    const featureOpen = featureOpenForPath(pathname);
+    if (featureOpen && !featureOpenedRef.current.has(featureOpen.action)) {
+      featureOpenedRef.current.add(featureOpen.action);
+      trackActivity(featureOpen.action, { feature: featureOpen.feature, page: pathname });
+    }
+  }, [pathname]);
+
   useEffect(() => {
     const interval = setInterval(() => {
       flushActivity().catch(() => {});

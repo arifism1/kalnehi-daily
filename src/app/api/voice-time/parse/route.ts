@@ -10,6 +10,7 @@ import {
   type VoiceNotificationParseFailureReason,
 } from "@/lib/runVoiceNotificationParse";
 import { assertSameOrigin } from "@/lib/assertSameOrigin";
+import { recordVoiceUsageEvent } from "@/lib/journey/recordVoiceUsage";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -118,6 +119,11 @@ export async function POST(req: Request) {
         { status: unauthorized ? 401 : 429 },
       );
     }
+
+    void recordVoiceUsageEvent(user.id, {
+      feature: "voice_time",
+      secondsCharged: voiceSecondsCharged,
+    });
 
     const d = result.data;
     return NextResponse.json({

@@ -9,6 +9,11 @@ import {
   fetchVoiceTasksFromGroq,
   type GroqVoiceTask,
 } from "@/lib/voiceDictateGroq";
+import {
+  recordVoiceUsageEvent,
+  voiceSecondsFromBilling,
+} from "@/lib/journey/recordVoiceUsage";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { USER_ERROR } from "@/lib/userFacingErrors";
 import {
   isoToIST_HHMM,
@@ -125,6 +130,17 @@ export async function runVoiceDictationPipeline(
     return { ok: false, error: usageCheck.error };
   }
 
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user) {
+    void recordVoiceUsageEvent(user.id, {
+      feature: "voice_dictate",
+      secondsCharged: voiceSecondsFromBilling(durationSeconds, voiceMinutes),
+    });
+  }
+
   revalidatePath("/dictate-day");
   revalidatePath("/daily-debrief");
   revalidatePath("/daily-log");
@@ -154,6 +170,17 @@ export async function saveRawVoiceNote(
   const usageCheck = await incrementVoiceMinuteUsage(voiceMinutes);
   if (!usageCheck.ok) {
     return { ok: false, error: usageCheck.error };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user) {
+    void recordVoiceUsageEvent(user.id, {
+      feature: "voice_dictate",
+      secondsCharged: voiceSecondsFromBilling(input.durationSeconds, voiceMinutes),
+    });
   }
 
   const occurredAt = input.occurred_at ?? new Date().toISOString();
@@ -249,6 +276,17 @@ export async function parseVoiceTranscriptToDraft(
   const usageCheck = await incrementVoiceMinuteUsage(voiceMinutes);
   if (!usageCheck.ok) {
     return { ok: false, error: usageCheck.error };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user) {
+    void recordVoiceUsageEvent(user.id, {
+      feature: "voice_dictate",
+      secondsCharged: voiceSecondsFromBilling(input.durationSeconds, voiceMinutes),
+    });
   }
 
   return draft;

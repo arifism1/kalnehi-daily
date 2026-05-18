@@ -7,9 +7,9 @@ export function AdminRetentionClient({ data }: { data: RetentionSnapshot }) {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold text-kal-text">Retention &amp; churn</h1>
+        <h1 className="text-2xl font-semibold text-kal-text">Subscription retention</h1>
         <p className="mt-1 text-sm text-kal-muted">
-          Cohort = users with trial_started_at in month. &quot;Paying now&quot; = active subscription end in future.
+          Paying-subscriber churn by trial cohort. For Day-1/Day-7 product retention, see Journey.
         </p>
       </div>
 
