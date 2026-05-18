@@ -6,6 +6,7 @@ import {
 } from "@/actions/subscription";
 import { clampVoiceBillingDurationSeconds } from "@/lib/voiceDurationBilling";
 import { USER_ERROR } from "@/lib/userFacingErrors";
+import { recordVoiceUsageEvent } from "@/lib/journey/recordVoiceUsage";
 import { assertSameOrigin } from "@/lib/assertSameOrigin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -70,6 +71,11 @@ export async function POST(req: Request) {
       { status: unauthorized ? 401 : 429 },
     );
   }
+
+  void recordVoiceUsageEvent(user.id, {
+    feature: "voice_consume",
+    secondsCharged: voiceSecondsCharged,
+  });
 
   return NextResponse.json({
     ok: true,

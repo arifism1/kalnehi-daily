@@ -16,6 +16,8 @@ import { useCallback, useEffect, useState } from "react";
 
 import { completeOnboarding } from "@/actions/profile";
 import { ensureFreeTrialStarted } from "@/actions/subscription";
+import { trackActivity } from "@/lib/activity";
+import { JourneyAction } from "@/lib/analytics/journeyEvents";
 import { trackMetaFreeTrialStarted } from "@/lib/analytics";
 import type { ExamTrack } from "@/lib/examTracks";
 import {
@@ -69,6 +71,18 @@ export function OnboardingWizard() {
   }, []);
 
   useEffect(() => {
+    trackActivity(JourneyAction.ONBOARDING_STARTED, { feature: "onboarding", page: "/onboarding" });
+  }, []);
+
+  useEffect(() => {
+    trackActivity(JourneyAction.ONBOARDING_STEP, {
+      feature: "onboarding",
+      page: "/onboarding",
+      metadata: { step },
+    });
+  }, [step]);
+
+  useEffect(() => {
     if (!selectedTrack) {
       setExamDatesByKey({});
       return;
@@ -110,6 +124,11 @@ export function OnboardingWizard() {
     }
     setError(null);
     setStep2Phase("confirm");
+    trackActivity(JourneyAction.EXAM_SELECTED, {
+      feature: "onboarding",
+      page: "/onboarding",
+      metadata: { track_id: selectedTrack.id },
+    });
   }, [selectedTrack]);
 
   const validateStep2 = useCallback(() => {
@@ -149,6 +168,11 @@ export function OnboardingWizard() {
         exam_dates: Object.keys(exam_dates).length > 0 ? exam_dates : null,
       });
       if (!res.ok) throw new Error(res.error);
+      trackActivity(JourneyAction.ONBOARDING_COMPLETED, {
+        feature: "onboarding",
+        page: "/onboarding",
+        metadata: { track_id: selectedTrack.id },
+      });
       setLocalCompleted(true);
 
       // Start the free trial immediately — if the daily cap is hit, redirect

@@ -7,6 +7,7 @@ import {
 import { assertSameOrigin } from "@/lib/assertSameOrigin";
 import { runVoiceParseRevisionReminder } from "@/lib/runVoiceParseRevisionReminder";
 import { clampVoiceBillingDurationSeconds } from "@/lib/voiceDurationBilling";
+import { recordVoiceUsageEvent } from "@/lib/journey/recordVoiceUsage";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function POST(req: Request) {
@@ -86,6 +87,11 @@ export async function POST(req: Request) {
       { status: unauthorized ? 401 : 429 },
     );
   }
+
+  void recordVoiceUsageEvent(user.id, {
+    feature: "voice_revision",
+    secondsCharged: voiceSecondsCharged,
+  });
 
   return NextResponse.json({ ...result, voice_seconds_charged: voiceSecondsCharged });
 }

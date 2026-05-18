@@ -8,6 +8,7 @@ import {
   VOICE_BILLING_DURATION_SEC_MIN,
 } from "@/lib/voiceDurationBilling";
 import { assertSameOrigin } from "@/lib/assertSameOrigin";
+import { recordVoiceUsageEvent } from "@/lib/journey/recordVoiceUsage";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 /** `verbose_json` adds `duration` (seconds); groq-sdk's Transcription type only declares `text`. */
@@ -101,6 +102,11 @@ export async function POST(req: Request) {
         { status: unauthorized ? 401 : 402 },
       );
     }
+
+    void recordVoiceUsageEvent(user.id, {
+      feature: "voice_transcribe",
+      secondsCharged: billedSeconds,
+    });
 
     return NextResponse.json({ ok: true, transcript, durationSeconds });
   } catch (err) {

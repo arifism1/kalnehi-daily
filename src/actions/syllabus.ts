@@ -5,6 +5,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { formatSupabaseError } from "@/lib/supabase";
 import { USER_ERROR } from "@/lib/userFacingErrors";
+import { JourneyAction } from "@/lib/analytics/journeyEvents";
+import { recordJourneyMilestoneServer } from "@/lib/journey/milestones";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { normalizeSyllabusMasterId } from "@/lib/syllabusIds";
 import {
@@ -156,6 +158,10 @@ export async function updateMicrotopicStatus(
         ok: false,
         error: USER_ERROR.syncPending,
       };
+    }
+
+    if (status === "completed") {
+      void recordJourneyMilestoneServer(user.id, JourneyAction.FIRST_CHAPTER_MARKED);
     }
 
     return {

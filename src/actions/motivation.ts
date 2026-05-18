@@ -13,6 +13,7 @@ import {
   estimateMaxVoiceAudioDurationSeconds,
   VOICE_BILLING_DURATION_SEC_MIN,
 } from "@/lib/voiceDurationBilling";
+import { recordVoiceUsageEvent } from "@/lib/journey/recordVoiceUsage";
 import type { TablesInsert, TablesUpdate } from "@/types/supabase";
 
 const GROQ_TRANSCRIBE_MODEL = "whisper-large-v3-turbo";
@@ -381,6 +382,11 @@ export async function transcribeMotivationAudio(
     if (!usage.ok) {
       return { ok: false, error: usage.error };
     }
+
+    void recordVoiceUsageEvent(user.id, {
+      feature: "voice_motivation",
+      secondsCharged: billedSeconds,
+    });
 
     return { ok: true, text };
   } catch (e) {

@@ -6,6 +6,8 @@ import type { PrevScoreEntry } from "@/lib/prevScoreEntries";
 import { formatSupabaseError } from "@/lib/supabase";
 import { isUpscCseMainsExam } from "@/lib/upscMainsOptionalSubjects";
 import { USER_ERROR } from "@/lib/userFacingErrors";
+import { JourneyAction } from "@/lib/analytics/journeyEvents";
+import { recordJourneyMilestoneServer } from "@/lib/journey/milestones";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type UpsertProfileResult =
@@ -160,6 +162,16 @@ export async function upsertUserProfile(fields: {
       }
     }
 
+    if (fields.prev_score != null && fields.prev_score > 0) {
+      void recordJourneyMilestoneServer(user.id, JourneyAction.CURRENT_SCORE_ENTERED);
+    }
+    if (examHistoryPatch?.prev_score_entries && Array.isArray(examHistoryPatch.prev_score_entries)) {
+      const entries = examHistoryPatch.prev_score_entries as { score?: number }[];
+      if (entries.some((e) => typeof e.score === "number" && e.score > 0)) {
+        void recordJourneyMilestoneServer(user.id, JourneyAction.CURRENT_SCORE_ENTERED);
+      }
+    }
+
     revalidatePath("/");
     revalidatePath("/profile");
     revalidatePath("/settings");
@@ -298,6 +310,8 @@ export async function completeOnboarding(fields: {
         .insert({ user_id: user.id, ...patch });
       if (error) throw error;
     }
+
+    void recordJourneyMilestoneServer(user.id, JourneyAction.ONBOARDING_COMPLETED);
 
     revalidatePath("/");
     return { ok: true };

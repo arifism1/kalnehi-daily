@@ -8,6 +8,7 @@ import { runVoiceParseDraft } from "@/lib/runVoiceParseDraft";
 import { clampVoiceBillingDurationSeconds } from "@/lib/voiceDurationBilling";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
+import { recordVoiceUsageEvent } from "@/lib/journey/recordVoiceUsage";
 import { assertSameOrigin } from "@/lib/assertSameOrigin";
 
 export async function POST(req: Request) {
@@ -98,6 +99,11 @@ export async function POST(req: Request) {
       { status: unauthorized ? 401 : 429 },
     );
   }
+
+  void recordVoiceUsageEvent(user.id, {
+    feature: "voice_draft",
+    secondsCharged: voiceSecondsCharged,
+  });
 
   return NextResponse.json({ ...result, voice_seconds_charged: voiceSecondsCharged });
 }

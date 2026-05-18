@@ -172,6 +172,9 @@ export async function insertDailyTask(
       }
       return { ok: false, error: USER_ERROR.tryAgain };
     }
+    const { recordJourneyMilestoneServer } = await import("@/lib/journey/milestones");
+    const { JourneyAction } = await import("@/lib/analytics/journeyEvents");
+    void recordJourneyMilestoneServer(user.id, JourneyAction.FIRST_TASK);
     revalidateDailyPlanPaths();
     return { ok: true };
   } catch (e) {

@@ -1,3 +1,4 @@
+import { JourneyAction } from "@/lib/analytics/journeyEvents";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 
 import { profileHasExamGoalSet } from "@/lib/profileTrackSegment";
@@ -76,11 +77,22 @@ export async function getActivationSnapshot(): Promise<ActivationSnapshot | null
 
   const since = new Date(Date.now() - 14 * 24 * 3600 * 1000).toISOString();
 
-  const [{ data: profiles }, events] = await Promise.all([
+  const [{ data: profiles }, events, { data: activityRows }, { data: voiceRows }] = await Promise.all([
     admin
       .from("user_profiles")
       .select("mandatory_onboarding_completed_at, target_exam, primary_exam, selected_track, user_id"),
     fetchFeatureEventsSince(since),
+    admin
+      .from("user_activity_logs")
+      .select("user_id, action, feature")
+      .gte("created_at", since)
+      .in("action", [JourneyAction.AI_CHAT_SENT])
+      .limit(8000),
+    admin
+      .from("voice_ai_usage_log")
+      .select("user_id")
+      .gte("created_at", since)
+      .limit(8000),
   ]);
 
   const profs = (profiles ?? []) as {
@@ -95,8 +107,15 @@ export async function getActivationSnapshot(): Promise<ActivationSnapshot | null
   const onboardingCompleted = profs.filter((p) => p.mandatory_onboarding_completed_at).length;
   const withTargetExam = profs.filter((p) => profileHasExamGoalSet(p)).length;
 
-  const prepbrainUserCount = new Set(events.filter((e) => e.feature === "prepbrain").map((e) => e.user_id)).size;
-  const voiceUserCount = new Set(events.filter((e) => e.feature === "voice").map((e) => e.user_id)).size;
+  const prepbrainFromActivity = (activityRows ?? []) as { user_id: string }[];
+  const prepbrainUserCount = new Set([
+    ...prepbrainFromActivity.map((r) => r.user_id),
+    ...events.filter((e) => e.feature === "prepbrain").map((e) => e.user_id),
+  ]).size;
+  const voiceUserCount = new Set([
+    ...((voiceRows ?? []) as { user_id: string }[]).map((r) => r.user_id),
+    ...events.filter((e) => e.feature === "voice").map((e) => e.user_id),
+  ]).size;
 
   return {
     profilesSampled: n,
