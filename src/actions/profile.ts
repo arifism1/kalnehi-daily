@@ -211,7 +211,7 @@ export async function saveEnabledFeatures(
 
 export async function completeOnboarding(fields: {
   full_name: string;
-  phone_number: string;
+  phone_number?: string;
   class_studying: string;
   /** Track ID, e.g. "jee". */
   selected_track: string;
@@ -234,7 +234,7 @@ export async function completeOnboarding(fields: {
     }
 
     const name = fields.full_name.trim();
-    const phone = fields.phone_number.trim();
+    const phoneRaw = (fields.phone_number ?? "").trim();
     const cls = fields.class_studying.trim();
     const track = fields.selected_track.trim();
     const enabledExams = fields.enabled_exams_in_track.filter((e) => e.trim());
@@ -246,8 +246,12 @@ export async function completeOnboarding(fields: {
         : {};
 
     if (!name) return { ok: false, error: "Please enter your name." };
-    if (!phone || !/^\d{10}$/.test(phone))
-      return { ok: false, error: "Please enter a valid 10-digit phone number." };
+    if (phoneRaw && !/^\d{10}$/.test(phoneRaw))
+      return {
+        ok: false,
+        error: "Please enter a valid 10-digit phone number, or leave it blank.",
+      };
+    const phone = phoneRaw || null;
     if (!cls) return { ok: false, error: "Please select your class." };
     if (!track) return { ok: false, error: "Please choose a track." };
     if (enabledExams.length === 0)

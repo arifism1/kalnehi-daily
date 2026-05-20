@@ -106,8 +106,9 @@ export function OnboardingWizard() {
       setError("Please enter your name.");
       return;
     }
-    if (!phone.trim() || !/^\d{10}$/.test(phone.trim())) {
-      setError("Enter a valid 10-digit phone number.");
+    const trimmedPhone = phone.trim();
+    if (trimmedPhone && !/^\d{10}$/.test(trimmedPhone)) {
+      setError("Enter a valid 10-digit phone number, or leave blank.");
       return;
     }
     if (!classStudying) {
@@ -277,7 +278,7 @@ export function OnboardingWizard() {
           <div>
             <label className="flex items-center gap-1.5 text-xs font-semibold text-kal-text-secondary">
               <Phone className="h-3.5 w-3.5" />
-              Phone number
+              Phone number (optional)
             </label>
             <input
               type="tel"
@@ -285,7 +286,7 @@ export function OnboardingWizard() {
               maxLength={10}
               value={phone}
               onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
-              placeholder="10-digit mobile number"
+              placeholder="10-digit mobile (optional)"
               className="mt-2 min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-base text-kal-text transition-colors duration-200 focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
             />
           </div>
