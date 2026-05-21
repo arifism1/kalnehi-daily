@@ -1,5 +1,6 @@
 "use client";
 
+import { Capacitor } from "@capacitor/core";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SubscriptionPaywallInterstitial } from "@/components/subscription/SubscriptionPaywallInterstitial";
@@ -77,6 +78,12 @@ function ProfileErrorScreen({ onRetry }: { onRetry: () => void }) {
   );
 }
 
+/** Shown on Android when the waitlist position page is blocked (contains Razorpay checkout). */
+const ANDROID_DAILY_CAP_MSG =
+  "Kalnehi is at capacity for new users today. Please try again tomorrow — your spot is reserved.";
+const ANDROID_WAITLIST_QUEUED_MSG =
+  "You're on the waitlist. Your spot is reserved — we'll notify you when Kalnehi opens for you.";
+
 /**
  * Shown when onboarding is complete but the welcome trial has never been started
  * (e.g. the user hit a network error during OnboardingWizard's trial-start call,
@@ -88,8 +95,14 @@ function TrialStartGate({ refetch }: { refetch: () => void }) {
 
   const startTrial = useCallback(async () => {
     setError(null);
+    const isNativeApp = Capacitor.isNativePlatform();
     // Fast-path: already queued in this session — skip the server round-trip.
     if (sessionStorage.getItem("wl_position")) {
+      if (isNativeApp) {
+        // Android: /waitlist/position is proxy-blocked (Razorpay checkout).
+        setError(ANDROID_WAITLIST_QUEUED_MSG);
+        return;
+      }
       window.location.assign("/waitlist/position");
       return;
     }
@@ -111,6 +124,11 @@ function TrialStartGate({ refetch }: { refetch: () => void }) {
               aheadCount: Math.max(0, cap.position - 1),
             }),
           );
+          if (isNativeApp) {
+            // Android: do not navigate to billing-blocked waitlist page.
+            setError(ANDROID_DAILY_CAP_MSG);
+            return;
+          }
           window.location.assign("/waitlist/position");
           return;
         }

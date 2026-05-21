@@ -28,6 +28,8 @@ const CONTENT_SECURITY_POLICY = [
     "https://vitals.vercel-insights.com",
     "https://www.googletagmanager.com",
     "https://www.google-analytics.com",
+    // Razorpay checkout — required for web/PWA at /pricing and /upgrade.
+    // Android WebView never loads these routes (blocked by isAndroidAppBillingBlockedPath in proxy.ts).
     "https://checkout.razorpay.com",
     "https://www.gstatic.com",
     "https://cdn.jsdelivr.net",
