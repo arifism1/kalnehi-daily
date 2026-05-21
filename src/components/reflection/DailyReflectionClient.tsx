@@ -111,6 +111,7 @@ export function DailyReflectionClient({
   useEffect(() => {
     let cancelled = false;
     async function load() {
+      if (cancelled) return;
       const todayResult = await getTodayReflection(today);
       if (cancelled) return;
       if (todayResult.ok && todayResult.data) {
@@ -125,6 +126,7 @@ export function DailyReflectionClient({
         setIsEditing(true);
       }
       if (showInlineRecentHistory) {
+        if (cancelled) return;
         const historyResult = await getRecentReflections(8);
         if (cancelled) return;
         if (historyResult.ok) {
@@ -355,7 +357,7 @@ export function DailyReflectionClient({
   if (loadingInit) {
     return (
       <div className="flex min-h-[200px] items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-kal-accent/60" />
+        <Loader2 className="size-6 animate-spin text-kal-accent/60" />
       </div>
     );
   }
@@ -405,7 +407,7 @@ export function DailyReflectionClient({
         onClick={() => setIsEditing(true)}
         className="flex shrink-0 items-center gap-1.5 self-start rounded-lg px-3 py-1.5 text-sm font-medium text-kal-text-secondary transition-colors hover:bg-kal-surface/60 hover:text-kal-text"
       >
-        <PenLine className="h-3.5 w-3.5" />
+        <PenLine className="size-3.5" />
         Edit
       </button>
     ) : null;
@@ -428,7 +430,7 @@ export function DailyReflectionClient({
                 )}
               >
                 <label className={clsx("flex items-center gap-2 font-semibold text-sm", accentClass)}>
-                  <Icon className="h-4 w-4 shrink-0" aria-hidden />
+                  <Icon className="size-4 shrink-0" aria-hidden />
                   {question}
                 </label>
                 <div className="relative">
@@ -449,16 +451,16 @@ export function DailyReflectionClient({
                           : "Start voice input"
                       }
                       className={clsx(
-                        "absolute bottom-2 right-2 flex h-7 w-7 items-center justify-center rounded-lg transition-colors",
+                        "absolute bottom-2 right-2 flex size-7 items-center justify-center rounded-lg transition-colors",
                         voiceSessionForField && isListeningActive
                           ? "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
                           : "bg-kal-surface text-kal-text-secondary hover:text-kal-accent",
                       )}
                     >
                       {voiceSessionForField && isListeningActive ? (
-                        <MicOff className="h-3.5 w-3.5" />
+                        <MicOff className="size-3.5" />
                       ) : (
-                        <Mic className="h-3.5 w-3.5" />
+                        <Mic className="size-3.5" />
                       )}
                     </button>
                   )}
@@ -517,7 +519,7 @@ export function DailyReflectionClient({
               disabled={isSaving}
               className="flex items-center gap-2 rounded-xl bg-kal-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-kal-accent/90 disabled:opacity-60 transition-colors"
             >
-              {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+              {isSaving && <Loader2 className="size-4 animate-spin" />}
               Save reflection
             </button>
           </div>
@@ -532,7 +534,7 @@ export function DailyReflectionClient({
             className={clsx("kal-glass-card rounded-2xl border p-4 space-y-1.5", borderClass)}
           >
             <p className={clsx("flex items-center gap-2 text-xs font-semibold uppercase tracking-wide", accentClass)}>
-              <Icon className="h-3.5 w-3.5" aria-hidden />
+              <Icon className="size-3.5" aria-hidden />
               {question}
             </p>
             <p className="text-sm text-kal-text leading-relaxed">
@@ -568,7 +570,7 @@ export function DailyReflectionClient({
             >
               <ChevronDown
                 className={clsx(
-                  "mt-0.5 h-4 w-4 shrink-0 text-kal-text-secondary transition-transform duration-200 sm:mt-1",
+                  "mt-0.5 size-4 shrink-0 text-kal-text-secondary transition-transform duration-200 sm:mt-1",
                   panelOpen && "rotate-180",
                 )}
                 aria-hidden

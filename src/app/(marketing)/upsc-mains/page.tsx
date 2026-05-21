@@ -37,7 +37,7 @@ export default function UpscMainsPage() {
         />
 
         <section className="space-y-4" aria-labelledby="mains-papers">
-          <h2 id="mains-papers" className="text-xl font-bold text-kal-text">UPSC Mains papers tracked in Kalnehi Daily</h2>
+          <h2 id="mains-papers" className="text-xl font-semibold text-kal-text">UPSC Mains papers tracked in Kalnehi Daily</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {[
               { paper: "GS Paper I (250 marks)", topics: ["Indian Heritage and Culture", "History — Ancient, Medieval, Modern", "World History (18th century onwards)", "Indian Society, Diversity, Globalisation", "Physical Geography, Resources, Disasters"] },
@@ -46,7 +46,7 @@ export default function UpscMainsPage() {
               { paper: "GS Paper IV + Essay (250+250)", topics: ["Ethics, Integrity, Aptitude", "Contributions of Moral Thinkers", "Case Studies on Ethics", "Essay: 2 papers × 1250 words each"] },
             ].map(({ paper, topics }) => (
               <div key={paper} className="kal-glass-card rounded-xl p-4 space-y-1.5">
-                <h3 className="text-xs font-bold text-kal-accent-dark">{paper}</h3>
+                <h3 className="text-xs font-semibold text-kal-accent-dark">{paper}</h3>
                 <ul className="space-y-0.5">{topics.map(t => <li key={t} className="text-xs text-kal-text-secondary">· {t}</li>)}</ul>
               </div>
             ))}

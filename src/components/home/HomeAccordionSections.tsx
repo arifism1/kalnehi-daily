@@ -252,7 +252,7 @@ export function HomeAccordionSections() {
       icon: CalendarDays,
       content: (
         <div className="kal-glass-subtle rounded-2xl border border-kal-border/60 p-4">
-          <h3 className="mb-2 text-sm font-bold text-kal-text">Recent plans</h3>
+          <h3 className="mb-2 text-sm font-semibold text-kal-text">Recent plans</h3>
           <SavedPlansHomeWidgetLazy />
         </div>
       ),
@@ -419,7 +419,7 @@ export function HomeAccordionSections() {
                 onClick={() => setShowAll(false)}
                 className="inline-flex items-center gap-1.5 rounded-xl border border-kal-accent/40 bg-kal-accent/10 px-3.5 py-2 text-xs font-semibold text-kal-accent transition-colors hover:bg-kal-accent/20"
               >
-                <X className="h-3.5 w-3.5" aria-hidden />
+                <X className="size-3.5" aria-hidden />
                 Back to My Features
               </button>
             ) : (
@@ -428,7 +428,7 @@ export function HomeAccordionSections() {
                 onClick={() => setShowAll(true)}
                 className="kal-glass-subtle inline-flex items-center gap-1.5 rounded-xl border-kal-border/70 px-3.5 py-2 text-xs font-semibold text-kal-text-secondary transition-colors hover:border-kal-accent/40 hover:text-kal-accent"
               >
-                <LayersIcon className="h-3.5 w-3.5" aria-hidden />
+                <LayersIcon className="size-3.5" aria-hidden />
                 Show All Features
                 {hiddenCount > 0 && (
                   <span className="ml-0.5 rounded-full bg-kal-accent/15 px-1.5 py-0.5 text-[10px] font-bold text-kal-accent">
@@ -470,8 +470,8 @@ export function HomeAccordionSections() {
                 className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left sm:px-5 sm:py-4"
               >
                 <span className="flex items-center gap-3">
-                  <span className="kal-glass-subtle inline-flex h-9 w-9 items-center justify-center rounded-xl border-kal-border/70 text-kal-accent">
-                    <Icon className="h-4.5 w-4.5" aria-hidden />
+                  <span className="kal-glass-subtle inline-flex size-9 items-center justify-center rounded-xl border-kal-border/70 text-kal-accent">
+                    <Icon className="size-4.5" aria-hidden />
                   </span>
                   <span className="text-sm font-semibold tracking-tight text-kal-text sm:text-[0.98rem]">
                     {section.title}
@@ -479,7 +479,7 @@ export function HomeAccordionSections() {
                 </span>
                 <ChevronDown
                   className={clsx(
-                    "h-4.5 w-4.5 shrink-0 text-kal-muted transition-transform duration-300",
+                    "size-4.5 shrink-0 text-kal-muted transition-transform duration-300",
                     isOpen && "rotate-180",
                   )}
                   aria-hidden

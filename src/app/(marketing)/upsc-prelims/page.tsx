@@ -37,7 +37,7 @@ export default function UpscPrelimsPage() {
         />
 
         <section className="space-y-4" aria-labelledby="prelims-gs">
-          <h2 id="prelims-gs" className="text-xl font-bold text-kal-text">GS Paper I topics tracked in Kalnehi Daily</h2>
+          <h2 id="prelims-gs" className="text-xl font-semibold text-kal-text">GS Paper I topics tracked in Kalnehi Daily</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {[
               { area: "History", topics: ["Ancient India (Indus Valley to Gupta)", "Medieval India (Delhi Sultanate, Mughals)", "Modern India (British Rule, Independence Movement)", "Art & Culture, World History"] },
@@ -46,7 +46,7 @@ export default function UpscPrelimsPage() {
               { area: "Economy + Environment", topics: ["Economic Planning, GDP, Inflation", "Banking, Fiscal Policy, Trade", "Ecology, Biodiversity, Climate Change", "Environment Conventions & Schemes"] },
             ].map(({ area, topics }) => (
               <div key={area} className="kal-glass-card rounded-xl p-4 space-y-1.5">
-                <h3 className="text-xs font-bold text-kal-accent-dark">{area}</h3>
+                <h3 className="text-xs font-semibold text-kal-accent-dark">{area}</h3>
                 <ul className="space-y-0.5">{topics.map(t => <li key={t} className="text-xs text-kal-text-secondary">· {t}</li>)}</ul>
               </div>
             ))}

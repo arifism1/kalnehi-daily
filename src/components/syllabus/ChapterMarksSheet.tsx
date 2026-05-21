@@ -103,13 +103,13 @@ export function ChapterMarksSheet({
       <div className="kal-glass-panel relative z-[66] flex min-h-0 w-full max-w-lg max-h-[min(90dvh,36rem)] flex-col overflow-hidden rounded-t-3xl shadow-2xl sm:rounded-3xl">
         <div className="flex shrink-0 items-start justify-between gap-2 border-b border-kal-border/50 px-5 pb-3 pt-5">
           <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-kal-accent/15 text-kal-accent">
-              <SlidersHorizontal className="h-5 w-5" aria-hidden />
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-kal-accent/15 text-kal-accent">
+              <SlidersHorizontal className="size-5" aria-hidden />
             </div>
             <div>
               <h2
                 id={`${baseId}-marks-title`}
-                className="text-lg font-bold text-kal-text"
+                className="text-lg font-semibold text-kal-text"
               >
                 Chapter marks weights
               </h2>
@@ -121,7 +121,7 @@ export function ChapterMarksSheet({
             onClick={() => !busy && onClose()}
             className="rounded-lg p-2 text-kal-muted hover:bg-kal-card-muted"
           >
-            <X className="h-5 w-5" />
+            <X className="size-5" />
           </button>
         </div>
 
@@ -183,7 +183,7 @@ export function ChapterMarksSheet({
                           [r.id]: { ...d, y26: e.target.value },
                         }))
                       }
-                      className="mt-1 w-full rounded-lg border border-kal-border bg-kal-input-bg px-2 py-2 text-base sm:text-sm text-kal-text tabular-nums placeholder:text-kal-muted"
+                      className="mt-1 w-full rounded-lg border border-kal-border bg-kal-input-bg p-2 text-base sm:text-sm text-kal-text tabular-nums placeholder:text-kal-muted"
                       placeholder="—"
                       autoComplete="off"
                     />
@@ -201,7 +201,7 @@ export function ChapterMarksSheet({
                           [r.id]: { ...d, y25: e.target.value },
                         }))
                       }
-                      className="mt-1 w-full rounded-lg border border-kal-border bg-kal-input-bg px-2 py-2 text-base sm:text-sm text-kal-text tabular-nums placeholder:text-kal-muted"
+                      className="mt-1 w-full rounded-lg border border-kal-border bg-kal-input-bg p-2 text-base sm:text-sm text-kal-text tabular-nums placeholder:text-kal-muted"
                       placeholder="—"
                       autoComplete="off"
                     />
@@ -218,7 +218,7 @@ export function ChapterMarksSheet({
                           [r.id]: { ...d, y24: e.target.value },
                         }))
                       }
-                      className="mt-1 w-full rounded-lg border border-kal-border bg-kal-input-bg px-2 py-2 text-base sm:text-sm text-kal-text tabular-nums placeholder:text-kal-muted"
+                      className="mt-1 w-full rounded-lg border border-kal-border bg-kal-input-bg p-2 text-base sm:text-sm text-kal-text tabular-nums placeholder:text-kal-muted"
                       placeholder="—"
                       autoComplete="off"
                     />
@@ -235,7 +235,7 @@ export function ChapterMarksSheet({
                           [r.id]: { ...d, y23: e.target.value },
                         }))
                       }
-                      className="mt-1 w-full rounded-lg border border-kal-border bg-kal-input-bg px-2 py-2 text-base sm:text-sm text-kal-text tabular-nums placeholder:text-kal-muted"
+                      className="mt-1 w-full rounded-lg border border-kal-border bg-kal-input-bg p-2 text-base sm:text-sm text-kal-text tabular-nums placeholder:text-kal-muted"
                       placeholder="—"
                       autoComplete="off"
                     />
@@ -265,7 +265,7 @@ export function ChapterMarksSheet({
           >
             {busy ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                <Loader2 className="size-4 animate-spin" aria-hidden />
                 Saving…
               </>
             ) : (

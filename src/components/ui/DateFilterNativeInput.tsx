@@ -68,7 +68,7 @@ export function DateFilterNativeInput({
         )}
         aria-label="Pick date from calendar"
       >
-        <CalendarDays className="h-3.5 w-3.5 shrink-0" aria-hidden />
+        <CalendarDays className="size-3.5 shrink-0" aria-hidden />
         <span className="hidden min-[360px]:inline">Pick date</span>
       </button>
     </div>

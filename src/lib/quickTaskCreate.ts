@@ -173,6 +173,7 @@ export async function bulkAddSyllabusMicrotopicsToDailyPlan(
         microtopic_id: mid,
         id,
       };
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential: early-return on failure; existing.add() tracks created items to skip duplicates
       const r = await applyOptimisticTaskCreate(insertRow, userId, fullTask);
       if (!r.ok) return r;
       trackMetaTaskCreated();
@@ -245,6 +246,7 @@ export async function addSelectedSyllabusRowsToDailyPlan(
         microtopic_id: mid,
         id,
       };
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential: early-return on failure; existing.add() tracks created items to skip duplicates
       const r = await applyOptimisticTaskCreate(insertRow, userId, fullTask);
       if (!r.ok) return r;
       trackMetaTaskCreated();

@@ -199,7 +199,7 @@ export function ExecutionLogClient() {
             Execution log
           </p>
           <h1 className="kal-feature-title mt-1 flex items-center gap-2">
-            <ScrollText className="h-7 w-7 text-kal-accent" aria-hidden />
+            <ScrollText className="size-7 text-kal-accent" aria-hidden />
             Daily mastery record
           </h1>
           <p className="kal-feature-lead mt-2 max-w-xl">
@@ -236,7 +236,7 @@ export function ExecutionLogClient() {
       {view === "daily" && (
         <section className="rounded-3xl border border-kal-border bg-kal-card p-6 kal-shadow-card sm:p-8">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-sm font-bold text-kal-text">Day detail</h2>
+            <h2 className="text-sm font-semibold text-kal-text">Day detail</h2>
             <div className="flex items-center gap-1">
               <button
                 type="button"
@@ -246,7 +246,7 @@ export function ExecutionLogClient() {
                   setSelectedDay(format(addDays(parseISO(selectedDay), -1), "yyyy-MM-dd"))
                 }
               >
-                <ChevronLeft className="h-5 w-5" />
+                <ChevronLeft className="size-5" />
               </button>
               <span className="min-w-[10rem] text-center text-sm font-semibold tabular-nums text-kal-accent/90">
                 {selectedDay}
@@ -259,7 +259,7 @@ export function ExecutionLogClient() {
                   setSelectedDay(format(addDays(parseISO(selectedDay), 1), "yyyy-MM-dd"))
                 }
               >
-                <ChevronRight className="h-5 w-5" />
+                <ChevronRight className="size-5" />
               </button>
               <button
                 type="button"
@@ -358,7 +358,7 @@ export function ExecutionLogClient() {
             id="study-sessions-log"
             className="mt-8 border-t border-kal-border pt-8 scroll-mt-24"
           >
-            <h3 className="text-sm font-bold text-kal-text">Study sessions</h3>
+            <h3 className="text-sm font-semibold text-kal-text">Study sessions</h3>
             <p className="mt-1 text-xs leading-relaxed text-kal-muted">
               Logged study sessions for this day.
             </p>
@@ -375,8 +375,8 @@ export function ExecutionLogClient() {
       {view === "monthly" && (
         <section className="rounded-3xl border border-kal-border bg-kal-card p-6 kal-shadow-card sm:p-8">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="flex items-center gap-2 text-sm font-bold text-kal-text">
-              <CalendarRange className="h-4 w-4 text-kal-accent" aria-hidden />
+            <h2 className="flex items-center gap-2 text-sm font-semibold text-kal-text">
+              <CalendarRange className="size-4 text-kal-accent" aria-hidden />
               Monthly rollup
             </h2>
             <div className="flex items-center gap-1">
@@ -386,7 +386,7 @@ export function ExecutionLogClient() {
                 onClick={() => setMonthCursor((d) => addMonths(d, -1))}
                 aria-label="Previous month"
               >
-                <ChevronLeft className="h-5 w-5" />
+                <ChevronLeft className="size-5" />
               </button>
               <span className="min-w-[8rem] text-center text-sm font-semibold text-kal-accent/90">
                 {format(monthCursor, "MMMM yyyy")}
@@ -397,7 +397,7 @@ export function ExecutionLogClient() {
                 onClick={() => setMonthCursor((d) => addMonths(d, 1))}
                 aria-label="Next month"
               >
-                <ChevronRight className="h-5 w-5" />
+                <ChevronRight className="size-5" />
               </button>
             </div>
           </div>
@@ -424,7 +424,7 @@ export function ExecutionLogClient() {
       {view === "yearly" && (
         <section className="rounded-3xl border border-kal-border bg-kal-card p-6 kal-shadow-card sm:p-8">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-sm font-bold text-kal-text">Yearly arc</h2>
+            <h2 className="text-sm font-semibold text-kal-text">Yearly arc</h2>
             <div className="flex items-center gap-1">
               <button
                 type="button"
@@ -432,7 +432,7 @@ export function ExecutionLogClient() {
                 onClick={() => setYearCursor((d) => addYears(d, -1))}
                 aria-label="Previous year"
               >
-                <ChevronLeft className="h-5 w-5" />
+                <ChevronLeft className="size-5" />
               </button>
               <span className="min-w-[4rem] text-center text-sm font-semibold text-kal-accent/90">
                 {format(yearCursor, "yyyy")}
@@ -443,7 +443,7 @@ export function ExecutionLogClient() {
                 onClick={() => setYearCursor((d) => addYears(d, 1))}
                 aria-label="Next year"
               >
-                <ChevronRight className="h-5 w-5" />
+                <ChevronRight className="size-5" />
               </button>
             </div>
           </div>

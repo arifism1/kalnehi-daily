@@ -85,7 +85,7 @@ function TestCard({ test, onDelete, deleting, showExamBadge }: TestCardProps) {
               disabled={deleting}
               className="rounded-lg p-1.5 text-kal-text-secondary/50 hover:text-red-500 transition-colors disabled:opacity-40"
             >
-              {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+              {deleting ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
             </button>
           </div>
         </div>
@@ -107,9 +107,9 @@ function TestCard({ test, onDelete, deleting, showExamBadge }: TestCardProps) {
             className="flex items-center gap-1 text-xs text-kal-accent font-medium hover:underline"
           >
             {expanded ? (
-              <><ChevronUp className="h-3 w-3" /> Hide subject breakdown</>
+              <><ChevronUp className="size-3" /> Hide subject breakdown</>
             ) : (
-              <><ChevronDown className="h-3 w-3" /> Subject breakdown</>
+              <><ChevronDown className="size-3" /> Subject breakdown</>
             )}
           </button>
         )}
@@ -184,6 +184,7 @@ export function MockTestsClient() {
   const trendInsight = useMemo(() => {
     if (filteredTests.length < 2 || filterExam === "all") return null;
     const recent = filteredTests.slice(0, Math.min(5, filteredTests.length));
+    // react-doctor-disable-next-line react-doctor/js-combine-iterations -- map-then-filter with type narrowing; flatMap would lose null type predicate
     const scores = recent
       .map((t) => {
         if (t.total_score === null) return null;
@@ -218,7 +219,7 @@ export function MockTestsClient() {
           onClick={() => setAddOpen(true)}
           className="flex items-center gap-2 rounded-xl bg-kal-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-kal-accent/90 transition-colors"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="size-4" />
           Log test
         </button>
       </div>
@@ -257,7 +258,7 @@ export function MockTestsClient() {
       {/* Trend insight */}
       {trendInsight && (
         <div className="flex items-center gap-2 rounded-xl border border-kal-accent/30 bg-kal-accent-soft/40 px-4 py-3">
-          <Star className="h-4 w-4 text-kal-accent shrink-0" aria-hidden />
+          <Star className="size-4 text-kal-accent shrink-0" aria-hidden />
           <p className="text-sm font-medium text-kal-text">{trendInsight}</p>
         </div>
       )}
@@ -265,7 +266,7 @@ export function MockTestsClient() {
       {/* List */}
       {loading ? (
         <div className="flex min-h-[200px] items-center justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-kal-accent/60" />
+          <Loader2 className="size-6 animate-spin text-kal-accent/60" />
         </div>
       ) : filteredTests.length === 0 ? (
         <div className="py-8 text-center">

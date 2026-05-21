@@ -1,6 +1,6 @@
 "use client";
 
-import { addDays, format, parse, parseISO } from "date-fns";
+import { addDays, format, parseISO } from "date-fns";
 import { ArrowLeft, Home } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -25,6 +25,7 @@ export function SelfTypeDayPage() {
   const [planListKey, bumpPlanList] = useState(0);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- URL param sync: setting state in response to a route parameter change is intentional
     if (urlPlanDate) setLogDate(urlPlanDate);
   }, [urlPlanDate]);
 
@@ -34,6 +35,14 @@ export function SelfTypeDayPage() {
     () => dailyPlanLiveHeading(logDate, today),
     [logDate, today],
   );
+
+  const [yesterday, tomorrow] = useMemo(() => {
+    const base = parseISO(today);
+    return [
+      format(addDays(base, -1), "yyyy-MM-dd"),
+      format(addDays(base, 1), "yyyy-MM-dd"),
+    ];
+  }, [today]);
 
   if (!user) {
     return (
@@ -47,12 +56,12 @@ export function SelfTypeDayPage() {
     <div className="relative mx-auto max-w-2xl pb-16 pt-2 sm:pt-4">
       <div className="flex items-center gap-3 text-sm font-semibold text-kal-accent">
         <Link href="/daily-plan" className="inline-flex items-center gap-1.5 transition hover:text-kal-accent-hover">
-          <ArrowLeft className="h-4 w-4" aria-hidden />
+          <ArrowLeft className="size-4" aria-hidden />
           Plan hub
         </Link>
         <span className="text-kal-border">|</span>
         <Link href="/" className="inline-flex items-center gap-1.5 transition hover:text-kal-accent-hover">
-          <Home className="h-4 w-4" aria-hidden />
+          <Home className="size-4" aria-hidden />
           Home
         </Link>
       </div>
@@ -73,8 +82,8 @@ export function SelfTypeDayPage() {
         <div className="kal-glass-subtle flex min-h-[44px] items-center gap-1 rounded-xl p-1">
           {[
             { id: today, label: "Today" },
-            { id: format(addDays(parse(today, "yyyy-MM-dd", new Date()), -1), "yyyy-MM-dd"), label: "Yesterday" },
-            { id: format(addDays(parse(today, "yyyy-MM-dd", new Date()), 1), "yyyy-MM-dd"), label: "Tomorrow" },
+            { id: yesterday, label: "Yesterday" },
+            { id: tomorrow, label: "Tomorrow" },
           ].map((d) => (
             <button
               key={d.id}

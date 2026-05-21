@@ -36,7 +36,7 @@ function SheetSwitch({
     >
       <span
         className={clsx(
-          "absolute top-1 left-1 h-7 w-7 rounded-full bg-white shadow transition-transform duration-200",
+          "absolute top-1 left-1 size-7 rounded-full bg-white shadow transition-transform duration-200",
           checked ? "translate-x-[1.35rem]" : "translate-x-0",
         )}
       />
@@ -118,7 +118,7 @@ export function SettingsToggles() {
           ))}
         </div>
       </div>
-      <div className="flex items-center justify-between gap-3 px-3 py-3.5">
+      <div className="flex items-center justify-between gap-3 p-3.5">
         <div>
           <div className="flex items-center gap-2">
             <span className="text-[15px] font-medium text-kal-text">
@@ -137,7 +137,7 @@ export function SettingsToggles() {
           label="Toggle exam countdown"
         />
       </div>
-      <div className="flex items-center justify-between gap-3 px-3 py-3.5">
+      <div className="flex items-center justify-between gap-3 p-3.5">
         <div>
           <div className="flex items-center gap-2">
             <span className="text-[15px] font-medium text-kal-text">
@@ -157,7 +157,7 @@ export function SettingsToggles() {
           label="Toggle projected marks estimate"
         />
       </div>
-      <div className="flex items-center justify-between gap-3 px-3 py-3.5">
+      <div className="flex items-center justify-between gap-3 p-3.5">
         <div>
           <div className="flex items-center gap-2">
             <span className="text-[15px] font-medium text-kal-text">
@@ -176,7 +176,7 @@ export function SettingsToggles() {
           label="Toggle sound effects"
         />
       </div>
-      <div className="flex items-center justify-between gap-3 px-3 py-3.5">
+      <div className="flex items-center justify-between gap-3 p-3.5">
         <div>
           <div className="flex items-center gap-2">
             <span className="text-[15px] font-medium text-kal-text">

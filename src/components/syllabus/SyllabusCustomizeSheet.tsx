@@ -199,7 +199,7 @@ export function SyllabusCustomizeSheet({
         <div className="flex shrink-0 items-start justify-between gap-3 border-b border-kal-border/60 px-6 pb-3 pt-6 dark:border-white/10">
           <h2
             id="syllabus-sheet-title"
-            className="text-lg font-bold tracking-tight text-kal-text"
+            className="text-lg font-semibold tracking-tight text-kal-text"
           >
             {title}
           </h2>
@@ -210,7 +210,7 @@ export function SyllabusCustomizeSheet({
             className="rounded-lg p-2 text-kal-muted hover:bg-kal-card-muted hover:text-kal-text"
             aria-label="Close"
           >
-            <X className="h-5 w-5" />
+            <X className="size-5" />
           </button>
         </div>
 

@@ -25,7 +25,7 @@ function HeroSection({ capStatus }: { capStatus: DailyCapStatus }) {
 
       <div className="relative mx-auto max-w-4xl px-6 text-center">
         <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-kal-accent/30 bg-kal-accent-soft px-4 py-2">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-kal-accent" aria-hidden />
+          <span className="size-2 animate-pulse rounded-full bg-kal-accent" aria-hidden />
           <span className="text-xs font-bold uppercase tracking-widest text-kal-accent-dark dark:text-kal-accent">
             Kalnehi Daily
           </span>
@@ -146,10 +146,10 @@ function PricingTableSection() {
                     <td className="px-4 py-3.5 text-sm font-medium text-kal-text-secondary sm:px-6">
                       {name}
                     </td>
-                    <td className="px-3 py-3.5">
+                    <td className="p-3.5">
                       <FeatureCell value={trial} />
                     </td>
-                    <td className="bg-kal-accent/[0.04] px-3 py-3.5 ring-2 ring-inset ring-kal-accent/30">
+                    <td className="bg-kal-accent/[0.04] p-3.5 ring-2 ring-inset ring-kal-accent/30">
                       <FeatureCell value={smart} />
                     </td>
                   </tr>

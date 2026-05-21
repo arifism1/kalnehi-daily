@@ -26,8 +26,8 @@ function LoadingScreen() {
         <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
           <KalShimmerBlock className="h-7 w-28 rounded-lg" />
           <div className="flex items-center gap-2">
-            <KalShimmerBlock className="h-9 w-9 rounded-xl" />
-            <KalShimmerBlock className="h-9 w-9 rounded-xl" />
+            <KalShimmerBlock className="size-9 rounded-xl" />
+            <KalShimmerBlock className="size-9 rounded-xl" />
           </div>
         </div>
       </div>
@@ -40,7 +40,7 @@ function LoadingScreen() {
           <KalShimmerBlock className="h-4 w-2/3 rounded" />
         </div>
         <div className="kal-card-surface space-y-3">
-          <KalShimmerBlock className="h-4 w-4/5 rounded" />
+          <KalShimmerBlock className="size-4/5 rounded" />
           <KalShimmerBlock className="h-4 w-3/5 rounded" />
         </div>
         <div className="kal-card-surface space-y-3">

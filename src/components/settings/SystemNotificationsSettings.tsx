@@ -95,7 +95,7 @@ export function SystemNotificationsSettings({
       {!embedded ? (
         <div className="flex items-start gap-2">
           <Sparkles
-            className="mt-0.5 h-5 w-5 shrink-0 text-kal-accent"
+            className="mt-0.5 size-5 shrink-0 text-kal-accent"
             aria-hidden
           />
           <div className="min-w-0 flex-1">
@@ -114,12 +114,12 @@ export function SystemNotificationsSettings({
       <div className={clsx("flex items-center justify-between gap-3", embedded ? "mt-1" : "mt-4")}>
         {loading ? (
           <div className="flex flex-1 items-center gap-2">
-            <div className="h-4 w-4 shrink-0 animate-pulse rounded bg-kal-border/60" />
+            <div className="size-4 shrink-0 animate-pulse rounded bg-kal-border/60" />
             <div className="h-4 max-w-[12rem] flex-1 animate-pulse rounded bg-kal-border/50" />
           </div>
         ) : (
           <span className="inline-flex items-center gap-2 text-sm font-medium text-kal-text">
-            <BellRing className="h-4 w-4 shrink-0 text-kal-accent" aria-hidden />
+            <BellRing className="size-4 shrink-0 text-kal-accent" aria-hidden />
             Automated system messages
           </span>
         )}

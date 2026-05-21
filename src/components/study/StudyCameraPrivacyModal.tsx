@@ -48,8 +48,8 @@ export function StudyCameraPrivacyModal({
         )}
       >
         <div className="flex shrink-0 items-start gap-3 border-b border-white/10 px-6 pb-4 pt-6 sm:px-7 sm:pt-7">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-kal-accent/15 text-kal-accent">
-            <ShieldCheck className="h-6 w-6" aria-hidden />
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-kal-accent/15 text-kal-accent">
+            <ShieldCheck className="size-6" aria-hidden />
           </span>
           <div>
             <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent/90">
@@ -57,7 +57,7 @@ export function StudyCameraPrivacyModal({
             </p>
             <h2
               id="study-cam-privacy-title"
-              className="mt-1 text-lg font-bold leading-snug text-white"
+              className="mt-1 text-lg font-semibold leading-snug text-white"
             >
               {variant === "settings"
                 ? "Your video stays on this device"
@@ -71,7 +71,7 @@ export function StudyCameraPrivacyModal({
           {POINTS.map((text) => (
             <li key={text} className="flex gap-2">
               <Lock
-                className="mt-0.5 h-4 w-4 shrink-0 text-kal-accent/80"
+                className="mt-0.5 size-4 shrink-0 text-kal-accent/80"
                 aria-hidden
               />
               <span>{text}</span>
@@ -92,7 +92,7 @@ export function StudyCameraPrivacyModal({
             onClick={onContinue}
             className="min-h-[48px] flex-1 rounded-2xl bg-kal-accent py-3 text-sm font-semibold text-kal-accent-foreground"
           >
-            Continue
+            Enable camera
           </button>
           {onDismiss ? (
             <button

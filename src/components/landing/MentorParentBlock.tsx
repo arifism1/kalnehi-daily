@@ -18,10 +18,10 @@ export function MentorParentBlock() {
         <div className="grid gap-8 lg:grid-cols-2">
           {/* Mentor card */}
           <div className="rounded-2xl border border-kal-border bg-white/70 p-8 shadow-[0_4px_12px_rgba(100,75,40,0.05)]">
-            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-kal-accent-soft text-2xl">
+            <div className="mb-5 flex size-12 items-center justify-center rounded-2xl bg-kal-accent-soft text-2xl">
               🎓
             </div>
-            <h3 className="mb-2 text-lg font-bold text-kal-text">For mentors and teachers</h3>
+            <h3 className="mb-2 text-lg font-semibold text-kal-text">For mentors and teachers</h3>
             <p className="mb-6 text-sm leading-relaxed text-kal-text-secondary">
               Create a cohort. Assign weekly targets. See every student&apos;s weak areas in one
               grid — who&apos;s falling behind, who&apos;s on track, and what to address in
@@ -45,10 +45,10 @@ export function MentorParentBlock() {
 
           {/* Parent card */}
           <div className="rounded-2xl border border-kal-border bg-white/70 p-8 shadow-[0_4px_12px_rgba(100,75,40,0.05)]">
-            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-kal-accent-soft text-2xl">
+            <div className="mb-5 flex size-12 items-center justify-center rounded-2xl bg-kal-accent-soft text-2xl">
               🏠
             </div>
-            <h3 className="mb-2 text-lg font-bold text-kal-text">For parents</h3>
+            <h3 className="mb-2 text-lg font-semibold text-kal-text">For parents</h3>
             <p className="mb-6 text-sm leading-relaxed text-kal-text-secondary">
               Get a weekly summary — honest, clean, no drama. Enough to know they&apos;re okay,
               not enough to micromanage. No more daily interrogations at dinner.
@@ -57,7 +57,7 @@ export function MentorParentBlock() {
             {/* WhatsApp-style mock summary */}
             <div className="rounded-xl border border-[rgba(37,211,102,0.2)] bg-[rgba(37,211,102,0.04)] p-4">
               <div className="mb-2 flex items-center gap-2">
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[rgba(37,211,102,0.15)] text-[11px]">
+                <div className="flex size-6 items-center justify-center rounded-full bg-[rgba(37,211,102,0.15)] text-[11px]">
                   K
                 </div>
                 <span className="text-[11px] font-bold text-kal-text">Kalnehi Daily</span>

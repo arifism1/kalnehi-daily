@@ -96,6 +96,7 @@ export function KalnehiSidebar() {
 
   const sidebarCategories = useMemo(() => {
     const effective = resolveEffectiveEnabledFeatures(storedFeatures);
+    // react-doctor-disable-next-line react-doctor/js-combine-iterations -- map-then-filter; the filter removes empty-item categories after mapping; splitting is more readable
     return VISIBLE_FEATURE_CATEGORIES.map((cat) => ({
       title: cat.title,
       dotColor: cat.dotColor,
@@ -142,7 +143,7 @@ export function KalnehiSidebar() {
           >
             <Home
               className={clsx(
-                "h-4 w-4 shrink-0",
+                "size-4 shrink-0",
                 pathname === "/home" || pathname.startsWith("/home/")
                   ? "text-[#BA7517] dark:text-kal-accent"
                   : "text-kal-text-secondary",
@@ -158,7 +159,7 @@ export function KalnehiSidebar() {
         <div key={cat.title} className="mb-4">
           <div className="flex items-center gap-2 px-4 pb-1 pt-4">
             <span
-              className="h-1.5 w-1.5 shrink-0 rounded-full"
+              className="size-1.5 shrink-0 rounded-full"
               style={{ backgroundColor: cat.dotColor }}
               aria-hidden
             />
@@ -188,7 +189,7 @@ export function KalnehiSidebar() {
                   >
                     <Icon
                       className={clsx(
-                        "h-4 w-4 shrink-0",
+                        "size-4 shrink-0",
                         isActive
                           ? "text-[#BA7517] dark:text-kal-accent"
                           : "text-kal-text-secondary",
@@ -230,7 +231,7 @@ export function KalnehiSidebar() {
                 >
                   <Icon
                     className={clsx(
-                      "h-4 w-4 shrink-0",
+                      "size-4 shrink-0",
                       isActive
                         ? "text-[#BA7517] dark:text-kal-accent"
                         : "text-kal-text-secondary",

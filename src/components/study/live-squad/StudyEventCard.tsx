@@ -57,11 +57,11 @@ export function StudyEventCard({ event, accentVariant = 0 }: StudyEventCardProps
       className={`flex min-h-[44px] w-full items-center gap-2.5 rounded-2xl border-2 px-3 py-2.5 shadow-sm backdrop-blur-md sm:min-h-0 ${borderAccent}`}
     >
       <div
-        className={`relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-extrabold ${avatarAccent}`}
+        className={`relative flex size-9 shrink-0 items-center justify-center rounded-xl text-xs font-extrabold ${avatarAccent}`}
       >
         {event.peerName.slice(0, 1)}
         <motion.span
-          className={`absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full ${dotClass}`}
+          className={`absolute -right-0.5 -top-0.5 size-2 rounded-full ${dotClass}`}
           aria-hidden
           animate={
             reduceMotion

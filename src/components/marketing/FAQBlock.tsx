@@ -26,7 +26,7 @@ function FAQEntry({ question, answer }: FAQItem) {
       >
         <span>{question}</span>
         <ChevronDown
-          className={clsx("mt-0.5 h-4 w-4 shrink-0 text-kal-muted transition-transform", open && "rotate-180")}
+          className={clsx("mt-0.5 size-4 shrink-0 text-kal-muted transition-transform", open && "rotate-180")}
           aria-hidden
         />
       </button>
@@ -40,7 +40,7 @@ function FAQEntry({ question, answer }: FAQItem) {
 export function FAQBlock({ items, title = "Frequently asked questions" }: FAQBlockProps) {
   return (
     <section aria-labelledby="faq-heading" className="space-y-1">
-      <h2 id="faq-heading" className="text-lg font-bold text-kal-text">{title}</h2>
+      <h2 id="faq-heading" className="text-lg font-semibold text-kal-text">{title}</h2>
       <div className="mt-3 divide-y divide-kal-border rounded-2xl border border-kal-border bg-kal-card px-4 py-1">
         {items.map((item) => (
           <FAQEntry key={item.question} {...item} />

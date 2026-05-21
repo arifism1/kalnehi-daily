@@ -43,7 +43,7 @@ function ymdDaysAgo(days: number): string {
 }
 
 function uniqueSortedDates(descDates: string[]): string[] {
-  return [...new Set(descDates)].sort((a, b) => (a < b ? 1 : -1));
+  return [...new Set(descDates)].toSorted((a, b) => (a < b ? 1 : -1));
 }
 
 function computeDateStreakFromToday(completedDatesDesc: string[]): number {
@@ -119,9 +119,9 @@ async function syllabusSubjectCompletionForExamLabel(
   if (progErr) throw progErr;
 
   const doneSet = new Set(
-    (progressRows ?? [])
-      .filter((r) => r.status === "completed")
-      .map((r) => r.syllabus_master_id),
+    (progressRows ?? []).flatMap((r) =>
+      r.status === "completed" && r.syllabus_master_id != null ? [r.syllabus_master_id] : [],
+    ),
   );
 
   const bySubjectMap = new Map<string, { done: number; total: number }>();
@@ -256,7 +256,7 @@ export async function getWeakStrongSubjects(
         topics_remaining: s.total - s.done,
       }));
       const weak = [...e.by_subject]
-        .sort((a, b) => a.completion_percent - b.completion_percent)
+        .toSorted((a, b) => a.completion_percent - b.completion_percent)
         .slice(0, 3)
         .map((s) => ({
           subject: s.subject,
@@ -366,6 +366,7 @@ export async function getHabitStreakSummary(admin: AdminClient, userId: string) 
   if (habitsRes.error) throw habitsRes.error;
   if (logsRes.error) throw logsRes.error;
   const logs = logsRes.data ?? [];
+  // react-doctor-disable-next-line react-doctor/js-combine-iterations -- filter-then-map; not a hot path
   const completedDates = logs.filter((l) => l.completed).map((l) => l.log_date);
   const streak_days = computeDateStreakFromToday(completedDates);
   return {
@@ -658,7 +659,10 @@ export async function getStudyTimerStats(admin: AdminClient, userId: string) {
   const totalMinutes = Math.round(totalSeconds / 60);
 
   const studyDates = new Set(
-    sessions.map((r) => r.started_at?.slice(0, 10)).filter(Boolean),
+    sessions.flatMap((r) => {
+      const date = r.started_at?.slice(0, 10);
+      return date ? [date] : [];
+    }),
   );
   const total_study_days_last_30d = studyDates.size;
   const avg_daily_focused_minutes =

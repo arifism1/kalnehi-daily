@@ -161,6 +161,7 @@ export async function applyOptimisticTaskUpdate(
     for (const m of all) {
       if (m.op === "task_update" && m.taskId === taskId && m.patch) {
         mergedPatch = { ...mergedPatch, ...m.patch };
+        // react-doctor-disable-next-line react-doctor/async-await-in-loop -- outbox must be merged sequentially to preserve patch order
         await deleteOutboxMutation(m.clientMutationId);
       }
     }

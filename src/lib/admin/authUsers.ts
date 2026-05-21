@@ -16,6 +16,7 @@ export async function listAllAuthUsers(
 ): Promise<User[]> {
   const all: User[] = [];
   for (let page = 1; page <= MAX_PAGES; page++) {
+    // react-doctor-disable-next-line react-doctor/async-await-in-loop -- pagination loop: next page only fetched if current page was full
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage });
     if (error) {
       console.error("[admin] listUsers page", page, error.message);

@@ -308,8 +308,8 @@ export async function getAiUsageSnapshot(): Promise<AiUsageSnapshot | null> {
     return s;
   };
 
-  const paidIds = new Set(paidUsers.map((p) => p.user_id).filter(Boolean) as string[]);
-  const trialIds = new Set(trialUsers.map((p) => p.user_id).filter(Boolean) as string[]);
+  const paidIds = new Set(paidUsers.flatMap((p) => (p.user_id ? [p.user_id] : [])));
+  const trialIds = new Set(trialUsers.flatMap((p) => (p.user_id ? [p.user_id] : [])));
 
   const paidTok = sumTokensByUser(paidIds);
   const trialTok = sumTokensByUser(trialIds);
@@ -324,6 +324,7 @@ export async function getAiUsageSnapshot(): Promise<AiUsageSnapshot | null> {
   const trialHits = trialUsers.filter((p) => (p.welcome_ai_tokens_used ?? 0) >= 55_000).length;
   const trialTokenHitRatePct = trialUsers.length > 0 ? (trialHits / trialUsers.length) * 100 : 0;
 
+  // react-doctor-disable-next-line react-doctor/js-combine-iterations -- map-then-filter for admin analytics; performance not a concern
   const topUsersByAiTokens: AiUsageTopUserRow[] = [...userAgg.entries()]
     .map(([userId, a]) => ({
       userId,
@@ -338,7 +339,7 @@ export async function getAiUsageSnapshot(): Promise<AiUsageSnapshot | null> {
 
   return {
     tokensFinalizedByDay: [...byDay.entries()]
-      .sort((a, b) => a[0].localeCompare(b[0]))
+      .toSorted((a, b) => a[0].localeCompare(b[0]))
       .map(([day, { tokens, costInr }]) => ({ day, tokens, costInr })),
     tokensToday,
     tokensThisWeek,

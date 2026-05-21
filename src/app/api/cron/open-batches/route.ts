@@ -60,15 +60,18 @@ export async function GET(req: NextRequest) {
   for (const batch of dueNow ?? []) {
     const b = batch as { id: string; batch_number: number; opens_at: string };
     try {
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential batch opening: each batch must complete before the next to avoid race conditions
       const result = await openBatch(b.id);
       totalActivated += result.activated;
       openedBatches.push(b.batch_number);
 
       const closesAt = new Date(new Date(b.opens_at).getTime() + FREE_TRIAL_MS).toISOString();
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential: update closes_at after openBatch confirms success
       await admin.from("batches").update({ closes_at: closesAt }).eq("id", b.id);
 
       // Send BATCH_OPEN notifications to all activated users.
       for (const userId of result.userIds) {
+        // react-doctor-disable-next-line react-doctor/async-await-in-loop -- per-user notification send; sequential to avoid overwhelming email/push providers
         const { data: entry } = await admin
           .from("waitlist_entries")
           .select("notification_channel, contact_email")
@@ -93,6 +96,7 @@ export async function GET(req: NextRequest) {
   // Send 1-hour warning pushes.
   for (const batch of due1hr ?? []) {
     const b = batch as { id: string; batch_number: number };
+    // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential: entries depend on each batch; must process one batch at a time
     const { data: entries } = await admin
       .from("waitlist_entries")
       .select("user_id")
@@ -100,6 +104,7 @@ export async function GET(req: NextRequest) {
       .eq("status", "waiting");
 
     for (const entry of entries ?? []) {
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential notification send to avoid rate limits
       await sendBatch1Hr({ userId: (entry as { user_id: string }).user_id, batchNumber: b.batch_number });
     }
   }

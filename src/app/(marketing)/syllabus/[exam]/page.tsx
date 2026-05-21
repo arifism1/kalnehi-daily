@@ -68,7 +68,7 @@ export default async function SyllabusPage({ params }: Props) {
       <div className="space-y-10">
         <header className="space-y-3">
           <p className="inline-flex items-center gap-1.5 rounded-full border border-kal-accent/25 bg-kal-accent-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-kal-accent-dark">
-            <span className="h-1.5 w-1.5 rounded-full bg-kal-accent" aria-hidden />
+            <span className="size-1.5 rounded-full bg-kal-accent" aria-hidden />
             Official Syllabus — Updated {data.lastUpdated}
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -108,7 +108,7 @@ export default async function SyllabusPage({ params }: Props) {
         <div className="space-y-8" id="syllabus-content">
           {data.subjects.map((subject) => (
             <section key={subject.name} className="space-y-4">
-              <h2 className="text-lg font-bold text-kal-text border-b border-kal-border pb-2">{subject.name}</h2>
+              <h2 className="text-lg font-semibold text-kal-text border-b border-kal-border pb-2">{subject.name}</h2>
               <div className="grid gap-4 sm:grid-cols-2">
                 {subject.chapters.map((chapter) => (
                   <div key={chapter.name} className="kal-glass-card rounded-2xl p-4 space-y-2">

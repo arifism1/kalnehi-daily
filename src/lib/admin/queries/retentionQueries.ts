@@ -68,7 +68,7 @@ export async function getRetentionSnapshot(): Promise<RetentionSnapshot | null> 
     cohortMap.set(ck, slot);
   }
 
-  const sortedMonths = [...cohortMap.keys()].sort().slice(-8);
+  const sortedMonths = [...cohortMap.keys()].toSorted().slice(-8);
   const cohortRows: CohortRow[] = sortedMonths.map((cohortMonth) => {
     const { total, paying } = cohortMap.get(cohortMonth)!;
     return {
@@ -103,6 +103,7 @@ export async function getRetentionSnapshot(): Promise<RetentionSnapshot | null> 
     examKeys.add(adminSegmentLabelFromProfile(p));
   }
 
+  // react-doctor-disable-next-line react-doctor/js-combine-iterations -- map-then-filter for admin analytics; performance not a concern
   const churnByExam = [...examKeys].map((exam) => {
     const subset = profiles.filter((p) => adminSegmentLabelFromProfile(p) === exam);
     const paying = subset.filter(isPaying).length;

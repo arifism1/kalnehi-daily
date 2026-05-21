@@ -98,7 +98,7 @@ function PlanMockup() {
         aria-label="Dictate My Day"
         tabIndex={-1}
       >
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-kal-accent text-white text-sm" aria-hidden>
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-kal-accent text-white text-sm" aria-hidden>
           🎙
         </div>
         <div>
@@ -115,7 +115,7 @@ function PlanMockup() {
         aria-label="Self Type"
         tabIndex={-1}
       >
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-kal-accent-soft text-sm" aria-hidden>
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-kal-accent-soft text-sm" aria-hidden>
           ✏️
         </div>
         <div>
@@ -136,7 +136,7 @@ function PlanMockup() {
           ))}
         </div>
         <p className="ml-2 text-[10px] font-medium text-white/60">Listening...</p>
-        <div className="ml-auto h-2 w-2 rounded-full bg-kal-accent animate-pulse" aria-hidden />
+        <div className="ml-auto size-2 rounded-full bg-kal-accent animate-pulse" aria-hidden />
       </div>
     </div>
   );
@@ -152,8 +152,8 @@ function ExecuteMockup() {
 
       {/* Timer */}
       <div className="mb-4 flex flex-col items-center">
-        <div className="relative flex h-24 w-24 items-center justify-center">
-          <svg className="absolute h-24 w-24 -rotate-90" viewBox="0 0 96 96" aria-hidden>
+        <div className="relative flex size-24 items-center justify-center">
+          <svg className="absolute size-24 -rotate-90" viewBox="0 0 96 96" aria-hidden>
             <circle cx="48" cy="48" r="42" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="5" />
             <circle
               cx="48" cy="48" r="42" fill="none" stroke="var(--kal-accent)" strokeWidth="5"
@@ -185,6 +185,7 @@ function ExecuteMockup() {
         <button type="button" className="flex min-h-[38px] items-center justify-center rounded-xl border border-white/15 text-xs font-semibold text-white/70" tabIndex={-1}>
           Pause
         </button>
+        {/* react-doctor-disable-next-line react-doctor/design-no-vague-button-label -- decorative demo button (tabIndex=-1); not interactive */}
         <button type="button" className="flex min-h-[38px] items-center justify-center rounded-xl bg-kal-accent text-xs font-bold text-white" tabIndex={-1}>
           Done
         </button>
@@ -206,7 +207,7 @@ function RecoverMockup() {
           <span className="text-[10px] font-medium text-kal-muted">5 min session</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center h-8 w-8 rounded-full border border-[rgba(6,182,212,0.3)] bg-[rgba(6,182,212,0.1)] text-sm" aria-hidden>
+          <div className="flex items-center justify-center size-8 rounded-full border border-[rgba(6,182,212,0.3)] bg-[rgba(6,182,212,0.1)] text-sm" aria-hidden>
             🧘
           </div>
           <div className="flex-1">

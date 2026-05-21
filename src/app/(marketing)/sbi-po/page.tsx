@@ -37,7 +37,7 @@ export default function SbiPoPage() {
         />
 
         <section className="space-y-3" aria-labelledby="sbipo-system">
-          <h2 id="sbipo-system" className="text-xl font-bold text-kal-text">The SBI PO preparation system in Kalnehi Daily</h2>
+          <h2 id="sbipo-system" className="text-xl font-semibold text-kal-text">The SBI PO preparation system in Kalnehi Daily</h2>
           <ul className="space-y-3 text-sm">
             {[
               { t: "Prelims + Mains tracking", d: "Set up separate syllabus trackers for Prelims (QA, Reasoning, English) and Mains (Data Analysis, Reasoning + Computer, English, GA). Mastermind monitors both phases and shifts focus as dates approach." },

@@ -165,7 +165,7 @@ export function ProductivityPlannerView() {
           onChange={(e) => persist({ ...s, notes: e.target.value })}
           rows={6}
           placeholder="High-yield topics for this week, mock analysis takeaways, coach assignments…"
-          className="mt-1.5 w-full resize-y rounded-2xl border border-kal-border bg-kal-card-muted px-3 py-3 text-base sm:text-sm text-kal-text placeholder:text-kal-muted focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
+          className="mt-1.5 w-full resize-y rounded-2xl border border-kal-border bg-kal-card-muted p-3 text-base sm:text-sm text-kal-text placeholder:text-kal-muted focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
         />
       </label>
     </PlannerPageShell>

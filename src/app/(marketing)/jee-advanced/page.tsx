@@ -37,7 +37,7 @@ export default function JeeAdvancedPage() {
         />
 
         <section className="space-y-4" aria-labelledby="jeeadv-approach">
-          <h2 id="jeeadv-approach" className="text-xl font-bold text-kal-text">What makes JEE Advanced prep different</h2>
+          <h2 id="jeeadv-approach" className="text-xl font-semibold text-kal-text">What makes JEE Advanced prep different</h2>
           <div className="space-y-3 text-sm">
             <div className="kal-glass-card rounded-xl p-4">
               <strong className="text-kal-text block mb-1">Problem volume matters more than reading</strong>

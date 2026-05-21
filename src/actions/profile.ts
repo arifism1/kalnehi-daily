@@ -95,20 +95,18 @@ export async function upsertUserProfile(fields: {
             const attempted = Boolean(fields.prev_exam_attempted);
             const raw = fields.prev_score_entries;
             const normalized: PrevScoreEntry[] = Array.isArray(raw)
-              ? raw
-                  .filter(
-                    (e) =>
-                      e &&
-                      typeof e.label === "string" &&
-                      e.label.trim().length > 0 &&
-                      typeof e.score === "number" &&
-                      Number.isFinite(e.score) &&
-                      e.score >= 0,
+              ? raw.flatMap((e) => {
+                  if (
+                    !e ||
+                    typeof e.label !== "string" ||
+                    e.label.trim().length === 0 ||
+                    typeof e.score !== "number" ||
+                    !Number.isFinite(e.score) ||
+                    e.score < 0
                   )
-                  .map((e) => ({
-                    label: e.label.trim(),
-                    score: Math.round(e.score),
-                  }))
+                    return [];
+                  return [{ label: e.label.trim(), score: Math.round(e.score) }];
+                })
               : [];
             return {
               prev_exam_attempted: attempted,
@@ -374,6 +372,7 @@ export async function saveEnabledExamsInTrack(fields: {
  * Changes the user's track entirely (with full reset of enabled exams).
  * Used by the "Change Track" flow in Profile — requires explicit user confirmation.
  */
+// react-doctor-disable-next-line react-doctor/server-auth-actions -- delegates to saveEnabledExamsInTrack which calls getUser()
 export async function changeTrack(fields: {
   selected_track: string;
   enabled_exams_in_track: string[];

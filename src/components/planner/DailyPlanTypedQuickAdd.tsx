@@ -227,6 +227,7 @@ export function DailyPlanTypedQuickAdd({ planDate, onAdded }: Props) {
           r.startInput,
           r.endInput,
         );
+        // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential task insertion to preserve user-specified order
         const res = await insertDailyTask({
           plan_date: planDate,
           id: crypto.randomUUID(),
@@ -287,12 +288,12 @@ export function DailyPlanTypedQuickAdd({ planDate, onAdded }: Props) {
         >
           {parsing ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="size-4 animate-spin" />
               Parsing…
             </>
           ) : (
             <>
-              <Plus className="h-4 w-4" />
+              <Plus className="size-4" />
               Add to preview
             </>
           )}
@@ -338,7 +339,7 @@ export function DailyPlanTypedQuickAdd({ planDate, onAdded }: Props) {
         >
           {committing ? (
             <>
-              <Loader2 className="h-5 w-5 animate-spin" />
+              <Loader2 className="size-5 animate-spin" />
               Adding…
             </>
           ) : (

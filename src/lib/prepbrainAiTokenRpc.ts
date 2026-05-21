@@ -91,8 +91,10 @@ export async function prepbrainAiTokenFinalize(
   for (let attempt = 0; attempt < FINALIZE_RETRY_DELAYS_MS.length; attempt++) {
     const delay = FINALIZE_RETRY_DELAYS_MS[attempt];
     if (delay > 0) {
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- retry delay loop: sequential retry with exponential backoff
       await new Promise((r) => setTimeout(r, delay));
     }
+    // react-doctor-disable-next-line react-doctor/async-await-in-loop -- retry loop: attempt RPC after delay
     const { data, error } = await admin.rpc("prepbrain_ai_token_finalize", {
       p_user_id: userId,
       p_reservation_id: reservationId,

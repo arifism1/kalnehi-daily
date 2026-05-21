@@ -245,6 +245,7 @@ export async function openBatch(batchId: string): Promise<OpenBatchResult> {
     // Set trial_started_at for users who haven't started yet.
     const now = new Date().toISOString();
     for (const uid of userIds) {
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential per-user update to avoid overwhelming the DB in a single cron run
       await admin
         .from("user_profiles")
         .update({ trial_started_at: now, has_used_free_trial: true, has_had_trial: true, updated_at: now })
@@ -285,6 +286,7 @@ export async function checkExpiredTrials(): Promise<string[]> {
   const expiredIds: string[] = [];
 
   for (const entry of typed) {
+    // react-doctor-disable-next-line react-doctor/async-await-in-loop -- per-user sequential check; each user's status must be read before expiry determination
     const { data: prof } = await admin
       .from("user_profiles")
       .select("trial_started_at, subscription_status, subscription_end_date")

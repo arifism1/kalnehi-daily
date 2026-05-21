@@ -76,7 +76,7 @@ export function EndOfDayNudgeFlow({ planDate, todayCalendar }: EndOfDayNudgeFlow
           className="mb-5 flex gap-3 rounded-2xl border border-violet-500/35 bg-gradient-to-br from-violet-500/[0.12] via-kal-card-muted to-fuchsia-500/[0.08] px-4 py-3.5 shadow-sm sm:px-5"
           role="status"
         >
-          <MoonStar className="mt-0.5 h-9 w-9 shrink-0 text-violet-500" aria-hidden />
+          <MoonStar className="mt-0.5 size-9 shrink-0 text-violet-500" aria-hidden />
           <div className="min-w-0 flex-1">
             <p className="font-semibold text-kal-text">Wrap up tonight</p>
             <p className="mt-1 text-sm text-kal-text-secondary">
@@ -94,9 +94,9 @@ export function EndOfDayNudgeFlow({ planDate, todayCalendar }: EndOfDayNudgeFlow
             type="button"
             onClick={onDismissBanner}
             aria-label="Dismiss banner until tomorrow"
-            className="h-10 w-10 shrink-0 rounded-full border border-kal-border text-kal-muted hover:bg-kal-card-muted hover:text-kal-text"
+            className="size-10 shrink-0 rounded-full border border-kal-border text-kal-muted hover:bg-kal-card-muted hover:text-kal-text"
           >
-            <X className="mx-auto h-5 w-5" aria-hidden />
+            <X className="mx-auto size-5" aria-hidden />
           </button>
         </div>
       ) : null}

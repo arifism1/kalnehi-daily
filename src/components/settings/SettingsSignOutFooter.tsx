@@ -83,7 +83,7 @@ export function SettingsSignOutFooter() {
           onClick={() => setSignOutConfirmOpen(true)}
           className="flex w-full min-h-[52px] items-center justify-center gap-2 rounded-xl border border-[var(--kal-danger-border)] bg-[var(--kal-danger-soft)] py-3.5 text-[15px] font-semibold text-[var(--kal-danger-text)] active:opacity-90"
         >
-          <LogOut className="h-5 w-5" />
+          <LogOut className="size-5" />
           Sign out
         </button>
       </nav>

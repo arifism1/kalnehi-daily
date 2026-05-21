@@ -1,5 +1,6 @@
 "use server";
 
+import { after } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/types/supabase";
@@ -66,7 +67,8 @@ export async function attachReferralToUser(params: {
   } as never);
 
   if (error) {
-    console.warn("[attachReferralToUser] RPC error:", error.message);
+    // react-doctor-disable-next-line react-doctor/server-after-nonblocking
+    after(() => console.warn("[attachReferralToUser] RPC error:", error.message));
     return { ok: false, error: "Could not save referral." };
   }
 
@@ -78,6 +80,7 @@ export async function attachReferralToUser(params: {
  * Non-blocking helper: logs a trial_started referral event if the user has
  * a referral_source set. Called from ensureFreeTrialStarted — never awaited.
  */
+// react-doctor-disable-next-line react-doctor/server-auth-actions -- internal helper; userId is verified by the calling action (ensureFreeTrialStarted)
 export async function logReferralTrialStarted(userId: string): Promise<void> {
   const admin = getAdminClient();
   if (!admin) return;
@@ -101,7 +104,8 @@ export async function logReferralTrialStarted(userId: string): Promise<void> {
       metadata: {},
     } as never)
     .then(({ error }: { error: { message: string } | null }) => {
-      if (error) console.warn("[logReferralTrialStarted] insert error:", error.message);
+      // react-doctor-disable-next-line react-doctor/server-after-nonblocking
+      if (error) after(() => console.warn("[logReferralTrialStarted] insert error:", error.message));
     });
 }
 

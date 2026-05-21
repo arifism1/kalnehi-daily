@@ -311,15 +311,15 @@ export function BestStudyPracticesClient() {
       {/* Hero */}
       <section className="relative overflow-hidden rounded-3xl border border-white/40 bg-gradient-to-br from-white/70 via-white/45 to-kal-accent-soft/30 px-8 py-14 shadow-[0_24px_80px_-32px_rgba(255,122,0,0.35)] backdrop-blur-xl dark:border-white/10 dark:from-zinc-900/80 dark:via-zinc-900/55 dark:to-orange-950/25 dark:shadow-[0_28px_90px_-28px_rgba(0,0,0,0.65)] sm:px-12 sm:py-16">
         <div
-          className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-kal-accent/20 blur-3xl motion-safe:animate-pulse"
+          className="pointer-events-none absolute -right-20 -top-24 size-64 rounded-full bg-kal-accent/20 blur-3xl motion-safe:animate-pulse"
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute -bottom-16 -left-12 h-56 w-56 rounded-full bg-sky-400/15 blur-3xl"
+          className="pointer-events-none absolute -bottom-16 -left-12 size-56 rounded-full bg-sky-400/15 blur-3xl"
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-400/10 blur-2xl"
+          className="pointer-events-none absolute left-1/2 top-1/2 size-40 -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-400/10 blur-2xl"
           aria-hidden
         />
         <div className="relative space-y-5 text-center">
@@ -373,6 +373,7 @@ export function BestStudyPracticesClient() {
         </div>
 
         <ol className="list-none space-y-7">
+          {/* react-doctor-disable-next-line react-doctor/js-combine-iterations -- filter-then-map in JSX; flatMap here would reduce readability */}
           {RESEARCH_SECTIONS.filter((s) => s.id !== "study-sessions").map((s, idx) => (
             <li key={s.id}>
               <article className="group relative overflow-hidden rounded-2xl border border-white/45 bg-white/35 shadow-[0_16px_40px_-24px_rgba(0,0,0,0.18)] backdrop-blur-md transition-shadow duration-300 hover:shadow-[0_24px_56px_-20px_rgba(255,122,0,0.2)] dark:border-white/10 dark:bg-zinc-900/40">
@@ -384,7 +385,7 @@ export function BestStudyPracticesClient() {
                   {/* Header */}
                   <div className="flex items-start gap-4">
                     <span
-                      className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/60 text-3xl shadow-inner ring-1 ring-white/50 dark:bg-zinc-800/80 dark:ring-white/10"
+                      className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-white/60 text-3xl shadow-inner ring-1 ring-white/50 dark:bg-zinc-800/80 dark:ring-white/10"
                       aria-hidden
                     >
                       {s.emoji}
@@ -393,7 +394,7 @@ export function BestStudyPracticesClient() {
                       <span className="text-xs font-semibold uppercase tracking-[0.2em] text-kal-muted">
                         Practice {idx + 1}
                       </span>
-                      <h3 className="mt-1 text-lg font-bold leading-snug text-kal-text sm:text-xl">
+                      <h3 className="mt-1 text-lg font-semibold leading-snug text-kal-text sm:text-xl">
                         {s.title}
                       </h3>
                     </div>
@@ -422,7 +423,7 @@ export function BestStudyPracticesClient() {
                           key={c}
                           className="flex gap-2 text-xs leading-relaxed text-kal-text-secondary"
                         >
-                          <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-kal-accent/60" aria-hidden />
+                          <span className="mt-1 size-1.5 shrink-0 rounded-full bg-kal-accent/60" aria-hidden />
                           <span>{c}</span>
                         </li>
                       ))}
@@ -454,7 +455,7 @@ export function BestStudyPracticesClient() {
         className="relative overflow-hidden rounded-2xl border border-white/40 bg-gradient-to-br from-white/60 via-kal-accent-soft/20 to-white/50 p-6 shadow-[0_16px_40px_-20px_rgba(255,122,0,0.2)] backdrop-blur-md dark:border-white/10 dark:from-zinc-900/75 dark:via-orange-950/20 dark:to-zinc-900/60 sm:p-8"
       >
         <div
-          className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-kal-accent/15 blur-3xl"
+          className="pointer-events-none absolute -right-10 -top-12 size-40 rounded-full bg-kal-accent/15 blur-3xl"
           aria-hidden
         />
         <div className="relative space-y-6">
@@ -515,11 +516,11 @@ export function BestStudyPracticesClient() {
         className="relative overflow-hidden rounded-3xl border border-kal-accent/35 bg-gradient-to-br from-white/75 via-kal-accent-soft/25 to-white/60 p-8 shadow-[0_24px_64px_-28px_rgba(255,122,0,0.4)] backdrop-blur-lg dark:border-kal-accent/25 dark:from-zinc-900/85 dark:via-orange-950/25 dark:to-zinc-900/75 sm:p-10"
       >
         <div
-          className="pointer-events-none absolute -left-12 -top-16 h-48 w-48 rounded-full bg-kal-accent/20 blur-3xl motion-safe:animate-pulse"
+          className="pointer-events-none absolute -left-12 -top-16 size-48 rounded-full bg-kal-accent/20 blur-3xl motion-safe:animate-pulse"
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute -bottom-12 -right-10 h-40 w-40 rounded-full bg-sky-400/15 blur-3xl"
+          className="pointer-events-none absolute -bottom-12 -right-10 size-40 rounded-full bg-sky-400/15 blur-3xl"
           aria-hidden
         />
         <div className="relative space-y-6 text-center">

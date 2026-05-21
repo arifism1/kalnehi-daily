@@ -134,7 +134,7 @@ export function MyTargetClient() {
         href="/"
         className="inline-flex items-center gap-2 text-sm font-semibold text-kal-accent hover:text-kal-accent-hover"
       >
-        <ArrowLeft className="h-4 w-4" aria-hidden />
+        <ArrowLeft className="size-4" aria-hidden />
         Home
       </Link>
 
@@ -197,7 +197,7 @@ export function MyTargetClient() {
 
       {loading ? (
         <div className="flex items-center gap-2 text-kal-muted">
-          <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+          <Loader2 className="size-5 animate-spin" aria-hidden />
           Loading…
         </div>
       ) : visibleList.length === 0 ? (
@@ -226,7 +226,7 @@ export function MyTargetClient() {
                 key={row.id}
                 className="kal-glass-panel overflow-hidden rounded-2xl border border-kal-border"
               >
-                <div className="flex flex-wrap items-start justify-between gap-3 border-b border-kal-border bg-kal-card-muted/40 px-4 py-4 sm:px-5">
+                <div className="flex flex-wrap items-start justify-between gap-3 border-b border-kal-border bg-kal-card-muted/40 p-4 sm:px-5">
                   <div>
                     <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-kal-muted">
                       Added on
@@ -253,9 +253,9 @@ export function MyTargetClient() {
                     className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-kal-border px-3 py-2 text-xs font-semibold text-kal-muted hover:border-kal-accent/50 hover:text-kal-accent disabled:opacity-50"
                   >
                     {deletingId === row.id ? (
-                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                      <Loader2 className="size-4 animate-spin" aria-hidden />
                     ) : (
-                      <Trash2 className="h-4 w-4" aria-hidden />
+                      <Trash2 className="size-4" aria-hidden />
                     )}
                     Delete
                   </button>

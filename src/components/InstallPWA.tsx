@@ -77,7 +77,7 @@ export function InstallPWA({ className = "" }: { className?: string }) {
     >
       <span className="flex min-w-0 flex-1 items-center gap-2">
         <Download
-          className="h-5 w-5 shrink-0 text-kal-accent"
+          className="size-5 shrink-0 text-kal-accent"
           aria-hidden
         />
         <span className="min-w-0">

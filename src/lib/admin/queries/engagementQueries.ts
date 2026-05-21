@@ -15,13 +15,13 @@ function summarizeEventsLocal(
   return {
     totalEvents: list.length,
     byFeature: [...byFeature.entries()]
-      .sort((a, b) => b[1] - a[1])
+      .toSorted((a, b) => b[1] - a[1])
       .map(([feature, count]) => ({ feature, count })),
     byEvent: [...byEvent.entries()]
-      .sort((a, b) => b[1] - a[1])
+      .toSorted((a, b) => b[1] - a[1])
       .slice(0, 25)
       .map(([event, count]) => ({ event, count })),
-    recentSamples: [...list].sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 20),
+    recentSamples: [...list].toSorted((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 20),
   };
 }
 

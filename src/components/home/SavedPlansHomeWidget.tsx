@@ -70,7 +70,7 @@ export function SavedPlansHomeWidget() {
   if (loading) {
     return (
       <div className="flex items-center gap-2 text-sm text-kal-muted">
-        <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+        <Loader2 className="size-4 animate-spin" aria-hidden />
         Loading saved plans…
       </div>
     );
@@ -124,7 +124,7 @@ export function SavedPlansHomeWidget() {
               </p>
             </div>
             <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-kal-border/80 bg-kal-card-muted/60 px-2 py-0.5 text-[10px] font-bold text-kal-muted">
-              <CheckCircle2 className="h-3 w-3 text-kal-accent" aria-hidden />
+              <CheckCircle2 className="size-3 text-kal-accent" aria-hidden />
               {plan.completionPercent}%
             </span>
           </li>
@@ -134,7 +134,7 @@ export function SavedPlansHomeWidget() {
         href="/saved-plans"
         className="inline-flex w-full min-h-[40px] items-center justify-center gap-2 rounded-xl border border-kal-accent/40 bg-kal-accent/10 px-4 py-2.5 text-sm font-semibold text-kal-accent transition-colors hover:bg-kal-accent/15"
       >
-        <CalendarDays className="h-4 w-4" aria-hidden />
+        <CalendarDays className="size-4" aria-hidden />
         View all saved plans
       </Link>
     </div>

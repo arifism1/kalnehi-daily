@@ -105,7 +105,7 @@ export async function getAcquisitionSnapshot(): Promise<AcquisitionSnapshot | nu
 
   // Build examsBySource: top 5 sources × top 8 exams per source.
   const topSources = [...bySource.entries()]
-    .sort((a, b) => b[1] - a[1])
+    .toSorted((a, b) => b[1] - a[1])
     .slice(0, 5)
     .map(([s]) => s);
 
@@ -114,7 +114,7 @@ export async function getAcquisitionSnapshot(): Promise<AcquisitionSnapshot | nu
     const examMap = examSourceMap.get(source);
     if (!examMap) continue;
     const topExams = [...examMap.entries()]
-      .sort((a, b) => b[1] - a[1])
+      .toSorted((a, b) => b[1] - a[1])
       .slice(0, 8);
     for (const [exam, count] of topExams) {
       examsBySource.push({ source, exam, count });
@@ -123,18 +123,18 @@ export async function getAcquisitionSnapshot(): Promise<AcquisitionSnapshot | nu
 
   return {
     signupsBySource: [...bySource.entries()]
-      .sort((a, b) => b[1] - a[1])
+      .toSorted((a, b) => b[1] - a[1])
       .map(([source, count]) => ({ source, count })),
     signupsByExam: [...byExam.entries()]
-      .sort((a, b) => b[1] - a[1])
+      .toSorted((a, b) => b[1] - a[1])
       .slice(0, 20)
       .map(([exam, count]) => ({ exam, count })),
-    signupsByDay: [...byDay.entries()].sort((a, b) => a[0].localeCompare(b[0])).slice(-45).map(([day, count]) => ({
+    signupsByDay: [...byDay.entries()].toSorted((a, b) => a[0].localeCompare(b[0])).slice(-45).map(([day, count]) => ({
       day,
       count,
     })),
     topUtmCampaigns: [...byCampaign.entries()]
-      .sort((a, b) => b[1] - a[1])
+      .toSorted((a, b) => b[1] - a[1])
       .slice(0, 15)
       .map(([campaign, count]) => ({ campaign, count })),
     profilesWithAttribution: withAttr,

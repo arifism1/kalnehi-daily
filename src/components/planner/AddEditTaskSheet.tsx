@@ -1,7 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 
 import type { TablesUpdate } from "@/types/supabase";
 import {
@@ -79,6 +79,7 @@ export function AddEditTaskSheet({
   task,
   defaultAssignedDate,
 }: Props) {
+  const uid = useId();
   const userId = useAuthStore((s) => s.user?.id);
   const syllabusById = useTaskStore((s) => s.microtopics);
   const tasksRecord = useTaskStore((s) => s.tasks);
@@ -405,11 +406,11 @@ export function AddEditTaskSheet({
             className="rounded-xl p-2 text-kal-muted hover:bg-kal-card-muted hover:text-kal-text"
             aria-label="Close"
           >
-            <X className="h-5 w-5" />
+            <X className="size-5" />
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4 sm:px-6 [-webkit-overflow-scrolling:touch]">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-4 sm:px-6 [-webkit-overflow-scrolling:touch]">
         {draftError ? (
           <p className="rounded-xl bg-kal-danger-soft border border-kal-danger-border px-3 py-2 text-sm text-kal-danger-text">
             {draftError}
@@ -441,8 +442,9 @@ export function AddEditTaskSheet({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-kal-muted">From (optional)</label>
+                <label htmlFor={`${uid}-from`} className="text-xs text-kal-muted">From (optional)</label>
                 <input
+                  id={`${uid}-from`}
                   type="time"
                   value={fromTime}
                   onChange={(e) => onFromTimeChange(e.target.value)}
@@ -451,8 +453,9 @@ export function AddEditTaskSheet({
                 />
               </div>
               <div>
-                <label className="text-xs text-kal-muted">To (optional)</label>
+                <label htmlFor={`${uid}-to`} className="text-xs text-kal-muted">To (optional)</label>
                 <input
+                  id={`${uid}-to`}
                   type="time"
                   value={toTime}
                   onChange={(e) => onToTimeChange(e.target.value)}
@@ -466,8 +469,9 @@ export function AddEditTaskSheet({
             </p>
 
             <div>
-              <label className="text-xs text-kal-muted">Marks (optional)</label>
+              <label htmlFor={`${uid}-marks`} className="text-xs text-kal-muted">Marks (optional)</label>
               <input
+                id={`${uid}-marks`}
                 type="number"
                 inputMode="decimal"
                 min={0}
@@ -534,10 +538,11 @@ export function AddEditTaskSheet({
               <>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs text-kal-muted">
+                    <label htmlFor={`${uid}-estmin`} className="text-xs text-kal-muted">
                       Est. minutes (optional)
                     </label>
                     <input
+                      id={`${uid}-estmin`}
                       type="number"
                       inputMode="numeric"
                       min={0}
@@ -553,8 +558,9 @@ export function AddEditTaskSheet({
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs text-kal-muted">Date</label>
+                  <label htmlFor={`${uid}-date`} className="text-xs text-kal-muted">Date</label>
                   <input
+                    id={`${uid}-date`}
                     type="date"
                     value={assignedDate}
                     onChange={(e) => {
@@ -569,8 +575,9 @@ export function AddEditTaskSheet({
             )}
 
             <div>
-              <label className="text-xs text-kal-muted">Status</label>
+              <label htmlFor={`${uid}-status`} className="text-xs text-kal-muted">Status</label>
               <select
+                id={`${uid}-status`}
                 value={status}
                 onChange={(e) => {
                   setStatus(e.target.value);
@@ -594,7 +601,7 @@ export function AddEditTaskSheet({
         )}
         </div>
 
-        <div className="flex shrink-0 gap-2 border-t border-kal-border px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-6">
+        <div className="flex shrink-0 gap-2 border-t border-kal-border p-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-6">
           <button
             type="button"
             onClick={handleClose}
@@ -608,7 +615,7 @@ export function AddEditTaskSheet({
             onClick={handleClose}
             className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-kal-accent py-3.5 text-sm font-semibold text-white shadow-sm transition-opacity duration-200 hover:bg-kal-accent-hover disabled:opacity-40"
           >
-            Done
+            Save task
           </button>
         </div>
       </div>

@@ -22,6 +22,7 @@ async function loadPreviewMap(): Promise<
 > {
   const next: Record<number, { dataUrl: string; label: string } | null> = {};
   for (const slot of SLOTS) {
+    // react-doctor-disable-next-line react-doctor/async-await-in-loop -- SLOTS is tiny (≤5); sequential IDB reads are acceptable here
     const row = await getPurposeImage(slot);
     next[slot] = row ? { dataUrl: row.dataUrl, label: row.label } : null;
   }
@@ -151,7 +152,7 @@ export function PurposeModePhotos() {
                       />
                     ) : (
                       <span className="flex flex-col items-center gap-1.5 px-2 py-4 text-xs text-kal-text-secondary">
-                        <ImagePlus className="h-6 w-6 text-kal-muted" />
+                        <ImagePlus className="size-6 text-kal-muted" />
                         Tap to add
                       </span>
                     )}
@@ -185,7 +186,7 @@ export function PurposeModePhotos() {
                         onClick={() => void onRemove(slot)}
                         className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-kal-danger-border bg-kal-danger-soft px-3 py-2 text-xs font-medium text-kal-danger-text transition hover:bg-kal-danger-border/30"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="size-3.5" />
                         Remove photo
                       </button>
                     )}

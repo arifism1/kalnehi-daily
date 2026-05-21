@@ -166,8 +166,8 @@ export function RealitySnapshot({
         >
           {showSyllabusComingSoonBanner && (examFriendly || examLabel) ? (
             <div className="mb-5 flex gap-3 rounded-xl border border-kal-accent/30 bg-kal-accent-soft/90 px-4 py-3.5 shadow-sm backdrop-blur-sm sm:px-5 dark:bg-kal-accent-soft/50">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-kal-accent/15">
-                <Sparkles className="h-5 w-5 text-kal-accent" aria-hidden />
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-kal-accent/15">
+                <Sparkles className="size-5 text-kal-accent" aria-hidden />
               </div>
               <div className="min-w-0 text-left">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-kal-accent">
@@ -401,7 +401,7 @@ export function RealitySnapshot({
                     {syllabusMultiYear.lines.map((line) => (
                       <li
                         key={line.year}
-                        className="flex min-w-0 flex-col gap-2 px-3 py-3.5 text-left sm:flex-row sm:items-start sm:justify-between sm:gap-3 sm:px-4 sm:py-4"
+                        className="flex min-w-0 flex-col gap-2 p-3.5 text-left sm:flex-row sm:items-start sm:justify-between sm:gap-3 sm:px-4 sm:py-4"
                       >
                         <p className="min-w-0 shrink text-[11px] font-semibold uppercase tracking-[0.12em] text-kal-muted sm:max-w-[45%] sm:pt-0.5">
                           {examFriendly || examLabel || "Exam"} {line.year}
@@ -512,7 +512,7 @@ export function RealitySnapshot({
 
         <div
           className={clsx(
-            "mt-8 rounded-2xl border px-4 py-4 text-left transition-colors duration-200 sm:mt-10 sm:px-5 sm:py-5 md:px-6",
+            "mt-8 rounded-2xl border p-4 text-left transition-colors duration-200 sm:mt-10 sm:px-5 sm:py-5 md:px-6",
             bandTone(dailyBand),
           )}
         >

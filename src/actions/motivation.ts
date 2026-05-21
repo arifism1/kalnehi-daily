@@ -288,6 +288,7 @@ export async function setMotivationWallpaperPhoto(
   }
 }
 
+// react-doctor-disable-next-line react-doctor/server-auth-actions -- delegates to upsertMotivationLetter/createMotivationVoiceEntry/createMotivationPhotoEntry, each of which calls getUser()
 export async function applyMotivationOutboxOp(
   op: MotivationOutboxOp,
 ): Promise<{ ok: true } | { ok: false; error: string }> {

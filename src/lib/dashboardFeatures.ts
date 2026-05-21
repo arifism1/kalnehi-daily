@@ -302,6 +302,7 @@ export const LAUNCH_HIDDEN_DASHBOARD_FEATURE_IDS: ReadonlySet<string> = new Set(
 ]);
 
 /** `FEATURE_CATEGORIES` with any currently-hidden features removed from their groups. */
+// react-doctor-disable-next-line react-doctor/js-combine-iterations -- map-then-filter for feature category; combining would reduce clarity
 export const VISIBLE_FEATURE_CATEGORIES: FeatureCategoryDef[] = FEATURE_CATEGORIES.map(
   (cat) => ({
     ...cat,

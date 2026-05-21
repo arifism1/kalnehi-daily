@@ -38,7 +38,7 @@ export function SettingsSheetSwitch({
       <span
         className={clsx(
           "absolute rounded-full bg-white shadow transition-transform duration-200",
-          sm ? "top-0.5 left-0.5 h-7 w-7" : "top-1 left-1 h-7 w-7",
+          sm ? "top-0.5 left-0.5 size-7" : "top-1 left-1 size-7",
           checked
             ? sm
               ? "translate-x-[1.1rem]"

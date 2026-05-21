@@ -8,11 +8,8 @@ export function topicCompletionStats(
 ): { percent: number; doneTopics: number; totalTopics: number } {
   const totalTopics = microtopics.length;
   if (totalTopics === 0) return { percent: 0, doneTopics: 0, totalTopics: 0 };
-  const doneMicroIds = new Set(
-    tasks
-      .filter(isTaskCompleted)
-      .map((t) => t.microtopic_id)
-      .filter(Boolean) as string[],
+  const doneMicroIds = new Set<string>(
+    tasks.flatMap((t) => (isTaskCompleted(t) && t.microtopic_id ? [t.microtopic_id] : [])),
   );
   const doneTopics = microtopics.filter((m) => doneMicroIds.has(m.id)).length;
   const percent = (doneTopics / totalTopics) * 100;

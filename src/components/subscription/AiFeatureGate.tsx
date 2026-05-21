@@ -28,8 +28,8 @@ export function AiFeatureGate({ children }: Props) {
   if (!hasAiAccess) {
     return (
       <div className="kal-glass-panel flex flex-col items-center gap-4 rounded-2xl p-8 text-center">
-        <Lock className="h-8 w-8 text-kal-text-secondary" />
-        <h3 className="text-lg font-bold text-kal-text">Voice dictation requires Smart Plan</h3>
+        <Lock className="size-8 text-kal-text-secondary" />
+        <h3 className="text-lg font-semibold text-kal-text">Voice dictation requires Smart Plan</h3>
         <p className="max-w-sm text-sm text-kal-text-secondary">
           Your 7-day free trial has ended. Subscribe to Smart Plan ({SMART_PLAN_MONTHLY_DISPLAY}/month) to get 100 minutes of voice per month.
         </p>
@@ -52,8 +52,8 @@ export function AiFeatureGate({ children }: Props) {
     if (isWelcomeTrial && !hasPaidAccess) {
       return (
         <div className="flex flex-col items-center gap-4 rounded-2xl border border-kal-accent/25 bg-gradient-to-br from-kal-accent/10 to-kal-card-muted p-8 text-center shadow-inner dark:border-kal-accent/20">
-          <Mic className="h-8 w-8 text-kal-accent" />
-          <h3 className="text-lg font-bold text-kal-text">Trial voice limit reached</h3>
+          <Mic className="size-8 text-kal-accent" />
+          <h3 className="text-lg font-semibold text-kal-text">Trial voice limit reached</h3>
           <p className="max-w-sm text-sm text-kal-text-secondary">
             You&apos;ve used all 5 minutes of voice included in your 7-day free trial. Upgrade to Smart Plan for{" "}
             {TIERS.pro.monthlyPriceDisplay}/month and get 100 minutes of voice every month.
@@ -73,8 +73,8 @@ export function AiFeatureGate({ children }: Props) {
 
     return (
       <div className="flex flex-col items-center gap-4 rounded-2xl border border-amber-200 bg-amber-50 p-8 text-center dark:border-amber-800 dark:bg-amber-950/30">
-        <Mic className="h-8 w-8 text-amber-600 dark:text-amber-400" />
-        <h3 className="text-lg font-bold text-kal-text">Monthly voice limit reached</h3>
+        <Mic className="size-8 text-amber-600 dark:text-amber-400" />
+        <h3 className="text-lg font-semibold text-kal-text">Monthly voice limit reached</h3>
         <p className="max-w-sm text-sm text-kal-text-secondary">
           {voiceMinuteStatus}. Buy extra voice credits on My Subscription for more minutes.
         </p>

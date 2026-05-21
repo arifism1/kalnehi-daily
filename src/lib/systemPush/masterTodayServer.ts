@@ -73,6 +73,7 @@ export async function resolveMasterTodayMetrics(
   const typedTasks = tasks as Task[];
   const microIds = [
     ...new Set(
+      // react-doctor-disable-next-line react-doctor/js-combine-iterations -- map-then-filter with type narrowing; flatMap would lose the type predicate
       typedTasks
         .map((t) => t.microtopic_id)
         .filter((id): id is string => Boolean(id)),

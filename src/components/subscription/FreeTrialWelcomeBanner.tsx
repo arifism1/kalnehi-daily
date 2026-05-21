@@ -76,7 +76,7 @@ export function FreeTrialWelcomeBanner() {
       <div className="kal-trial-welcome-toast-in pointer-events-auto overflow-hidden rounded-2xl border border-kal-accent/25 bg-kal-bg-elevated shadow-[0_12px_40px_-16px_rgba(0,0,0,0.18)] dark:border-kal-accent/20 dark:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.45)]">
         <div className="relative px-4 py-3.5 sm:flex sm:items-center sm:gap-4 sm:px-5">
           <div className="flex shrink-0 items-center justify-center rounded-xl bg-kal-accent/20 p-2 text-kal-accent ring-1 ring-kal-accent/25">
-            <Sparkles className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2} aria-hidden />
+            <Sparkles className="size-5 sm:h-6 sm:w-6" strokeWidth={2} aria-hidden />
           </div>
           <div className="mt-3 min-w-0 flex-1 sm:mt-0">
             <p className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-kal-accent">
@@ -98,10 +98,10 @@ export function FreeTrialWelcomeBanner() {
           <button
             type="button"
             onClick={persistDismiss}
-            className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-lg text-kal-text-secondary transition-colors hover:bg-black/5 hover:text-kal-text dark:hover:bg-white/10"
+            className="absolute right-2 top-2 flex size-9 items-center justify-center rounded-lg text-kal-text-secondary transition-colors hover:bg-black/5 hover:text-kal-text dark:hover:bg-white/10"
             aria-label="Dismiss"
           >
-            <X className="h-4 w-4" />
+            <X className="size-4" />
           </button>
         </div>
       </div>

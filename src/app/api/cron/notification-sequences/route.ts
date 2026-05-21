@@ -78,6 +78,7 @@ async function runNotificationSequencesCron(admin: ServiceRoleClient): Promise<N
     let tomorrowSent = 0;
     for (const batch of batchesDue ?? []) {
       const b = batch as { id: string; batch_number: number; opens_at: string };
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential: each batch's entries depend on the previous query result
       const { data: entries } = await admin
         .from("waitlist_entries")
         .select("user_id, notification_channel, contact_email")
@@ -86,8 +87,10 @@ async function runNotificationSequencesCron(admin: ServiceRoleClient): Promise<N
 
       for (const entry of entries ?? []) {
         const e = entry as { user_id: string; notification_channel: string; contact_email: string | null };
+        // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential per-user notification send to avoid rate limits
         const { data: authUser } = await admin.auth.admin.getUserById(e.user_id);
         const email = e.contact_email ?? authUser?.user?.email ?? null;
+        // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential notification send
         await sendBatchTomorrow({
           email,
           userId: e.user_id,
@@ -115,6 +118,7 @@ async function runNotificationSequencesCron(admin: ServiceRoleClient): Promise<N
     for (const entry of activatedEntries ?? []) {
       const uid = (entry as { user_id: string }).user_id;
 
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- per-user sequential processing: each user's state must be read before deciding to send
       const { data: prof } = await admin
         .from("user_profiles")
         .select("user_id, trial_started_at, subscription_status, subscription_end_date, welcome_ai_tokens_used")
@@ -178,6 +182,7 @@ async function runNotificationSequencesCron(admin: ServiceRoleClient): Promise<N
     let trialDay7EveningSent = 0;
     for (const entry of activatedEntries ?? []) {
       const uid = (entry as { user_id: string }).user_id;
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- per-user sequential processing: each user's trial state must be read before deciding to send
       const { data: prof } = await admin
         .from("user_profiles")
         .select("trial_started_at, subscription_status, subscription_end_date")
@@ -196,10 +201,12 @@ async function runNotificationSequencesCron(admin: ServiceRoleClient): Promise<N
 
       const dayNum = trialDayNumber(p.trial_started_at, now);
       if (dayNum === 7) {
+        // react-doctor-disable-next-line react-doctor/async-await-in-loop -- per-user sequential: fetch streak then send notification
         const { count: streakCount } = await admin
           .from("study_sessions")
           .select("id", { count: "exact", head: true })
           .eq("user_id", uid);
+        // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential notification send
         await sendDay3Evening({ userId: uid, streakDays: streakCount ?? 0 });
         trialDay7EveningSent++;
       }
@@ -212,6 +219,7 @@ async function runNotificationSequencesCron(admin: ServiceRoleClient): Promise<N
     const expiredUserIds = await checkExpiredTrials();
     let pausedSent = 0;
     for (const uid of expiredUserIds) {
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- per-user sequential processing to avoid rate limits on auth/email providers
       const { data: authUser } = await admin.auth.admin.getUserById(uid);
       const email = authUser?.user?.email;
       if (!email) continue;
@@ -261,6 +269,7 @@ async function runNotificationSequencesCron(admin: ServiceRoleClient): Promise<N
     let d7Sent = 0;
     for (const entry of retargetEntries ?? []) {
       const uid = (entry as { user_id: string }).user_id;
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential: streakCount depends on authUser; early-continue on missing email
       const { data: authUser } = await admin.auth.admin.getUserById(uid);
       const email = authUser?.user?.email;
       if (!email) continue;
@@ -291,6 +300,7 @@ async function runNotificationSequencesCron(admin: ServiceRoleClient): Promise<N
     let d14Sent = 0;
     for (const entry of retargetEntries ?? []) {
       const uid = (entry as { user_id: string }).user_id;
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential: profile lookup depends on authUser; early-continue on missing email
       const { data: authUser } = await admin.auth.admin.getUserById(uid);
       const email = authUser?.user?.email;
       if (!email) continue;

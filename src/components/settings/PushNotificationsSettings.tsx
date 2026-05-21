@@ -396,7 +396,7 @@ export function PushNotificationsSettings({
       {!embedded ? (
         <div className="flex items-start gap-2">
           <Bell
-            className="mt-0.5 h-5 w-5 shrink-0 text-kal-accent"
+            className="mt-0.5 size-5 shrink-0 text-kal-accent"
             aria-hidden
           />
           <div className="min-w-0 flex-1">
@@ -466,7 +466,7 @@ export function PushNotificationsSettings({
                   className="inline-flex min-h-[40px] items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 text-sm font-medium text-kal-text backdrop-blur-sm transition-colors hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <RefreshCw
-                    className={clsx("h-4 w-4", refreshBusy && "animate-spin")}
+                    className={clsx("size-4", refreshBusy && "animate-spin")}
                     aria-hidden
                   />
                   {refreshBusy ? "Refreshing…" : "Refresh push registration"}
@@ -477,7 +477,7 @@ export function PushNotificationsSettings({
                   disabled={testBusy || !pushOn}
                   className="inline-flex min-h-[40px] items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 text-sm font-medium text-kal-text backdrop-blur-sm transition-colors hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <Send className="h-4 w-4" aria-hidden />
+                  <Send className="size-4" aria-hidden />
                   {testBusy ? "Sending…" : "Send test notification"}
                 </button>
               </div>

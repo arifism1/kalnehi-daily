@@ -53,6 +53,7 @@ export async function getUserEnabledExamKeys(
     : [];
 
   if (enabledRaw.length > 0) {
+    // react-doctor-disable-next-line react-doctor/js-combine-iterations -- type-narrowing filter after map; flatMap would lose the type predicate
     const examKeys = enabledRaw
       .map((name) => syllabusCatalogExamName(name))
       .filter((k): k is string => Boolean(k));
@@ -97,6 +98,7 @@ export async function resolveAllowedSyllabusMasterIdsForUser(
 ): Promise<Set<string>> {
   const normalized = [
     ...new Set(
+      // react-doctor-disable-next-line react-doctor/js-combine-iterations -- map-then-filter for ID normalization; readable as-is
       candidateIds
         .map((id) => normalizeSyllabusMasterId(String(id)))
         .filter((id) => id.length > 0),
@@ -115,6 +117,7 @@ export async function resolveAllowedSyllabusMasterIdsForUser(
   for (const examKey of examKeys) {
     for (let i = 0; i < normalized.length; i += ID_CHUNK) {
       const chunk = normalized.slice(i, i + ID_CHUNK);
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- chunks must be fetched sequentially per exam key to avoid query size limits
       const { data: smRows, error: smErr } = await supabase
         .from("syllabus_master")
         .select("id, subject")
@@ -143,6 +146,7 @@ export async function resolveAllowedSyllabusMasterIdsForUser(
   for (const examKey of examKeys) {
     for (let i = 0; i < stillNeed.length; i += ID_CHUNK) {
       const chunk = stillNeed.slice(i, i + ID_CHUNK);
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- chunks must be fetched sequentially per exam key to avoid query size limits
       const { data: adds, error: addErr } = await supabase
         .from("user_syllabus_customizations")
         .select("id")
@@ -174,6 +178,7 @@ export async function userCatalogAllowsSyllabusMasterIds(
 ): Promise<boolean> {
   const normalized = [
     ...new Set(
+      // react-doctor-disable-next-line react-doctor/js-combine-iterations -- map-then-filter for ID normalization; readable as-is
       ids
         .map((id) => normalizeSyllabusMasterId(String(id)))
         .filter((id) => id.length > 0),
@@ -199,6 +204,7 @@ export async function assertSyllabusBelongsToUserExam(
 ): Promise<void> {
   const normalized = [
     ...new Set(
+      // react-doctor-disable-next-line react-doctor/js-combine-iterations -- map-then-filter for ID normalization; readable as-is
       syllabusIds
         .map((id) => normalizeSyllabusMasterId(String(id)))
         .filter((id) => id.length > 0),

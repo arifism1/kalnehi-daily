@@ -106,7 +106,7 @@ export default function CatPage() {
         />
 
         <section className="space-y-5" aria-labelledby="cat-syllabus">
-          <h2 id="cat-syllabus" className="text-xl font-bold text-kal-text">
+          <h2 id="cat-syllabus" className="text-xl font-semibold text-kal-text">
             CAT syllabus mapped in Kalnehi Daily
           </h2>
           <p className="text-sm leading-relaxed text-kal-text-secondary">
@@ -116,7 +116,7 @@ export default function CatPage() {
           <div className="grid gap-4 sm:grid-cols-3">
             {SYLLABUS.map(({ section, topics }) => (
               <div key={section} className="kal-glass-card rounded-2xl p-4 space-y-2">
-                <h3 className="text-sm font-bold text-kal-accent-dark uppercase tracking-wide">{section}</h3>
+                <h3 className="text-sm font-semibold text-kal-accent-dark uppercase tracking-wide">{section}</h3>
                 <ul className="space-y-1">
                   {topics.map((t) => (
                     <li key={t} className="text-xs text-kal-text-secondary leading-snug">· {t}</li>
@@ -128,7 +128,7 @@ export default function CatPage() {
         </section>
 
         <section className="space-y-4" aria-labelledby="cat-mastermind">
-          <h2 id="cat-mastermind" className="text-xl font-bold text-kal-text">How Mastermind helps CAT aspirants</h2>
+          <h2 id="cat-mastermind" className="text-xl font-semibold text-kal-text">How Mastermind helps CAT aspirants</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <FeatureBlock
               title="Sectional balance analysis"
@@ -154,7 +154,7 @@ export default function CatPage() {
         </section>
 
         <section className="space-y-4" aria-labelledby="cat-voice">
-          <h2 id="cat-voice" className="text-xl font-bold text-kal-text">Voice control for CAT prep</h2>
+          <h2 id="cat-voice" className="text-xl font-semibold text-kal-text">Voice control for CAT prep</h2>
           <div className="space-y-3">
             {[
               { cmd: "Hey Boss, log 45 minutes of Quant — Time and Work chapter", result: "Session logged, Quant tracker updated" },

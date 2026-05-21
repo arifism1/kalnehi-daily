@@ -126,7 +126,7 @@ export function MistakeLogClient() {
           onClick={() => setAddOpen(true)}
           className="flex items-center gap-2 rounded-xl bg-kal-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-kal-accent/90 transition-colors"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="size-4" />
           Log mistake
         </button>
       </div>
@@ -140,7 +140,7 @@ export function MistakeLogClient() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2 items-center">
-        <Filter className="h-4 w-4 text-kal-text-secondary shrink-0" />
+        <Filter className="size-4 text-kal-text-secondary shrink-0" />
 
         <select
           value={filterSubject}
@@ -176,7 +176,7 @@ export function MistakeLogClient() {
       {/* List */}
       {loading ? (
         <div className="flex min-h-[160px] items-center justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-kal-accent/60" />
+          <Loader2 className="size-6 animate-spin text-kal-accent/60" />
         </div>
       ) : logs.length === 0 ? (
         <div className="py-8 text-center">
@@ -198,7 +198,7 @@ export function MistakeLogClient() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-2 min-w-0">
                     {Icon && (
-                      <Icon className={clsx("h-4 w-4 shrink-0", meta?.colorClass)} aria-hidden />
+                      <Icon className={clsx("size-4 shrink-0", meta?.colorClass)} aria-hidden />
                     )}
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-kal-text truncate">
@@ -221,7 +221,7 @@ export function MistakeLogClient() {
                           : "text-kal-text-secondary/50 hover:text-kal-accent",
                       )}
                     >
-                      <BookmarkCheck className="h-3.5 w-3.5" />
+                      <BookmarkCheck className="size-3.5" />
                     </button>
                     <button
                       onClick={() => handleDelete(log.id)}
@@ -229,8 +229,8 @@ export function MistakeLogClient() {
                       className="rounded-lg p-1.5 text-kal-text-secondary/50 hover:text-red-500 transition-colors disabled:opacity-40"
                     >
                       {deleting === log.id
-                        ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        : <Trash2 className="h-3.5 w-3.5" />
+                        ? <Loader2 className="size-3.5 animate-spin" />
+                        : <Trash2 className="size-3.5" />
                       }
                     </button>
                   </div>

@@ -12,7 +12,7 @@ import {
 
 import { OnboardingStepIllustration } from "@/components/illustrations/OnboardingStepIllustration";
 import { TrackConfirmation, TrackPicker } from "@/components/onboarding/TrackPicker";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 
 import { completeOnboarding } from "@/actions/profile";
 import { ensureFreeTrialStarted } from "@/actions/subscription";
@@ -46,6 +46,7 @@ const CLASS_OPTIONS = [
 type Step2Phase = "pick" | "confirm";
 
 export function OnboardingWizard() {
+  const uid = useId();
   const setLocalCompleted = useOnboardingStore((s) => s.setOnboardingCompleted);
 
   const [step, setStep] = useState(1);
@@ -211,7 +212,7 @@ export function OnboardingWizard() {
   const totalStepsDisplay = STEPS;
 
   return (
-    <div className="kal-page-bg mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col px-4 py-4 sm:py-6">
+    <div className="kal-page-bg mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col p-4 sm:py-6">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-kal-accent">
           Setup · {displayStep}/{totalStepsDisplay}
@@ -237,7 +238,7 @@ export function OnboardingWizard() {
             disabled={busy}
             className="ml-auto inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-kal-text-secondary hover:text-kal-accent disabled:pointer-events-none disabled:opacity-30"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="size-4" />
             Back
           </button>
         )}
@@ -251,7 +252,7 @@ export function OnboardingWizard() {
         <section className="kal-glass-panel flex flex-1 flex-col gap-5 rounded-2xl p-5 sm:p-6">
           <OnboardingStepIllustration step={1} className="mx-auto w-full max-w-[200px] opacity-90" />
           <div className="flex items-center gap-2">
-            <User className="h-6 w-6 text-kal-accent" />
+            <User className="size-6 text-kal-accent" />
             <div>
               <h1 className="kal-feature-title">
                 About you
@@ -263,10 +264,11 @@ export function OnboardingWizard() {
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-kal-text-secondary">
+            <label htmlFor={`${uid}-name`} className="text-xs font-semibold text-kal-text-secondary">
               Full name
             </label>
             <input
+              id={`${uid}-name`}
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
@@ -276,11 +278,12 @@ export function OnboardingWizard() {
           </div>
 
           <div>
-            <label className="flex items-center gap-1.5 text-xs font-semibold text-kal-text-secondary">
-              <Phone className="h-3.5 w-3.5" />
+            <label htmlFor={`${uid}-phone`} className="flex items-center gap-1.5 text-xs font-semibold text-kal-text-secondary">
+              <Phone className="size-3.5" />
               Phone number (optional)
             </label>
             <input
+              id={`${uid}-phone`}
               type="tel"
               inputMode="numeric"
               maxLength={10}
@@ -292,11 +295,12 @@ export function OnboardingWizard() {
           </div>
 
           <div>
-            <label className="flex items-center gap-1.5 text-xs font-semibold text-kal-text-secondary">
-              <GraduationCap className="h-3.5 w-3.5" />
+            <label htmlFor={`${uid}-class`} className="flex items-center gap-1.5 text-xs font-semibold text-kal-text-secondary">
+              <GraduationCap className="size-3.5" />
               Class / Year
             </label>
             <select
+              id={`${uid}-class`}
               value={classStudying}
               onChange={(e) => setClassStudying(e.target.value)}
               className="mt-2 min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-base text-kal-text transition-colors duration-200 focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
@@ -323,7 +327,7 @@ export function OnboardingWizard() {
             className="kal-btn-accent mt-auto flex min-h-[52px] items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-semibold disabled:opacity-50"
           >
             Continue
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRight className="size-4" />
           </button>
         </section>
       )}
@@ -332,7 +336,7 @@ export function OnboardingWizard() {
         <section className="kal-glass-panel flex flex-1 flex-col gap-5 rounded-2xl p-5 sm:p-6">
           <OnboardingStepIllustration step={2} className="mx-auto w-full max-w-[200px] opacity-90" />
           <div className="flex items-center gap-2">
-            <Layers className="h-6 w-6 text-kal-accent" />
+            <Layers className="size-6 text-kal-accent" />
             <div>
               <h1 className="kal-feature-title">
                 {step2Phase === "confirm" ? "Confirm your track" : "Choose your track"}
@@ -372,7 +376,7 @@ export function OnboardingWizard() {
                 className="kal-btn-accent mt-auto flex min-h-[52px] items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-semibold disabled:opacity-50"
               >
                 Continue
-                <ArrowRight className="h-4 w-4" />
+                <ArrowRight className="size-4" />
               </button>
             </>
           ) : (
@@ -403,7 +407,7 @@ export function OnboardingWizard() {
         <section className="kal-glass-panel flex flex-1 flex-col gap-6 rounded-2xl p-5 sm:p-6">
           <OnboardingStepIllustration step={3} className="mx-auto w-full max-w-[200px] opacity-90" />
           <div className="flex items-center gap-2">
-            <CalendarDays className="h-6 w-6 text-kal-accent" />
+            <CalendarDays className="size-6 text-kal-accent" />
             <div>
               <h1 className="kal-feature-title">
                 Target dates for your exams
@@ -450,7 +454,7 @@ export function OnboardingWizard() {
             className="kal-btn-accent mt-auto flex min-h-[52px] items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-semibold disabled:opacity-50"
           >
             {busy ? "Saving…" : "Continue"}
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRight className="size-4" />
           </button>
         </section>
       )}

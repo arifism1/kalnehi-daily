@@ -238,6 +238,7 @@ export function filterNavByEnabledFeatures(
   sections: MainNavSection[],
   enabledFeatures: string[] | null,
 ): MainNavSection[] {
+  // react-doctor-disable-next-line react-doctor/js-combine-iterations -- nested map+filter pattern; combining would reduce readability
   const withoutLaunchHidden = sections
     .map((section) => ({
       ...section,
@@ -249,6 +250,7 @@ export function filterNavByEnabledFeatures(
     .filter((section) => section.items.length > 0);
 
   const effective = resolveEffectiveEnabledFeatures(enabledFeatures);
+  // react-doctor-disable-next-line react-doctor/js-combine-iterations -- nested map+filter pattern; combining would reduce readability
   return withoutLaunchHidden
     .map((section) => ({
       ...section,
@@ -308,6 +310,7 @@ export function getDefaultQuickNavItemsInOrder(
   enabledFeatures: string[] | null = null,
 ): MainNavItem[] {
   const effective = resolveEffectiveEnabledFeatures(enabledFeatures);
+  // react-doctor-disable-next-line react-doctor/js-combine-iterations -- flatMap+filter; already uses flatMap, additional combine would reduce readability
   const flat = MAIN_NAV_SECTIONS.flatMap((s) => s.items).filter(
     (item) =>
       !item.menuAction &&
@@ -315,7 +318,7 @@ export function getDefaultQuickNavItemsInOrder(
       (!item.featureId || !LAUNCH_HIDDEN_DASHBOARD_FEATURE_IDS.has(item.featureId)) &&
       (!item.featureId || effective.includes(item.featureId)),
   );
-  return [...flat].sort(
+  return [...flat].toSorted(
     (a, b) => quickNavOrderIndex(a.href) - quickNavOrderIndex(b.href),
   );
 }

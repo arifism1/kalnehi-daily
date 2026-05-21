@@ -49,12 +49,12 @@ export function ProfileAccountSection() {
             <img
               src={avatarUrl}
               alt=""
-              className="h-11 w-11 shrink-0 rounded-full border border-kal-border object-cover"
+              className="size-11 shrink-0 rounded-full border border-kal-border object-cover"
               referrerPolicy="no-referrer"
             />
           ) : (
-            <div className="kal-glass-subtle flex h-11 w-11 shrink-0 items-center justify-center rounded-full">
-              <UserCircle className="h-8 w-8 text-kal-muted" />
+            <div className="kal-glass-subtle flex size-11 shrink-0 items-center justify-center rounded-full">
+              <UserCircle className="size-8 text-kal-muted" />
             </div>
           )}
           <div className="min-w-0 flex-1">

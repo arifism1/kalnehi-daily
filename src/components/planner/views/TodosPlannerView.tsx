@@ -189,7 +189,7 @@ export function TodosPlannerView() {
           {todos.map((t) => (
             <li
               key={t.id}
-              className={`flex items-start gap-3 rounded-xl border px-3 py-3 ${priorityStyle[t.priority as Priority]}`}
+              className={`flex items-start gap-3 rounded-xl border p-3 ${priorityStyle[t.priority as Priority]}`}
             >
               <input
                 type="checkbox"
@@ -201,7 +201,7 @@ export function TodosPlannerView() {
                     ),
                   )
                 }
-                className="mt-1 h-5 w-5 rounded border-kal-border bg-kal-input-bg text-kal-accent"
+                className="mt-1 size-5 rounded border-kal-border bg-kal-input-bg text-kal-accent"
               />
               <div className="min-w-0 flex-1">
                 <p
@@ -223,7 +223,7 @@ export function TodosPlannerView() {
                 className="rounded-lg p-2 text-kal-muted hover:bg-kal-accent-soft hover:text-orange-500"
                 aria-label="Delete"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="size-4" />
               </button>
             </li>
           ))}
@@ -234,7 +234,7 @@ export function TodosPlannerView() {
         onClick={add}
         className="kal-btn-accent flex w-full min-h-[48px] items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-semibold shadow-lg shadow-orange-900/20"
       >
-        <Plus className="h-4 w-4" />
+        <Plus className="size-4" />
         Add to-do
       </button>
     </PlannerPageShell>

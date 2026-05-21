@@ -78,7 +78,7 @@ export async function getRevenueSnapshot(): Promise<RevenueSnapshot | null> {
     autopayMap.set(m, (autopayMap.get(m) ?? 0) + 1);
   }
   const autopayDistribution = [...autopayMap.entries()]
-    .sort((a, b) => a[0] - b[0])
+    .toSorted((a, b) => a[0] - b[0])
     .map(([months, count]) => ({ months, count }));
 
   const totalPlan = payingMonthly.length + payingAnnual.length;
@@ -134,7 +134,7 @@ export async function getRevenueSnapshot(): Promise<RevenueSnapshot | null> {
   ).length;
 
   const revenueByDay = [...byDay.entries()]
-    .sort((a, b) => a[0].localeCompare(b[0]))
+    .toSorted((a, b) => a[0].localeCompare(b[0]))
     .slice(-30)
     .map(([day, inr]) => ({ day, inr }));
 

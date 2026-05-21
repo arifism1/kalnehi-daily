@@ -23,12 +23,12 @@ function formatYearMarks(row: SyllabusRow): string {
 
 export function NeetSyllabusReadOnly({ rows }: { rows: SyllabusRow[] }) {
   const grouped = groupBySubjectAndChapter(rows);
-  const subjects = [...grouped.keys()].sort(sortSubjects);
+  const subjects = [...grouped.keys()].toSorted(sortSubjects);
 
   if (rows.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-600 bg-slate-950/40 px-4 py-14 text-center">
-        <BookMarked className="mx-auto mb-4 h-12 w-12 text-kal-accent/70" />
+        <BookMarked className="mx-auto mb-4 size-12 text-kal-accent/70" />
         <p className="text-sm leading-relaxed text-zinc-400">
           Your NEET syllabus tree will appear here as soon as it&apos;s available
           for your account.
@@ -55,7 +55,7 @@ export function NeetSyllabusReadOnly({ rows }: { rows: SyllabusRow[] }) {
       <div className="space-y-3">
         {subjects.map((subject) => {
           const chapters = grouped.get(subject)!;
-          const chapterNames = [...chapters.keys()].sort((a, b) =>
+          const chapterNames = [...chapters.keys()].toSorted((a, b) =>
             a.localeCompare(b),
           );
           return (
@@ -66,12 +66,12 @@ export function NeetSyllabusReadOnly({ rows }: { rows: SyllabusRow[] }) {
               <summary className="flex min-h-[48px] cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-base font-semibold text-white marker:hidden [&::-webkit-details-marker]:hidden">
                 <span className="flex items-center gap-2">
                   <BookMarked
-                    className="h-5 w-5 shrink-0 text-kal-accent"
+                    className="size-5 shrink-0 text-kal-accent"
                     aria-hidden
                   />
                   {subject}
                 </span>
-                <ChevronDown className="h-5 w-5 shrink-0 text-zinc-400 transition-transform duration-200 group-open:rotate-180" />
+                <ChevronDown className="size-5 shrink-0 text-zinc-400 transition-transform duration-200 group-open:rotate-180" />
               </summary>
               <div className="border-t border-slate-800">
                 {chapterNames.map((chapter) => {
@@ -88,7 +88,7 @@ export function NeetSyllabusReadOnly({ rows }: { rows: SyllabusRow[] }) {
                               <span className="text-sm font-semibold text-zinc-100">
                                 {chapter}
                               </span>
-                              <ChevronDown className="h-4 w-4 shrink-0 text-zinc-400 transition-transform group-open/ch:rotate-180" />
+                              <ChevronDown className="size-4 shrink-0 text-zinc-400 transition-transform group-open/ch:rotate-180" />
                             </div>
                             <p className="mt-1 text-[11px] text-zinc-400">
                               {list.length} microtopic

@@ -45,7 +45,7 @@ export function CookieConsentBanner() {
 
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-[100] border-t border-kal-border bg-kal-card/95 px-4 py-4 shadow-[0_-8px_32px_rgba(0,0,0,0.12)] backdrop-blur-md sm:px-6"
+      className="fixed inset-x-0 bottom-0 z-[100] border-t border-kal-border bg-kal-card/95 p-4 shadow-[0_-8px_32px_rgba(0,0,0,0.12)] backdrop-blur-md sm:px-6"
       role="dialog"
       aria-modal="false"
       aria-labelledby="cookie-banner-title"
@@ -74,10 +74,11 @@ export function CookieConsentBanner() {
 
         {customOpen ? (
           <div className="space-y-3 rounded-xl border border-kal-border bg-kal-page/80 p-3 sm:p-4">
-            <label className="flex cursor-pointer items-start gap-3 text-sm text-kal-text">
+            <label htmlFor="cookie-analytics" aria-label="Analytics cookies" className="flex cursor-pointer items-start gap-3 text-sm text-kal-text">
               <input
+                id="cookie-analytics"
                 type="checkbox"
-                className="mt-1 h-4 w-4 rounded border-kal-border text-kal-accent"
+                className="mt-1 size-4 rounded border-kal-border text-kal-accent"
                 checked={draftAnalytics}
                 onChange={(e) => setDraftAnalytics(e.target.checked)}
               />
@@ -88,10 +89,11 @@ export function CookieConsentBanner() {
                 </span>
               </span>
             </label>
-            <label className="flex cursor-pointer items-start gap-3 text-sm text-kal-text">
+            <label htmlFor="cookie-marketing" aria-label="Marketing cookies" className="flex cursor-pointer items-start gap-3 text-sm text-kal-text">
               <input
+                id="cookie-marketing"
                 type="checkbox"
-                className="mt-1 h-4 w-4 rounded border-kal-border text-kal-accent"
+                className="mt-1 size-4 rounded border-kal-border text-kal-accent"
                 checked={draftMarketing}
                 onChange={(e) => setDraftMarketing(e.target.checked)}
               />

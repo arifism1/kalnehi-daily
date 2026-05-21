@@ -464,10 +464,12 @@ export async function plannerTextSetTodos(
   await saveUserPlannerTextBundleCached(next);
   for (const id of prevIds) {
     if (!nextIds.has(id)) {
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- outbox enqueue must preserve FIFO deletion order
       await enqueueUserPlannerTextOutbox(userId, { kind: "todo_delete", id });
     }
   }
   for (const t of positioned) {
+    // react-doctor-disable-next-line react-doctor/async-await-in-loop -- outbox enqueue must preserve FIFO upsert order
     await enqueueUserPlannerTextOutbox(userId, {
       kind: "todo_upsert",
       id: t.id,

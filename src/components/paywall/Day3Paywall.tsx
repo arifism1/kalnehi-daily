@@ -278,7 +278,7 @@ export function Day3Paywall() {
                   <span>12 months</span>
                 </div>
                 <div className="mt-2 flex items-center gap-1.5 rounded-lg bg-kal-accent/[0.08] px-2.5 py-1.5">
-                  <Check className="h-3.5 w-3.5 shrink-0 text-kal-accent" strokeWidth={2.5} />
+                  <Check className="size-3.5 shrink-0 text-kal-accent" strokeWidth={2.5} />
                   <p className="text-xs text-kal-text">
                     Up to <span className="font-bold text-kal-accent">{months}</span> monthly
                     payment{months === 1 ? "" : "s"}, then stops.

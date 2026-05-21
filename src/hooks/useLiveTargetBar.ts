@@ -65,6 +65,7 @@ export function useLiveTargetBar(): LiveTargetBarModel {
     void (async () => {
       setBlueprintLoading(true);
       try {
+        if (cancelled) return;
         const supabase = getSupabaseBrowserClient();
         const { data, error } = await supabase
           .from("user_target_blueprints")

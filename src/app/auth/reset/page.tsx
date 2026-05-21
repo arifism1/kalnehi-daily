@@ -79,7 +79,7 @@ export default function AuthResetPage() {
               htmlFor="reset-password"
               className="flex items-center gap-1.5 text-xs font-semibold text-kal-text-secondary"
             >
-              <Lock className="h-3.5 w-3.5" />
+              <Lock className="size-3.5" />
               New password
             </label>
             <input
@@ -97,7 +97,7 @@ export default function AuthResetPage() {
               htmlFor="reset-confirm"
               className="flex items-center gap-1.5 text-xs font-semibold text-kal-text-secondary"
             >
-              <Lock className="h-3.5 w-3.5" />
+              <Lock className="size-3.5" />
               Confirm password
             </label>
             <input
@@ -123,9 +123,9 @@ export default function AuthResetPage() {
             className="kal-btn-accent flex w-full min-h-[50px] items-center justify-center gap-2 rounded-xl disabled:opacity-50"
           >
             {busy ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
+              <Loader2 className="size-5 animate-spin" />
             ) : (
-              <KeyRound className="h-4 w-4" />
+              <KeyRound className="size-4" />
             )}
             Update password
           </button>

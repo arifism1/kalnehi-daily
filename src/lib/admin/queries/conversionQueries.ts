@@ -66,15 +66,18 @@ export async function getConversionSnapshot(): Promise<ConversionSnapshot | null
       : 0;
 
   const payersWithSkip = new Set(
-    (payments ?? [])
-      .filter((x) => (x as { kind: string }).kind === "waitlist_skip")
-      .map((x) => (x as { user_id: string }).user_id),
+    (payments ?? []).flatMap((x) =>
+      (x as { kind: string }).kind === "waitlist_skip"
+        ? [(x as { user_id: string }).user_id]
+        : [],
+    ),
   );
 
   const paidTrialThenMonthly = [...payingIds].filter((id) => payersWithSkip.has(id)).length;
 
   const paywallViews = events.filter((e) => e.event === "paywall_view" || e.event === "paywall_shown").length;
 
+  // react-doctor-disable-next-line react-doctor/js-combine-iterations -- clear filter-then-map; not a performance-critical path
   const prepbrainUsers = new Set(events.filter((e) => e.feature === "prepbrain").map((e) => e.user_id));
   const conversionsWithPrepbrainTouch = [...payingIds].filter((id) => prepbrainUsers.has(id)).length;
 
@@ -87,6 +90,7 @@ export async function getConversionSnapshot(): Promise<ConversionSnapshot | null
     byExamMap.set(ex, slot);
   }
 
+  // react-doctor-disable-next-line react-doctor/js-combine-iterations -- map-then-filter chain; combining would reduce readability
   const byExam = [...byExamMap.entries()]
     .map(([exam, s]) => ({
       exam,

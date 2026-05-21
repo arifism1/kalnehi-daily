@@ -255,7 +255,7 @@ function SyllabusMicrotopicRow({
         <div className="min-w-0 flex-1">
           <div className="flex items-start gap-2.5">
             <span
-              className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-kal-muted/45 ring-1 ring-kal-border/30"
+              className="mt-[0.45rem] size-1 shrink-0 rounded-full bg-kal-muted/45 ring-1 ring-kal-border/30"
               aria-hidden
             />
             <div className="min-w-0 flex-1 space-y-1.5">
@@ -288,7 +288,7 @@ function SyllabusMicrotopicRow({
                 type="button"
                 title="Edit microtopic"
                 aria-label="Edit microtopic"
-                className="flex h-7 w-7 items-center justify-center rounded-lg border border-transparent text-kal-muted/80 transition-colors hover:border-kal-border hover:text-[#BA7517] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40"
+                className="flex size-7 items-center justify-center rounded-lg border border-transparent text-kal-muted/80 transition-colors hover:border-kal-border hover:text-[#BA7517] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40"
                 onClick={() => {
                   if (mr.userSyllabus?.isUserAdded) {
                     openSheet({
@@ -311,13 +311,13 @@ function SyllabusMicrotopicRow({
                   }
                 }}
               >
-                <Pencil className="h-3.5 w-3.5" aria-hidden />
+                <Pencil className="size-3.5" aria-hidden />
               </button>
               <button
                 type="button"
                 title="Remove microtopic"
                 aria-label="Remove microtopic"
-                className="flex h-7 w-7 items-center justify-center rounded-lg border border-transparent text-kal-muted/80 transition-colors hover:border-red-200 hover:text-[#E24B4A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/40"
+                className="flex size-7 items-center justify-center rounded-lg border border-transparent text-kal-muted/80 transition-colors hover:border-red-200 hover:text-[#E24B4A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/40"
                 onClick={() => {
                   setConfirmState({
                     title: mr.userSyllabus?.isUserAdded
@@ -349,7 +349,7 @@ function SyllabusMicrotopicRow({
                   });
                 }}
               >
-                <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                <Trash2 className="size-3.5" aria-hidden />
               </button>
             </div>
           ) : null}
@@ -620,6 +620,7 @@ export function SyllabusTracker() {
     if (examResults.length <= 1) {
       return `${displayExam} syllabus`;
     }
+    // react-doctor-disable-next-line react-doctor/js-combine-iterations -- type-narrowing filter after map; flatMap would lose the type predicate
     const names = examResults
       .map(
         (er) =>
@@ -631,7 +632,7 @@ export function SyllabusTracker() {
   }, [displayExam, examCatalogRows, examResults]);
   const grouped = useMemo(() => groupBySubjectAndChapter(rows), [rows]);
   const subjects = useMemo(
-    () => [...grouped.keys()].sort(sortSubjects),
+    () => [...grouped.keys()].toSorted(sortSubjects),
     [grouped],
   );
 
@@ -647,7 +648,7 @@ export function SyllabusTracker() {
         examLabel: er.examLabel,
         catalogExamKey: er.catalogExamKey,
         grouped: g,
-        subjects: [...g.keys()].sort(sortSubjects),
+        subjects: [...g.keys()].toSorted(sortSubjects),
       };
     });
   }, [examResults]);
@@ -701,6 +702,7 @@ export function SyllabusTracker() {
 
   const syllabusIssuePrefill = useMemo(() => {
     if (examResults.length > 1) {
+      // react-doctor-disable-next-line react-doctor/js-combine-iterations -- type-narrowing filter after map; flatMap would lose the type predicate
       const names = examResults
         .map(
           (er) =>
@@ -756,7 +758,7 @@ export function SyllabusTracker() {
   if (!loading && !error && cuetAwaitingDomainSelection) {
     return (
       <div className="mx-auto max-w-lg rounded-2xl border border-kal-warn-border bg-kal-warn-soft px-6 py-8 text-center dark:border-amber-500/25 dark:bg-amber-950/20">
-        <BookMarked className="mx-auto h-10 w-10 text-kal-warn-text dark:text-amber-400/90" aria-hidden />
+        <BookMarked className="mx-auto size-10 text-kal-warn-text dark:text-amber-400/90" aria-hidden />
         <h2 className="kal-section-heading mt-4">
           Choose your CUET domain subjects
         </h2>
@@ -800,7 +802,7 @@ export function SyllabusTracker() {
   if (rows.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-kal-border bg-kal-card-muted/50 px-6 py-12 text-center">
-        <Sparkles className="mx-auto mb-3 h-10 w-10 text-kal-accent" />
+        <Sparkles className="mx-auto mb-3 size-10 text-kal-accent" />
         <p className="text-sm leading-relaxed text-kal-muted">
           {examLabel
             ? "We couldn’t load syllabus rows for your exam yet. Check your connection, or confirm your target exam in Profile matches the catalog."
@@ -828,7 +830,7 @@ export function SyllabusTracker() {
               <span>Important marks/weightage disclaimer</span>
               <ChevronDown
                 aria-hidden
-                className="h-4 w-4 shrink-0 text-kal-accent transition-transform duration-200 group-open:rotate-180"
+                className="size-4 shrink-0 text-kal-accent transition-transform duration-200 group-open:rotate-180"
               />
             </summary>
             <div className="border-t border-kal-border/50 px-4 pb-4 pt-3 text-[13px] leading-relaxed text-kal-muted">
@@ -889,7 +891,7 @@ export function SyllabusTracker() {
                       </div>
                       <ChevronDown
                         aria-hidden
-                        className="h-4 w-4 shrink-0 text-kal-accent transition-transform duration-200 group-open:rotate-180"
+                        className="size-4 shrink-0 text-kal-accent transition-transform duration-200 group-open:rotate-180"
                       />
                     </summary>
                     <div className="border-t border-kal-border/50 px-3 pb-3 pt-2">
@@ -1072,7 +1074,7 @@ export function SyllabusTracker() {
                         </div>
                         <ChevronDown
                           aria-hidden
-                          className="h-4 w-4 shrink-0 text-kal-accent transition-transform duration-200 group-open:rotate-180"
+                          className="size-4 shrink-0 text-kal-accent transition-transform duration-200 group-open:rotate-180"
                         />
                       </summary>
                       <div className="border-t border-kal-border/50 px-3 pb-3 pt-2 text-left">
@@ -1240,12 +1242,12 @@ export function SyllabusTracker() {
                         >
                           <div className="flex min-h-[48px] items-start justify-between gap-2 sm:items-center">
                             <span className="flex min-w-0 items-start gap-2 sm:items-center">
-                              <BookMarked className="h-5 w-5 shrink-0 text-kal-accent" aria-hidden />
+                              <BookMarked className="size-5 shrink-0 text-kal-accent" aria-hidden />
                               <span className="min-w-0 break-words text-left leading-snug">{subject}</span>
                             </span>
                             <ChevronDown
                               className={clsx(
-                                "h-5 w-5 shrink-0 text-kal-muted transition-transform duration-200",
+                                "size-5 shrink-0 text-kal-muted transition-transform duration-200",
                                 subjectIsOpen && "rotate-180",
                               )}
                               aria-hidden
@@ -1309,8 +1311,8 @@ export function SyllabusTracker() {
                                       >
                                         <div className="flex items-start justify-between gap-3">
                                           <span className="flex min-w-0 items-start gap-2.5">
-                                            <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-kal-card shadow-sm ring-1 ring-kal-border/50">
-                                              <Layers className="h-[1.15rem] w-[1.15rem] text-kal-accent" aria-hidden />
+                                            <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-kal-card shadow-sm ring-1 ring-kal-border/50">
+                                              <Layers className="size-[1.15rem] text-kal-accent" aria-hidden />
                                             </span>
                                             <span className="min-w-0 pt-0.5">
                                               <span className="kal-category-label block text-kal-accent">Chapter</span>
@@ -1327,7 +1329,7 @@ export function SyllabusTracker() {
                                           {!syllabusLimited && (
                                             <ChevronDown
                                               className={clsx(
-                                                "mt-1 h-5 w-5 shrink-0 text-kal-muted transition-transform duration-200",
+                                                "mt-1 size-5 shrink-0 text-kal-muted transition-transform duration-200",
                                                 chapterIsOpen && "rotate-180",
                                               )}
                                               aria-hidden
@@ -1366,7 +1368,7 @@ export function SyllabusTracker() {
                                             <button
                                               type="button"
                                               title="Add microtopic here"
-                                              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-kal-accent/30 text-kal-accent hover:bg-kal-accent-soft dark:border-orange-500/25 dark:text-orange-400 dark:hover:bg-orange-950/50"
+                                              className="inline-flex size-9 items-center justify-center rounded-lg border border-kal-accent/30 text-kal-accent hover:bg-kal-accent-soft dark:border-orange-500/25 dark:text-orange-400 dark:hover:bg-orange-950/50"
                                               onClick={(e) => {
                                                 e.preventDefault();
                                                 e.stopPropagation();
@@ -1380,12 +1382,12 @@ export function SyllabusTracker() {
                                                 });
                                               }}
                                             >
-                                              <Plus className="h-4 w-4" aria-hidden />
+                                              <Plus className="size-4" aria-hidden />
                                             </button>
                                             <button
                                               type="button"
                                               title="Rename chapter"
-                                              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-kal-border text-kal-muted hover:bg-kal-card-muted"
+                                              className="inline-flex size-9 items-center justify-center rounded-lg border border-kal-border text-kal-muted hover:bg-kal-card-muted"
                                               onClick={(e) => {
                                                 e.preventDefault();
                                                 e.stopPropagation();
@@ -1398,12 +1400,12 @@ export function SyllabusTracker() {
                                                 });
                                               }}
                                             >
-                                              <Pencil className="h-4 w-4" aria-hidden />
+                                              <Pencil className="size-4" aria-hidden />
                                             </button>
                                             <button
                                               type="button"
                                               title="Hide chapter (for you)"
-                                              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-orange-500/25 text-orange-400/90 hover:bg-orange-950/30"
+                                              className="inline-flex size-9 items-center justify-center rounded-lg border border-orange-500/25 text-orange-400/90 hover:bg-orange-950/30"
                                               onClick={(e) => {
                                                 e.preventDefault();
                                                 e.stopPropagation();
@@ -1423,7 +1425,7 @@ export function SyllabusTracker() {
                                                 });
                                               }}
                                             >
-                                              <Trash2 className="h-4 w-4" aria-hidden />
+                                              <Trash2 className="size-4" aria-hidden />
                                             </button>
                                           </>
                                         ) : null}
@@ -1467,7 +1469,7 @@ export function SyllabusTracker() {
                                               });
                                             }}
                                           >
-                                            <SlidersHorizontal className="h-4 w-4 shrink-0" aria-hidden />
+                                            <SlidersHorizontal className="size-4 shrink-0" aria-hidden />
                                             <span className="hidden sm:inline">Marks</span>
                                           </button>
                                         ) : null}
@@ -1528,7 +1530,7 @@ export function SyllabusTracker() {
                 <div className="flex min-h-[48px] items-start justify-between gap-2 sm:items-center">
                   <span className="flex min-w-0 items-start gap-2 sm:items-center">
                     <BookMarked
-                      className="h-5 w-5 shrink-0 text-kal-accent"
+                      className="size-5 shrink-0 text-kal-accent"
                       aria-hidden
                     />
                     <span className="min-w-0 break-words text-left leading-snug">
@@ -1547,7 +1549,7 @@ export function SyllabusTracker() {
                   <span className="flex shrink-0 items-center gap-1.5">
                     <ChevronDown
                       className={clsx(
-                        "h-5 w-5 shrink-0 text-kal-muted transition-transform duration-200",
+                        "size-5 shrink-0 text-kal-muted transition-transform duration-200",
                         subjectIsOpen && "rotate-180",
                       )}
                       aria-hidden
@@ -1627,9 +1629,9 @@ export function SyllabusTracker() {
                           >
                             <div className="flex items-start justify-between gap-3">
                               <span className="flex min-w-0 items-start gap-2.5">
-                                <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-kal-card shadow-sm ring-1 ring-kal-border/50">
+                                <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-kal-card shadow-sm ring-1 ring-kal-border/50">
                                   <Layers
-                                    className="h-[1.15rem] w-[1.15rem] text-kal-accent"
+                                    className="size-[1.15rem] text-kal-accent"
                                     aria-hidden
                                   />
                                 </span>
@@ -1652,13 +1654,13 @@ export function SyllabusTracker() {
                                   className="inline-flex shrink-0 items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
                                   title="Upgrade to Smart Plan to expand chapters and see microtopics"
                                 >
-                                  <Lock className="h-2.5 w-2.5" aria-hidden />
+                                  <Lock className="size-2.5" aria-hidden />
                                   Smart Plan
                                 </span>
                               ) : (
                                 <ChevronDown
                                   className={clsx(
-                                    "mt-1 h-5 w-5 shrink-0 text-kal-muted transition-transform duration-200",
+                                    "mt-1 size-5 shrink-0 text-kal-muted transition-transform duration-200",
                                     chapterIsOpen && "rotate-180",
                                   )}
                                   aria-hidden
@@ -1705,7 +1707,7 @@ export function SyllabusTracker() {
                                 <button
                                   type="button"
                                   title="Add microtopic here"
-                                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-kal-accent/30 text-kal-accent hover:bg-kal-accent-soft dark:border-orange-500/25 dark:text-orange-400 dark:hover:bg-orange-950/50"
+                                  className="inline-flex size-9 items-center justify-center rounded-lg border border-kal-accent/30 text-kal-accent hover:bg-kal-accent-soft dark:border-orange-500/25 dark:text-orange-400 dark:hover:bg-orange-950/50"
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
@@ -1719,12 +1721,12 @@ export function SyllabusTracker() {
                                     });
                                   }}
                                 >
-                                  <Plus className="h-4 w-4" aria-hidden />
+                                  <Plus className="size-4" aria-hidden />
                                 </button>
                                 <button
                                   type="button"
                                   title="Rename chapter"
-                                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-kal-border text-kal-muted hover:bg-kal-card-muted"
+                                  className="inline-flex size-9 items-center justify-center rounded-lg border border-kal-border text-kal-muted hover:bg-kal-card-muted"
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
@@ -1737,12 +1739,12 @@ export function SyllabusTracker() {
                                     });
                                   }}
                                 >
-                                  <Pencil className="h-4 w-4" aria-hidden />
+                                  <Pencil className="size-4" aria-hidden />
                                 </button>
                                 <button
                                   type="button"
                                   title="Hide chapter (for you)"
-                                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-orange-500/25 text-orange-400/90 hover:bg-orange-950/30"
+                                  className="inline-flex size-9 items-center justify-center rounded-lg border border-orange-500/25 text-orange-400/90 hover:bg-orange-950/30"
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
@@ -1763,7 +1765,7 @@ export function SyllabusTracker() {
                                     });
                                   }}
                                 >
-                                  <Trash2 className="h-4 w-4" aria-hidden />
+                                  <Trash2 className="size-4" aria-hidden />
                                 </button>
                               </>
                             ) : null}
@@ -1802,7 +1804,7 @@ export function SyllabusTracker() {
                                 }}
                               >
                                 <SlidersHorizontal
-                                  className="h-4 w-4 shrink-0"
+                                  className="size-4 shrink-0"
                                   aria-hidden
                                 />
                                 <span className="hidden sm:inline">Marks</span>

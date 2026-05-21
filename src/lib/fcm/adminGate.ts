@@ -7,13 +7,15 @@ import type { User } from "@supabase/supabase-js";
 export function isFcmAdminUser(user: User | null): boolean {
   if (!user) return false;
   const emails =
-    process.env.FCM_ADMIN_EMAILS?.split(",")
-      .map((s) => s.trim().toLowerCase())
-      .filter(Boolean) ?? [];
+    process.env.FCM_ADMIN_EMAILS?.split(",").flatMap((s) => {
+      const t = s.trim().toLowerCase();
+      return t ? [t] : [];
+    }) ?? [];
   const ids =
-    process.env.FCM_ADMIN_USER_IDS?.split(",")
-      .map((s) => s.trim())
-      .filter(Boolean) ?? [];
+    process.env.FCM_ADMIN_USER_IDS?.split(",").flatMap((s) => {
+      const t = s.trim();
+      return t ? [t] : [];
+    }) ?? [];
   const email = user.email?.toLowerCase();
   if (emails.length && email && emails.includes(email)) return true;
   if (ids.length && ids.includes(user.id)) return true;

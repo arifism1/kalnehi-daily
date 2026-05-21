@@ -197,6 +197,7 @@ export default function NotificationsPage() {
       try {
         const ensureP = ensureAutomatedNotifications();
 
+        if (cancelled) return;
         const listRes = await listUserNotificationsPage(0, 5);
         if (cancelled) return;
         if (!listRes.ok) {
@@ -212,6 +213,7 @@ export default function NotificationsPage() {
         primeUserNotificationsListCache(userId, listRes.items, listRes.hasMore);
         setLoadingGeneral(false);
 
+        if (cancelled) return;
         const ensureRes = await ensureP;
         if (cancelled) return;
         if (!ensureRes.ok) {
@@ -271,6 +273,7 @@ export default function NotificationsPage() {
     setUpdatesError(null);
     void (async () => {
       try {
+        if (cancelled) return;
         const res = await listAppUpdates();
         if (cancelled) return;
         if (!res.ok) { setUpdatesError(surfaceErrorForUi(res.error)); return; }
@@ -317,14 +320,14 @@ export default function NotificationsPage() {
   }, [notifications, filter]);
 
   const generalDayGroups = useMemo(() => {
-    const sorted = [...filtered].sort(
+    const sorted = [...filtered].toSorted(
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
     );
     return groupUserNotificationsByLocalDay(sorted);
   }, [filtered]);
 
   const updatesDayGroups = useMemo(() => {
-    const sorted = [...updates].sort(
+    const sorted = [...updates].toSorted(
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
     );
     return groupByDay(sorted);
@@ -371,6 +374,7 @@ export default function NotificationsPage() {
 
   async function handleMarkUpdatesRead() {
     if (markingUpdatesRead || updatesUnread === 0) return;
+    // react-doctor-disable-next-line react-doctor/js-combine-iterations -- filter-then-map; flatMap would reduce readability here
     const unreadIds = updates.filter((u) => !u.read).map((u) => u.id);
     if (unreadIds.length === 0) return;
     setMarkingUpdatesRead(true);
@@ -547,7 +551,7 @@ export default function NotificationsPage() {
             </section>
           ) : notifications.length === 0 ? (
             <section className="kal-glass-panel rounded-[1.25rem] p-6 text-center sm:p-8">
-              <NotificationsEmptyIllustration className="mx-auto h-32 w-32" />
+              <NotificationsEmptyIllustration className="mx-auto size-32" />
               <p className="mt-4 text-lg font-semibold text-kal-text">You&apos;re all caught up</p>
               <p className="mt-2 text-sm text-kal-muted">
                 No new notifications. Check back after your next study session.
@@ -568,7 +572,7 @@ export default function NotificationsPage() {
                 >
                   {loadingMoreGeneral ? (
                     <>
-                      <Loader2 className="h-4 w-4 shrink-0 animate-spin text-kal-accent" aria-hidden />
+                      <Loader2 className="size-4 shrink-0 animate-spin text-kal-accent" aria-hidden />
                       Loading…
                     </>
                   ) : (
@@ -614,7 +618,7 @@ export default function NotificationsPage() {
                             <div className="mt-1.5 flex w-2 shrink-0 justify-center">
                               {!item.read ? (
                                 <span
-                                  className="h-2 w-2 rounded-full bg-kal-accent"
+                                  className="size-2 rounded-full bg-kal-accent"
                                   aria-label="Unread"
                                 />
                               ) : null}
@@ -647,7 +651,7 @@ export default function NotificationsPage() {
                 >
                   {loadingMoreGeneral ? (
                     <>
-                      <Loader2 className="h-4 w-4 shrink-0 animate-spin text-kal-accent" aria-hidden />
+                      <Loader2 className="size-4 shrink-0 animate-spin text-kal-accent" aria-hidden />
                       <span className="text-sm text-kal-muted">Loading…</span>
                     </>
                   ) : (
@@ -726,7 +730,7 @@ export default function NotificationsPage() {
                           <div className="mt-1.5 flex w-2 shrink-0 justify-center">
                             {!item.read ? (
                               <span
-                                className="h-2 w-2 rounded-full bg-kal-accent"
+                                className="size-2 rounded-full bg-kal-accent"
                                 aria-label="Unread"
                               />
                             ) : null}

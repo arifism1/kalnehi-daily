@@ -461,7 +461,7 @@ export function MeditationPage() {
 
       <section className="kal-glass-panel rounded-2xl p-6">
         <div className="flex flex-wrap items-center gap-3">
-          <Timer className="h-5 w-5 text-kal-accent" />
+          <Timer className="size-5 text-kal-accent" />
           <p className="text-sm font-semibold text-kal-text">Brain Yoga session</p>
           <span className="text-sm text-kal-muted">
             {activeType ? activeType.title : "Choose a practice below to begin"}
@@ -478,7 +478,7 @@ export function MeditationPage() {
               onClick={() => setRunning(true)}
               className="inline-flex items-center gap-1 rounded-xl border border-kal-border bg-kal-card/80 px-3 py-2 text-sm backdrop-blur-sm"
             >
-              <CirclePlay className="h-4 w-4" />
+              <CirclePlay className="size-4" />
               Resume
             </button>
           ) : (
@@ -491,7 +491,7 @@ export function MeditationPage() {
               }}
               className="inline-flex items-center gap-1 rounded-xl border border-kal-border bg-kal-card/80 px-3 py-2 text-sm backdrop-blur-sm"
             >
-              <CirclePause className="h-4 w-4" />
+              <CirclePause className="size-4" />
               Pause
             </button>
           )}
@@ -582,7 +582,7 @@ export function MeditationPage() {
               disabled={!lastCompletedSessionId}
               className="kal-btn-accent mt-3 rounded-xl px-4 py-2 text-sm"
             >
-              <CheckCircle2 className="h-4 w-4" />
+              <CheckCircle2 className="size-4" />
               Save note
             </button>
           </div>
@@ -594,7 +594,7 @@ export function MeditationPage() {
           <p className="text-xs uppercase tracking-wide text-kal-muted">Daily streak</p>
           <div className="mt-3 flex items-center gap-4">
             <div
-              className="relative h-20 w-20 rounded-full"
+              className="relative size-20 rounded-full"
               style={{
                 background: `conic-gradient(var(--kal-accent) ${Math.min(100, streak * 12)}%, var(--kal-success-border) 0)`,
               }}
@@ -627,7 +627,7 @@ export function MeditationPage() {
           {calendar.cells.map((c) => (
             <div
               key={c.key}
-              className={`rounded-lg px-2 py-2 text-sm ${
+              className={`rounded-lg p-2 text-sm ${
                 c.done ? "bg-kal-accent-soft text-kal-accent" : "bg-kal-card-muted text-kal-muted"
               }`}
             >
@@ -661,7 +661,7 @@ export function MeditationPage() {
                 onClick={() => void beginSession(item, item.durationRangeMinutes[0])}
                 className="kal-btn-accent min-h-[42px] rounded-xl px-4 text-sm"
               >
-                <PlayCircle className="h-4 w-4" />
+                <PlayCircle className="size-4" />
                 Start
               </button>
             </div>
@@ -672,7 +672,7 @@ export function MeditationPage() {
         href="/meditation/consistency"
         className="kal-glass-subtle inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold text-kal-text transition-colors hover:opacity-95"
       >
-        <CalendarDays className="h-5 w-5 text-kal-accent" />
+        <CalendarDays className="size-5 text-kal-accent" />
         View Brain Yoga consistency
       </Link>
 

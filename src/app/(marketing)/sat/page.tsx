@@ -37,14 +37,14 @@ export default function SatPage() {
         />
 
         <section className="space-y-4" aria-labelledby="sat-sections">
-          <h2 id="sat-sections" className="text-xl font-bold text-kal-text">Digital SAT sections tracked in Kalnehi Daily</h2>
+          <h2 id="sat-sections" className="text-xl font-semibold text-kal-text">Digital SAT sections tracked in Kalnehi Daily</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {[
               { s: "Reading & Writing (800)", topics: ["Reading Comprehension — literary, informational", "Command of Evidence (textual + quantitative)", "Words in Context, Cross-text Connections", "Expression of Ideas — rhetoric, transitions", "Standard English Conventions — grammar"] },
               { s: "Math (800)", topics: ["Algebra — linear equations, functions", "Advanced Math — quadratics, exponentials", "Problem Solving & Data Analysis", "Geometry & Trigonometry"] },
             ].map(({ s, topics }) => (
               <div key={s} className="kal-glass-card rounded-xl p-4 space-y-1.5">
-                <h3 className="text-xs font-bold text-kal-accent-dark">{s}</h3>
+                <h3 className="text-xs font-semibold text-kal-accent-dark">{s}</h3>
                 <ul className="space-y-0.5">{topics.map(t => <li key={t} className="text-xs text-kal-text-secondary">· {t}</li>)}</ul>
               </div>
             ))}

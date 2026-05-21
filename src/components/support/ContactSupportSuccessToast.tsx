@@ -28,9 +28,9 @@ export function ContactSupportSuccessToast({
         <button
           type="button"
           onClick={onDismiss}
-          className="shrink-0 rounded-lg px-2 py-2 text-xs font-semibold text-kal-muted transition-colors hover:bg-kal-card-muted hover:text-kal-text"
+          className="shrink-0 rounded-lg p-2 text-xs font-semibold text-kal-muted transition-colors hover:bg-kal-card-muted hover:text-kal-text"
         >
-          OK
+          Dismiss
         </button>
       </div>
     </div>

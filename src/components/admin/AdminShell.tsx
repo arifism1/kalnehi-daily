@@ -64,7 +64,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-kal-page text-kal-text flex">
       <aside className="hidden w-56 shrink-0 flex-col border-r border-kal-border bg-kal-card/40 lg:flex">
-        <div className="border-b border-kal-border px-4 py-4">
+        <div className="border-b border-kal-border p-4">
           <span className="text-[10px] font-bold uppercase tracking-widest text-kal-accent">Admin</span>
           <p className="mt-0.5 text-sm font-semibold text-kal-text">Kalnehi Daily</p>
         </div>
@@ -103,7 +103,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <div className="border-t border-kal-border p-3">
           <Link
             href="/home"
-            className="block rounded-lg px-2 py-2 text-xs text-kal-muted hover:text-kal-text"
+            className="block rounded-lg p-2 text-xs text-kal-muted hover:text-kal-text"
           >
             ← Back to app
           </Link>

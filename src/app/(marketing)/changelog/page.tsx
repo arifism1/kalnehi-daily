@@ -122,7 +122,7 @@ export default function ChangelogPage() {
     <div className="space-y-12">
       <header className="space-y-3">
         <p className="inline-flex items-center gap-1.5 rounded-full border border-kal-accent/25 bg-kal-accent-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-kal-accent-dark">
-          <span className="h-1.5 w-1.5 rounded-full bg-kal-accent" aria-hidden />
+          <span className="size-1.5 rounded-full bg-kal-accent" aria-hidden />
           Changelog
         </p>
         <h1 className="kal-feature-title">What&apos;s new in Kalnehi Daily</h1>
@@ -135,7 +135,7 @@ export default function ChangelogPage() {
         {RELEASES.map((release) => (
           <section key={release.version} className="space-y-5">
             <div className="flex items-baseline gap-3 border-b border-kal-border pb-3">
-              <h2 className="text-xl font-bold text-kal-text">v{release.version}</h2>
+              <h2 className="text-xl font-semibold text-kal-text">v{release.version}</h2>
               <span className="text-sm text-kal-muted">{release.date}</span>
             </div>
             <p className="text-sm text-kal-text-secondary leading-relaxed">{release.summary}</p>

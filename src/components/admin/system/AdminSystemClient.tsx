@@ -127,8 +127,9 @@ function DisableFeatureModal({
           Users who try to use this feature will see the message below.
         </p>
         <div className="mt-4">
-          <label className="block text-xs font-medium text-kal-muted">Message shown to users</label>
+          <label htmlFor="admin-feature-message" className="block text-xs font-medium text-kal-muted">Message shown to users</label>
           <input
+            id="admin-feature-message"
             type="text"
             value={msg}
             onChange={(e) => setMsg(e.target.value)}
@@ -159,7 +160,7 @@ function DisableFeatureModal({
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="rounded-2xl border border-kal-border bg-kal-card/50 p-5 sm:p-6">
-      <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-kal-muted">{title}</h2>
+      <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-kal-muted">{title}</h2>
       {children}
     </section>
   );
@@ -398,7 +399,7 @@ export function AdminSystemClient({ config: initial, flags: initialFlags, auditL
               >
                 <span
                   className={clsx(
-                    "absolute top-1 h-6 w-6 rounded-full bg-white shadow transition-transform",
+                    "absolute top-1 size-6 rounded-full bg-white shadow transition-transform",
                     config.app_enabled ? "left-7" : "left-1",
                   )}
                 />
@@ -447,8 +448,9 @@ export function AdminSystemClient({ config: initial, flags: initialFlags, auditL
             </p>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
-                <label className="block text-xs font-medium text-kal-muted">Title</label>
+                <label htmlFor="admin-maintenance-title" className="block text-xs font-medium text-kal-muted">Title</label>
                 <input
+                  id="admin-maintenance-title"
                   type="text"
                   value={editTitle}
                   onChange={(e) => setEditTitle(e.target.value)}
@@ -456,8 +458,9 @@ export function AdminSystemClient({ config: initial, flags: initialFlags, auditL
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className="block text-xs font-medium text-kal-muted">Message</label>
+                <label htmlFor="admin-maintenance-message" className="block text-xs font-medium text-kal-muted">Message</label>
                 <textarea
+                  id="admin-maintenance-message"
                   value={editMessage}
                   onChange={(e) => setEditMessage(e.target.value)}
                   rows={2}

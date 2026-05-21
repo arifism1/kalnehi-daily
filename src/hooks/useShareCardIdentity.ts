@@ -18,8 +18,10 @@ export function useShareCardIdentity(): {
   const { examScopes } = useAllExamScopes();
 
   const examLine = examScopes
-    .map((s) => (s.displayName || s.examLabel).trim())
-    .filter(Boolean)
+    .flatMap((s) => {
+      const label = (s.displayName || s.examLabel).trim();
+      return label ? [label] : [];
+    })
     .join(" · ");
 
   /** True until auth resolved and (if signed in) profile name fetch finished. */

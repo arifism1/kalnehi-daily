@@ -235,7 +235,7 @@ export function UpgradeCheckout() {
 
         <div className="kal-card-surface space-y-6 p-8">
           <div className="flex items-start gap-3 rounded-xl border border-kal-border bg-kal-card-muted/40 px-4 py-3">
-            <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-kal-accent" aria-hidden />
+            <ShieldCheck className="mt-0.5 size-5 shrink-0 text-kal-accent" aria-hidden />
             <p className="text-xs leading-relaxed text-kal-text-secondary">
               Encrypted checkout via Razorpay. Your study data stays in Kalnehi — this screen only
               handles billing.
@@ -298,7 +298,7 @@ export function UpgradeCheckout() {
             disabled={busy || !checkoutReady}
             className="kal-btn-accent flex min-h-[52px] w-full items-center justify-center gap-2 disabled:opacity-60"
           >
-            <Check className="h-5 w-5" aria-hidden />
+            <Check className="size-5" aria-hidden />
             {busy
               ? confirmingPayment
                 ? "Confirming payment…"

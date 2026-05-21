@@ -99,7 +99,7 @@ export async function getReferralSnapshot(): Promise<ReferralSnapshot | null> {
   }
   const daily: ReferralDailyRow[] = Array.from(dailyMap.entries())
     .map(([day, signups]) => ({ day, signups }))
-    .sort((a, b) => a.day.localeCompare(b.day));
+    .toSorted((a, b) => a.day.localeCompare(b.day));
 
   // Grand totals.
   let totals = { clicks: 0, signups: 0, trials: 0, conversions: 0 };
@@ -136,14 +136,14 @@ export async function getReferralSnapshot(): Promise<ReferralSnapshot | null> {
   }
 
   const igExamsSummary = [...examTotals.entries()]
-    .sort((a, b) => b[1] - a[1])
+    .toSorted((a, b) => b[1] - a[1])
     .slice(0, 15)
     .map(([exam, count]) => ({ exam, count }));
 
   const examsByCode: { code: string; exam: string; count: number }[] = [];
   for (const [code, examMap] of examPerCode.entries()) {
     const topExams = [...examMap.entries()]
-      .sort((a, b) => b[1] - a[1])
+      .toSorted((a, b) => b[1] - a[1])
       .slice(0, 5);
     for (const [exam, count] of topExams) {
       examsByCode.push({ code, exam, count });

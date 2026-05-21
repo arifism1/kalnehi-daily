@@ -37,9 +37,7 @@ function completionDatesForHabit(
   habitId: string,
 ): Set<string> {
   return new Set(
-    logs
-      .filter((l) => l.habit_id === habitId && l.completed)
-      .map((l) => l.log_date),
+    logs.flatMap((l) => l.habit_id === habitId && l.completed ? [l.log_date] : []),
   );
 }
 
@@ -129,6 +127,7 @@ export function HabitsPlannerView() {
               if (legacy.length > 0) {
                 for (const h of legacy) {
                   if (habitIds.has(h.id)) continue;
+                  // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential outbox enqueue for legacy habit migration
                   await enqueueHabitOutbox(userId, {
                     kind: "habit_create",
                     id: h.id,
@@ -340,7 +339,7 @@ export function HabitsPlannerView() {
                 className="rounded-xl p-2 text-kal-muted hover:bg-kal-danger-soft hover:text-kal-danger-text"
                 aria-label="Remove habit"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="size-4" />
               </button>
             </div>
           </li>
@@ -360,7 +359,7 @@ export function HabitsPlannerView() {
         onClick={() => void add()}
         className="flex w-full min-h-[48px] items-center justify-center gap-2 rounded-2xl border border-dashed border-kal-accent/40 py-3 text-sm font-semibold text-kal-accent hover:bg-kal-accent-soft"
       >
-        <Plus className="h-4 w-4" />
+        <Plus className="size-4" />
         Add exam habit
       </button>
       <p id={`${baseId}-hint`} className="text-[11px] text-kal-text-secondary">

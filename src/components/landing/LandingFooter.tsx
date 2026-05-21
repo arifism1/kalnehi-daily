@@ -62,7 +62,7 @@ export function LandingFooter() {
           {(Object.entries(FOOTER_LINKS) as [string, readonly { href: string; label: string }[]][]).map(
             ([section, links]) => (
               <div key={section}>
-                <h3 className="mb-4 text-[10px] font-bold uppercase tracking-widest text-kal-muted">
+                <h3 className="mb-4 text-[10px] font-semibold uppercase tracking-widest text-kal-muted">
                   {section}
                 </h3>
                 <ul className="space-y-2.5">
@@ -99,7 +99,7 @@ export function LandingFooter() {
               Made in Bengaluru for aspirants in India and worldwide
             </span>
           </div>
-          <p className="text-xs text-kal-muted">
+          <p className="text-xs text-kal-muted" suppressHydrationWarning>
             © {new Date().getFullYear()} Kalnehi Daily. All rights reserved.
           </p>
         </div>

@@ -823,6 +823,7 @@ ${toolPack.toolDataMarkdown}
       const reader = textStream.getReader();
       try {
         while (true) {
+          // react-doctor-disable-next-line react-doctor/async-await-in-loop -- streaming read loop: each chunk depends on the previous
           const { done, value } = await reader.read();
           if (done) break;
           controller.enqueue(

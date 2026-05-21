@@ -27,13 +27,13 @@ function summarizeEvents(list: FeatureEventRow[]): FeatureEventSummary {
   return {
     totalEvents: list.length,
     byFeature: [...byFeature.entries()]
-      .sort((a, b) => b[1] - a[1])
+      .toSorted((a, b) => b[1] - a[1])
       .map(([feature, count]) => ({ feature, count })),
     byEvent: [...byEvent.entries()]
-      .sort((a, b) => b[1] - a[1])
+      .toSorted((a, b) => b[1] - a[1])
       .slice(0, 30)
       .map(([event, count]) => ({ event, count })),
-    recentSamples: [...list].sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 25),
+    recentSamples: [...list].toSorted((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 25),
   };
 }
 
@@ -110,10 +110,12 @@ export async function getActivationSnapshot(): Promise<ActivationSnapshot | null
   const prepbrainFromActivity = (activityRows ?? []) as { user_id: string }[];
   const prepbrainUserCount = new Set([
     ...prepbrainFromActivity.map((r) => r.user_id),
+    // react-doctor-disable-next-line react-doctor/js-combine-iterations -- filter-then-map for deduplication into Set; readable as-is
     ...events.filter((e) => e.feature === "prepbrain").map((e) => e.user_id),
   ]).size;
   const voiceUserCount = new Set([
     ...((voiceRows ?? []) as { user_id: string }[]).map((r) => r.user_id),
+    // react-doctor-disable-next-line react-doctor/js-combine-iterations -- filter-then-map for deduplication into Set; readable as-is
     ...events.filter((e) => e.feature === "voice").map((e) => e.user_id),
   ]).size;
 

@@ -66,8 +66,10 @@ export function SearchClient({ index }: Props) {
   const results = useMemo(() => {
     if (q.length < 2) return [];
     return index
-      .map((e) => ({ e, s: scoreEntry(q, e) }))
-      .filter((x) => x.s > 0)
+      .flatMap((e) => {
+        const s = scoreEntry(q, e);
+        return s > 0 ? [{ e, s }] : [];
+      })
       .sort((a, b) => b.s - a.s);
   }, [q, index]);
 
@@ -123,7 +125,7 @@ export function SearchClient({ index }: Props) {
             if (list.length === 0) return null;
             return (
               <section key={type} className="space-y-3" aria-labelledby={`search-${type}`}>
-                <h2 id={`search-${type}`} className="text-sm font-bold uppercase tracking-wide text-kal-muted">
+                <h2 id={`search-${type}`} className="text-sm font-semibold uppercase tracking-wide text-kal-muted">
                   {TYPE_LABEL[type]}
                 </h2>
                 <ul className="space-y-2">

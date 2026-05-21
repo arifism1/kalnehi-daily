@@ -103,6 +103,7 @@ export async function callChatCompletion(
       let resp: OpenAICompatibleChatResponse;
 
       if (candidate.provider === "deepinfra") {
+        // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential fallback: try next provider only if this one fails
         resp = await deepinfraChat({
           model: candidate.model,
           messages,
@@ -110,6 +111,7 @@ export async function callChatCompletion(
           max_tokens: options.max_tokens,
         });
       } else {
+        // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential fallback: try next provider only if this one fails
         resp = await groqOpenAiChat({
           model: candidate.model,
           messages,
@@ -213,6 +215,7 @@ function openAiSseToTextStream(
 
       try {
         while (true) {
+          // react-doctor-disable-next-line react-doctor/async-await-in-loop -- streaming read loop: each chunk depends on the previous
           const { value, done } = await reader.read();
           if (done) break;
           lineBuf += dec.decode(value, { stream: true });
@@ -305,7 +308,8 @@ export async function callStreamingChatCompletion(
     try {
       const resp =
         candidate.provider === "deepinfra"
-          ? await deepinfraChatStreamRequest({
+          ? // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential fallback: try next provider only if this one fails
+            await deepinfraChatStreamRequest({
               model: candidate.model,
               messages,
               temperature: options.temperature,

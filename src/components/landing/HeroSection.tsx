@@ -61,7 +61,7 @@ export function HeroSection() {
               className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full border border-kal-border bg-kal-card px-6 text-base font-semibold text-kal-text backdrop-blur-sm transition hover:border-kal-accent/30 hover:bg-kal-bg-elevated active:scale-[0.99]"
             >
               See all features
-              <ArrowRight className="h-4 w-4" aria-hidden />
+              <ArrowRight className="size-4" aria-hidden />
             </Link>
           </div>
 
@@ -75,22 +75,22 @@ export function HeroSection() {
           <div className="relative w-full max-w-[480px]">
             {/* Floating subject icons — decorative */}
             <div className="absolute -left-10 top-16 z-10 hidden lg:block" aria-hidden>
-              <div className="flex h-11 w-11 items-center justify-center rounded-full border border-kal-accent/25 bg-kal-card text-lg shadow-md backdrop-blur-sm">
+              <div className="flex size-11 items-center justify-center rounded-full border border-kal-accent/25 bg-kal-card text-lg shadow-md backdrop-blur-sm">
                 ⚛
               </div>
             </div>
             <div className="absolute -left-6 top-36 z-10 hidden lg:block" aria-hidden>
-              <div className="flex h-9 w-9 items-center justify-center rounded-full border border-kal-accent/20 bg-kal-card text-base shadow-sm backdrop-blur-sm opacity-80">
+              <div className="flex size-9 items-center justify-center rounded-full border border-kal-accent/20 bg-kal-card text-base shadow-sm backdrop-blur-sm opacity-80">
                 ∑
               </div>
             </div>
             <div className="absolute -right-8 bottom-20 z-10 hidden lg:block" aria-hidden>
-              <div className="flex h-10 w-10 items-center justify-center rounded-full border border-emerald-600/30 bg-kal-card text-base shadow-md backdrop-blur-sm dark:border-emerald-400/35">
+              <div className="flex size-10 items-center justify-center rounded-full border border-emerald-600/30 bg-kal-card text-base shadow-md backdrop-blur-sm dark:border-emerald-400/35">
                 🌿
               </div>
             </div>
             <div className="absolute -left-12 bottom-16 z-10 hidden xl:block" aria-hidden>
-              <div className="flex h-9 w-9 items-center justify-center rounded-full border border-kal-accent/15 bg-kal-card text-base shadow-sm backdrop-blur-sm opacity-60">
+              <div className="flex size-9 items-center justify-center rounded-full border border-kal-accent/15 bg-kal-card text-base shadow-sm backdrop-blur-sm opacity-60">
                 ⚗
               </div>
             </div>
@@ -103,7 +103,7 @@ export function HeroSection() {
             {/* Floating PrepBrain card */}
             <div className="absolute -right-4 -top-6 z-10 w-52 rounded-2xl border border-indigo-500/20 bg-kal-card p-3.5 shadow-[0_8px_24px_rgba(99,102,241,0.14)] backdrop-blur-xl dark:border-indigo-400/25 dark:shadow-[0_8px_24px_rgba(0,0,0,0.35)]">
               <div className="flex items-start gap-2">
-                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-[11px] dark:bg-indigo-950/60" aria-hidden>
+                <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-[11px] dark:bg-indigo-950/60" aria-hidden>
                   🤖
                 </div>
                 <div>
@@ -163,8 +163,8 @@ function DashboardMockup() {
         </p>
         <div className="flex items-center gap-3">
           {/* Ring */}
-          <div className="relative flex h-14 w-14 shrink-0 items-center justify-center">
-            <svg className="h-14 w-14 -rotate-90" viewBox="0 0 56 56" aria-hidden>
+          <div className="relative flex size-14 shrink-0 items-center justify-center">
+            <svg className="size-14 -rotate-90" viewBox="0 0 56 56" aria-hidden>
               <circle cx="28" cy="28" r="23" fill="none" stroke="var(--kal-border)" strokeWidth="4" />
               <circle
                 cx="28" cy="28" r="23" fill="none" stroke="var(--kal-accent)" strokeWidth="4"
@@ -219,7 +219,7 @@ function DashboardMockup() {
           ].map(({ subject, topic, done, rev }) => (
             <div key={topic} className="flex items-center gap-2 rounded-lg border border-kal-border bg-kal-card-muted px-2.5 py-2 backdrop-blur-sm">
               <div
-                className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[9px] ${
+                className={`flex size-4 shrink-0 items-center justify-center rounded-full text-[9px] ${
                   done
                     ? "bg-emerald-500 text-white"
                     : rev

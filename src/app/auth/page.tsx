@@ -243,7 +243,7 @@ export default function AuthPage() {
             }}
             className="kal-btn-accent mt-5 flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="size-4" />
             Back to login
           </button>
         </div>
@@ -276,7 +276,7 @@ export default function AuthPage() {
                 htmlFor="forgot-email"
                 className="flex items-center gap-1.5 text-xs font-semibold text-kal-text-secondary"
               >
-                <Mail className="h-3.5 w-3.5" />
+                <Mail className="size-3.5" />
                 Email
               </label>
               <input
@@ -302,9 +302,9 @@ export default function AuthPage() {
               className="kal-btn-accent flex w-full min-h-[50px] items-center justify-center gap-2 rounded-xl disabled:opacity-50"
             >
               {busy ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <Loader2 className="size-5 animate-spin" />
               ) : (
-                <Mail className="h-4 w-4" />
+                <Mail className="size-4" />
               )}
               Send reset link
             </button>
@@ -319,7 +319,7 @@ export default function AuthPage() {
             }}
             className="mt-4 flex w-full items-center justify-center gap-2 text-sm text-kal-muted transition-colors hover:text-kal-text-secondary disabled:opacity-50"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="size-4" />
             Back to login
           </button>
         </div>
@@ -366,7 +366,7 @@ export default function AuthPage() {
                 : "text-kal-text-secondary hover:text-kal-text",
             )}
           >
-            <LogIn className="h-4 w-4" />
+            <LogIn className="size-4" />
             Log in
           </button>
           <button
@@ -383,7 +383,7 @@ export default function AuthPage() {
                 : "text-kal-text-secondary hover:text-kal-text",
             )}
           >
-            <UserPlus className="h-4 w-4" />
+            <UserPlus className="size-4" />
             Sign up
           </button>
         </div>
@@ -398,7 +398,7 @@ export default function AuthPage() {
           {mode === "signup" && storedReferral?.ref && (
             <div>
               <p className="flex items-center gap-1.5 text-xs font-semibold text-kal-text-secondary">
-                <KeyRound className="h-3.5 w-3.5" />
+                <KeyRound className="size-3.5" />
                 Referral code
               </p>
               <div className="mt-1.5 flex min-h-[44px] w-full items-center justify-between rounded-xl border border-kal-accent/25 bg-kal-accent/[0.04] px-4 py-2.5">
@@ -414,7 +414,7 @@ export default function AuthPage() {
               htmlFor="auth-email"
               className="flex items-center gap-1.5 text-xs font-semibold text-kal-text-secondary"
             >
-              <Mail className="h-3.5 w-3.5" />
+              <Mail className="size-3.5" />
               Email
             </label>
             <input
@@ -432,7 +432,7 @@ export default function AuthPage() {
               htmlFor="auth-password"
               className="flex items-center gap-1.5 text-xs font-semibold text-kal-text-secondary"
             >
-              <Lock className="h-3.5 w-3.5" />
+              <Lock className="size-3.5" />
               Password
             </label>
             <input
@@ -474,9 +474,9 @@ export default function AuthPage() {
             className="kal-btn-accent flex w-full min-h-[50px] items-center justify-center gap-2 rounded-xl disabled:opacity-50"
           >
             {busy ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
+              <Loader2 className="size-5 animate-spin" />
             ) : (
-              <KeyRound className="h-4 w-4" />
+              <KeyRound className="size-4" />
             )}
             {mode === "login" ? "Continue with email" : "Create account"}
           </button>
@@ -491,7 +491,7 @@ export default function AuthPage() {
             className="kal-glass-subtle mt-3 flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-kal-text transition-colors duration-200 hover:opacity-95 disabled:opacity-50"
           >
             {busy ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
+              <Loader2 className="size-5 animate-spin" />
             ) : null}
             Continue with Google
           </button>

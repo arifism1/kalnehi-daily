@@ -32,8 +32,8 @@ export function EnabledDashboardFeatureGate({ featureId, title, children }: Prop
   if (!effective.includes(featureId)) {
     return (
       <div className="kal-glass-panel mx-auto flex max-w-md flex-col items-center gap-5 rounded-2xl p-10 text-center">
-        <div className="kal-glass-subtle flex h-14 w-14 items-center justify-center rounded-full">
-          <LayoutDashboard className="h-6 w-6 text-kal-text-secondary" aria-hidden />
+        <div className="kal-glass-subtle flex size-14 items-center justify-center rounded-full">
+          <LayoutDashboard className="size-6 text-kal-text-secondary" aria-hidden />
         </div>
         <h2 className="kal-section-heading">{title}</h2>
         <p className="text-sm leading-relaxed text-kal-text-secondary">

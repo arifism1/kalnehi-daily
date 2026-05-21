@@ -55,6 +55,7 @@ export async function migrateLegacyLocalStorageSession(
       };
       const { access_token, refresh_token } = parsed;
       if (typeof access_token === "string" && typeof refresh_token === "string") {
+        // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential: try each legacy key until session is set successfully
         const { error } = await supabase.auth.setSession({
           access_token,
           refresh_token,

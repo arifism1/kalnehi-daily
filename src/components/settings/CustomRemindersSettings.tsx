@@ -252,7 +252,7 @@ export function CustomRemindersSettings({
         {!embedded ? (
           <div className="flex min-w-0 flex-1 items-start gap-2">
             <AlarmClock
-              className="mt-0.5 h-5 w-5 shrink-0 text-kal-accent"
+              className="mt-0.5 size-5 shrink-0 text-kal-accent"
               aria-hidden
             />
             <div className="min-w-0">
@@ -277,7 +277,7 @@ export function CustomRemindersSettings({
             "Close"
           ) : (
             <>
-              <Plus className="h-4 w-4" aria-hidden />
+              <Plus className="size-4" aria-hidden />
               Add reminder
             </>
           )}
@@ -431,7 +431,7 @@ export function CustomRemindersSettings({
             {[0, 1, 2].map((k) => (
               <div
                 key={k}
-                className="animate-pulse rounded-xl border border-white/10 bg-white/5 px-3 py-3 dark:bg-black/20"
+                className="animate-pulse rounded-xl border border-white/10 bg-white/5 p-3 dark:bg-black/20"
               >
                 <div className="h-4 w-[45%] max-w-[14rem] rounded bg-kal-border/50" />
                 <div className="mt-2 h-3 w-full rounded bg-kal-border/35" />
@@ -476,7 +476,7 @@ export function CustomRemindersSettings({
                   className="rounded-lg border border-white/15 p-2 text-kal-text hover:bg-white/10"
                   aria-label="Edit reminder"
                 >
-                  <Pencil className="h-4 w-4" />
+                  <Pencil className="size-4" />
                 </button>
                 <button
                   type="button"
@@ -485,7 +485,7 @@ export function CustomRemindersSettings({
                   className="rounded-lg border border-white/15 p-2 text-kal-text hover:bg-red-500/15"
                   aria-label="Delete reminder"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="size-4" />
                 </button>
               </div>
             </div>

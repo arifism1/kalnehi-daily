@@ -64,14 +64,14 @@ export function PrepOperatingSystemSection() {
               className="flex flex-col gap-4 rounded-2xl border border-kal-border bg-kal-card p-7 shadow-[0_2px_8px_rgba(100,75,40,0.05)] backdrop-blur-sm transition hover:border-kal-accent/20 hover:shadow-[0_8px_24px_rgba(100,75,40,0.08)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
             >
               <div>
-                <h3 className="text-lg font-bold text-kal-text">{title}</h3>
+                <h3 className="text-lg font-semibold text-kal-text">{title}</h3>
                 <p className="mt-1 text-sm font-semibold leading-snug text-kal-accent/90">{hook}</p>
               </div>
               <p className="text-sm leading-relaxed text-kal-text-secondary">{body}</p>
               <ul className="mt-1 space-y-2 border-t border-kal-border pt-4">
                 {bullets.map((b) => (
                   <li key={b} className="flex items-start gap-2.5 text-sm leading-relaxed text-kal-text-secondary">
-                    <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-kal-accent" aria-hidden />
+                    <span className="mt-2 size-1 shrink-0 rounded-full bg-kal-accent" aria-hidden />
                     <span>{b}</span>
                   </li>
                 ))}

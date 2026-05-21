@@ -43,7 +43,7 @@ export function PwaUpdateCallout({ variant }: PwaUpdateCalloutProps) {
               <button
                 type="button"
                 onClick={dismiss}
-                className="rounded-lg px-2 py-2 text-xs font-semibold text-kal-muted transition-colors hover:bg-kal-card-muted hover:text-kal-text"
+                className="rounded-lg p-2 text-xs font-semibold text-kal-muted transition-colors hover:bg-kal-card-muted hover:text-kal-text"
                 aria-label="Dismiss"
               >
                 Later
@@ -73,7 +73,7 @@ export function PwaUpdateCallout({ variant }: PwaUpdateCalloutProps) {
                 onClick={applyReload}
                 className="inline-flex min-h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-kal-accent px-2 py-1.5 text-[11px] font-bold uppercase tracking-wide text-kal-accent-foreground transition-colors hover:bg-kal-accent-hover"
               >
-                <RefreshCw className="h-3 w-3 shrink-0" aria-hidden />
+                <RefreshCw className="size-3 shrink-0" aria-hidden />
                 Reload
               </button>
               <button
@@ -108,7 +108,7 @@ export function PwaUpdateCallout({ variant }: PwaUpdateCalloutProps) {
               onClick={applyReload}
               className="inline-flex min-h-[44px] min-w-[5.5rem] items-center justify-center gap-1.5 rounded-xl bg-kal-accent px-3 py-2 text-xs font-bold uppercase tracking-wide text-kal-accent-foreground transition-colors hover:bg-kal-accent-hover active:scale-[0.98] motion-reduce:active:scale-100"
             >
-              <RefreshCw className="h-3.5 w-3.5 shrink-0" aria-hidden />
+              <RefreshCw className="size-3.5 shrink-0" aria-hidden />
               Reload
             </button>
             <button

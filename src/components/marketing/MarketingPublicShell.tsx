@@ -39,7 +39,7 @@ export function MarketingPublicShell({ children }: { children: React.ReactNode }
           {" · "}
           <CookieSettingsTrigger className="text-kal-muted underline-offset-2 hover:underline" />
         </p>
-        <p className="mt-2">© {new Date().getFullYear()} {SITE_NAME}</p>
+        <p className="mt-2" suppressHydrationWarning>© {new Date().getFullYear()} {SITE_NAME}</p>
       </footer>
       <PwaInstallPromptDeferred />
     </div>

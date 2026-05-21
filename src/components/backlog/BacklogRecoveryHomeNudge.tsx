@@ -39,10 +39,10 @@ export function BacklogRecoveryHomeNudge() {
     }
     let cancelled = false;
     void (async () => {
+      if (cancelled) return;
       await rolloverMissedBacklogRecoveryTasks(today);
       if (cancelled) return;
       const wasDismissed = (await storage.getItem(`${STORAGE_PREFIX}:${user.id}:${today}`)) === "1";
-      if (cancelled) return;
       if (wasDismissed) {
         setDismissed(true);
         return;

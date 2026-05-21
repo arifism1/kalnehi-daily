@@ -179,6 +179,7 @@ async function groqChat(
   // Voice parsing is strictly locked to 8B — no 70B failover allowed.
   for (const modelName of [GROQ_DEFAULT_PARSING_ID]) {
     try {
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- single-model loop; sequential fallback pattern
       const completion = await groq.chat.completions.create({
         model: modelName,
         ...opts,

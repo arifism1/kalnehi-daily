@@ -74,7 +74,7 @@ export function PricingFAQ() {
             >
               <span className="text-base font-semibold leading-snug text-kal-text">{q}</span>
               <ChevronDown
-                className={`mt-0.5 h-5 w-5 shrink-0 text-kal-accent transition-transform duration-200 ${
+                className={`mt-0.5 size-5 shrink-0 text-kal-accent transition-transform duration-200 ${
                   isOpen ? "rotate-180" : ""
                 }`}
                 aria-hidden

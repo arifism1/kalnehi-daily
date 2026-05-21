@@ -509,7 +509,7 @@ export function ScheduleRevisionReminderDialog({
         className="kal-glass-panel relative z-[81] my-auto flex min-h-0 w-full max-w-lg max-h-[min(92dvh,100dvh-2rem)] flex-col overflow-hidden rounded-2xl shadow-lg sm:max-h-[min(90dvh,85dvh)]"
       >
         <div className="flex shrink-0 items-start justify-between gap-3 border-b border-kal-border/50 px-5 pb-3 pt-5 sm:px-6 sm:pt-6">
-          <h2 id={titleId} className="text-lg font-bold text-kal-text">
+          <h2 id={titleId} className="text-lg font-semibold text-kal-text">
             {dialogTitle}
           </h2>
           <button
@@ -519,7 +519,7 @@ export function ScheduleRevisionReminderDialog({
             onClick={() => onOpenChange(false)}
             className="rounded-lg p-1 text-kal-muted hover:bg-kal-card-muted hover:text-kal-text"
           >
-            <X className="h-5 w-5" />
+            <X className="size-5" />
           </button>
         </div>
 
@@ -604,7 +604,7 @@ export function ScheduleRevisionReminderDialog({
                       else startVoice();
                     }}
                     className={clsx(
-                      "flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition",
+                      "flex size-12 shrink-0 items-center justify-center rounded-full transition",
                       voicePhase === "listening" && "animate-pulse",
                       (voicePhase === "processing" || !isSupported) && "opacity-50",
                     )}
@@ -622,13 +622,13 @@ export function ScheduleRevisionReminderDialog({
                   >
                     {voicePhase === "processing" ? (
                       <Loader2
-                        className="h-5 w-5 animate-spin"
+                        className="size-5 animate-spin"
                         style={{ color: "#EF9F27" }}
                         aria-hidden
                       />
                     ) : (
                       <Mic
-                        className="h-5 w-5"
+                        className="size-5"
                         style={{
                           color: voicePhase === "listening" ? "#ffffff" : "#EF9F27",
                         }}
@@ -730,6 +730,7 @@ export function ScheduleRevisionReminderDialog({
                     <button
                       type="button"
                       role="option"
+                      aria-selected={selectedSyllabusId === String(r.id)}
                       className="flex w-full px-3 py-2 text-left text-sm hover:bg-kal-accent-soft/50"
                       onClick={() => pickSyllabusRow(r)}
                     >
@@ -833,7 +834,7 @@ export function ScheduleRevisionReminderDialog({
           >
             {saving ? (
               <>
-                <Loader2 className="mr-2 inline h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 inline size-4 animate-spin" />
                 Saving…
               </>
             ) : (

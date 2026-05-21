@@ -132,7 +132,7 @@ export async function getOverviewSnapshot(): Promise<OverviewSnapshot | null> {
   }
 
   const trialCohortsByDayRemaining: TrialCohortRow[] = [...cohortMap.entries()]
-    .sort((a, b) => a[0] - b[0])
+    .toSorted((a, b) => a[0] - b[0])
     .map(([daysRemaining, userCount]) => ({ daysRemaining, userCount }));
 
   const smartPlanMonthly = profiles.filter(

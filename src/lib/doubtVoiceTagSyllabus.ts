@@ -115,7 +115,7 @@ export function buildDoubtVoiceTagSubjectList(
   for (const r of rows) {
     if (r.subject) uniq.add(r.subject);
   }
-  const sorted = [...uniq].sort((a, b) => a.localeCompare(b));
+  const sorted = [...uniq].toSorted((a, b) => a.localeCompare(b));
   if (sorted.includes(DOUBT_GENERAL_SUBJECT)) return sorted;
   return [...sorted, DOUBT_GENERAL_SUBJECT];
 }
@@ -148,7 +148,7 @@ export function buildTopicLinesForPrompt(
     bySubject.set(r.subject, list);
   }
 
-  const subjects = [...bySubject.keys()].sort((a, b) => a.localeCompare(b));
+  const subjects = [...bySubject.keys()].toSorted((a, b) => a.localeCompare(b));
   const out: string[] = [];
   for (const sub of subjects) {
     const list = bySubject.get(sub) ?? [];

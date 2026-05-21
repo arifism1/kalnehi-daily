@@ -58,13 +58,13 @@ export function SubscriptionPaywallInterstitial({
         aria-describedby={descId}
         className="kal-glass-panel relative z-[81] flex min-h-0 w-full max-w-md max-h-[min(92dvh,40rem)] flex-col overflow-hidden rounded-2xl sm:rounded-2xl"
       >
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-6 py-6 [-webkit-overflow-scrolling:touch] sm:px-6">
-        <div className="kal-glass-subtle mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full">
-          <Lock className="h-6 w-6 text-kal-text-secondary" aria-hidden />
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-6 [-webkit-overflow-scrolling:touch] sm:px-6">
+        <div className="kal-glass-subtle mx-auto mb-5 flex size-14 items-center justify-center rounded-full">
+          <Lock className="size-6 text-kal-text-secondary" aria-hidden />
         </div>
         <h2
           id={titleId}
-          className="text-center text-lg font-bold tracking-tight text-kal-text"
+          className="text-center text-lg font-semibold tracking-tight text-kal-text"
         >
           {freeTrialEnded ? "Your 7-day trial has ended" : "Smart Plan required"}
         </h2>

@@ -1,5 +1,6 @@
 "use server";
 
+import { after } from "next/server";
 import { format } from "date-fns";
 
 import { formatSupabaseError } from "@/lib/supabase";
@@ -75,9 +76,12 @@ async function insertAutomatedNotificationsIfMissing(
 
   if (selectError) {
     if (isUserNotificationsTableMissing(selectError)) {
-      console.log(
-        "[user_notifications] table missing; skip insert until migration is applied",
-        selectError,
+      after(() =>
+        // react-doctor-disable-next-line react-doctor/server-after-nonblocking
+        console.log(
+          "[user_notifications] table missing; skip insert until migration is applied",
+          selectError,
+        ),
       );
       return;
     }
@@ -105,9 +109,12 @@ async function insertAutomatedNotificationsIfMissing(
   const { error } = await supabase.from("user_notifications").insert(toInsert);
   if (error) {
     if (isUserNotificationsTableMissing(error)) {
-      console.log(
-        "[user_notifications] table missing; skip insert until migration is applied",
-        error,
+      after(() =>
+        // react-doctor-disable-next-line react-doctor/server-after-nonblocking
+        console.log(
+          "[user_notifications] table missing; skip insert until migration is applied",
+          error,
+        ),
       );
       return;
     }
@@ -228,16 +235,22 @@ export async function listUserNotificationsPage(
       .order("created_at", { ascending: false })
       .range(safeOffset, rangeEnd);
     if (error) {
-      console.log("[listUserNotificationsPage] query error", {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint,
-        full: error,
-      });
+      after(() =>
+        // react-doctor-disable-next-line react-doctor/server-after-nonblocking
+        console.log("[listUserNotificationsPage] query error", {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+          full: error,
+        }),
+      );
       if (isUserNotificationsTableMissing(error)) {
-        console.log(
-          "[listUserNotificationsPage] user_notifications not in DB yet — returning empty list (apply supabase migration)",
+        after(() =>
+          // react-doctor-disable-next-line react-doctor/server-after-nonblocking
+          console.log(
+            "[listUserNotificationsPage] user_notifications not in DB yet — returning empty list (apply supabase migration)",
+          ),
         );
         return { ok: true, items: [], hasMore: false };
       }

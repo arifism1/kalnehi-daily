@@ -22,11 +22,15 @@ export async function flushHabitOutbox(userId: string | undefined): Promise<void
       if (row.userId !== userId) continue;
       const fails = row.failCount ?? 0;
       if (fails >= MAX_FAIL_BEFORE_DROP) {
+        // react-doctor-disable-next-line react-doctor/async-await-in-loop -- outbox must be processed sequentially to preserve mutation order
         await deleteHabitOutbox(row.id);
         continue;
       }
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- outbox must be processed sequentially to preserve mutation order
       const res = await applyHabitOutboxOp(row.op);
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- outbox must be processed sequentially to preserve mutation order
       if (res.ok) await deleteHabitOutbox(row.id);
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- outbox must be processed sequentially to preserve mutation order
       else await bumpHabitOutboxFail(row.id);
     }
     const stillPending = (await getAllHabitOutbox()).some(

@@ -256,7 +256,7 @@ function BlueprintExamPanel({ scope }: { scope: ExamScope }) {
   if (!hasMarksData) {
     return (
       <div className="mx-auto max-w-lg rounded-2xl border border-kal-border bg-kal-card-muted/60 px-6 py-10 text-center">
-        <Crosshair className="mx-auto mb-4 h-10 w-10 text-kal-accent opacity-80" aria-hidden />
+        <Crosshair className="mx-auto mb-4 size-10 text-kal-accent opacity-80" aria-hidden />
         <p className="text-sm leading-relaxed text-kal-text">
           Marks distribution data is not yet available for this exam. Feature will be enabled soon.
         </p>
@@ -290,7 +290,7 @@ function BlueprintExamPanel({ scope }: { scope: ExamScope }) {
               : "text-kal-muted hover:bg-kal-card/50 hover:text-kal-text"
           }`}
         >
-          <LayoutGrid className="h-4 w-4 shrink-0" aria-hidden />
+          <LayoutGrid className="size-4 shrink-0" aria-hidden />
           Gain Extra Marks
         </button>
         <button
@@ -307,7 +307,7 @@ function BlueprintExamPanel({ scope }: { scope: ExamScope }) {
               : "text-kal-muted hover:bg-kal-card/50 hover:text-kal-text"
           }`}
         >
-          <Target className="h-4 w-4 shrink-0" aria-hidden />
+          <Target className="size-4 shrink-0" aria-hidden />
           Reach My Target Score
         </button>
       </div>
@@ -330,7 +330,7 @@ function BlueprintExamPanel({ scope }: { scope: ExamScope }) {
                 href="/my-target"
                 className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-kal-accent/35 bg-kal-accent/12 px-4 py-2.5 text-sm font-semibold text-kal-accent shadow-sm transition-colors hover:bg-kal-accent/20"
               >
-                <BookMarked className="h-4 w-4 shrink-0" aria-hidden />
+                <BookMarked className="size-4 shrink-0" aria-hidden />
                 View My Targets
               </Link>
               <button
@@ -340,9 +340,9 @@ function BlueprintExamPanel({ scope }: { scope: ExamScope }) {
                   setShowBoostMyTargetSuccess(false);
                   setShowReachMyTargetSuccess(false);
                 }}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-kal-border text-kal-muted transition-colors hover:bg-kal-card hover:text-kal-text"
+                className="inline-flex size-10 items-center justify-center rounded-xl border border-kal-border text-kal-muted transition-colors hover:bg-kal-card hover:text-kal-text"
               >
-                <X className="h-4 w-4" strokeWidth={2.5} aria-hidden />
+                <X className="size-4" strokeWidth={2.5} aria-hidden />
               </button>
             </div>
           </div>
@@ -363,8 +363,8 @@ function BlueprintExamPanel({ scope }: { scope: ExamScope }) {
                 rise to the top.
               </p>
             </div>
-            <div className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-kal-accent/12 sm:flex">
-              <Sparkles className="h-5 w-5 text-kal-accent" aria-hidden />
+            <div className="hidden size-11 shrink-0 items-center justify-center rounded-2xl bg-kal-accent/12 sm:flex">
+              <Sparkles className="size-5 text-kal-accent" aria-hidden />
             </div>
           </div>
 
@@ -393,7 +393,7 @@ function BlueprintExamPanel({ scope }: { scope: ExamScope }) {
             >
               {boostLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+                  <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
                   Finding chapters…
                 </>
               ) : (
@@ -508,7 +508,7 @@ function BlueprintExamPanel({ scope }: { scope: ExamScope }) {
               >
                 {savingBoostToMyTarget ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+                    <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
                     Saving…
                   </>
                 ) : boostSavedToMyTarget ? (
@@ -638,7 +638,7 @@ function BlueprintExamPanel({ scope }: { scope: ExamScope }) {
           {showBlueprintTable && blueprint ? (
             <>
               <section className="kal-glass-panel overflow-hidden rounded-2xl border border-kal-border/80 shadow-sm">
-                <div className="border-b border-kal-border/50 bg-kal-card-muted/30 px-4 py-4 sm:px-6">
+                <div className="border-b border-kal-border/50 bg-kal-card-muted/30 p-4 sm:px-6">
                   <h3 className="text-base font-semibold text-kal-text">Chapters to focus on</h3>
                   <p className="mt-1.5 text-sm leading-relaxed text-kal-muted">
                     We start with the heaviest parts of the paper, then the sections you still have
@@ -694,7 +694,7 @@ function BlueprintExamPanel({ scope }: { scope: ExamScope }) {
                   </div>
                 )}
                 {blueprint.selected.length > 0 ? (
-                  <div className="border-t border-kal-border/50 bg-kal-card-muted/20 px-4 py-4 sm:px-6">
+                  <div className="border-t border-kal-border/50 bg-kal-card-muted/20 p-4 sm:px-6">
                     <p className="text-sm text-kal-text">
                       About{" "}
                       <span className="font-semibold tabular-nums text-kal-accent">
@@ -726,7 +726,7 @@ function BlueprintExamPanel({ scope }: { scope: ExamScope }) {
 
               {blueprint.selected.length > 0 ? (
                 <aside
-                  className="rounded-2xl border border-amber-500/30 bg-amber-50/85 px-4 py-4 text-sm leading-relaxed text-amber-950 shadow-sm dark:border-amber-800/40 dark:bg-amber-950/30 dark:text-amber-100"
+                  className="rounded-2xl border border-amber-500/30 bg-amber-50/85 p-4 text-sm leading-relaxed text-amber-950 shadow-sm dark:border-amber-800/40 dark:bg-amber-950/30 dark:text-amber-100"
                   role="note"
                 >
                   <p className="font-semibold text-amber-950 dark:text-amber-50">
@@ -753,7 +753,7 @@ function BlueprintExamPanel({ scope }: { scope: ExamScope }) {
                   >
                     {savingMyTarget ? (
                       <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+                        <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
                         Saving…
                       </>
                     ) : (
@@ -794,7 +794,7 @@ export function TargetScoreBlueprintClient() {
   if (loading) {
     return (
       <div className="flex items-center gap-2 text-kal-muted">
-        <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+        <Loader2 className="size-5 animate-spin" aria-hidden />
         Loading your syllabus…
       </div>
     );
@@ -818,7 +818,7 @@ export function TargetScoreBlueprintClient() {
     return (
       <div className="mx-auto max-w-lg rounded-2xl border border-kal-warn-border bg-kal-warn-soft px-6 py-8 text-center dark:border-amber-500/25 dark:bg-amber-950/20">
         <BookMarked
-          className="mx-auto h-10 w-10 text-kal-warn-text dark:text-amber-400/90"
+          className="mx-auto size-10 text-kal-warn-text dark:text-amber-400/90"
           aria-hidden
         />
         <h2 className="kal-section-heading mt-4">Choose your CUET domain subjects</h2>
@@ -863,7 +863,7 @@ export function TargetScoreBlueprintClient() {
         href="/"
         className="inline-flex items-center gap-2 text-sm font-medium text-kal-muted transition-colors hover:text-kal-accent"
       >
-        <ArrowLeft className="h-4 w-4" aria-hidden />
+        <ArrowLeft className="size-4" aria-hidden />
         Home
       </Link>
 

@@ -25,12 +25,12 @@ export function compareChapterNames(a: string, b: string): number {
 }
 
 export function sortChapterNameList(names: string[]): string[] {
-  return [...names].sort(compareChapterNames);
+  return [...names].toSorted(compareChapterNames);
 }
 
 /** Subject → chapter unit order → microtopic label. */
 export function sortSyllabusRows(rows: SyllabusRow[]): SyllabusRow[] {
-  return [...rows].sort((a, b) => {
+  return [...rows].toSorted((a, b) => {
     const subA = a.subject || "Other";
     const subB = b.subject || "Other";
     const subCmp = sortSubjects(subA, subB);

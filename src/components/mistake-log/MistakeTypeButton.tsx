@@ -77,7 +77,7 @@ export function MistakeTypeGrid({ value, onChange, disabled }: Props) {
                 : "border-zinc-300/95 bg-zinc-100/90 text-zinc-900 hover:border-kal-accent/50 dark:border-zinc-600 dark:bg-zinc-800/90 dark:text-zinc-100",
             )}
           >
-            <Icon className={clsx("h-4 w-4 shrink-0", colorClass)} aria-hidden />
+            <Icon className={clsx("size-4 shrink-0", colorClass)} aria-hidden />
             <span
               className={clsx(
                 "text-sm font-semibold leading-tight",

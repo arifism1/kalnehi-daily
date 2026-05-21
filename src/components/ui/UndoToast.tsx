@@ -37,7 +37,7 @@ export function UndoToast() {
           <button
             type="button"
             onClick={dismissToast}
-            className="rounded-lg px-2 py-2 text-xs font-semibold text-kal-muted transition-colors hover:bg-kal-card-muted hover:text-kal-text"
+            className="rounded-lg p-2 text-xs font-semibold text-kal-muted transition-colors hover:bg-kal-card-muted hover:text-kal-text"
             aria-label="Dismiss"
           >
             Dismiss

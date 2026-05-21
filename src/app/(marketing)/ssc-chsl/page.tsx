@@ -37,7 +37,7 @@ export default function SscChslPage() {
         />
 
         <section className="space-y-3" aria-labelledby="chsl-how">
-          <h2 id="chsl-how" className="text-xl font-bold text-kal-text">How Kalnehi Daily helps SSC CHSL preparation</h2>
+          <h2 id="chsl-how" className="text-xl font-semibold text-kal-text">How Kalnehi Daily helps SSC CHSL preparation</h2>
           <ul className="space-y-3 text-sm">
             {[
               { t: "Daily mock test tracking", d: "Log your Tier 1 mock scores section-wise. Mastermind tracks your accuracy trend across mocks and tells you which section is most improvable in the time you have left." },

@@ -33,8 +33,8 @@ function SectionHeaderTitles({
   return (
     <span className="flex min-w-0 items-start gap-3">
       {Icon ? (
-        <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-kal-accent/15 text-kal-accent">
-          <Icon className="h-4 w-4" aria-hidden />
+        <span className="mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-kal-accent/15 text-kal-accent">
+          <Icon className="size-4" aria-hidden />
         </span>
       ) : null}
       <span className="min-w-0">
@@ -80,7 +80,7 @@ export function SettingsExpandableSection({
           className,
         )}
       >
-        <div className="px-3 py-3 sm:px-4">
+        <div className="p-3 sm:px-4">
           <SectionHeaderTitles
             Icon={Icon}
             kicker={kicker}
@@ -107,7 +107,7 @@ export function SettingsExpandableSection({
           aria-expanded={open}
           aria-controls={panelId}
           onClick={() => setOpen((prev) => !prev)}
-          className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left sm:px-4"
+          className="flex w-full items-center justify-between gap-3 p-3 text-left sm:px-4"
         >
           <SectionHeaderTitles
             Icon={Icon}
@@ -117,7 +117,7 @@ export function SettingsExpandableSection({
           />
           <ChevronDown
             className={clsx(
-              "mt-0.5 h-4.5 w-4.5 shrink-0 text-kal-muted transition-transform duration-300",
+              "mt-0.5 size-4.5 shrink-0 text-kal-muted transition-transform duration-300",
               open && "rotate-180",
             )}
             aria-hidden

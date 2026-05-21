@@ -109,8 +109,8 @@ export function DailyVoiceNudge() {
         transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
       >
         <div className="flex flex-col items-center px-6 pb-6 pt-8 text-center">
-          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-kal-accent/12">
-            <Mic className="h-7 w-7 text-kal-accent" strokeWidth={1.75} />
+          <div className="mb-4 flex size-14 items-center justify-center rounded-full bg-kal-accent/12">
+            <Mic className="size-7 text-kal-accent" strokeWidth={1.75} />
           </div>
 
           <h2
@@ -134,7 +134,7 @@ export function DailyVoiceNudge() {
             onClick={handleDictateDay}
             className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-kal-accent px-4 py-3 text-[14px] font-semibold text-white transition-opacity active:opacity-80 sm:min-h-[44px]"
           >
-            <Mic className="h-4 w-4" strokeWidth={2} aria-hidden />
+            <Mic className="size-4" strokeWidth={2} aria-hidden />
             Dictate my day
           </button>
           <button

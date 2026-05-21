@@ -52,12 +52,14 @@ export async function flushMeditationOutbox(userId: string | undefined): Promise
     const queue = await getMeditationOutbox(userId);
     for (const entry of queue) {
       if ((entry.failCount ?? 0) >= MAX_FAILS) {
+        // react-doctor-disable-next-line react-doctor/async-await-in-loop -- outbox must be processed sequentially to preserve mutation order
         await deleteMeditationOutbox(entry.id);
         continue;
       }
       let error: { code?: string } | null = null;
       if (entry.op.kind === "session_create") {
         const row = entry.op.row;
+        // react-doctor-disable-next-line react-doctor/async-await-in-loop -- outbox must be processed sequentially to preserve mutation order
         const res = await supabase.from("meditation_sessions").insert({
           id: row.id,
           user_id: row.user_id,
@@ -71,6 +73,7 @@ export async function flushMeditationOutbox(userId: string | undefined): Promise
         });
         error = res.error;
       } else if (entry.op.kind === "session_note_update") {
+        // react-doctor-disable-next-line react-doctor/async-await-in-loop -- outbox must be processed sequentially to preserve mutation order
         const res = await supabase
           .from("meditation_sessions")
           .update({
@@ -81,8 +84,10 @@ export async function flushMeditationOutbox(userId: string | undefined): Promise
         error = res.error;
       }
       if (!error || error.code === "23505") {
+        // react-doctor-disable-next-line react-doctor/async-await-in-loop -- outbox must be processed sequentially to preserve mutation order
         await deleteMeditationOutbox(entry.id);
       } else {
+        // react-doctor-disable-next-line react-doctor/async-await-in-loop -- outbox must be processed sequentially to preserve mutation order
         await bumpMeditationOutboxFail(entry.id);
       }
     }

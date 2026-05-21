@@ -68,16 +68,16 @@ export function TaskInputModal({ mode, planDate, onClose }: Props) {
         {/* Sticky header */}
         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-kal-border bg-kal-card px-5 py-3.5 sm:px-6">
           <div className="flex items-center gap-2">
-            <Icon className="h-4 w-4 text-kal-accent" aria-hidden />
+            <Icon className="size-4 text-kal-accent" aria-hidden />
             <p className="text-sm font-bold text-kal-text">{label}</p>
           </div>
           <button
             type="button"
             aria-label="Close"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-kal-muted transition-colors hover:bg-kal-card-muted hover:text-kal-text"
+            className="flex size-8 items-center justify-center rounded-lg text-kal-muted transition-colors hover:bg-kal-card-muted hover:text-kal-text"
           >
-            <X className="h-4 w-4" aria-hidden />
+            <X className="size-4" aria-hidden />
           </button>
         </div>
 

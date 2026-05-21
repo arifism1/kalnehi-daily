@@ -55,7 +55,7 @@ export function CuetDomainSubjectPick({
               checked={on}
               disabled={disabled}
               onChange={() => toggle(opt)}
-              className="h-4 w-4 rounded border-kal-border bg-kal-card text-kal-accent focus:ring-kal-accent/40"
+              className="size-4 rounded border-kal-border bg-kal-card text-kal-accent focus:ring-kal-accent/40"
             />
             <span className="text-[15px] font-medium text-kal-text">{opt}</span>
           </label>

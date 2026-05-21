@@ -114,12 +114,12 @@ export function DailyExecutionPanel() {
         </p>
       </div>
 
-      <div className="px-6 py-6 sm:px-8 sm:py-8">
+      <div className="p-6 sm:px-8 sm:py-8">
         <div className="flex flex-col items-center gap-8 lg:flex-row lg:items-start lg:gap-10">
           <div className="flex flex-col items-center gap-4">
             {todaySnap.plannedTasks === 0 ? (
               <div className="flex h-[100px] flex-col items-center justify-center gap-2 text-center">
-                <CalendarDays className="h-8 w-8 text-kal-muted" aria-hidden />
+                <CalendarDays className="size-8 text-kal-muted" aria-hidden />
                 <p className="text-sm font-medium text-kal-text">No plan for today</p>
                 <p className="text-[13px] text-kal-muted">Add tasks in Plan to start tracking.</p>
               </div>
@@ -160,7 +160,7 @@ export function DailyExecutionPanel() {
 
           <div className="min-w-0 flex-1 space-y-6">
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl border border-kal-border/80 bg-kal-card-muted/30 px-3 py-3 dark:border-slate-700/80 dark:bg-slate-950/30">
+              <div className="rounded-xl border border-kal-border/80 bg-kal-card-muted/30 p-3 dark:border-slate-700/80 dark:bg-slate-950/30">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-kal-muted">
                   Tasks
                 </p>
@@ -175,7 +175,7 @@ export function DailyExecutionPanel() {
                   completed vs planned today
                 </p>
               </div>
-              <div className="rounded-xl border border-kal-border/80 bg-kal-card-muted/30 px-3 py-3 dark:border-slate-700/80 dark:bg-slate-950/30">
+              <div className="rounded-xl border border-kal-border/80 bg-kal-card-muted/30 p-3 dark:border-slate-700/80 dark:bg-slate-950/30">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-kal-muted">
                   Time
                 </p>

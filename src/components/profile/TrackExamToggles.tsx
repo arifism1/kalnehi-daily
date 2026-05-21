@@ -56,7 +56,7 @@ export function TrackExamToggles({
               checked={isEnabled}
               disabled={disabled || isOnlyEnabled}
               onChange={() => toggle(examName)}
-              className="h-4 w-4 rounded border-kal-border accent-kal-accent"
+              className="size-4 rounded border-kal-border accent-kal-accent"
             />
             <span className="text-sm text-kal-text">{displayName}</span>
             {isOnlyEnabled && (

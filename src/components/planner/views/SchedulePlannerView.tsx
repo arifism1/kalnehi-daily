@@ -22,7 +22,7 @@ export function SchedulePlannerView() {
         {rows.map((r) => (
           <div
             key={r.t}
-            className="kal-glass-card flex flex-col gap-1 rounded-xl px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
+            className="kal-glass-card flex flex-col gap-1 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between"
           >
             <div>
               <p className="text-xs font-semibold tabular-nums text-kal-accent">

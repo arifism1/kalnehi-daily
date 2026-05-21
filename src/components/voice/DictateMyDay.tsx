@@ -507,6 +507,7 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
       });
 
       for (const payload of inserts) {
+        // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential task insertion preserves parsed order; early-return on failure
         const res = await insertDailyTask(payload);
         if (!res.ok) {
           setError(`Failed to save "${payload.title}": ${surfaceErrorForUi(res.error)}`);
@@ -566,7 +567,7 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
                     className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/80 bg-amber-50/95 px-[10px] py-1 text-amber-950 dark:border-amber-500/45 dark:bg-amber-950/50 dark:text-amber-50"
                   >
                     <Mic
-                      className="h-3 w-3 shrink-0 text-amber-800 dark:text-amber-300"
+                      className="size-3 shrink-0 text-amber-800 dark:text-amber-300"
                       aria-hidden
                     />
                     <span className="text-[12px] font-medium text-amber-950 dark:text-amber-50">
@@ -600,7 +601,7 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
               );
             })()}
             <h1 className="kal-feature-title mt-1 flex flex-wrap items-center gap-2">
-              <Volume2 className="h-7 w-7 shrink-0 text-kal-accent" aria-hidden />
+              <Volume2 className="size-7 shrink-0 text-kal-accent" aria-hidden />
               Dictate My Day
             </h1>
             <p className="kal-glass-subtle mt-3 rounded-xl px-3 py-2 text-xs leading-relaxed text-kal-text-secondary">
@@ -684,7 +685,7 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
               else startVoice();
             }}
             className={[
-              "relative flex h-24 w-24 shrink-0 items-center justify-center rounded-full transition-all sm:h-28 sm:w-28",
+              "relative flex size-24 shrink-0 items-center justify-center rounded-full transition-all sm:h-28 sm:w-28",
               phase === "listening"
                 ? "animate-pulse"
                 : "",
@@ -699,10 +700,10 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
             aria-label={phase === "listening" ? "Stop listening" : "Start listening"}
           >
             {phase === "processing" ? (
-              <Loader2 className="h-10 w-10 animate-spin" style={{ color: "#EF9F27" }} />
+              <Loader2 className="size-10 animate-spin" style={{ color: "#EF9F27" }} />
             ) : (
               <Mic
-                className="h-10 w-10"
+                className="size-10"
                 style={{ color: phase === "listening" ? "#ffffff" : "#EF9F27" }}
               />
             )}
@@ -765,7 +766,7 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
 
       <section className="kal-glass-panel rounded-[1.25rem] p-4 sm:p-6">
         <div className="flex items-center justify-between gap-2">
-          <h2 className="text-sm font-bold text-kal-text">Preview (not saved yet)</h2>
+          <h2 className="text-sm font-semibold text-kal-text">Preview (not saved yet)</h2>
           <span className="text-xs text-kal-text-secondary">{logDate}</span>
         </div>
         <p className="mt-1 text-xs leading-relaxed text-kal-text-secondary">
@@ -822,7 +823,7 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
           >
             {busyCommit ? (
               <>
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <Loader2 className="size-5 animate-spin" />
                 Adding…
               </>
             ) : (
@@ -867,7 +868,7 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
               placeholder="Edit your note…"
             />
           ) : (
-            <p className="kal-glass-subtle mt-4 rounded-[1rem] px-4 py-4 text-lg leading-relaxed text-kal-text">
+            <p className="kal-glass-subtle mt-4 rounded-[1rem] p-4 text-lg leading-relaxed text-kal-text">
               {fallbackPanel.text}
             </p>
           )}
@@ -888,7 +889,7 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
             >
               {phase === "processing" ? (
                 <span className="inline-flex items-center justify-center gap-2">
-                  <Loader2 className="h-5 w-5 animate-spin" /> Saving…
+                  <Loader2 className="size-5 animate-spin" /> Saving…
                 </span>
               ) : (
                 "Save as raw note"

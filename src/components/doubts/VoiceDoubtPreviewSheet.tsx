@@ -173,12 +173,12 @@ export function VoiceDoubtPreviewSheet({
         <div className="flex shrink-0 items-start justify-between gap-2 border-b border-kal-border px-5 pb-3 pt-4">
           <div className="min-w-0">
             <p className="flex items-center gap-1.5 text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-kal-accent">
-              <Mic className="h-3.5 w-3.5 shrink-0" aria-hidden />
+              <Mic className="size-3.5 shrink-0" aria-hidden />
               Voice doubt
             </p>
             <h2
               id={`${baseId}-title`}
-              className="text-lg font-bold tracking-tight text-kal-text"
+              className="text-lg font-semibold tracking-tight text-kal-text"
             >
               Review and save
             </h2>
@@ -207,7 +207,7 @@ export function VoiceDoubtPreviewSheet({
             disabled={saving}
             className="rounded-lg p-2 text-kal-muted transition-colors hover:bg-kal-card-muted disabled:opacity-50"
           >
-            <X className="h-5 w-5" />
+            <X className="size-5" />
           </button>
         </div>
 
@@ -219,7 +219,7 @@ export function VoiceDoubtPreviewSheet({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               rows={4}
-              className="mt-2 w-full resize-y rounded-xl border border-kal-border bg-kal-input-bg px-3 py-3 text-base leading-relaxed text-kal-text outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40"
+              className="mt-2 w-full resize-y rounded-xl border border-kal-border bg-kal-input-bg p-3 text-base leading-relaxed text-kal-text outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40"
             />
           </label>
 
@@ -265,7 +265,7 @@ export function VoiceDoubtPreviewSheet({
                 saving && "pointer-events-none cursor-not-allowed opacity-50",
               )}
             >
-              <Camera className="h-5 w-5 shrink-0" aria-hidden />
+              <Camera className="size-5 shrink-0" aria-hidden />
               <span>📸 Add photo</span>
             </label>
 
@@ -280,15 +280,15 @@ export function VoiceDoubtPreviewSheet({
                     <img
                       src={p.url}
                       alt=""
-                      className="h-20 w-20 object-cover sm:h-24 sm:w-24"
+                      className="size-20 object-cover sm:h-24 sm:w-24"
                     />
                     <button
                       type="button"
                       onClick={() => removePending(i)}
-                      className="absolute right-0.5 top-0.5 flex h-7 w-7 items-center justify-center rounded-md bg-black/60 text-white"
+                      className="absolute right-0.5 top-0.5 flex size-7 items-center justify-center rounded-md bg-black/60 text-white"
                       aria-label="Remove photo"
                     >
-                      <X className="h-3.5 w-3.5" />
+                      <X className="size-3.5" />
                     </button>
                   </li>
                 ))}
@@ -315,7 +315,7 @@ export function VoiceDoubtPreviewSheet({
           >
             {saving ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                <Loader2 className="size-4 animate-spin" aria-hidden />
                 Saving…
               </>
             ) : (

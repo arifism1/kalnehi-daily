@@ -137,7 +137,7 @@ export function WaitlistJoinClient({
                 "Your position is locked the moment you submit",
               ].map((point) => (
                 <div key={point} className="flex items-start gap-2.5">
-                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-kal-accent/70" aria-hidden />
+                  <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-kal-accent/70" aria-hidden />
                   <span className="text-sm leading-snug text-kal-text-secondary">{point}</span>
                 </div>
               ))}

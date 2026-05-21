@@ -122,7 +122,7 @@ export function AdminConfigClient({ config, descriptions, userId }: Props) {
           disabled={syncing}
           className="flex shrink-0 items-center gap-1.5 rounded-lg bg-kal-accent/15 px-3 py-2 text-xs font-medium text-kal-accent hover:bg-kal-accent/25 disabled:opacity-50"
         >
-          <RefreshCw className={`h-3.5 w-3.5 ${syncing ? "animate-spin" : ""}`} />
+          <RefreshCw className={`size-3.5 ${syncing ? "animate-spin" : ""}`} />
           {syncing ? "Syncing…" : "Sync DeepInfra prices"}
         </button>
       </div>
@@ -204,28 +204,28 @@ export function AdminConfigClient({ config, descriptions, userId }: Props) {
                           type="button"
                           onClick={handleSave}
                           disabled={saving}
-                          className="flex h-7 w-7 items-center justify-center rounded-lg bg-kal-accent/15 text-kal-accent hover:bg-kal-accent/25 disabled:opacity-50"
+                          className="flex size-7 items-center justify-center rounded-lg bg-kal-accent/15 text-kal-accent hover:bg-kal-accent/25 disabled:opacity-50"
                           aria-label="Save"
                         >
-                          <Check className="h-4 w-4" />
+                          <Check className="size-4" />
                         </button>
                         <button
                           type="button"
                           onClick={() => setEditing(null)}
-                          className="flex h-7 w-7 items-center justify-center rounded-lg bg-kal-card-muted text-kal-muted hover:text-kal-text"
+                          className="flex size-7 items-center justify-center rounded-lg bg-kal-card-muted text-kal-muted hover:text-kal-text"
                           aria-label="Cancel"
                         >
-                          <X className="h-4 w-4" />
+                          <X className="size-4" />
                         </button>
                       </div>
                     ) : (
                       <button
                         type="button"
                         onClick={() => setEditing({ key, value: localConfig[key] ?? "" })}
-                        className="flex h-7 w-7 items-center justify-center rounded-lg text-kal-muted hover:bg-kal-card hover:text-kal-text"
+                        className="flex size-7 items-center justify-center rounded-lg text-kal-muted hover:bg-kal-card hover:text-kal-text"
                         aria-label={`Edit ${key}`}
                       >
-                        <Pencil className="h-3.5 w-3.5" />
+                        <Pencil className="size-3.5" />
                       </button>
                     )}
                   </td>

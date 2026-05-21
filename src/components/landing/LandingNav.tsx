@@ -56,7 +56,7 @@ function NavFeaturesDropdown() {
         aria-haspopup="menu"
       >
         Features
-        <svg className={clsx("h-3.5 w-3.5 transition-transform", open && "rotate-180")} viewBox="0 0 12 12" fill="none" aria-hidden>
+        <svg className={clsx("size-3.5 transition-transform", open && "rotate-180")} viewBox="0 0 12 12" fill="none" aria-hidden>
           <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </button>
@@ -173,7 +173,7 @@ export function LandingNav() {
               >
                 Exams
                 <svg
-                  className={clsx("h-3.5 w-3.5 transition-transform", examsOpen && "rotate-180")}
+                  className={clsx("size-3.5 transition-transform", examsOpen && "rotate-180")}
                   viewBox="0 0 12 12"
                   fill="none"
                   aria-hidden
@@ -196,7 +196,7 @@ export function LandingNav() {
                       onClick={() => setExamsOpen(false)}
                       className="flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-kal-text transition-colors hover:bg-kal-accent-soft hover:text-kal-accent-dark"
                     >
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-kal-accent/50" aria-hidden />
+                      <span className="size-1.5 shrink-0 rounded-full bg-kal-accent/50" aria-hidden />
                       {label}
                     </Link>
                   ))}
@@ -248,9 +248,9 @@ export function LandingNav() {
               onClick={() => setMenuOpen((v) => !v)}
               aria-label={menuOpen ? "Close menu" : "Open menu"}
               aria-expanded={menuOpen}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-kal-border bg-kal-card/70 text-kal-text-secondary transition hover:border-kal-accent/40 hover:text-kal-accent lg:hidden"
+              className="inline-flex size-10 items-center justify-center rounded-xl border border-kal-border bg-kal-card/70 text-kal-text-secondary transition hover:border-kal-accent/40 hover:text-kal-accent lg:hidden"
             >
-              {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
             </button>
           </div>
         </div>
@@ -261,7 +261,7 @@ export function LandingNav() {
             ref={menuRef}
             className="border-t border-kal-border bg-kal-card/95 backdrop-blur-xl lg:hidden"
           >
-            <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
+            <div className="mx-auto max-w-7xl p-4 sm:px-6">
               <nav className="flex flex-col gap-1" aria-label="Mobile navigation">
                 {NAV_LINKS.map(({ href, label }) => (
                   <Link
@@ -284,7 +284,7 @@ export function LandingNav() {
                       onClick={() => setMenuOpen(false)}
                       className="rounded-xl px-4 py-3 text-sm font-medium text-kal-text transition-colors hover:bg-kal-accent-soft hover:text-kal-accent-dark flex items-center gap-2.5"
                     >
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-kal-accent/50" aria-hidden />
+                      <span className="size-1.5 shrink-0 rounded-full bg-kal-accent/50" aria-hidden />
                       {label}
                     </Link>
                   ))}

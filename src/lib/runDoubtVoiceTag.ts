@@ -102,7 +102,7 @@ export async function runDoubtVoiceTagGroq(
     return { ok: false, error: "Nothing was captured to tag." };
   }
 
-  const subjectList = [...input.allowedSubjects].sort((a, b) =>
+  const subjectList = [...input.allowedSubjects].toSorted((a, b) =>
     a.localeCompare(b),
   );
   const topicSlice = input.topicLinesForPrompt.slice(0, 400);
@@ -149,6 +149,7 @@ ${topicSlice.map((l) => `- ${l}`).join("\n")}`;
 
   for (const model of getGroqModelCandidates("parsing")) {
     try {
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential model fallback: try next model only if this one fails
       const completion = await groq.chat.completions.create({
         model,
         messages,

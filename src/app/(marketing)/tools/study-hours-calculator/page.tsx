@@ -56,7 +56,7 @@ export default function StudyHoursCalculatorPage() {
       <div className="space-y-10">
         <header className="space-y-3">
           <p className="inline-flex items-center gap-1.5 rounded-full border border-kal-accent/25 bg-kal-accent-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-kal-accent-dark">
-            <span className="h-1.5 w-1.5 rounded-full bg-kal-accent" aria-hidden />
+            <span className="size-1.5 rounded-full bg-kal-accent" aria-hidden />
             Free Tool — No login required
           </p>
           <h1 className="kal-feature-title">Study Hours Calculator for Competitive Exams</h1>
@@ -70,7 +70,7 @@ export default function StudyHoursCalculatorPage() {
         </div>
 
         <section className="space-y-3" aria-labelledby="how-it-works">
-          <h2 id="how-it-works" className="text-lg font-bold text-kal-text">How the calculation works</h2>
+          <h2 id="how-it-works" className="text-lg font-semibold text-kal-text">How the calculation works</h2>
           <div className="space-y-2 text-sm text-kal-text-secondary leading-relaxed">
             <p>The calculator estimates total hours needed by multiplying remaining topics by your estimated hours per topic (first reading + initial problems), adding revision time (typically 40-60% of first reading time), and mock test hours.</p>
             <p>Available hours are calculated from your exam date with a 15% buffer for sick days and unavoidable gaps. If available hours exceed needed hours by 30%+, your preparation is comfortable. Below that threshold, you're in tight or critical territory.</p>

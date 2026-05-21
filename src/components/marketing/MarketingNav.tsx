@@ -97,9 +97,9 @@ export function MarketingNav() {
         aria-expanded={open}
         aria-controls="marketing-nav-menu"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-kal-border bg-kal-card/70 text-kal-text-secondary transition hover:border-kal-accent/40 hover:text-kal-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/50"
+        className="inline-flex size-10 items-center justify-center rounded-xl border border-kal-border bg-kal-card/70 text-kal-text-secondary transition hover:border-kal-accent/40 hover:text-kal-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/50"
       >
-        {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        {open ? <X className="size-5" /> : <Menu className="size-5" />}
       </button>
 
       {/* Get started CTA */}
@@ -151,9 +151,9 @@ export function MarketingNav() {
                 )}
               >
                 {installed ? (
-                  <CheckCircle2 className="h-[1.125rem] w-[1.125rem] shrink-0" strokeWidth={2.35} />
+                  <CheckCircle2 className="size-[1.125rem] shrink-0" strokeWidth={2.35} />
                 ) : (
-                  <Download className="h-[1.125rem] w-[1.125rem] shrink-0" strokeWidth={2.35} />
+                  <Download className="size-[1.125rem] shrink-0" strokeWidth={2.35} />
                 )}
                 {installed
                   ? "App Installed"
@@ -185,7 +185,7 @@ export function MarketingNav() {
                     }`}
                   >
                     <span
-                      className={`h-1.5 w-1.5 shrink-0 rounded-full transition-colors ${
+                      className={`size-1.5 shrink-0 rounded-full transition-colors ${
                         active ? "bg-kal-accent" : "bg-kal-border"
                       }`}
                       aria-hidden

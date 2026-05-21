@@ -185,13 +185,13 @@ export function MissedTasks() {
       map.set(r.sortKey, list);
     }
     return [...map.entries()]
-      .sort(([a], [b]) => b.localeCompare(a))
+      .toSorted(([a], [b]) => b.localeCompare(a))
       .map(([date, rows]) => ({ date, rows }));
   }, [dateFilteredRows, selectedDate]);
 
   const missedPickerBounds = useMemo(() => {
     if (dateRowCounts.size === 0) return null;
-    const keys = [...dateRowCounts.keys()].sort((a, b) => a.localeCompare(b));
+    const keys = [...dateRowCounts.keys()].toSorted((a, b) => a.localeCompare(b));
     return {
       min: keys[0]!,
       max: keys[keys.length - 1]!,
@@ -347,7 +347,7 @@ export function MissedTasks() {
           className="kal-btn-accent flex w-full min-h-[48px] items-center justify-center gap-2 rounded-2xl py-3 text-xs font-bold uppercase tracking-wide active:scale-[0.99]"
         >
           <CalendarCheck
-            className="h-4 w-4 shrink-0 opacity-95"
+            className="size-4 shrink-0 opacity-95"
             aria-hidden
           />
           Move to today
@@ -392,7 +392,7 @@ export function MissedTasks() {
             disabled={!userId}
             className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-xl border border-kal-border/70 bg-kal-card-muted px-3 text-xs font-semibold text-kal-text hover:bg-kal-accent-soft/50 disabled:opacity-50"
           >
-            <Check className="h-3.5 w-3.5" aria-hidden />
+            <Check className="size-3.5" aria-hidden />
             Mark done
           </button>
           <button
@@ -401,7 +401,7 @@ export function MissedTasks() {
             disabled={!userId}
             className="kal-btn-accent inline-flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wide disabled:opacity-50"
           >
-            <CalendarCheck className="h-3.5 w-3.5" aria-hidden />
+            <CalendarCheck className="size-3.5" aria-hidden />
             Move to today
           </button>
           <button
@@ -410,7 +410,7 @@ export function MissedTasks() {
             disabled={!userId}
             className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-rose-200/80 px-3 text-xs font-semibold text-rose-700 hover:bg-rose-50 dark:border-rose-900/50 dark:text-rose-300 dark:hover:bg-rose-950/40 disabled:opacity-50"
           >
-            <Trash2 className="h-3.5 w-3.5" aria-hidden />
+            <Trash2 className="size-3.5" aria-hidden />
             Delete
           </button>
         </div>
@@ -419,8 +419,8 @@ export function MissedTasks() {
 
   if (allCaughtUp) {
     return (
-      <div className="flex flex-col items-center justify-center px-6 py-6 text-center">
-        <MissedTasksEmptyIllustration className="h-36 w-36" />
+      <div className="flex flex-col items-center justify-center p-6 text-center">
+        <MissedTasksEmptyIllustration className="size-36" />
         <h2 className="mt-3 text-base font-medium text-kal-text">
           You&apos;re all caught up
         </h2>
@@ -444,13 +444,13 @@ export function MissedTasks() {
       aria-labelledby="missed-heading"
     >
       <div className="flex items-start gap-2.5 sm:gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-amber-300/80 bg-amber-100 text-amber-800 shadow-sm sm:h-11 sm:w-11 sm:rounded-2xl dark:border-amber-500/35 dark:bg-amber-500/15 dark:text-amber-200">
-          <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden />
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-amber-300/80 bg-amber-100 text-amber-800 shadow-sm sm:h-11 sm:w-11 sm:rounded-2xl dark:border-amber-500/35 dark:bg-amber-500/15 dark:text-amber-200">
+          <AlertTriangle className="size-4 sm:h-5 sm:w-5" aria-hidden />
         </div>
         <div className="min-w-0 flex-1">
           <h2
             id="missed-heading"
-            className="text-xs font-bold uppercase tracking-wide text-amber-900 sm:text-sm dark:text-amber-100"
+            className="text-xs font-semibold uppercase tracking-wide text-amber-900 sm:text-sm dark:text-amber-100"
           >
             Overdue &amp; missed
           </h2>
@@ -513,7 +513,7 @@ export function MissedTasks() {
 
       {userId && revisionLoading && missedDaily.length > 0 ? (
         <p className="mt-2 flex items-center gap-2 text-xs text-kal-muted">
-          <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" aria-hidden />
+          <Loader2 className="size-3.5 shrink-0 animate-spin" aria-hidden />
           Syncing Revision Tracker…
         </p>
       ) : null}
@@ -557,7 +557,7 @@ export function MissedTasks() {
           <div className="mt-4 space-y-6 sm:mt-5">
             {(missedRowsGrouped ?? []).map(({ date, rows }) => (
               <section key={date} className="space-y-3">
-                <h3 className="border-b border-amber-200/60 pb-1.5 text-xs font-bold uppercase tracking-wide text-amber-900/90 dark:border-amber-500/20 dark:text-amber-200/90">
+                <h3 className="border-b border-amber-200/60 pb-1.5 text-xs font-semibold uppercase tracking-wide text-amber-900/90 dark:border-amber-500/20 dark:text-amber-200/90">
                   {format(parseISO(date), "EEEE, MMM d, yyyy")}
                 </h3>
                 <ul className="space-y-3 sm:space-y-4">

@@ -111,6 +111,7 @@ async function groqChat(
   let lastErr: unknown;
   for (const model of [GROQ_DEFAULT_PARSING_ID]) {
     try {
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential model fallback: try next model only if this one fails
       const completion = await groq.chat.completions.create({
         model,
         ...opts,

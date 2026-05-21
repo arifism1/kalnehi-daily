@@ -171,12 +171,12 @@ async function refreshTasksFromSupabaseImpl(userId: string): Promise<void> {
 
   const queue = await getAllOutboxMutations();
   const pendingDeleteIds = new Set(
-    queue.filter((m) => m.op === "task_delete").map((m) => m.taskId),
+    queue.flatMap((m) => m.op === "task_delete" ? [m.taskId] : []),
   );
   const pendingLocalMutationIds = new Set(
-    queue
-      .filter((m) => m.op === "task_create" || m.op === "task_update")
-      .map((m) => m.taskId),
+    queue.flatMap((m) =>
+      m.op === "task_create" || m.op === "task_update" ? [m.taskId] : [],
+    ),
   );
   const pendingUpdatePatchesByTaskId = new Map<string, TablesUpdate<"tasks">>();
   for (const m of queue) {

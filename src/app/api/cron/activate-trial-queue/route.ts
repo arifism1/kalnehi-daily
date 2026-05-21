@@ -74,6 +74,7 @@ export async function GET(req: NextRequest) {
 
   for (const entry of entries ?? []) {
     // Skip users who already have an active trial (e.g. they started manually or paid ₹19).
+    // react-doctor-disable-next-line react-doctor/async-await-in-loop -- per-user sequential processing in trial activation queue
     const { data: profile } = await admin
       .from("user_profiles")
       .select("has_used_free_trial")

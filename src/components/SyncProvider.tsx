@@ -35,6 +35,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false;
     void (async () => {
       try {
+        if (cancelled) return;
         const { loadAllLocalState } = await import("@/lib/taskIdb");
         const { tasks, microtopics } = await loadAllLocalState();
         if (cancelled) return;

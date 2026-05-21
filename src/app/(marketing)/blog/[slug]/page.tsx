@@ -58,7 +58,7 @@ function renderMarkdown(content: string): React.ReactNode[] {
     const line = lines[i];
 
     if (line.startsWith("## ")) {
-      elements.push(<h2 key={i} className="mt-8 text-xl font-bold text-kal-text first:mt-0">{line.slice(3)}</h2>);
+      elements.push(<h2 key={i} className="mt-8 text-xl font-semibold text-kal-text first:mt-0">{line.slice(3)}</h2>);
     } else if (line.startsWith("### ")) {
       elements.push(<h3 key={i} className="mt-6 text-base font-semibold text-kal-text">{line.slice(4)}</h3>);
     } else if (line.startsWith("**") && line.endsWith("**") && !line.slice(2, -2).includes("**")) {
@@ -71,6 +71,7 @@ function renderMarkdown(content: string): React.ReactNode[] {
         i++;
       }
       const [header, , ...rows] = tableLines;
+      // react-doctor-disable-next-line react-doctor/js-combine-iterations -- split-filter-map for parsing table rows; performance not critical
       const headers = header.split("|").filter(Boolean).map(h => h.trim());
       elements.push(
         <div key={`table-${i}`} className="my-4 overflow-x-auto rounded-xl border border-kal-border">
@@ -80,6 +81,7 @@ function renderMarkdown(content: string): React.ReactNode[] {
             </thead>
             <tbody>
               {rows.map((row, ri) => {
+                // react-doctor-disable-next-line react-doctor/js-combine-iterations -- split-filter-map for parsing table cells; performance not critical
                 const cells = row.split("|").filter(Boolean).map(c => c.trim());
                 return <tr key={ri} className={ri % 2 === 0 ? "bg-kal-page" : "bg-kal-card/40"}>{cells.map((c, ci) => <td key={ci} className="px-3 py-2 text-kal-text-secondary">{c}</td>)}</tr>;
               })}
@@ -219,7 +221,7 @@ export default async function BlogPostPage({ params }: Props) {
         {/* Related posts */}
         {related.length > 0 && (
           <section className="space-y-4" aria-labelledby="related-posts">
-            <h2 id="related-posts" className="text-lg font-bold text-kal-text">Read next</h2>
+            <h2 id="related-posts" className="text-lg font-semibold text-kal-text">Read next</h2>
             <div className="grid gap-4 sm:grid-cols-2">
               {related.map((p) => <BlogCard key={p.slug} {...p} />)}
             </div>

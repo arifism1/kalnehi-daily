@@ -62,7 +62,7 @@ export function BottomTabBar() {
                   isActive ? "text-[#BA7517]" : "text-kal-muted",
                 )}
               >
-                <Icon className="h-5 w-5 shrink-0" aria-hidden />
+                <Icon className="size-5 shrink-0" aria-hidden />
                 <span
                   className={clsx(
                     "w-full max-w-full truncate text-center text-[9px] font-medium leading-none tracking-wide",

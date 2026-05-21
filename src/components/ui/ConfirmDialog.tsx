@@ -47,10 +47,10 @@ export function ConfirmDialog({
         aria-describedby="confirm-dialog-desc"
         className="kal-glass-panel relative z-[81] flex min-h-0 w-full max-w-md max-h-[min(92dvh,40rem)] flex-col overflow-hidden rounded-2xl sm:rounded-2xl"
       >
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-6 py-6 [-webkit-overflow-scrolling:touch] sm:px-6">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-6 [-webkit-overflow-scrolling:touch] sm:px-6">
         <h2
           id="confirm-dialog-title"
-          className="text-lg font-bold tracking-tight text-kal-text"
+          className="text-lg font-semibold tracking-tight text-kal-text"
         >
           {title}
         </h2>

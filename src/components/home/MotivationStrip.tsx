@@ -81,7 +81,7 @@ export function MotivationStrip() {
   return (
     <section
       aria-labelledby="motivation-heading"
-      className="kal-glass-card overflow-hidden rounded-2xl px-5 py-5 sm:rounded-2xl sm:px-6 sm:py-6"
+      className="kal-glass-card overflow-hidden rounded-2xl p-5 sm:rounded-2xl sm:px-6 sm:py-6"
     >
       <div className="mb-2 flex items-baseline justify-between gap-2 sm:mb-3">
         <h2
@@ -129,7 +129,7 @@ export function MotivationStrip() {
                   className="aspect-square w-full object-cover"
                 />
               </button>
-              <figcaption className="truncate border-t border-kal-border px-2 py-2 text-center text-[10px] font-semibold uppercase tracking-wide text-kal-muted">
+              <figcaption className="truncate border-t border-kal-border p-2 text-center text-[10px] font-semibold uppercase tracking-wide text-kal-muted">
                 {r.label}
               </figcaption>
             </figure>
@@ -162,10 +162,10 @@ export function MotivationStrip() {
             <button
               type="button"
               onClick={closeLightbox}
-              className="absolute -right-1 -top-1 z-[202] flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-white/20 bg-kal-card text-kal-text shadow-lg transition-colors hover:bg-kal-card-muted sm:right-0 sm:top-0 sm:translate-x-1/2 sm:-translate-y-1/2"
+              className="absolute -right-1 -top-1 z-[202] flex size-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-white/20 bg-kal-card text-kal-text shadow-lg transition-colors hover:bg-kal-card-muted sm:right-0 sm:top-0 sm:translate-x-1/2 sm:-translate-y-1/2"
               aria-label="Close"
             >
-              <X className="h-5 w-5" strokeWidth={2.25} />
+              <X className="size-5" strokeWidth={2.25} />
             </button>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img

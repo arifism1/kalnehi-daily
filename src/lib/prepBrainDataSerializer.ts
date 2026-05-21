@@ -282,11 +282,11 @@ export function formatWeakStrongMarkdown(data: unknown): string {
       const strong = block.strong_top_3;
       const weakStr =
         Array.isArray(weak) && weak.length > 0
-          ? weak.map((r) => fmtSubjectRow(r)).filter(Boolean).join("; ")
+          ? weak.flatMap((r) => { const s = fmtSubjectRow(r); return s ? [s] : []; }).join("; ")
           : "none listed";
       const strongStr =
         Array.isArray(strong) && strong.length > 0
-          ? strong.map((r) => fmtSubjectRow(r)).filter(Boolean).join("; ")
+          ? strong.flatMap((r) => { const s = fmtSubjectRow(r); return s ? [s] : []; }).join("; ")
           : "none listed";
       parts.push(`**${examName}** — Weakest: ${weakStr}. Strongest: ${strongStr}.`);
     }
@@ -297,11 +297,11 @@ export function formatWeakStrongMarkdown(data: unknown): string {
   const strong = data.strong_top_3;
   const weakStr =
     Array.isArray(weak) && weak.length > 0
-      ? weak.map((r) => fmtSubjectRow(r)).filter(Boolean).join("; ")
+      ? weak.flatMap((r) => { const s = fmtSubjectRow(r); return s ? [s] : []; }).join("; ")
       : "none listed";
   const strongStr =
     Array.isArray(strong) && strong.length > 0
-      ? strong.map((r) => fmtSubjectRow(r)).filter(Boolean).join("; ")
+      ? strong.flatMap((r) => { const s = fmtSubjectRow(r); return s ? [s] : []; }).join("; ")
       : "none listed";
   return `### Strong vs weak (by subject completion)\nWeakest: ${weakStr}.\nStrongest: ${strongStr}.`;
 }
@@ -473,7 +473,7 @@ export function formatBacklogSnapshotMarkdown(data: unknown): string {
   if (!Array.isArray(items) || items.length === 0) {
     return `${head}\n_No open backlog rows._`;
   }
-  const sorted = [...items].sort((a, b) => {
+  const sorted = [...items].toSorted((a, b) => {
     if (!isRecord(a) || !isRecord(b)) return 0;
     const ra = typeof a.retries === "number" ? a.retries : 0;
     const rb = typeof b.retries === "number" ? b.retries : 0;

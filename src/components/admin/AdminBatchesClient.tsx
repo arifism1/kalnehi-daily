@@ -279,7 +279,7 @@ export function AdminBatchesClient({
       if (!data.ok) {
         setCreateError(data.error ?? "Failed to create batch.");
       } else {
-        setManageBatches((prev) => [...prev, data.batch!].sort((a, b) => a.batch_number - b.batch_number));
+        setManageBatches((prev) => [...prev, data.batch!].toSorted((a, b) => a.batch_number - b.batch_number));
         setCreateOpensAt("");
         setCreateSize("10000");
         setCreateNotes("");
@@ -401,7 +401,7 @@ export function AdminBatchesClient({
           {activeBatch && (
             <div className="mb-6 rounded-2xl border border-kal-accent/30 bg-kal-accent/[0.05] p-5">
               <div className="mb-3 flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-xs font-bold uppercase tracking-wider text-kal-accent">
                   Live — Batch {activeBatch.batch_number}
                 </span>
@@ -538,7 +538,7 @@ export function AdminBatchesClient({
               <thead>
                 <tr className="border-b border-kal-border bg-kal-card/70">
                   {["Pos", "Name", "Email", "Phone", "Status", "Trial started", "AI tokens", "Voice used", "Subscription", "Joined"].map((h) => (
-                    <th key={h} className="px-3 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-kal-muted whitespace-nowrap">
+                    <th key={h} className="p-3 text-left text-[10px] font-bold uppercase tracking-wider text-kal-muted whitespace-nowrap">
                       {h}
                     </th>
                   ))}

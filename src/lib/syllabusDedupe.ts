@@ -16,7 +16,7 @@ export function microtopicPlacementKey(row: {
 }
 
 function pickCanonicalRow(group: MergedSyllabusRow[]): MergedSyllabusRow {
-  const sorted = [...group].sort((a, b) => {
+  const sorted = [...group].toSorted((a, b) => {
     const ua = a.userSyllabus?.isUserAdded ? 1 : 0;
     const ub = b.userSyllabus?.isUserAdded ? 1 : 0;
     if (ua !== ub) return ua - ub;

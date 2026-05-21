@@ -66,11 +66,11 @@ export async function getNotificationAnalyticsSnapshot(): Promise<NotificationAn
 
   return {
     totalSends: list.length,
-    byType: [...byType.entries()].sort((a, b) => b[1] - a[1]).map(([notification_type, count]) => ({
+    byType: [...byType.entries()].toSorted((a, b) => b[1] - a[1]).map(([notification_type, count]) => ({
       notification_type,
       count,
     })),
-    byChannel: [...byChannel.entries()].sort((a, b) => b[1] - a[1]).map(([channel, count]) => ({
+    byChannel: [...byChannel.entries()].toSorted((a, b) => b[1] - a[1]).map(([channel, count]) => ({
       channel,
       count,
     })),

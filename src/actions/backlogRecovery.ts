@@ -1,6 +1,7 @@
 "use server";
 
 import { addDays, differenceInCalendarDays, format, parseISO } from "date-fns";
+import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 
 import {
@@ -152,6 +153,7 @@ export async function commitPendingBacklogFromOrganize(
     for (const r of rows) {
       if (r.syllabus_master_id) {
         try {
+          // react-doctor-disable-next-line react-doctor/async-await-in-loop -- validation mutates r.syllabus_master_id in-place; sequential processing required
           await assertSyllabusBelongsToUserExam(supabase, user.id, [
             r.syllabus_master_id,
           ]);
@@ -214,6 +216,7 @@ export async function appendPendingBacklogItems(
     for (const r of rows) {
       if (r.syllabus_master_id) {
         try {
+          // react-doctor-disable-next-line react-doctor/async-await-in-loop -- validation mutates r.syllabus_master_id in-place; sequential processing required
           await assertSyllabusBelongsToUserExam(supabase, user.id, [
             r.syllabus_master_id,
           ]);
@@ -539,7 +542,8 @@ export async function commitBacklogSchedule(
         user_id: user.id,
         raw_text: vent,
       });
-      if (vErr) console.warn("[commitBacklogSchedule] vent insert", vErr.message);
+      // react-doctor-disable-next-line react-doctor/server-after-nonblocking
+      if (vErr) after(() => console.warn("[commitBacklogSchedule] vent insert", vErr.message));
     }
 
     const { usedMinutesToday, backlogTaskCountToday } = await loadTodayPlanTaskStats(
@@ -644,6 +648,7 @@ export async function commitBacklogSchedule(
 }
 
 /** @deprecated Use commitBacklogSchedule with client today + local hour + intensity. */
+// react-doctor-disable-next-line react-doctor/server-auth-actions -- delegates to commitBacklogSchedule which enforces auth via insertDailyTask
 export async function lockOrganizedBacklogToPlan(
   items: OrganizedBacklogItemInput[],
   startPlanDate: string,
@@ -685,7 +690,7 @@ export async function rolloverMissedBacklogRecoveryTasks(
       return { ok: false, error: USER_ERROR.tryAgain };
     }
 
-    const planIds = (pastPlans ?? []).map((p) => p.id).filter(Boolean);
+    const planIds = (pastPlans ?? []).flatMap((p) => (p.id ? [p.id] : []));
     if (planIds.length === 0) {
       return { ok: true, rolled: 0 };
     }
@@ -706,6 +711,7 @@ export async function rolloverMissedBacklogRecoveryTasks(
     for (const t of list) {
       if (t.status === "done" || !t.backlog_item_id) continue;
 
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential rollover: each task delete/update depends on the previous completing successfully
       const { error: delErr } = await supabase.from("daily_tasks").delete().eq("id", t.id);
       if (delErr) continue;
 
@@ -927,7 +933,7 @@ export async function fetchTaskListPayload(
       .eq("status", "pending")
       .limit(TASK_LIST_UNPLANNED_MAX_ROWS);
 
-    const sortedPending = [...(pendingRows ?? [])].sort((a, b) => {
+    const sortedPending = [...(pendingRows ?? [])].toSorted((a, b) => {
       const ac = String(a.created_at ?? "");
       const bc = String(b.created_at ?? "");
       if (ac !== bc) return ac.localeCompare(bc);
@@ -990,8 +996,11 @@ export async function fetchTaskListPayload(
       count > sortedPending.length &&
       sortedPending.length >= TASK_LIST_UNPLANNED_MAX_ROWS
     ) {
-      console.warn(
-        "[fetchTaskListPayload] pending backlog rows exceed TASK_LIST_UNPLANNED_MAX_ROWS; raise cap or paginate.",
+      after(() =>
+        // react-doctor-disable-next-line react-doctor/server-after-nonblocking
+        console.warn(
+          "[fetchTaskListPayload] pending backlog rows exceed TASK_LIST_UNPLANNED_MAX_ROWS; raise cap or paginate.",
+        ),
       );
     }
     const unplanned: TaskListBacklogRow[] = sortedPending.map((r) => ({

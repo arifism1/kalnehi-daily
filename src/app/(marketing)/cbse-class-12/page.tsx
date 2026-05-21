@@ -37,7 +37,7 @@ export default function CbseClass12Page() {
         />
 
         <section className="space-y-3" aria-labelledby="cbse12-system">
-          <h2 id="cbse12-system" className="text-xl font-bold text-kal-text">How Kalnehi Daily helps Class 12 Board students</h2>
+          <h2 id="cbse12-system" className="text-xl font-semibold text-kal-text">How Kalnehi Daily helps Class 12 Board students</h2>
           <ul className="space-y-3 text-sm">
             {[
               { t: "Subject-wise syllabus tracker", d: "Track chapters across Physics, Chemistry, Maths (or Biology) at the topic level. Mark NCERT chapters as done and flag chapters that need revision. Mastermind monitors your completion per subject." },

@@ -90,7 +90,7 @@ export function FeedbackEngineClient() {
         {insights.map((ins, i) => (
           <div
             key={`${ins.title}-${i}`}
-            className={`rounded-2xl border px-4 py-4 ${TONE[ins.tone]}`}
+            className={`rounded-2xl border p-4 ${TONE[ins.tone]}`}
           >
             <p className="text-xs font-semibold uppercase tracking-wide text-kal-accent/90">
               {ins.title}

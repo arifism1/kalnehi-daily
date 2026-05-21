@@ -85,7 +85,7 @@ export function WeeklyMagazineClient() {
           className="flex min-h-[320px] items-center justify-center rounded-2xl border border-kal-border/60 bg-kal-card-muted/30"
           aria-busy="true"
         >
-          <Loader2 className="h-8 w-8 animate-spin text-kal-accent" />
+          <Loader2 className="size-8 animate-spin text-kal-accent" />
         </div>
       ) : (
         <>
@@ -267,9 +267,9 @@ export function WeeklyMagazineClient() {
               className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-kal-accent px-6 text-sm font-semibold text-white shadow-md transition-colors hover:opacity-95 disabled:opacity-60"
             >
               {busy ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="size-4 animate-spin" />
               ) : (
-                <Share2 className="h-4 w-4" />
+                <Share2 className="size-4" />
               )}
               Share cover
             </button>

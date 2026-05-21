@@ -84,10 +84,10 @@ export function CalendarEngineClient() {
         <button
           type="button"
           onClick={() => setCursor((c) => subMonths(c, 1))}
-          className="flex h-11 w-11 items-center justify-center rounded-xl border border-kal-border bg-kal-card text-kal-text hover:bg-kal-card-muted"
+          className="flex size-11 items-center justify-center rounded-xl border border-kal-border bg-kal-card text-kal-text hover:bg-kal-card-muted"
           aria-label="Previous month"
         >
-          <ChevronLeft className="h-5 w-5" />
+          <ChevronLeft className="size-5" />
         </button>
         <p className="text-center text-lg font-semibold text-kal-text">
           {monthLabel(year, monthIndex0)}
@@ -95,26 +95,26 @@ export function CalendarEngineClient() {
         <button
           type="button"
           onClick={() => setCursor((c) => addMonths(c, 1))}
-          className="flex h-11 w-11 items-center justify-center rounded-xl border border-kal-border bg-kal-card text-kal-text hover:bg-kal-card-muted"
+          className="flex size-11 items-center justify-center rounded-xl border border-kal-border bg-kal-card text-kal-text hover:bg-kal-card-muted"
           aria-label="Next month"
         >
-          <ChevronRight className="h-5 w-5" />
+          <ChevronRight className="size-5" />
         </button>
       </div>
 
       <EngineCard title="Heatmap legend">
         <div className="flex flex-wrap gap-3 text-[11px] text-kal-muted">
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-sm bg-emerald-500/55" /> &gt;80%
+            <span className="size-3 rounded-sm bg-emerald-500/55" /> &gt;80%
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-sm bg-amber-500/45" /> 50–80%
+            <span className="size-3 rounded-sm bg-amber-500/45" /> 50–80%
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-sm bg-orange-500/50" /> &lt;50%
+            <span className="size-3 rounded-sm bg-orange-500/50" /> &lt;50%
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-sm bg-kal-border" /> No data
+            <span className="size-3 rounded-sm bg-kal-border" /> No data
           </span>
         </div>
       </EngineCard>

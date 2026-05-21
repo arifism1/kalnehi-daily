@@ -58,7 +58,7 @@ export function targetToRange(rawTarget: number, maxScore: number): TargetMarksR
 }
 
 export function sortChaptersForBlueprint(chapters: ChapterRollup[]): ChapterRollup[] {
-  return [...chapters].sort((a, b) => {
+  return [...chapters].toSorted((a, b) => {
     const mw = b.chapterMarksTotal - a.chapterMarksTotal;
     if (mw !== 0) return mw;
     return a.microtopicProgressPercent - b.microtopicProgressPercent;

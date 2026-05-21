@@ -244,11 +244,11 @@ export function WhatCanKalnehiDoClient() {
     <div className="space-y-14 pb-4">
       <section className="relative overflow-hidden rounded-3xl border border-white/40 bg-gradient-to-br from-white/70 via-white/45 to-kal-accent-soft/30 px-8 py-14 shadow-[0_24px_80px_-32px_rgba(255,122,0,0.35)] backdrop-blur-xl dark:border-white/10 dark:from-zinc-900/80 dark:via-zinc-900/55 dark:to-orange-950/25 dark:shadow-[0_28px_90px_-28px_rgba(0,0,0,0.65)] sm:px-12 sm:py-16">
         <div
-          className="pointer-events-none absolute -right-20 -top-24 h-56 w-56 rounded-full bg-kal-accent/20 blur-3xl motion-safe:animate-pulse"
+          className="pointer-events-none absolute -right-20 -top-24 size-56 rounded-full bg-kal-accent/20 blur-3xl motion-safe:animate-pulse"
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute -bottom-16 -left-12 h-48 w-48 rounded-full bg-sky-400/15 blur-3xl"
+          className="pointer-events-none absolute -bottom-16 -left-12 size-48 rounded-full bg-sky-400/15 blur-3xl"
           aria-hidden
         />
         <div className="relative space-y-4 text-center">
@@ -276,6 +276,7 @@ export function WhatCanKalnehiDoClient() {
         </div>
 
         <ul className="grid list-none grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-7">
+          {/* react-doctor-disable-next-line react-doctor/js-combine-iterations -- filter-then-map in JSX; flatMap here would reduce readability */}
           {FEATURES.filter((f) => f.id !== "study-sessions").map((f) => {
             const expanded = openId === f.id;
             return (
@@ -294,20 +295,20 @@ export function WhatCanKalnehiDoClient() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex min-w-0 items-center gap-3">
                         <span
-                          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/60 text-2xl shadow-inner ring-1 ring-white/50 dark:bg-zinc-800/80 dark:ring-white/10"
+                          className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-white/60 text-2xl shadow-inner ring-1 ring-white/50 dark:bg-zinc-800/80 dark:ring-white/10"
                           aria-hidden
                         >
                           {f.emoji}
                         </span>
                         <div className="min-w-0">
-                          <h3 className="text-base font-bold leading-snug text-kal-text sm:text-lg">
+                          <h3 className="text-base font-semibold leading-snug text-kal-text sm:text-lg">
                             {f.title}
                           </h3>
                           <p className="mt-1 text-sm leading-snug text-kal-text-secondary">{f.tagline}</p>
                         </div>
                       </div>
                       <ChevronDown
-                        className={`mt-1 h-5 w-5 shrink-0 text-kal-accent transition-transform duration-300 ${
+                        className={`mt-1 size-5 shrink-0 text-kal-accent transition-transform duration-300 ${
                           expanded ? "rotate-180" : "group-hover:translate-y-0.5"
                         }`}
                         aria-hidden

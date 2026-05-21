@@ -282,6 +282,7 @@ export function chapterMarksPoolForYearRows(
   list: SyllabusMarksRow[],
   year: number,
 ): number {
+  // react-doctor-disable-next-line react-doctor/js-combine-iterations -- map-then-filter; combining would reduce readability
   const ws = list
     .map((r) => syllabusMarksWeightForYear(r, year))
     .filter((w) => w > 0);

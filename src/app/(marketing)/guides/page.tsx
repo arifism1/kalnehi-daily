@@ -161,8 +161,8 @@ export default function GuidesHubPage() {
                 href={href}
                 className="kal-glass-card flex h-full gap-4 rounded-2xl p-5 transition-all hover:-translate-y-0.5 hover:shadow-[0_16px_40px_-16px_rgba(255,122,0,0.2)]"
               >
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-kal-accent-soft text-kal-accent">
-                  <Icon className="h-6 w-6" aria-hidden />
+                <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-kal-accent-soft text-kal-accent">
+                  <Icon className="size-6" aria-hidden />
                 </span>
                 <span>
                   <span className="block font-semibold text-kal-text">{title}</span>

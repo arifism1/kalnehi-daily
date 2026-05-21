@@ -56,7 +56,7 @@ export default function RevisionSchedulerPage() {
       <div className="space-y-10">
         <header className="space-y-3">
           <p className="inline-flex items-center gap-1.5 rounded-full border border-kal-accent/25 bg-kal-accent-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-kal-accent-dark">
-            <span className="h-1.5 w-1.5 rounded-full bg-kal-accent" aria-hidden />
+            <span className="size-1.5 rounded-full bg-kal-accent" aria-hidden />
             Free Tool — No login required
           </p>
           <h1 className="kal-feature-title">Spaced Repetition Revision Scheduler</h1>

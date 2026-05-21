@@ -71,6 +71,7 @@ function taskToParsedEntry(task: GroqVoiceTask): ParsedVoiceDayEntry {
  * Passes to Groq: `occurredAtIso` (CURRENT_TIME_ISO + derived CURRENT_IST_HHMM) and `logDate` (LOG_DATE).
  * On missing API key / empty transcript, returns `mode: "fallback"` for raw save UI.
  */
+// react-doctor-disable-next-line react-doctor/server-auth-actions -- auth enforced by insertDailyTask (getUser) and incrementVoiceMinuteUsage
 export async function runVoiceDictationPipeline(
   transcript: string,
   logDate: string,
@@ -109,6 +110,7 @@ export async function runVoiceDictationPipeline(
     const { time_slot, time_start, time_end } = slotFromStartEnd(si, ei);
     const id = crypto.randomUUID();
 
+    // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential task insertion preserves parsed order from voice transcript
     const ins = await insertDailyTask({
       plan_date: logDate,
       id,
@@ -228,6 +230,7 @@ export async function saveRawVoiceNote(
  * `occurred_at` should be when the user stopped speaking (ISO) — used as "current time" for parsing "now"/abhi.
  * (Audio is not sent; Groq receives text + timestamps only.)
  */
+// react-doctor-disable-next-line react-doctor/server-auth-actions -- delegates to runVoiceDictationPipeline which enforces auth via insertDailyTask
 export async function parseVoiceNoteWithGroq(
   input: VoiceDictateInput,
 ): Promise<VoiceDictateSuccess | VoiceDictateFailure> {
@@ -250,6 +253,7 @@ export async function parseVoiceNoteWithGroq(
 /**
  * Parse only (no DB writes): transcript -> draft task rows for table review.
  */
+// react-doctor-disable-next-line react-doctor/server-auth-actions -- auth enforced by incrementVoiceMinuteUsage (getUser) before any data is returned
 export async function parseVoiceTranscriptToDraft(
   input: VoiceDictateInput,
 ): Promise<{ ok: true; tasks: VoiceDraftRow[] } | VoiceDictateFailure> {
@@ -295,6 +299,7 @@ export async function parseVoiceTranscriptToDraft(
 /**
  * Save reviewed draft rows to the unified daily plan (`daily_tasks`).
  */
+// react-doctor-disable-next-line react-doctor/server-auth-actions -- auth enforced by insertDailyTask (getUser) on every row insert
 export async function saveVoiceDraftToTimeline(
   input: {
     log_date: string;
@@ -310,6 +315,7 @@ export async function saveVoiceDraftToTimeline(
   const raw = (input.transcript_raw ?? "").trim().slice(0, 12_000);
   if (!raw) return { ok: false, error: "Nothing to save." };
 
+  // react-doctor-disable-next-line react-doctor/js-combine-iterations -- map-then-filter; combining would reduce clarity
   const cleaned = input.tasks
     .map((t) => ({
       name: t.taskTitle.trim().slice(0, 200),
@@ -338,6 +344,7 @@ export async function saveVoiceDraftToTimeline(
       task.end_time && /^\d{2}:\d{2}$/.test(task.end_time) ? task.end_time : "";
     const { time_slot, time_start, time_end } = slotFromStartEnd(si, ei);
     const id = crypto.randomUUID();
+    // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential task insertion preserves parsed order from voice transcript
     const ins = await insertDailyTask({
       plan_date: logDate,
       id,

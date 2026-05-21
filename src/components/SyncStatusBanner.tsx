@@ -82,10 +82,10 @@ export function SyncStatusBanner() {
           className="shrink-0 rounded-lg bg-kal-accent px-2.5 py-1 text-[10px] font-semibold text-white hover:bg-kal-accent-hover disabled:opacity-50"
         >
           {retrying ? (
-            <Loader2 className="h-3 w-3 animate-spin" />
+            <Loader2 className="size-3 animate-spin" />
           ) : (
             <span className="flex items-center gap-1">
-              <RefreshCw className="h-3 w-3" /> Retry
+              <RefreshCw className="size-3" /> Retry
             </span>
           )}
         </button>
@@ -95,7 +95,7 @@ export function SyncStatusBanner() {
           className="shrink-0 rounded-md p-0.5 opacity-60 hover:bg-black/5 hover:opacity-100 dark:hover:bg-white/10"
           aria-label="Dismiss"
         >
-          <X className="h-3 w-3" strokeWidth={2.5} />
+          <X className="size-3" strokeWidth={2.5} />
         </button>
       </div>
     );
@@ -109,7 +109,7 @@ export function SyncStatusBanner() {
           "kal-glass-subtle mb-4 flex items-start gap-2 rounded-[0.875rem] px-3 py-2 text-[10px] leading-snug text-kal-muted",
         )}
       >
-        <CloudOff className="mt-0.5 h-3 w-3 shrink-0 text-kal-muted" />
+        <CloudOff className="mt-0.5 size-3 shrink-0 text-kal-muted" />
         <p className="min-w-0 flex-1 pt-0.5">
           You&apos;re offline — your work is saved on this device
           {pendingCount > 0 &&
@@ -122,7 +122,7 @@ export function SyncStatusBanner() {
           className="shrink-0 rounded-md p-0.5 text-kal-muted hover:bg-kal-border/40"
           aria-label="Dismiss"
         >
-          <X className="h-3 w-3" strokeWidth={2.5} />
+          <X className="size-3" strokeWidth={2.5} />
         </button>
       </div>
     );
@@ -138,7 +138,7 @@ export function SyncStatusBanner() {
           "flex items-center gap-2 rounded-full border border-kal-accent/30 bg-kal-accent-soft/95 px-4 py-1.5 text-[11px] leading-snug text-kal-text-secondary shadow-md backdrop-blur-md dark:bg-kal-accent-soft/60",
         )}
       >
-        <Loader2 className="h-3 w-3 shrink-0 animate-spin text-kal-accent" />
+        <Loader2 className="size-3 shrink-0 animate-spin text-kal-accent" />
         <span>
           Syncing {pendingCount} change{pendingCount > 1 ? "s" : ""}…
         </span>

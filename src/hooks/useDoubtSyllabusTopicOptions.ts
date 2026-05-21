@@ -25,7 +25,7 @@ function rowsToTopicLinesBySubject(
   }
   const out: Record<string, string[]> = {};
   for (const [sub, set] of map) {
-    out[sub] = [...set].sort((a, b) => a.localeCompare(b));
+    out[sub] = [...set].toSorted((a, b) => a.localeCompare(b));
   }
   return out;
 }
@@ -79,7 +79,7 @@ export function useDoubtSyllabusTopicOptions() {
     for (const lines of Object.values(bySubject)) {
       for (const l of lines) set.add(l);
     }
-    return [...set].sort((a, b) => a.localeCompare(b));
+    return [...set].toSorted((a, b) => a.localeCompare(b));
   }, [bySubject]);
 
   return {

@@ -126,7 +126,7 @@ export function ExamCountdownHero() {
       </p>
       <div className="relative mx-auto mt-4 flex max-w-sm flex-col items-center">
         <div
-          className="relative flex h-[min(52vw,220px)] w-[min(52vw,220px)] items-center justify-center rounded-full border border-kal-accent/30 bg-kal-card shadow-[0_8px_40px_-12px_rgba(255,122,0,0.25)] backdrop-blur-lg dark:border-kal-accent/25 dark:shadow-[0_0_60px_-12px_rgba(255,122,0,0.40)]"
+          className="relative flex size-[min(52vw,220px)] items-center justify-center rounded-full border border-kal-accent/30 bg-kal-card shadow-[0_8px_40px_-12px_rgba(255,122,0,0.25)] backdrop-blur-lg dark:border-kal-accent/25 dark:shadow-[0_0_60px_-12px_rgba(255,122,0,0.40)]"
           aria-live="polite"
         >
           <div

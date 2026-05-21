@@ -36,17 +36,17 @@ export default function StudySquadPageContent({
               className="inline-flex items-center gap-1.5 rounded-full bg-zinc-900/12 px-3 py-1 text-[0.65rem] font-bold uppercase tracking-wide text-zinc-900 dark:bg-zinc-900/18"
               aria-hidden
             >
-              <span className="relative flex h-2 w-2">
+              <span className="relative flex size-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-zinc-900/40 opacity-60" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-zinc-900" />
+                <span className="relative inline-flex size-2 rounded-full bg-zinc-900" />
               </span>
               Live
             </span>
             <span
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900/10 dark:bg-zinc-900/15"
+              className="flex size-10 items-center justify-center rounded-full bg-zinc-900/10 dark:bg-zinc-900/15"
               aria-hidden
             >
-              <Bell className="h-5 w-5 text-zinc-900/80" strokeWidth={2.25} />
+              <Bell className="size-5 text-zinc-900/80" strokeWidth={2.25} />
             </span>
           </div>
         </div>

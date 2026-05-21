@@ -14,7 +14,7 @@ import {
 import { USER_ERROR } from "@/lib/userFacingErrors";
 import type { TablesInsert, TablesUpdate } from "@/types/supabase";
 
-const REPEAT_TYPES = new Set(["once", "daily", "weekly"]);
+const REPEAT_TYPES = ["once", "daily", "weekly"] as const;
 
 function normalizeTag(tag: string): ScheduledNotificationTag {
   const t = tag.trim();
@@ -62,7 +62,7 @@ export async function createScheduledNotification(
     if (authErr || !user) return { ok: false, error: USER_ERROR.session };
 
     const repeat = input.repeat_type.trim();
-    if (!REPEAT_TYPES.has(repeat)) {
+    if (!(REPEAT_TYPES as readonly string[]).includes(repeat)) {
       return { ok: false, error: "Invalid repeat type." };
     }
 
@@ -176,7 +176,7 @@ export async function updateScheduledNotification(
     }
     if (input.repeat_type !== undefined) {
       const r = input.repeat_type.trim();
-      if (!REPEAT_TYPES.has(r)) return { ok: false, error: "Invalid repeat type." };
+      if (!(REPEAT_TYPES as readonly string[]).includes(r)) return { ok: false, error: "Invalid repeat type." };
       patch.repeat_type = r;
     }
     if (input.is_active !== undefined) patch.is_active = input.is_active;

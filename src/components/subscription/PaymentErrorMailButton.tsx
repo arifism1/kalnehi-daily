@@ -48,7 +48,7 @@ export function PaymentErrorMailButton({
         "mt-2 inline-flex items-center gap-1.5 rounded-lg border border-kal-border bg-kal-card px-3 py-1.5 text-xs font-semibold text-kal-accent underline-offset-2 hover:underline"
       }
     >
-      <LifeBuoy className="h-3.5 w-3.5 shrink-0" aria-hidden />
+      <LifeBuoy className="size-3.5 shrink-0" aria-hidden />
       Contact support
     </button>
   );

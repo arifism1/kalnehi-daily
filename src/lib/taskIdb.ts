@@ -259,6 +259,7 @@ export async function persistTasks(tasks: Task[]): Promise<void> {
   const tx = db.transaction("tasks", "readwrite");
   await tx.store.clear();
   for (const t of tasks) {
+    // react-doctor-disable-next-line react-doctor/async-await-in-loop -- IDB transaction puts must be sequential within a single transaction
     await tx.store.put(t);
   }
   await tx.done;
@@ -279,6 +280,7 @@ export async function persistMicrotopics(rows: Microtopic[]): Promise<void> {
   const tx = db.transaction("microtopics", "readwrite");
   await tx.store.clear();
   for (const m of rows) {
+    // react-doctor-disable-next-line react-doctor/async-await-in-loop -- IDB transaction puts must be sequential within a single transaction
     await tx.store.put(m);
   }
   await tx.done;
@@ -372,6 +374,7 @@ export async function resetAllOutboxFailCounts(): Promise<void> {
   for (const row of all) {
     if ((row.failCount ?? 0) > 0) {
       row.failCount = 0;
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- IDB transaction puts must be sequential within a single transaction
       await tx.store.put(row);
     }
   }
@@ -405,6 +408,7 @@ export async function mergeExecutionSessions(rows: ExecutionSessionRow[]): Promi
   const db = await getDb();
   const tx = db.transaction("execution_log", "readwrite");
   for (const r of rows) {
+    // react-doctor-disable-next-line react-doctor/async-await-in-loop -- IDB transaction puts must be sequential within a single transaction
     await tx.store.put(r);
   }
   await tx.done;

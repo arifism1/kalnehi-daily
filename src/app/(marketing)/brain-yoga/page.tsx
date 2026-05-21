@@ -68,7 +68,7 @@ export default function BrainYogaMarketingPage() {
 
         <section className="kal-glass-card space-y-4 rounded-2xl p-5">
           <h2 className="kal-section-heading flex items-center gap-2">
-            <Wind className="h-5 w-5 text-kal-accent" aria-hidden />
+            <Wind className="size-5 text-kal-accent" aria-hidden />
             What to practice (5–10 minutes total)
           </h2>
           <ul className="space-y-3 text-sm leading-relaxed text-kal-text-secondary">
@@ -104,7 +104,7 @@ export default function BrainYogaMarketingPage() {
 
         <section className="kal-glass-panel flex flex-col gap-4 rounded-2xl p-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
-            <Leaf className="mt-0.5 h-8 w-8 shrink-0 text-kal-accent" aria-hidden />
+            <Leaf className="mt-0.5 size-8 shrink-0 text-kal-accent" aria-hidden />
             <div>
               <h2 className="font-semibold text-kal-text">Stack with Meditation in the app</h2>
               <p className="mt-1 text-sm text-kal-text-secondary">
@@ -150,7 +150,7 @@ export default function BrainYogaMarketingPage() {
         </section>
 
         <p className="flex items-center gap-2 text-xs text-kal-muted">
-          <Brain className="h-4 w-4" aria-hidden />
+          <Brain className="size-4" aria-hidden />
           <Link href="/guides" className="hover:underline">
             All guides
           </Link>

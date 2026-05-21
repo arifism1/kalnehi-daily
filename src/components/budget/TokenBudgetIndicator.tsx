@@ -66,7 +66,7 @@ export function TokenBudgetIndicator() {
     if (isApp) {
       return (
         <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/10 px-2.5 py-1 text-xs font-semibold text-red-500">
-          <span className="h-1.5 w-1.5 rounded-full bg-red-500" aria-hidden />
+          <span className="size-1.5 rounded-full bg-red-500" aria-hidden />
           Mastermind limit reached
         </span>
       );
@@ -76,7 +76,7 @@ export function TokenBudgetIndicator() {
         href="/pricing#subscribe"
         className="inline-flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/10 px-2.5 py-1 text-xs font-semibold text-red-500"
       >
-        <span className="h-1.5 w-1.5 rounded-full bg-red-500" aria-hidden />
+        <span className="size-1.5 rounded-full bg-red-500" aria-hidden />
         Upgrade to continue
       </Link>
     );
@@ -86,7 +86,7 @@ export function TokenBudgetIndicator() {
 
   return (
     <span className={clsx("inline-flex items-center gap-1 text-xs font-medium tabular-nums", colorClass)}>
-      <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" aria-hidden />
+      <span className="size-1.5 rounded-full bg-current opacity-70" aria-hidden />
       AI: {fmt(remaining)} left
       {pct < 0.25 && !exhausted && (
         <span className="ml-0.5 font-semibold text-orange-500">· Low</span>

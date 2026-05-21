@@ -136,11 +136,11 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
             <button
               type="button"
               onClick={() => setMenuOpen(true)}
-              className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-white/25 bg-white/40 text-kal-text-secondary backdrop-blur-md transition-colors hover:border-white/40 hover:bg-white/55 active:scale-[0.98] dark:border-white/12 dark:bg-zinc-900/50 dark:hover:bg-zinc-900/70"
+              className="flex size-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-white/25 bg-white/40 text-kal-text-secondary backdrop-blur-md transition-colors hover:border-white/40 hover:bg-white/55 active:scale-[0.98] dark:border-white/12 dark:bg-zinc-900/50 dark:hover:bg-zinc-900/70"
               aria-expanded={menuOpen}
               aria-label="Open navigation menu"
             >
-              <Menu className="h-6 w-6" strokeWidth={2} />
+              <Menu className="size-6" strokeWidth={2} />
             </button>
           </div>
         </header>
@@ -186,13 +186,13 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
               aria-pressed={voiceOpen}
               data-tour="voice"
               className={clsx(
-                "flex h-8 w-8 min-h-[32px] min-w-[32px] items-center justify-center rounded-xl border backdrop-blur-md transition-colors active:scale-[0.98]",
+                "flex size-8 min-h-[32px] min-w-[32px] items-center justify-center rounded-xl border backdrop-blur-md transition-colors active:scale-[0.98]",
                 voiceOpen
                   ? "border-kal-accent/35 bg-kal-accent-soft text-kal-accent shadow-sm"
                   : "border-white/30 bg-white/45 text-kal-accent hover:border-white/45 hover:bg-white/65 dark:border-white/12 dark:bg-zinc-900/50",
               )}
             >
-              <MicVocal className="h-4.5 w-4.5 shrink-0" strokeWidth={2.25} aria-hidden />
+              <MicVocal className="size-4.5 shrink-0" strokeWidth={2.25} aria-hidden />
             </button>
             <NotificationBellLink pathname={pathname} />
 
@@ -200,12 +200,12 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
             <button
               type="button"
               onClick={() => setMenuOpen(true)}
-              className="flex h-8 w-8 min-h-[32px] min-w-[32px] items-center justify-center rounded-xl border border-white/25 bg-white/40 text-kal-text-secondary backdrop-blur-md transition-colors hover:border-white/40 hover:bg-white/55 active:scale-[0.98] dark:border-white/12 dark:bg-zinc-900/50"
+              className="flex size-8 min-h-[32px] min-w-[32px] items-center justify-center rounded-xl border border-white/25 bg-white/40 text-kal-text-secondary backdrop-blur-md transition-colors hover:border-white/40 hover:bg-white/55 active:scale-[0.98] dark:border-white/12 dark:bg-zinc-900/50"
               aria-expanded={menuOpen}
               aria-label="Open navigation menu"
               data-tour="menu"
             >
-              <Menu className="h-5 w-5" strokeWidth={2} />
+              <Menu className="size-5" strokeWidth={2} />
             </button>
           </div>
         </div>

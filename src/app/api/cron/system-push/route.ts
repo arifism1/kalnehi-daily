@@ -105,7 +105,7 @@ export async function GET(req: NextRequest) {
   }
 
   const userIds = [
-    ...new Set((tokenRows ?? []).map((r) => r.user_id).filter(Boolean)),
+    ...new Set((tokenRows ?? []).flatMap((r) => (r.user_id ? [r.user_id] : []))),
   ] as string[];
 
   if (userIds.length === 0) {
@@ -149,12 +149,14 @@ export async function GET(req: NextRequest) {
       continue;
     }
 
+    // react-doctor-disable-next-line react-doctor/async-await-in-loop -- per-user sequential processing: dedupe check then rate-limit must happen atomically
     const gate = await reserveSystemPushDedupe(admin, uid, kind, dateKey);
     if (gate !== "reserved") {
       skipped += 1;
       continue;
     }
 
+    // react-doctor-disable-next-line react-doctor/async-await-in-loop -- per-user sequential rate limit check
     const rateOk = await tryConsumeAutomatedPushBudget(admin, uid, dateKey);
     if (!rateOk) {
       await releaseSystemPushDedupe(admin, uid, kind, dateKey);

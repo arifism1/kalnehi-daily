@@ -229,7 +229,7 @@ function msInLastDays(iso: string, days: number): boolean {
 function weakChaptersFromRollup(rollup: SyllabusRollup | null): PrepBrainContext["syllabus_snapshot"]["weakest_chapters"] {
   if (!rollup?.chapters?.length) return [];
   return [...rollup.chapters]
-    .sort((a, b) => a.microtopicProgressPercent - b.microtopicProgressPercent)
+    .toSorted((a, b) => a.microtopicProgressPercent - b.microtopicProgressPercent)
     .slice(0, WEAK_CHAPTER_CAP)
     .map((ch) => ({
       subject: ch.subject,

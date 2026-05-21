@@ -74,7 +74,7 @@ export function PlannerLandingModules() {
             className="flex h-full flex-col gap-2 kal-glass-card rounded-2xl p-4 transition-colors hover:border-kal-accent/30 hover:bg-kal-accent-soft/40"
           >
             <span className="flex items-center gap-2 font-semibold text-kal-text">
-              <Icon className="h-5 w-5 shrink-0 text-kal-accent" aria-hidden />
+              <Icon className="size-5 shrink-0 text-kal-accent" aria-hidden />
               {title}
             </span>
             <span className="text-sm leading-snug text-kal-text-secondary">{description}</span>

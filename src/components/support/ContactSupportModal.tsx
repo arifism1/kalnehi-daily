@@ -84,6 +84,7 @@ export function ContactSupportModal({
     setEmail(user.email?.trim() ?? "");
     void (async () => {
       try {
+        if (cancelled) return;
         const supabase = getSupabaseBrowserClient();
         const { data, error: qErr } = await supabase
           .from("user_profiles")
@@ -193,7 +194,7 @@ export function ContactSupportModal({
             </p>
             <h2
               id="contact-support-title"
-              className="mt-1 text-lg font-bold tracking-tight text-kal-text"
+              className="mt-1 text-lg font-semibold tracking-tight text-kal-text"
             >
               Contact support
             </h2>
@@ -205,10 +206,10 @@ export function ContactSupportModal({
             type="button"
             onClick={() => !busy && onClose()}
             disabled={busy}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-kal-muted transition-colors hover:bg-kal-card-muted hover:text-kal-text"
+            className="flex size-10 shrink-0 items-center justify-center rounded-xl text-kal-muted transition-colors hover:bg-kal-card-muted hover:text-kal-text"
             aria-label="Close dialog"
           >
-            <X className="h-5 w-5" strokeWidth={2} />
+            <X className="size-5" strokeWidth={2} />
           </button>
         </div>
 
@@ -339,7 +340,7 @@ export function ContactSupportModal({
             >
               {busy ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                  <Loader2 className="size-4 animate-spin" aria-hidden />
                   Sending…
                 </>
               ) : (

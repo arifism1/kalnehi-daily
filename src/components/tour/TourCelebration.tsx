@@ -113,9 +113,9 @@ export function TourCelebration({ onFinish }: TourCelebrationProps) {
         initial={{ scale: 0, rotate: -30 }}
         animate={{ scale: 1, rotate: 0 }}
         transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.1 }}
-        className="relative z-10 mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-[#1D9E75]/12"
+        className="relative z-10 mb-6 flex size-20 items-center justify-center rounded-full bg-[#1D9E75]/12"
       >
-        <CheckCircle2 className="h-10 w-10 text-[#1D9E75]" strokeWidth={1.75} />
+        <CheckCircle2 className="size-10 text-[#1D9E75]" strokeWidth={1.75} />
       </motion.div>
 
       {/* Headline */}
@@ -157,7 +157,7 @@ export function TourCelebration({ onFinish }: TourCelebrationProps) {
               border: `1px solid ${color}30`,
             }}
           >
-            <CheckCircle2 className="h-3 w-3" style={{ color }} aria-hidden />
+            <CheckCircle2 className="size-3" style={{ color }} aria-hidden />
             {label}
           </span>
         ))}
@@ -173,7 +173,7 @@ export function TourCelebration({ onFinish }: TourCelebrationProps) {
         transition={{ delay: 0.75, duration: 0.45, ease: "easeOut" }}
       >
         Start my first day
-        <ArrowRight className="h-4.5 w-4.5" />
+        <ArrowRight className="size-4.5" />
       </motion.button>
     </div>
   );

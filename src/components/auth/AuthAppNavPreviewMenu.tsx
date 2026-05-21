@@ -48,12 +48,12 @@ export function AuthAppNavPreviewMenu() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="fixed right-4 top-[max(1rem,env(safe-area-inset-top))] z-[60] flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-kal-border/80 bg-kal-card/95 text-kal-text-secondary shadow-sm backdrop-blur-md transition-colors hover:border-kal-accent/35 hover:bg-kal-card hover:text-kal-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40 sm:right-6"
+        className="fixed right-4 top-[max(1rem,env(safe-area-inset-top))] z-[60] flex size-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-kal-border/80 bg-kal-card/95 text-kal-text-secondary shadow-sm backdrop-blur-md transition-colors hover:border-kal-accent/35 hover:bg-kal-card hover:text-kal-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40 sm:right-6"
         aria-expanded={open}
         aria-controls="auth-app-nav-preview-panel"
         aria-label="Preview app navigation (sign in to use)"
       >
-        <Menu className="h-6 w-6" strokeWidth={2} aria-hidden />
+        <Menu className="size-6" strokeWidth={2} aria-hidden />
       </button>
 
       <div
@@ -82,8 +82,8 @@ export function AuthAppNavPreviewMenu() {
           )}
         >
           <div className="flex shrink-0 items-center gap-2.5 border-b border-white/20 px-3 pb-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] backdrop-blur-sm sm:px-4 dark:border-white/10">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-kal-accent-soft text-kal-accent">
-              <Menu className="h-5 w-5" strokeWidth={2.25} aria-hidden />
+            <div className="flex size-9 items-center justify-center rounded-lg bg-kal-accent-soft text-kal-accent">
+              <Menu className="size-5" strokeWidth={2.25} aria-hidden />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[0.6rem] font-bold uppercase tracking-widest text-kal-accent-dark">
@@ -97,29 +97,29 @@ export function AuthAppNavPreviewMenu() {
               </p>
             </div>
             <span
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-kal-border/50 bg-kal-card-muted/90 text-kal-muted"
+              className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-kal-border/50 bg-kal-card-muted/90 text-kal-muted"
               title="Locked until you sign in"
               aria-hidden
             >
-              <LockKeyhole className="h-4 w-4" strokeWidth={2.25} />
+              <LockKeyhole className="size-4" strokeWidth={2.25} />
             </span>
           </div>
-          <div className="border-b border-white/20 px-3 py-3 backdrop-blur-sm sm:px-4 dark:border-white/10">
+          <div className="border-b border-white/20 p-3 backdrop-blur-sm sm:px-4 dark:border-white/10">
             {showInstallCard ? (
               <div className="rounded-xl border border-kal-accent/35 bg-kal-accent-soft px-2.5 py-3 sm:px-3">
                 <div className="flex items-start gap-2.5">
                   <span
                     className={clsx(
-                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
+                      "flex size-10 shrink-0 items-center justify-center rounded-lg",
                       installed
                         ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
                         : "bg-kal-accent/25 text-kal-accent-dark dark:text-kal-accent",
                     )}
                   >
                     {installed ? (
-                      <CheckCircle2 className="h-5 w-5" strokeWidth={2.25} />
+                      <CheckCircle2 className="size-5" strokeWidth={2.25} />
                     ) : (
-                      <Download className="h-5 w-5" strokeWidth={2.25} />
+                      <Download className="size-5" strokeWidth={2.25} />
                     )}
                   </span>
                   <div className="min-w-0 flex-1">
@@ -154,9 +154,9 @@ export function AuthAppNavPreviewMenu() {
                       )}
                     >
                       {installed ? (
-                        <CheckCircle2 className="h-[1.125rem] w-[1.125rem]" strokeWidth={2.5} />
+                        <CheckCircle2 className="size-[1.125rem]" strokeWidth={2.5} />
                       ) : (
-                        <Download className="h-[1.125rem] w-[1.125rem]" strokeWidth={2.5} />
+                        <Download className="size-[1.125rem]" strokeWidth={2.5} />
                       )}
                       {installed
                         ? "App Installed"
@@ -231,14 +231,14 @@ function LockedNavRow({ label, Icon }: { label: string; Icon: LucideIcon }) {
       aria-disabled="true"
       title="Sign in to use this"
     >
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-kal-card-muted text-kal-muted sm:h-10 sm:w-10">
-        <Icon className="h-[1.125rem] w-[1.125rem] sm:h-5 sm:w-5" strokeWidth={2} aria-hidden />
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-kal-card-muted text-kal-muted sm:h-10 sm:w-10">
+        <Icon className="size-[1.125rem] sm:h-5 sm:w-5" strokeWidth={2} aria-hidden />
       </span>
       <span className="min-w-0 flex-1 text-sm font-semibold leading-tight text-kal-text">
         {label}
       </span>
       <span
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-amber-500/25 bg-gradient-to-br from-amber-500/12 to-amber-600/5 text-amber-800/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] dark:border-amber-400/20 dark:from-amber-400/15 dark:to-amber-500/5 dark:text-amber-100/85"
+        className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-amber-500/25 bg-gradient-to-br from-amber-500/12 to-amber-600/5 text-amber-800/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] dark:border-amber-400/20 dark:from-amber-400/15 dark:to-amber-500/5 dark:text-amber-100/85"
         aria-hidden
       >
         <LockKeyhole className="h-[1.05rem] w-[1.05rem] sm:h-[1.15rem] sm:w-[1.15rem]" strokeWidth={2.35} />

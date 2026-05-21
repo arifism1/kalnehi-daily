@@ -112,6 +112,7 @@ export async function deleteDoubtPhoto(
 
 export async function deleteDoubtFully(meta: DoubtMeta): Promise<void> {
   for (const pid of meta.photoIds) {
+    // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential deletion ensures each photo is removed before moving to the next
     await deleteDoubtPhoto(meta.id, pid);
   }
   await deleteDoubtMeta(meta.id);
@@ -125,6 +126,7 @@ export async function restoreDoubtFully(
   await saveDoubtMeta(meta);
   for (const pid of meta.photoIds) {
     const dataUrl = photoDataUrls[pid];
+    // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential restore preserves photo ordering
     if (dataUrl) await saveDoubtPhoto(meta.id, pid, dataUrl);
   }
 }

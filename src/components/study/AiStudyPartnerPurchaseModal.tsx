@@ -130,10 +130,10 @@ export function AiStudyPartnerPurchaseModal({ open, onClose, onPurchased }: Prop
           {/* Header */}
           <div className="shrink-0 border-b border-kal-border px-5 py-4">
             <div className="flex items-center gap-2">
-              <Bot className="h-5 w-5 shrink-0 text-kal-accent" aria-hidden />
+              <Bot className="size-5 shrink-0 text-kal-accent" aria-hidden />
               <h2 className="text-sm font-semibold text-kal-text">AI Study Partner</h2>
               <span className="ml-1 inline-flex items-center gap-1 rounded-full bg-kal-accent/10 px-2 py-0.5 text-[10px] font-semibold text-kal-accent">
-                <Star className="h-2.5 w-2.5" aria-hidden />
+                <Star className="size-2.5" aria-hidden />
                 Popular
               </span>
             </div>
@@ -186,7 +186,7 @@ export function AiStudyPartnerPurchaseModal({ open, onClose, onPurchased }: Prop
               className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-kal-accent py-2.5 text-sm font-semibold text-white disabled:opacity-50"
             >
               {isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                <Loader2 className="size-4 animate-spin" aria-hidden />
               ) : null}
               Buy for ₹799
             </button>

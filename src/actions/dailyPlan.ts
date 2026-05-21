@@ -380,6 +380,7 @@ export async function deleteDailyTask(
 }
 
 /** Typed quick-add: start/end from `<input type="time">` values (HH:MM). */
+// react-doctor-disable-next-line react-doctor/server-auth-actions -- auth enforced inside insertDailyTask (getUser at line 124)
 export async function appendTypedDailyTaskQuick(input: {
   plan_date: string;
   title: string;

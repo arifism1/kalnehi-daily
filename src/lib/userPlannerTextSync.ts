@@ -54,11 +54,15 @@ export async function flushUserPlannerTextOutbox(
       if (row.userId !== userId) continue;
       const fails = row.failCount ?? 0;
       if (fails >= MAX_FAIL_BEFORE_DROP) {
+        // react-doctor-disable-next-line react-doctor/async-await-in-loop -- outbox must be processed sequentially to preserve mutation order
         await deleteUserPlannerTextOutbox(row.id);
         continue;
       }
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- outbox must be processed sequentially to preserve mutation order
       const res = await applyUserPlannerTextOutboxOp(row.op);
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- outbox must be processed sequentially to preserve mutation order
       if (res.ok) await deleteUserPlannerTextOutbox(row.id);
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- outbox must be processed sequentially to preserve mutation order
       else await bumpUserPlannerTextOutboxFail(row.id);
     }
     const stillPending = (await getAllUserPlannerTextOutbox()).some(

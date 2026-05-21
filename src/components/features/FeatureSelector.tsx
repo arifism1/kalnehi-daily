@@ -79,13 +79,13 @@ export function FeatureSelector({ selected, onChange, toolbarEnd }: FeatureSelec
               {/* Icon badge */}
               <span
                 className={clsx(
-                  "mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition-colors duration-200",
+                  "mt-0.5 inline-flex size-9 shrink-0 items-center justify-center rounded-xl border transition-colors duration-200",
                   isOn
                     ? "border-kal-accent/40 bg-kal-accent/10 text-kal-accent"
                     : "border-kal-border/80 bg-white/70 text-kal-muted dark:bg-zinc-900/40",
                 )}
               >
-                <Icon className="h-4 w-4" aria-hidden />
+                <Icon className="size-4" aria-hidden />
               </span>
 
               {/* Text */}
@@ -106,13 +106,13 @@ export function FeatureSelector({ selected, onChange, toolbarEnd }: FeatureSelec
               {/* Check badge */}
               <span
                 className={clsx(
-                  "mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-200",
+                  "mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-200",
                   isOn
                     ? "border-kal-accent bg-kal-accent text-white"
                     : "border-kal-border/60 bg-transparent text-transparent",
                 )}
               >
-                <Check className="h-3 w-3" strokeWidth={3} aria-hidden />
+                <Check className="size-3" strokeWidth={3} aria-hidden />
               </span>
             </button>
           );

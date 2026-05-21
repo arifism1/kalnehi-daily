@@ -107,7 +107,7 @@ export default function UpscPage() {
 
         {/* Section 2 — Syllabus */}
         <section className="space-y-5" aria-labelledby="upsc-syllabus">
-          <h2 id="upsc-syllabus" className="text-xl font-bold text-kal-text">
+          <h2 id="upsc-syllabus" className="text-xl font-semibold text-kal-text">
             How Kalnehi Daily maps to the UPSC CSE structure
           </h2>
           <p className="text-sm leading-relaxed text-kal-text-secondary">
@@ -118,7 +118,7 @@ export default function UpscPage() {
           <div className="grid gap-4 sm:grid-cols-3">
             {SYLLABUS.map(({ paper, topics }) => (
               <div key={paper} className="kal-glass-card rounded-2xl p-4 space-y-2">
-                <h3 className="text-sm font-bold text-kal-accent-dark uppercase tracking-wide">{paper}</h3>
+                <h3 className="text-sm font-semibold text-kal-accent-dark uppercase tracking-wide">{paper}</h3>
                 <ul className="space-y-1.5">
                   {topics.map((t) => (
                     <li key={t} className="text-xs text-kal-text-secondary leading-snug">· {t}</li>
@@ -131,7 +131,7 @@ export default function UpscPage() {
 
         {/* Section 3 — Mastermind */}
         <section className="space-y-4" aria-labelledby="upsc-mastermind">
-          <h2 id="upsc-mastermind" className="text-xl font-bold text-kal-text">
+          <h2 id="upsc-mastermind" className="text-xl font-semibold text-kal-text">
             How Mastermind helps UPSC aspirants
           </h2>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -160,7 +160,7 @@ export default function UpscPage() {
 
         {/* Section 4 — Voice control */}
         <section className="space-y-4" aria-labelledby="upsc-voice">
-          <h2 id="upsc-voice" className="text-xl font-bold text-kal-text">
+          <h2 id="upsc-voice" className="text-xl font-semibold text-kal-text">
             Voice control for UPSC prep
           </h2>
           <div className="space-y-3">

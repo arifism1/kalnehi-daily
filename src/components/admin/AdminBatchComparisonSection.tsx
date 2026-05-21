@@ -29,7 +29,7 @@ export function AdminBatchComparisonSection({ rows }: { rows: BatchComparisonRow
               ].map((h) => (
                 <th
                   key={h}
-                  className="px-3 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-kal-muted whitespace-nowrap"
+                  className="p-3 text-left text-[10px] font-bold uppercase tracking-wider text-kal-muted whitespace-nowrap"
                 >
                   {h}
                 </th>

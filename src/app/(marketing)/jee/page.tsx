@@ -115,7 +115,7 @@ export default function JeePage() {
 
         {/* Section 2 — Syllabus structure */}
         <section className="space-y-5" aria-labelledby="jee-syllabus">
-          <h2 id="jee-syllabus" className="text-xl font-bold text-kal-text">
+          <h2 id="jee-syllabus" className="text-xl font-semibold text-kal-text">
             How Kalnehi Daily maps to the JEE syllabus
           </h2>
           <p className="text-sm leading-relaxed text-kal-text-secondary">
@@ -126,7 +126,7 @@ export default function JeePage() {
           <div className="grid gap-4 sm:grid-cols-3">
             {SYLLABUS.map(({ subject, chapters }) => (
               <div key={subject} className="kal-glass-card rounded-2xl p-4 space-y-2">
-                <h3 className="text-sm font-bold text-kal-accent-dark uppercase tracking-wide">
+                <h3 className="text-sm font-semibold text-kal-accent-dark uppercase tracking-wide">
                   {subject}
                 </h3>
                 <ul className="space-y-1">
@@ -149,7 +149,7 @@ export default function JeePage() {
 
         {/* Section 3 — Mastermind */}
         <section className="space-y-4" aria-labelledby="jee-mastermind">
-          <h2 id="jee-mastermind" className="text-xl font-bold text-kal-text">
+          <h2 id="jee-mastermind" className="text-xl font-semibold text-kal-text">
             How Mastermind helps JEE aspirants
           </h2>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -178,7 +178,7 @@ export default function JeePage() {
 
         {/* Section 4 — Voice control */}
         <section className="space-y-4" aria-labelledby="jee-voice">
-          <h2 id="jee-voice" className="text-xl font-bold text-kal-text">
+          <h2 id="jee-voice" className="text-xl font-semibold text-kal-text">
             Voice control for JEE prep — hands-free logging
           </h2>
           <p className="text-sm leading-relaxed text-kal-text-secondary">

@@ -165,6 +165,7 @@ export function AddMockTestSheet({
   const handleSave = useCallback(() => {
     setSaveError(null);
     startTransition(async () => {
+      // react-doctor-disable-next-line react-doctor/js-combine-iterations -- map-then-filter; combining would reduce readability
       const scores: SubjectScoreInput[] = syllabusSubjects
         .map((s) => ({
           subject: s,
@@ -242,7 +243,7 @@ export function AddMockTestSheet({
                 onClick={() => setStep(1)}
                 className="rounded-lg p-1 text-zinc-600 transition-colors hover:bg-zinc-200/80 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="size-4" />
               </button>
             )}
             <div>
@@ -264,7 +265,7 @@ export function AddMockTestSheet({
             onClick={handleClose}
             className="rounded-lg p-1.5 text-zinc-600 transition-colors hover:bg-zinc-200/80 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
           >
-            <X className="h-4 w-4" />
+            <X className="size-4" />
           </button>
         </div>
 
@@ -462,11 +463,12 @@ export function AddMockTestSheet({
                     <p className="text-sm font-semibold text-zinc-950 dark:text-zinc-50">{subject}</p>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[0.65rem] font-medium uppercase tracking-wide text-zinc-600 dark:text-zinc-400">
+                        <p className="text-[0.65rem] font-medium uppercase tracking-wide text-zinc-600 dark:text-zinc-400">
                           Score
-                        </label>
+                        </p>
                         <input
                           type="number"
+                          aria-label={`Score for ${subject}`}
                           value={subjectScores[subject]?.score ?? ""}
                           onChange={(e) =>
                             setSubjectScores((prev) => ({
@@ -480,11 +482,12 @@ export function AddMockTestSheet({
                       </div>
                       {scoreType !== "percentile" && (
                         <div>
-                          <label className="text-[0.65rem] font-medium uppercase tracking-wide text-zinc-600 dark:text-zinc-400">
+                          <p className="text-[0.65rem] font-medium uppercase tracking-wide text-zinc-600 dark:text-zinc-400">
                             Max
-                          </label>
+                          </p>
                           <input
                             type="number"
+                            aria-label={`Max score for ${subject}`}
                             value={subjectScores[subject]?.max ?? ""}
                             onChange={(e) =>
                               setSubjectScores((prev) => ({
@@ -514,7 +517,7 @@ export function AddMockTestSheet({
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-kal-accent py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-kal-accent/90 disabled:opacity-50"
             >
               Subject scores
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="size-4" />
             </button>
           ) : (
             <>
@@ -527,7 +530,7 @@ export function AddMockTestSheet({
                 disabled={isPending}
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-kal-accent py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-kal-accent/90 disabled:opacity-60"
               >
-                {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                {isPending && <Loader2 className="size-4 animate-spin" />}
                 Save Test
               </button>
             </>

@@ -37,7 +37,7 @@ export default function CuetPage() {
         />
 
         <section className="space-y-3" aria-labelledby="cuet-how">
-          <h2 id="cuet-how" className="text-xl font-bold text-kal-text">How Kalnehi Daily helps CUET aspirants</h2>
+          <h2 id="cuet-how" className="text-xl font-semibold text-kal-text">How Kalnehi Daily helps CUET aspirants</h2>
           <ul className="space-y-3 text-sm">
             {[
               { t: "Multi-domain subject tracking", d: "Track your preparation across all chosen domain subjects (Economics, History, Mathematics, Political Science, etc.) simultaneously. Mastermind monitors which subject has the lowest completion and tells you to shift focus." },

@@ -37,7 +37,7 @@ export default function ClatPage() {
         />
 
         <section className="space-y-4" aria-labelledby="clat-sections">
-          <h2 id="clat-sections" className="text-xl font-bold text-kal-text">CLAT sections tracked in Kalnehi Daily</h2>
+          <h2 id="clat-sections" className="text-xl font-semibold text-kal-text">CLAT sections tracked in Kalnehi Daily</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {[
               { s: "English Language (20%)", tips: "2-3 RC passages daily. Track speed and accuracy separately. Mastermind flags when your reading speed has plateaued." },
@@ -46,7 +46,7 @@ export default function ClatPage() {
               { s: "Logical Reasoning (20%)", tips: "Critical reasoning and argument analysis. Daily 20-minute practice is more effective than weekly marathons." },
             ].map(({ s, tips }) => (
               <div key={s} className="kal-glass-card rounded-xl p-4 space-y-1.5">
-                <h3 className="text-xs font-bold text-kal-accent-dark">{s}</h3>
+                <h3 className="text-xs font-semibold text-kal-accent-dark">{s}</h3>
                 <p className="text-xs text-kal-text-secondary">{tips}</p>
               </div>
             ))}

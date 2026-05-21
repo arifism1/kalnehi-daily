@@ -138,7 +138,7 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
                   className="rounded-xl p-2 text-kal-muted hover:bg-kal-card-muted"
                   aria-label="Close"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="size-5" />
                 </button>
               </div>
               <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 pb-5 pt-3 sm:px-6 sm:pb-6 [-webkit-overflow-scrolling:touch]">
@@ -167,7 +167,7 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
                   className="rounded-xl p-2 text-kal-muted hover:bg-kal-card-muted hover:text-kal-text"
                   aria-label="Close"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="size-5" />
                 </button>
               </div>
 
@@ -204,7 +204,7 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
                     </p>
                   </div>
                 ) : isAiStudyPartnerUiEnabled && needsPartnerTime ? (
-                  <div className="mt-4 rounded-2xl border border-amber-500/35 bg-amber-500/[0.07] px-4 py-4">
+                  <div className="mt-4 rounded-2xl border border-amber-500/35 bg-amber-500/[0.07] p-4">
                     <p className="text-sm font-semibold text-kal-text">
                       No AI Study Partner time left
                     </p>
@@ -232,7 +232,7 @@ export function AddStudySessionSheet({ open, onClose }: Props) {
                   >
                     {isCheckingBalance ? (
                       <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <Loader2 className="size-4 animate-spin" />
                         Checking balance…
                       </>
                     ) : (

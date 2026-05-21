@@ -49,7 +49,7 @@ export default async function UseCasePage({ params }: Props) {
       <div className="space-y-10">
         <header className="space-y-3">
           <p className="inline-flex items-center gap-1.5 rounded-full border border-kal-accent/25 bg-kal-accent-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-kal-accent-dark">
-            <span className="h-1.5 w-1.5 rounded-full bg-kal-accent" aria-hidden />
+            <span className="size-1.5 rounded-full bg-kal-accent" aria-hidden />
             For {data.audienceLabel}
           </p>
           <h1 className="kal-feature-title">{data.headline}</h1>
@@ -160,6 +160,7 @@ export default async function UseCasePage({ params }: Props) {
         <div className="space-y-3">
           <h3 className="text-sm font-semibold text-kal-text-secondary uppercase tracking-wide">Also useful for</h3>
           <div className="flex flex-wrap gap-2">
+            {/* react-doctor-disable-next-line react-doctor/js-combine-iterations -- filter-then-map in JSX; flatMap here would reduce readability */}
             {getAllUseCases()
               .filter((u) => u.slug !== audience)
               .map((u) => (

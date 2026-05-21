@@ -59,8 +59,8 @@ export function StudyCameraProgressCard() {
     return (
       <section className={shell}>
         <div className="flex items-start gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/30 bg-white/60 text-kal-accent shadow-sm backdrop-blur-sm dark:border-white/12 dark:bg-zinc-900/60">
-            <Video className="h-5 w-5" aria-hidden />
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-white/30 bg-white/60 text-kal-accent shadow-sm backdrop-blur-sm dark:border-white/12 dark:bg-zinc-900/60">
+            <Video className="size-5" aria-hidden />
           </span>
           <div>
             <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
@@ -83,8 +83,8 @@ export function StudyCameraProgressCard() {
     <section className={shell}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/30 bg-white/60 text-kal-accent shadow-sm backdrop-blur-sm dark:border-white/12 dark:bg-zinc-900/60">
-            <Video className="h-5 w-5" aria-hidden />
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-white/30 bg-white/60 text-kal-accent shadow-sm backdrop-blur-sm dark:border-white/12 dark:bg-zinc-900/60">
+            <Video className="size-5" aria-hidden />
           </span>
           <div>
             <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">

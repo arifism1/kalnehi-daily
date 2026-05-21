@@ -27,9 +27,9 @@ export async function listUsersForAdmin(
   if (!admin) return { rows: [], total: 0 };
 
   const { data: adminRows } = await admin.from("admin_users").select("user_id");
-  const adminIds = ((adminRows ?? []) as { user_id: string }[])
-    .map((r) => r.user_id)
-    .filter(Boolean);
+  const adminIds = ((adminRows ?? []) as { user_id: string }[]).flatMap((r) =>
+    r.user_id ? [r.user_id] : [],
+  );
 
   const from = (page - 1) * perPage;
   let query = admin
@@ -94,6 +94,7 @@ async function findAuthUserIdByEmail(
 ): Promise<User | null> {
   const e = email.toLowerCase();
   for (let page = 1; page <= 25; page++) {
+    // react-doctor-disable-next-line react-doctor/async-await-in-loop -- pagination: each page is fetched only after checking if the previous had more results
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
     if (error) return null;
     const hit = data.users.find((u) => u.email?.toLowerCase() === e);
@@ -143,8 +144,10 @@ export async function searchUsersForAdmin(q: string): Promise<UserLookupBundle[]
   for (const p of profList) {
     if (!p.user_id || seen.has(p.user_id)) continue;
     seen.add(p.user_id);
+    // react-doctor-disable-next-line react-doctor/async-await-in-loop -- per-user sequential fetch; deduped via seen set
     const { data: u } = await admin.auth.admin.getUserById(p.user_id);
     if (u.user) {
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- per-user sequential fetch
       const b = await loadBundleForUserId(admin, p.user_id, u.user);
       if (b) bundles.push(b);
     }

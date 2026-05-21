@@ -27,11 +27,11 @@ export function SyllabusComingSoon({
         )}
       >
         <div
-          className="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full bg-kal-accent/15 blur-3xl dark:bg-kal-accent/10"
+          className="pointer-events-none absolute -right-12 -top-12 size-36 rounded-full bg-kal-accent/15 blur-3xl dark:bg-kal-accent/10"
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute -bottom-10 -left-8 h-28 w-28 rounded-full bg-red-400/10 blur-3xl dark:bg-red-500/10"
+          className="pointer-events-none absolute -bottom-10 -left-8 size-28 rounded-full bg-red-400/10 blur-3xl dark:bg-red-500/10"
           aria-hidden
         />
 
@@ -39,13 +39,13 @@ export function SyllabusComingSoon({
           <div
             className={clsx(
               "flex items-center justify-center rounded-2xl border border-kal-accent/25 bg-kal-card shadow-sm ring-1 ring-kal-border/80 dark:bg-kal-card-muted/60",
-              compact ? "h-14 w-14" : "h-20 w-20",
+              compact ? "size-14" : "size-20",
             )}
           >
             <Sparkles
               className={clsx(
                 "text-kal-accent",
-                compact ? "h-7 w-7" : "h-10 w-10",
+                compact ? "size-7" : "size-10",
               )}
               strokeWidth={1.5}
               aria-hidden

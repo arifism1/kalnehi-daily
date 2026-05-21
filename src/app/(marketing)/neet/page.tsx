@@ -117,7 +117,7 @@ export default function NeetPage() {
 
         {/* Section 2 — Syllabus */}
         <section className="space-y-5" aria-labelledby="neet-syllabus">
-          <h2 id="neet-syllabus" className="text-xl font-bold text-kal-text">
+          <h2 id="neet-syllabus" className="text-xl font-semibold text-kal-text">
             How Kalnehi Daily maps to the NEET syllabus
           </h2>
           <p className="text-sm leading-relaxed text-kal-text-secondary">
@@ -128,7 +128,7 @@ export default function NeetPage() {
           <div className="grid gap-4 sm:grid-cols-3">
             {SYLLABUS.map(({ subject, chapters }) => (
               <div key={subject} className="kal-glass-card rounded-2xl p-4 space-y-2">
-                <h3 className="text-sm font-bold text-kal-accent-dark uppercase tracking-wide">
+                <h3 className="text-sm font-semibold text-kal-accent-dark uppercase tracking-wide">
                   {subject}
                 </h3>
                 <ul className="space-y-1">
@@ -149,7 +149,7 @@ export default function NeetPage() {
 
         {/* Section 3 — Mastermind */}
         <section className="space-y-4" aria-labelledby="neet-mastermind">
-          <h2 id="neet-mastermind" className="text-xl font-bold text-kal-text">
+          <h2 id="neet-mastermind" className="text-xl font-semibold text-kal-text">
             How Mastermind helps NEET aspirants
           </h2>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -178,7 +178,7 @@ export default function NeetPage() {
 
         {/* Section 4 — Voice control */}
         <section className="space-y-4" aria-labelledby="neet-voice">
-          <h2 id="neet-voice" className="text-xl font-bold text-kal-text">
+          <h2 id="neet-voice" className="text-xl font-semibold text-kal-text">
             Voice control for NEET prep
           </h2>
           <p className="text-sm leading-relaxed text-kal-text-secondary">

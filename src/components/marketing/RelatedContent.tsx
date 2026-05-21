@@ -15,12 +15,10 @@ export function RelatedContent({ pathname }: Props) {
   const links = getInternalLinks(pathname);
   if (!links) return null;
 
-  const posts = (links.relatedPosts ?? [])
-    .map((slug) => {
-      const p = getPostBySlug(slug);
-      return p ? { slug, title: p.title } : null;
-    })
-    .filter((x): x is { slug: string; title: string } => x !== null);
+  const posts = (links.relatedPosts ?? []).flatMap((slug) => {
+    const p = getPostBySlug(slug);
+    return p ? [{ slug, title: p.title }] : [];
+  });
 
   const hasAny =
     posts.length > 0 || (links.relatedExams?.length ?? 0) > 0 || (links.relatedFeatures?.length ?? 0) > 0;
@@ -28,7 +26,7 @@ export function RelatedContent({ pathname }: Props) {
 
   return (
     <section className="space-y-4 rounded-2xl border border-kal-border bg-kal-card/40 p-5" aria-labelledby="related-content">
-      <h2 id="related-content" className="text-base font-bold text-kal-text">
+      <h2 id="related-content" className="text-base font-semibold text-kal-text">
         Related on Kalnehi Daily
       </h2>
       <div className="grid gap-6 sm:grid-cols-2">

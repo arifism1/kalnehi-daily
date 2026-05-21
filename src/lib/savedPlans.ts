@@ -148,6 +148,7 @@ export function toSavedPlanListItem(row: SavedPlanListRowRaw): SavedPlanListItem
     totalWorkedMinutes > 0 && totalPlannedMinutes > 0
       ? Math.min(999, Math.round((totalWorkedMinutes / totalPlannedMinutes) * 100))
       : null;
+  // react-doctor-disable-next-line react-doctor/js-combine-iterations -- map-then-filter; combining would reduce readability
   const previewTitles = tasks
     .map((task) => task.title?.trim() ?? "")
     .filter((title) => title.length > 0)

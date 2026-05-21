@@ -145,9 +145,9 @@ export function TourStepCard({ currentStep, onNext, onSkip }: TourStepCardProps)
               type="button"
               onClick={onSkip}
               aria-label="Skip tour"
-              className="flex h-7 w-7 items-center justify-center rounded-full text-kal-muted transition-colors hover:bg-kal-border/40 hover:text-kal-text"
+              className="flex size-7 items-center justify-center rounded-full text-kal-muted transition-colors hover:bg-kal-border/40 hover:text-kal-text"
             >
-              <X className="h-4 w-4" />
+              <X className="size-4" />
             </button>
           </div>
 
@@ -169,7 +169,7 @@ export function TourStepCard({ currentStep, onNext, onSkip }: TourStepCardProps)
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-kal-accent px-4 py-2.5 text-[14px] font-semibold text-white transition-opacity active:opacity-80"
             >
               {isLastFeatureStep ? "See the finish line" : "Next"}
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="size-4" />
             </button>
           </div>
         </motion.div>

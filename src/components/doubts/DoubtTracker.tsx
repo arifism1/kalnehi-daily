@@ -120,7 +120,7 @@ function DoubtPhotoThumb({
       <img
         src={url}
         alt=""
-        className="h-16 w-16 object-cover sm:h-20 sm:w-20"
+        className="size-16 object-cover sm:h-20 sm:w-20"
       />
       {onRemove && (
         <button
@@ -129,10 +129,10 @@ function DoubtPhotoThumb({
             e.stopPropagation();
             onRemove();
           }}
-          className="absolute right-0.5 top-0.5 flex h-7 w-7 items-center justify-center rounded-md bg-black/55 text-white opacity-0 transition-opacity group-hover/thumb:opacity-100"
+          className="absolute right-0.5 top-0.5 flex size-7 items-center justify-center rounded-md bg-black/55 text-white opacity-0 transition-opacity group-hover/thumb:opacity-100"
           aria-label="Remove photo"
         >
-          <X className="h-4 w-4" />
+          <X className="size-4" />
         </button>
       )}
     </div>
@@ -259,11 +259,12 @@ export function DoubtTracker() {
   }, [doubts, subjectFilter]);
 
   const filterChoices = useMemo(() => {
+    // react-doctor-disable-next-line react-doctor/js-combine-iterations -- map-then-filter with type narrowing; flatMap would lose the type predicate
     const fromDoubts = doubts
       .map((d) => normalizeStoredDoubtSubject(d.subject))
       .filter((s): s is string => Boolean(s));
     const merged = new Set<string>([...syllabusSubjects, ...fromDoubts]);
-    const sorted = [...merged].sort((a, b) => a.localeCompare(b));
+    const sorted = [...merged].toSorted((a, b) => a.localeCompare(b));
     return [
       { key: "__all__", label: "All" },
       { key: "__none__", label: "No subject" },
@@ -275,7 +276,7 @@ export function DoubtTracker() {
     const set = new Set(syllabusSubjects);
     const v = voicePreview.subject?.trim();
     if (v) set.add(v);
-    return [...set].sort((a, b) => a.localeCompare(b));
+    return [...set].toSorted((a, b) => a.localeCompare(b));
   }, [syllabusSubjects, voicePreview.subject]);
 
   const cardNumberById = useMemo(() => {
@@ -289,7 +290,7 @@ export function DoubtTracker() {
     }
     const out: Record<string, number> = {};
     for (const k of Object.keys(byStatusAll) as DoubtStatus[]) {
-      byStatusAll[k].sort(compareByUpdatedAtDesc);
+      byStatusAll[k].toSorted(compareByUpdatedAtDesc);
       for (const [index, d] of byStatusAll[k].entries()) {
         out[d.id] = index + 1;
       }
@@ -307,7 +308,7 @@ export function DoubtTracker() {
       m[d.status].push(d);
     }
     for (const k of Object.keys(m) as DoubtStatus[]) {
-      m[k].sort(compareByUpdatedAtDesc);
+      m[k].toSorted(compareByUpdatedAtDesc);
     }
     return m;
   }, [filteredDoubts]);
@@ -601,7 +602,7 @@ export function DoubtTracker() {
   if (!hydrated) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 text-kal-muted">
-        <Loader2 className="h-9 w-9 animate-spin text-kal-accent" />
+        <Loader2 className="size-9 animate-spin text-kal-accent" />
         <p className="text-sm">Loading your doubts…</p>
       </div>
     );
@@ -631,8 +632,8 @@ export function DoubtTracker() {
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
         <div className="min-w-0 space-y-1.5 sm:space-y-2">
           <div className="flex items-center gap-2.5 sm:gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-kal-accent-soft text-kal-accent sm:h-11 sm:w-11 sm:rounded-xl">
-              <CircleHelp className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2.25} />
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-kal-accent-soft text-kal-accent sm:h-11 sm:w-11 sm:rounded-xl">
+              <CircleHelp className="size-4 sm:h-5 sm:w-5" strokeWidth={2.25} />
             </div>
             <div>
               <p className="text-[0.6rem] font-semibold uppercase tracking-[0.2em] text-kal-accent sm:text-[0.65rem] sm:tracking-widest">
@@ -654,7 +655,7 @@ export function DoubtTracker() {
               onClick={() => setAddSheetOpen(true)}
               className="kal-btn-accent flex min-h-[48px] min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-xs active:scale-[0.99] sm:min-h-[52px] sm:flex-initial sm:px-6 sm:py-3.5 sm:text-sm"
             >
-              <Plus className="h-4 w-4 shrink-0 sm:h-5 sm:w-5" aria-hidden />
+              <Plus className="size-4 shrink-0 sm:h-5 sm:w-5" aria-hidden />
               Add doubt
             </button>
             <button
@@ -698,9 +699,9 @@ export function DoubtTracker() {
               }
             >
               {voiceProcessing ? (
-                <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+                <Loader2 className="size-5 animate-spin" aria-hidden />
               ) : (
-                <Mic className="h-5 w-5" strokeWidth={2.25} aria-hidden />
+                <Mic className="size-5" strokeWidth={2.25} aria-hidden />
               )}
             </button>
           </div>
@@ -827,7 +828,7 @@ export function DoubtTracker() {
               {byStatus[col.status].length === 0 ? (
                 <div className="kal-glass-subtle flex flex-col items-center rounded-lg border border-dashed border-white/35 px-2.5 py-4 text-center sm:rounded-xl sm:px-3 sm:py-6 dark:border-white/15">
                   {col.status === "current" && doubts.length === 0 && (
-                    <DoubtsEmptyIllustration className="mb-2 h-28 w-28 opacity-80" />
+                    <DoubtsEmptyIllustration className="mb-2 size-28 opacity-80" />
                   )}
                   <p className="text-[11px] leading-relaxed text-kal-muted sm:text-[12px]">
                     {col.empty}
@@ -849,7 +850,7 @@ export function DoubtTracker() {
                         className="mt-px shrink-0 text-kal-muted sm:mt-0.5"
                         aria-hidden
                       >
-                        <GripVertical className="h-4 w-4 sm:h-5 sm:w-5" />
+                        <GripVertical className="size-4 sm:h-5 sm:w-5" />
                       </div>
                       <div className="flex min-w-0 flex-1 flex-col">
                         <button
@@ -917,10 +918,10 @@ export function DoubtTracker() {
                                 e.stopPropagation();
                                 setEditingId(d.id);
                               }}
-                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-kal-border text-kal-muted transition-opacity hover:bg-kal-card-muted hover:text-kal-text md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100"
+                              className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-kal-border text-kal-muted transition-opacity hover:bg-kal-card-muted hover:text-kal-text md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100"
                               aria-label="Edit doubt"
                             >
-                              <PencilLine className="h-4 w-4" strokeWidth={2.25} />
+                              <PencilLine className="size-4" strokeWidth={2.25} />
                             </button>
                             <button
                               type="button"
@@ -928,10 +929,10 @@ export function DoubtTracker() {
                                 e.stopPropagation();
                                 setPendingDeleteId(d.id);
                               }}
-                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-orange-500/90 transition-opacity hover:bg-orange-100/60 hover:text-orange-600 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 dark:hover:bg-orange-950/30 dark:hover:text-orange-300"
+                              className="flex size-8 shrink-0 items-center justify-center rounded-lg text-orange-500/90 transition-opacity hover:bg-orange-100/60 hover:text-orange-600 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 dark:hover:bg-orange-950/30 dark:hover:text-orange-300"
                               aria-label="Delete doubt"
                             >
-                              <Trash2 className="h-4 w-4" strokeWidth={2.25} />
+                              <Trash2 className="size-4" strokeWidth={2.25} />
                             </button>
                           </div>
                           <div className="flex items-center gap-0.5">
@@ -943,10 +944,10 @@ export function DoubtTracker() {
                                 const next = shiftDoubtStatus(d.status, -1);
                                 if (next) void setDoubtStatus(d.id, next);
                               }}
-                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-kal-border text-kal-muted transition hover:bg-kal-card-muted hover:text-kal-text disabled:opacity-30 disabled:hover:bg-transparent"
+                              className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-kal-border text-kal-muted transition hover:bg-kal-card-muted hover:text-kal-text disabled:opacity-30 disabled:hover:bg-transparent"
                               aria-label="Move left"
                             >
-                              <ChevronLeft className="h-4 w-4" />
+                              <ChevronLeft className="size-4" />
                             </button>
                             <button
                               type="button"
@@ -956,10 +957,10 @@ export function DoubtTracker() {
                                 const next = shiftDoubtStatus(d.status, 1);
                                 if (next) void setDoubtStatus(d.id, next);
                               }}
-                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-kal-border text-kal-muted transition hover:bg-kal-card-muted hover:text-kal-text disabled:opacity-30 disabled:hover:bg-transparent"
+                              className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-kal-border text-kal-muted transition hover:bg-kal-card-muted hover:text-kal-text disabled:opacity-30 disabled:hover:bg-transparent"
                               aria-label="Move right"
                             >
-                              <ChevronRight className="h-4 w-4" />
+                              <ChevronRight className="size-4" />
                             </button>
                           </div>
                         </div>
@@ -1057,7 +1058,7 @@ export function DoubtTracker() {
             <div className="flex shrink-0 items-start justify-between gap-2 border-b border-kal-border px-6 pb-3 pt-6">
               <h2
                 id={`${baseId}-edit-title`}
-                className="text-lg font-bold text-kal-text"
+                className="text-lg font-semibold text-kal-text"
               >
                 Edit doubt
               </h2>
@@ -1066,7 +1067,7 @@ export function DoubtTracker() {
                 onClick={() => !editSaving && setEditingId(null)}
                 className="rounded-lg p-2 text-kal-muted hover:bg-kal-card-muted"
               >
-                <X className="h-5 w-5" />
+                <X className="size-5" />
               </button>
             </div>
 
@@ -1076,7 +1077,7 @@ export function DoubtTracker() {
               <input
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
-                className="mt-1.5 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-3 text-base text-kal-text outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40"
+                className="mt-1.5 w-full rounded-xl border border-kal-border bg-kal-input-bg p-3 text-base text-kal-text outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40"
               />
             </label>
             <label className="mt-4 block text-xs font-medium text-kal-muted">
@@ -1085,7 +1086,7 @@ export function DoubtTracker() {
                 value={editDesc}
                 onChange={(e) => setEditDesc(e.target.value)}
                 rows={5}
-                className="mt-1.5 w-full resize-y rounded-xl border border-kal-border bg-kal-input-bg px-3 py-3 text-base text-kal-text outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40"
+                className="mt-1.5 w-full resize-y rounded-xl border border-kal-border bg-kal-input-bg p-3 text-base text-kal-text outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40"
               />
             </label>
             <DoubtSubjectSelect
@@ -1133,7 +1134,7 @@ export function DoubtTracker() {
                   editSaving && "pointer-events-none cursor-not-allowed opacity-50",
                 )}
               >
-                <Camera className="h-5 w-5 shrink-0" aria-hidden />
+                <Camera className="size-5 shrink-0" aria-hidden />
                 <span>📸 Add photo</span>
               </label>
               <div className="mt-3 flex flex-wrap gap-2">
@@ -1163,7 +1164,7 @@ export function DoubtTracker() {
                 onClick={() => setPendingDeleteId(editing.id)}
                 className="flex min-h-[48px] items-center justify-center gap-2 rounded-xl border border-orange-400/40 bg-orange-50/80 py-3 text-sm font-semibold text-orange-700 dark:bg-orange-950/25 dark:text-orange-200"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="size-4" />
                 Delete doubt
               </button>
             </div>

@@ -23,7 +23,7 @@ export function AdminExamSegmentsClient({ data }: { data: ExamSegmentsSnapshot }
           <thead>
             <tr className="border-b border-kal-border bg-kal-card/70">
               {["Track / exam", "Users", "Paying", "Trials", "Conversion %", "Churn 30d", "ARPU ₹"].map((h) => (
-                <th key={h} className="px-3 py-3 text-left text-[10px] font-bold uppercase text-kal-muted">
+                <th key={h} className="p-3 text-left text-[10px] font-bold uppercase text-kal-muted">
                   {h}
                 </th>
               ))}

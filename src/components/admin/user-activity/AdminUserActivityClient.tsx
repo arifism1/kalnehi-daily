@@ -117,7 +117,7 @@ function groupTasksByDate(rows: AdminTaskRow[]): { date: string; tasks: AdminTas
     map.get(d)!.push(r);
   }
   return [...map.entries()]
-    .sort((a, b) => b[0].localeCompare(a[0]))
+    .toSorted((a, b) => b[0].localeCompare(a[0]))
     .map(([date, tasks]) => ({ date, tasks }));
 }
 

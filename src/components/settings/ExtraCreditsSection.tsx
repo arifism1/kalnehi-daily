@@ -43,7 +43,7 @@ function CreditCard({
   return (
     <div className="kal-glass-subtle flex min-w-0 flex-row items-center justify-between gap-3 rounded-xl px-4 py-3">
       <div className="flex min-w-0 flex-1 items-center gap-3">
-        <Icon className="h-4 w-4 shrink-0 text-kal-accent" aria-hidden />
+        <Icon className="size-4 shrink-0 text-kal-accent" aria-hidden />
         <div className="min-w-0">
           <p className="text-sm font-medium text-kal-text">{pack.label}</p>
           <p className="text-xs text-kal-text-secondary">{pack.priceDisplay}</p>
@@ -55,7 +55,7 @@ function CreditCard({
         onClick={() => onBuy(pack)}
         className="kal-glass-subtle inline-flex h-9 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-lg px-4 text-xs font-semibold text-kal-text disabled:opacity-50"
       >
-        <Plus className="h-3 w-3 shrink-0" />
+        <Plus className="size-3 shrink-0" />
         Buy
       </button>
     </div>
@@ -166,7 +166,7 @@ export function ExtraCreditsSection() {
         </div>
         {isPending && (
           <div className="flex justify-center border-t border-kal-border py-2">
-            <Loader2 className="h-4 w-4 animate-spin text-kal-accent" />
+            <Loader2 className="size-4 animate-spin text-kal-accent" />
           </div>
         )}
         {payError ? (

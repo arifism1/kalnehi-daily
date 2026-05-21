@@ -12,11 +12,11 @@ import type { TablesInsert, TablesUpdate } from "@/types/supabase";
  * `estimated_minutes` is the app-side alias; the DB column is `estimated_time_minutes`.
  * We map it here so callers can use either name.
  */
-const COLS_MISSING_FROM_DB: readonly string[] = [];
+const COLS_MISSING_FROM_DB: readonly string[] = Object.freeze([]);
 
-const STATUS_TO_DB: Record<string, string> = {
+const STATUS_TO_DB = Object.freeze<Record<string, string>>({
   pending: "not_started",
-};
+});
 
 function sanitizeTaskPayload<T extends TablesInsert<"tasks"> | TablesUpdate<"tasks">>(
   row: T,
@@ -103,6 +103,7 @@ export async function createTasksBulk(
             ...(row as TablesInsert<"tasks">),
             user_id: userId,
           } as TablesInsert<"tasks">);
+          // react-doctor-disable-next-line react-doctor/async-await-in-loop -- fallback one-by-one insert on unique-constraint violation to identify which rows succeed
           const { error: rowErr } = await supabase.from("tasks").insert(one);
           if (rowErr && rowErr.code !== "23505") {
             return { ok: false, error: formatSupabaseError(rowErr) };
@@ -110,6 +111,7 @@ export async function createTasksBulk(
         }
         revalidatePath("/");
         revalidatePath("/daily-plan");
+        // react-doctor-disable-next-line react-doctor/js-combine-iterations -- map-then-filter with type narrowing; flatMap would lose the type predicate
         const outIds = rows
           .map((r) => (r as TablesInsert<"tasks">).id)
           .filter((id): id is string => typeof id === "string" && id.length > 0);
@@ -164,6 +166,7 @@ export async function deleteTask(
   }
 }
 
+// react-doctor-disable-next-line react-doctor/server-auth-actions -- delegates to updateTask which calls requireUser()
 export async function reallocateTask(
   id: string,
   newAssignedDate: string,

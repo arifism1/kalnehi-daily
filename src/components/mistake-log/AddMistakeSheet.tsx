@@ -231,7 +231,7 @@ export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects, exam
             onClick={handleClose}
             className="rounded-lg p-1.5 text-zinc-600 transition-colors hover:bg-zinc-200/80 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
           >
-            <X className="h-4 w-4" />
+            <X className="size-4" />
           </button>
         </div>
 
@@ -356,13 +356,13 @@ export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects, exam
                     else startVoice();
                   }}
                   className={clsx(
-                    "absolute bottom-2 right-2 flex h-7 w-7 items-center justify-center rounded-lg border border-transparent transition-colors",
+                    "absolute bottom-2 right-2 flex size-7 items-center justify-center rounded-lg border border-transparent transition-colors",
                     isVoiceActive
                       ? "border-red-200 bg-red-100 text-red-800 dark:border-red-800 dark:bg-red-950/50 dark:text-red-200"
                       : "bg-zinc-200/90 text-zinc-800 hover:border-zinc-300 hover:bg-zinc-300/90 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:border-zinc-600 dark:hover:bg-zinc-700",
                   )}
                 >
-                  {isVoiceActive ? <MicOff className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}
+                  {isVoiceActive ? <MicOff className="size-3.5" /> : <Mic className="size-3.5" />}
                 </button>
               )}
             </div>
@@ -397,7 +397,7 @@ export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects, exam
               type="checkbox"
               checked={flagForRevision}
               onChange={(e) => setFlagForRevision(e.target.checked)}
-              className="h-4 w-4 rounded border-zinc-400 accent-kal-accent focus:ring-2 focus:ring-kal-accent/40 dark:border-zinc-500"
+              className="size-4 rounded border-zinc-400 accent-kal-accent focus:ring-2 focus:ring-kal-accent/40 dark:border-zinc-500"
             />
             <span className="text-sm text-zinc-900 dark:text-zinc-100">Flag for revision</span>
           </label>
@@ -421,7 +421,7 @@ export function AddMistakeSheet({ open, onClose, onSaved, syllabusSubjects, exam
               disabled={isPending}
               className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-kal-accent py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-kal-accent/90 disabled:opacity-60"
             >
-              {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              {isPending && <Loader2 className="size-4 animate-spin" />}
               Save Mistake
             </button>
           </div>

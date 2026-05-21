@@ -37,7 +37,7 @@ function SheetSwitch({
     >
       <span
         className={clsx(
-          "absolute top-1 left-1 h-7 w-7 rounded-full bg-white shadow transition-transform duration-200",
+          "absolute top-1 left-1 size-7 rounded-full bg-white shadow transition-transform duration-200",
           checked ? "translate-x-[1.35rem]" : "translate-x-0",
         )}
       />
@@ -111,8 +111,8 @@ export function StudyCameraVerificationControls({ className }: { className?: str
       >
         <div className="border-b border-kal-border px-5 py-4">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-kal-accent/15 text-kal-accent">
-              <Camera className="h-4 w-4" aria-hidden />
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-kal-accent/15 text-kal-accent">
+              <Camera className="size-4" aria-hidden />
             </span>
             <div className="min-w-0">
               <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
@@ -129,7 +129,7 @@ export function StudyCameraVerificationControls({ className }: { className?: str
         </div>
 
         <div className="divide-y divide-white/15 dark:divide-white/10">
-          <div className="px-4 py-4 sm:px-5">
+          <div className="p-4 sm:px-5">
             {!userId ? (
               <p className="text-sm text-kal-muted">
                 Sign in to turn on-camera verification on.
@@ -157,7 +157,7 @@ export function StudyCameraVerificationControls({ className }: { className?: str
 
           {userId && studyCameraEnabled ? (
             <>
-              <div className="flex flex-col gap-2 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+              <div className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
                 <div>
                   <span className="text-[15px] font-medium text-kal-text">
                     Default camera
@@ -178,7 +178,7 @@ export function StudyCameraVerificationControls({ className }: { className?: str
                   <option value="environment">Back</option>
                 </select>
               </div>
-              <div className="px-4 py-4 sm:px-5">
+              <div className="p-4 sm:px-5">
                 <span className="text-[15px] font-medium text-kal-text">
                   Detection sensitivity
                 </span>

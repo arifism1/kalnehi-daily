@@ -107,13 +107,13 @@ function AutopayDurationPanel({
     <div className="mx-auto max-w-2xl space-y-2">
       <div className="kal-glass-panel relative overflow-hidden rounded-xl border border-kal-accent/25 shadow-[0_16px_40px_-20px_rgba(0,0,0,0.22)] dark:border-kal-accent/20 dark:shadow-[0_20px_48px_-18px_rgba(0,0,0,0.45)]">
         <div
-          className="pointer-events-none absolute -right-10 -top-12 h-28 w-28 rounded-full bg-kal-accent/12 blur-2xl dark:bg-kal-accent/10"
+          className="pointer-events-none absolute -right-10 -top-12 size-28 rounded-full bg-kal-accent/12 blur-2xl dark:bg-kal-accent/10"
           aria-hidden
         />
         <div className="relative p-3">
           <div className="flex gap-2.5 sm:gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-kal-accent/15 text-kal-accent ring-1 ring-kal-accent/20">
-              <CalendarClock className="h-4 w-4" strokeWidth={2} aria-hidden />
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-kal-accent/15 text-kal-accent ring-1 ring-kal-accent/20">
+              <CalendarClock className="size-4" strokeWidth={2} aria-hidden />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-kal-accent">
@@ -165,7 +165,7 @@ function AutopayDurationPanel({
 
           <div className="mt-2 flex gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/[0.07] px-2.5 py-2 backdrop-blur-sm dark:border-emerald-500/20 dark:bg-emerald-500/[0.08]">
             <Check
-              className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400"
+              className="mt-0.5 size-3.5 shrink-0 text-emerald-600 dark:text-emerald-400"
               strokeWidth={2.5}
               aria-hidden
             />
@@ -643,7 +643,7 @@ export function PricingPageClient() {
         {showWelcomeFreeCta ? (
           queuedState ? (
             /* ── State D: user was just queued for tomorrow ──────────────────── */
-            <div className="kal-glass-panel rounded-2xl border-2 border-kal-accent/40 bg-kal-accent/[0.05] px-5 py-5 text-center">
+            <div className="kal-glass-panel rounded-2xl border-2 border-kal-accent/40 bg-kal-accent/[0.05] p-5 text-center">
               <p className="text-sm font-semibold text-kal-text">
                 You&rsquo;re on tomorrow&rsquo;s list.
               </p>
@@ -678,7 +678,7 @@ export function PricingPageClient() {
             </div>
           ) : capStatus?.capEnabled && capStatus.isFull ? (
             /* ── State C: cap full ───────────────────────────────────────────── */
-            <div className="kal-glass-panel rounded-2xl border-2 border-kal-border/60 bg-kal-card-muted/60 px-5 py-5 text-center">
+            <div className="kal-glass-panel rounded-2xl border-2 border-kal-border/60 bg-kal-card-muted/60 p-5 text-center">
               {/* Primary outline button first */}
               <button
                 type="button"
@@ -714,7 +714,7 @@ export function PricingPageClient() {
             </div>
           ) : (
             /* ── State A / B: cap off or spots available ─────────────────────── */
-            <div className="kal-glass-panel rounded-2xl border-2 border-emerald-500/35 bg-emerald-500/[0.06] px-5 py-5 text-center dark:border-emerald-500/25 dark:bg-emerald-500/[0.08]">
+            <div className="kal-glass-panel rounded-2xl border-2 border-emerald-500/35 bg-emerald-500/[0.06] p-5 text-center dark:border-emerald-500/25 dark:bg-emerald-500/[0.08]">
               <p className="text-sm font-semibold text-kal-text">
                 Start your 7-day free trial — every feature, no card required.
               </p>
@@ -782,7 +782,7 @@ export function PricingPageClient() {
               type="button"
               aria-pressed={billingCycle === "monthly"}
               onClick={() => setBillingCycle("monthly")}
-              className={`flex flex-col items-center justify-center rounded-xl px-2 py-2.5 text-center transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kal-accent ${
+              className={`flex flex-col items-center justify-center rounded-xl p-2.5 text-center transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kal-accent ${
                 billingCycle === "monthly"
                   ? "bg-kal-card text-kal-text shadow-sm"
                   : "text-kal-text-secondary hover:text-kal-text"
@@ -797,7 +797,7 @@ export function PricingPageClient() {
               type="button"
               aria-pressed={billingCycle === "six_month"}
               onClick={() => setBillingCycle("six_month")}
-              className={`flex flex-col items-center justify-center rounded-xl px-2 py-2.5 text-center transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kal-accent ${
+              className={`flex flex-col items-center justify-center rounded-xl p-2.5 text-center transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kal-accent ${
                 billingCycle === "six_month"
                   ? "bg-kal-accent text-white shadow-sm"
                   : "bg-amber-500/10 text-kal-text-secondary hover:text-kal-text dark:bg-amber-500/14"
@@ -817,7 +817,7 @@ export function PricingPageClient() {
               type="button"
               aria-pressed={billingCycle === "annual"}
               onClick={() => setBillingCycle("annual")}
-              className={`flex flex-col items-center justify-center rounded-xl px-2 py-2.5 text-center transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kal-accent ${
+              className={`flex flex-col items-center justify-center rounded-xl p-2.5 text-center transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kal-accent ${
                 billingCycle === "annual"
                   ? "bg-kal-accent text-white shadow-sm"
                   : "bg-amber-500/[0.18] text-kal-text-secondary hover:text-kal-text dark:bg-amber-500/[0.22]"
@@ -859,13 +859,13 @@ export function PricingPageClient() {
 
             <div className="mt-2 flex items-center gap-2">
               <span className="text-kal-accent">
-                <Crown className="h-5 w-5" />
+                <Crown className="size-5" />
               </span>
               <h2 className="kal-section-heading">{pro.name}</h2>
             </div>
             <p className="mt-1 text-xs text-kal-text-secondary">{pro.tagline}</p>
 
-            <div className="mt-4 rounded-xl border border-kal-accent/40 bg-kal-accent/10 px-3 py-3">
+            <div className="mt-4 rounded-xl border border-kal-accent/40 bg-kal-accent/10 p-3">
               {billingCycle === "annual" ? (
                 <>
                   <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-kal-accent">

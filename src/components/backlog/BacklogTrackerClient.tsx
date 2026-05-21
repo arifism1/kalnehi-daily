@@ -232,6 +232,7 @@ export function BacklogTrackerClient() {
 
     if (Array.isArray(p.staged_items) && p.staged_items.length > 0) {
       clearPrefill();
+      // react-doctor-disable-next-line react-doctor/js-combine-iterations -- map-then-filter; combining would reduce readability
       const rows = p.staged_items
         .map((s) => ({
           title: String(s.title ?? "").trim().slice(0, 500),
@@ -334,7 +335,7 @@ export function BacklogTrackerClient() {
         .from("user_syllabus_backlog")
         .select("title")
         .in("id", backlogIdsForTitles);
-      const titles = (data ?? []).map((r) => r.title).filter(Boolean);
+      const titles = (data ?? []).flatMap((r) => (r.title ? [r.title] : []));
       if (titles.length) setTranscript(titles.join("\n"));
     })();
   }, [user?.id]);
@@ -568,8 +569,7 @@ export function BacklogTrackerClient() {
   const flushDirectLines = async () => {
     const lines = transcript
       .split(/\n/)
-      .map((l) => l.trim())
-      .filter(Boolean)
+      .flatMap((l) => (l.trim() ? [l.trim()] : []))
       .slice(0, 50);
     if (lines.length === 0) return;
     const organizeItems: OrganizeItem[] = lines.map((title) => ({
@@ -770,10 +770,11 @@ export function BacklogTrackerClient() {
       {phase === "vent" ? (
         <div className="space-y-6">
           <section className="space-y-3 rounded-2xl border border-kal-border bg-kal-card p-4 kal-shadow-card">
-            <label className="block text-xs font-semibold text-kal-muted">
+            <label htmlFor="backlog-transcript" className="block text-xs font-semibold text-kal-muted">
               Tell your Backlogs
             </label>
             <textarea
+              id="backlog-transcript"
               value={isVoiceActive && voicePreview ? voicePreview : transcript}
               onChange={(e) => setTranscript(e.target.value)}
               rows={5}
@@ -790,7 +791,7 @@ export function BacklogTrackerClient() {
                     disabled={!isSupported || isWhisperTranscribing || busy !== null}
                     className="inline-flex items-center gap-2 rounded-xl border border-kal-border bg-kal-accent px-4 py-2 text-sm font-semibold text-kal-accent-foreground disabled:opacity-50"
                   >
-                    <Mic className="h-4 w-4" aria-hidden />
+                    <Mic className="size-4" aria-hidden />
                     Speak
                   </button>
                 ) : (
@@ -805,7 +806,7 @@ export function BacklogTrackerClient() {
                       }
                       className="inline-flex max-w-full items-center gap-2 rounded-xl border border-kal-border bg-kal-accent px-3 py-2 text-sm font-semibold leading-snug text-kal-accent-foreground disabled:opacity-50"
                     >
-                      <Square className="h-4 w-4 shrink-0" aria-hidden />
+                      <Square className="size-4 shrink-0" aria-hidden />
                       Done
                     </button>
                     <button
@@ -821,7 +822,7 @@ export function BacklogTrackerClient() {
                       }
                       className="inline-flex items-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-2 text-sm font-semibold text-kal-text disabled:opacity-50"
                     >
-                      <XCircle className="h-4 w-4" aria-hidden />
+                      <XCircle className="size-4" aria-hidden />
                       Cancel
                     </button>
                   </>
@@ -933,9 +934,9 @@ export function BacklogTrackerClient() {
                   >
                     <div className="min-w-0 flex-1 space-y-1">
                       <p className="font-medium leading-snug">{it.title}</p>
-                      <label className="block text-[10px] font-semibold uppercase tracking-wide text-kal-muted">
+                      <p className="block text-[10px] font-semibold uppercase tracking-wide text-kal-muted">
                         Subject
-                      </label>
+                      </p>
                       <input
                         type="text"
                         list="backlog-tracker-subject-suggestions"
@@ -1050,7 +1051,7 @@ export function BacklogTrackerClient() {
             </button>
           </div>
 
-          <div className="space-y-2 rounded-xl border border-kal-border/70 bg-kal-card-muted/40 px-3 py-3">
+          <div className="space-y-2 rounded-xl border border-kal-border/70 bg-kal-card-muted/40 p-3">
             <label htmlFor="backlog-start-date" className="block text-xs font-semibold text-kal-muted">
               When do you want to fix it?
             </label>

@@ -2,7 +2,7 @@
 
 import clsx from "clsx";
 import { AlertTriangle } from "lucide-react";
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 
 import {
   chaptersForSubject,
@@ -51,6 +51,7 @@ export function TaskPlanner({
   excludeTaskId,
   disabled = false,
 }: TaskPlannerProps) {
+  const uid = useId();
   const subjects = useMemo(
     () => uniqueSubjects(microtopics),
     [microtopics],
@@ -92,7 +93,7 @@ export function TaskPlanner({
     <div className="space-y-4">
       <div>
         <div className="flex items-center justify-between gap-2">
-          <label className="text-xs font-medium text-kal-muted">Subject</label>
+          <label htmlFor={`${uid}-subject`} className="text-xs font-medium text-kal-muted">Subject</label>
           {subject ? (
             <button
               type="button"
@@ -105,6 +106,7 @@ export function TaskPlanner({
           ) : null}
         </div>
         <select
+          id={`${uid}-subject`}
           value={subject}
           disabled={disabled || microtopics.length === 0}
           onChange={(e) => {
@@ -125,7 +127,7 @@ export function TaskPlanner({
 
       <div>
         <div className="flex items-center justify-between gap-2">
-          <label className="text-xs font-medium text-kal-muted">Chapter</label>
+          <label htmlFor={`${uid}-chapter`} className="text-xs font-medium text-kal-muted">Chapter</label>
           {chapter ? (
             <button
               type="button"
@@ -138,6 +140,7 @@ export function TaskPlanner({
           ) : null}
         </div>
         <select
+          id={`${uid}-chapter`}
           value={chapter}
           disabled={disabled || !subject}
           onChange={(e) => {
@@ -157,7 +160,7 @@ export function TaskPlanner({
 
       <div>
         <div className="flex items-center justify-between gap-2">
-          <label className="text-xs font-medium text-kal-muted">Microtopic</label>
+          <label htmlFor={`${uid}-microtopic`} className="text-xs font-medium text-kal-muted">Microtopic</label>
           {microtopicId ? (
             <button
               type="button"
@@ -170,6 +173,7 @@ export function TaskPlanner({
           ) : null}
         </div>
         <select
+          id={`${uid}-microtopic`}
           value={microtopicId}
           disabled={disabled || !chapter}
           onChange={(e) => onMicrotopicIdChange(e.target.value)}
@@ -196,8 +200,9 @@ export function TaskPlanner({
       </div>
 
       <div>
-        <label className="text-xs font-medium text-kal-muted">Assigned date</label>
+        <label htmlFor={`${uid}-date`} className="text-xs font-medium text-kal-muted">Assigned date</label>
         <input
+          id={`${uid}-date`}
           type="date"
           value={assignedDate}
           disabled={disabled}
@@ -207,10 +212,11 @@ export function TaskPlanner({
       </div>
 
       <div>
-        <label className="text-xs font-medium text-kal-muted">
+        <label htmlFor={`${uid}-estmin`} className="text-xs font-medium text-kal-muted">
           Est. minutes (optional)
         </label>
         <input
+          id={`${uid}-estmin`}
           type="number"
           inputMode="numeric"
           min={0}
@@ -237,7 +243,7 @@ export function TaskPlanner({
           role="status"
           className="flex gap-2 rounded-xl border border-amber-500/40 bg-amber-950/30 px-3 py-2.5 text-sm text-amber-100"
         >
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+          <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-400" />
           <p>
             Soft warning: this day already has a heavy load. Adding this task
             pushes estimated time over <strong>9 hours</strong> — consider

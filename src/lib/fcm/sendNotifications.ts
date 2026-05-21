@@ -82,7 +82,7 @@ export async function sendFcmToUserTokens(
     invalid_registration_streak: number | null;
   };
   const typedRows = (rows ?? []) as Row[];
-  const tokens = typedRows.map((r) => r.token).filter(Boolean);
+  const tokens = typedRows.flatMap((r) => (r.token ? [r.token] : []));
   if (tokens.length === 0) {
     return { sent: 0, failures: ["No device tokens for user"] };
   }
@@ -111,6 +111,7 @@ export async function sendFcmToUserTokens(
 
     if (resp.success) {
       sent += 1;
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- per-token sequential update after send; required to track individual token state
       await admin
         .from("user_push_tokens")
         .update({ invalid_registration_streak: 0 })

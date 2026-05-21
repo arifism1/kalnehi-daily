@@ -45,7 +45,7 @@ export type ComputedBacklogSchedule = {
 };
 
 function sortForRetryPriority<T extends SchedulableBacklogItem>(items: T[]): T[] {
-  return [...items].sort((a, b) => {
+  return [...items].toSorted((a, b) => {
     const rc = (b.retry_count ?? 0) - (a.retry_count ?? 0);
     if (rc !== 0) return rc;
     const ad = a.last_attempt_date ?? "";
@@ -190,7 +190,7 @@ export function buildPreviewRows(args: {
     byDate.set(d, list);
   });
   const out: BacklogSchedulePreviewRow[] = [];
-  const dates = [...new Set(rawDates)].sort();
+  const dates = [...new Set(rawDates)].toSorted();
   for (const d of dates) {
     const bucket = byDate.get(d) ?? [];
     const bal = balanceSubjectsWithinDay(bucket);

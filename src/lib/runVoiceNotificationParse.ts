@@ -190,6 +190,7 @@ If you cannot determine a time, use notify_at as an empty string (caller will re
 
   for (const model of getGroqModelCandidates("parsing")) {
     try {
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential model fallback: try next model only if this one fails
       const completion = await groq.chat.completions.create({
         model,
         messages,

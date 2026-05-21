@@ -239,7 +239,7 @@ export function PlannerQuickAddCard({
           placeholder="Task name — start typing"
           autoComplete="off"
           disabled={creating}
-          className="min-h-[4.5rem] w-full min-w-0 resize-y overflow-hidden rounded-lg border border-kal-border bg-kal-input-bg px-3 py-3 text-base font-medium leading-snug text-kal-text outline-none placeholder:text-kal-muted [overflow-wrap:anywhere] focus-visible:border-kal-accent/40 focus-visible:ring-2 focus-visible:ring-kal-accent/25 disabled:opacity-50 sm:min-h-[5.5rem] sm:rounded-xl sm:px-4 sm:py-3.5 sm:text-[17px]"
+          className="min-h-[4.5rem] w-full min-w-0 resize-y overflow-hidden rounded-lg border border-kal-border bg-kal-input-bg p-3 text-base font-medium leading-snug text-kal-text outline-none placeholder:text-kal-muted [overflow-wrap:anywhere] focus-visible:border-kal-accent/40 focus-visible:ring-2 focus-visible:ring-kal-accent/25 disabled:opacity-50 sm:min-h-[5.5rem] sm:rounded-xl sm:px-4 sm:py-3.5 sm:text-[17px]"
         />
       </label>
 
@@ -350,7 +350,7 @@ export function PlannerQuickAddCard({
           onClick={finish}
           className="min-h-[44px] rounded-xl bg-kal-accent px-6 text-sm font-bold text-white shadow-sm transition-all hover:bg-kal-accent-hover active:scale-[0.98] disabled:opacity-60"
         >
-          Done
+          Save task
         </button>
       </div>
     </div>

@@ -56,6 +56,7 @@ async function checkHost(host) {
   for (const path of TEST_URLS) {
     const fullUrl = `${protocol}://${host}${path}`;
     try {
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- diagnostic script: sequential URL checks to display results one by one
       const html = await fetchUrl(fullUrl);
       const canonical = extractCanonical(html);
       const robots = extractMetaRobots(html);
@@ -98,6 +99,7 @@ async function checkSitemapHosts() {
     try {
       const protocol = 'https';
       const sitemapUrl = `${protocol}://${host}/sitemap-pages.xml`;
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- diagnostic script: sequential host checks
       const xml = await fetchUrl(sitemapUrl);
 
       // Extract first 5 <loc> entries

@@ -25,7 +25,7 @@ export function CustomizeFeaturesSection() {
 
   const selectableCatalogIds = useMemo(
     () =>
-      VISIBLE_DASHBOARD_FEATURES.filter((f) => f.id !== "daily-log").map((f) => f.id),
+      VISIBLE_DASHBOARD_FEATURES.flatMap((f) => f.id !== "daily-log" ? [f.id] : []),
     [],
   );
   const selectableCatalogCount = selectableCatalogIds.length;
@@ -91,8 +91,8 @@ export function CustomizeFeaturesSection() {
           className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left"
         >
           <div className="flex items-center gap-2.5">
-            <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-kal-border/80 bg-white/70 text-kal-accent dark:bg-zinc-900/40">
-              <LayoutDashboard className="h-4.5 w-4.5" aria-hidden />
+            <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl border border-kal-border/80 bg-white/70 text-kal-accent dark:bg-zinc-900/40">
+              <LayoutDashboard className="size-4.5" aria-hidden />
             </span>
             <div>
               <h2
@@ -106,7 +106,7 @@ export function CustomizeFeaturesSection() {
           </div>
           <ChevronDown
             className={clsx(
-              "h-4.5 w-4.5 shrink-0 text-kal-muted transition-transform duration-300",
+              "size-4.5 shrink-0 text-kal-muted transition-transform duration-300",
               open && "rotate-180",
             )}
             aria-hidden
@@ -153,7 +153,7 @@ export function CustomizeFeaturesSection() {
                       "Saving…"
                     ) : (
                       <>
-                        <Save className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden />
+                        <Save className="size-3.5 sm:h-4 sm:w-4" aria-hidden />
                         Save
                       </>
                     )}

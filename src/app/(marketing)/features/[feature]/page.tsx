@@ -35,9 +35,10 @@ export default async function FeaturePage({ params }: Props) {
   if (!feature) notFound();
 
   const allFeatures = getAllFeatures();
-  const relatedFeatureData = feature.relatedFeatures
-    .map((s) => allFeatures.find((f) => f.slug === s))
-    .filter(Boolean);
+  const relatedFeatureData = feature.relatedFeatures.flatMap((s) => {
+    const f = allFeatures.find((feat) => feat.slug === s);
+    return f ? [f] : [];
+  });
 
   return (
     <>
@@ -64,7 +65,7 @@ export default async function FeaturePage({ params }: Props) {
         {/* Hero */}
         <header className="space-y-4">
           <p className="inline-flex items-center gap-1.5 rounded-full border border-kal-accent/25 bg-kal-accent-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-kal-accent-dark">
-            <span className="h-1.5 w-1.5 rounded-full bg-kal-accent" aria-hidden />
+            <span className="size-1.5 rounded-full bg-kal-accent" aria-hidden />
             Kalnehi Daily Feature
           </p>
           <h1 className="kal-feature-title">{feature.headline}</h1>
@@ -87,7 +88,7 @@ export default async function FeaturePage({ params }: Props) {
 
         {/* Description */}
         <section className="space-y-3" aria-labelledby="feature-what">
-          <h2 id="feature-what" className="text-xl font-bold text-kal-text">What {feature.name} does</h2>
+          <h2 id="feature-what" className="text-xl font-semibold text-kal-text">What {feature.name} does</h2>
           <div className="prose prose-sm max-w-none text-kal-text-secondary leading-relaxed">
             {feature.description.split("\n\n").map((para, i) => (
               <p key={i} className="mb-3">{para}</p>
@@ -97,7 +98,7 @@ export default async function FeaturePage({ params }: Props) {
 
         {/* Scenarios */}
         <section className="space-y-4" aria-labelledby="feature-scenarios">
-          <h2 id="feature-scenarios" className="text-xl font-bold text-kal-text">
+          <h2 id="feature-scenarios" className="text-xl font-semibold text-kal-text">
             What it looks like in real prep
           </h2>
           <div className="space-y-3">

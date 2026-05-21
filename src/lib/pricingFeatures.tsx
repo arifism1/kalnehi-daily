@@ -28,13 +28,13 @@ export function FeatureCell({ value, variant = "desktop" }: FeatureCellProps) {
     if (value === true)
       return (
         <Check
-          className="h-4 w-4 text-emerald-500 dark:text-emerald-400"
+          className="size-4 text-emerald-500 dark:text-emerald-400"
           strokeWidth={2.5}
           aria-label="Included"
         />
       );
     if (value === false || value === null)
-      return <Minus className="h-4 w-4 text-kal-muted/50" strokeWidth={2} aria-label="Not included" />;
+      return <Minus className="size-4 text-kal-muted/50" strokeWidth={2} aria-label="Not included" />;
     return <span className="text-xs font-semibold tabular-nums text-kal-text">{value}</span>;
   }
 
@@ -42,7 +42,7 @@ export function FeatureCell({ value, variant = "desktop" }: FeatureCellProps) {
     return (
       <span className="flex justify-center">
         <Check
-          className="h-5 w-5 text-emerald-500 dark:text-emerald-400"
+          className="size-5 text-emerald-500 dark:text-emerald-400"
           strokeWidth={2.5}
           aria-label="Included"
         />
@@ -51,7 +51,7 @@ export function FeatureCell({ value, variant = "desktop" }: FeatureCellProps) {
   if (value === false || value === null)
     return (
       <span className="flex justify-center">
-        <Minus className="h-4 w-4 text-kal-muted/50" strokeWidth={2} aria-label="Not included" />
+        <Minus className="size-4 text-kal-muted/50" strokeWidth={2} aria-label="Not included" />
       </span>
     );
   return (

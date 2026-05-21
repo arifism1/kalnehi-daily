@@ -58,7 +58,7 @@ export default function PoliciesHubPage() {
           <li key={href}>
             <Link
               href={href}
-              className="group flex min-h-[72px] items-center gap-3 px-4 py-4 transition-colors hover:bg-white/40 active:bg-white/55 dark:hover:bg-zinc-900/50 dark:active:bg-zinc-900/60 sm:px-5"
+              className="group flex min-h-[72px] items-center gap-3 p-4 transition-colors hover:bg-white/40 active:bg-white/55 dark:hover:bg-zinc-900/50 dark:active:bg-zinc-900/60 sm:px-5"
             >
               <span className="min-w-0 flex-1">
                 <span className="block text-[15px] font-semibold text-kal-text group-hover:text-kal-accent">
@@ -69,7 +69,7 @@ export default function PoliciesHubPage() {
                 </span>
               </span>
               <ChevronRight
-                className="h-5 w-5 shrink-0 text-kal-muted transition-transform group-hover:translate-x-0.5 group-hover:text-kal-accent"
+                className="size-5 shrink-0 text-kal-muted transition-transform group-hover:translate-x-0.5 group-hover:text-kal-accent"
                 aria-hidden
               />
             </Link>

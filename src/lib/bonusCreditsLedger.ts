@@ -100,7 +100,7 @@ export function consumeFromBonusLedger(
   if (consume <= 0) {
     return { ledger: pruneExpiredBonusLedger(entries, now), taken: 0 };
   }
-  const sorted = [...pruneExpiredBonusLedger(entries, now)].sort(
+  const sorted = [...pruneExpiredBonusLedger(entries, now)].toSorted(
     (a, b) => new Date(a.expires_at).getTime() - new Date(b.expires_at).getTime(),
   );
   let need = consume;

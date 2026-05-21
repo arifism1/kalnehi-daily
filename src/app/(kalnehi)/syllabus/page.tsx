@@ -31,7 +31,7 @@ export default async function SyllabusPage() {
 
   return (
     <div className="kal-glass-panel mx-auto max-w-lg rounded-2xl px-8 py-10 text-center">
-      <SyllabusEmptyIllustration className="mx-auto h-44 w-44" />
+      <SyllabusEmptyIllustration className="mx-auto size-44" />
       <h1 className="kal-feature-title mt-4">Choose your target exam</h1>
       <p className="mt-2 text-sm leading-relaxed text-kal-muted">
         Set <strong className="text-kal-text">Target exam</strong> in Settings

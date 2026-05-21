@@ -104,7 +104,7 @@ function TaskQuickSheet({
             className="rounded-lg p-2 text-kal-muted hover:bg-kal-card-muted hover:text-kal-text"
             aria-label="Close"
           >
-            <X className="h-5 w-5" />
+            <X className="size-5" />
           </button>
         </div>
         <div className="mt-4 flex flex-col gap-2">
@@ -142,13 +142,13 @@ function TaskQuickSheet({
               {TimerIcon ? (
                 <TimerIcon
                   className={clsx(
-                    "h-4 w-4",
+                    "size-4",
                     TimerIcon !== Pause && "fill-current",
                   )}
                   aria-hidden
                 />
               ) : (
-                <Play className="h-4 w-4 fill-current" aria-hidden />
+                <Play className="size-4 fill-current" aria-hidden />
               )}
               {timerActionLabel}
             </button>
@@ -518,7 +518,7 @@ export function TaskCard({
                   }
                 }}
                 className={clsx(
-                  "rounded-md px-0.5 py-0.5 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-kal-accent/35",
+                  "rounded-md p-0.5 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-kal-accent/35",
                   !done && "cursor-pointer hover:bg-kal-card-muted active:bg-kal-border/30",
                 )}
               >
@@ -533,7 +533,7 @@ export function TaskCard({
                     {title}
                   </p>
                   {busy && (
-                    <Loader2 className="h-3 w-3 shrink-0 animate-spin text-kal-accent sm:h-3.5 sm:w-3.5" />
+                    <Loader2 className="size-3 shrink-0 animate-spin text-kal-accent sm:h-3.5 sm:w-3.5" />
                   )}
                   {done && (
                     <span className="shrink-0 rounded border border-kal-accent/35 bg-kal-accent/10 px-1 py-px text-[7px] font-bold uppercase tracking-[0.1em] text-kal-accent/95 sm:px-1.5 sm:text-[8px] sm:tracking-[0.12em]">
@@ -568,9 +568,9 @@ export function TaskCard({
                         title="Start timer"
                         onClick={() => void startOrResumeTimer()}
                         disabled={busy}
-                        className="flex h-9 w-9 min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-kal-accent/25 bg-kal-accent/10 text-kal-accent transition-colors hover:bg-kal-accent/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40 disabled:opacity-40 sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0"
+                        className="flex size-9 min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-kal-accent/25 bg-kal-accent/10 text-kal-accent transition-colors hover:bg-kal-accent/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40 disabled:opacity-40 sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0"
                       >
-                        <Play className="h-3 w-3 fill-current sm:h-3.5 sm:w-3.5" aria-hidden />
+                        <Play className="size-3 fill-current sm:h-3.5 sm:w-3.5" aria-hidden />
                       </button>
                     )}
                     {isThisActive && running && (
@@ -582,7 +582,7 @@ export function TaskCard({
                           disabled={busy}
                           className="flex h-9 min-w-9 min-h-[44px] items-center justify-center gap-0.5 rounded-lg bg-kal-accent px-1.5 text-kal-accent-foreground shadow-sm shadow-kal-accent/25 transition-colors hover:bg-kal-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/50 disabled:opacity-40 sm:h-8 sm:min-h-0 sm:min-w-8"
                         >
-                          <Pause className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" aria-hidden />
+                          <Pause className="size-3 shrink-0 sm:h-3.5 sm:w-3.5" aria-hidden />
                           <span className="max-w-[2.75rem] truncate text-[8px] font-bold tabular-nums leading-none sm:text-[9px] md:text-[10px]">
                             {elapsedDisplay}
                           </span>
@@ -592,9 +592,9 @@ export function TaskCard({
                           title="End session & save time"
                           onClick={() => void endTimerSession()}
                           disabled={busy}
-                          className="flex h-9 w-9 min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-rose-500/35 bg-rose-950/35 text-rose-200 transition-colors hover:bg-rose-950/55 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/35 disabled:opacity-40 sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0"
+                          className="flex size-9 min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-rose-500/35 bg-rose-950/35 text-rose-200 transition-colors hover:bg-rose-950/55 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/35 disabled:opacity-40 sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0"
                         >
-                          <Square className="h-2.5 w-2.5 fill-current sm:h-3 sm:w-3" aria-hidden />
+                          <Square className="size-2.5 fill-current sm:h-3 sm:w-3" aria-hidden />
                         </button>
                       </>
                     )}
@@ -607,7 +607,7 @@ export function TaskCard({
                           disabled={busy}
                           className="flex h-9 min-w-9 min-h-[44px] items-center justify-center gap-0.5 rounded-lg bg-amber-600 px-1.5 text-amber-950 shadow-sm shadow-amber-950/25 transition-colors hover:bg-amber-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/45 disabled:opacity-40 sm:h-8 sm:min-h-0 sm:min-w-8"
                         >
-                          <Play className="h-3 w-3 shrink-0 fill-current sm:h-3.5 sm:w-3.5" aria-hidden />
+                          <Play className="size-3 shrink-0 fill-current sm:h-3.5 sm:w-3.5" aria-hidden />
                           <span className="max-w-[2.75rem] truncate text-[8px] font-bold tabular-nums leading-none sm:text-[9px] md:text-[10px]">
                             {elapsedDisplay}
                           </span>
@@ -617,9 +617,9 @@ export function TaskCard({
                           title="End session & save time"
                           onClick={() => void endTimerSession()}
                           disabled={busy}
-                          className="flex h-9 w-9 min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-rose-500/35 bg-rose-950/35 text-rose-200 transition-colors hover:bg-rose-950/55 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/35 disabled:opacity-40 sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0"
+                          className="flex size-9 min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-rose-500/35 bg-rose-950/35 text-rose-200 transition-colors hover:bg-rose-950/55 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/35 disabled:opacity-40 sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0"
                         >
-                          <Square className="h-2.5 w-2.5 fill-current sm:h-3 sm:w-3" aria-hidden />
+                          <Square className="size-2.5 fill-current sm:h-3 sm:w-3" aria-hidden />
                         </button>
                       </>
                     )}
@@ -643,10 +643,10 @@ export function TaskCard({
               e.stopPropagation();
               onEdit();
             }}
-            className="flex h-10 w-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-kal-muted transition-colors hover:bg-kal-card-muted hover:text-kal-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/30 sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0"
+            className="flex size-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-kal-muted transition-colors hover:bg-kal-card-muted hover:text-kal-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/30 sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0"
             aria-label="Edit task"
           >
-            <Pencil className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2} />
+            <Pencil className="size-3.5 sm:h-4 sm:w-4" strokeWidth={2} />
           </button>
           <button
             type="button"
@@ -654,10 +654,10 @@ export function TaskCard({
               e.stopPropagation();
               onDelete();
             }}
-            className="flex h-10 w-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-rose-400/90 transition-colors hover:bg-rose-950/40 hover:text-rose-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/30 sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0"
+            className="flex size-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-rose-400/90 transition-colors hover:bg-rose-950/40 hover:text-rose-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/30 sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0"
             aria-label="Delete task"
           >
-            <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2} />
+            <Trash2 className="size-3.5 sm:h-4 sm:w-4" strokeWidth={2} />
           </button>
           <button
             type="button"
@@ -665,10 +665,10 @@ export function TaskCard({
               e.stopPropagation();
               openQuickSheet();
             }}
-            className="flex h-10 w-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-kal-muted transition-colors hover:bg-kal-card-muted hover:text-kal-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-border sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0"
+            className="flex size-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-kal-muted transition-colors hover:bg-kal-card-muted hover:text-kal-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-border sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0"
             aria-label="More actions"
           >
-            <ChevronDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2.5} />
+            <ChevronDown className="size-3.5 sm:h-4 sm:w-4" strokeWidth={2.5} />
           </button>
         </div>
       </div>

@@ -99,7 +99,7 @@ export function deriveUpscOptionalSubjects(subjects: string[]): string[] {
     const key = normalizeLabel(base);
     if (!unique.has(key)) unique.set(key, base);
   }
-  return [...unique.values()].sort((a, b) => a.localeCompare(b));
+  return [...unique.values()].toSorted((a, b) => a.localeCompare(b));
 }
 
 export function parseTextArrayJson(value: unknown): string[] {

@@ -110,6 +110,7 @@ export function ProfileForm() {
       setLoading(true);
       setError(null);
       try {
+        if (cancelled) return;
         const supabase = getSupabaseBrowserClient();
         const { data, error: qErr } = await supabase
           .from("user_profiles")
@@ -205,7 +206,7 @@ export function ProfileForm() {
         if (queryError) throw queryError;
         if (cancelled) return;
         setUpscOptionalSubjectOptions(
-          (data ?? []).map((r) => r.base_name).filter(Boolean),
+          (data ?? []).flatMap((r) => (r.base_name ? [r.base_name] : [])),
         );
       } catch {
         if (!cancelled) setUpscOptionalSubjectOptions([]);
@@ -335,7 +336,7 @@ export function ProfileForm() {
   if (loading) {
     return (
       <div className="flex justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-kal-accent" />
+        <Loader2 className="size-8 animate-spin text-kal-accent" />
       </div>
     );
   }
@@ -396,7 +397,7 @@ export function ProfileForm() {
           {/* Track display row */}
           <Row className="flex-col items-stretch gap-2 sm:flex-row sm:items-center">
             <span className="flex items-center gap-1.5 w-28 shrink-0 text-[15px] font-medium text-kal-text-secondary">
-              <Layers className="h-4 w-4" />
+              <Layers className="size-4" />
               Track
             </span>
             <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
@@ -456,7 +457,7 @@ export function ProfileForm() {
             );
           })}
           {formPrimaryExam && isCuetExam(formPrimaryExam) ? (
-            <div className="border-t border-kal-border px-4 py-4">
+            <div className="border-t border-kal-border p-4">
               <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
                 CUET domain subjects
               </p>
@@ -475,7 +476,7 @@ export function ProfileForm() {
             </div>
           ) : null}
           {formPrimaryExam && isUpscCseMainsExam(formPrimaryExam) ? (
-            <div className="border-t border-kal-border px-4 py-4">
+            <div className="border-t border-kal-border p-4">
               <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
                 Optional Subject (if any)
               </p>
@@ -612,7 +613,7 @@ export function ProfileForm() {
                   >
                     <span
                       className={clsx(
-                        "absolute top-1 left-1 h-6 w-6 rounded-full bg-white shadow transition-transform duration-300",
+                        "absolute top-1 left-1 size-6 rounded-full bg-white shadow transition-transform duration-300",
                         prevAttempted ? "translate-x-5" : "translate-x-0",
                       )}
                     />
@@ -628,7 +629,7 @@ export function ProfileForm() {
                   )}
                 >
                   <div className="overflow-hidden">
-                    <div className="space-y-3 border-t border-kal-border px-4 py-4">
+                    <div className="space-y-3 border-t border-kal-border p-4">
                       <p className="text-xs text-kal-text-secondary">
                         Label the attempt, then enter marks. Use &quot;Add
                         another score&quot; for more tries.
@@ -703,7 +704,7 @@ export function ProfileForm() {
                               className="flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 rounded-lg border border-kal-border bg-kal-card px-3 py-2 text-xs font-semibold text-kal-text-secondary transition-colors hover:border-[var(--kal-danger-border)] hover:bg-[var(--kal-danger-soft)] hover:text-[var(--kal-danger-text)] disabled:pointer-events-none disabled:opacity-40"
                               aria-label={`Remove score row ${index + 1}`}
                             >
-                              <Trash2 className="h-4 w-4" aria-hidden />
+                              <Trash2 className="size-4" aria-hidden />
                               Remove
                             </button>
                           </li>
@@ -715,7 +716,7 @@ export function ProfileForm() {
                         className="kal-glass-subtle flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl border border-dashed border-white/35 py-2.5 text-sm font-semibold text-kal-accent transition-colors hover:border-kal-accent/35 hover:bg-kal-accent-soft/50 dark:border-white/15"
                       >
                         <Plus
-                          className="h-4 w-4"
+                          className="size-4"
                           strokeWidth={2.5}
                           aria-hidden
                         />
@@ -735,7 +736,7 @@ export function ProfileForm() {
               disabled={saving}
               className="kal-btn-accent flex w-full min-h-[52px] items-center justify-center gap-2 py-3.5 text-[15px] transition-opacity duration-200 disabled:opacity-50"
             >
-              {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+              {saving && <Loader2 className="size-4 animate-spin" />}
               Save profile
             </button>
             {error && (

@@ -271,6 +271,7 @@ export function MyPlanPageClient() {
 
     void (async () => {
       try {
+        if (cancelled) return;
         const res = await fetch("/api/prepbrain/usage", {
           credentials: "same-origin",
           cache: "no-store",
@@ -482,7 +483,7 @@ export function MyPlanPageClient() {
           href="/"
           className="inline-flex min-h-[44px] items-center gap-1.5 text-sm font-medium text-kal-text-secondary hover:text-kal-accent"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="size-4" />
           Home
         </Link>
         <p className="mt-3 text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
@@ -500,7 +501,7 @@ export function MyPlanPageClient() {
 
       {loading ? (
         <div className="flex justify-center py-16">
-          <Loader2 className="h-8 w-8 animate-spin text-kal-accent" />
+          <Loader2 className="size-8 animate-spin text-kal-accent" />
         </div>
       ) : (
         <>
@@ -523,14 +524,14 @@ export function MyPlanPageClient() {
                 </p>
               </div>
               <UsageBar
-                icon={<Mic className="h-4 w-4" />}
+                icon={<Mic className="size-4" />}
                 label="Welcome voice time"
                 used={trialVoiceSecondsUsed}
                 limit={FREE_TRIAL_VOICE_CAP_SECONDS}
               />
               {prepbrainUsage?.phase === "welcome" ? (
                 <TokenUsageBar
-                  icon={<Brain className="h-4 w-4" />}
+                  icon={<Brain className="size-4" />}
                   label="Mastermind tokens (welcome)"
                   used={prepbrainUsage.used}
                   limit={prepbrainUsage.limit}
@@ -540,8 +541,8 @@ export function MyPlanPageClient() {
           ) : null}
 
           {onWelcomeTrial && !hasPaidAccess ? (
-            <div className="kal-glass-panel rounded-2xl border border-kal-accent/30 bg-kal-accent-soft/40 px-5 py-5 dark:bg-kal-accent/10">
-              <h3 className="text-base font-bold text-kal-text">Upgrade to Smart Plan</h3>
+            <div className="kal-glass-panel rounded-2xl border border-kal-accent/30 bg-kal-accent-soft/40 p-5 dark:bg-kal-accent/10">
+              <h3 className="text-base font-semibold text-kal-text">Upgrade to Smart Plan</h3>
               <p className="mt-2 text-sm text-kal-text-secondary">
                 You&apos;re on your 7-day free trial. Subscribe now to keep full access after your trial —{" "}
                 <span className="font-semibold text-kal-text">{TIERS.pro.monthlyPriceDisplay}/month</span>{" "}
@@ -573,7 +574,7 @@ export function MyPlanPageClient() {
                 className="kal-btn-accent mt-4 min-h-[44px] w-full sm:w-auto"
               >
                 {resubBusy ? (
-                  <Loader2 className="mx-auto h-5 w-5 animate-spin" />
+                  <Loader2 className="mx-auto size-5 animate-spin" />
                 ) : (
                   `Subscribe — ${TIERS.pro.monthlyPriceDisplay}/month`
                 )}
@@ -587,8 +588,8 @@ export function MyPlanPageClient() {
           ) : null}
 
           {welcomeTrialExpiredNoPay && !hasPaidAccess ? (
-            <div className="kal-glass-panel rounded-2xl border border-kal-accent/30 bg-kal-accent-soft/40 px-5 py-5 dark:bg-kal-accent/10">
-              <h3 className="text-base font-bold text-kal-text">Your 7-day trial has ended</h3>
+            <div className="kal-glass-panel rounded-2xl border border-kal-accent/30 bg-kal-accent-soft/40 p-5 dark:bg-kal-accent/10">
+              <h3 className="text-base font-semibold text-kal-text">Your 7-day trial has ended</h3>
               <p className="mt-2 text-sm text-kal-text-secondary">
                 Subscribe to Smart Plan to continue —{" "}
                 <span className="font-semibold text-kal-text">{TIERS.pro.monthlyPriceDisplay}/month</span>{" "}
@@ -601,7 +602,7 @@ export function MyPlanPageClient() {
                 className="kal-btn-accent mt-4 min-h-[44px] w-full sm:w-auto"
               >
                 {resubBusy ? (
-                  <Loader2 className="mx-auto h-5 w-5 animate-spin" />
+                  <Loader2 className="mx-auto size-5 animate-spin" />
                 ) : (
                   `Subscribe — ${TIERS.pro.monthlyPriceDisplay}/month`
                 )}
@@ -617,8 +618,8 @@ export function MyPlanPageClient() {
           {/* Tier spotlight */}
           <div className="kal-glass-panel overflow-hidden rounded-2xl border border-kal-accent/30 shadow-lg dark:border-kal-accent/25">
             <div className="flex items-start gap-4 p-5 sm:p-6">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-kal-accent/15 text-kal-accent">
-                <Crown className="h-6 w-6" strokeWidth={2.25} />
+              <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-kal-accent/15 text-kal-accent">
+                <Crown className="size-6" strokeWidth={2.25} />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
@@ -723,7 +724,7 @@ export function MyPlanPageClient() {
                 ) : null}
 
                 <UsageBar
-                  icon={<Mic className="h-4 w-4" />}
+                  icon={<Mic className="size-4" />}
                   label="Voice time (plan allowance)"
                   used={voiceMinutesUsed}
                   limit={monthlyVoiceMinuteLimit}
@@ -732,7 +733,7 @@ export function MyPlanPageClient() {
                 {prepbrainUsage &&
                 prepbrainUsage.phase === "monthly" ? (
                   <TokenUsageBar
-                    icon={<Brain className="h-4 w-4" />}
+                    icon={<Brain className="size-4" />}
                     label="Mastermind tokens (this month)"
                     used={prepbrainUsage.used}
                     limit={prepbrainUsage.limit}
@@ -793,7 +794,7 @@ export function MyPlanPageClient() {
                     Your plan stays active until {formatDate(endDate)}.
                   </p>
                 </div>
-                <div className="border-t border-kal-border px-4 py-4 space-y-3">
+                <div className="border-t border-kal-border p-4 space-y-3">
                   <div>
                     <p className="mb-2 text-[0.65rem] font-semibold uppercase tracking-wide text-kal-text-secondary">
                       AutoPay months for new plan
@@ -830,12 +831,12 @@ export function MyPlanPageClient() {
                   >
                     {resubBusy ? (
                       <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <Loader2 className="size-4 animate-spin" />
                         Opening checkout...
                       </>
                     ) : (
                       <>
-                        <RefreshCw className="h-4 w-4" />
+                        <RefreshCw className="size-4" />
                         Resubscribe to {tierConfig.name} — {TIERS.pro.monthlyPriceDisplay}/month
                       </>
                     )}
@@ -873,7 +874,7 @@ export function MyPlanPageClient() {
                 >
                   {isPending ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="mr-2 size-4 animate-spin" />
                       Cancelling...
                     </>
                   ) : status === "trial" ? (
@@ -936,8 +937,8 @@ export function MyPlanPageClient() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-kal-accent/10">
-                      <Bot className="h-4.5 w-4.5 text-kal-accent" aria-hidden />
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-kal-accent/10">
+                      <Bot className="size-4.5 text-kal-accent" aria-hidden />
                     </span>
                     <div>
                       <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">

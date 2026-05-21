@@ -69,6 +69,7 @@ export async function GET(req: NextRequest) {
       if (!userId) continue;
       processed += 1;
       try {
+        // react-doctor-disable-next-line react-doctor/async-await-in-loop -- per-user sequential leaderboard refresh; parallelizing would overwhelm the DB
         const syl = await loadSyllabusDataForUser(admin, userId);
         const cohort = cohortKeyForLeaderboard(syl);
         if (!cohort) {

@@ -187,7 +187,7 @@ export function AllFeaturesSection() {
             >
               <div className="flex items-start gap-3">
                 <span
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-kal-accent-soft text-lg"
+                  className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-kal-accent-soft text-lg"
                   aria-hidden
                 >
                   {emoji}

@@ -38,7 +38,7 @@ export function VoiceBudgetIndicator() {
 
     return (
       <span className={clsx("inline-flex items-center gap-1 text-xs font-medium tabular-nums", colorClass)}>
-        <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" aria-hidden />
+        <span className="size-1.5 rounded-full bg-current opacity-70" aria-hidden />
         {exhausted
           ? "Voice: used up"
           : `Voice: ${Math.floor(remainingMin)}m ${Math.round((remainingMin % 1) * 60)}s`}
@@ -61,7 +61,7 @@ export function VoiceBudgetIndicator() {
 
   return (
     <span className={clsx("inline-flex items-center gap-1 text-xs font-medium tabular-nums", colorClass)}>
-      <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" aria-hidden />
+      <span className="size-1.5 rounded-full bg-current opacity-70" aria-hidden />
       Voice: {fmtHours(remaining)} left
     </span>
   );

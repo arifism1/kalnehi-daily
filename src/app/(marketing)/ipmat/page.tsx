@@ -37,14 +37,14 @@ export default function IpmatPage() {
         />
 
         <section className="space-y-4" aria-labelledby="ipmat-sections">
-          <h2 id="ipmat-sections" className="text-xl font-bold text-kal-text">IPMAT sections tracked in Kalnehi Daily</h2>
+          <h2 id="ipmat-sections" className="text-xl font-semibold text-kal-text">IPMAT sections tracked in Kalnehi Daily</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {[
               { s: "Quantitative Ability", topics: ["Arithmetic (Percentages, Ratios, Profit-Loss, Time-Work)", "Algebra (Equations, Polynomials, Inequalities)", "Geometry & Mensuration", "Number Theory (Divisibility, Remainders, LCM/HCF)", "Data Interpretation (Tables, Graphs, Caselets)"] },
               { s: "Verbal Ability", topics: ["Reading Comprehension", "Para Jumbles, Para Completion", "Sentence Correction, Fill in the Blanks", "Vocabulary — Synonyms, Antonyms, Analogy", "Critical Reasoning"] },
             ].map(({ s, topics }) => (
               <div key={s} className="kal-glass-card rounded-xl p-4 space-y-1.5">
-                <h3 className="text-xs font-bold text-kal-accent-dark">{s}</h3>
+                <h3 className="text-xs font-semibold text-kal-accent-dark">{s}</h3>
                 <ul className="space-y-0.5">{topics.map(t => <li key={t} className="text-xs text-kal-text-secondary">· {t}</li>)}</ul>
               </div>
             ))}

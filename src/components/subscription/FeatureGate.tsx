@@ -34,8 +34,8 @@ export function FeatureGate({ feature, children }: Props) {
     const label = FEATURE_LABELS[feature];
     return (
       <div className="kal-glass-panel mx-auto flex max-w-md flex-col items-center gap-5 rounded-2xl p-10 text-center">
-        <div className="kal-glass-subtle flex h-14 w-14 items-center justify-center rounded-full">
-          <Lock className="h-6 w-6 text-kal-text-secondary" />
+        <div className="kal-glass-subtle flex size-14 items-center justify-center rounded-full">
+          <Lock className="size-6 text-kal-text-secondary" />
         </div>
         <h2 className="kal-section-heading">{label.name}</h2>
         <p className="text-sm leading-relaxed text-kal-text-secondary">

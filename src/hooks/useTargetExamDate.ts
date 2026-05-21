@@ -28,6 +28,7 @@ export function useTargetExamDate(): {
     void (async () => {
       setLoading(true);
       try {
+        if (cancelled) return;
         const supabase = getSupabaseBrowserClient();
         const { data, error } = await supabase
           .from("user_profiles")

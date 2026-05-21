@@ -133,13 +133,13 @@ export function LoginMethodsSection() {
   if (identities === null) {
     return (
       <div className={rowClassName("justify-center py-8")}>
-        <Loader2 className="h-6 w-6 animate-spin text-kal-accent" aria-hidden />
+        <Loader2 className="size-6 animate-spin text-kal-accent" aria-hidden />
         <span className="text-sm text-kal-muted">Loading sign-in methods…</span>
       </div>
     );
   }
 
-  const sorted = [...identities].sort((a, b) =>
+  const sorted = [...identities].toSorted((a, b) =>
     providerLabel(a.provider).localeCompare(providerLabel(b.provider)),
   );
 
@@ -184,7 +184,7 @@ export function LoginMethodsSection() {
             onClick={() => void linkGoogle()}
             className="kal-glass-subtle flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-kal-text transition-colors hover:opacity-95 disabled:opacity-50"
           >
-            {linkBusy ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
+            {linkBusy ? <Loader2 className="size-5 animate-spin" /> : null}
             Link Google
           </button>
         </div>
@@ -215,7 +215,7 @@ export function LoginMethodsSection() {
                 htmlFor="login-methods-new-password"
                 className="flex items-center gap-1.5 text-xs font-semibold text-kal-text-secondary"
               >
-                <Lock className="h-3.5 w-3.5" aria-hidden />
+                <Lock className="size-3.5" aria-hidden />
                 New password
               </label>
               <input
@@ -233,7 +233,7 @@ export function LoginMethodsSection() {
                 htmlFor="login-methods-confirm-password"
                 className="flex items-center gap-1.5 text-xs font-semibold text-kal-text-secondary"
               >
-                <Lock className="h-3.5 w-3.5" aria-hidden />
+                <Lock className="size-3.5" aria-hidden />
                 Confirm password
               </label>
               <input
@@ -253,9 +253,9 @@ export function LoginMethodsSection() {
               className="kal-btn-accent flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl disabled:opacity-50"
             >
               {passwordBusy ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <Loader2 className="size-5 animate-spin" />
               ) : (
-                <KeyRound className="h-4 w-4" />
+                <KeyRound className="size-4" />
               )}
               Set password for email login
             </button>
@@ -316,7 +316,7 @@ export function LoginMethodsSection() {
                 onClick={() => void submitPassword()}
                 className="kal-btn-accent flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl text-sm disabled:opacity-50"
               >
-                {passwordBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                {passwordBusy ? <Loader2 className="size-4 animate-spin" /> : null}
                 Update password
               </button>
             </div>

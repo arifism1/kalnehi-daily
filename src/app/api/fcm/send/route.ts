@@ -186,6 +186,7 @@ export async function POST(req: Request) {
     const failures: string[] = [];
 
     for (const uid of userIds) {
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential per-user notification to avoid FCM rate limits
       const result = await sendFcmToUserTokens(sdk.messaging, uid, payload);
       sent += result.sent;
       if (result.sent > 0) {

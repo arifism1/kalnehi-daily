@@ -289,6 +289,7 @@ function filterCategoriesByEnabledFeatures(
   enabledFeatures: string[] | null,
 ): Category[] {
   const effective = resolveEffectiveEnabledFeatures(enabledFeatures);
+  // react-doctor-disable-next-line react-doctor/js-combine-iterations -- map-then-filter; the map transforms items, filter removes empty cats; combining would reduce clarity
   return categories
     .map((cat) => ({
       ...cat,
@@ -330,7 +331,7 @@ function FeatureCard({
         "focus-visible:ring-2 focus-visible:ring-[#BA7517] focus-visible:ring-offset-2",
       )}
     >
-      <Icon className="h-5 w-5 shrink-0 text-kal-accent" aria-hidden />
+      <Icon className="size-5 shrink-0 text-kal-accent" aria-hidden />
       <p className="mt-2 font-serif text-[15px] font-normal leading-[1.3] text-kal-text">
         {item.label}
       </p>
@@ -395,7 +396,7 @@ export function HomeFeatureGrid({
         <div key={cat.title}>
           <div className="mb-2 flex items-center gap-2">
             <span
-              className="h-1 w-1 shrink-0 rounded-full"
+              className="size-1 shrink-0 rounded-full"
               style={{ backgroundColor: cat.dotColor }}
               aria-hidden
             />

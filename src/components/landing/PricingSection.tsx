@@ -101,7 +101,7 @@ export function PricingSection() {
                 {plan.features.map((f) => (
                   <li key={f} className="flex items-start gap-2.5">
                     <Check
-                      className="mt-0.5 h-4 w-4 shrink-0 text-kal-accent"
+                      className="mt-0.5 size-4 shrink-0 text-kal-accent"
                       strokeWidth={2.5}
                       aria-hidden
                     />
@@ -127,7 +127,7 @@ export function PricingSection() {
             className="inline-flex items-center gap-2 rounded-full border border-kal-border bg-transparent px-5 py-2.5 text-sm font-semibold text-kal-text-secondary transition hover:border-kal-accent/40 hover:text-kal-accent"
           >
             View full comparison
-            <ArrowRight className="h-4 w-4" aria-hidden />
+            <ArrowRight className="size-4" aria-hidden />
           </Link>
         </div>
 
@@ -141,7 +141,7 @@ export function PricingSection() {
             "Installs as a PWA",
           ].map((s) => (
             <span key={s} className="flex items-center gap-1.5 text-xs text-kal-muted">
-              <span className="h-1 w-1 rounded-full bg-kal-accent/50" aria-hidden />
+              <span className="size-1 rounded-full bg-kal-accent/50" aria-hidden />
               {s}
             </span>
           ))}

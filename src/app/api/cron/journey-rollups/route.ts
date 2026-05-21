@@ -35,18 +35,20 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const userIds = ((profiles ?? []) as { user_id: string }[])
-    .map((p) => p.user_id)
-    .filter(Boolean);
+  const userIds = ((profiles ?? []) as { user_id: string }[]).flatMap((p) =>
+    p.user_id ? [p.user_id] : [],
+  );
 
   let processed = 0;
   let failed = 0;
 
   for (let i = 0; i < userIds.length; i += BATCH) {
     const chunk = userIds.slice(i, i + BATCH);
+    // react-doctor-disable-next-line react-doctor/async-await-in-loop -- intentional chunked batching; processing all users at once would exhaust memory
     await Promise.all(
       chunk.map(async (userId) => {
         try {
+          // react-doctor-disable-next-line react-doctor/async-await-in-loop -- inside Promise.all; all chunk items run concurrently
           await rollupJourneyMetricsForUser(userId);
           processed++;
         } catch (e) {

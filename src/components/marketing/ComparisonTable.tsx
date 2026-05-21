@@ -17,22 +17,22 @@ interface ComparisonTableProps {
 function Cell({ value }: { value: ComparisonValue }) {
   if (value === "yes") {
     return (
-      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600">
-        <Check className="h-3.5 w-3.5" strokeWidth={2.5} aria-label="Yes" />
+      <span className="inline-flex size-6 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600">
+        <Check className="size-3.5" strokeWidth={2.5} aria-label="Yes" />
       </span>
     );
   }
   if (value === "no") {
     return (
-      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-red-500/10 text-red-500">
-        <X className="h-3.5 w-3.5" strokeWidth={2.5} aria-label="No" />
+      <span className="inline-flex size-6 items-center justify-center rounded-full bg-red-500/10 text-red-500">
+        <X className="size-3.5" strokeWidth={2.5} aria-label="No" />
       </span>
     );
   }
   if (value === "partial") {
     return (
-      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-amber-500/10 text-amber-600">
-        <Minus className="h-3.5 w-3.5" strokeWidth={2.5} aria-label="Partial" />
+      <span className="inline-flex size-6 items-center justify-center rounded-full bg-amber-500/10 text-amber-600">
+        <Minus className="size-3.5" strokeWidth={2.5} aria-label="Partial" />
       </span>
     );
   }

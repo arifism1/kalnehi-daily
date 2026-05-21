@@ -121,15 +121,15 @@ export async function getActivitySnapshot(days = 7): Promise<ActivitySnapshot | 
     totalEventsLast7d: rows.length,
     uniqueUsersLast7d: uniqueUsers.size,
     topPages: [...pageCount.entries()]
-      .sort((a, b) => b[1] - a[1])
+      .toSorted((a, b) => b[1] - a[1])
       .slice(0, 20)
       .map(([page, count]) => ({ page, count })),
-    topActions: [...actionKey.values()].sort((a, b) => b.count - a.count).slice(0, 20),
+    topActions: [...actionKey.values()].toSorted((a, b) => b.count - a.count).slice(0, 20),
     dailyCounts: [...dayCount.entries()]
-      .sort((a, b) => a[0].localeCompare(b[0]))
+      .toSorted((a, b) => a[0].localeCompare(b[0]))
       .map(([date, count]) => ({ date, count })),
     platformBreakdown: [...platformCount.entries()]
-      .sort((a, b) => b[1] - a[1])
+      .toSorted((a, b) => b[1] - a[1])
       .map(([platform, count]) => ({ platform, count })),
   };
 }
@@ -211,7 +211,7 @@ export async function getPwaStats(days = 30): Promise<PwaStatsSnapshot | null> {
       .sort((a, b) => (b.pwa_last_opened_at ?? "").localeCompare(a.pwa_last_opened_at ?? ""))
       .slice(0, 50) as PwaStatsSnapshot["recentInstalls"],
     dailyInstallEvents: [...dayCount.entries()]
-      .sort((a, b) => a[0].localeCompare(b[0]))
+      .toSorted((a, b) => a[0].localeCompare(b[0]))
       .map(([date, count]) => ({ date, count })),
   };
 }

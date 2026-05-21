@@ -136,7 +136,7 @@ export function computeDaysBehindExecution(
       completed[0].assigned_date,
     );
   } else {
-    const dates = [...new Set(tasks.map((t) => t.assigned_date))].sort();
+    const dates = [...new Set(tasks.map((t) => t.assigned_date))].toSorted();
     ref = dates[0]!;
   }
   return differenceInCalendarDays(

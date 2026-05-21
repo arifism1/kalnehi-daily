@@ -166,6 +166,7 @@ export async function deleteUserHabit(
   }
 }
 
+// react-doctor-disable-next-line react-doctor/server-auth-actions -- delegates to createUserHabit/deleteUserHabit/upsertHabitLogEntry, each of which calls getUser()
 export async function applyHabitOutboxOp(
   op: HabitOutboxOp,
 ): Promise<{ ok: true } | { ok: false; error: string }> {

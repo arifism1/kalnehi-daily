@@ -90,14 +90,14 @@ function pct(n: number, d: number): number {
 
 function median(nums: number[]): number | null {
   if (nums.length === 0) return null;
-  const s = [...nums].sort((a, b) => a - b);
+  const s = [...nums].toSorted((a, b) => a - b);
   const mid = Math.floor(s.length / 2);
   return s.length % 2 ? s[mid]! : (s[mid - 1]! + s[mid]!) / 2;
 }
 
 function p75(nums: number[]): number | null {
   if (nums.length === 0) return null;
-  const s = [...nums].sort((a, b) => a - b);
+  const s = [...nums].toSorted((a, b) => a - b);
   return s[Math.floor(s.length * 0.75)] ?? null;
 }
 
@@ -221,10 +221,12 @@ export async function getJourneySnapshot(windowDays = 7): Promise<JourneySnapsho
   const activatedInCohort = cohortUsers.filter((m) => m.activated_at).length;
   const activationRatePct = pct(activatedInCohort, cohortUsers.length);
 
+  // react-doctor-disable-next-line react-doctor/js-combine-iterations -- type-narrowing filter after map; flatMap would lose the type predicate
   const ttfaValues = metrics
     .map((m) => m.time_to_first_value_seconds)
     .filter((v): v is number => typeof v === "number" && v >= 0);
 
+  // react-doctor-disable-next-line react-doctor/js-combine-iterations -- type-narrowing filter after map; flatMap would lose the type predicate
   const avgSessionSecs = metrics
     .map((m) => m.avg_session_seconds_7d)
     .filter((v): v is number => typeof v === "number" && v > 0);
@@ -241,6 +243,7 @@ export async function getJourneySnapshot(windowDays = 7): Promise<JourneySnapsho
   }[];
 
   const countUsersWithAction = (action: string) =>
+    // react-doctor-disable-next-line react-doctor/js-combine-iterations -- clear readable filter-then-map; performance not a concern for admin analytics
     new Set(logs.filter((l) => l.action === action).map((l) => l.user_id)).size;
 
   const onboardingFunnel = buildFunnel(
@@ -276,14 +279,14 @@ export async function getJourneySnapshot(windowDays = 7): Promise<JourneySnapsho
   );
 
   const active7Users = new Set(
-    ((activeTime7 ?? []) as { user_id: string; active_seconds: number }[])
-      .filter((r) => r.active_seconds > 0)
-      .map((r) => r.user_id),
+    ((activeTime7 ?? []) as { user_id: string; active_seconds: number }[]).flatMap((r) =>
+      r.active_seconds > 0 ? [r.user_id] : [],
+    ),
   );
   const active30Users = new Set(
-    ((activeTime30 ?? []) as { user_id: string; active_seconds: number }[])
-      .filter((r) => r.active_seconds > 0)
-      .map((r) => r.user_id),
+    ((activeTime30 ?? []) as { user_id: string; active_seconds: number }[]).flatMap((r) =>
+      r.active_seconds > 0 ? [r.user_id] : [],
+    ),
   );
 
   const now = Date.now();
@@ -303,7 +306,7 @@ export async function getJourneySnapshot(windowDays = 7): Promise<JourneySnapsho
     featureCount.set(key, (featureCount.get(key) ?? 0) + 1);
   }
   const featureUsage = [...featureCount.entries()]
-    .sort((a, b) => b[1] - a[1])
+    .toSorted((a, b) => b[1] - a[1])
     .slice(0, 12)
     .map(([feature, count]) => ({ feature, count }));
 
@@ -354,7 +357,7 @@ export async function getJourneySnapshot(windowDays = 7): Promise<JourneySnapsho
   const totalVoiceInstructions7d = voiceRows.length;
   const byFeature = [...voiceByFeature.entries()]
     .map(([feature, v]) => ({ feature, ...v }))
-    .sort((a, b) => b.instructions - a.instructions)
+    .toSorted((a, b) => b.instructions - a.instructions)
     .slice(0, 8);
 
   const segmentUsers: JourneySegmentUserRow[] = metrics.slice(0, 100).map((m) => {

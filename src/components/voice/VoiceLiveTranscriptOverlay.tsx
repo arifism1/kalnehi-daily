@@ -64,7 +64,7 @@ export function VoiceLiveTranscriptOverlay({
               <p className="mt-1 text-[11px] leading-snug text-kal-text-secondary">{subtitle}</p>
             ) : null}
           </div>
-          <div className="space-y-3 px-4 py-4">
+          <div className="space-y-3 p-4">
             <p className="text-[11px] font-medium text-kal-accent/80">{statusLine}</p>
             <div
               className={clsx(
@@ -98,7 +98,7 @@ export function VoiceLiveTranscriptOverlay({
               disabled={stopDisabled}
               className="flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl border border-red-300/80 bg-red-500/10 px-4 py-2.5 text-sm font-semibold text-red-700 transition hover:bg-red-500/15 disabled:opacity-50 dark:border-red-500/45 dark:bg-red-950/35 dark:text-red-200"
             >
-              <MicOff className="h-4 w-4 shrink-0" aria-hidden />
+              <MicOff className="size-4 shrink-0" aria-hidden />
               Stop
             </button>
           </div>

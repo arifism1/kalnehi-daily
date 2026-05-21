@@ -813,7 +813,7 @@ export function PersonalMotivationPage() {
   if (hydrating && !bundle) {
     return (
       <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-kal-muted">
-        <Loader2 className="h-10 w-10 animate-spin text-kal-accent" />
+        <Loader2 className="size-10 animate-spin text-kal-accent" />
         <p className="text-sm font-medium">Loading your motivation…</p>
       </div>
     );
@@ -822,7 +822,7 @@ export function PersonalMotivationPage() {
   return (
     <div className="relative mx-auto max-w-3xl pb-16">
       <div
-        className="pointer-events-none absolute -right-20 top-0 h-52 w-52 rounded-full bg-kal-accent/10 blur-3xl"
+        className="pointer-events-none absolute -right-20 top-0 size-52 rounded-full bg-kal-accent/10 blur-3xl"
         aria-hidden
       />
       <header className="relative mb-8 text-center sm:text-left">
@@ -857,8 +857,8 @@ export function PersonalMotivationPage() {
               One honest letter per day keeps the chain alive.
             </p>
           </div>
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-kal-card text-kal-accent ring-1 ring-kal-border">
-            <Flame className="h-7 w-7" strokeWidth={2} />
+          <div className="flex size-14 items-center justify-center rounded-2xl bg-kal-card text-kal-accent ring-1 ring-kal-border">
+            <Flame className="size-7" strokeWidth={2} />
           </div>
         </div>
       </div>
@@ -868,12 +868,12 @@ export function PersonalMotivationPage() {
         onClick={pullRandom}
         className="relative mb-8 flex w-full min-h-[52px] items-center justify-center gap-2 rounded-2xl border-2 border-kal-accent/35 bg-kal-card px-5 py-4 text-sm font-bold text-kal-accent shadow-sm transition-colors hover:bg-kal-accent-soft/60 active:scale-[0.99] sm:text-base"
       >
-        <Sparkles className="h-5 w-5 shrink-0" />
+        <Sparkles className="size-5 shrink-0" />
         Pull a message from past me
       </button>
 
       {randomPayload ? (
-        <div className="mb-8 rounded-2xl border border-kal-border bg-kal-card-muted/80 px-5 py-5 sm:px-7 sm:py-6">
+        <div className="mb-8 rounded-2xl border border-kal-border bg-kal-card-muted/80 p-5 sm:px-7 sm:py-6">
           <p className="text-[10px] font-bold uppercase tracking-wider text-kal-muted">
             From {randomPayload.date} ·{" "}
             {randomPayload.type === "letter" ? "Letter" : "Voice note"}
@@ -899,13 +899,13 @@ export function PersonalMotivationPage() {
             type="button"
             onClick={() => setTab(id)}
             aria-label={label}
-            className={`flex min-h-[44px] min-w-0 flex-1 items-center justify-center rounded-xl px-2 py-2 text-xs font-semibold transition-colors ${
+            className={`flex min-h-[44px] min-w-0 flex-1 items-center justify-center rounded-xl p-2 text-xs font-semibold transition-colors ${
               tab === id
                 ? "bg-kal-card text-kal-accent shadow-sm ring-1 ring-kal-border"
                 : "text-kal-muted hover:text-kal-text"
             }`}
           >
-            <Icon className="h-4 w-4 shrink-0" strokeWidth={2} />
+            <Icon className="size-4 shrink-0" strokeWidth={2} />
           </button>
         ))}
       </div>
@@ -917,7 +917,7 @@ export function PersonalMotivationPage() {
           ) : null}
 
           <div className="flex items-baseline justify-between gap-2">
-            <h2 className="text-sm font-bold text-kal-text">Letter to Future Self</h2>
+            <h2 className="text-sm font-semibold text-kal-text">Letter to Future Self</h2>
             <span className="text-xs font-medium tabular-nums text-kal-muted">
               {today}
             </span>
@@ -931,7 +931,7 @@ export function PersonalMotivationPage() {
               </p>
               <div className="flex flex-col items-center gap-4 rounded-2xl border border-kal-border bg-kal-page px-6 py-10 text-center">
                 <Lock
-                  className="h-12 w-12 text-kal-accent"
+                  className="size-12 text-kal-accent"
                   strokeWidth={1.5}
                   aria-hidden
                 />
@@ -1003,7 +1003,7 @@ export function PersonalMotivationPage() {
                 rows={14}
                 placeholder="Dear future me…"
                 disabled={letterSaving}
-                className="min-h-[280px] w-full resize-y rounded-2xl border border-kal-border bg-kal-page px-4 py-4 text-base leading-relaxed text-kal-text placeholder:text-kal-muted/80 focus:border-kal-accent/50 focus:outline-none focus:ring-2 focus:ring-kal-accent/20 disabled:opacity-60"
+                className="min-h-[280px] w-full resize-y rounded-2xl border border-kal-border bg-kal-page p-4 text-base leading-relaxed text-kal-text placeholder:text-kal-muted/80 focus:border-kal-accent/50 focus:outline-none focus:ring-2 focus:ring-kal-accent/20 disabled:opacity-60"
               />
 
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -1014,9 +1014,9 @@ export function PersonalMotivationPage() {
                   className="kal-btn-accent flex-1 min-h-[48px] disabled:opacity-50"
                 >
                   {letterSaving ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="size-4 animate-spin" />
                   ) : (
-                    <Check className="h-4 w-4" />
+                    <Check className="size-4" />
                   )}
                   Save letter
                 </button>
@@ -1026,7 +1026,7 @@ export function PersonalMotivationPage() {
                   onClick={() => void saveLetter({ pinned: true })}
                   className="inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl border border-kal-accent/40 bg-kal-accent-soft/50 px-5 py-3 text-xs font-bold uppercase tracking-wide text-kal-accent transition-colors hover:bg-kal-accent-soft disabled:opacity-50"
                 >
-                  <Pin className="h-4 w-4" />
+                  <Pin className="size-4" />
                   Pin this letter
                 </button>
               </div>
@@ -1041,7 +1041,7 @@ export function PersonalMotivationPage() {
                   }}
                   className="flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-sm font-semibold text-kal-text transition-colors hover:bg-kal-card disabled:opacity-50"
                 >
-                  <Lock className="h-4 w-4 text-kal-accent" />
+                  <Lock className="size-4 text-kal-accent" />
                   Seal for a future date
                 </button>
               ) : (
@@ -1070,7 +1070,7 @@ export function PersonalMotivationPage() {
                       onClick={() => void confirmSealLetter()}
                       className="kal-btn-accent min-h-[48px] flex-1"
                     >
-                      <Lock className="h-4 w-4" />
+                      <Lock className="size-4" />
                       Seal this letter
                     </button>
                     <button
@@ -1091,7 +1091,7 @@ export function PersonalMotivationPage() {
 
       {tab === "voice" ? (
         <section className="space-y-6 kal-glass-card rounded-2xl px-5 py-6 sm:px-8 sm:py-8">
-          <h2 className="text-sm font-bold text-kal-text">Voice Affirmations</h2>
+          <h2 className="text-sm font-semibold text-kal-text">Voice Affirmations</h2>
           <p className="text-xs text-kal-text-secondary">
             Tap Record, then Stop — your words are transcribed automatically. Only
             the text is saved.
@@ -1104,7 +1104,7 @@ export function PersonalMotivationPage() {
                 onClick={() => void startRecording()}
                 className="kal-btn-accent disabled:opacity-45"
               >
-                <Mic className="h-4 w-4" />
+                <Mic className="size-4" />
                 Record
               </button>
             ) : (
@@ -1113,13 +1113,13 @@ export function PersonalMotivationPage() {
                 onClick={stopRecording}
                 className="inline-flex items-center gap-2 rounded-xl border border-kal-accent/40 bg-kal-accent-soft px-4 py-3 text-xs font-bold uppercase tracking-wide text-kal-accent-dark dark:text-kal-accent"
               >
-                <Square className="h-4 w-4 fill-current" />
+                <Square className="size-4 fill-current" />
                 Stop
               </button>
             )}
             {transcribing ? (
               <span className="inline-flex items-center gap-2 text-xs font-medium text-kal-muted">
-                <Loader2 className="h-4 w-4 animate-spin text-kal-accent" />
+                <Loader2 className="size-4 animate-spin text-kal-accent" />
                 Transcribing…
               </span>
             ) : null}
@@ -1178,7 +1178,7 @@ export function PersonalMotivationPage() {
       {tab === "vision" ? (
         <section className="space-y-6 kal-glass-card rounded-2xl px-5 py-6 sm:px-8 sm:py-8">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-sm font-bold text-kal-text">Vision Board</h2>
+            <h2 className="text-sm font-semibold text-kal-text">Vision Board</h2>
             <input
               ref={cameraInputRef}
               type="file"
@@ -1210,9 +1210,9 @@ export function PersonalMotivationPage() {
                 className="kal-btn-accent"
               >
                 {photoBusy ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="size-4 animate-spin" />
                 ) : (
-                  <Camera className="h-4 w-4" />
+                  <Camera className="size-4" />
                 )}
                 Camera
               </button>
@@ -1222,7 +1222,7 @@ export function PersonalMotivationPage() {
                 onClick={() => galleryInputRef.current?.click()}
                 className="inline-flex items-center gap-2 rounded-xl border border-kal-border px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-kal-text"
               >
-                <ImagePlus className="h-4 w-4" />
+                <ImagePlus className="size-4" />
                 Gallery
               </button>
             </div>
@@ -1265,9 +1265,9 @@ export function PersonalMotivationPage() {
       {tab === "timeline" ? (
         <section className="kal-glass-card rounded-2xl px-5 py-6 sm:px-8 sm:py-8">
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <h2 className="text-sm font-bold text-kal-text">Timeline</h2>
+            <h2 className="text-sm font-semibold text-kal-text">Timeline</h2>
             <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-kal-muted" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-kal-muted" />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -1288,7 +1288,7 @@ export function PersonalMotivationPage() {
                     {showMonth ? (
                       <div className="mb-3 flex items-center gap-2">
                         <span
-                          className="z-[1] h-2.5 w-2.5 shrink-0 rounded-full bg-kal-accent ring-4 ring-kal-card"
+                          className="z-[1] size-2.5 shrink-0 rounded-full bg-kal-accent ring-4 ring-kal-card"
                           aria-hidden
                         />
                         <span className="text-xs font-bold uppercase tracking-wide text-kal-muted">

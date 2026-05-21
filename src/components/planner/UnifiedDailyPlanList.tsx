@@ -98,7 +98,7 @@ function SourceBadge({ source }: { source: string }) {
                 : "border-white/30 bg-white/55 text-kal-muted dark:border-white/12 dark:bg-zinc-900/55 uppercase tracking-wide"
       }`}
     >
-      <Icon className="h-3 w-3 shrink-0 text-kal-accent" aria-hidden />
+      <Icon className="size-3 shrink-0 text-kal-accent" aria-hidden />
       <span className="min-w-0 truncate">{label}</span>
     </span>
   );
@@ -288,7 +288,7 @@ function DailyTaskEditSheet({
             className="rounded-xl p-2 text-kal-muted hover:bg-kal-card-muted hover:text-kal-text"
             aria-label="Close"
           >
-            <X className="h-5 w-5" />
+            <X className="size-5" />
           </button>
         </div>
 
@@ -378,7 +378,7 @@ function DailyTaskEditSheet({
                       disabled={saving}
                       className="text-xs font-medium text-kal-muted underline-offset-2 hover:text-kal-text hover:underline disabled:opacity-50"
                     >
-                      Done
+                      Close picker
                     </button>
                   </div>
                 </div>
@@ -448,7 +448,7 @@ function DailyTaskEditSheet({
                 className="inline-flex items-center gap-1.5 rounded-lg border border-kal-border/60 bg-kal-card-muted/40 px-2.5 py-1.5 text-xs font-medium text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-accent disabled:opacity-50"
               >
                 <Link2
-                  className="h-3.5 w-3.5 shrink-0 text-kal-accent/80"
+                  className="size-3.5 shrink-0 text-kal-accent/80"
                   aria-hidden
                 />
                 Link to Syllabus
@@ -479,7 +479,7 @@ function DailyTaskEditSheet({
             disabled={saving}
             className="kal-btn-accent flex flex-1 items-center justify-center gap-2 rounded-2xl py-3 text-sm font-semibold disabled:opacity-50"
           >
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
+            {saving ? <Loader2 className="size-4 animate-spin" /> : "Save"}
           </button>
         </div>
       </div>
@@ -501,9 +501,9 @@ function DailyPlanListSkeleton({ rowCount = 5 }: { rowCount?: number }) {
       {Array.from({ length: rowCount }).map((_, i) => (
         <div
           key={i}
-          className="flex items-start gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-3 py-3 dark:border-white/10 dark:bg-zinc-900/35"
+          className="flex items-start gap-2 rounded-2xl border border-white/15 bg-white/[0.04] p-3 dark:border-white/10 dark:bg-zinc-900/35"
         >
-          <KalShimmerBlock className="h-11 w-11 shrink-0 rounded-xl" />
+          <KalShimmerBlock className="size-11 shrink-0 rounded-xl" />
           <div className="min-w-0 flex-1 space-y-2.5 pt-0.5">
             <div className="flex gap-2">
               <KalShimmerBlock className="h-5 w-16 rounded-full" />
@@ -513,8 +513,8 @@ function DailyPlanListSkeleton({ rowCount = 5 }: { rowCount?: number }) {
             <KalShimmerBlock className="h-3 w-28 rounded-md" />
           </div>
           <div className="flex shrink-0 gap-1 pt-0.5">
-            <KalShimmerBlock className="h-7 w-7 rounded-lg" />
-            <KalShimmerBlock className="h-7 w-7 rounded-lg" />
+            <KalShimmerBlock className="size-7 rounded-lg" />
+            <KalShimmerBlock className="size-7 rounded-lg" />
           </div>
         </div>
       ))}
@@ -597,8 +597,9 @@ export function UnifiedDailyPlanList({
       }
 
       try {
+        // Discard if planDate changed before or while the request was in-flight.
+        if (dateSnapshot !== planDate) return;
         const res = await fetchDailyPlanTasksForClient(dateSnapshot);
-        // Discard if planDate changed while the request was in-flight.
         if (dateSnapshot !== planDate) return;
         if (res.ok) {
           setTasks(res.tasks);
@@ -720,7 +721,7 @@ export function UnifiedDailyPlanList({
         const already = prev.find((x) => x.id === t.id);
         return already
           ? prev
-          : [...prev, t].sort((a, b) => (a.created_at < b.created_at ? -1 : 1));
+          : [...prev, t].toSorted((a, b) => (a.created_at < b.created_at ? -1 : 1));
       });
       setError(surfaceErrorForUi(res.error));
       return;
@@ -757,7 +758,7 @@ export function UnifiedDailyPlanList({
         }
         setTasks((prev) => {
           if (prev.some((x) => x.id === snapshot.id)) return prev;
-          return [...prev, snapshot].sort((a, b) =>
+          return [...prev, snapshot].toSorted((a, b) =>
             a.created_at < b.created_at ? -1 : 1,
           );
         });
@@ -867,7 +868,7 @@ export function UnifiedDailyPlanList({
                   <li
                     key={t.id}
                     // `group` enables sm:group-hover to show action buttons on desktop hover
-                    className={`group rounded-2xl border px-3 py-3 shadow-sm transition-all ${
+                    className={`group rounded-2xl border p-3 shadow-sm transition-all ${
                       done
                         ? "border-white/20 bg-white/45 opacity-75 backdrop-blur-sm dark:border-white/10 dark:bg-zinc-900/45"
                         : skipped
@@ -883,7 +884,7 @@ export function UnifiedDailyPlanList({
                         role="checkbox"
                         disabled={busyId === t.id || isDeleting || skipped || statusToggleLocked}
                         onClick={() => void toggleDone(t)}
-                        className={`relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${
+                        className={`relative flex size-11 shrink-0 items-center justify-center rounded-xl border-2 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kal-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${
                           checkboxReadOnly
                             ? "disabled:cursor-not-allowed disabled:opacity-90 focus-visible:ring-kal-muted/25"
                             : "disabled:opacity-40"
@@ -899,12 +900,12 @@ export function UnifiedDailyPlanList({
                       >
                         {busyId === t.id ? (
                           <Loader2
-                            className={`h-5 w-5 animate-spin ${done ? "text-white" : "text-kal-accent"}`}
+                            className={`size-5 animate-spin ${done ? "text-white" : "text-kal-accent"}`}
                           />
                         ) : done ? (
-                          <Check className="h-5 w-5 text-white" strokeWidth={2.75} />
+                          <Check className="size-5 text-white" strokeWidth={2.75} />
                         ) : skipped ? (
-                          <X className="h-4 w-4 text-kal-muted" strokeWidth={2.5} />
+                          <X className="size-4 text-kal-muted" strokeWidth={2.5} />
                         ) : null}
                         {confettiTaskId === t.id && (
                           <ConfettiBurst onDone={() => setConfettiTaskId(null)} />
@@ -971,7 +972,7 @@ export function UnifiedDailyPlanList({
                             className="mt-2 inline-flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-xl border border-kal-border/60 bg-kal-card-muted/40 px-3 py-2 text-xs font-semibold text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-accent disabled:opacity-40 sm:w-auto sm:justify-start"
                           >
                             <Link2
-                              className="h-3.5 w-3.5 shrink-0 text-kal-accent/80"
+                              className="size-3.5 shrink-0 text-kal-accent/80"
                               aria-hidden
                             />
                             {syllabusCtaLabel}
@@ -985,7 +986,7 @@ export function UnifiedDailyPlanList({
                             className="mt-2 inline-flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-xl border border-kal-accent/35 bg-kal-accent/10 px-3 py-2 text-xs font-semibold text-kal-accent transition-colors hover:bg-kal-accent/15 disabled:opacity-40 sm:w-auto sm:justify-start"
                             aria-haspopup="dialog"
                           >
-                            <AlarmClock className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                            <AlarmClock className="size-3.5 shrink-0" aria-hidden />
                             Schedule revision
                           </button>
                         ) : null}
@@ -1035,23 +1036,23 @@ export function UnifiedDailyPlanList({
                             })
                           }
                           disabled={isDeleting}
-                          className="flex h-8 w-8 items-center justify-center rounded-lg text-kal-muted/80 transition-colors hover:bg-kal-card-muted hover:text-kal-accent disabled:opacity-40 sm:h-7 sm:w-7"
+                          className="flex size-8 items-center justify-center rounded-lg text-kal-muted/80 transition-colors hover:bg-kal-card-muted hover:text-kal-accent disabled:opacity-40 sm:h-7 sm:w-7"
                           aria-label="Edit task"
                         >
-                          <Pencil className="h-[13px] w-[13px]" strokeWidth={2} />
+                          <Pencil className="size-[13px]" strokeWidth={2} />
                         </button>
                         {/* Delete */}
                         <button
                           type="button"
                           onClick={() => void deleteTaskNow(t)}
                           disabled={isDeleting}
-                          className="flex h-8 w-8 items-center justify-center rounded-lg text-kal-muted/80 transition-colors hover:bg-orange-500/10 hover:text-orange-600 disabled:opacity-40 dark:hover:text-orange-400 sm:h-7 sm:w-7"
+                          className="flex size-8 items-center justify-center rounded-lg text-kal-muted/80 transition-colors hover:bg-orange-500/10 hover:text-orange-600 disabled:opacity-40 dark:hover:text-orange-400 sm:h-7 sm:w-7"
                           aria-label="Delete task"
                         >
                           {isDeleting ? (
-                            <Loader2 className="h-[13px] w-[13px] animate-spin" />
+                            <Loader2 className="size-[13px] animate-spin" />
                           ) : (
-                            <Trash2 className="h-[13px] w-[13px]" strokeWidth={2} />
+                            <Trash2 className="size-[13px]" strokeWidth={2} />
                           )}
                         </button>
                       </div>

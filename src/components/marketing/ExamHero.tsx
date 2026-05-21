@@ -20,7 +20,7 @@ export function ExamHero({
   return (
     <header className="space-y-5 pb-2">
       <p className="inline-flex items-center gap-1.5 rounded-full border border-kal-accent/25 bg-kal-accent-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-kal-accent-dark">
-        <span className="h-1.5 w-1.5 rounded-full bg-kal-accent" aria-hidden />
+        <span className="size-1.5 rounded-full bg-kal-accent" aria-hidden />
         {badge}
       </p>
 

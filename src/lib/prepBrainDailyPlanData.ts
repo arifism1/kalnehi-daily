@@ -59,12 +59,13 @@ export async function fetchIncompleteDailyTasksBeforeDate(
     .eq("user_id", userId)
     .lt("plan_date", beforeDate);
   if (error || !plans?.length) return 0;
-  const ids = plans.map((p) => p.id).filter(Boolean);
+  const ids = plans.flatMap((p) => (p.id ? [p.id] : []));
   if (ids.length === 0) return 0;
 
   let total = 0;
   for (let i = 0; i < ids.length; i += IN_CHUNK) {
     const chunk = ids.slice(i, i + IN_CHUNK);
+    // react-doctor-disable-next-line react-doctor/async-await-in-loop -- chunked queries are independent but must be sequential to accumulate totals
     const { count, error: cErr } = await supabase
       .from("daily_tasks")
       .select("id", { count: "exact", head: true })

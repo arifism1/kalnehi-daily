@@ -2,9 +2,9 @@ import type { Microtopic, Task } from "@/store/useTaskStore";
 
 export function uniqueSubjects(microtopics: Microtopic[]): string[] {
   const set = new Set(
-    microtopics.map((m) => m.subject.trim()).filter(Boolean),
+    microtopics.flatMap((m) => (m.subject.trim() ? [m.subject.trim()] : [])),
   );
-  return [...set].sort((a, b) => a.localeCompare(b));
+  return [...set].toSorted((a, b) => a.localeCompare(b));
 }
 
 export function chaptersForSubject(
@@ -12,12 +12,13 @@ export function chaptersForSubject(
   subject: string,
 ): string[] {
   const set = new Set(
-    microtopics
-      .filter((m) => m.subject === subject)
-      .map((m) => m.chapter.trim())
-      .filter(Boolean),
+    microtopics.flatMap((m) => {
+      if (m.subject !== subject) return [];
+      const chapter = m.chapter.trim();
+      return chapter ? [chapter] : [];
+    }),
   );
-  return [...set].sort((a, b) => a.localeCompare(b));
+  return [...set].toSorted((a, b) => a.localeCompare(b));
 }
 
 export function microtopicsForSubjectChapter(

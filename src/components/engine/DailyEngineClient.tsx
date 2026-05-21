@@ -87,7 +87,7 @@ export function DailyEngineClient() {
           {snap.trend.map((d) => (
             <div
               key={d.date}
-              className="flex min-w-[4.5rem] flex-col rounded-xl border border-kal-border bg-kal-card-muted px-2 py-2 text-center"
+              className="flex min-w-[4.5rem] flex-col rounded-xl border border-kal-border bg-kal-card-muted p-2 text-center"
             >
               <span className="text-[10px] font-medium uppercase tracking-wide text-kal-muted">
                 {d.date.slice(5)}

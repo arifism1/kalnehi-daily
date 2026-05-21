@@ -63,7 +63,7 @@ export function TransientNotice({
         className="shrink-0 rounded-lg p-1 text-kal-muted transition-colors hover:bg-kal-card hover:text-kal-text"
         aria-label="Dismiss"
       >
-        <X className="h-3.5 w-3.5" strokeWidth={2.5} />
+        <X className="size-3.5" strokeWidth={2.5} />
       </button>
     </div>
   );

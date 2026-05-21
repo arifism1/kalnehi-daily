@@ -45,7 +45,8 @@ async function getDb() {
         for (let s = 0; s < MAX_PURPOSE_PHOTOS; s++) {
           const slot = s as PurposeSlot;
           try {
-            const v: unknown = await oldStore.get(slot);
+            // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential IDB migration: must read each slot before writing to new store
+      const v: unknown = await oldStore.get(slot);
             if (
               v &&
               typeof v === "object" &&
@@ -80,6 +81,7 @@ async function getDb() {
         keyPath: "slot",
       });
       for (const row of migrated) {
+        // react-doctor-disable-next-line react-doctor/async-await-in-loop -- IDB store puts within an upgrade transaction must be sequential
         await store.put(row);
       }
     },
@@ -205,6 +207,7 @@ export async function getPurposeImage(
 export async function getAllPurposeImages(): Promise<PurposeImageRecord[]> {
   const out: PurposeImageRecord[] = [];
   for (let i = 0; i < MAX_PURPOSE_PHOTOS; i++) {
+    // react-doctor-disable-next-line react-doctor/async-await-in-loop -- MAX_PURPOSE_PHOTOS is tiny (≤5); sequential reads are fine here
     const row = await getPurposeImage(i as PurposeSlot);
     if (row) out.push(row);
   }

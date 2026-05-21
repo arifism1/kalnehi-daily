@@ -374,7 +374,7 @@ export async function rollupJourneyMetricsForUser(userId: string): Promise<void>
   }[];
   const activeTimeRows = (activeDays ?? []) as { date_ist: string; active_seconds: number }[];
 
-  const dayKeys = [...activeDayKeysFromLogs(logRows, activeTimeRows)].sort();
+  const dayKeys = [...activeDayKeysFromLogs(logRows, activeTimeRows)].toSorted();
   const { current, longest } = countStreaks(dayKeys);
 
   const last7Keys = new Set<string>();
@@ -417,9 +417,9 @@ export async function rollupJourneyMetricsForUser(userId: string): Promise<void>
   }
 
   const sessionIds = new Set(
-    logRows.filter((r) => r.action === JourneyAction.APP_OPENED).map((r) => r.session_id),
+    logRows.flatMap((r) => r.action === JourneyAction.APP_OPENED ? [r.session_id] : []),
   );
-  const pageViewSessions = new Set(logRows.filter((r) => r.action === "page_view").map((r) => r.session_id));
+  const pageViewSessions = new Set(logRows.flatMap((r) => r.action === "page_view" ? [r.session_id] : []));
   const appOpenCount = sessionIds.size > 0 ? sessionIds.size : pageViewSessions.size;
 
   const lastActive =

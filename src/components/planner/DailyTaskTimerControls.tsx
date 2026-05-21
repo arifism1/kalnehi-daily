@@ -170,9 +170,9 @@ export function DailyTaskTimerControls({
                 aria-label="Start timer"
               >
                 {busy ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <Loader2 className="size-3.5 animate-spin" />
                 ) : (
-                  <Play className="h-3.5 w-3.5" />
+                  <Play className="size-3.5" />
                 )}
                 Start
               </button>
@@ -184,7 +184,7 @@ export function DailyTaskTimerControls({
                   className="inline-flex h-8 items-center gap-1 rounded-lg border border-kal-border/80 bg-kal-card-muted/50 px-2.5 text-xs font-semibold text-kal-text"
                   aria-label="Pause timer"
                 >
-                  <Pause className="h-3.5 w-3.5" />
+                  <Pause className="size-3.5" />
                   Pause
                 </button>
                 <button
@@ -195,9 +195,9 @@ export function DailyTaskTimerControls({
                   aria-label="Stop and save time"
                 >
                   {busy ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <Loader2 className="size-3.5 animate-spin" />
                   ) : (
-                    <Square className="h-3.5 w-3.5" />
+                    <Square className="size-3.5" />
                   )}
                   Stop
                 </button>
@@ -213,7 +213,7 @@ export function DailyTaskTimerControls({
                   className="inline-flex h-8 items-center gap-1 rounded-lg border border-kal-accent/40 bg-kal-accent/10 px-2.5 text-xs font-semibold text-kal-accent"
                   aria-label="Resume timer"
                 >
-                  <Play className="h-3.5 w-3.5" />
+                  <Play className="size-3.5" />
                   Resume
                 </button>
                 <button
@@ -224,9 +224,9 @@ export function DailyTaskTimerControls({
                   aria-label="Stop and save time"
                 >
                   {busy ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <Loader2 className="size-3.5 animate-spin" />
                   ) : (
-                    <Square className="h-3.5 w-3.5" />
+                    <Square className="size-3.5" />
                   )}
                   Stop
                 </button>

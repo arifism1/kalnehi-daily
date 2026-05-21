@@ -37,7 +37,7 @@ export default function GrePage() {
         />
 
         <section className="space-y-4" aria-labelledby="gre-sections">
-          <h2 id="gre-sections" className="text-xl font-bold text-kal-text">GRE sections tracked in Kalnehi Daily</h2>
+          <h2 id="gre-sections" className="text-xl font-semibold text-kal-text">GRE sections tracked in Kalnehi Daily</h2>
           <div className="grid gap-3 sm:grid-cols-3">
             {[
               { s: "Verbal Reasoning (170)", topics: ["Vocabulary — Magoosh 1000, GRE Prep lists", "Text Completion (1/2/3 blanks)", "Sentence Equivalence", "Reading Comprehension — short + long"] },
@@ -45,7 +45,7 @@ export default function GrePage() {
               { s: "Analytical Writing (6.0)", topics: ["Issue Essay — take a position, 30 min", "Argument Essay — analyse argument, 30 min", "Essay pool practice (ETS published)", "Structure and template mastery"] },
             ].map(({ s, topics }) => (
               <div key={s} className="kal-glass-card rounded-xl p-4 space-y-1.5">
-                <h3 className="text-xs font-bold text-kal-accent-dark">{s}</h3>
+                <h3 className="text-xs font-semibold text-kal-accent-dark">{s}</h3>
                 <ul className="space-y-0.5">{topics.map(t => <li key={t} className="text-xs text-kal-text-secondary">· {t}</li>)}</ul>
               </div>
             ))}

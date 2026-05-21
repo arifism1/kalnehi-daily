@@ -37,7 +37,7 @@ export default function CaFinalPage() {
         />
 
         <section className="space-y-3" aria-labelledby="cafinal-system">
-          <h2 id="cafinal-system" className="text-xl font-bold text-kal-text">The CA Final preparation system in Kalnehi Daily</h2>
+          <h2 id="cafinal-system" className="text-xl font-semibold text-kal-text">The CA Final preparation system in Kalnehi Daily</h2>
           <ul className="space-y-3 text-sm">
             {[
               { t: "8-paper syllabus tracker", d: "Track every chapter in Financial Reporting, SFM, Audit, Corporate Laws, SCM, Direct Tax and Indirect Tax. See completion percentage per paper at a glance." },

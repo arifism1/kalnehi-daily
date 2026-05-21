@@ -971,19 +971,19 @@ export function StudyCameraTracker({ subject, userId, aiPartnerMode = false, onD
           <div className="order-first flex flex-col items-center justify-center gap-4 rounded-2xl border border-kal-accent/20 bg-kal-card-muted px-5 py-6 sm:order-last sm:w-2/5">
             {/* Active indicator pill */}
             <div className="flex items-center gap-2 rounded-full bg-kal-accent/10 px-3 py-1.5 text-[11px] font-semibold text-kal-accent ring-1 ring-kal-accent/20">
-              <span className="relative flex h-2 w-2 shrink-0">
+              <span className="relative flex size-2 shrink-0">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-kal-accent opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-kal-accent" />
+                <span className="relative inline-flex size-2 rounded-full bg-kal-accent" />
               </span>
               AI Study Partner Active
             </div>
 
             {/* Animated avatar */}
-            <div className="relative flex h-24 w-24 items-center justify-center">
+            <div className="relative flex size-24 items-center justify-center">
               <span className="absolute inset-0 animate-ping rounded-full bg-kal-accent/15" />
               <span className="absolute inset-3 rounded-full bg-kal-accent/10" />
-              <span className="relative z-10 flex h-20 w-20 items-center justify-center rounded-full bg-kal-accent/15 ring-2 ring-kal-accent/30">
-                <Bot className="h-9 w-9 text-kal-accent" aria-hidden />
+              <span className="relative z-10 flex size-20 items-center justify-center rounded-full bg-kal-accent/15 ring-2 ring-kal-accent/30">
+                <Bot className="size-9 text-kal-accent" aria-hidden />
               </span>
             </div>
 
@@ -1046,7 +1046,7 @@ export function StudyCameraTracker({ subject, userId, aiPartnerMode = false, onD
                 className="absolute top-3 right-3 flex items-center gap-1.5 rounded-xl bg-black/55 px-3 py-2 text-xs font-semibold text-white shadow-lg backdrop-blur-sm ring-1 ring-white/10 transition-opacity active:opacity-70"
                 aria-label={facing === "user" ? "Switch to back camera" : "Switch to front camera"}
               >
-                <RefreshCw className="h-4 w-4" />
+                <RefreshCw className="size-4" />
                 {facing === "user" ? "Back" : "Front"}
               </button>
               <div className="absolute bottom-2 left-2 max-w-[min(100%,16rem)] rounded-md bg-black/75 px-2 py-1 text-[8px] font-medium leading-tight text-zinc-200 ring-1 ring-white/10">
@@ -1082,7 +1082,7 @@ export function StudyCameraTracker({ subject, userId, aiPartnerMode = false, onD
               className="absolute top-3 right-3 flex items-center gap-1.5 rounded-xl bg-black/55 px-3 py-2 text-xs font-semibold text-white shadow-lg backdrop-blur-sm ring-1 ring-white/10 transition-opacity active:opacity-70"
               aria-label={facing === "user" ? "Switch to back camera" : "Switch to front camera"}
             >
-              <RefreshCw className="h-4 w-4" />
+              <RefreshCw className="size-4" />
               {facing === "user" ? "Back" : "Front"}
             </button>
             <div className="absolute bottom-2 left-2 max-w-[min(100%,16rem)] rounded-md bg-black/75 px-2 py-1 text-[8px] font-medium leading-tight text-zinc-200 ring-1 ring-white/10">
@@ -1114,7 +1114,7 @@ export function StudyCameraTracker({ subject, userId, aiPartnerMode = false, onD
 
       {/* ── Camera positioning instruction — always visible ── */}
       <div className="kal-glass-subtle flex items-start gap-2.5 rounded-xl px-4 py-3">
-        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-kal-accent" aria-hidden />
+        <Info className="mt-0.5 size-3.5 shrink-0 text-kal-accent" aria-hidden />
         <p className="text-xs leading-relaxed text-kal-muted">
           <span className="font-semibold text-kal-text-secondary">Camera tip:</span>{" "}
           Place the phone or laptop <strong>farther back</strong> so the frame includes
@@ -1136,7 +1136,7 @@ export function StudyCameraTracker({ subject, userId, aiPartnerMode = false, onD
             onClick={() => setFacing("environment")}
             className="shrink-0 inline-flex items-center gap-1.5 rounded-xl border border-kal-border bg-kal-card px-3 py-2 text-xs font-semibold text-kal-text-secondary transition-colors hover:bg-kal-card-muted active:scale-95"
           >
-            <RefreshCw className="h-3.5 w-3.5" />
+            <RefreshCw className="size-3.5" />
             Back camera
           </button>
         </div>
@@ -1336,7 +1336,7 @@ export function StudyCameraTracker({ subject, userId, aiPartnerMode = false, onD
             disabled={!modelsReady}
             className="kal-btn-accent inline-flex min-h-[52px] min-w-[10rem] items-center justify-center gap-2 px-6 text-base disabled:opacity-40"
           >
-            <Play className="h-5 w-5" />
+            <Play className="size-5" />
             Start session
           </button>
         ) : null}
@@ -1354,7 +1354,7 @@ export function StudyCameraTracker({ subject, userId, aiPartnerMode = false, onD
             onClick={pauseSession}
             className="inline-flex min-h-[52px] min-w-[8rem] items-center justify-center gap-2 rounded-2xl bg-amber-500 px-5 text-base font-semibold text-amber-950"
           >
-            <Pause className="h-5 w-5" />
+            <Pause className="size-5" />
             Pause
           </button>
         ) : null}
@@ -1365,7 +1365,7 @@ export function StudyCameraTracker({ subject, userId, aiPartnerMode = false, onD
             onClick={resumeSession}
             className="kal-btn-accent inline-flex min-h-[52px] min-w-[8rem] items-center justify-center gap-2 px-5 text-base"
           >
-            <Play className="h-5 w-5" />
+            <Play className="size-5" />
             Resume
           </button>
         ) : null}
@@ -1376,7 +1376,7 @@ export function StudyCameraTracker({ subject, userId, aiPartnerMode = false, onD
             onClick={() => void endAndLog()}
             className="inline-flex min-h-[52px] min-w-[8rem] items-center justify-center gap-2 rounded-2xl border-2 border-kal-danger-border bg-kal-danger-soft px-5 text-base font-semibold text-kal-danger-text"
           >
-            <Square className="h-5 w-5" />
+            <Square className="size-5" />
             End session
           </button>
         ) : null}
@@ -1395,7 +1395,7 @@ export function StudyCameraTracker({ subject, userId, aiPartnerMode = false, onD
             )}
             title="Override detection for 30 seconds"
           >
-            <Check className="h-4 w-4" />
+            <Check className="size-4" />
             {overrideSecondsLeft > 0
               ? `Override active · ${overrideSecondsLeft}s`
               : "I'm studying"}

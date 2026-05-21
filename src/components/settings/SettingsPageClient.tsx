@@ -31,7 +31,7 @@ export function SettingsPageClient() {
           href="/"
           className="inline-flex min-h-[44px] items-center gap-1.5 text-sm font-medium text-kal-text-secondary hover:text-kal-accent"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="size-4" />
           Home
         </Link>
         <p className="mt-3 text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
@@ -82,7 +82,7 @@ export function SettingsPageClient() {
           icon={Image}
         >
           <div className="kal-glass-panel rounded-[1rem] px-1">
-            <div className="flex items-center justify-between gap-3 px-3 py-3.5">
+            <div className="flex items-center justify-between gap-3 p-3.5">
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-[15px] font-medium text-kal-text">
@@ -123,7 +123,7 @@ export function SettingsPageClient() {
               >
                 <span
                   className={clsx(
-                    "absolute top-1 left-1 h-7 w-7 rounded-full bg-white shadow transition-transform duration-200",
+                    "absolute top-1 left-1 size-7 rounded-full bg-white shadow transition-transform duration-200",
                     purposeMode ? "translate-x-[1.35rem]" : "translate-x-0",
                   )}
                 />

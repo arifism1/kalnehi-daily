@@ -177,16 +177,16 @@ export function HomeHeroCard({
     <section
       aria-label="Overview"
       aria-busy={loading}
-      className="relative overflow-hidden rounded-[12px] bg-[#FFF3E4] px-5 py-5 dark:bg-kal-bg-elevated dark:ring-1 dark:ring-kal-border sm:px-6 sm:py-5"
+      className="relative overflow-hidden rounded-[12px] bg-[#FFF3E4] p-5 dark:bg-kal-bg-elevated dark:ring-1 dark:ring-kal-border sm:px-6 sm:py-5"
     >
       {/* Subtle background blobs */}
       <div
-        className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full opacity-40 blur-2xl dark:opacity-25"
+        className="pointer-events-none absolute -right-10 -top-10 size-32 rounded-full opacity-40 blur-2xl dark:opacity-25"
         style={{ background: "#EF9F27" }}
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute -bottom-8 -left-8 h-24 w-24 rounded-full opacity-30 blur-2xl dark:opacity-20"
+        className="pointer-events-none absolute -bottom-8 -left-8 size-24 rounded-full opacity-30 blur-2xl dark:opacity-20"
         style={{ background: "#FAC775" }}
         aria-hidden
       />

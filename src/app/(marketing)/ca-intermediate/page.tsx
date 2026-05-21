@@ -38,14 +38,14 @@ export default function CaIntermediatePage() {
         />
 
         <section className="space-y-4" aria-labelledby="caint-papers">
-          <h2 id="caint-papers" className="text-xl font-bold text-kal-text">CA Intermediate papers mapped in Kalnehi Daily</h2>
+          <h2 id="caint-papers" className="text-xl font-semibold text-kal-text">CA Intermediate papers mapped in Kalnehi Daily</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {[
               { group: "Group 1", papers: ["Paper 1: Accounting", "Paper 2: Corporate & Other Laws", "Paper 3: Cost & Management Accounting", "Paper 4: Taxation (IT + GST)"] },
               { group: "Group 2", papers: ["Paper 5: Advanced Accounting", "Paper 6: Auditing & Assurance", "Paper 7: EIS & Strategic Management", "Paper 8: FM & Economics for Finance"] },
             ].map(({ group, papers }) => (
               <div key={group} className="kal-glass-card rounded-xl p-4 space-y-1.5">
-                <h3 className="text-xs font-bold text-kal-accent-dark">{group}</h3>
+                <h3 className="text-xs font-semibold text-kal-accent-dark">{group}</h3>
                 <ul className="space-y-0.5">{papers.map(p => <li key={p} className="text-xs text-kal-text-secondary">· {p}</li>)}</ul>
               </div>
             ))}
@@ -53,7 +53,7 @@ export default function CaIntermediatePage() {
         </section>
 
         <section className="space-y-3" aria-labelledby="caint-mastermind">
-          <h2 id="caint-mastermind" className="text-xl font-bold text-kal-text">Mastermind for CA Intermediate</h2>
+          <h2 id="caint-mastermind" className="text-xl font-semibold text-kal-text">Mastermind for CA Intermediate</h2>
           <p className="text-sm text-kal-text-secondary leading-relaxed">Mastermind tracks your ICAI mock scores paper by paper and tells you which Accounting or Audit topics are pulling your aggregate down. It also monitors whether you're spending proportional time across both groups — the #1 mistake that causes Group 2 failures among students who focused all attention on Group 1.</p>
         </section>
 

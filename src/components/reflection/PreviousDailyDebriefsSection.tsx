@@ -18,6 +18,7 @@ export function PreviousDailyDebriefsSection() {
   useEffect(() => {
     let cancelled = false;
     async function load() {
+      if (cancelled) return;
       const result = await getRecentReflections(PREVIOUS_LIMIT);
       if (cancelled) return;
       if (result.ok) {
@@ -58,7 +59,7 @@ export function PreviousDailyDebriefsSection() {
       <section className="space-y-3" aria-busy="true" aria-label="Loading previous debriefs">
         <h2 className="kal-section-heading text-sm">Previous daily debriefs</h2>
         <div className="flex min-h-[120px] items-center justify-center rounded-2xl border border-kal-border/50 bg-kal-card-muted/30">
-          <Loader2 className="h-6 w-6 animate-spin text-kal-accent/60" />
+          <Loader2 className="size-6 animate-spin text-kal-accent/60" />
         </div>
       </section>
     );

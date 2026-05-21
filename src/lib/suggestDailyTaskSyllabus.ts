@@ -32,10 +32,10 @@ export function suggestSyllabusIdFromTitle(
   const t = title.trim().toLowerCase();
   if (!t || microtopics.length === 0) return null;
 
-  const tokens = t
-    .split(/\s+/)
-    .map((w) => w.replace(/[^a-z0-9]/gi, "").toLowerCase())
-    .filter((w) => w.length > 2 && !STOP.has(w));
+  const tokens = t.split(/\s+/).flatMap((w) => {
+    const normalized = w.replace(/[^a-z0-9]/gi, "").toLowerCase();
+    return normalized.length > 2 && !STOP.has(normalized) ? [normalized] : [];
+  });
 
   let best: { id: string; score: number } | null = null;
 

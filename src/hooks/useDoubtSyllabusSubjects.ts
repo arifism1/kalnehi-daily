@@ -76,7 +76,7 @@ function disambiguateSubjects(scopes: ExamScope[]): {
     }
   }
 
-  const allSubjects = [...allLabeled].sort((a, b) => a.localeCompare(b));
+  const allSubjects = [...allLabeled].toSorted((a, b) => a.localeCompare(b));
   if (!allSubjects.includes(DOUBT_GENERAL_SUBJECT)) {
     allSubjects.push(DOUBT_GENERAL_SUBJECT);
   }

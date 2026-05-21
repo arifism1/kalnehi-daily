@@ -46,6 +46,7 @@ export function detectConversationThread(
   ];
 
   // Map prior messages (all except the most recent) to intents.
+  // react-doctor-disable-next-line react-doctor/js-combine-iterations -- map-then-filter for intent routing; combining would reduce readability
   const priorIntents = recentUser
     .slice(0, -1)
     .map((m) => detectPrepBrainIntent(m.content))

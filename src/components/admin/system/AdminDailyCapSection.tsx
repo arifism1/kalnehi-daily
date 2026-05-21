@@ -169,7 +169,7 @@ export function AdminDailyCapSection({ initialConfig, initialHistory }: Props) {
 
   return (
     <section className="rounded-2xl border border-kal-border bg-kal-card/50 p-5 sm:p-6">
-      <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-kal-muted">
+      <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-kal-muted">
         Daily Trial Cap
       </h2>
 
@@ -199,7 +199,7 @@ export function AdminDailyCapSection({ initialConfig, initialHistory }: Props) {
           aria-label={capEnabled ? "Disable daily cap" : "Enable daily cap"}
         >
           <span
-            className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+            className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-transform ${
               capEnabled ? "translate-x-5" : "translate-x-0.5"
             }`}
           />
@@ -208,9 +208,10 @@ export function AdminDailyCapSection({ initialConfig, initialHistory }: Props) {
 
       {/* ── Cap size input ──────────────────────────────────────────────────── */}
       <div className="mt-4">
-        <label className="block text-xs font-medium text-kal-muted">Daily cap (spots per day)</label>
+        <label htmlFor="admin-daily-cap-input" className="block text-xs font-medium text-kal-muted">Daily cap (spots per day)</label>
         <div className="mt-1.5 flex gap-2">
           <input
+            id="admin-daily-cap-input"
             type="number"
             min={100}
             max={50000}
@@ -235,7 +236,7 @@ export function AdminDailyCapSection({ initialConfig, initialHistory }: Props) {
 
       {/* ── Live today counter ──────────────────────────────────────────────── */}
       <div className="mt-5 grid grid-cols-3 gap-3">
-        <div className="rounded-xl border border-kal-border bg-kal-card-muted/40 px-3 py-3 text-center">
+        <div className="rounded-xl border border-kal-border bg-kal-card-muted/40 p-3 text-center">
           <p className="text-xl font-bold tabular-nums text-kal-text">
             {trialsToday.toLocaleString("en-IN")}
           </p>
@@ -243,7 +244,7 @@ export function AdminDailyCapSection({ initialConfig, initialHistory }: Props) {
             Started today
           </p>
         </div>
-        <div className="rounded-xl border border-kal-border bg-kal-card-muted/40 px-3 py-3 text-center">
+        <div className="rounded-xl border border-kal-border bg-kal-card-muted/40 p-3 text-center">
           <p className="text-xl font-bold tabular-nums text-kal-text">
             {spotsLeft.toLocaleString("en-IN")}
           </p>
@@ -251,7 +252,7 @@ export function AdminDailyCapSection({ initialConfig, initialHistory }: Props) {
             Spots remaining
           </p>
         </div>
-        <div className="rounded-xl border border-kal-border bg-kal-card-muted/40 px-3 py-3 text-center">
+        <div className="rounded-xl border border-kal-border bg-kal-card-muted/40 p-3 text-center">
           <p className="text-xl font-bold tabular-nums text-kal-text">{resetIn}</p>
           <p className="mt-0.5 text-[10px] font-medium uppercase tracking-wider text-kal-muted">
             Resets in

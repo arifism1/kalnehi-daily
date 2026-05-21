@@ -36,8 +36,7 @@ export async function GET() {
 
   const fingerprints = rawFingerprints
     .split(",")
-    .map((f) => f.trim())
-    .filter(Boolean);
+    .flatMap((f) => (f.trim() ? [f.trim()] : []));
 
   const assetLinks = [
     {

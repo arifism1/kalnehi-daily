@@ -385,6 +385,7 @@ async function probeSameOriginReachable(): Promise<boolean> {
     try {
       const u = new URL(path, window.location.origin);
       u.searchParams.set("_kalnehi_net", String(Date.now()));
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential fallback: return early on first success, try next path on failure
       const res = await fetch(u.href, {
         method: "GET",
         cache: "no-store",
@@ -458,6 +459,7 @@ export async function flushOutbox(userId: string | undefined): Promise<void> {
     );
 
     const runTaskCreateBatch = async (batch: OutboxMutation[]) => {
+      // react-doctor-disable-next-line react-doctor/js-combine-iterations -- map-then-filter with type narrowing; flatMap would lose the type predicate
       const inserts = batch
         .map((m) => m.insert)
         .filter((v): v is NonNullable<OutboxMutation["insert"]> => !!v);
@@ -466,6 +468,7 @@ export async function flushOutbox(userId: string | undefined): Promise<void> {
         const res = await createTasksBulk(inserts);
         if (res.ok) {
           for (const m of batch) {
+            // react-doctor-disable-next-line react-doctor/async-await-in-loop -- outbox deletions must be sequential to preserve mutation ordering
             await deleteOutboxMutation(m.clientMutationId);
             processed++;
           }
@@ -474,6 +477,7 @@ export async function flushOutbox(userId: string | undefined): Promise<void> {
         }
         for (const m of batch) {
           const fails = m.failCount ?? 0;
+          // react-doctor-disable-next-line react-doctor/async-await-in-loop -- outbox fail-count bumps must be sequential to preserve mutation ordering
           await bumpOutboxFailCount(m.clientMutationId);
           failedThisRound++;
           worstFailCount = Math.max(worstFailCount, fails + 1);
@@ -488,6 +492,7 @@ export async function flushOutbox(userId: string | undefined): Promise<void> {
         const msg = formatSupabaseError(err);
         for (const m of batch) {
           const fails = m.failCount ?? 0;
+          // react-doctor-disable-next-line react-doctor/async-await-in-loop -- outbox fail-count bumps must be sequential to preserve mutation ordering
           await bumpOutboxFailCount(m.clientMutationId);
           failedThisRound++;
           worstFailCount = Math.max(worstFailCount, fails + 1);
@@ -503,6 +508,7 @@ export async function flushOutbox(userId: string | undefined): Promise<void> {
         batches.push(retryableTaskCreates.slice(i, i + TASK_CREATE_BATCH_SIZE));
       }
       for (let i = 0; i < batches.length; i += TASK_CREATE_BATCH_PARALLEL) {
+        // react-doctor-disable-next-line react-doctor/async-await-in-loop -- intentional chunked parallelism; each window of batches awaited before next
         await Promise.all(
           batches
             .slice(i, i + TASK_CREATE_BATCH_PARALLEL)
@@ -526,6 +532,7 @@ export async function flushOutbox(userId: string | undefined): Promise<void> {
       }
 
       try {
+        // react-doctor-disable-next-line react-doctor/async-await-in-loop -- outbox mutations must be applied in FIFO order; parallel execution would violate ordering guarantees
         const res = await applyOne(m);
 
         if (res.ok) {

@@ -36,7 +36,7 @@ export function TrackPicker({ selected, onSelect, catalog, disabled }: TrackPick
             <div className="flex items-center justify-between gap-2">
               <span className="text-sm font-semibold text-kal-text">{track.name}</span>
               {isSelected && (
-                <Check className="h-4 w-4 shrink-0 text-kal-accent" />
+                <Check className="size-4 shrink-0 text-kal-accent" />
               )}
             </div>
             <p className="text-[11px] leading-snug text-kal-text-secondary">
@@ -83,7 +83,7 @@ export function TrackConfirmation({
         <ul className="mt-2 flex flex-col gap-1">
           {examDisplayNames.map((name, i) => (
             <li key={i} className="flex items-center gap-2 text-sm text-kal-text">
-              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-kal-accent" />
+              <span className="size-1.5 shrink-0 rounded-full bg-kal-accent" />
               {name}
             </li>
           ))}

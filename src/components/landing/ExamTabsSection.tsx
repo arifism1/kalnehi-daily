@@ -136,7 +136,7 @@ export function ExamTabsSection() {
               <div className="grid grid-cols-1 gap-y-2 sm:grid-cols-2">
                 {UNIVERSAL_FEATURES.map((f) => (
                   <div key={f} className="flex items-center gap-2.5">
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-kal-accent/70" aria-hidden />
+                    <span className="size-1.5 shrink-0 rounded-full bg-kal-accent/70" aria-hidden />
                     <span className="text-sm text-kal-text-secondary">{f}</span>
                   </div>
                 ))}

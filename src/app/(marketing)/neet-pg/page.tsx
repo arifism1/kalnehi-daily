@@ -38,7 +38,7 @@ export default function NeetPgPage() {
         />
 
         <section className="space-y-3" aria-labelledby="neetpg-system">
-          <h2 id="neetpg-system" className="text-xl font-bold text-kal-text">How Kalnehi Daily helps NEET PG aspirants</h2>
+          <h2 id="neetpg-system" className="text-xl font-semibold text-kal-text">How Kalnehi Daily helps NEET PG aspirants</h2>
           <ul className="space-y-3 text-sm">
             {[
               { t: "19-subject syllabus tracker", d: "Track progress across Medicine, Surgery, OBG, Paediatrics, Pathology, Microbiology and all other NEET PG subjects at the topic level. See which subjects are lagging in one view." },

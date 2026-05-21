@@ -14,6 +14,7 @@ export function normalizeEnabledFeaturesRow(raw: unknown): string[] | null {
   if (raw == null) return null;
   if (!Array.isArray(raw)) return null;
   if (raw.length === 0) return [];
+  // react-doctor-disable-next-line react-doctor/js-combine-iterations -- filter-then-map with type narrowing; flatMap would lose the type predicate
   const ids = raw
     .filter(
       (id): id is string => typeof id === "string" && id.trim().length > 0,

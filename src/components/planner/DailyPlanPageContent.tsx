@@ -108,13 +108,13 @@ export function DailyPlanPageContent() {
         href="/"
         className="inline-flex items-center gap-2 text-sm font-semibold text-kal-accent hover:text-kal-accent-hover"
       >
-        <ArrowLeft className="h-4 w-4" aria-hidden />
+        <ArrowLeft className="size-4" aria-hidden />
         Home
       </Link>
 
       <header className="mt-6 mb-5">
         <div className="flex flex-wrap items-center gap-2">
-          <Zap className="h-5 w-5 text-kal-accent" aria-hidden />
+          <Zap className="size-5 text-kal-accent" aria-hidden />
           <h1 className="kal-feature-title">{heroTitle}</h1>
         </div>
       </header>
@@ -140,7 +140,7 @@ export function DailyPlanPageContent() {
 
         {/* Arbitrary date picker */}
         <label className="flex min-h-[36px] cursor-pointer items-center gap-1.5 rounded-xl border border-kal-border bg-kal-card-muted px-3 py-1 text-xs font-semibold text-kal-muted transition-colors hover:text-kal-text">
-          <CalendarDays className="h-3.5 w-3.5 text-kal-accent" aria-hidden />
+          <CalendarDays className="size-3.5 text-kal-accent" aria-hidden />
           <span className="sr-only">Pick a date</span>
           {!isChipDate && (
             <span className="text-kal-accent">
@@ -163,7 +163,7 @@ export function DailyPlanPageContent() {
           onClick={() => setModalMode("dictate")}
           className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-kal-border bg-kal-card-muted px-3 py-1 text-xs font-semibold text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-text"
         >
-          <Mic className="h-3.5 w-3.5 text-kal-accent" aria-hidden />
+          <Mic className="size-3.5 text-kal-accent" aria-hidden />
           Dictate
         </button>
         <button
@@ -171,7 +171,7 @@ export function DailyPlanPageContent() {
           onClick={() => setModalMode("self-type")}
           className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-kal-border bg-kal-card-muted px-3 py-1 text-xs font-semibold text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-text"
         >
-          <Type className="h-3.5 w-3.5 text-kal-accent" aria-hidden />
+          <Type className="size-3.5 text-kal-accent" aria-hidden />
           Self Type
         </button>
       </div>

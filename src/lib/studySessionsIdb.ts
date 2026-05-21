@@ -119,6 +119,7 @@ async function runLegacyMigration(): Promise<void> {
     const tx = db.transaction("study_sessions", "readwrite");
     for (const r of raw) {
       const n = normalize(r);
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- IDB transaction puts must be sequential within a single transaction
       if (n) await tx.store.put(n);
     }
     await tx.done;
@@ -184,6 +185,7 @@ export async function mergeStudySessions(rows: StudySessionLog[]): Promise<void>
   const db = await getDb();
   const tx = db.transaction("study_sessions", "readwrite");
   for (const r of rows) {
+    // react-doctor-disable-next-line react-doctor/async-await-in-loop -- IDB transaction puts must be sequential within a single transaction
     await tx.store.put(r);
   }
   await tx.done;

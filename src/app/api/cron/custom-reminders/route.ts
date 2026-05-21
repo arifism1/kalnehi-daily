@@ -118,6 +118,7 @@ export async function GET(req: NextRequest) {
       continue;
     }
 
+    // react-doctor-disable-next-line react-doctor/async-await-in-loop -- per-reminder sequential processing to track sent/skipped counts accurately
     const { count: tokenCount, error: tokErr } = await admin
       .from("user_push_tokens")
       .select("id", { count: "exact", head: true })

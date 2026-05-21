@@ -34,47 +34,34 @@ export function PwaServiceWorkerUpdateProvider({ children }: { children: ReactNo
     if (process.env.NODE_ENV !== "production") return;
     if (!("serviceWorker" in navigator)) return;
 
-    let disposed = false;
-    let cleanupListeners: (() => void) | undefined;
+    const hadController = !!navigator.serviceWorker.controller;
 
-    void (async () => {
-      if (disposed) return;
+    const onControllerChange = () => {
+      if (hadController) setUpdateReady(true);
+    };
+    navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
 
-      const hadController = !!navigator.serviceWorker.controller;
+    // Fire-and-forget: register the SW and kick off an update check on mount.
+    void navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {
+      /* ignore — private mode, blocked, etc. */
+    });
 
-      const onControllerChange = () => {
-        if (hadController) setUpdateReady(true);
-      };
-      navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
-
-      void navigator.serviceWorker
-        .register("/sw.js", { scope: "/" })
-        .catch(() => {
-          /* ignore — private mode, blocked, etc. */
-        });
-
-      /** Helps iOS/Android/desktop discover new SW versions when the user returns to the app. */
-      const checkForNewWorker = () => {
-        void navigator.serviceWorker.getRegistration().then((reg) => {
-          void reg?.update();
-        });
-      };
-      const onVisible = () => {
-        if (document.visibilityState === "visible") checkForNewWorker();
-      };
-      window.addEventListener("focus", checkForNewWorker);
-      document.addEventListener("visibilitychange", onVisible);
-
-      cleanupListeners = () => {
-        navigator.serviceWorker.removeEventListener("controllerchange", onControllerChange);
-        window.removeEventListener("focus", checkForNewWorker);
-        document.removeEventListener("visibilitychange", onVisible);
-      };
-    })();
+    /** Helps iOS/Android/desktop discover new SW versions when the user returns to the app. */
+    const checkForNewWorker = () => {
+      void navigator.serviceWorker.getRegistration().then((reg) => {
+        void reg?.update();
+      });
+    };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") checkForNewWorker();
+    };
+    window.addEventListener("focus", checkForNewWorker);
+    document.addEventListener("visibilitychange", onVisible);
 
     return () => {
-      disposed = true;
-      cleanupListeners?.();
+      navigator.serviceWorker.removeEventListener("controllerchange", onControllerChange);
+      window.removeEventListener("focus", checkForNewWorker);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);
 

@@ -39,7 +39,7 @@ export function FAQSection() {
                 <span className="text-base font-semibold text-kal-text">{question}</span>
                 <ChevronDown
                   className={clsx(
-                    "h-4 w-4 shrink-0 text-kal-muted transition-transform duration-200",
+                    "size-4 shrink-0 text-kal-muted transition-transform duration-200",
                     open === i && "rotate-180",
                   )}
                   aria-hidden

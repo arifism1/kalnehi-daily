@@ -157,8 +157,8 @@ export function PwaInstallPrompt() {
 
           {/* Header row */}
           <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-kal-accent-soft text-kal-accent">
-              <Download className="h-5 w-5" aria-hidden />
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-kal-accent-soft text-kal-accent">
+              <Download className="size-5" aria-hidden />
             </div>
 
             <div className="min-w-0 flex-1">
@@ -168,7 +168,7 @@ export function PwaInstallPrompt() {
 
               {isIos ? (
                 <div className="mt-2 flex items-start gap-2 rounded-xl border border-kal-border/60 bg-kal-accent-soft/40 px-3 py-2.5">
-                  <IosShareIcon className="mt-0.5 h-4 w-4 shrink-0 text-kal-accent" />
+                  <IosShareIcon className="mt-0.5 size-4 shrink-0 text-kal-accent" />
                   <p className="text-xs leading-relaxed text-kal-text-secondary">
                     Tap the{" "}
                     <span className="font-semibold text-kal-text">Share</span>{" "}
@@ -190,10 +190,10 @@ export function PwaInstallPrompt() {
             <button
               type="button"
               onClick={handleNotNow}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-kal-muted transition-colors hover:bg-kal-card-muted hover:text-kal-text"
+              className="flex size-9 shrink-0 items-center justify-center rounded-lg text-kal-muted transition-colors hover:bg-kal-card-muted hover:text-kal-text"
               aria-label="Dismiss for now"
             >
-              <X className="h-4.5 w-4.5" strokeWidth={2} />
+              <X className="size-4.5" strokeWidth={2} />
             </button>
           </div>
 
@@ -213,7 +213,7 @@ export function PwaInstallPrompt() {
                 onClick={handleInstall}
                 className="kal-btn-accent w-full"
               >
-                <Download className="h-4 w-4" aria-hidden />
+                <Download className="size-4" aria-hidden />
                 Install App
               </button>
             )}

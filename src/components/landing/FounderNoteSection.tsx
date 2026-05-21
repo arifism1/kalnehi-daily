@@ -21,7 +21,7 @@ export function FounderNoteSection() {
           </p>
 
           <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-kal-accent text-base font-bold text-white">
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-kal-accent text-base font-bold text-white">
               K
             </div>
             <div>

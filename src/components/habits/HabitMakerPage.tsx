@@ -84,9 +84,7 @@ function completionDatesForHabit(
   habitId: string,
 ): Set<string> {
   return new Set(
-    logs
-      .filter((l) => l.habit_id === habitId && l.completed)
-      .map((l) => l.log_date),
+    logs.flatMap((l) => l.habit_id === habitId && l.completed ? [l.log_date] : []),
   );
 }
 
@@ -226,7 +224,7 @@ function ConfettiCelebration({
 
   return (
     <div
-      className="pointer-events-none absolute left-1/2 top-1/2 z-20 h-0 w-0 overflow-visible"
+      className="pointer-events-none absolute left-1/2 top-1/2 z-20 size-0 overflow-visible"
       aria-hidden
     >
       {particles.map((p, i) => (
@@ -387,6 +385,7 @@ export function HabitMakerPage() {
   );
 
   const recoveryHabitIds = useMemo(() => {
+    // react-doctor-disable-next-line react-doctor/js-combine-iterations -- filter-then-map with multi-condition filter; flatMap would reduce readability
     return habits
       .filter((h) => {
         if (habitCreatedYmd(h) > yesterday) return false;
@@ -405,11 +404,13 @@ export function HabitMakerPage() {
     setNotice(null);
     try {
       for (const habitId of recoveryHabitIds) {
+        // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential habit recovery: each habit must be processed individually
         const cached = await getHabitBundleCached(userId);
         const runLogs = cached?.logs ?? logs;
         const tl = runLogs.find(
           (l) => l.habit_id === habitId && l.log_date === today,
         );
+        // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential habit recovery
         await persistLog(habitId, true, tl?.comment ?? null, tl ?? null, {
           skipRemoteRefresh: true,
         });
@@ -561,7 +562,7 @@ export function HabitMakerPage() {
   if (hydrating && !bundle) {
     return (
       <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-kal-muted">
-        <Loader2 className="h-10 w-10 animate-spin text-kal-accent" />
+        <Loader2 className="size-10 animate-spin text-kal-accent" />
         <p className="text-sm font-medium">Loading habits…</p>
       </div>
     );
@@ -570,11 +571,11 @@ export function HabitMakerPage() {
   return (
     <div className="relative mx-auto max-w-3xl pb-16">
       <div
-        className="pointer-events-none absolute -left-16 top-10 h-48 w-48 rounded-full bg-kal-accent/10 blur-3xl motion-safe:animate-pulse"
+        className="pointer-events-none absolute -left-16 top-10 size-48 rounded-full bg-kal-accent/10 blur-3xl motion-safe:animate-pulse"
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute -right-10 bottom-40 h-40 w-40 rounded-full bg-kal-accent-soft/40 blur-3xl"
+        className="pointer-events-none absolute -right-10 bottom-40 size-40 rounded-full bg-kal-accent-soft/40 blur-3xl"
         aria-hidden
       />
 
@@ -601,7 +602,7 @@ export function HabitMakerPage() {
       ) : null}
 
       <section className="kal-glass-panel mb-8 rounded-2xl px-5 py-6 sm:px-8 sm:py-7">
-        <h2 className="text-sm font-bold text-kal-text">Add new habit</h2>
+        <h2 className="text-sm font-semibold text-kal-text">Add new habit</h2>
         <p className="mt-1 text-xs text-kal-text-secondary sm:text-sm">
           Name what you&apos;ll repeat every day — keep it concrete.
         </p>
@@ -623,9 +624,9 @@ export function HabitMakerPage() {
             className="kal-btn-accent min-h-[48px] shrink-0 rounded-xl px-5 py-3 text-xs uppercase tracking-wide enabled:motion-safe:active:scale-[0.98] disabled:opacity-45 motion-reduce:enabled:active:scale-100"
           >
             {adding ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="size-4 animate-spin" />
             ) : (
-              <Plus className="h-4 w-4" strokeWidth={2.5} />
+              <Plus className="size-4" strokeWidth={2.5} />
             )}
             Add habit
           </button>
@@ -634,13 +635,13 @@ export function HabitMakerPage() {
 
       {habits.length === 0 ? (
         <section className="kal-glass-panel mb-10 overflow-hidden rounded-3xl border border-dashed border-kal-border/70 bg-gradient-to-br from-kal-accent-soft/50 via-kal-card/90 to-kal-card/95 px-6 py-10 text-center sm:px-10 sm:py-12">
-          <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-kal-accent-soft to-amber-50/90 shadow-inner ring-1 ring-kal-accent/20">
+          <div className="mx-auto mb-6 flex size-24 items-center justify-center rounded-3xl bg-gradient-to-br from-kal-accent-soft to-amber-50/90 shadow-inner ring-1 ring-kal-accent/20">
             <div className="relative">
               <Sparkles
-                className="h-11 w-11 text-kal-accent"
+                className="size-11 text-kal-accent"
                 strokeWidth={1.75}
               />
-              <span className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-kal-accent text-[11px] font-bold text-kal-accent-foreground shadow-md">
+              <span className="absolute -right-1 -top-1 flex size-6 items-center justify-center rounded-full bg-kal-accent text-[11px] font-bold text-kal-accent-foreground shadow-md">
                 ✓
               </span>
             </div>
@@ -672,13 +673,13 @@ export function HabitMakerPage() {
                   >
                     <span
                       className={clsx(
-                        "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition-colors",
+                        "flex size-11 shrink-0 items-center justify-center rounded-xl border transition-colors",
                         taken
                           ? "border-kal-border bg-kal-card-muted text-kal-muted"
                           : "border-kal-accent/20 bg-kal-accent-soft/50 text-kal-accent group-hover:border-kal-accent/40 group-hover:bg-kal-accent-soft",
                       )}
                     >
-                      <Icon className="h-5 w-5" strokeWidth={2} />
+                      <Icon className="size-5" strokeWidth={2} />
                     </span>
                     <span className="min-w-0 leading-snug">{name}</span>
                   </button>
@@ -692,7 +693,7 @@ export function HabitMakerPage() {
       {habits.length > 0 ? (
         <section className="kal-glass-panel relative mb-10 overflow-hidden rounded-3xl bg-gradient-to-br from-kal-card/95 via-white/60 to-kal-accent-soft/30 px-5 py-8 sm:px-10 sm:py-10">
           <div
-            className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-kal-accent/5 blur-3xl"
+            className="pointer-events-none absolute -right-20 -top-20 size-56 rounded-full bg-kal-accent/5 blur-3xl"
             aria-hidden
           />
           <div className="relative flex flex-col items-center gap-8 lg:flex-row lg:items-center lg:justify-between">
@@ -717,7 +718,7 @@ export function HabitMakerPage() {
                 </p>
               </CircularProgressRing>
               <div className="max-w-sm text-center sm:text-left">
-                <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-kal-accent">
+                <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-kal-accent">
                   Today&apos;s check-in
                 </h2>
                 <p className="mt-2 text-lg font-bold tracking-tight text-kal-text sm:text-xl">
@@ -784,13 +785,13 @@ export function HabitMakerPage() {
                       aria-label={`Did you complete ${h.name} today?`}
                       onClick={() => onToggleCheckIn(h.id, checked, tl)}
                       className={clsx(
-                        "relative mt-0.5 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 transition-[transform,box-shadow,background-color,border-color] motion-safe:duration-200",
+                        "relative mt-0.5 flex size-12 shrink-0 items-center justify-center rounded-2xl border-2 transition-[transform,box-shadow,background-color,border-color] motion-safe:duration-200",
                         checked
                           ? "border-kal-accent bg-kal-accent text-kal-accent-foreground shadow-[0_0_0_4px_rgba(239,68,68,0.12)] motion-safe:animate-[completion-pop_0.55s_ease-out_both] motion-reduce:animate-none"
                           : "border-kal-border bg-kal-page text-transparent shadow-sm hover:border-kal-accent/45 hover:shadow-md motion-safe:hover:scale-[1.03]",
                       )}
                     >
-                      <Check className="h-6 w-6" strokeWidth={3} />
+                      <Check className="size-6" strokeWidth={3} />
                     </button>
                     <div className="min-w-0 flex-1">
                       <span className="text-base font-semibold text-kal-text">
@@ -858,8 +859,8 @@ export function HabitMakerPage() {
         <div className="mb-10 overflow-hidden rounded-2xl border border-orange-200/80 bg-gradient-to-br from-orange-50/95 via-white/60 to-white/75 px-6 py-7 shadow-lg backdrop-blur-md motion-safe:animate-[habit-row-enter_0.6s_ease-out_both] dark:border-orange-900/45 dark:from-orange-950/45 dark:via-zinc-900/75 dark:to-zinc-900/88 sm:px-8 sm:py-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 gap-3">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-200">
-                <Sparkles className="h-6 w-6" strokeWidth={2} />
+              <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-200">
+                <Sparkles className="size-6" strokeWidth={2} />
               </span>
               <div>
                 <p className="text-sm font-bold text-kal-text sm:text-base">
@@ -878,7 +879,7 @@ export function HabitMakerPage() {
               className="kal-btn-accent min-h-[52px] w-full shrink-0 rounded-xl px-6 py-3.5 text-sm enabled:motion-safe:active:scale-[0.99] disabled:opacity-50 sm:w-auto sm:min-w-[14rem] motion-reduce:enabled:active:scale-100"
             >
               {recoveryBusy ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <Loader2 className="size-5 animate-spin" />
               ) : (
                 "Start New Streak Today"
               )}
@@ -889,7 +890,7 @@ export function HabitMakerPage() {
 
       {habits.length > 0 ? (
         <section className="mb-6">
-          <h2 className="mb-4 text-sm font-bold uppercase tracking-wide text-kal-muted">
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-kal-muted">
             My habits
           </h2>
           <ul className="flex flex-col gap-6">
@@ -989,22 +990,22 @@ export function HabitMakerPage() {
                       </p>
                       <p className="max-w-[16rem] text-[10px] leading-relaxed text-kal-muted sm:max-w-none">
                         <span className="inline-flex items-center gap-1">
-                          <span className="h-2 w-2 rounded-full bg-emerald-500" />{" "}
+                          <span className="size-2 rounded-full bg-emerald-500" />{" "}
                           Done
                         </span>
                         <span className="mx-1.5 text-kal-border sm:mx-2">·</span>
                         <span className="inline-flex items-center gap-1">
-                          <span className="h-2 w-2 rounded-full bg-orange-300" />{" "}
+                          <span className="size-2 rounded-full bg-orange-300" />{" "}
                           Missed
                         </span>
                         <span className="mx-1.5 text-kal-border sm:mx-2">·</span>
                         <span className="inline-flex items-center gap-1">
-                          <span className="h-2 w-2 rounded-full bg-kal-border/60" />{" "}
+                          <span className="size-2 rounded-full bg-kal-border/60" />{" "}
                           Future
                         </span>
                         <span className="mx-1.5 text-kal-border sm:mx-2">·</span>
                         <span className="inline-flex items-center gap-1">
-                          <span className="h-2 w-2 rounded-full bg-kal-card-muted ring-1 ring-kal-border/70" />{" "}
+                          <span className="size-2 rounded-full bg-kal-card-muted ring-1 ring-kal-border/70" />{" "}
                           Before
                         </span>
                       </p>
@@ -1017,7 +1018,7 @@ export function HabitMakerPage() {
                         <span
                           key={d.date}
                           title={d.date}
-                          className={`h-3 w-3 shrink-0 rounded-full ${dotVisualClass(d.kind)}`}
+                          className={`size-3 shrink-0 rounded-full ${dotVisualClass(d.kind)}`}
                         />
                       ))}
                     </div>

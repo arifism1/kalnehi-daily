@@ -37,7 +37,7 @@ export default function JeeMainPage() {
         />
 
         <section className="space-y-4" aria-labelledby="jeemain-how">
-          <h2 id="jeemain-how" className="text-xl font-bold text-kal-text">How Kalnehi Daily helps JEE Main aspirants</h2>
+          <h2 id="jeemain-how" className="text-xl font-semibold text-kal-text">How Kalnehi Daily helps JEE Main aspirants</h2>
           <ul className="space-y-3 text-sm text-kal-text-secondary leading-relaxed">
             <li className="kal-glass-card rounded-xl p-4"><strong className="text-kal-text block mb-1">Complete PCM syllabus tracking</strong>Mark every Physics, Chemistry and Maths chapter — from Kinematics to Coordination Compounds to Integration. See your completion percentage per subject at a glance.</li>
             <li className="kal-glass-card rounded-xl p-4"><strong className="text-kal-text block mb-1">Revision Tracker</strong>JEE Main demands you remember chapters studied months ago. Use Revision Tracker to set due dates and a clear queue — link syllabus microtopics, reschedule when needed, and push reviews into your daily plan.</li>

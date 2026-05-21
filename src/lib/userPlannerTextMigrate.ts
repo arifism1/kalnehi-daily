@@ -242,6 +242,7 @@ export async function maybeMigrateLegacyPlannerTextOnce(
   await saveUserPlannerTextBundleCached(next);
 
   for (const r of next.revisionItems) {
+    // react-doctor-disable-next-line react-doctor/async-await-in-loop -- outbox enqueue must preserve FIFO order for migration
     await enqueueUserPlannerTextOutbox(userId, {
       kind: "revision_upsert",
       id: r.id,
@@ -266,6 +267,7 @@ export async function maybeMigrateLegacyPlannerTextOnce(
   });
 
   for (const t of next.todos) {
+    // react-doctor-disable-next-line react-doctor/async-await-in-loop -- outbox enqueue must preserve FIFO order for migration
     await enqueueUserPlannerTextOutbox(userId, {
       kind: "todo_upsert",
       id: t.id,

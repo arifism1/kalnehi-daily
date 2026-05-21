@@ -187,15 +187,18 @@ export async function applyUserPlannerTextOutboxOp(
         return { ok: true };
       }
       case "todo_reorder": {
-        for (let i = 0; i < op.orderedIds.length; i++) {
-          const id = op.orderedIds[i]!;
-          const { error } = await supabase
-            .from("user_quick_exam_todos")
-            .update({ position: i, updated_at: now })
-            .eq("id", id)
-            .eq("user_id", user.id);
-          if (error) return { ok: false, error: formatSupabaseError(error) };
-        }
+        const reorderErrors = await Promise.all(
+          op.orderedIds.map(async (id, i) => {
+            const { error } = await supabase
+              .from("user_quick_exam_todos")
+              .update({ position: i, updated_at: now })
+              .eq("id", id)
+              .eq("user_id", user.id);
+            return error;
+          }),
+        );
+        const firstErr = reorderErrors.find(Boolean);
+        if (firstErr) return { ok: false, error: formatSupabaseError(firstErr) };
         return { ok: true };
       }
       case "engine_prefs_put": {

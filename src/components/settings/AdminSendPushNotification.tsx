@@ -132,7 +132,7 @@ export function AdminSendPushNotification() {
       <div className="kal-glass-panel rounded-[1rem] px-3 py-4">
         <div className="flex items-start gap-2">
           <Megaphone
-            className="mt-0.5 h-5 w-5 shrink-0 text-kal-accent"
+            className="mt-0.5 size-5 shrink-0 text-kal-accent"
             aria-hidden
           />
           <div className="min-w-0 flex-1">
@@ -258,7 +258,7 @@ export function AdminSendPushNotification() {
               busy ? "cursor-wait opacity-80" : "hover:bg-kal-accent",
             )}
           >
-            <Send className="h-4 w-4" aria-hidden />
+            <Send className="size-4" aria-hidden />
             {busy ? "Sending…" : "Send now"}
           </button>
         </form>

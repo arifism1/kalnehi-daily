@@ -34,6 +34,7 @@ async function loadPhotoCacheForDoubts(metas: DoubtMeta[]): Promise<PhotoUrlCach
   await Promise.all(
     metas.flatMap((d) =>
       d.photoIds.map(async (pid) => {
+        // react-doctor-disable-next-line react-doctor/async-await-in-loop -- inside Promise.all; all photo fetches run concurrently
         const url = await getDoubtPhoto(d.id, pid);
         if (url) out[cacheKey(d.id, pid)] = url;
       }),
@@ -128,6 +129,7 @@ export const useDoubtStore = create<DoubtStore>((set, get) => ({
     const files = initialFiles ?? [];
     for (const file of files) {
       if (!isLikelyImageFile(file)) continue;
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential upload: pid must be assigned before pushing to meta.photoIds
       const pid = await addDoubtPhotoFromFile(id, file);
       meta.photoIds.push(pid);
     }
@@ -279,7 +281,7 @@ export const useDoubtStore = create<DoubtStore>((set, get) => ({
       if (u) urls[cacheKey(meta.id, pid)] = u;
     }
     set((s) => ({
-      doubts: [meta, ...s.doubts.filter((d) => d.id !== meta.id)].sort(
+      doubts: [meta, ...s.doubts.filter((d) => d.id !== meta.id)].toSorted(
         (a, b) => b.updatedAt - a.updatedAt,
       ),
       photoUrls: urls,

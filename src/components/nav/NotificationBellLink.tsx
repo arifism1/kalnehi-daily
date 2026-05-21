@@ -77,14 +77,14 @@ export function NotificationBellLink({ pathname }: { pathname: string | null }) 
       onPointerDown={maybePrefetchList}
       onFocus={maybePrefetchList}
       className={clsx(
-        "relative flex h-8 w-8 min-h-[32px] min-w-[32px] items-center justify-center rounded-xl border backdrop-blur-md transition-colors active:scale-[0.98]",
+        "relative flex size-8 min-h-[32px] min-w-[32px] items-center justify-center rounded-xl border backdrop-blur-md transition-colors active:scale-[0.98]",
         pathname === "/notifications"
           ? "border-kal-accent/35 bg-kal-accent-soft text-kal-accent shadow-sm"
           : "border-white/30 bg-white/45 text-kal-accent hover:border-white/45 hover:bg-white/65 dark:border-white/12 dark:bg-zinc-900/50",
       )}
       aria-label={label}
     >
-      <Bell className="h-4.5 w-4.5 shrink-0" strokeWidth={2.25} aria-hidden />
+      <Bell className="size-4.5 shrink-0" strokeWidth={2.25} aria-hidden />
       {total > 0 ? (
         <span
           className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-kal-accent px-1 text-[10px] font-bold leading-none text-white tabular-nums shadow-sm"

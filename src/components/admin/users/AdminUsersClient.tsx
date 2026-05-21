@@ -464,8 +464,9 @@ function UserCard({
 
       <div className="flex flex-wrap items-end gap-2">
         <div className="flex-1 min-w-[200px]">
-          <label className="text-[10px] font-bold uppercase text-kal-muted">Note</label>
+          <label htmlFor="admin-user-note" className="text-[10px] font-bold uppercase text-kal-muted">Note</label>
           <textarea
+            id="admin-user-note"
             value={note}
             onChange={(e) => setNote(e.target.value)}
             rows={2}

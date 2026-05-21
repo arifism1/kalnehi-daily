@@ -41,10 +41,10 @@ export function RevisionScheduledToast({
         className="pointer-events-auto flex w-full max-w-md items-start gap-3 rounded-2xl border border-kal-accent/25 bg-kal-card/95 px-4 py-3.5 text-sm shadow-lg shadow-kal-accent/10 ring-1 ring-kal-border/50 backdrop-blur-md dark:bg-zinc-900/95"
       >
         <div
-          className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-kal-accent/15 text-kal-accent"
+          className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-kal-accent/15 text-kal-accent"
           aria-hidden
         >
-          <Check className="h-5 w-5" strokeWidth={2.5} />
+          <Check className="size-5" strokeWidth={2.5} />
         </div>
         <div className="min-w-0 flex-1 pt-0.5">
           <p className="font-semibold text-kal-text">Revision scheduled</p>
@@ -66,7 +66,7 @@ export function RevisionScheduledToast({
           className="shrink-0 rounded-lg p-1.5 text-kal-muted transition-colors hover:bg-kal-card-muted hover:text-kal-text"
           aria-label="Dismiss"
         >
-          <X className="h-4 w-4" strokeWidth={2.5} />
+          <X className="size-4" strokeWidth={2.5} />
         </button>
       </div>
     </div>

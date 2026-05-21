@@ -150,7 +150,7 @@ export function MeditationConsistencyPage() {
         <div className="kal-glass-card rounded-2xl p-5">
           <p className="text-xs uppercase tracking-wide text-kal-muted">Current streak</p>
           <p className="mt-2 inline-flex items-center gap-2 text-2xl font-bold text-kal-text">
-            <Flame className="h-5 w-5 text-kal-accent" />
+            <Flame className="size-5 text-kal-accent" />
             {streak} days
           </p>
         </div>
@@ -158,7 +158,7 @@ export function MeditationConsistencyPage() {
 
       <section className="kal-glass-card rounded-2xl p-5">
         <div className="mb-4 flex items-center gap-2">
-          <CalendarDays className="h-5 w-5 text-kal-accent" />
+          <CalendarDays className="size-5 text-kal-accent" />
           <h2 className="text-sm font-semibold text-kal-text">{year} Calendar</h2>
         </div>
         <div className="space-y-4">
@@ -180,7 +180,7 @@ export function MeditationConsistencyPage() {
                   {m.label}
                 </p>
                 <ChevronDown
-                  className={`h-4 w-4 text-kal-muted transition-transform ${
+                  className={`size-4 text-kal-muted transition-transform ${
                     expandedMonths.has(monthIndex) ? "rotate-180" : ""
                   }`}
                 />
@@ -223,7 +223,7 @@ export function MeditationConsistencyPage() {
         ) : (
           <div className="mt-3 space-y-2">
             <p className="inline-flex items-center gap-2 text-sm font-medium text-kal-text">
-              <Timer className="h-4 w-4 text-kal-accent" />
+              <Timer className="size-4 text-kal-accent" />
               Total: {fmt(sumSeconds(selectedRows))}
             </p>
             <ul className="space-y-2">

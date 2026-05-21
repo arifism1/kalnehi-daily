@@ -177,7 +177,7 @@ export function PathFlowchart() {
             "Voice control — 5 minutes",
           ].map((f) => (
             <div key={f} className="flex items-center gap-1.5">
-              <span className="h-1 w-1 shrink-0 rounded-full bg-emerald-500/70" aria-hidden />
+              <span className="size-1 shrink-0 rounded-full bg-emerald-500/70" aria-hidden />
               <span className="text-xs text-kal-text-secondary">{f}</span>
             </div>
           ))}
@@ -224,7 +224,7 @@ export function PathFlowchart() {
             "AutoPay — cancel anytime",
           ].map((line) => (
             <div key={line} className="flex items-start gap-2">
-              <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-kal-accent/60" aria-hidden />
+              <span className="mt-0.5 size-1.5 shrink-0 rounded-full bg-kal-accent/60" aria-hidden />
               <span className="text-[11px] leading-snug text-kal-text-secondary">{line}</span>
             </div>
           ))}

@@ -37,14 +37,14 @@ export default function NdaPage() {
         />
 
         <section className="space-y-4" aria-labelledby="nda-syllabus">
-          <h2 id="nda-syllabus" className="text-xl font-bold text-kal-text">NDA syllabus tracked in Kalnehi Daily</h2>
+          <h2 id="nda-syllabus" className="text-xl font-semibold text-kal-text">NDA syllabus tracked in Kalnehi Daily</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {[
               { p: "Paper I: Mathematics (300 marks)", topics: ["Algebra, Matrices, Determinants", "Trigonometry", "Analytical Geometry (2D & 3D)", "Differential Calculus & Integral Calculus", "Vector Algebra, Statistics & Probability"] },
               { p: "Paper II: GAT (600 marks)", topics: ["English — Grammar, Comprehension", "Physics — Mechanics, Heat, Optics", "Chemistry — Physical & Inorganic", "History — India & World", "Geography — Physical, Indian", "Current Events"] },
             ].map(({ p, topics }) => (
               <div key={p} className="kal-glass-card rounded-xl p-4 space-y-1.5">
-                <h3 className="text-xs font-bold text-kal-accent-dark">{p}</h3>
+                <h3 className="text-xs font-semibold text-kal-accent-dark">{p}</h3>
                 <ul className="space-y-0.5">{topics.map(t => <li key={t} className="text-xs text-kal-text-secondary">· {t}</li>)}</ul>
               </div>
             ))}

@@ -1,0 +1,18 @@
+{
+  "failOn": "none",
+  "offline": false,
+  "serverAuthFunctionNames": [
+    "getAuthedUserId",
+    "requireAdmin",
+    "assertAdmin",
+    "requireUser"
+  ],
+  "ignore": {
+    "files": []
+  },
+  "surfaces": {
+    "cli": {
+      "excludeTags": ["design"]
+    }
+  }
+}

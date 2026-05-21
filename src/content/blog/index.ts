@@ -20,7 +20,7 @@ const ALL_POSTS: BlogPost[] = [
   post1, post2, post3, post4, post5,
   post6, post7, post8, post9, post10,
   post11, post12, post13, post14, post15,
-].sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+].toSorted((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 
 export function getAllPosts(): BlogPost[] {
   return ALL_POSTS;
@@ -36,8 +36,10 @@ export function getPostsByCategory(category: string): BlogPost[] {
 
 export function getRelatedPosts(post: BlogPost): BlogPost[] {
   return post.relatedSlugs
-    .map((slug) => ALL_POSTS.find((p) => p.slug === slug))
-    .filter((p): p is BlogPost => p !== undefined)
+    .flatMap((slug) => {
+      const p = ALL_POSTS.find((post) => post.slug === slug);
+      return p ? [p] : [];
+    })
     .slice(0, 3);
 }
 

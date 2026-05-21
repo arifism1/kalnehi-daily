@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 
 import {
   chaptersForSubject,
@@ -25,6 +25,7 @@ export function DailyPlanMicrotopicPicker({
   disabled = false,
   compact = false,
 }: Props) {
+  const uid = useId();
   const syllabusById = useTaskStore((s) => s.microtopics);
   const microtopics = useMemo(
     () => Object.values(syllabusById),
@@ -61,7 +62,7 @@ export function DailyPlanMicrotopicPicker({
     <div className={compact ? "space-y-2" : "space-y-3"}>
       <div>
         <div className="flex items-center justify-between gap-2">
-          <label className={labelCls}>Subject</label>
+          <label htmlFor={`${uid}-subject`} className={labelCls}>Subject</label>
           {subject ? (
             <button
               type="button"
@@ -74,6 +75,7 @@ export function DailyPlanMicrotopicPicker({
           ) : null}
         </div>
         <select
+          id={`${uid}-subject`}
           value={subject}
           disabled={disabled || microtopics.length === 0}
           onChange={(e) => {
@@ -95,7 +97,7 @@ export function DailyPlanMicrotopicPicker({
 
       <div>
         <div className="flex items-center justify-between gap-2">
-          <label className={labelCls}>Chapter</label>
+          <label htmlFor={`${uid}-chapter`} className={labelCls}>Chapter</label>
           {chapter ? (
             <button
               type="button"
@@ -108,6 +110,7 @@ export function DailyPlanMicrotopicPicker({
           ) : null}
         </div>
         <select
+          id={`${uid}-chapter`}
           value={chapter}
           disabled={disabled || !subject}
           onChange={(e) => {
@@ -127,7 +130,7 @@ export function DailyPlanMicrotopicPicker({
 
       <div>
         <div className="flex items-center justify-between gap-2">
-          <label className={labelCls}>Microtopic</label>
+          <label htmlFor={`${uid}-microtopic`} className={labelCls}>Microtopic</label>
           {value ? (
             <button
               type="button"
@@ -140,6 +143,7 @@ export function DailyPlanMicrotopicPicker({
           ) : null}
         </div>
         <select
+          id={`${uid}-microtopic`}
           value={value ?? ""}
           disabled={disabled || !chapter}
           onChange={(e) => {

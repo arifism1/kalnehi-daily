@@ -95,6 +95,7 @@ export async function GET(req: NextRequest) {
   for (const raw of list) {
     const r = raw as ScheduledRow;
 
+    // react-doctor-disable-next-line react-doctor/async-await-in-loop -- per-notification sequential processing to track sent/skipped counts accurately
     const { count: tokenCount, error: tokErr } = await admin
       .from("user_push_tokens")
       .select("id", { count: "exact", head: true })

@@ -29,13 +29,17 @@ export async function flushMotivationOutbox(userId: string | undefined): Promise
       if (row.userId !== userId) continue;
       const fails = row.failCount ?? 0;
       if (fails >= MAX_FAIL_BEFORE_DROP) {
+        // react-doctor-disable-next-line react-doctor/async-await-in-loop -- outbox must be processed sequentially to preserve mutation order
         await deleteMotivationOutbox(row.id);
         continue;
       }
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- outbox must be processed sequentially to preserve mutation order
       const res = await applyMotivationOutboxOp(row.op);
       if (res.ok) {
+        // react-doctor-disable-next-line react-doctor/async-await-in-loop -- outbox must be processed sequentially to preserve mutation order
         await deleteMotivationOutbox(row.id);
       } else {
+        // react-doctor-disable-next-line react-doctor/async-await-in-loop -- outbox must be processed sequentially to preserve mutation order
         await bumpMotivationOutboxFail(row.id);
       }
     }

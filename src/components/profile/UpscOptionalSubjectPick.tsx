@@ -32,7 +32,7 @@ export function UpscOptionalSubjectPick({
         ))}
       </select>
       <ChevronRight
-        className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 rotate-90 text-kal-muted"
+        className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 rotate-90 text-kal-muted"
         aria-hidden
       />
     </div>

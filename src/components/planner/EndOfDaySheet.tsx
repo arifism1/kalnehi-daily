@@ -42,11 +42,11 @@ export function EndOfDaySheet({ open, onClose, isoDate }: EndOfDaySheetProps) {
         aria-labelledby="end-of-day-sheet-title"
         className="kal-glass-panel relative z-[73] flex min-h-0 w-full max-w-lg flex-col rounded-t-[1.75rem] border border-kal-border shadow-2xl sm:max-h-[min(92dvh,52rem)] sm:rounded-[1.75rem]"
       >
-        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-kal-border px-4 py-4 sm:px-5">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-kal-border p-4 sm:px-5">
           <div className="min-w-0">
             <h2
               id="end-of-day-sheet-title"
-              className="text-lg font-bold tracking-tight text-kal-text"
+              className="text-lg font-semibold tracking-tight text-kal-text"
             >
               Wrap up today
             </h2>
@@ -57,22 +57,22 @@ export function EndOfDaySheet({ open, onClose, isoDate }: EndOfDaySheetProps) {
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-kal-border text-kal-text-secondary hover:bg-kal-card-muted hover:text-kal-text"
+            className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-kal-border text-kal-text-secondary hover:bg-kal-card-muted hover:text-kal-text"
           >
-            <X className="h-5 w-5" aria-hidden />
+            <X className="size-5" aria-hidden />
           </button>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 pb-6 pt-5 [-webkit-overflow-scrolling:touch] sm:px-5">
           <section className="space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wide text-kal-accent">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-kal-accent">
               Today&apos;s recap
             </h3>
             <EndOfDayRecapPanel isoDate={isoDate} showMagazineLinks={false} />
           </section>
 
           <section className="mt-8 border-t border-kal-border pt-8">
-            <h3 className="text-xs font-bold uppercase tracking-wide text-kal-accent">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-kal-accent">
               Daily debrief
             </h3>
             <p className="mt-1 text-sm text-kal-text-secondary">
@@ -89,8 +89,8 @@ export function EndOfDaySheet({ open, onClose, isoDate }: EndOfDaySheetProps) {
           </section>
 
           <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 border-t border-kal-border pt-6 text-sm">
-            <FootLink href="/recap" icon={<Clapperboard className="h-4 w-4" />} label="Full recap page" />
-            <FootLink href="/daily-debrief" icon={<NotebookPen className="h-4 w-4" />} label="Daily debrief" />
+            <FootLink href="/recap" icon={<Clapperboard className="size-4" />} label="Full recap page" />
+            <FootLink href="/daily-debrief" icon={<NotebookPen className="size-4" />} label="Daily debrief" />
           </div>
         </div>
 
@@ -104,7 +104,7 @@ export function EndOfDaySheet({ open, onClose, isoDate }: EndOfDaySheetProps) {
                 router.push("/welcome/night");
               }}
             >
-              <Moon className="h-4 w-4 text-kal-accent" aria-hidden />
+              <Moon className="size-4 text-kal-accent" aria-hidden />
               I&apos;m done for the day
             </button>
           </div>

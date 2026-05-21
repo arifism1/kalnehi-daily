@@ -30,15 +30,15 @@ export function TourWelcomeModal({ onStart, onSkip }: TourWelcomeModalProps) {
   return (
     <div className="fixed inset-0 z-[70] flex flex-col items-center justify-center bg-kal-page px-6">
       {/* Animated icon ring */}
-      <div className="relative mb-8 flex h-40 w-40 items-center justify-center">
+      <div className="relative mb-8 flex size-40 items-center justify-center">
         {/* Central pulsing orb */}
         <motion.div
-          className="absolute h-20 w-20 rounded-full bg-kal-accent/15"
+          className="absolute size-20 rounded-full bg-kal-accent/15"
           animate={{ scale: [1, 1.12, 1] }}
           transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className="absolute h-12 w-12 rounded-full bg-kal-accent/25"
+          className="absolute size-12 rounded-full bg-kal-accent/25"
           animate={{ scale: [1, 1.08, 1] }}
           transition={{
             duration: 2.4,
@@ -48,12 +48,12 @@ export function TourWelcomeModal({ onStart, onSkip }: TourWelcomeModalProps) {
           }}
         />
         <motion.div
-          className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full bg-kal-accent shadow-md"
+          className="relative z-10 flex size-10 items-center justify-center rounded-full bg-kal-accent shadow-md"
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ delay: 0.2, type: "spring", stiffness: 260, damping: 20 }}
         >
-          <Brain className="h-5 w-5 text-white" aria-hidden />
+          <Brain className="size-5 text-white" aria-hidden />
         </motion.div>
 
         {/* Orbiting feature icons */}
@@ -66,7 +66,7 @@ export function TourWelcomeModal({ onStart, onSkip }: TourWelcomeModalProps) {
           return (
             <motion.div
               key={label}
-              className="absolute flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white shadow-sm dark:bg-zinc-900"
+              className="absolute flex size-9 items-center justify-center rounded-full border border-white/30 bg-white shadow-sm dark:bg-zinc-900"
               style={{ left: "50%", top: "50%", marginLeft: x - 18, marginTop: y - 18 }}
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -77,7 +77,7 @@ export function TourWelcomeModal({ onStart, onSkip }: TourWelcomeModalProps) {
                 damping: 22,
               }}
             >
-              <Icon className="h-4 w-4" style={{ color }} aria-hidden />
+              <Icon className="size-4" style={{ color }} aria-hidden />
             </motion.div>
           );
         })}
@@ -120,7 +120,7 @@ export function TourWelcomeModal({ onStart, onSkip }: TourWelcomeModalProps) {
             style={{ color, backgroundColor: `${color}14` }}
           >
             <span
-              className="h-1.5 w-1.5 rounded-full"
+              className="size-1.5 rounded-full"
               style={{ backgroundColor: color }}
               aria-hidden
             />

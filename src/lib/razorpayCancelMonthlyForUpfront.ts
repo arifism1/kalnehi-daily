@@ -45,9 +45,11 @@ export async function cancelRazorpayMonthlyBeforeUpfrontPlan(
 
   for (const wait of backoffMs) {
     if (wait > 0) {
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- retry backoff loop: wait then attempt cancel
       await new Promise((r) => setTimeout(r, wait));
     }
     try {
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop -- retry loop: attempt cancel and return on success
       await razorpay.subscriptions.cancel(subId, false);
       return { ok: true, cancelled: true };
     } catch (e) {

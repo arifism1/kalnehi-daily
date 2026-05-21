@@ -144,13 +144,13 @@ export function SavedPlansPageContent() {
         href="/"
         className="inline-flex items-center gap-2 text-sm font-semibold text-kal-accent hover:text-kal-accent-hover"
       >
-        <ArrowLeft className="h-4 w-4" aria-hidden />
+        <ArrowLeft className="size-4" aria-hidden />
         Home
       </Link>
 
       <header className="kal-glass-panel rounded-3xl px-5 py-6 sm:px-7 sm:py-7">
         <div className="flex flex-wrap items-center gap-2">
-          <CalendarDays className="h-5 w-5 text-kal-accent" aria-hidden />
+          <CalendarDays className="size-5 text-kal-accent" aria-hidden />
           <h1 className="kal-feature-title">Saved Daily Plans</h1>
         </div>
         <p className="mt-2 max-w-2xl text-sm text-kal-muted">
@@ -159,7 +159,7 @@ export function SavedPlansPageContent() {
         </p>
       </header>
 
-      <section className="kal-glass-panel rounded-3xl px-4 py-4 sm:px-5">
+      <section className="kal-glass-panel rounded-3xl p-4 sm:px-5">
         <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
           <label className="flex min-w-0 flex-col gap-1">
             <span className="text-xs font-semibold text-kal-muted">Start date</span>
@@ -229,8 +229,8 @@ export function SavedPlansPageContent() {
       ) : null}
 
       {loading ? (
-        <div className="kal-glass-panel flex items-center gap-2 rounded-2xl px-4 py-4 text-sm text-kal-muted">
-          <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+        <div className="kal-glass-panel flex items-center gap-2 rounded-2xl p-4 text-sm text-kal-muted">
+          <Loader2 className="size-4 animate-spin" aria-hidden />
           Loading saved plans...
         </div>
       ) : null}
@@ -260,7 +260,7 @@ export function SavedPlansPageContent() {
                 <button
                   type="button"
                   onClick={() => setExpandedPlanDate((prev) => (prev === plan.planDate ? null : plan.planDate))}
-                  className="kal-glass-panel w-full min-w-0 rounded-3xl px-5 py-5 text-left transition-colors hover:border-kal-accent/35 sm:px-6"
+                  className="kal-glass-panel w-full min-w-0 rounded-3xl p-5 text-left transition-colors hover:border-kal-accent/35 sm:px-6"
                   aria-expanded={expanded}
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
@@ -289,7 +289,7 @@ export function SavedPlansPageContent() {
                       </p>
                     </div>
                     <div className="inline-flex items-center gap-2 rounded-full border border-kal-border bg-kal-card-muted/60 px-3 py-1 text-xs font-semibold text-kal-muted">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-kal-accent" aria-hidden />
+                      <CheckCircle2 className="size-3.5 text-kal-accent" aria-hidden />
                       {plan.completionPercent}% completed
                     </div>
                   </div>
@@ -321,7 +321,7 @@ export function SavedPlansPageContent() {
                   <div className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-kal-accent">
                     {expanded ? "Hide details" : "Open full day details"}
                     <ChevronDown
-                      className={`h-3.5 w-3.5 transition-transform ${expanded ? "rotate-180" : ""}`}
+                      className={`size-3.5 transition-transform ${expanded ? "rotate-180" : ""}`}
                       aria-hidden
                     />
                   </div>
@@ -350,7 +350,7 @@ export function SavedPlansPageContent() {
             onClick={() => void loadPage(pageIndex + 1, "append")}
             className="inline-flex items-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted/70 px-4 py-2 text-sm font-semibold text-kal-muted hover:border-kal-accent/40 hover:text-kal-text disabled:opacity-60"
           >
-            {loadingMore ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
+            {loadingMore ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
             {loadingMore ? "Loading more..." : "Load more plans"}
           </button>
         </div>

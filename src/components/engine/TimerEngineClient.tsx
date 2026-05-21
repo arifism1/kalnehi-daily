@@ -338,6 +338,7 @@ export function TimerEngineClient() {
       let any = false;
       for (const row of matches) {
         if (row.status === nextDailyStatus) continue;
+        // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential update to avoid race conditions when setting task status
         const res = await updateDailyTask(row.id, { status: nextDailyStatus });
         if (res.ok) {
           any = true;
@@ -770,7 +771,7 @@ export function TimerEngineClient() {
                 <button
                   type="button"
                   onClick={() => setCustomSec(Math.max(5 * 60, customSec - 5 * 60))}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-kal-border bg-white text-base font-semibold transition-colors hover:border-kal-accent/40 hover:bg-kal-accent-soft dark:bg-zinc-900/80"
+                  className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-kal-border bg-white text-base font-semibold transition-colors hover:border-kal-accent/40 hover:bg-kal-accent-soft dark:bg-zinc-900/80"
                   style={{ color: "#BA7517" }}
                   aria-label="Decrease duration by 5 minutes"
                 >
@@ -782,7 +783,7 @@ export function TimerEngineClient() {
                 <button
                   type="button"
                   onClick={() => setCustomSec(Math.min(120 * 60, customSec + 5 * 60))}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-kal-border bg-white text-base font-semibold transition-colors hover:border-kal-accent/40 hover:bg-kal-accent-soft dark:bg-zinc-900/80"
+                  className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-kal-border bg-white text-base font-semibold transition-colors hover:border-kal-accent/40 hover:bg-kal-accent-soft dark:bg-zinc-900/80"
                   style={{ color: "#BA7517" }}
                   aria-label="Increase duration by 5 minutes"
                 >
@@ -820,7 +821,7 @@ export function TimerEngineClient() {
               }}
               placeholder="Type a task or pick from your list…"
               autoComplete="off"
-              className="mt-3 w-full rounded-xl border border-kal-border bg-kal-input-bg px-3 py-3 text-sm text-kal-text placeholder:text-kal-muted focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
+              className="mt-3 w-full rounded-xl border border-kal-border bg-kal-input-bg p-3 text-sm text-kal-text placeholder:text-kal-muted focus:border-kal-accent focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
               aria-autocomplete="list"
               aria-expanded={showLinkTaskPicker}
             />
@@ -847,7 +848,7 @@ export function TimerEngineClient() {
                     const row = pick.row;
                     const line = dailyPlanPickerLine(row);
                     return (
-                      <li key={`daily-${row.id}`} role="option">
+                      <li key={`daily-${row.id}`} role="option" aria-selected={pickedDailyTaskId === row.id}>
                         <button
                           type="button"
                           className="w-full px-3 py-2.5 text-left text-sm text-kal-text hover:bg-kal-card-muted"
@@ -870,7 +871,7 @@ export function TimerEngineClient() {
                   const doneTag =
                     t.status === "completed" ? " · Done (add time)" : "";
                   return (
-                    <li key={t.id} role="option">
+                    <li key={t.id} role="option" aria-selected={pickedTaskId === t.id}>
                       <button
                         type="button"
                         className="w-full px-3 py-2.5 text-left text-sm text-kal-text hover:bg-kal-card-muted"
@@ -938,7 +939,7 @@ export function TimerEngineClient() {
             className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold text-white shadow-sm transition-transform duration-200 enabled:motion-safe:active:scale-[0.99] disabled:opacity-40 motion-reduce:enabled:active:scale-100 sm:w-auto"
             style={{ backgroundColor: "#EF9F27" }}
           >
-            <Play className="h-4 w-4" />
+            <Play className="size-4" />
             {creatingTask ? "Creating…" : "Start linked timer"}
           </button>
         </div>
@@ -1017,7 +1018,7 @@ export function TimerEngineClient() {
                         }}
                         className="inline-flex items-center gap-2 rounded-xl bg-kal-accent px-4 py-2.5 text-sm font-semibold text-kal-accent-foreground transition-colors hover:bg-kal-accent-hover"
                       >
-                        <Pause className="h-4 w-4" />
+                        <Pause className="size-4" />
                         Pause
                       </button>
                     )}
@@ -1031,7 +1032,7 @@ export function TimerEngineClient() {
                         }}
                         className="inline-flex items-center gap-2 rounded-xl bg-kal-accent px-4 py-2.5 text-sm font-semibold text-kal-accent-foreground hover:bg-kal-accent-hover"
                       >
-                        <Play className="h-4 w-4" />
+                        <Play className="size-4" />
                         Resume
                       </button>
                     )}
@@ -1047,7 +1048,7 @@ export function TimerEngineClient() {
                         }}
                         className="inline-flex items-center gap-2 rounded-xl bg-kal-accent px-4 py-2.5 text-sm font-semibold text-kal-accent-foreground transition-colors hover:bg-kal-accent-hover"
                       >
-                        <Pause className="h-4 w-4" />
+                        <Pause className="size-4" />
                         Pause
                       </button>
                     )}
@@ -1061,7 +1062,7 @@ export function TimerEngineClient() {
                         }}
                         className="inline-flex items-center gap-2 rounded-xl bg-kal-accent px-4 py-2.5 text-sm font-semibold text-kal-accent-foreground hover:bg-kal-accent-hover"
                       >
-                        <Play className="h-4 w-4" />
+                        <Play className="size-4" />
                         Resume
                       </button>
                     )}
@@ -1072,7 +1073,7 @@ export function TimerEngineClient() {
                   onClick={() => void finishSessionMarkUndone()}
                   className="inline-flex items-center gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-2.5 text-sm font-semibold text-kal-text hover:bg-kal-card hover:border-kal-border-strong"
                 >
-                  <Undo2 className="h-4 w-4" />
+                  <Undo2 className="size-4" />
                   Mark undone
                 </button>
                 <button
@@ -1080,7 +1081,7 @@ export function TimerEngineClient() {
                   onClick={() => void finishSessionMarkDone()}
                   className="inline-flex items-center gap-2 rounded-xl bg-kal-accent px-4 py-2.5 text-sm font-semibold text-kal-accent-foreground transition-colors hover:bg-kal-accent-hover"
                 >
-                  <Check className="h-4 w-4" />
+                  <Check className="size-4" />
                   Mark done
                 </button>
               </div>

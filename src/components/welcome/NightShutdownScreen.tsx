@@ -129,9 +129,9 @@ export function NightShutdownScreen({
                   initial="initial"
                   animate="animate"
                   variants={check}
-                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/20"
+                  className="flex size-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/20"
                 >
-                  <Check className="h-3.5 w-3.5 text-emerald-400" strokeWidth={2.5} />
+                  <Check className="size-3.5 text-emerald-400" strokeWidth={2.5} />
                 </motion.span>
                 <span>
                   Tasks:{" "}
@@ -146,9 +146,9 @@ export function NightShutdownScreen({
                   initial="initial"
                   animate="animate"
                   variants={check}
-                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/20"
+                  className="flex size-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/20"
                 >
-                  <Check className="h-3.5 w-3.5 text-emerald-400" strokeWidth={2.5} />
+                  <Check className="size-3.5 text-emerald-400" strokeWidth={2.5} />
                 </motion.span>
                 <span>
                   Time studied:{" "}
@@ -163,9 +163,9 @@ export function NightShutdownScreen({
                   initial="initial"
                   animate="animate"
                   variants={check}
-                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/20"
+                  className="flex size-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/20"
                 >
-                  <Check className="h-3.5 w-3.5 text-emerald-400" strokeWidth={2.5} />
+                  <Check className="size-3.5 text-emerald-400" strokeWidth={2.5} />
                 </motion.span>
                 <span>
                   Syllabus:{" "}

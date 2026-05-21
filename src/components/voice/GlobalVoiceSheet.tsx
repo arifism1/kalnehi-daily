@@ -269,8 +269,8 @@ function QuotaGate({ voiceMinuteStatus }: { voiceMinuteStatus: string }) {
 
   return (
     <div className="flex flex-col items-center gap-4 px-4 py-6">
-      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-950/40">
-        <MicOff className="h-6 w-6 text-amber-600 dark:text-amber-400" aria-hidden />
+      <div className="flex size-14 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-950/40">
+        <MicOff className="size-6 text-amber-600 dark:text-amber-400" aria-hidden />
       </div>
       <div className="text-center">
         <p className="text-sm font-semibold text-kal-text">Voice time used up</p>
@@ -343,13 +343,13 @@ function ListeningState({
           onClick={active ? onStopListening : onStartListening}
           aria-label={active ? "Stop listening" : "Start listening"}
           className={clsx(
-            "relative flex h-14 w-14 items-center justify-center rounded-full transition-all duration-200",
+            "relative flex size-14 items-center justify-center rounded-full transition-all duration-200",
             active
               ? "bg-kal-accent text-white scale-105 shadow-[0_4px_20px_rgba(255,122,0,0.4)]"
               : "bg-kal-accent/85 text-white shadow-md hover:bg-kal-accent hover:scale-[1.04] hover:shadow-[0_4px_16px_rgba(255,122,0,0.28)]",
           )}
         >
-          <Mic className="h-6 w-6" strokeWidth={2} aria-hidden />
+          <Mic className="size-6" strokeWidth={2} aria-hidden />
         </button>
       </div>
 
@@ -393,8 +393,8 @@ function ProcessingState({
 }) {
   return (
     <div className="flex flex-col items-center gap-4 px-4 py-6">
-      <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-kal-accent/10">
-        <Loader2 className="h-6 w-6 animate-spin text-kal-accent" aria-hidden />
+      <div className="relative flex size-14 items-center justify-center rounded-full bg-kal-accent/10">
+        <Loader2 className="size-6 animate-spin text-kal-accent" aria-hidden />
       </div>
       <div className="w-full text-center space-y-2">
         <p className="text-sm font-semibold text-kal-text">On it\u2026</p>
@@ -414,7 +414,7 @@ function ProcessingState({
 function DoneState({ responseText }: { responseText: string | null }) {
   return (
     <div className="flex flex-col items-center gap-3 px-4 py-6">
-      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-950/40">
+      <div className="flex size-14 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-950/40">
         <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden>
           <path
             d="M4.5 12.5 L9.5 17.5 L19.5 7.5"
@@ -450,8 +450,8 @@ function ErrorState({
 
   return (
     <div className="flex flex-col items-center gap-4 px-4 py-6">
-      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-100 dark:bg-red-950/40">
-        <MicOff className="h-6 w-6 text-red-500 dark:text-red-400" aria-hidden />
+      <div className="flex size-14 items-center justify-center rounded-full bg-red-100 dark:bg-red-950/40">
+        <MicOff className="size-6 text-red-500 dark:text-red-400" aria-hidden />
       </div>
       <p className="text-center text-sm leading-snug text-kal-text">
         {error ?? "Something went wrong."}
@@ -747,6 +747,7 @@ export function GlobalVoiceSheet() {
         for (const item of intent.items) {
           const id = crypto.randomUUID();
           const slot = voiceTimeSlotFields(item.time_start, item.time_end);
+          // react-doctor-disable-next-line react-doctor/async-await-in-loop -- sequential task insertion preserves voice-parsed order
           const result = await insertDailyTask({
             plan_date: intent.plan_date,
             id,
@@ -1222,9 +1223,9 @@ export function GlobalVoiceSheet() {
                   type="button"
                   onClick={handleClose}
                   aria-label="Close voice command"
-                  className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/25 bg-white/40 text-kal-text-secondary backdrop-blur-md transition-colors hover:bg-white/60 active:scale-[0.97] dark:border-white/12 dark:bg-zinc-900/50"
+                  className="flex size-7 items-center justify-center rounded-lg border border-white/25 bg-white/40 text-kal-text-secondary backdrop-blur-md transition-colors hover:bg-white/60 active:scale-[0.97] dark:border-white/12 dark:bg-zinc-900/50"
                 >
-                  <X className="h-3.5 w-3.5" strokeWidth={2.5} aria-hidden />
+                  <X className="size-3.5" strokeWidth={2.5} aria-hidden />
                 </button>
               </div>
 

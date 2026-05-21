@@ -273,7 +273,7 @@ export function TaskListClient({
         if (g) set.add(g);
       }
     }
-    return [...set].sort((a, b) => a.localeCompare(b));
+    return [...set].toSorted((a, b) => a.localeCompare(b));
   }, [unplanned, plannedByDate]);
 
   const filteredUnplanned = useMemo(() => {
@@ -319,7 +319,7 @@ export function TaskListClient({
       {/* Planned Fix — dominant */}
       <section className="space-y-3">
         <div className="flex items-baseline justify-between gap-2">
-          <h2 className="text-base font-bold text-kal-text">Planned Fix</h2>
+          <h2 className="text-base font-semibold text-kal-text">Planned Fix</h2>
           <span className="text-[11px] font-medium text-kal-muted">Already scheduled</span>
         </div>
         <p className="text-xs text-kal-muted">Your backlog is already being handled.</p>
@@ -413,9 +413,9 @@ export function TaskListClient({
                           setDeleteListError(null);
                           setDeletePlannedRow(t);
                         }}
-                        className="kal-glass-subtle flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-kal-border text-kal-muted hover:border-rose-500/35 hover:bg-rose-500/10 hover:text-rose-700 disabled:opacity-50 dark:hover:text-rose-300 sm:h-[unset] sm:min-h-[2.875rem]"
+                        className="kal-glass-subtle flex size-11 shrink-0 items-center justify-center rounded-xl border border-kal-border text-kal-muted hover:border-rose-500/35 hover:bg-rose-500/10 hover:text-rose-700 disabled:opacity-50 dark:hover:text-rose-300 sm:h-[unset] sm:min-h-[2.875rem]"
                       >
-                        <Trash2 className="h-4 w-4" aria-hidden />
+                        <Trash2 className="size-4" aria-hidden />
                       </button>
                     </li>
                   ))}
@@ -438,7 +438,7 @@ export function TaskListClient({
       {/* Unplanned */}
       <section className="space-y-3 rounded-2xl border border-kal-border/90 bg-kal-card-muted/40 p-4">
         <div className="flex items-baseline justify-between gap-2">
-          <h2 className="text-sm font-bold text-kal-text">
+          <h2 className="text-sm font-semibold text-kal-text">
             Unplanned Fix ({unplannedHeadingCount} items)
           </h2>
           <span className="text-[11px] text-kal-muted">
@@ -495,9 +495,9 @@ export function TaskListClient({
                       setDeleteListError(null);
                       setDeleteUnplannedRow(row);
                     }}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-kal-border text-kal-muted hover:border-rose-500/35 hover:bg-rose-500/10 hover:text-rose-700 disabled:opacity-50 dark:hover:text-rose-300"
+                    className="inline-flex size-9 items-center justify-center rounded-lg border border-kal-border text-kal-muted hover:border-rose-500/35 hover:bg-rose-500/10 hover:text-rose-700 disabled:opacity-50 dark:hover:text-rose-300"
                   >
-                    <Trash2 className="h-4 w-4" aria-hidden />
+                    <Trash2 className="size-4" aria-hidden />
                   </button>
                 </div>
               </li>
@@ -541,10 +541,10 @@ export function TaskListClient({
             aria-labelledby="planned-edit-title"
             className="kal-glass-panel relative z-[81] flex w-full max-w-md flex-col rounded-2xl sm:rounded-2xl"
           >
-            <div className="space-y-4 px-6 py-6">
+            <div className="space-y-4 p-6">
               <h2
                 id="planned-edit-title"
-                className="text-lg font-bold tracking-tight text-kal-text"
+                className="text-lg font-semibold tracking-tight text-kal-text"
               >
                 Edit planned item
               </h2>

@@ -171,8 +171,8 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
       >
         <div className="shrink-0 border-b pt-[env(safe-area-inset-top)] backdrop-blur-sm" style={{ borderColor: "var(--kal-border)" }}>
           <div className="flex items-start gap-2.5 px-3 py-2.5 sm:px-4">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-kal-accent-soft text-kal-accent">
-              <Menu className="h-5 w-5" strokeWidth={2.25} />
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-kal-accent-soft text-kal-accent">
+              <Menu className="size-5" strokeWidth={2.25} />
             </div>
             <div className="min-w-0 flex-1 pt-0.5">
               <p className="text-[0.6rem] font-bold uppercase tracking-widest text-kal-accent-dark">
@@ -208,13 +208,13 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
             >
               {installed ? (
                 <CheckCircle2
-                  className="h-[1.125rem] w-[1.125rem] shrink-0 text-kal-muted"
+                  className="size-[1.125rem] shrink-0 text-kal-muted"
                   strokeWidth={2.35}
                 />
               ) : needsIosInstallModal ? (
-                <Smartphone className="h-[1.125rem] w-[1.125rem] shrink-0" strokeWidth={2.35} />
+                <Smartphone className="size-[1.125rem] shrink-0" strokeWidth={2.35} />
               ) : (
-                <ArrowDown className="h-[1.125rem] w-[1.125rem] shrink-0" strokeWidth={2.5} />
+                <ArrowDown className="size-[1.125rem] shrink-0" strokeWidth={2.5} />
               )}
               {installed ? (
                 <span className="font-bold tracking-tight">App Installed</span>
@@ -259,9 +259,9 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
                             onClick={openContactFromMenu}
                             className="flex w-full min-h-[44px] items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-left transition-colors hover:bg-kal-card-muted active:bg-kal-card-muted sm:gap-3"
                           >
-                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-kal-card-muted text-kal-muted sm:h-10 sm:w-10">
+                            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-kal-card-muted text-kal-muted sm:h-10 sm:w-10">
                               <Icon
-                                className="h-[1.125rem] w-[1.125rem] sm:h-5 sm:w-5"
+                                className="size-[1.125rem] sm:h-5 sm:w-5"
                                 strokeWidth={2}
                               />
                             </span>
@@ -289,14 +289,14 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
                         >
                           <span
                             className={clsx(
-                              "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg sm:h-10 sm:w-10",
+                              "flex size-9 shrink-0 items-center justify-center rounded-lg sm:h-10 sm:w-10",
                               active
                                 ? "bg-kal-accent/20 text-kal-accent-dark dark:text-kal-accent"
                                 : "bg-kal-card-muted text-kal-muted",
                             )}
                           >
                             <Icon
-                              className="h-[1.125rem] w-[1.125rem] sm:h-5 sm:w-5"
+                              className="size-[1.125rem] sm:h-5 sm:w-5"
                               strokeWidth={2}
                             />
                           </span>
@@ -321,8 +321,8 @@ export function MainNavigationMenu({ open, onClose }: MainNavigationMenuProps) {
                 onClick={() => void handleShareApp()}
                 className="flex w-full min-h-[44px] touch-manipulation items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-left transition-colors hover:bg-kal-card-muted active:bg-kal-card-muted sm:gap-3"
               >
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-kal-card-muted text-kal-muted sm:h-10 sm:w-10">
-                  <Share2 className="h-[1.125rem] w-[1.125rem] sm:h-5 sm:w-5" strokeWidth={2} />
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-kal-card-muted text-kal-muted sm:h-10 sm:w-10">
+                  <Share2 className="size-[1.125rem] sm:h-5 sm:w-5" strokeWidth={2} />
                 </span>
                 <span className="min-w-0 flex-1 text-sm font-semibold leading-tight text-kal-text">
                   Share App

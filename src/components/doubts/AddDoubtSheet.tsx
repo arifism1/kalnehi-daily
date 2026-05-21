@@ -178,7 +178,7 @@ export function AddDoubtSheet({
         <div className="flex shrink-0 items-start justify-between gap-2 border-b border-kal-border px-5 pb-3 pt-4">
           <h2
             id={`${baseId}-add-title`}
-            className="text-lg font-bold tracking-tight text-kal-text"
+            className="text-lg font-semibold tracking-tight text-kal-text"
           >
             New doubt
           </h2>
@@ -188,7 +188,7 @@ export function AddDoubtSheet({
             disabled={saving}
             className="rounded-lg p-2 text-kal-muted transition-colors hover:bg-kal-card-muted disabled:opacity-50"
           >
-            <X className="h-5 w-5" aria-hidden />
+            <X className="size-5" aria-hidden />
           </button>
         </div>
 
@@ -202,7 +202,7 @@ export function AddDoubtSheet({
               rows={3}
               placeholder="Type here — question, topic, or screenshot context…"
               autoComplete="off"
-              className="mt-2 w-full resize-y rounded-xl border border-kal-border bg-kal-input-bg px-3 py-3 text-base leading-relaxed text-kal-text outline-none placeholder:text-kal-muted focus-visible:ring-2 focus-visible:ring-kal-accent/40"
+              className="mt-2 w-full resize-y rounded-xl border border-kal-border bg-kal-input-bg p-3 text-base leading-relaxed text-kal-text outline-none placeholder:text-kal-muted focus-visible:ring-2 focus-visible:ring-kal-accent/40"
             />
           </label>
 
@@ -213,15 +213,15 @@ export function AddDoubtSheet({
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
               placeholder="Steps you tried, page number, etc."
-              className="mt-2 w-full resize-y rounded-xl border border-kal-border bg-kal-input-bg px-3 py-3 text-base leading-relaxed text-kal-text outline-none placeholder:text-kal-muted focus-visible:ring-2 focus-visible:ring-kal-accent/40"
+              className="mt-2 w-full resize-y rounded-xl border border-kal-border bg-kal-input-bg p-3 text-base leading-relaxed text-kal-text outline-none placeholder:text-kal-muted focus-visible:ring-2 focus-visible:ring-kal-accent/40"
             />
           </label>
 
           {isMultiExam && subjectsByExam && (
             <div className="mt-4">
-              <label className="block text-[11px] font-medium uppercase tracking-wide text-kal-muted mb-1.5">
+              <p className="block text-[11px] font-medium uppercase tracking-wide text-kal-muted mb-1.5">
                 Exam (optional)
-              </label>
+              </p>
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
@@ -282,7 +282,7 @@ export function AddDoubtSheet({
                 saving && "pointer-events-none cursor-not-allowed opacity-50",
               )}
             >
-              <Camera className="h-5 w-5 shrink-0" aria-hidden />
+              <Camera className="size-5 shrink-0" aria-hidden />
               <span>📸 Add photo</span>
             </label>
 
@@ -297,15 +297,15 @@ export function AddDoubtSheet({
                     <img
                       src={p.url}
                       alt=""
-                      className="h-20 w-20 object-cover sm:h-24 sm:w-24"
+                      className="size-20 object-cover sm:h-24 sm:w-24"
                     />
                     <button
                       type="button"
                       onClick={() => removePending(i)}
-                      className="absolute right-0.5 top-0.5 flex h-7 w-7 items-center justify-center rounded-md bg-black/60 text-white"
+                      className="absolute right-0.5 top-0.5 flex size-7 items-center justify-center rounded-md bg-black/60 text-white"
                       aria-label="Remove photo"
                     >
-                      <X className="h-3.5 w-3.5" />
+                      <X className="size-3.5" />
                     </button>
                   </li>
                 ))}
@@ -332,7 +332,7 @@ export function AddDoubtSheet({
           >
             {saving ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                <Loader2 className="size-4 animate-spin" aria-hidden />
                 Saving…
               </>
             ) : (

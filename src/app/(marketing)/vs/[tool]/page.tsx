@@ -52,7 +52,7 @@ export default async function ComparisonPage({ params }: Props) {
       <div className="space-y-10">
         <header className="space-y-3">
           <p className="inline-flex items-center gap-1.5 rounded-full border border-kal-accent/25 bg-kal-accent-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-kal-accent-dark">
-            <span className="h-1.5 w-1.5 rounded-full bg-kal-accent" aria-hidden />
+            <span className="size-1.5 rounded-full bg-kal-accent" aria-hidden />
             Honest comparison
           </p>
           <h1 className="kal-feature-title">{data.headline}</h1>
@@ -75,7 +75,7 @@ export default async function ComparisonPage({ params }: Props) {
           <ul className="space-y-3">
             {data.whyKalnehi.map((point, i) => (
               <li key={i} className="flex gap-3 text-sm text-kal-text-secondary leading-relaxed">
-                <span className="mt-1 h-5 w-5 flex-shrink-0 rounded-full bg-kal-accent/10 text-kal-accent-dark text-xs flex items-center justify-center font-bold">
+                <span className="mt-1 size-5 flex-shrink-0 rounded-full bg-kal-accent/10 text-kal-accent-dark text-xs flex items-center justify-center font-bold">
                   {i + 1}
                 </span>
                 <span>{point}</span>
@@ -123,6 +123,7 @@ export default async function ComparisonPage({ params }: Props) {
         <div className="space-y-3">
           <h2 className="text-sm font-semibold text-kal-text-secondary uppercase tracking-wide">Other comparisons</h2>
           <div className="flex flex-wrap gap-2">
+            {/* react-doctor-disable-next-line react-doctor/js-combine-iterations -- filter-then-map in JSX; flatMap here would reduce readability */}
             {getAllComparisons()
               .filter((c) => c.slug !== tool)
               .map((c) => (

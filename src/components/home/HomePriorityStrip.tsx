@@ -50,7 +50,7 @@ function PriorityCardItem({ card }: { card: PriorityCard }) {
         )}
         aria-label={`${card.name} — ${card.status}`}
       >
-        <Icon className="h-4 w-4 shrink-0 text-kal-accent" aria-hidden />
+        <Icon className="size-4 shrink-0 text-kal-accent" aria-hidden />
         <div>
           <p className="text-[12px] font-medium leading-tight text-kal-text">{card.name}</p>
           <p className="mt-0.5 text-[11px] leading-tight text-kal-muted">{card.status}</p>
@@ -83,6 +83,7 @@ export function HomePriorityStrip() {
     let cancelled = false;
     void (async () => {
       // Seed from IDB cache immediately for an instant badge count.
+      if (cancelled) return;
       const cached = await getUserPlannerTextBundleCached(userId);
       if (cached && !cancelled) {
         setMissedRevCount(
@@ -92,6 +93,7 @@ export function HomePriorityStrip() {
         );
       }
       // Revision-only sync: one table, no productivity/todos/prefs overhead.
+      if (cancelled) return;
       const b = await hydrateUserPlannerTextRevisionsFromServer(userId);
       if (cancelled) return;
       setMissedRevCount(

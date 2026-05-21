@@ -37,7 +37,7 @@ export default function CaFoundationPage() {
         />
 
         <section className="space-y-4" aria-labelledby="cafound-papers">
-          <h2 id="cafound-papers" className="text-xl font-bold text-kal-text">CA Foundation papers tracked in Kalnehi Daily</h2>
+          <h2 id="cafound-papers" className="text-xl font-semibold text-kal-text">CA Foundation papers tracked in Kalnehi Daily</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {[
               { paper: "Paper 1: Accounts", topics: ["Basic Accounting Concepts", "Journal, Ledger, Trial Balance", "Financial Statements", "Partnership Accounts", "Company Accounts"] },
@@ -46,7 +46,7 @@ export default function CaFoundationPage() {
               { paper: "Paper 4: Economics", topics: ["Introduction to Economics", "Theory of Demand & Supply", "Production & Cost Theory", "Price Determination", "Business & Commercial Knowledge"] },
             ].map(({ paper, topics }) => (
               <div key={paper} className="kal-glass-card rounded-xl p-4 space-y-1.5">
-                <h3 className="text-xs font-bold text-kal-accent-dark">{paper}</h3>
+                <h3 className="text-xs font-semibold text-kal-accent-dark">{paper}</h3>
                 <ul className="space-y-0.5">{topics.map(t => <li key={t} className="text-xs text-kal-text-secondary">· {t}</li>)}</ul>
               </div>
             ))}
@@ -54,7 +54,7 @@ export default function CaFoundationPage() {
         </section>
 
         <section className="space-y-3" aria-labelledby="cafound-mastermind">
-          <h2 id="cafound-mastermind" className="text-xl font-bold text-kal-text">How Mastermind helps CA Foundation students</h2>
+          <h2 id="cafound-mastermind" className="text-xl font-semibold text-kal-text">How Mastermind helps CA Foundation students</h2>
           <p className="text-sm text-kal-text-secondary">Mastermind tracks your ICAI mock scores and tells you which paper is pulling your aggregate down. It also flags when you're spending too many hours on Paper 1 (Accounts) while Paper 3 (Maths) is neglected — a common mistake that causes Foundation failures.</p>
         </section>
 

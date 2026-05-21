@@ -349,7 +349,7 @@ export function HomeDashboardBody({
       {/* Ambient accent orb — GPU-composited, single layer, very subtle */}
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-16 right-0 h-72 w-72 rounded-full blur-3xl"
+        className="pointer-events-none absolute -top-16 right-0 size-72 rounded-full blur-3xl"
         style={{
           background: "radial-gradient(circle, var(--kal-accent-glow) 0%, transparent 70%)",
           animation: "kal-fade-in 1.2s ease forwards, orb-drift 14s ease-in-out infinite alternate",

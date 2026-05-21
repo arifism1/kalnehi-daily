@@ -150,7 +150,7 @@ export function DailyPlanPreviewStaging({
       ) : null}
       {processing ? (
         <div className="kal-glass-subtle flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-kal-muted">
-          <Loader2 className="h-4 w-4 animate-spin text-kal-accent" />
+          <Loader2 className="size-4 animate-spin text-kal-accent" />
           {processingLabel}
         </div>
       ) : null}
@@ -187,8 +187,8 @@ export function DailyPlanPreviewStaging({
                 disabled={disabled}
                 className={
                   compact
-                    ? "mt-1.5 h-4 w-4 shrink-0 rounded border-kal-border bg-kal-input-bg text-kal-accent focus:ring-kal-accent disabled:opacity-50"
-                    : "mt-2.5 h-5 w-5 shrink-0 rounded border-kal-border bg-kal-input-bg text-kal-accent focus:ring-kal-accent disabled:opacity-50"
+                    ? "mt-1.5 size-4 shrink-0 rounded border-kal-border bg-kal-input-bg text-kal-accent focus:ring-kal-accent disabled:opacity-50"
+                    : "mt-2.5 size-5 shrink-0 rounded border-kal-border bg-kal-input-bg text-kal-accent focus:ring-kal-accent disabled:opacity-50"
                 }
                 title={excludeFromSaveHint}
                 aria-label={excludeFromSaveHint}
@@ -203,7 +203,7 @@ export function DailyPlanPreviewStaging({
                   className={
                     compact
                       ? "min-h-[36px] min-w-0 w-full resize-y overflow-hidden rounded border border-kal-border bg-kal-input-bg px-2 py-1.5 text-sm font-semibold leading-5 text-kal-text placeholder:text-kal-muted [overflow-wrap:anywhere] disabled:opacity-50"
-                      : "min-h-[40px] min-w-0 w-full resize-y overflow-hidden rounded border border-kal-border bg-kal-input-bg px-2 py-2 text-sm font-semibold leading-5 text-kal-text placeholder:text-kal-muted [overflow-wrap:anywhere] disabled:opacity-50"
+                      : "min-h-[40px] min-w-0 w-full resize-y overflow-hidden rounded border border-kal-border bg-kal-input-bg p-2 text-sm font-semibold leading-5 text-kal-text placeholder:text-kal-muted [overflow-wrap:anywhere] disabled:opacity-50"
                   }
                   aria-label="Task name"
                 />
@@ -294,7 +294,7 @@ export function DailyPlanPreviewStaging({
                             onClick={() => setExpanded(r.id, false)}
                             className="text-[10px] font-medium text-kal-muted underline-offset-2 hover:text-kal-text hover:underline disabled:opacity-40"
                           >
-                            Done
+                            Collapse
                           </button>
                         </div>
                       </div>
@@ -378,7 +378,7 @@ export function DailyPlanPreviewStaging({
                       }
                     >
                       <Link2
-                        className="h-3.5 w-3.5 shrink-0 text-kal-accent/80"
+                        className="size-3.5 shrink-0 text-kal-accent/80"
                         aria-hidden
                       />
                       Link to Syllabus
@@ -397,7 +397,7 @@ export function DailyPlanPreviewStaging({
                 }
                 aria-label="Delete row"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="size-4" />
               </button>
             </li>
           );
@@ -413,7 +413,7 @@ export function DailyPlanPreviewStaging({
             : "flex w-full min-h-[40px] items-center justify-center gap-2 rounded-lg border border-dashed border-white/35 bg-white/30 text-sm text-kal-muted backdrop-blur-sm hover:bg-white/50 disabled:opacity-40 dark:border-white/15 dark:bg-zinc-900/30 dark:hover:bg-zinc-900/50"
         }
       >
-        <Plus className="h-4 w-4" />
+        <Plus className="size-4" />
         {addAnotherLabel}
       </button>
     </div>

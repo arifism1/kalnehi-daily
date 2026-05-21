@@ -38,7 +38,7 @@ export function dedupeExamsCatalogForUi(rows: ExamCatalogRow[]): ExamCatalogRow[
       out.push(byWant);
       continue;
     }
-    const sorted = [...group].sort((a, b) => {
+    const sorted = [...group].toSorted((a, b) => {
       if (a.sort_order !== b.sort_order) return (a.sort_order ?? 0) - (b.sort_order ?? 0);
       const sa = syllabusCatalogExamName(a.exam_name) ?? a.exam_name;
       const sb = syllabusCatalogExamName(b.exam_name) ?? b.exam_name;

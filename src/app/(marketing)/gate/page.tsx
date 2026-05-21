@@ -89,7 +89,7 @@ export default function GatePage() {
         />
 
         <section className="space-y-5" aria-labelledby="gate-syllabus">
-          <h2 id="gate-syllabus" className="text-xl font-bold text-kal-text">GATE CSE syllabus — tracked in Kalnehi Daily</h2>
+          <h2 id="gate-syllabus" className="text-xl font-semibold text-kal-text">GATE CSE syllabus — tracked in Kalnehi Daily</h2>
           <p className="text-sm leading-relaxed text-kal-text-secondary">
             Every GATE subject can be added to Kalnehi Daily's syllabus tracker. Here's how GATE CSE maps
             across subjects — each with individual topics you can mark as done, in progress, or needing
@@ -98,7 +98,7 @@ export default function GatePage() {
           <div className="grid gap-3 sm:grid-cols-2">
             {GATE_CSE_SUBJECTS.map(({ subject, topics }) => (
               <div key={subject} className="kal-glass-card rounded-xl p-4 space-y-1.5">
-                <h3 className="text-xs font-bold text-kal-accent-dark uppercase tracking-wide">{subject}</h3>
+                <h3 className="text-xs font-semibold text-kal-accent-dark uppercase tracking-wide">{subject}</h3>
                 <ul className="space-y-0.5">
                   {topics.map((t) => (
                     <li key={t} className="text-xs text-kal-text-secondary">· {t}</li>
@@ -114,7 +114,7 @@ export default function GatePage() {
         </section>
 
         <section className="space-y-4" aria-labelledby="gate-mastermind">
-          <h2 id="gate-mastermind" className="text-xl font-bold text-kal-text">How Mastermind helps GATE aspirants</h2>
+          <h2 id="gate-mastermind" className="text-xl font-semibold text-kal-text">How Mastermind helps GATE aspirants</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <FeatureBlock
               title="Subject weight vs completion analysis"
@@ -140,7 +140,7 @@ export default function GatePage() {
         </section>
 
         <section className="space-y-4" aria-labelledby="gate-voice">
-          <h2 id="gate-voice" className="text-xl font-bold text-kal-text">Voice control for GATE prep</h2>
+          <h2 id="gate-voice" className="text-xl font-semibold text-kal-text">Voice control for GATE prep</h2>
           <div className="space-y-3">
             {[
               { cmd: "Hey Boss, log 3 hours of Signals and Systems done", result: "Study session logged, GATE ECE tracker updated" },

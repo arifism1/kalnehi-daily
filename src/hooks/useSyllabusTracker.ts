@@ -112,6 +112,7 @@ export function useSyllabusTracker() {
         setError(null);
       }
       try {
+        if (myId !== loadSeqRef.current) return;
         const supabase = getSupabaseBrowserClient();
         const { track, examResults: loaded } =
           await loadMultiExamSyllabusDataForUser(supabase, userId);

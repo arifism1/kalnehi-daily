@@ -31,7 +31,7 @@ import { PrepBrainIllustration } from "@/components/illustrations/PrepBrainIllus
 
 function RobotSendIcon({ sending }: { sending: boolean }) {
   return (
-    <svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" aria-hidden>
+    <svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" className="size-8" aria-hidden>
       {/* Antenna stem */}
       <line x1="22" y1="5" x2="22" y2="11" stroke="white" strokeWidth="2" strokeLinecap="round" />
       {/* Antenna tip — heart shape */}
@@ -136,13 +136,13 @@ const prepbrainAssistantMarkdownComponents: Components = {
   ),
   li: ({ children }) => <li className="break-words">{children}</li>,
   h1: ({ children }) => (
-    <h3 className="mb-2 mt-3 text-base font-bold first:mt-0">{children}</h3>
+    <h3 className="mb-2 mt-3 text-base font-semibold first:mt-0">{children}</h3>
   ),
   h2: ({ children }) => (
-    <h3 className="mb-2 mt-3 text-base font-bold first:mt-0">{children}</h3>
+    <h3 className="mb-2 mt-3 text-base font-semibold first:mt-0">{children}</h3>
   ),
   h3: ({ children }) => (
-    <h3 className="mb-2 mt-3 text-[15px] font-bold first:mt-0">{children}</h3>
+    <h3 className="mb-2 mt-3 text-[15px] font-semibold first:mt-0">{children}</h3>
   ),
   a: ({ href, children, node, ...props }) => {
     void node;
@@ -348,17 +348,17 @@ export function PrepBrainChat() {
         <button
           type="button"
           onClick={() => setHistoryOpen(true)}
-          className="touch-manipulation mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/50 bg-white/55 text-kal-text shadow-sm ring-1 ring-black/[0.04] transition-colors hover:bg-white/80 hover:ring-kal-accent/20 active:scale-[0.98] dark:border-white/10 dark:bg-zinc-900/50 dark:hover:bg-zinc-900/70 sm:h-11 sm:w-11 sm:rounded-2xl"
+          className="touch-manipulation mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl border border-white/50 bg-white/55 text-kal-text shadow-sm ring-1 ring-black/[0.04] transition-colors hover:bg-white/80 hover:ring-kal-accent/20 active:scale-[0.98] dark:border-white/10 dark:bg-zinc-900/50 dark:hover:bg-zinc-900/70 sm:h-11 sm:w-11 sm:rounded-2xl"
           aria-expanded={historyOpen}
           aria-controls="prepbrain-history-drawer"
           aria-label="Open menu, usage, and chat history"
         >
-          <Menu className="h-5 w-5" strokeWidth={2} aria-hidden />
+          <Menu className="size-5" strokeWidth={2} aria-hidden />
         </button>
         <div className="min-w-0 flex-1 pt-0.5">
           <div className="flex items-center gap-2 sm:gap-2.5">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-kal-accent-soft text-kal-accent shadow-sm ring-1 ring-kal-accent/15 sm:h-9 sm:w-9 sm:rounded-xl">
-              <Brain className="h-4 w-4 sm:h-[18px] sm:w-[18px]" strokeWidth={2} aria-hidden />
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-kal-accent-soft text-kal-accent shadow-sm ring-1 ring-kal-accent/15 sm:h-9 sm:w-9 sm:rounded-xl">
+              <Brain className="size-4 sm:h-[18px] sm:w-[18px]" strokeWidth={2} aria-hidden />
             </span>
             <h2 className="kal-section-heading">
               Mastermind
@@ -399,10 +399,10 @@ export function PrepBrainChat() {
                     <button
                       type="button"
                       onClick={() => setHistoryOpen(false)}
-                      className="touch-manipulation -mr-1 -mt-1 flex h-7 w-7 items-center justify-center rounded-lg text-kal-text-secondary transition-colors hover:bg-white/60 hover:text-kal-text dark:hover:bg-white/10"
+                      className="touch-manipulation -mr-1 -mt-1 flex size-7 items-center justify-center rounded-lg text-kal-text-secondary transition-colors hover:bg-white/60 hover:text-kal-text dark:hover:bg-white/10"
                       aria-label="Close menu"
                     >
-                      <X className="h-4 w-4" aria-hidden />
+                      <X className="size-4" aria-hidden />
                     </button>
                   </div>
                   {usageLoading ? (
@@ -479,7 +479,7 @@ export function PrepBrainChat() {
                 disabled={isSending}
                 className="kal-glass-subtle mx-4 mt-4 flex touch-manipulation items-center gap-2.5 rounded-2xl px-3.5 py-3 text-left text-sm font-semibold text-kal-text shadow-sm transition-colors hover:ring-1 hover:ring-kal-accent/25 disabled:opacity-50"
               >
-                <SquarePen className="h-4 w-4 shrink-0 text-kal-accent" aria-hidden />
+                <SquarePen className="size-4 shrink-0 text-kal-accent" aria-hidden />
                 New chat
               </button>
               <div className="mt-5 min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6 [-webkit-overflow-scrolling:touch]">
@@ -524,7 +524,7 @@ export function PrepBrainChat() {
                           disabled={isSending}
                           className="touch-manipulation shrink-0 self-center rounded-lg p-2 text-kal-text-secondary opacity-70 transition-colors hover:bg-kal-card-muted hover:text-[var(--kal-danger-text)] disabled:opacity-40"
                         >
-                          <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                          <Trash2 className="size-3.5" aria-hidden />
                         </button>
                       </li>
                     ))}
@@ -538,11 +538,11 @@ export function PrepBrainChat() {
         <div className="relative min-h-0 flex-1 overflow-hidden">
           {historyLoading ? (
             <div className="absolute inset-0 z-10 flex items-center justify-center bg-kal-card/60 backdrop-blur-[1px]">
-              <Loader2 className="h-8 w-8 animate-spin text-kal-accent" aria-hidden />
+              <Loader2 className="size-8 animate-spin text-kal-accent" aria-hidden />
               <span className="sr-only">Loading chat</span>
             </div>
           ) : null}
-          <div className="h-full min-h-0 overflow-y-auto overscroll-contain px-3 py-3 [-webkit-overflow-scrolling:touch] sm:px-8 sm:py-8">
+          <div className="h-full min-h-0 overflow-y-auto overscroll-contain p-3 [-webkit-overflow-scrolling:touch] sm:px-8 sm:py-8">
         {messages.length === 0 && !isSending && (
           <div className="mx-auto flex max-w-2xl flex-col items-center gap-4 text-center sm:gap-8">
             <PrepBrainIllustration className="w-full max-w-[90px] sm:max-w-[110px]" />
@@ -565,7 +565,7 @@ export function PrepBrainChat() {
                     ].map((item) => (
                       <li key={item} className="flex items-start gap-2">
                         <CheckCircle2
-                          className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400"
+                          className="mt-0.5 size-3.5 shrink-0 text-emerald-600 dark:text-emerald-400"
                           aria-hidden
                         />
                         <span className="text-[12px] leading-snug text-kal-text-secondary sm:text-[13px]">
@@ -588,7 +588,7 @@ export function PrepBrainChat() {
                     ].map((item) => (
                       <li key={item} className="flex items-start gap-2">
                         <X
-                          className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-500/80"
+                          className="mt-0.5 size-3.5 shrink-0 text-red-500/80"
                           aria-hidden
                         />
                         <span className="text-[12px] leading-snug text-kal-text-secondary sm:text-[13px]">
@@ -634,7 +634,7 @@ export function PrepBrainChat() {
             <div className="flex justify-start">
               <div className="flex flex-col gap-1 rounded-2xl rounded-bl-md border border-kal-border/50 bg-kal-card/85 px-3.5 py-3 backdrop-blur-md">
                 <div className="flex items-center gap-2 text-[15px] leading-snug text-kal-text-secondary sm:text-base">
-                  <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
+                  <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
                   Mastermind is preparing a reply from your latest prep data…
                 </div>
                 <p className="pl-6 text-[12px] leading-snug text-kal-text-secondary/60">
@@ -689,7 +689,7 @@ export function PrepBrainChat() {
           <button
             type="submit"
             disabled={isSending || atTokenLimit || !draft.trim()}
-            className="touch-manipulation inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-kal-accent text-kal-accent-foreground shadow-[0_6px_20px_rgba(255,122,0,0.32)] transition-transform hover:opacity-95 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 sm:h-[52px] sm:w-[52px] sm:rounded-2xl"
+            className="touch-manipulation inline-flex size-12 shrink-0 items-center justify-center rounded-xl bg-kal-accent text-kal-accent-foreground shadow-[0_6px_20px_rgba(255,122,0,0.32)] transition-transform hover:opacity-95 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 sm:h-[52px] sm:w-[52px] sm:rounded-2xl"
             aria-label="Send"
           >
             <RobotSendIcon sending={isSending} />
