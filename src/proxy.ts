@@ -251,6 +251,10 @@ function isAndroidAppBillingBlockedPath(pathname: string): boolean {
   // Safety net: even if someone deep-links directly to /upgrade, block the
   // Razorpay JS page — payments must happen in Chrome Custom Tabs, not WebView.
   if (pathname === "/upgrade" || pathname.startsWith("/upgrade/")) return true;
+  // Waitlist position page includes ₹19 Razorpay skip checkout — block in WebView.
+  if (pathname === "/waitlist/position" || pathname.startsWith("/waitlist/position/")) {
+    return true;
+  }
   return false;
 }
 

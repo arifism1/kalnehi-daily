@@ -73,11 +73,18 @@ export function SubscriptionPaywallInterstitial({
           className="mt-2 text-center text-sm leading-relaxed text-kal-muted"
         >
           {freeTrialEnded ? (
-            <>
-              Your 7-day free trial is over. Subscribe to{" "}
-              <span className="font-semibold text-kal-text">Smart Plan</span> for{" "}
-              <span className="font-semibold text-kal-text">{TIERS.pro.monthlyPriceDisplay}/month</span> — 2 million Mastermind tokens and 100 minutes of voice every month. Cancel anytime.
-            </>
+            isApp ? (
+              <>
+                Your 7-day free trial has ended. To continue, subscribe via the{" "}
+                <span className="font-semibold text-kal-text">Kalnehi website</span>.
+              </>
+            ) : (
+              <>
+                Your 7-day free trial is over. Subscribe to{" "}
+                <span className="font-semibold text-kal-text">Smart Plan</span> for{" "}
+                <span className="font-semibold text-kal-text">{TIERS.pro.monthlyPriceDisplay}/month</span> — 2 million Mastermind tokens and 100 minutes of voice every month. Cancel anytime.
+              </>
+            )
           ) : (
             <>
               A subscription is required to use Kalnehi Daily. Your plan is not
@@ -85,7 +92,7 @@ export function SubscriptionPaywallInterstitial({
             </>
           )}
         </p>
-        {freeTrialEnded && (
+        {freeTrialEnded && !isApp && (
           <p className="mt-3 text-center text-xs leading-relaxed text-kal-muted">
             The ₹19 waitlist skip is for new users only — it does not extend or restart a
             trial. Only Smart Plan ({TIERS.pro.monthlyPriceDisplay}/month) continues your

@@ -1,7 +1,7 @@
 "use client";
 
 import { RefreshCw, ExternalLink } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 
 /** URL for the web-based checkout page, opened in Chrome Custom Tabs on Android. */
@@ -12,25 +12,115 @@ const CHECKOUT_URL = "https://www.kalnehi.com/upgrade";
  * the welcome trial ends. Opens kalnehi.com/upgrade in Chrome Custom Tabs
  * (separate browser process) rather than the WebView, satisfying Google Play
  * billing policy.
+ *
+ * Auto-polls subscription status when Chrome Custom Tabs closes so the user
+ * is unblocked without needing to tap "Refresh status" manually.
  */
 export function NativeLockoutScreen() {
-  const { refetch } = useSubscriptionAccess();
+  const { refetch, hasPaidAccess } = useSubscriptionAccess();
   const [busy, setBusy] = useState(false);
+  const [polling, setPolling] = useState(false);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
+
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollDeadlineRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isPollingRef = useRef(false);
+  // Set to true when WE opened the tab so the listener ignores unrelated events.
+  const isCheckoutOpenRef = useRef(false);
+
+  const stopTimers = useCallback(() => {
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
+    if (pollDeadlineRef.current) {
+      clearTimeout(pollDeadlineRef.current);
+      pollDeadlineRef.current = null;
+    }
+  }, []);
+
+  const startPoll = useCallback(() => {
+    if (isPollingRef.current) return;
+    isPollingRef.current = true;
+    setPolling(true);
+    setStatusMsg("Checking your subscription… this usually takes a few seconds.");
+
+    refetch({ silent: true });
+
+    stopTimers();
+    pollIntervalRef.current = setInterval(() => {
+      refetch({ silent: true });
+    }, 1500);
+
+    // Hard stop after 30 s — nudge the user to refresh manually if nothing arrived.
+    pollDeadlineRef.current = setTimeout(() => {
+      stopTimers();
+      isPollingRef.current = false;
+      setPolling(false);
+      setBusy(false);
+      void refetch();
+      setStatusMsg(
+        "If you just paid, tap Refresh status below. Otherwise reopen the app after subscribing.",
+      );
+    }, 30_000);
+  }, [refetch, stopTimers]);
+
+  // Keep a stable ref so the browserFinished effect (empty deps, registered once)
+  // always calls the latest startPoll without re-registering the listener.
+  const startPollRef = useRef(startPoll);
+  useEffect(() => {
+    startPollRef.current = startPoll;
+  }, [startPoll]);
+
+  // Register browserFinished listener once on mount.
+  useEffect(() => {
+    let listenerHandle: { remove: () => void } | null = null;
+
+    void (async () => {
+      try {
+        const { Browser } = await import("@capacitor/browser");
+        listenerHandle = await Browser.addListener("browserFinished", () => {
+          if (!isCheckoutOpenRef.current) return;
+          isCheckoutOpenRef.current = false;
+          startPollRef.current();
+        });
+      } catch (err) {
+        console.warn("[NativeLockoutScreen] Could not register browserFinished listener:", err);
+      }
+    })();
+
+    return () => {
+      listenerHandle?.remove();
+      stopTimers();
+      isPollingRef.current = false;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // intentionally empty — listener registered once for the component lifetime
+
+  // When hasPaidAccess becomes true while polling, stop timers (AppShell will unmount this).
+  useEffect(() => {
+    if (!hasPaidAccess || !polling) return;
+    stopTimers();
+    isPollingRef.current = false;
+    setPolling(false);
+    setBusy(false);
+    setStatusMsg(null);
+  }, [hasPaidAccess, polling, stopTimers]);
 
   const handleOpenCheckout = useCallback(async () => {
     setBusy(true);
     setStatusMsg(null);
     try {
       const { Browser } = await import("@capacitor/browser");
+      isCheckoutOpenRef.current = true;
       await Browser.open({
         url: CHECKOUT_URL,
         toolbarColor: "#FF7A00",
       });
     } catch {
-      setStatusMsg("Could not open checkout. Please try again.");
-    } finally {
+      isCheckoutOpenRef.current = false;
       setBusy(false);
+      setStatusMsg("Could not open checkout. Please try again.");
     }
   }, []);
 
@@ -66,16 +156,16 @@ export function NativeLockoutScreen() {
           <button
             type="button"
             onClick={() => void handleOpenCheckout()}
-            disabled={busy}
+            disabled={busy || polling}
             className="kal-btn-accent flex min-h-[48px] w-full items-center justify-center gap-2 disabled:opacity-60"
           >
             <ExternalLink className="h-4 w-4" aria-hidden />
-            {busy ? "Opening…" : "Subscribe on Kalnehi.com"}
+            {polling ? "Checking payment…" : busy ? "Opening…" : "Subscribe on Kalnehi.com"}
           </button>
           <button
             type="button"
             onClick={() => void handleRefresh()}
-            disabled={busy}
+            disabled={busy || polling}
             className="kal-glass-subtle flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-kal-text disabled:opacity-50"
           >
             <RefreshCw className="h-4 w-4" aria-hidden />

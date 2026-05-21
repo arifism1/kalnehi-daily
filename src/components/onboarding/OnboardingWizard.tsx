@@ -12,6 +12,7 @@ import {
 
 import { OnboardingStepIllustration } from "@/components/illustrations/OnboardingStepIllustration";
 import { TrackConfirmation, TrackPicker } from "@/components/onboarding/TrackPicker";
+import { Capacitor } from "@capacitor/core";
 import { useCallback, useEffect, useId, useState } from "react";
 
 import { completeOnboarding } from "@/actions/profile";
@@ -196,6 +197,13 @@ export function OnboardingWizard() {
             aheadCount: Math.max(0, capResult.position - 1),
           }),
         );
+        if (Capacitor.isNativePlatform()) {
+          // Android: /waitlist/position is proxy-blocked (Razorpay checkout).
+          setError(
+            "Kalnehi is at capacity for new users today. Please try again tomorrow — your spot is reserved.",
+          );
+          return;
+        }
         window.location.assign("/waitlist/position");
         return;
       }
