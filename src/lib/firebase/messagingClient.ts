@@ -1,6 +1,7 @@
 "use client";
 
 import type { Messaging } from "firebase/messaging";
+import { Capacitor } from "@capacitor/core";
 
 import { getFirebaseAppBrowser } from "@/lib/firebase/client";
 import { readFirebaseWebVapidKey } from "@/lib/firebase/config";
@@ -217,8 +218,70 @@ export async function obtainFcmToken(
 }
 
 export async function revokeFcmToken(): Promise<void> {
+  if (Capacitor.isNativePlatform()) {
+    await revokeNativeFcmToken();
+    return;
+  }
   const messaging = await getMessagingIfSupported();
   if (!messaging) return;
   const { deleteToken } = await import("firebase/messaging");
   await deleteToken(messaging).catch(() => {});
+}
+
+// ── Native FCM (Capacitor Android) ────────────────────────────────────────────
+
+/**
+ * Requests notification permission and returns an FCM token using the native
+ * Capacitor Firebase Messaging plugin. Token format is identical to the web
+ * FCM token — the server-side /api/fcm/register endpoint requires no changes.
+ *
+ * Only call on Capacitor.isNativePlatform().
+ */
+export async function obtainNativeFcmToken(): Promise<ObtainFcmTokenResult> {
+  try {
+    const { FirebaseMessaging } = await import("@capacitor-firebase/messaging");
+
+    const { receive } = await FirebaseMessaging.checkPermissions();
+    if (receive === "denied") {
+      return {
+        token: null,
+        hint: "Notifications are blocked. Enable them in Android Settings → Apps → Kalnehi Daily → Notifications.",
+      };
+    }
+
+    if (receive !== "granted") {
+      const { receive: granted } = await FirebaseMessaging.requestPermissions();
+      if (granted !== "granted") {
+        return {
+          token: null,
+          hint: "Notification permission was not granted.",
+        };
+      }
+    }
+
+    const { token } = await FirebaseMessaging.getToken();
+    if (!token) {
+      return {
+        token: null,
+        hint: "Native FCM did not return a token. Ensure google-services.json is present in android/app/.",
+      };
+    }
+    return { token };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { token: null, hint: `Native FCM error: ${msg}` };
+  }
+}
+
+/**
+ * Deletes the native FCM token so the device stops receiving push notifications.
+ * Only call on Capacitor.isNativePlatform().
+ */
+export async function revokeNativeFcmToken(): Promise<void> {
+  try {
+    const { FirebaseMessaging } = await import("@capacitor-firebase/messaging");
+    await FirebaseMessaging.deleteToken();
+  } catch {
+    // Ignore — token may already be gone
+  }
 }

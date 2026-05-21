@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useCallback, useState } from "react";
+import { RotateCcw } from "lucide-react";
 
 import { getAnonymousLeaderboardLine } from "@/actions/leaderboard";
 
@@ -10,6 +11,7 @@ export function AnonymousLeaderboardCard() {
   const [line, setLine] = useState<Awaited<
     ReturnType<typeof getAnonymousLeaderboardLine>
   > | null>(null);
+  const [fetchKey, setFetchKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -24,6 +26,10 @@ export function AnonymousLeaderboardCard() {
     return () => {
       cancelled = true;
     };
+  }, [fetchKey]);
+
+  const retry = useCallback(() => {
+    setFetchKey((k) => k + 1);
   }, []);
 
   if (loading) {
@@ -38,8 +44,18 @@ export function AnonymousLeaderboardCard() {
 
   if (error || !line?.ok) {
     return (
-      <div className="kal-glass-card rounded-2xl p-5 text-sm text-kal-text-secondary">
-        {error ?? "Could not load leaderboard."}
+      <div className="kal-glass-card rounded-2xl p-5 space-y-3">
+        <p className="text-sm text-kal-text-secondary">
+          {error ?? "Could not load leaderboard."}
+        </p>
+        <button
+          type="button"
+          onClick={retry}
+          className="flex items-center gap-1.5 rounded-xl border border-kal-border bg-kal-card-muted px-3 py-1.5 text-xs font-semibold text-kal-text transition-colors hover:bg-kal-accent/10"
+        >
+          <RotateCcw className="h-3 w-3" aria-hidden />
+          Retry
+        </button>
       </div>
     );
   }

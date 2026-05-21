@@ -26,6 +26,10 @@
     "verify:security": "npm run security:audit && npm run verify:supabase-security && npm run verify:service-role && npm run verify:dast-staging && npm run verify:api-pii",
     "generate:icons": "node scripts/rebuild-pwa-assets.mjs --icons",
     "generate:pwa-assets": "node scripts/rebuild-pwa-assets.mjs",
+    "generate:android-assets": "capacitor-assets generate --android",
+    "android:sync": "npx cap sync android",
+    "android:open": "npx cap open android",
+    "android:build": "next build && npx cap sync android",
     "test:rollup": "node --import tsx --test src/lib/syllabusRollup.projection.test.ts src/lib/syllabusRollup.multiExam.test.ts",
     "test:leaderboard": "node --import tsx --test src/lib/leaderboardComposite.test.ts",
     "test:prepbrain": "node --import tsx --test src/lib/prepbrainIntentRouting.test.ts src/lib/mastermindModelTier.test.ts src/lib/prepBrainMultiExam.test.ts",
@@ -34,6 +38,17 @@
     "test:waitlist": "node --import tsx --test src/lib/waitlist/joinContactEmail.test.ts"
   },
   "dependencies": {
+    "@capacitor-firebase/messaging": "^8.2.0",
+    "@capacitor/android": "^8.3.4",
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/browser": "^8.0.3",
+    "@capacitor/core": "^8.3.4",
+    "@capacitor/filesystem": "^8.1.2",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/network": "^8.0.1",
+    "@capacitor/share": "^8.0.1",
+    "@capacitor/splash-screen": "^8.0.1",
+    "@capacitor/status-bar": "^8.0.2",
     "@google/generative-ai": "^0.24.1",
     "@mediapipe/tasks-vision": "^0.10.34",
     "@supabase/ssr": "^0.10.0",
@@ -73,6 +88,8 @@
     "uuid": "^14.0.0"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.3.4",
     "@next/bundle-analyzer": "^16.2.6",
     "@tailwindcss/postcss": "^4",
     "@types/canvas-confetti": "^1.9.0",

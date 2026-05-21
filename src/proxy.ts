@@ -248,6 +248,9 @@ function isAndroidAppBillingBlockedPath(pathname: string): boolean {
   if (pathname === "/checkout" || pathname.startsWith("/checkout/")) return true;
   if (pathname === "/my-subscription" || pathname.startsWith("/my-subscription/")) return true;
   if (pathname === "/my-plan" || pathname.startsWith("/my-plan/")) return true;
+  // Safety net: even if someone deep-links directly to /upgrade, block the
+  // Razorpay JS page — payments must happen in Chrome Custom Tabs, not WebView.
+  if (pathname === "/upgrade" || pathname.startsWith("/upgrade/")) return true;
   return false;
 }
 

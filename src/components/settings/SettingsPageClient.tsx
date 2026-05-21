@@ -4,7 +4,6 @@ import Link from "next/link";
 import { ArrowLeft, Image } from "lucide-react";
 import clsx from "clsx";
 
-import { AdminSendPushNotification } from "@/components/settings/AdminSendPushNotification";
 import { DataAndThisDeviceSection } from "@/components/settings/DataAndThisDeviceSection";
 import { CustomizeFeaturesSection } from "@/components/settings/CustomizeFeaturesSection";
 import { PurposeModePhotos } from "@/components/settings/PurposeModePhotos";
@@ -150,13 +149,6 @@ export function SettingsPageClient() {
       </section>
 
       <NotificationsSettingsGroup />
-
-      <section aria-labelledby="admin-push-heading">
-        <h2 id="admin-push-heading" className="sr-only">
-          Admin push broadcast
-        </h2>
-        <AdminSendPushNotification />
-      </section>
 
       <ProfileAccountSection />
 
