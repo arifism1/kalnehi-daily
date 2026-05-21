@@ -817,14 +817,41 @@ export function UnifiedDailyPlanList({
             <DailyPlanListSkeleton />
           </>
         ) : error ? (
-          <p className="text-sm text-[var(--kal-danger-text)]" role="alert">
-            {error}
-          </p>
+          <div className="flex flex-col items-center gap-3 py-6 text-center" role="alert">
+            <p className="text-sm text-[var(--kal-danger-text)]">{error}</p>
+            <button
+              type="button"
+              onClick={() => void load()}
+              className="flex items-center gap-1.5 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-2 text-sm font-semibold text-kal-text transition-colors hover:bg-kal-accent/10"
+            >
+              <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+              Try again
+            </button>
+          </div>
         ) : tasks.length === 0 ? (
           <div className="kal-glass-subtle flex min-h-[140px] flex-col items-center justify-center rounded-xl border border-dashed border-white/35 py-8 text-center dark:border-white/15">
             <WinDailyIllustration className="mx-auto mb-2 h-auto w-40" />
             <p className="text-sm font-semibold text-kal-text">Nothing here yet</p>
             <p className="mt-1 text-xs text-kal-muted">Your plan is empty for this date.</p>
+            <button
+              type="button"
+              onClick={() => {
+                // Focus the nearest task-add input in the page, or scroll to the bottom
+                // where the add-task bar typically lives in the parent layout.
+                const addInput =
+                  document.querySelector<HTMLElement>("[data-daily-add-input]") ??
+                  document.querySelector<HTMLElement>("[data-task-input]");
+                if (addInput) {
+                  addInput.focus();
+                } else {
+                  window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+                }
+              }}
+              className="mt-4 flex items-center gap-1.5 rounded-xl bg-kal-accent px-4 py-2 text-sm font-semibold text-white"
+            >
+              <Sparkles className="h-3.5 w-3.5" aria-hidden />
+              Add a task
+            </button>
           </div>
         ) : (
           <>

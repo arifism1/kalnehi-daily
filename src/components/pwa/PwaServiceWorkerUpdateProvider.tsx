@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { Capacitor } from "@capacitor/core";
 
 type PwaServiceWorkerUpdateContextValue = {
   updateReady: boolean;
@@ -32,6 +33,9 @@ export function PwaServiceWorkerUpdateProvider({ children }: { children: ReactNo
 
   useEffect(() => {
     if (process.env.NODE_ENV !== "production") return;
+    // Service workers don't meaningfully run inside Capacitor's Android WebView.
+    // Native FCM is handled by @capacitor-firebase/messaging instead.
+    if (Capacitor.isNativePlatform()) return;
     if (!("serviceWorker" in navigator)) return;
 
     let disposed = false;

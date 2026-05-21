@@ -1,20 +1,15 @@
 "use client";
 
-import { useLayoutEffect, useState } from "react";
+import { Capacitor } from "@capacitor/core";
 
 export { ANDROID_APP_UA_MARKER } from "@/lib/androidAppUa";
 
 /**
- * Always false — the app is distributed as a PWA. The Capacitor native shell has been removed.
- * The hook remains for interface compatibility; callers that branch on `isApp` will always take
- * the web path.
+ * Returns whether the app is running inside the Capacitor native Android shell.
+ * When true, callers should use native plugin paths (FCM, Browser, Network)
+ * instead of web APIs (service worker, Web Push, etc.).
  */
 export function usePlatform(): { isApp: boolean } {
-  const [isApp] = useState(false);
-
-  useLayoutEffect(() => {
-    // no-op: native platform detection removed with Capacitor
-  }, []);
-
+  const isApp = Capacitor.isNativePlatform();
   return { isApp };
 }

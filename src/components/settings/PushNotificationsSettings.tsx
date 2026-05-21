@@ -8,6 +8,7 @@ import { isFirebaseConfigured } from "@/lib/firebase/config";
 import {
   isIosWebPushDevice,
   obtainFcmToken,
+  obtainNativeFcmToken,
   revokeFcmToken,
 } from "@/lib/firebase/messagingClient";
 import { FCM_STALE_TOKEN_USER_MESSAGE } from "@/lib/fcm/messages";
@@ -118,7 +119,29 @@ export function PushNotificationsSettings({
   }, [user?.id]);
 
   const syncFromBrowser = useCallback(async () => {
-    if (!configured || typeof window === "undefined") {
+    if (typeof window === "undefined") {
+      setPushOn(false);
+      return;
+    }
+
+    if (isNativeKalnehiShell) {
+      const want = (await storage.getItem(LS_ENABLED)) === "1";
+      if (!want) {
+        setPushOn(false);
+        return;
+      }
+      const { token } = await obtainNativeFcmToken();
+      if (token) {
+        tokenRef.current = token;
+        await registerTokenOnServer(token);
+        setPushOn(true);
+      } else {
+        setPushOn(false);
+      }
+      return;
+    }
+
+    if (!configured) {
       setPushOn(false);
       return;
     }
@@ -126,8 +149,7 @@ export function PushNotificationsSettings({
       setPushOn(false);
       return;
     }
-    const want =
-      (await storage.getItem(LS_ENABLED)) === "1";
+    const want = (await storage.getItem(LS_ENABLED)) === "1";
     try {
       const { token, hint } = await obtainFcmToken();
       if (!token) {
@@ -160,7 +182,7 @@ export function PushNotificationsSettings({
         setPushOn(false);
       }
     }
-  }, [configured]);
+  }, [configured, isNativeKalnehiShell]);
 
   useEffect(() => {
     void syncFromBrowser();
@@ -176,25 +198,44 @@ export function PushNotificationsSettings({
 
   const enablePush = useCallback(async () => {
     setMessage(null);
-    if (!configured) {
-      setMessage("Push is not configured on this deployment.");
-      return;
-    }
-
-    if (!("Notification" in window) || !("serviceWorker" in navigator)) {
-      setMessage("This browser does not support web push.");
-      return;
-    }
-
-    if (Notification.permission === "denied") {
-      setMessage(
-        "Notifications are blocked for this site. Enable them in your browser or system settings, then try again.",
-      );
-      return;
-    }
-
     setBusy(true);
     try {
+      if (isNativeKalnehiShell) {
+        const { token, hint } = await obtainNativeFcmToken();
+        if (!token) {
+          setMessage(hint ?? "Could not get a push token from the native app.");
+          return;
+        }
+        const ok = await registerTokenOnServer(token);
+        if (!ok) {
+          setMessage("Could not save this device on the server. Try again.");
+          return;
+        }
+        tokenRef.current = token;
+        await storage.setItem(LS_ENABLED, "1");
+        setPushOn(true);
+        setMessage("Push notifications are on for this device.");
+        showToast("Push is on for this device.");
+        return;
+      }
+
+      if (!configured) {
+        setMessage("Push is not configured on this deployment.");
+        return;
+      }
+
+      if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+        setMessage("This browser does not support web push.");
+        return;
+      }
+
+      if (Notification.permission === "denied") {
+        setMessage(
+          "Notifications are blocked for this site. Enable them in your browser or system settings, then try again.",
+        );
+        return;
+      }
+
       if (Notification.permission === "default") {
         setMessage(
           `Your browser will ask whether ${SITE_NAME} can send notifications — choose Allow to continue.`,
@@ -206,7 +247,6 @@ export function PushNotificationsSettings({
               ? "Permission was denied. You can enable notifications in browser settings."
               : "Permission was not granted.",
           );
-          setBusy(false);
           return;
         }
       }
@@ -217,14 +257,12 @@ export function PushNotificationsSettings({
           hint ??
             "Could not get a push token. Check Firebase config and Web Push key (VAPID).",
         );
-        setBusy(false);
         return;
       }
 
       const ok = await registerTokenOnServer(token);
       if (!ok) {
         setMessage("Could not save this device on the server. Try again.");
-        setBusy(false);
         return;
       }
 
@@ -239,7 +277,7 @@ export function PushNotificationsSettings({
     } finally {
       setBusy(false);
     }
-  }, [configured, showToast]);
+  }, [configured, isNativeKalnehiShell, showToast]);
 
   const disablePush = useCallback(async () => {
     setMessage(null);
@@ -429,13 +467,27 @@ export function PushNotificationsSettings({
           This environment does not support web push.
         </p>
       ) : isNativeKalnehiShell ? (
-        <p className={clsx("text-xs leading-relaxed text-kal-text-secondary", !embedded && "mt-3")}>
-          Reminders use Firebase Web Push inside Chrome / Safari / desktop browsers—not inside this
-          installed Kalnehi shell yet. Open{" "}
-          <span className="font-medium text-kal-text">kalnehi.com</span> in Chrome, sign in, and turn
-          on notifications there (or install the PWA from the browser menu) for push while we keep
-          the native app consumption-only on the Play Store.
-        </p>
+        <>
+          <div className={clsx("flex items-center justify-between gap-3", embedded ? "mt-1" : "mt-4")}>
+            <span className="text-sm font-medium text-kal-text">
+              Enable push notifications
+            </span>
+            <SettingsSheetSwitch
+              id={`${baseId}-push`}
+              checked={pushOn}
+              disabled={busy || refreshBusy}
+              onChange={onToggle}
+            />
+          </div>
+          {message ? (
+            <p
+              className="mt-3 text-xs leading-relaxed text-kal-text-secondary"
+              role="status"
+            >
+              {message}
+            </p>
+          ) : null}
+        </>
       ) : (
         <>
           <div className={clsx("flex items-center justify-between gap-3", embedded ? "mt-1" : "mt-4")}>
@@ -483,10 +535,7 @@ export function PushNotificationsSettings({
               </div>
               <p className="mt-2 text-[11px] text-kal-text-secondary">
                 Admin / developer: calls{" "}
-                <span className="font-mono">/api/fcm/test</span>. Use{" "}
-                <span className="font-semibold">Send Push Notification</span>{" "}
-                below for targeted or broadcast sends (
-                <span className="font-mono">/api/fcm/send</span>).
+                <span className="font-mono">/api/fcm/test</span>.
               </p>
             </div>
           )}

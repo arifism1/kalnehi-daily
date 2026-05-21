@@ -23,6 +23,8 @@ import {
 import { KillSwitchGuard } from "@/components/KillSwitchGuard";
 import { OAuthAuthAnalytics } from "@/components/OAuthAuthAnalytics";
 import { CookieConsentProvider } from "@/components/consent/CookieConsentProvider";
+import { CapacitorDeepLinkHandler } from "@/components/CapacitorDeepLinkHandler";
+import { CapacitorNetworkSyncBridge } from "@/components/CapacitorNetworkSyncBridge";
 
 import "./globals.css";
 
@@ -193,6 +195,7 @@ export default function RootLayout({
       <body className="flex min-h-dvh min-h-[-webkit-fill-available] flex-col bg-kal-page font-sans text-kal-text">
         <CookieConsentProvider>
           <OAuthAuthAnalytics />
+          <CapacitorDeepLinkHandler />
           <PwaServiceWorkerUpdateProvider>
             <JsonLd />
             <OrganicEntryCapture />
@@ -205,6 +208,7 @@ export default function RootLayout({
                   <UiPrefsRemoteSync />
                   <StoragePersistenceInit />
                   <FcmForegroundListener />
+                  <CapacitorNetworkSyncBridge />
                   <AppShell>{children}</AppShell>
                 </SubscriptionAccessProvider>
               </AuthProvider>
