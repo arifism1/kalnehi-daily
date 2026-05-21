@@ -373,7 +373,7 @@ export function ProgressOverview() {
               <span className="text-kal-muted"> / {denom} plan marks</span>
               <span className="mt-1 block text-xs text-kal-muted">
                 {syllabusSoon
-                  ? `Chapter-weight capture for ${examTitle || examLabel} is coming soon.`
+                  ? "Not available for your exam yet — check back after your next session."
                   : "Open Syllabus after setting your target exam for chapter-level capture."}
               </span>
             </p>

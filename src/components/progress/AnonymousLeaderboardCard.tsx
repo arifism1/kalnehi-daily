@@ -44,18 +44,21 @@ export function AnonymousLeaderboardCard() {
 
   if (error || !line?.ok) {
     return (
-      <div className="kal-glass-card rounded-2xl p-5 space-y-3">
-        <p className="text-sm text-kal-text-secondary">
-          {error ?? "Could not load leaderboard."}
-        </p>
-        <button
-          type="button"
-          onClick={retry}
-          className="flex items-center gap-1.5 rounded-xl border border-kal-border bg-kal-card-muted px-3 py-1.5 text-xs font-semibold text-kal-text transition-colors hover:bg-kal-accent/10"
-        >
-          <RotateCcw className="h-3 w-3" aria-hidden />
-          Retry
-        </button>
+      <div className="kal-glass-card rounded-2xl p-5">
+        <div className="flex flex-col items-center gap-4 py-2 text-center">
+          <p className="text-sm leading-relaxed text-kal-text-secondary">
+            {error ??
+              "Couldn't load your rank right now. This usually clears up quickly."}
+          </p>
+          <button
+            type="button"
+            onClick={retry}
+            className="kal-btn-accent flex min-h-[44px] items-center justify-center gap-1.5 px-5 py-2 text-sm font-semibold"
+          >
+            <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+            Try again
+          </button>
+        </div>
       </div>
     );
   }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { RefreshCw, AlertTriangle } from "lucide-react";
 
 /**
@@ -16,6 +17,8 @@ export default function RouteError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const router = useRouter();
+
   useEffect(() => {
     console.error("[Kalnehi] Route error:", error);
   }, [error]);
@@ -32,8 +35,8 @@ export default function RouteError({
             Something went wrong
           </h1>
           <p className="text-sm leading-relaxed text-kal-text-secondary">
-            This page ran into an unexpected error. Your data is safe — tap
-            retry to reload.
+            We couldn&apos;t load this page. This usually happens when your
+            connection is spotty. Your data is safe — tap retry to reload.
           </p>
         </div>
 
@@ -48,7 +51,7 @@ export default function RouteError({
 
         <button
           type="button"
-          onClick={() => (window.location.href = "/home")}
+          onClick={() => router.push("/home")}
           className="text-sm font-medium text-kal-accent underline underline-offset-2"
         >
           Go to Home
