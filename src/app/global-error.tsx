@@ -67,7 +67,7 @@ export default function GlobalError({
                 color: "#1a1a1a",
               }}
             >
-              Kalnehi ran into a problem
+              Kalnehi Daily crashed
             </h1>
             <p
               style={{
@@ -77,8 +77,8 @@ export default function GlobalError({
                 color: "#666",
               }}
             >
-              An unexpected error occurred. Your study data is safe. Please tap
-              retry to reload the app.
+              An unexpected error occurred. Your study data is safe. Tap below
+              to restart the app.
             </p>
           </div>
 
@@ -97,7 +97,7 @@ export default function GlobalError({
               cursor: "pointer",
             }}
           >
-            Retry
+            Restart the app
           </button>
 
           <button

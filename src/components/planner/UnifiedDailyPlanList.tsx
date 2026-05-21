@@ -20,6 +20,7 @@ import { KalSpinner } from "@/components/loading/KalSpinner";
 import { WinDailyIllustration } from "@/components/illustrations/WinDailyIllustration";
 import { ConfettiBurst } from "@/components/ui/ConfettiBurst";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import {
   deleteDailyTask,
@@ -538,6 +539,10 @@ type Props = {
   onTasksLoaded?: (count: number) => void;
   /** When true, done tasks get "Schedule revision" (Daily Plan). */
   showScheduleRevision?: boolean;
+  /** Opens the self-type task input (parent modal). Falls back to /daily-plan?open=self-type. */
+  onAddTask?: () => void;
+  /** Opens the voice dictate flow (parent modal). Falls back to /daily-plan?open=dictate. */
+  onDictatePlan?: () => void;
 };
 
 export function UnifiedDailyPlanList({
@@ -547,7 +552,10 @@ export function UnifiedDailyPlanList({
   disablePastStatusToggle = false,
   onTasksLoaded,
   showScheduleRevision = false,
+  onAddTask,
+  onDictatePlan,
 }: Props) {
+  const router = useRouter();
   const userId = useAuthStore((s) => s.user?.id);
   const today = useCalendarDate();
   const statusToggleLocked = Boolean(
@@ -818,12 +826,17 @@ export function UnifiedDailyPlanList({
             <DailyPlanListSkeleton />
           </>
         ) : error ? (
-          <div className="flex flex-col items-center gap-3 py-6 text-center" role="alert">
-            <p className="text-sm text-[var(--kal-danger-text)]">{error}</p>
+          <div className="flex flex-col items-center gap-4 py-6 text-center" role="alert">
+            <p className="text-sm text-kal-text-secondary">
+              Couldn&apos;t load your plan. Check your connection and try again.
+            </p>
+            {error ? (
+              <p className="text-xs text-[var(--kal-danger-text)]">{error}</p>
+            ) : null}
             <button
               type="button"
               onClick={() => void load()}
-              className="flex items-center gap-1.5 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-2 text-sm font-semibold text-kal-text transition-colors hover:bg-kal-accent/10"
+              className="kal-btn-accent flex min-h-[44px] items-center justify-center gap-1.5 px-5 py-2 text-sm font-semibold"
             >
               <RotateCcw className="h-3.5 w-3.5" aria-hidden />
               Try again
@@ -834,25 +847,30 @@ export function UnifiedDailyPlanList({
             <WinDailyIllustration className="mx-auto mb-2 h-auto w-40" />
             <p className="text-sm font-semibold text-kal-text">Nothing here yet</p>
             <p className="mt-1 text-xs text-kal-muted">Your plan is empty for this date.</p>
-            <button
-              type="button"
-              onClick={() => {
-                // Focus the nearest task-add input in the page, or scroll to the bottom
-                // where the add-task bar typically lives in the parent layout.
-                const addInput =
-                  document.querySelector<HTMLElement>("[data-daily-add-input]") ??
-                  document.querySelector<HTMLElement>("[data-task-input]");
-                if (addInput) {
-                  addInput.focus();
-                } else {
-                  window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
-                }
-              }}
-              className="mt-4 flex items-center gap-1.5 rounded-xl bg-kal-accent px-4 py-2 text-sm font-semibold text-white"
-            >
-              <Sparkles className="h-3.5 w-3.5" aria-hidden />
-              Add a task
-            </button>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (onAddTask) onAddTask();
+                  else router.push("/daily-plan?open=self-type");
+                }}
+                className="flex items-center gap-1.5 rounded-xl bg-kal-accent px-4 py-2 text-sm font-semibold text-white"
+              >
+                <Sparkles className="h-3.5 w-3.5" aria-hidden />
+                Add a task
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (onDictatePlan) onDictatePlan();
+                  else router.push("/daily-plan?open=dictate");
+                }}
+                className="flex items-center gap-1.5 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-2 text-sm font-semibold text-kal-text transition-colors hover:bg-kal-accent/10"
+              >
+                <Mic className="h-3.5 w-3.5 text-kal-accent" aria-hidden />
+                Dictate plan
+              </button>
+            </div>
           </div>
         ) : (
           <>

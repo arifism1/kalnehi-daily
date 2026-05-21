@@ -189,6 +189,8 @@ export function DailyPlanPageContent() {
         planDate={logDate}
         title={listTitle}
         showScheduleRevision
+        onAddTask={() => setModalMode("self-type")}
+        onDictatePlan={() => setModalMode("dictate")}
       />
 
       {logDate === today ? (

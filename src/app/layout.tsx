@@ -25,6 +25,7 @@ import { OAuthAuthAnalytics } from "@/components/OAuthAuthAnalytics";
 import { CookieConsentProvider } from "@/components/consent/CookieConsentProvider";
 import { CapacitorDeepLinkHandler } from "@/components/CapacitorDeepLinkHandler";
 import { CapacitorNetworkSyncBridge } from "@/components/CapacitorNetworkSyncBridge";
+import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 
 import "./globals.css";
 
@@ -209,7 +210,9 @@ export default function RootLayout({
                   <StoragePersistenceInit />
                   <FcmForegroundListener />
                   <CapacitorNetworkSyncBridge />
-                  <AppShell>{children}</AppShell>
+                  <GlobalErrorBoundary>
+                    <AppShell>{children}</AppShell>
+                  </GlobalErrorBoundary>
                 </SubscriptionAccessProvider>
               </AuthProvider>
             </KillSwitchGuard>
