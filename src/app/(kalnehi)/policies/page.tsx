@@ -31,6 +31,11 @@ const POLICY_LINKS: { href: string; label: string; description: string }[] =
       description: "Digital products — no returns.",
     },
     {
+      href: "/account-deletion",
+      label: "Account Deletion",
+      description: "How to delete your account and all your data.",
+    },
+    {
       href: "/about",
       label: "About Us",
       description: "Who we are and how to reach us.",

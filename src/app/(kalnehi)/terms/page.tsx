@@ -11,7 +11,7 @@ export default function TermsPage() {
         Terms &amp; Conditions
       </h1>
       <p>
-        <strong>Last updated:</strong> May 16, 2026
+        <strong>Last updated:</strong> May 23, 2026
       </p>
       <p>
         These Terms &amp; Conditions govern your use of {SITE_NAME} operated
@@ -51,7 +51,7 @@ export default function TermsPage() {
       </p>
       <p>
         The app uses Artificial Intelligence.{" "}
-        <strong>We are not responsible</strong> for any AI output.         AI may
+        <strong>We are not responsible</strong> for any AI output. AI may
         produce wrong, inaccurate, incomplete, or misleading results. You use
         all AI features <strong>entirely at your own risk</strong>.
       </p>
@@ -87,6 +87,33 @@ export default function TermsPage() {
       <p>
         All content and features belong to Neven Academy Assam. You may not copy
         or distribute any part of the app.
+      </p>
+      <p>
+        <strong>Subscriptions and Payments</strong>
+      </p>
+      <p>
+        {SITE_NAME} offers a paid Smart Plan subscription. Subscriptions are
+        billed on a recurring basis (monthly or prepaid) via Razorpay, a
+        third-party payment processor. By subscribing you authorise Razorpay to
+        charge your payment method automatically at the start of each billing
+        period until you cancel.
+      </p>
+      <p>
+        A <strong>7-day free trial</strong> is available to new users. If you
+        do not cancel before the trial ends, it converts to a paid subscription
+        and you will be charged. You may cancel at any time from{" "}
+        <strong>Settings → Subscription</strong> before the next billing date.
+        Cancellation stops future charges; access continues until the end of
+        the current paid period. All payments are{" "}
+        <strong>non-refundable</strong> except where required by applicable
+        law. See our{" "}
+        <a
+          href="/refund"
+          className="font-medium text-kal-accent underline underline-offset-2 hover:text-kal-accent/90"
+        >
+          Refund &amp; Cancellation Policy
+        </a>{" "}
+        for full details.
       </p>
       <p>
         <strong>Cookies and marketing technologies</strong>

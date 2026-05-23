@@ -6,6 +6,11 @@ import { KeyRound, Loader2, Lock } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { buildAuthCallbackUrl } from "@/lib/authCallbackUrl";
+import { useNativeOAuthBrowserDismiss } from "@/hooks/useNativeOAuthBrowserDismiss";
+import {
+  isNativeKalnehiShell,
+  startNativeSupabaseOAuthFlow,
+} from "@/lib/nativeSupabaseOAuth";
 import { formatSupabaseError, getSupabaseBrowserClient } from "@/lib/supabase";
 import { useAuthStore } from "@/store/useAuthStore";
 
@@ -110,16 +115,32 @@ export function LoginMethodsSection() {
     }
   }, [confirmPassword, hasEmail, newPassword, refreshIdentities]);
 
+  const clearLinkBusy = useCallback(() => {
+    setLinkBusy(false);
+  }, []);
+
+  useNativeOAuthBrowserDismiss(clearLinkBusy, linkBusy);
+
   const linkGoogle = useCallback(async () => {
     setLinkError(null);
     setLinkBusy(true);
     try {
       const supabase = getSupabaseBrowserClient();
+      const redirectTo = buildAuthCallbackUrl("/settings#login-methods");
+
+      if (isNativeKalnehiShell()) {
+        await startNativeSupabaseOAuthFlow(() =>
+          supabase.auth.linkIdentity({
+            provider: "google",
+            options: { redirectTo, skipBrowserRedirect: true },
+          }),
+        );
+        return;
+      }
+
       const { error } = await supabase.auth.linkIdentity({
         provider: "google",
-        options: {
-          redirectTo: buildAuthCallbackUrl("/settings#login-methods"),
-        },
+        options: { redirectTo },
       });
       if (error) throw error;
     } catch (e) {

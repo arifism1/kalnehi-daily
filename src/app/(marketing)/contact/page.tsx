@@ -28,7 +28,7 @@ export default function ContactPage() {
           <h2 className="text-base font-semibold text-kal-text">Quick links</h2>
           <div className="space-y-3">
             {[
-              { label: "Email support", href: "mailto:support@kalnehi.com", description: "support@kalnehi.com — fastest for account and billing issues" },
+              { label: "Email support", href: "mailto:curioversitylearning@gmail.com", description: "curioversitylearning@gmail.com — fastest for account and billing issues" },
               { label: "Pricing and plans", href: "/pricing", description: "Compare plans, see what's included in the free trial" },
               { label: "Product changelog", href: "/changelog", description: "What's new — features added, bugs fixed, improvements made" },
               { label: "Privacy policy", href: "/privacy", description: "What data we collect, how we use it, how to delete it" },
@@ -51,8 +51,8 @@ export default function ContactPage() {
           <ContactForm />
           <p className="text-xs text-kal-muted">
             This opens your email client. Or email us directly at{" "}
-            <a href="mailto:support@kalnehi.com" className="text-kal-accent-dark hover:underline">
-              support@kalnehi.com
+            <a href="mailto:curioversitylearning@gmail.com" className="text-kal-accent-dark hover:underline">
+              curioversitylearning@gmail.com
             </a>
             .
           </p>
@@ -64,8 +64,8 @@ export default function ContactPage() {
         <div className="space-y-3">
           {[
             { q: "How do I cancel my subscription?", a: "Go to Settings → Subscription → Cancel. Your access continues until the end of the billing period. No questions asked." },
-            { q: "Can I get a refund?", a: "We offer a full refund within 7 days of any paid charge if you're not satisfied. Email support@kalnehi.com with your account email and reason." },
-            { q: "Is my data safe if I cancel?", a: "Yes. Your data is retained for 90 days after cancellation. For a full export of your account data, email support@kalnehi.com from your registered address." },
+            { q: "Can I get a refund?", a: "All purchases are final and non-refundable except where law requires otherwise. You can cancel the 7-day free trial before it converts to avoid any charge. See our Refund Policy for details." },
+            { q: "Is my data safe if I cancel?", a: "Yes. Your data is retained for 90 days after cancellation. For a full export or deletion of your account data, email curioversitylearning@gmail.com from your registered address or visit our account deletion page." },
             { q: "I forgot my password. What do I do?", a: "Use 'Forgot password' on the sign-in page. A reset link is sent to your registered email within 2 minutes." },
           ].map((item) => (
             <div key={item.q} className="space-y-1 border-b border-kal-border last:border-0 pb-3 last:pb-0">

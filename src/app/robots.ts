@@ -59,6 +59,7 @@ export default function robots(): MetadataRoute.Robots {
           "/best-study-practices",
           "/privacy",
           "/terms",
+          "/account-deletion",
           "/search",
         ],
         disallow: [

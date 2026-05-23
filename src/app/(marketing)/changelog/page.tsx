@@ -162,8 +162,8 @@ export default function ChangelogPage() {
         <p className="text-sm font-semibold text-kal-text">Want to suggest a feature?</p>
         <p className="text-sm text-kal-text-secondary">
           Send a message to{" "}
-          <a href="mailto:support@kalnehi.com" className="text-kal-accent-dark hover:underline underline-offset-2">
-            support@kalnehi.com
+          <a href="mailto:curioversitylearning@gmail.com" className="text-kal-accent-dark hover:underline underline-offset-2">
+            curioversitylearning@gmail.com
           </a>{" "}
           with the subject "Feature request". We read every one and implement the most-requested ones.
         </p>

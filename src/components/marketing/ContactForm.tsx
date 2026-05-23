@@ -15,7 +15,7 @@ export function ContactForm() {
     const data = new FormData(form);
     const subject = encodeURIComponent(`[Kalnehi Daily] ${data.get("topic") || "Contact"}`);
     const body = encodeURIComponent((data.get("message") as string) || "");
-    window.location.href = `mailto:support@kalnehi.com?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:curioversitylearning@gmail.com?subject=${subject}&body=${body}`;
   }
 
   return (

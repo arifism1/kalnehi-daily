@@ -96,6 +96,7 @@ const MARKETING_SITEMAP: SitemapEntry[] = [
   { path: "/return", priority: 0.4, changeFrequency: yearly },
   { path: "/shipping", priority: 0.4, changeFrequency: yearly },
   { path: "/policies", priority: 0.5, changeFrequency: yearly },
+  { path: "/account-deletion", priority: 0.5, changeFrequency: yearly },
   { path: "/kalnehi-daily", priority: 0.6, changeFrequency: monthly },
   ...getSyllabusSlugs().map(
     (slug): SitemapEntry => ({

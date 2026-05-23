@@ -44,6 +44,19 @@
                 <!-- Apex domain — handles links shared without www -->
                 <data android:scheme="https" android:host="kalnehi.com" />
             </intent-filter>
+
+            <!--
+                Custom URL scheme — OAuth fallback return URI for Google sign-in.
+                Supabase Auth redirects to com.kalnehi.daily://auth/callback after
+                the OAuth flow completes in the external browser. Without this
+                filter, the redirect stays in Chrome and the app never receives it.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="com.kalnehi.daily" />
+            </intent-filter>
         </activity>
 
         <provider

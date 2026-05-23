@@ -17,7 +17,7 @@ export function TrialGuard({ children }: TrialGuardProps) {
   const router = useRouter();
 
   const locked = welcomeTrialExpiredNoPay && !loading;
-  // Android: payment must open in Chrome Custom Tabs, not the WebView.
+  // Android companion app: no in-app purchase — users subscribe at kalnehi.com.
   const isNativeApp = Capacitor.isNativePlatform();
 
   return (
@@ -36,14 +36,16 @@ export function TrialGuard({ children }: TrialGuardProps) {
               aria-hidden
             />
             {isNativeApp ? (
-              // Android branch: external checkout via Chrome Custom Tabs (Play-compliant).
-              // pointer-events-auto overrides the parent's pointer-events-none so the
-              // NativeLockoutScreen buttons remain tappable despite CSS inheritance.
+              // Android companion model: informational notice only — no checkout
+              // button or Custom Tabs. Users subscribe on kalnehi.com in their
+              // own browser, then return and refresh. pointer-events-auto
+              // overrides the parent's pointer-events-none so the refresh button
+              // is tappable.
               <div className="pointer-events-auto">
                 <NativeLockoutScreen />
               </div>
             ) : (
-              // Web/PWA branch: unchanged in-app upgrade route.
+              // Web/PWA branch: in-app upgrade route.
               <div
                 className="pointer-events-none absolute inset-0 z-[81] flex items-center justify-center p-6"
                 role="dialog"

@@ -178,7 +178,17 @@ const nextConfig: NextConfig = {
   },
 
   async rewrites() {
-    return [];
+    return [
+      {
+        // Serve Digital Asset Links for Android App Link verification.
+        // Required for android:autoVerify="true" in AndroidManifest.xml so that
+        // https://www.kalnehi.com deep links open the app instead of Chrome.
+        // The route reads TWA_PACKAGE_NAME + TWA_SHA256_FINGERPRINTS env vars
+        // (set in Vercel dashboard after the first Play Console upload).
+        source: "/.well-known/assetlinks.json",
+        destination: "/api/digital-asset-links",
+      },
+    ];
   },
 
   async headers() {
