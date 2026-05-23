@@ -17,6 +17,11 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useState } from "react";
 
 import { buildAuthCallbackUrl } from "@/lib/authCallbackUrl";
+import { useNativeOAuthBrowserDismiss } from "@/hooks/useNativeOAuthBrowserDismiss";
+import {
+  isNativeKalnehiShell,
+  startNativeSupabaseOAuthFlow,
+} from "@/lib/nativeSupabaseOAuth";
 
 const AuthAppNavPreviewMenu = dynamic(
   () =>
@@ -198,6 +203,12 @@ export default function AuthPage() {
     }
   }, [email]);
 
+  const clearGoogleBusy = useCallback(() => {
+    setBusy(false);
+  }, []);
+
+  useNativeOAuthBrowserDismiss(clearGoogleBusy, busy);
+
   const signInGoogle = useCallback(async () => {
     setBusy(true);
     setError(null);
@@ -207,9 +218,21 @@ export default function AuthPage() {
       const nextPath =
         nextRaw && nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "/home";
       const supabase = getSupabaseBrowserClient();
+      const redirectTo = buildAuthCallbackUrl(nextPath);
+
+      if (isNativeKalnehiShell()) {
+        await startNativeSupabaseOAuthFlow(() =>
+          supabase.auth.signInWithOAuth({
+            provider: "google",
+            options: { redirectTo, skipBrowserRedirect: true },
+          }),
+        );
+        return;
+      }
+
       const { error: oErr } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: buildAuthCallbackUrl(nextPath) },
+        options: { redirectTo },
       });
       if (oErr) throw oErr;
     } catch (e) {
@@ -502,6 +525,10 @@ export default function AuthPage() {
         By continuing you agree to our{" "}
         <Link href="/terms" className="underline-offset-2 hover:text-kal-accent hover:underline">
           terms and conditions
+        </Link>{" "}
+        and{" "}
+        <Link href="/privacy" className="underline-offset-2 hover:text-kal-accent hover:underline">
+          privacy policy
         </Link>
         .
       </p>

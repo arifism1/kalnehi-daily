@@ -47,13 +47,13 @@ export function DataAndThisDeviceSection() {
           </Link>
           . Optional analytics &amp; marketing:{" "}
           <CookieSettingsTrigger className="font-semibold text-kal-accent underline underline-offset-2" />
-          . For a full export of account data or deletion, email{" "}
-          <a
-            href="mailto:curioversitylearning@gmail.com"
+          . To export or delete your account data, visit the{" "}
+          <Link
+            href="/account-deletion"
             className="font-semibold text-kal-accent underline underline-offset-2"
           >
-            curioversitylearning@gmail.com
-          </a>
+            account deletion page
+          </Link>
           .
         </p>
       </div>

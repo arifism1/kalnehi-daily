@@ -11,7 +11,7 @@ export default function RefundPage() {
         Refund &amp; Cancellation Policy
       </h1>
       <p>
-        <strong>Last updated:</strong> April 08, 2026
+        <strong>Last updated:</strong> May 23, 2026
       </p>
       <p>
         All purchases made on {SITE_NAME} are{" "}
@@ -27,11 +27,11 @@ export default function RefundPage() {
         dissatisfaction, or any other reason.
       </p>
       <p>
-        <strong>3-Day Trial</strong>
+        <strong>7-Day Free Trial</strong>
       </p>
       <p>
-        You may cancel the 7-day trial plan before it ends to avoid being
-        charged the full monthly fee. Cancellation must be done from your
+        You may cancel the 7-day free trial before it ends to avoid being
+        charged the full subscription fee. Cancellation must be done from your
         account settings. After the trial converts to a paid plan,{" "}
         <strong>no refund</strong> is possible.
       </p>

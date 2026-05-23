@@ -23,14 +23,21 @@ Confirm: no crash when opening mic; quota/errors surface readably.
 
 | Shell | Expected |
 | ----- | -------- |
-| Capacitor | Settings shows banner: web push not registered in shell; open site in Chrome for reminders. |
-| Chrome / PWA | Toggle can obtain FCM token when Firebase + VAPID configured. |
+| Capacitor (with google-services.json) | Native FCM token obtained; Settings shows "Push notifications" toggle; test notification arrives. |
+| Capacitor (without google-services.json) | Firebase plugin skipped; graceful degradation (no crash). |
+| Chrome / PWA | Toggle obtains FCM token via service worker when Firebase + VAPID configured. |
 
-## Billing / trial
+## Billing / trial (companion-app model)
+
+The Android shell is a **companion app** — no in-app purchase or checkout.
 
 | Shell | Expected |
 | ----- | -------- |
-| UA contains `KalnehiAndroidApp` | Paywall shows native lockout copy (no Razorpay script); server redirects billing URLs away from checkout when applicable. |
+| UA contains `KalnehiAndroidApp` (trial active) | Full app access; no paywall. |
+| UA contains `KalnehiAndroidApp` (trial expired, not subscribed) | `NativeLockoutScreen` shown — informational copy only, **no** "Subscribe" or checkout button. Refresh button polls subscription status. |
+| UA contains `KalnehiAndroidApp` (subscribed via web) | Full access after tapping "Refresh status" or reopening the app. |
+| Billing URLs (`/pricing`, `/upgrade`, `/my-subscription`, etc.) | Server redirects to `/home` for Android UA — no Razorpay script loads. |
+| `/pricing` link in `FeatureGate` | Hidden on Android (`isApp` check) — shows "Available with Smart Plan" text only. |
 
 ## Study camera (heavy WebView)
 

@@ -60,6 +60,7 @@ const MINIMAL_CHROME_PATHS = new Set([
   "/shipping",
   "/return",
   "/about",
+  "/account-deletion",
   "/pricing",
 ]);
 

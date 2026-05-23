@@ -1,5 +1,32 @@
 apply plugin: 'com.android.application'
 
+// ── Release signing ──────────────────────────────────────────────────────────
+// Read keystore credentials from android/keystore.properties (never committed).
+// Create the file locally before building a release APK/AAB:
+//
+//   storeFile=/absolute/path/to/kalnehi-daily-upload.jks
+//   storePassword=<store password>
+//   keyAlias=kalnehi-daily
+//   keyPassword=<key password>
+//
+// Generate a new keystore (first time only):
+//   keytool -genkeypair -v \
+//     -keystore kalnehi-daily-upload.jks \
+//     -alias kalnehi-daily \
+//     -keyalg RSA -keysize 2048 \
+//     -validity 10000
+//
+// Build a release AAB:
+//   cd android && ./gradlew bundleRelease
+//
+// IMPORTANT: Back up the .jks file and passwords in a safe location.
+// Losing the upload keystore means you cannot update the Play Store listing.
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace = "com.kalnehi.daily"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -16,11 +43,24 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            if (keystorePropertiesFile.exists()) {
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (keystorePropertiesFile.exists()) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }
