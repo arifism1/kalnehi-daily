@@ -26,6 +26,7 @@ const NAV_GROUPS: {
   {
     label: "Business",
     items: [
+      { label: "Organizations", href: "/admin/organizations" },
       { label: "Revenue", href: "/admin/revenue" },
       { label: "Retention", href: "/admin/retention" },
       { label: "AI usage", href: "/admin/ai-usage" },

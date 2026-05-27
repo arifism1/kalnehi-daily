@@ -21,11 +21,13 @@ import { createClient } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 
 import { ANDROID_APP_UA_MARKER } from "@/lib/androidAppUa";
+import { ORG_ID_HEADER } from "@/lib/auth/withOrganization";
 import { distributedRateLimit } from "@/lib/distributedRateLimit";
 import { isLegalPath } from "@/lib/legal-paths";
 import { isPublicMarketingPath } from "@/lib/public-paths";
 import { getSupabaseConfig } from "@/lib/supabase";
 import { readAppStatus, type AppStatus } from "@/lib/edgeConfig";
+import { grantOrgSubscriptionInternal } from "@/lib/b2b/orgSubscription";
 
 // ── Rate limiting ─────────────────────────────────────────────────────────────
 // Per-IP, per-minute limits on public payment and waitlist endpoints.
@@ -365,7 +367,176 @@ export async function proxy(request: NextRequest) {
     return redirectResponse;
   }
 
+  // ── B2B org membership sync ───────────────────────────────────────────────
+  // Reads organization_id from JWT app_metadata (written here on first sync).
+  // Only performs a DB round-trip when the key is absent (undefined), meaning
+  // this user has never been synced. Once set (UUID or null), the JWT claim
+  // is trusted until it naturally expires and refreshes (~1h Supabase default)
+  // or until a B2B admin action calls supabase.auth.admin.updateUser directly.
+  //
+  // Fix for Supabase JWT refresh delay: after updateUser, we call refreshSession()
+  // server-side so the CURRENT request already carries the updated app_metadata
+  // when RLS evaluates get_org_id_from_jwt(). The new cookie is written to
+  // baseResponse so the browser is also updated in the same round-trip.
+  //
+  // IMPORTANT: user.app_metadata is the in-memory snapshot from getUser() above.
+  // syncOrgMembership() returns the freshly-resolved org_id so we can use it for
+  // the current request even before the refreshed JWT propagates to the user object.
+  let orgIdForHeader: string | null =
+    user?.app_metadata?.organization_id ?? null;
+
+  if (user && !isProxyAuthExempt(pathname)) {
+    const existingOrgId: string | undefined =
+      user.app_metadata?.organization_id;
+
+    if (existingOrgId === undefined) {
+      // First time this user has been seen — fetch their membership from DB.
+      // Use the returned value directly; the stale user object won't reflect it.
+      orgIdForHeader = await syncOrgMembership(
+        user.id,
+        user.email ?? undefined,
+        supabase,
+        baseResponse,
+      );
+    }
+  }
+  const requestHeaders = new Headers(request.headers);
+  if (orgIdForHeader) {
+    requestHeaders.set(ORG_ID_HEADER, orgIdForHeader);
+  }
+
+  // Re-create baseResponse with the updated request headers if needed.
+  // We only need to do this when there's an org to forward.
+  if (orgIdForHeader) {
+    const finalResponse = NextResponse.next({ request: { headers: requestHeaders } });
+    // Copy session cookies from baseResponse onto finalResponse.
+    baseResponse.headers.getSetCookie?.().forEach((cookie) => {
+      finalResponse.headers.append("Set-Cookie", cookie);
+    });
+    return finalResponse;
+  }
+
   return baseResponse;
+}
+
+// ── Org membership sync helper ────────────────────────────────────────────────
+
+/**
+ * Queries user_organization_memberships for `userId` and writes the result
+ * into auth.jwt() app_metadata via the Admin API. Then immediately calls
+ * refreshSession() so the CURRENT request's JWT carries the updated claim
+ * before any Server Component runs (eliminates the Supabase JWT refresh delay).
+ *
+ * Returns the resolved organization_id (or null for B2C users) so the caller
+ * can use it for the current request without re-reading the now-stale user object.
+ */
+async function syncOrgMembership(
+  userId: string,
+  userEmail: string | undefined,
+  supabase: ReturnType<typeof createServerClient>,
+  response: NextResponse,
+): Promise<string | null> {
+  try {
+    const { url } = getSupabaseConfig();
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+    if (!serviceKey) return null;
+
+    const adminClient = createClient(url, serviceKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+
+    // Look up the user's org membership (at most one row due to UNIQUE constraint).
+    const { data: membership } = await adminClient
+      .from("user_organization_memberships")
+      .select("organization_id")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    let organizationId: string | null = membership?.organization_id ?? null;
+
+    // If no active membership, check the pre-approved email allowlist.
+    // This auto-enrolls users who signed up after an admin added their email
+    // via the admin panel (org_email_invitations table).
+    if (!organizationId && userEmail) {
+      const { data: invite } = await adminClient
+        .from("org_email_invitations")
+        .select("id, organization_id, batch_id, role, full_name")
+        .eq("email", userEmail.toLowerCase())
+        .is("accepted_at", null)
+        .maybeSingle();
+
+      if (invite) {
+        const inv = invite as {
+          id: string;
+          organization_id: string;
+          batch_id: string | null;
+          role: string;
+          full_name: string | null;
+        };
+
+        await adminClient.from("user_organization_memberships").upsert(
+          {
+            user_id: userId,
+            organization_id: inv.organization_id,
+            batch_id: inv.batch_id ?? null,
+            role: inv.role,
+          },
+          { onConflict: "user_id,organization_id" },
+        );
+
+        await adminClient
+          .from("org_email_invitations")
+          .update({ accepted_at: new Date().toISOString() })
+          .eq("id", inv.id);
+
+        // Grant Smart Plan immediately — the student should never see the paywall.
+        await grantOrgSubscriptionInternal(adminClient, userId);
+
+        // Pre-fill full_name on user_profiles if the invite had one and the
+        // profile field is currently empty (don't overwrite a name the user set).
+        if (inv.full_name) {
+          const { data: existingProfile } = await adminClient
+            .from("user_profiles")
+            .select("full_name")
+            .eq("user_id", userId)
+            .maybeSingle();
+          const ep = existingProfile as { full_name?: string | null } | null;
+          if (!ep?.full_name) {
+            await adminClient
+              .from("user_profiles")
+              .update({
+                full_name: inv.full_name,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("user_id", userId);
+          }
+        }
+
+        organizationId = inv.organization_id;
+      }
+    }
+
+    // Write to app_metadata.
+    await adminClient.auth.admin.updateUser(userId, {
+      app_metadata: { organization_id: organizationId },
+    });
+
+    // Immediately refresh the session so this request's JWT is up-to-date.
+    // refreshSession() signs a new JWT with the updated app_metadata and
+    // writes the new cookies — all before any Server Component sees the request.
+    const { data: refreshed } = await supabase.auth.refreshSession();
+    if (refreshed.session) {
+      // Cookies are set on the supabase client's response via the setAll callback
+      // bound to `response` — nothing extra needed here.
+      void refreshed;
+    }
+
+    return organizationId;
+  } catch {
+    // Non-fatal: B2C fallback. The JWT sync will be retried on the next request
+    // because app_metadata.organization_id remains undefined.
+    return null;
+  }
 }
 
 export const config = {

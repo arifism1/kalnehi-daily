@@ -2,11 +2,9 @@
 
 import { RefreshCw, LogOut } from "lucide-react";
 import { useCallback, useState } from "react";
-import { useRouter } from "next/navigation";
 
+import { useAppSignOut } from "@/hooks/useAppSignOut";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
-import { getSupabaseBrowserClient } from "@/lib/supabase";
-import { useAuthStore } from "@/store/useAuthStore";
 
 /**
  * Shown on the Android Capacitor shell when the 7-day free trial has ended
@@ -23,9 +21,8 @@ import { useAuthStore } from "@/store/useAuthStore";
  */
 export function NativeLockoutScreen() {
   const { refetch } = useSubscriptionAccess();
-  const router = useRouter();
+  const { signOut, signingOut } = useAppSignOut();
   const [busy, setBusy] = useState(false);
-  const [signingOut, setSigningOut] = useState(false);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
 
   const handleRefresh = useCallback(async () => {
@@ -35,17 +32,6 @@ export function NativeLockoutScreen() {
     setBusy(false);
     setStatusMsg(null);
   }, [refetch]);
-
-  const handleSignOut = useCallback(async () => {
-    setSigningOut(true);
-    try {
-      const supabase = getSupabaseBrowserClient();
-      await supabase.auth.signOut();
-    } catch {
-      useAuthStore.getState().setAuth(null);
-    }
-    router.replace("/auth");
-  }, [router]);
 
   return (
     <div className="fixed inset-0 z-[85] flex items-center justify-center bg-kal-page p-6">
@@ -81,7 +67,7 @@ export function NativeLockoutScreen() {
 
           <button
             type="button"
-            onClick={() => void handleSignOut()}
+            onClick={() => void signOut()}
             disabled={busy || signingOut}
             className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-kal-muted hover:text-kal-text disabled:opacity-50"
           >

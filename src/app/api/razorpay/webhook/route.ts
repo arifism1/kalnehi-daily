@@ -13,6 +13,7 @@ import { autopayMonthsFromNotes } from "@/lib/autopayMonths";
 import { RAZORPAY_PAYMENT_OR_SUB_ID_RE } from "@/lib/razorpayIds";
 import { currentUsagePeriodStartDateString } from "@/lib/subscriptionUsage";
 import type { Database } from "@/types/supabase";
+import { createRouteLogger } from "@/lib/logger";
 import {
   sendMonthlyWelcomeEmail,
   sendPaymentRetryingEmail,
@@ -22,6 +23,7 @@ import {
 
 export const runtime = "nodejs";
 
+const log = createRouteLogger("razorpay/webhook");
 const MAX_BODY_BYTES = 64 * 1024;
 /**
  * Events to handle. Must match what is enabled in Razorpay Dashboard → Webhooks for
@@ -249,7 +251,9 @@ export async function POST(request: Request) {
     }
     const result = await activateMonthlySubscriptionFromCapturedWebhookPayment(paymentId);
     if (!result.ok) {
-      console.error("[razorpay/webhook] payment.captured activation failed:", result.error);
+      log.error("payment.captured activation failed", undefined, {
+        error: result.error,
+      });
       return errorResponse(500);
     }
     if (result.skipped) return okResponse({ ignored: true });

@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { UserCircle } from "lucide-react";
+import { Building2, UserCircle } from "lucide-react";
 
 import { LoginMethodsSection } from "@/components/profile/LoginMethodsSection";
 import { SettingsExpandableSection } from "@/components/settings/SettingsExpandableSection";
+import { useOrgContext } from "@/components/OrgContextProvider";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 
@@ -13,6 +14,7 @@ import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
  */
 export function ProfileAccountSection() {
   const user = useAuthStore((s) => s.user);
+  const org = useOrgContext();
 
   const {
     status: subStatus,
@@ -130,6 +132,52 @@ export function ProfileAccountSection() {
           </Link>
         </div>
       </div>
+        {/* My Institute — only shown to B2B students enrolled in an organisation */}
+        {org && (
+          <div className="space-y-1.5">
+            <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
+              My Institute
+            </p>
+            <div className="kal-glass-panel overflow-hidden rounded-[1rem] px-4 py-3">
+              <div className="flex items-start gap-3">
+                {org.logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={org.logoUrl}
+                    alt={org.orgName}
+                    className="mt-0.5 size-9 shrink-0 rounded-lg border border-kal-border object-contain"
+                  />
+                ) : (
+                  <div className="kal-glass-subtle mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg border border-kal-border">
+                    <Building2 className="size-5 text-kal-muted" />
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-kal-text">
+                    {org.orgName}
+                  </p>
+                  <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                    {org.batchName && (
+                      <span className="text-xs text-kal-text-secondary">
+                        {org.batchName}
+                      </span>
+                    )}
+                    {org.role && (
+                      <span className="rounded-full border border-kal-border bg-kal-card px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-kal-muted">
+                        {org.role}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1.5 text-[11px] leading-relaxed text-kal-muted">
+                    Enrolled via your institution. Contact your admin to update
+                    enrolment details.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div id="login-methods" className="scroll-mt-24 space-y-3">
           <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
             Login methods

@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import bundleAnalyzer from "@next/bundle-analyzer";
+import { withSentryConfig } from "@sentry/nextjs";
 
 /**
  * App CSP (enforced + report-only duplicate for tuning in devtools).
@@ -78,6 +79,8 @@ const CONTENT_SECURITY_POLICY = [
     "https://checkout.razorpay.com",
     "https://api.razorpay.com",
     "https://lumberjack.razorpay.com",
+    "https://*.ingest.sentry.io",
+    "https://*.sentry.io",
   ].join(" "),
   ["worker-src", "'self'", "blob:"].join(" "),
   ["frame-src", "'self'", "https://api.razorpay.com", "https://checkout.razorpay.com"].join(
@@ -248,4 +251,17 @@ const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
 });
 
-export default withBundleAnalyzer(nextConfig);
+const sentryEnabled = Boolean(
+  process.env.SENTRY_DSN?.trim() || process.env.NEXT_PUBLIC_SENTRY_DSN?.trim(),
+);
+
+export default withSentryConfig(withBundleAnalyzer(nextConfig), {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  silent: !sentryEnabled,
+  widenClientFileUpload: true,
+  webpack: {
+    treeshake: { removeDebugLogging: true },
+    automaticVercelMonitors: true,
+  },
+});

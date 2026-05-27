@@ -2,10 +2,12 @@
 
 import { Capacitor } from "@capacitor/core";
 import clsx from "clsx";
+import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type ReactNode } from "react";
 
 import { NativeLockoutScreen } from "@/components/subscription/NativeLockoutScreen";
+import { useAppSignOut } from "@/hooks/useAppSignOut";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 
 type TrialGuardProps = {
@@ -14,6 +16,7 @@ type TrialGuardProps = {
 
 export function TrialGuard({ children }: TrialGuardProps) {
   const { welcomeTrialExpiredNoPay, loading } = useSubscriptionAccess();
+  const { signOut, signingOut } = useAppSignOut();
   const router = useRouter();
 
   const locked = welcomeTrialExpiredNoPay && !loading;
@@ -67,13 +70,22 @@ export function TrialGuard({ children }: TrialGuardProps) {
                     To keep using Kalnehi — study logs, streak, and the rest of the app — subscribe
                     to the <span className="font-semibold text-kal-text">Smart Plan</span>.
                   </p>
-                  <div className="mx-auto w-full max-w-xs">
+                  <div className="mx-auto flex w-full max-w-xs flex-col gap-2">
                     <button
                       type="button"
                       onClick={() => router.push("/upgrade")}
                       className="kal-btn-accent min-h-[48px] w-full"
                     >
                       Upgrade to Smart Plan
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void signOut()}
+                      disabled={signingOut}
+                      className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-kal-muted hover:text-kal-text disabled:opacity-50"
+                    >
+                      <LogOut className="h-4 w-4" aria-hidden />
+                      {signingOut ? "Signing out…" : "Sign out"}
                     </button>
                   </div>
                 </div>

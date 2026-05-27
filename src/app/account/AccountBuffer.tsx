@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 
 import { KalSpinner } from "@/components/loading/KalSpinner";
+import { useAppSignOut } from "@/hooks/useAppSignOut";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { useAuthStore } from "@/store/useAuthStore";
 
@@ -12,6 +14,7 @@ export function AccountBuffer() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const initialized = useAuthStore((s) => s.initialized);
+  const { signOut, signingOut } = useAppSignOut();
 
   const {
     loading: subscriptionLoading,
@@ -118,6 +121,15 @@ export function AccountBuffer() {
               </p>
             </>
           )}
+          <button
+            type="button"
+            onClick={() => void signOut()}
+            disabled={signingOut}
+            className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-kal-muted hover:text-kal-text disabled:opacity-50"
+          >
+            <LogOut className="h-4 w-4" aria-hidden />
+            {signingOut ? "Signing out…" : "Sign out"}
+          </button>
         </div>
       </div>
     </div>
