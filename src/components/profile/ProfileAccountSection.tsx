@@ -46,92 +46,93 @@ export function ProfileAccountSection() {
       <div className="space-y-6">
         <div className="kal-glass-panel overflow-hidden rounded-[1rem]">
           <div className="flex min-h-[52px] items-center gap-3 border-b border-kal-border px-4 py-3">
-          {avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={avatarUrl}
-              alt=""
-              className="size-11 shrink-0 rounded-full border border-kal-border object-cover"
-              referrerPolicy="no-referrer"
-            />
-          ) : (
-            <div className="kal-glass-subtle flex size-11 shrink-0 items-center justify-center rounded-full">
-              <UserCircle className="size-8 text-kal-muted" />
+            {avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={avatarUrl}
+                alt=""
+                className="size-11 shrink-0 rounded-full border border-kal-border object-cover"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <div className="kal-glass-subtle flex size-11 shrink-0 items-center justify-center rounded-full">
+                <UserCircle className="size-8 text-kal-muted" />
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
+                Signed in as
+              </p>
+              <p className="truncate text-sm text-kal-text">{user.email}</p>
             </div>
-          )}
-          <div className="min-w-0 flex-1">
-            <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
-              Signed in as
-            </p>
-            <p className="truncate text-sm text-kal-text">{user.email}</p>
+          </div>
+          <div className="px-4 py-3">
+            {subStatus ? (
+              <div className="mb-3 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3">
+                <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
+                  Current plan
+                </p>
+                <p className="mt-1 text-sm font-medium text-kal-text">
+                  {subPlan === "annual"
+                    ? "Annual Smart Plan"
+                    : subPlan === "six_month"
+                      ? "6-Month Smart Plan"
+                      : subPlan === "monthly" || subPlan === "trial"
+                        ? "Monthly Smart Plan"
+                        : "Smart Plan"}
+                  {" · "}
+                  <span
+                    className={
+                      subStatus === "active" || subStatus === "trial"
+                        ? "text-emerald-700 dark:text-emerald-400"
+                        : subStatus === "cancelled"
+                          ? "text-amber-700 dark:text-amber-400"
+                          : "text-kal-text-secondary"
+                    }
+                  >
+                    {subStatus === "active"
+                      ? "Active"
+                      : subStatus === "trial"
+                        ? "Trial"
+                        : subStatus === "cancelled"
+                          ? hasPaidAccess
+                            ? "Cancelled (access continues)"
+                            : "Cancelled"
+                          : subStatus === "expired"
+                            ? "Expired"
+                            : subStatus}
+                  </span>
+                </p>
+                {subEndDate ? (
+                  <p className="mt-0.5 text-xs text-kal-text-secondary">
+                    {subPlan === "annual" || subPlan === "six_month"
+                      ? "Plan runs until"
+                      : subStatus === "cancelled"
+                        ? "Access until"
+                        : "Month ends"}{" "}
+                    {new Date(subEndDate).toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                    {(subPlan === "monthly" || subPlan === "trial") &&
+                      autopayMonthsTotal !== null &&
+                      subStatus !== "cancelled" && (
+                        <> · AutoPay up to {autopayMonthsTotal} month{autopayMonthsTotal === 1 ? "" : "s"}</>
+                      )}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+            <Link
+              href="/my-subscription"
+              className="kal-glass-subtle flex w-full min-h-[48px] items-center justify-center rounded-xl py-3 text-[15px] font-semibold text-kal-text transition-colors hover:opacity-95 active:opacity-90"
+            >
+              My Subscription &amp; billing
+            </Link>
           </div>
         </div>
-        <div className="px-4 py-3">
-          {subStatus ? (
-            <div className="mb-3 rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3">
-              <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
-                Current plan
-              </p>
-              <p className="mt-1 text-sm font-medium text-kal-text">
-                {subPlan === "annual"
-                  ? "Annual Smart Plan"
-                  : subPlan === "six_month"
-                    ? "6-Month Smart Plan"
-                    : subPlan === "monthly" || subPlan === "trial"
-                      ? "Monthly Smart Plan"
-                      : "Smart Plan"}
-                {" · "}
-                <span
-                  className={
-                    subStatus === "active" || subStatus === "trial"
-                      ? "text-emerald-700 dark:text-emerald-400"
-                      : subStatus === "cancelled"
-                        ? "text-amber-700 dark:text-amber-400"
-                        : "text-kal-text-secondary"
-                  }
-                >
-                  {subStatus === "active"
-                    ? "Active"
-                    : subStatus === "trial"
-                      ? "Trial"
-                      : subStatus === "cancelled"
-                        ? hasPaidAccess
-                          ? "Cancelled (access continues)"
-                          : "Cancelled"
-                        : subStatus === "expired"
-                          ? "Expired"
-                          : subStatus}
-                </span>
-              </p>
-              {subEndDate ? (
-                <p className="mt-0.5 text-xs text-kal-text-secondary">
-                  {subPlan === "annual" || subPlan === "six_month"
-                    ? "Plan runs until"
-                    : subStatus === "cancelled"
-                      ? "Access until"
-                      : "Month ends"}{" "}
-                  {new Date(subEndDate).toLocaleDateString("en-IN", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })}
-                  {(subPlan === "monthly" || subPlan === "trial") &&
-                    autopayMonthsTotal !== null &&
-                    subStatus !== "cancelled" && (
-                      <> · AutoPay up to {autopayMonthsTotal} month{autopayMonthsTotal === 1 ? "" : "s"}</>
-                    )}
-                </p>
-              ) : null}
-            </div>
-          ) : null}
-          <Link
-            href="/my-subscription"
-            className="kal-glass-subtle flex w-full min-h-[48px] items-center justify-center rounded-xl py-3 text-[15px] font-semibold text-kal-text transition-colors hover:opacity-95 active:opacity-90"
-          >
-            My Subscription &amp; billing
-          </Link>
-        </div>
-      </div>
+
         {/* My Institute — only shown to B2B students enrolled in an organisation */}
         {org && (
           <div className="space-y-1.5">

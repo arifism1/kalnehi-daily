@@ -521,14 +521,16 @@ async function syncOrgMembership(
       app_metadata: { organization_id: organizationId },
     });
 
-    // Immediately refresh the session so this request's JWT is up-to-date.
-    // refreshSession() signs a new JWT with the updated app_metadata and
-    // writes the new cookies — all before any Server Component sees the request.
-    const { data: refreshed } = await supabase.auth.refreshSession();
-    if (refreshed.session) {
-      // Cookies are set on the supabase client's response via the setAll callback
-      // bound to `response` — nothing extra needed here.
-      void refreshed;
+    // Only refresh when a real org was assigned — B2C/admin users (null)
+    // don't need org_id in their JWT, and the extra rotation causes a
+    // double-refresh that invalidates the session in the admin layout.
+    if (organizationId !== null) {
+      const { data: refreshed } = await supabase.auth.refreshSession();
+      if (refreshed.session) {
+        // Cookies are set on the supabase client's response via the setAll callback
+        // bound to `response` — nothing extra needed here.
+        void refreshed;
+      }
     }
 
     return organizationId;

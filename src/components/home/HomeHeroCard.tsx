@@ -18,11 +18,11 @@ function OrgIdentityPill() {
   return (
     <p className="mt-1 flex items-center gap-1.5 truncate text-[11px] font-medium text-kal-text-secondary">
       <Building2 className="size-3 shrink-0 text-kal-muted" aria-hidden />
-      <span className="truncate">{org.orgName}</span>
+      <span className="min-w-0 truncate">{org.orgName}</span>
       {org.batchName && (
         <>
-          <span className="text-kal-muted">·</span>
-          <span className="truncate text-kal-muted">{org.batchName}</span>
+          <span className="shrink-0 text-kal-muted">·</span>
+          <span className="min-w-0 truncate text-kal-muted">{org.batchName}</span>
         </>
       )}
     </p>

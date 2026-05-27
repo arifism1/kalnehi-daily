@@ -136,7 +136,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
                 <img
                   src={org.logoUrl}
                   alt={org.orgName}
-                  className="h-8 w-auto max-w-[min(100%,7.5rem)] object-contain object-left sm:h-9 sm:max-w-[8.5rem]"
+                  className="max-h-7 h-8 w-auto shrink-0 max-w-[min(100%,7.5rem)] object-contain object-left sm:max-h-8 sm:h-9 sm:max-w-[8.5rem]"
                 />
               ) : (
                 <KalnehiMark
@@ -188,7 +188,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
               <img
                 src={org.logoUrl}
                 alt={org.orgName}
-                className="h-7 w-auto max-w-[min(100%,6.5rem)] object-contain object-left sm:h-8"
+                className="max-h-7 h-7 w-auto shrink-0 max-w-[min(100%,6.5rem)] object-contain object-left sm:max-h-8 sm:h-8"
               />
             ) : (
               <KalnehiMark
