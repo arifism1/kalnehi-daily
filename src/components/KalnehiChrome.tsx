@@ -28,6 +28,7 @@ import { BottomTabBar } from "@/components/nav/BottomTabBar";
 import { NotificationBellLink } from "@/components/nav/NotificationBellLink";
 import { KalnehiSidebar } from "@/components/nav/KalnehiSidebar";
 import { MainNavigationMenu } from "@/components/MainNavigationMenu";
+import { useOrgContext } from "@/components/OrgContextProvider";
 
 class QuietSavedToastBoundary extends Component<
   { children: ReactNode },
@@ -71,6 +72,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const { open: openVoice, close: closeVoice, isOpen: voiceOpen } = useVoiceCommandStore();
+  const org = useOrgContext();
 
   const onboarding = pathname === "/onboarding";
   const minimalChrome = MINIMAL_CHROME_PATHS.has(pathname);
@@ -129,10 +131,19 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
               className="flex shrink-0 items-center rounded-xl py-1 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-kal-accent/40"
               aria-label="Dashboard"
             >
-              <KalnehiMark
-                aria-hidden
-                className="h-8 w-auto max-w-[min(100%,7.5rem)] object-contain object-left sm:h-9 sm:max-w-[8.5rem]"
-              />
+              {org?.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={org.logoUrl}
+                  alt={org.orgName}
+                  className="h-8 w-auto max-w-[min(100%,7.5rem)] object-contain object-left sm:h-9 sm:max-w-[8.5rem]"
+                />
+              ) : (
+                <KalnehiMark
+                  aria-hidden
+                  className="h-8 w-auto max-w-[min(100%,7.5rem)] object-contain object-left sm:h-9 sm:max-w-[8.5rem]"
+                />
+              )}
             </Link>
             <button
               type="button"
@@ -166,16 +177,25 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
       {/* ── Top bar ────────────────────────────────────────────────────── */}
       <header className="kal-glass-header sticky top-0 z-40 shrink-0 pt-[env(safe-area-inset-top)]">
         <div className="flex h-[52px] w-full items-center justify-between gap-2 px-3 sm:h-[52px] sm:px-5">
-          {/* Logo */}
+          {/* Logo — swapped for org logo when a B2B student is signed in */}
           <Link
             href="/home"
             className="flex shrink-0 items-center rounded-xl py-1 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-kal-accent/40"
             aria-label="Dashboard"
           >
-            <KalnehiMark
-              aria-hidden
-              className="h-7 w-auto max-w-[min(100%,6.5rem)] object-contain object-left sm:h-8"
-            />
+            {org?.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={org.logoUrl}
+                alt={org.orgName}
+                className="h-7 w-auto max-w-[min(100%,6.5rem)] object-contain object-left sm:h-8"
+              />
+            ) : (
+              <KalnehiMark
+                aria-hidden
+                className="h-7 w-auto max-w-[min(100%,6.5rem)] object-contain object-left sm:h-8"
+              />
+            )}
           </Link>
 
           {/* Right controls */}

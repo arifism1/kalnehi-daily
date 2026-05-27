@@ -74,8 +74,12 @@ import {
   type PrepBrainIntent,
 } from "@/lib/prepbrainIntentRouting";
 import { resolvePrepbrainExamLabels } from "@/lib/syllabusDataForUser";
+import { fetchPrepbrainRagContext } from "@/lib/prepbrainEmbeddings";
+import { createRouteLogger } from "@/lib/logger";
 
 export const runtime = "nodejs";
+
+const log = createRouteLogger("prepbrain/chat");
 
 /**
  * Per-user, per-tool in-memory cache for Fluid Compute instance reuse.
@@ -647,8 +651,8 @@ export async function POST(request: Request) {
     upsc_optional_subjects: profileAny.upsc_optional_subjects ?? null,
   };
 
-  // Run tool fetching, Groq-only conversation summarisation, and token reservation in parallel.
-  const [toolPack, conversationSummary, reserve] = await Promise.all([
+  // Run tool fetching, RAG context, conversation summarisation, and token reservation in parallel.
+  const [toolPack, conversationSummary, reserve, ragContext] = await Promise.all([
     (async () => {
       if (selectedTools.length === 0) {
         return {
@@ -731,6 +735,7 @@ export async function POST(request: Request) {
     // Conversation summary: gives the model memory beyond the 4-message window.
     createConversationSummary(fullMessages, MASTERMIND_SUMMARY_MODELS),
     prepbrainAiTokenReserve(admin, user.id, monthKey),
+    fetchPrepbrainRagContext(admin, user.id, last.content),
   ]);
 
   if (!reserve.ok) {
@@ -782,11 +787,13 @@ export async function POST(request: Request) {
   const depthTag = depth > 1
     ? ` [DEPTH: ${depth}]${focusSubject ? ` [FOCUS: ${focusSubject}]` : ""}`
     : "";
+  const ragSection = ragContext.trim() ? `\n\n${ragContext.trim()}\n` : "";
+
   const systemContent = `[INTENT: ${effectiveIntent}]${depthTag}
 
 ${PREPBRAIN_SYSTEM_PROMPT}
 
-${conversationSummary.text}
+${conversationSummary.text}${ragSection}
 --- USER PREP DATA ---
 ${toolPack.toolDataMarkdown}
 --- END USER PREP DATA ---`.trim();
@@ -810,7 +817,7 @@ ${toolPack.toolDataMarkdown}
     usagePromise = s.usagePromise;
   } catch (e) {
     await prepbrainAiTokenCancelReservation(admin, user.id, reservationId);
-    console.error("[prepbrain/chat] AI error", e);
+    log.error("AI error", e);
     return NextResponse.json(
       { ok: false, error: "Could not get a response. Try again." },
       { status: 502 },
@@ -978,7 +985,7 @@ ${toolPack.toolDataMarkdown}
         });
       } catch (err) {
         await prepbrainAiTokenCancelReservation(admin, user.id, reservationId);
-        console.error("[prepbrain/chat] stream error", err);
+        log.error("stream error", err);
         try {
           controller.enqueue(
             encoder.encode(

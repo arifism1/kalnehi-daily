@@ -1,0 +1,35 @@
+/*
+ * B2B White-Labeling — Per-org CSS variable overrides.
+ *
+ * Applied via data-org="<slug>" on the (kalnehi) layout wrapper div.
+ * CSS custom properties cascade naturally through the DOM, so all child
+ * components that reference var(--kal-accent), var(--kal-page), etc. pick
+ * up the org's brand without any component changes.
+ *
+ * B2C users: data-org="" → matches no rule → falls back to :root defaults.
+ *
+ * HOW TO ADD A NEW INSTITUTE:
+ *   1. Insert a row in `organizations` with the desired slug, primary_color, accent_color.
+ *   2. Add a [data-org="<slug>"] block below.
+ *   3. The layout wrapper reads these at render time via getCurrentBranding().
+ *
+ * Dynamic approach (future): generate this block server-side as an inline
+ * <style> tag using the org's colors from the DB, removing the need to
+ * hard-code slugs here.
+ */
+
+/* ── Example institute override ────────────────────────────────────────────────
+   Replace "example-institute" with the org's actual slug value.           */
+[data-org="example-institute"] {
+  --kal-accent:            #1A56DB;   /* institute primary */
+  --kal-accent-hover:      #1447C4;
+  --kal-accent-soft:       #EFF6FF;
+  --kal-accent-dark:       #1E3A8A;
+  --kal-accent-foreground: #ffffff;
+  --kal-accent-glow:       rgba(26, 86, 219, 0.22);
+  --kal-primary:           var(--kal-accent);
+  --kal-primary-foreground: var(--kal-accent-foreground);
+  --kal-page:              #F8FAFF;
+  --kal-page-end:          #EFF4FF;
+  --kal-card:              rgba(255, 255, 255, 0.92);
+}

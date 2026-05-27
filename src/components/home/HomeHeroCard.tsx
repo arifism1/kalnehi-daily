@@ -1,6 +1,7 @@
 "use client";
 
 import { differenceInCalendarDays, parseISO, startOfDay } from "date-fns";
+import { Building2 } from "lucide-react";
 import { useMemo } from "react";
 
 import { useExamsCatalogRows } from "@/hooks/useExamsCatalogRows";
@@ -8,6 +9,25 @@ import { useTargetExamDate } from "@/hooks/useTargetExamDate";
 import { examHasPrevYearMarks } from "@/lib/examProfile";
 import { displayNameForExamCatalog } from "@/lib/examsCatalog";
 import { useCountUp } from "@/hooks/useCountUp";
+import { useOrgContext } from "@/components/OrgContextProvider";
+
+/** Small org + batch identity pill shown below the greeting for B2B students. */
+function OrgIdentityPill() {
+  const org = useOrgContext();
+  if (!org) return null;
+  return (
+    <p className="mt-1 flex items-center gap-1.5 truncate text-[11px] font-medium text-kal-text-secondary">
+      <Building2 className="size-3 shrink-0 text-kal-muted" aria-hidden />
+      <span className="truncate">{org.orgName}</span>
+      {org.batchName && (
+        <>
+          <span className="text-kal-muted">·</span>
+          <span className="truncate text-kal-muted">{org.batchName}</span>
+        </>
+      )}
+    </p>
+  );
+}
 
 type ExamRollupEntry = {
   examLabel: string | null;
@@ -240,6 +260,9 @@ export function HomeHeroCard({
               </p>
             )
           )}
+
+          {/* B2B org identity pill — only visible to students enrolled in an org */}
+          <OrgIdentityPill />
         </div>
 
         {/* Divider */}

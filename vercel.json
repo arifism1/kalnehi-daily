@@ -10,12 +10,12 @@
       "schedule": "30 14 * * *"
     },
     {
-      "path": "/api/cron/custom-reminders",
+      "path": "/api/cron/notification-worker",
       "schedule": "*/5 * * * *"
     },
     {
-      "path": "/api/cron/scheduled-notifications",
-      "schedule": "*/5 * * * *"
+      "path": "/api/cron/embed-user-context",
+      "schedule": "0 * * * *"
     },
     {
       "path": "/api/cron/sweep-prepbrain-ai-token-reservations",
@@ -40,6 +40,18 @@
     {
       "path": "/api/cron/journey-rollups",
       "schedule": "30 3 * * *"
+    },
+    {
+      "path": "/api/cron/refresh-org-analytics",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/notify-batch-faculty",
+      "schedule": "30 3 * * *"
+    },
+    {
+      "path": "/api/cron/renew-org-subscriptions",
+      "schedule": "0 2 * * *"
     }
   ]
 }
