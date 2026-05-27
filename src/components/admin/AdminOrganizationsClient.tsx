@@ -530,7 +530,10 @@ function OrgDetail({
       setSingleName("");
       setSingleEmail("");
       getOrgDetailsAction(org.id).then((r) => {
-        if (r.ok) setInvitations(r.invitations);
+        if (r.ok) {
+          setInvitations(r.invitations);
+          setMembers(r.members);
+        }
       });
     });
   }
@@ -567,7 +570,10 @@ function OrgDetail({
       setInviteResult({ invited: res.invited, linked: res.linked });
       setInviteEmails("");
       getOrgDetailsAction(org.id).then((r) => {
-        if (r.ok) setInvitations(r.invitations);
+        if (r.ok) {
+          setInvitations(r.invitations);
+          setMembers(r.members);
+        }
       });
     });
   }
