@@ -55,7 +55,7 @@ export async function linkUserToOrganizationAction(
   if (membershipErr) return { ok: false, error: membershipErr.message };
 
   // Immediately sync app_metadata so the user's next JWT carries the org claim.
-  await serviceClient.auth.admin.updateUser(input.userId, {
+  await serviceClient.auth.admin.updateUserById(input.userId, {
     app_metadata: { organization_id: input.organizationId },
   });
 

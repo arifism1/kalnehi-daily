@@ -41,7 +41,7 @@ export async function removeMemberAction(
   if (deleteErr) return { ok: false, error: deleteErr.message };
 
   // Clear JWT claim so the user's session reflects the removal on their next request.
-  await serviceClient.auth.admin.updateUser(userId, {
+  await serviceClient.auth.admin.updateUserById(userId, {
     app_metadata: { organization_id: null },
   });
 

@@ -24,6 +24,7 @@ export async function refreshExecutionLogFromServer(): Promise<void> {
       end_time: r.end_time,
       duration_seconds: r.duration_seconds,
       created_at: r.created_at,
+      organization_id: null,
     })),
   );
 }

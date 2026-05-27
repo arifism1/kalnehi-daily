@@ -35,6 +35,7 @@ export async function quickCreateEmptyTask(
       marks_value: null,
       marks_weight: null,
       time_spent_seconds: null,
+      organization_id: null,
     };
 
     const row: Omit<TablesInsert<"tasks">, "user_id" | "id"> & { id?: string } =
@@ -92,6 +93,7 @@ export async function quickCreatePlannedTask(
       marks_value: null,
       marks_weight: null,
       time_spent_seconds: null,
+      organization_id: null,
     };
 
     const row: Omit<TablesInsert<"tasks">, "user_id" | "id"> & { id?: string } =
@@ -163,6 +165,7 @@ export async function bulkAddSyllabusMicrotopicsToDailyPlan(
         marks_value: null,
         marks_weight: null,
         time_spent_seconds: null,
+        organization_id: null,
       };
       const insertRow: Omit<TablesInsert<"tasks">, "user_id" | "id"> & {
         id?: string;
@@ -236,6 +239,7 @@ export async function addSelectedSyllabusRowsToDailyPlan(
         marks_value: null,
         marks_weight: null,
         time_spent_seconds: null,
+        organization_id: null,
       };
       const insertRow: Omit<TablesInsert<"tasks">, "user_id" | "id"> & {
         id?: string;

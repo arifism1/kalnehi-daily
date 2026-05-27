@@ -62,7 +62,7 @@ export async function getOrgDetailsAction(
   const invitations: InviteRow[] = (invitesRes.data ?? []).map((r) => ({
     id: r.id,
     email: r.email,
-    full_name: (r as { full_name?: string | null }).full_name ?? null,
+    full_name: r.full_name,
     batch_id: r.batch_id,
     role: r.role,
     invited_at: r.invited_at,
@@ -86,7 +86,7 @@ export async function getOrgDetailsAction(
 
   const nameMap = new Map<string, string | null>();
   for (const p of profilesRes.data ?? []) {
-    nameMap.set(p.user_id, p.full_name);
+    if (p.user_id) nameMap.set(p.user_id, p.full_name);
   }
 
   // Fetch emails via Admin REST API in parallel chunks of 25.

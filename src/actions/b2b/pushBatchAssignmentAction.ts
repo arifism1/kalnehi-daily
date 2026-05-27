@@ -2,6 +2,7 @@
 
 import { getOrgContext } from "@/lib/auth/withOrganization";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
+import type { Json } from "@/types/supabase";
 
 export type PushAssignmentInput = {
   organizationId: string;
@@ -48,7 +49,7 @@ export async function pushBatchAssignmentAction(
       organization_id: input.organizationId,
       batch_id: input.batchId ?? null,
       task_type: input.taskType,
-      data_json: input.dataJson,
+      data_json: input.dataJson as Json,
       scheduled_for: input.scheduledFor ?? null,
     })
     .select("id")

@@ -342,6 +342,7 @@ export function HabitMakerPage() {
           comment == null ? null : comment.trim().slice(0, 1_000) || null,
         created_at: previousRow?.created_at ?? now,
         updated_at: now,
+        organization_id: previousRow?.organization_id ?? null,
       };
 
       setBundle((prev) => {
@@ -474,6 +475,7 @@ export function HabitMakerPage() {
         name,
         created_at: now,
         updated_at: now,
+        organization_id: null,
       };
       const base = bundle ?? {
         habits: [],
@@ -832,6 +834,7 @@ export function HabitMakerPage() {
                             comment: v.trim().slice(0, 1_000) || null,
                             created_at: prevLog?.created_at ?? now,
                             updated_at: now,
+                            organization_id: prevLog?.organization_id ?? null,
                           };
                           const next: HabitBundle = {
                             ...base,

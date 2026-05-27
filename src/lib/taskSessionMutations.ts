@@ -28,6 +28,7 @@ export async function applyOptimisticTaskSessionCreate(
     end_time: row.end_time ?? null,
     duration_seconds: row.duration_seconds ?? null,
     created_at: row.created_at ?? now,
+    organization_id: row.organization_id ?? null,
   };
 
   await putExecutionSession(local);

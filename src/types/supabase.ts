@@ -608,6 +608,39 @@ export type Database = {
         }
         Relationships: []
       }
+      doubts: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          status: string
+          subject: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          id?: string
+          status?: string
+          subject?: string | null
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          status?: string
+          subject?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       exam_phase_plans: {
         Row: {
           created_at: string
@@ -1445,6 +1478,54 @@ export type Database = {
           },
           {
             foreignKeyName: "org_batches_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_email_invitations: {
+        Row: {
+          accepted_at: string | null
+          batch_id: string | null
+          email: string
+          full_name: string | null
+          id: string
+          invited_at: string
+          organization_id: string
+          role: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          batch_id?: string | null
+          email: string
+          full_name?: string | null
+          id?: string
+          invited_at?: string
+          organization_id: string
+          role?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          batch_id?: string | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          invited_at?: string
+          organization_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_email_invitations_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "org_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_email_invitations_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"

@@ -132,7 +132,7 @@ export async function inviteEmailsAction(
         if (memberErr) return;
 
         // Sync JWT claim.
-        await serviceClient.auth.admin.updateUser(match.id, {
+        await serviceClient.auth.admin.updateUserById(match.id, {
           app_metadata: { organization_id: input.orgId },
         });
 

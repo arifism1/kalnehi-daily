@@ -192,6 +192,7 @@ export function HabitsPlannerView() {
           comment: null,
           created_at: nowIso,
           updated_at: nowIso,
+          organization_id: null,
         };
         nextLogs = [row, ...logs];
       }
@@ -248,6 +249,7 @@ export function HabitsPlannerView() {
       name: label.trim().slice(0, 200),
       created_at: now,
       updated_at: now,
+      organization_id: null,
     };
     const nextBundle: HabitBundle = {
       habits: [...habits, row],

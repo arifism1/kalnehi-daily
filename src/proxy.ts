@@ -517,7 +517,7 @@ async function syncOrgMembership(
     }
 
     // Write to app_metadata.
-    await adminClient.auth.admin.updateUser(userId, {
+    await adminClient.auth.admin.updateUserById(userId, {
       app_metadata: { organization_id: organizationId },
     });
 
