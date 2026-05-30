@@ -98,17 +98,17 @@
     "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4",
     "@types/canvas-confetti": "^1.9.0",
-    "@types/node": "^20",
+    "@types/node": "^25",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^9",
+    "eslint": "^10",
     "eslint-config-next": "^16.2.6",
-    "eslint-plugin-react-doctor": "^0.2.1",
-    "eslint-plugin-react-you-might-not-need-an-effect": "^0.10.1",
-    "react-doctor": "^0.2.1",
+    "eslint-plugin-react-doctor": "^0.2.14",
+    "eslint-plugin-react-you-might-not-need-an-effect": "^0.11.0",
+    "react-doctor": "^0.2.14",
     "sharp": "^0.34.5",
     "tailwindcss": "^4",
-    "tsx": "^4.21.0",
-    "typescript": "^5"
+    "tsx": "^4.22.3",
+    "typescript": "^6"
   }
 }
