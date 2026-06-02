@@ -92,7 +92,7 @@ import { useExamsCatalogRows } from "@/hooks/useExamsCatalogRows";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
 import { usePrimaryExamLabel } from "@/hooks/usePrimaryExamLabel";
 import { useSyllabusTracker } from "@/hooks/useSyllabusTracker";
-import { KalSpinner } from "@/components/loading/KalSpinner";
+import { SyllabusPageSkeleton } from "@/components/syllabus/SyllabusPageSkeleton";
 import { displayNameForExamCatalog } from "@/lib/examsCatalog";
 import {
   examHasPrevYearMarks,
@@ -1153,11 +1153,7 @@ export function SyllabusTracker() {
   }
 
   if (loading) {
-    return (
-      <div className="flex min-h-[40vh] items-center justify-center">
-        <KalSpinner size="lg" />
-      </div>
-    );
+    return <SyllabusPageSkeleton />;
   }
 
   if (error) {
@@ -1191,7 +1187,7 @@ export function SyllabusTracker() {
   }
 
   return (
-    <div className="space-y-4 pb-4">
+    <div className="kal-fade-in-fast space-y-4 pb-4">
       {examRollups ? (
         <div className="grid gap-3 sm:grid-cols-2">
           {examRollups.map((er) => {

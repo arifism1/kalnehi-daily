@@ -1,6 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import { DM_Sans, DM_Serif_Display, Syne } from "next/font/google";
 
 import { AppShell } from "@/components/AppShell";
@@ -24,8 +22,12 @@ import { KillSwitchGuard } from "@/components/KillSwitchGuard";
 import { OAuthAuthAnalytics } from "@/components/OAuthAuthAnalytics";
 import { CookieConsentProvider } from "@/components/consent/CookieConsentProvider";
 import { CapacitorDeepLinkHandler } from "@/components/CapacitorDeepLinkHandler";
+import { CapacitorNativeSwPilot } from "@/components/CapacitorNativeSwPilot";
 import { CapacitorNetworkSyncBridge } from "@/components/CapacitorNetworkSyncBridge";
+import { CapacitorOfflineWarmup } from "@/components/CapacitorOfflineWarmup";
 import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
+import { NativeSyncPolicyInit } from "@/components/NativeSyncPolicyInit";
+import { VercelWebVitalsGate } from "@/components/VercelWebVitalsGate";
 
 import "./globals.css";
 
@@ -210,14 +212,16 @@ export default function RootLayout({
                   <StoragePersistenceInit />
                   <FcmForegroundListener />
                   <CapacitorNetworkSyncBridge />
+                  <CapacitorOfflineWarmup />
+                  <CapacitorNativeSwPilot />
+                  <NativeSyncPolicyInit />
                   <GlobalErrorBoundary>
                     <AppShell>{children}</AppShell>
                   </GlobalErrorBoundary>
                 </SubscriptionAccessProvider>
               </AuthProvider>
             </KillSwitchGuard>
-            <Analytics />
-            <SpeedInsights sampleRate={0.5} />
+            <VercelWebVitalsGate />
           </PwaServiceWorkerUpdateProvider>
         </CookieConsentProvider>
       </body>

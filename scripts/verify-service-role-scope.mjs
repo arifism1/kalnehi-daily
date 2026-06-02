@@ -30,12 +30,8 @@ const ALLOWLIST = {
     "Defines the client itself; no DB queries here.",
 
   // ── Auth routes (rate-limit RPCs run as service role before user session exists) ──
-  "src/app/api/auth/login/route.ts":
-    "After IP rate-limit RPC (pre-session); session created via route-handler client.",
-  "src/app/api/auth/signup/route.ts":
-    "After IP rate-limit RPC (pre-session); session created via route-handler client.",
-  "src/app/api/auth/forgot-password/route.ts":
-    "Rate-limit RPC for password reset emails (pre-session).",
+  "src/app/api/auth/otp-send/route.ts":
+    "Rate-limit RPC for OTP send emails (pre-session); signInWithOtp via route-handler client.",
   "src/app/api/auth/otp-verify/route.ts":
     "Rate-limit RPC for OTP verification (pre-session).",
 

@@ -280,6 +280,9 @@ export async function proxy(request: NextRequest) {
 
   const ua = request.headers.get("user-agent") ?? "";
   const pathname = request.nextUrl.pathname;
+  if (pathname === "/auth/reset") {
+    return NextResponse.redirect(new URL("/auth", request.url), { status: 307 });
+  }
   if (
     ua.includes(ANDROID_APP_UA_MARKER) &&
     isAndroidAppBillingBlockedPath(pathname)

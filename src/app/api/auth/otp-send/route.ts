@@ -1,11 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 import {
-  authRateLimitStep,
+  authRateLimitPasswordReset,
   formatTooManyAttemptsMessage,
   getClientIpFromRequest,
   retryMinutesFromResult,
-  signupBucketKey,
 } from "@/lib/authRateLimit";
 import { assertSameOrigin } from "@/lib/assertSameOrigin";
 import { formatSupabaseError } from "@/lib/supabase";
@@ -27,7 +26,7 @@ export async function POST(request: NextRequest) {
   }
 
   const ip = getClientIpFromRequest(request);
-  let body: { email?: string; password?: string };
+  let body: { email?: string };
   try {
     body = await request.json();
   } catch {
@@ -35,29 +34,50 @@ export async function POST(request: NextRequest) {
   }
 
   const email = typeof body.email === "string" ? body.email.trim() : "";
-  const password = typeof body.password === "string" ? body.password : "";
-  if (!email || !password) {
+  if (!email) {
     return NextResponse.json(
-      { error: "Enter email and password.", code: "validation" },
-      { status: 400 },
-    );
-  }
-  if (password.length < 6) {
-    return NextResponse.json(
-      { error: "Password must be at least 6 characters.", code: "validation" },
+      { error: "Enter your email address.", code: "validation" },
       { status: 400 },
     );
   }
 
-  const bucket = signupBucketKey(ip);
-  const consume = await authRateLimitStep(svc, {
-    p_action_type: "signup",
-    p_bucket_key: bucket,
+  const check = await authRateLimitPasswordReset(svc, {
+    p_step: "check",
+    p_ip: ip,
+    p_email: email,
+  });
+  if (check.error && check.error !== "invalid email" && check.error !== "invalid ip") {
+    return NextResponse.json(
+      { error: "Could not verify sign-in limits. Try again shortly.", code: "rate_limit_error" },
+      { status: 503 },
+    );
+  }
+  if (check.allowed === false) {
+    if (check.error === "invalid email" || check.error === "invalid ip") {
+      return NextResponse.json(
+        { error: "Invalid request.", code: "invalid_input" },
+        { status: 400 },
+      );
+    }
+    const m = retryMinutesFromResult(check);
+    return NextResponse.json(
+      {
+        error: formatTooManyAttemptsMessage(m),
+        code: "rate_limited",
+        retryAfterMinutes: m,
+      },
+      { status: 429 },
+    );
+  }
+
+  const consume = await authRateLimitPasswordReset(svc, {
     p_step: "record_attempt",
+    p_ip: ip,
+    p_email: email,
   });
   if (consume.error) {
     return NextResponse.json(
-      { error: "Could not verify sign-up limits. Try again shortly.", code: "rate_limit_error" },
+      { error: "Could not verify sign-in limits. Try again shortly.", code: "rate_limit_error" },
       { status: 503 },
     );
   }
@@ -75,14 +95,17 @@ export async function POST(request: NextRequest) {
 
   const res = NextResponse.json({ ok: true });
   const supabase = createSupabaseRouteHandlerClient(request, res);
-  const { error: signErr } = await supabase.auth.signUp({ email, password });
+  const { error: otpErr } = await supabase.auth.signInWithOtp({
+    email,
+    options: { shouldCreateUser: true },
+  });
 
-  if (!signErr) {
+  if (!otpErr) {
     return res;
   }
 
   return NextResponse.json(
-    { error: formatSupabaseError(signErr), code: "auth_error" },
+    { error: formatSupabaseError(otpErr), code: "auth_error" },
     { status: 400 },
   );
 }

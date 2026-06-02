@@ -68,7 +68,7 @@ function pushDataLayer(data: DataLayer) {
 }
 
 /**
- * Call after successful email/password login or signup (session present).
+ * Call after successful email OTP or OAuth login/signup (session present).
  * Works with GA4 when `NEXT_PUBLIC_GA_MEASUREMENT_ID` is set (`gtag` + dataLayer).
  */
 export function trackAuthSuccess(event: "login" | "sign_up"): void {

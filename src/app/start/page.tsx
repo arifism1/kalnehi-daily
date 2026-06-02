@@ -37,16 +37,10 @@ export default function StartPage() {
 
       <div className="flex w-full max-w-xs flex-col gap-3">
         <Link
-          href="/auth?mode=signup"
+          href="/auth"
           className="flex h-11 w-full items-center justify-center rounded-xl bg-kal-accent px-6 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90 active:opacity-80"
         >
-          Create free account
-        </Link>
-        <Link
-          href="/auth?mode=login"
-          className="flex h-11 w-full items-center justify-center rounded-xl border border-kal-border bg-kal-card px-6 text-sm font-medium text-kal-text-secondary transition-colors hover:text-kal-text"
-        >
-          Already have an account? Sign in
+          Continue with email
         </Link>
       </div>
     </div>

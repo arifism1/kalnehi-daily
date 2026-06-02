@@ -22,6 +22,7 @@ import {
 } from "@/lib/taskIdb";
 import { USER_ERROR } from "@/lib/userFacingErrors";
 import { flushHabitOutbox } from "@/lib/habitSync";
+import { flushSyllabusOutbox } from "@/lib/syllabusSync";
 import { flushMotivationOutbox } from "@/lib/motivationSync";
 import {
   cancelPendingUserPlannerTextDebounce,
@@ -79,6 +80,7 @@ export function flushAllOutboxes(userId: string | undefined): void {
   void flushOutbox(userId);
   void flushMotivationOutbox(userId);
   void flushHabitOutbox(userId);
+  void flushSyllabusOutbox(userId);
   void flushUserPlannerTextOutbox(userId);
 }
 

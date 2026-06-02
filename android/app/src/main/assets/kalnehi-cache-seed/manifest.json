@@ -1,0 +1,7 @@
+{
+  "versionCode": 1,
+  "host": "www.kalnehi.com",
+  "builtAt": "placeholder-run-scripts/build-android-cache-seed.mjs-before-release",
+  "baseUrl": "https://www.kalnehi.com",
+  "paths": ["/home", "/auth", "/offline.html", "/manifest.webmanifest"]
+}

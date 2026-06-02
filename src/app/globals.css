@@ -583,6 +583,19 @@ body {
   100% { background-position: -200% center; }
 }
 
+.kal-shimmer-block {
+  background: linear-gradient(
+    90deg,
+    var(--kal-border) 0%,
+    var(--kal-card-muted) 40%,
+    var(--kal-border-strong) 50%,
+    var(--kal-card-muted) 60%,
+    var(--kal-border) 100%
+  );
+  background-size: 200% 100%;
+  animation: kal-shimmer 1.6s ease-in-out infinite;
+}
+
 @keyframes orb-drift {
   from { transform: translateY(0px); }
   to   { transform: translateY(18px); }
@@ -911,12 +924,17 @@ body {
   .kal-voice-preview-progress,
   .kal-check-draw,
   .kal-shimmer-sweep,
+  .kal-shimmer-block,
   .kal-voice-modal-in,
   .kal-voice-modal-out,
   .kal-fade-in-fast,
   .kal-welcome-sun-rise,
   .kal-welcome-star {
     animation: none;
+  }
+
+  .kal-shimmer-block {
+    opacity: 0.7;
   }
 
   .kal-welcome-sun-rise {

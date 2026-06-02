@@ -5,6 +5,18 @@ import { useState } from "react";
 
 import { useCookieConsent } from "@/components/consent/cookieConsentContext";
 
+const privacyLinkClass =
+  "font-medium text-kal-accent underline underline-offset-2 hover:text-kal-accent/90";
+
+const primaryButtonClass =
+  "min-h-10 rounded-md bg-kal-accent px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 sm:rounded-lg sm:py-2.5";
+
+const secondaryButtonClass =
+  "min-h-10 rounded-md border border-kal-border bg-kal-page px-4 py-2 text-xs font-medium text-kal-text sm:rounded-lg sm:py-2.5 sm:text-sm";
+
+const accentOutlineButtonClass =
+  "min-h-10 rounded-md border border-kal-border bg-transparent px-4 py-2 text-xs font-medium text-kal-accent sm:rounded-lg sm:py-2.5 sm:text-sm";
+
 /**
  * First-visit banner + “Cookie settings” panel. Fixed to bottom; does not block
  * essential app use (tap outside continues; buttons persist choice).
@@ -12,6 +24,7 @@ import { useCookieConsent } from "@/components/consent/cookieConsentContext";
 export function CookieConsentBanner() {
   const {
     consentRecord,
+    consentHydrated,
     settingsOpen,
     closeSettings,
     acceptAll,
@@ -23,7 +36,8 @@ export function CookieConsentBanner() {
   const [draftAnalytics, setDraftAnalytics] = useState(false);
   const [draftMarketing, setDraftMarketing] = useState(false);
 
-  const visible = consentRecord === null || settingsOpen;
+  const visible =
+    consentHydrated && (consentRecord === null || settingsOpen);
 
   function startCustomize() {
     setCustomOpen(true);
@@ -45,12 +59,12 @@ export function CookieConsentBanner() {
 
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-[100] border-t border-kal-border bg-kal-card/95 p-4 shadow-[0_-8px_32px_rgba(0,0,0,0.12)] backdrop-blur-md sm:px-6"
+      className="fixed inset-x-0 bottom-0 z-[100] border-t border-kal-border bg-kal-card/95 p-3 shadow-[0_-8px_32px_rgba(0,0,0,0.12)] backdrop-blur-md sm:p-4 sm:px-6"
       role="dialog"
       aria-modal="false"
       aria-labelledby="cookie-banner-title"
     >
-      <div className="mx-auto flex max-w-3xl flex-col gap-3 sm:gap-4">
+      <div className="mx-auto flex max-w-3xl flex-col gap-2 sm:gap-3">
         <div>
           <h2
             id="cookie-banner-title"
@@ -58,22 +72,29 @@ export function CookieConsentBanner() {
           >
             {title}
           </h2>
-          <p className="mt-2 text-sm leading-relaxed text-kal-text-secondary">
-            We use optional analytics and marketing tools to understand traffic
-            and measure ads. Essential cookies are required for sign-in and core
-            features. See our{" "}
-            <Link
-              href="/privacy"
-              className="font-medium text-kal-accent underline underline-offset-2 hover:text-kal-accent/90"
-            >
-              Privacy Policy
-            </Link>{" "}
-            for details.
+          <p className="mt-1 text-sm leading-snug text-kal-text-secondary sm:mt-2 sm:leading-relaxed">
+            <span className="sm:hidden">
+              Optional analytics and marketing cookies. Essential cookies always
+              run. See our{" "}
+              <Link href="/privacy" className={privacyLinkClass}>
+                Privacy Policy
+              </Link>
+              .
+            </span>
+            <span className="hidden sm:inline">
+              We use optional analytics and marketing tools to understand traffic
+              and measure ads. Essential cookies are required for sign-in and core
+              features. See our{" "}
+              <Link href="/privacy" className={privacyLinkClass}>
+                Privacy Policy
+              </Link>{" "}
+              for details.
+            </span>
           </p>
         </div>
 
         {customOpen ? (
-          <div className="space-y-3 rounded-xl border border-kal-border bg-kal-page/80 p-3 sm:p-4">
+          <div className="space-y-2 rounded-xl border border-kal-border bg-kal-page/80 p-2.5 sm:space-y-3 sm:p-4">
             <label htmlFor="cookie-analytics" aria-label="Analytics cookies" className="flex cursor-pointer items-start gap-3 text-sm text-kal-text">
               <input
                 id="cookie-analytics"
@@ -104,17 +125,17 @@ export function CookieConsentBanner() {
                 </span>
               </span>
             </label>
-            <div className="flex flex-wrap gap-2 pt-1">
+            <div className="flex flex-wrap gap-1.5 pt-0.5 sm:gap-2 sm:pt-1">
               <button
                 type="button"
-                className="rounded-lg bg-kal-accent px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                className={primaryButtonClass}
                 onClick={onSaveCustom}
               >
                 Save choices
               </button>
               <button
                 type="button"
-                className="rounded-lg border border-kal-border bg-kal-page px-4 py-2 text-sm font-medium text-kal-text"
+                className={secondaryButtonClass}
                 onClick={() => setCustomOpen(false)}
               >
                 Back
@@ -122,24 +143,24 @@ export function CookieConsentBanner() {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+          <div className="flex flex-col gap-1.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
             <button
               type="button"
-              className="rounded-lg bg-kal-accent px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              className={primaryButtonClass}
               onClick={acceptAll}
             >
               Accept all
             </button>
             <button
               type="button"
-              className="rounded-lg border border-kal-border bg-kal-page px-4 py-2.5 text-sm font-medium text-kal-text"
+              className={secondaryButtonClass}
               onClick={essentialOnly}
             >
               Reject non-essential
             </button>
             <button
               type="button"
-              className="rounded-lg border border-kal-border bg-transparent px-4 py-2.5 text-sm font-medium text-kal-accent"
+              className={accentOutlineButtonClass}
               onClick={startCustomize}
             >
               Customize
@@ -147,7 +168,7 @@ export function CookieConsentBanner() {
             {settingsOpen && consentRecord !== null ? (
               <button
                 type="button"
-                className="rounded-lg px-4 py-2.5 text-sm font-medium text-kal-muted underline-offset-2 hover:underline"
+                className="min-h-10 rounded-md px-4 py-2 text-xs font-medium text-kal-muted underline-offset-2 hover:underline sm:rounded-lg sm:py-2.5 sm:text-sm"
                 onClick={closeSettings}
               >
                 Close

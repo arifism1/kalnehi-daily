@@ -51,3 +51,25 @@ The Android shell is a **companion app** — no in-app purchase or checkout.
 Google sign-in: native path succeeds or falls back to OAuth + `com.kalnehi.daily://` return to app.
 
 Record failures with **device model**, **Android version**, **Chrome/WebView version**, and **which shell** (APK vs browser).
+
+## Offline + metered sync (Capacitor)
+
+| Case | Expected |
+| ---- | -------- |
+| Airplane mode after one online session | Home/planner usable from IndexedDB; `SyncStatusBanner` shows offline; no repeated Supabase errors in logcat. |
+| Cellular only (no Wi‑Fi) | Background task/syllabus/execution refreshes deferred; outbox still flushes when online per reachability probe. |
+| Wi‑Fi restored | Silent syllabus refresh allowed after native TTL; tasks refresh on focus. |
+| Vercel Analytics | Not loaded in Capacitor shell (`VercelWebVitalsGate`). |
+
+## Cold-start offline (APK cache seed)
+
+| Case | Expected |
+| ---- | -------- |
+| Fresh install → airplane mode before any online use | App opens (seeded `/home` or fallback HTML); no blank white WebView |
+| Fresh install → Wi‑Fi → open `/home` → airplane mode | Planner works; syllabus visible after sync; task edits queue offline |
+| `versionCode` bump without re-running `android:cache-seed` | Release process must run seed script before `bundleRelease` |
+| Old APK + new server HTML | Network-first when online; seed only when offline |
+
+## Offline capabilities (Settings)
+
+Settings → **Offline & data use** lists which features work without internet. Confirm copy matches device behavior after changes.

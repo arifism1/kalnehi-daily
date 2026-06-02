@@ -3,19 +3,19 @@
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
 
-import { RoutePageSkeleton } from "@/components/loading/RoutePageSkeleton";
+import { SyllabusPageSkeleton } from "@/components/syllabus/SyllabusPageSkeleton";
 
 const SyllabusTracker = dynamic(
   () =>
     import("@/components/syllabus/SyllabusTracker").then((m) => ({
       default: m.SyllabusTracker,
     })),
-  { ssr: false, loading: () => <RoutePageSkeleton /> },
+  { ssr: false, loading: () => <SyllabusPageSkeleton /> },
 );
 
 export function SyllabusShell() {
   return (
-    <Suspense fallback={<RoutePageSkeleton />}>
+    <Suspense fallback={<SyllabusPageSkeleton />}>
       <SyllabusTracker />
     </Suspense>
   );

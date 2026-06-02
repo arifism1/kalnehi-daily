@@ -5,6 +5,7 @@ import { ArrowLeft, Image } from "lucide-react";
 import clsx from "clsx";
 
 import { DataAndThisDeviceSection } from "@/components/settings/DataAndThisDeviceSection";
+import { OfflineCapabilitiesSection } from "@/components/settings/OfflineCapabilitiesSection";
 import { CustomizeFeaturesSection } from "@/components/settings/CustomizeFeaturesSection";
 import { PurposeModePhotos } from "@/components/settings/PurposeModePhotos";
 import { NotificationsSettingsGroup } from "@/components/settings/NotificationsSettingsGroup";
@@ -146,6 +147,7 @@ export function SettingsPageClient() {
           Data and device
         </h2>
         <DataAndThisDeviceSection />
+        <OfflineCapabilitiesSection />
       </section>
 
       <NotificationsSettingsGroup />

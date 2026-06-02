@@ -79,7 +79,7 @@ export default async function SyllabusPage({ params }: Props) {
             <div className="flex gap-2 flex-shrink-0">
               <PrintSyllabusButton examName={data.exam} />
               <Link
-                href="/auth/signup"
+                href="/auth"
                 className="inline-flex min-h-[40px] items-center justify-center rounded-full bg-kal-accent px-5 text-sm font-bold text-white transition hover:brightness-105"
               >
                 Track in Kalnehi Daily
@@ -135,7 +135,7 @@ export default async function SyllabusPage({ params }: Props) {
           </p>
           <div className="flex flex-col gap-2 sm:flex-row">
             <Link
-              href="/auth/signup"
+              href="/auth"
               className="inline-flex min-h-[44px] items-center justify-center rounded-full bg-kal-accent px-6 text-sm font-bold text-white transition hover:brightness-105"
             >
               Start free — 7 days on us

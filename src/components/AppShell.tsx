@@ -15,15 +15,19 @@ import { APP_HOME_PATH } from "@/config/appRoutes";
 import { useAuthStore } from "@/store/useAuthStore";
 import { KalShimmerBlock } from "@/components/loading/KalShimmerBlock";
 import { KalSpinner } from "@/components/loading/KalSpinner";
+import { SyllabusPageSkeleton } from "@/components/syllabus/SyllabusPageSkeleton";
 
-function LoadingScreen() {
+function isSyllabusHomePath(pathname: string) {
+  return pathname === APP_HOME_PATH || pathname.startsWith(`${APP_HOME_PATH}/`);
+}
+
+function GenericLoadingScreen() {
   return (
     <div
       className="flex min-h-full min-h-dvh flex-1 flex-col bg-kal-page"
       aria-busy="true"
       aria-label="Loading"
     >
-      {/* Header skeleton */}
       <div className="kal-glass-header sticky top-0 z-40 pt-[env(safe-area-inset-top)]">
         <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
           <KalShimmerBlock className="h-7 w-28 rounded-lg" />
@@ -33,7 +37,6 @@ function LoadingScreen() {
           </div>
         </div>
       </div>
-      {/* Content skeleton */}
       <div className="mx-auto w-full max-w-lg space-y-3 px-4 pt-6 md:max-w-5xl">
         <KalShimmerBlock className="h-6 w-2/5 rounded-lg" />
         <div className="kal-card-surface space-y-3">
@@ -42,7 +45,7 @@ function LoadingScreen() {
           <KalShimmerBlock className="h-4 w-2/3 rounded" />
         </div>
         <div className="kal-card-surface space-y-3">
-          <KalShimmerBlock className="size-4/5 rounded" />
+          <KalShimmerBlock className="h-4 w-4/5 rounded" />
           <KalShimmerBlock className="h-4 w-3/5 rounded" />
         </div>
         <div className="kal-card-surface space-y-3">
@@ -51,12 +54,18 @@ function LoadingScreen() {
           <KalShimmerBlock className="h-4 w-3/4 rounded" />
         </div>
       </div>
-      {/* Centered spinner with branded message */}
       <div className="flex flex-1 items-center justify-center py-12">
         <KalSpinner size="xl" message="Getting your plan ready…" />
       </div>
     </div>
   );
+}
+
+function LoadingScreen({ pathname }: { pathname: string }) {
+  if (isSyllabusHomePath(pathname)) {
+    return <SyllabusPageSkeleton showChrome />;
+  }
+  return <GenericLoadingScreen />;
 }
 
 function ProfileErrorScreen({ onRetry }: { onRetry: () => void }) {
@@ -171,7 +180,7 @@ function TrialStartGate({ refetch }: { refetch: () => void }) {
   );
 }
 
-const AUTH_PATHS = new Set(["/auth", "/auth/reset"]);
+const AUTH_PATHS = new Set(["/auth"]);
 
 function isAuthPath(p: string) {
   return AUTH_PATHS.has(p);
@@ -218,7 +227,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         isAuthPath(pathname) ||
         isLegalPath(pathname) ||
         isAccountBufferPath(pathname) ||
-        pathname === "/upgrade"
+        pathname === "/upgrade" ||
+        pathname === APP_HOME_PATH
       ) {
         return "render";
       }
@@ -316,7 +326,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   if (gateTarget !== "render" && gateTarget !== "paywallRender") {
     return (
       <main className="flex min-h-0 min-h-dvh flex-1 flex-col pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
-        <LoadingScreen />
+        <LoadingScreen pathname={pathname} />
       </main>
     );
   }

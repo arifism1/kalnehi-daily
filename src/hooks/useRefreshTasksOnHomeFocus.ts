@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 
+import { shouldSyncWithServer } from "@/lib/nativeSyncPolicy";
 import { refreshTasksFromSupabase } from "@/lib/refreshTasksFromSupabase";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useTaskStore } from "@/store/useTaskStore";
@@ -17,6 +18,7 @@ export function useRefreshTasksOnHomeFocus() {
     if (!userId || !hydrated) return;
 
     const run = () => {
+      if (!shouldSyncWithServer()) return;
       void refreshTasksFromSupabase(userId).catch(() => {
         /* ignore */
       });
@@ -34,6 +36,7 @@ export function useRefreshTasksOnHomeFocus() {
   useEffect(() => {
     if (!userId || !hydrated) return;
     const onSync = () => {
+      if (!shouldSyncWithServer()) return;
       void refreshTasksFromSupabase(userId).catch(() => {});
     };
     window.addEventListener("kalnehi-tasks-sync", onSync);

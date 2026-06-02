@@ -5,6 +5,7 @@ import { Lock, Mic } from "lucide-react";
 
 import { useAiGate } from "@/hooks/useAiGate";
 import { usePlatform } from "@/hooks/usePlatform";
+import { useSyncStore } from "@/store/useSyncStore";
 import { SMART_PLAN_MONTHLY_DISPLAY } from "@/lib/smartPlanPricing";
 import { TIERS } from "@/lib/subscriptionTiers";
 
@@ -22,8 +23,22 @@ export function AiFeatureGate({ children }: Props) {
     voiceMinuteStatus,
   } = useAiGate();
   const { isApp } = usePlatform();
+  const isOnline = useSyncStore((s) => s.isOnline);
 
   if (loading) return <>{children}</>;
+
+  if (!isOnline) {
+    return (
+      <div className="kal-glass-panel flex flex-col items-center gap-3 rounded-2xl p-8 text-center">
+        <Lock className="size-8 text-kal-text-secondary" />
+        <h3 className="text-lg font-semibold text-kal-text">Internet required</h3>
+        <p className="max-w-sm text-sm text-kal-text-secondary">
+          Mastermind and cloud voice transcription need a connection. Your daily plan and timer
+          still work offline.
+        </p>
+      </div>
+    );
+  }
 
   if (!hasAiAccess) {
     return (

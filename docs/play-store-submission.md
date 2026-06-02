@@ -13,6 +13,7 @@ Values are pre-filled from the codebase. Keep this document updated each release
 - [ ] AAB found at `android/app/build/outputs/bundle/release/app-release.aab`
 - [ ] AAB tested on a real Android device (auth, voice, camera, trial lockout, refresh)
 - [ ] `versionCode` incremented in `android/app/build.gradle` (must be unique per upload)
+- [ ] Offline cache seed rebuilt: `npm run android:cache-seed` (or full `npm run android:build`) so APK assets match this release
 
 ---
 
@@ -207,8 +208,7 @@ URL: **Policy → App content → Data safety**
 2. Select: **All functionality is available without special access** — OR —
 3. If reviewers cannot create an account: select **All or some functionality is restricted** and provide:
    - **Test account email:** *(create a dedicated test account)*
-   - **Test account password:** *(set a simple test password)*
-   - **Instructions:** "Create a new account via Google Sign-In on the sign-in screen. The 7-day trial activates automatically after sign-in."
+   - **Instructions:** "On the sign-in screen, enter the test email and use the 6-digit code sent to that inbox. For web/PWA, Google Sign-In is also available. The 7-day trial activates automatically after sign-in."
 
 ---
 

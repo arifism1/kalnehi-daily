@@ -66,7 +66,7 @@ export default function ContactPage() {
             { q: "How do I cancel my subscription?", a: "Go to Settings → Subscription → Cancel. Your access continues until the end of the billing period. No questions asked." },
             { q: "Can I get a refund?", a: "All purchases are final and non-refundable except where law requires otherwise. You can cancel the 7-day free trial before it converts to avoid any charge. See our Refund Policy for details." },
             { q: "Is my data safe if I cancel?", a: "Yes. Your data is retained for 90 days after cancellation. For a full export or deletion of your account data, email curioversitylearning@gmail.com from your registered address or visit our account deletion page." },
-            { q: "I forgot my password. What do I do?", a: "Use 'Forgot password' on the sign-in page. A reset link is sent to your registered email within 2 minutes." },
+            { q: "How do I sign in?", a: "Go to the sign-in page, enter your email, and use the 6-digit code we send you. New accounts are created automatically the first time you verify your email." },
           ].map((item) => (
             <div key={item.q} className="space-y-1 border-b border-kal-border last:border-0 pb-3 last:pb-0">
               <p className="text-xs font-semibold text-kal-text">{item.q}</p>

@@ -50,11 +50,11 @@ export const LANDING_FAQ_ITEMS = [
   {
     question: "Does it work offline?",
     answer:
-      "Yes. Kalnehi Daily is a PWA (Progressive Web App) and works offline for core features — daily plan, focus timer, and study sessions. AI features like Mastermind require a connection.",
+      "Yes. On the website (PWA) and the Android app, core features work offline — daily plan, focus timer, study sessions, habits, and doubts saved on your device. Open once on Wi‑Fi to cache your syllabus. Mastermind and study camera need internet.",
   },
   {
     question: "Is there an Android or iOS app?",
     answer:
-      "Kalnehi Daily is a PWA, which means you install it from your browser — no app store required. It works like a native app: home screen icon, full screen, offline support, and push notifications where supported.",
+      "Kalnehi Daily is on Google Play for Android (companion app). You can also install from Chrome as a PWA — home screen icon, full screen, offline support, and push notifications where supported.",
   },
 ] as const;

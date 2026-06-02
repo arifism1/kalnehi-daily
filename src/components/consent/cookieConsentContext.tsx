@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   useSyncExternalStore,
@@ -18,6 +19,8 @@ import {
 
 type CookieConsentContextValue = {
   consentRecord: ReturnType<typeof parseConsentRecord>;
+  /** True after mount so the banner can read localStorage/cookies (avoids SSR flash). */
+  consentHydrated: boolean;
   settingsOpen: boolean;
   settingsBannerKey: number;
   openSettings: () => void;
@@ -43,6 +46,11 @@ export function CookieConsentContextProvider({
   );
 
   const consentRecord = useMemo(() => parseConsentRecord(raw), [raw]);
+
+  const [consentHydrated, setConsentHydrated] = useState(false);
+  useEffect(() => {
+    setConsentHydrated(true);
+  }, []);
 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsBannerKey, setSettingsBannerKey] = useState(0);
@@ -72,6 +80,7 @@ export function CookieConsentContextProvider({
   const value = useMemo(
     () => ({
       consentRecord,
+      consentHydrated,
       settingsOpen,
       settingsBannerKey,
       openSettings,
@@ -82,6 +91,7 @@ export function CookieConsentContextProvider({
     }),
     [
       consentRecord,
+      consentHydrated,
       settingsOpen,
       settingsBannerKey,
       openSettings,

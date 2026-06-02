@@ -39,7 +39,7 @@ export function ProfileAccountSection() {
       sectionId="profile-account"
       kicker="Profile"
       title="Account"
-      description="Plan, billing, passwords, and linked sign-ins."
+      description="Plan, billing, and linked sign-ins."
       icon={UserCircle}
       expandable={false}
     >

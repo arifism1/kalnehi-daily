@@ -20,7 +20,7 @@ export const USER_ERROR = {
     "We couldn't read saved data on this device. Try closing other tabs or restarting the app.",
   syncPending:
     "Almost there — your latest changes are saved on this device.",
-  signIn: "Couldn't sign you in. Check your email and password and try again.",
+  signIn: "Couldn't sign you in. Check your email and code, then try again.",
   session: "Please sign in again to continue.",
   taskMissing: "That task isn't available anymore. Refresh and try again.",
 } as const;

@@ -30,6 +30,18 @@ import {
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { KALNEHI_PROFILE_UPDATED_EVENT } from "@/lib/profileEvents";
 import { toUserFacingMessage } from "@/lib/userFacingErrors";
+import {
+  getSyllabusTrackerCacheTtlMs,
+  shouldSyncWithServer,
+} from "@/lib/nativeSyncPolicy";
+import {
+  enqueueSyllabusOutbox,
+  getSyllabusSnapshot,
+  patchSyllabusSnapshotStatus,
+  saveSyllabusSnapshot,
+  type SyllabusSnapshot,
+} from "@/lib/syllabusIdb";
+import { useSyncStore } from "@/store/useSyncStore";
 import { useAuthStore } from "@/store/useAuthStore";
 
 const NEET_UG_HIDDEN_MARKS_YEARS = [2026] as const;
@@ -53,9 +65,45 @@ type SyllabusTrackerCache = {
  * Multiple components mounting the same route (e.g. ProgressOverview +
  * MarksEngineClient) would each fire 4 parallel Supabase queries without this.
  */
-const TRACKER_CACHE_TTL_MS = 30_000;
-
 let trackerCache: SyllabusTrackerCache | null = null;
+
+function snapshotToTrackerCache(snap: SyllabusSnapshot): SyllabusTrackerCache {
+  return {
+    userId: snap.userId,
+    rows: snap.rows,
+    statusBySyllabusMasterId: snap.statusBySyllabusMasterId,
+    targetExamLabel: snap.targetExamLabel,
+    cuetDomainSubjects: snap.cuetDomainSubjects,
+    upscOptionalSubject: snap.upscOptionalSubject,
+    catalogExamKey: snap.catalogExamKey,
+    selectedTrack: snap.selectedTrack,
+    examResults: snap.examResults,
+    loadedAt: snap.cachedAt,
+  };
+}
+
+function applyTrackerCacheToState(
+  cached: SyllabusTrackerCache,
+  setters: {
+    setRows: (r: MergedSyllabusRow[]) => void;
+    setStatusBySyllabusMasterId: (m: Record<string, string>) => void;
+    setTargetExamLabel: (v: string | null) => void;
+    setCuetDomainSubjects: (v: string[]) => void;
+    setUpscOptionalSubject: (v: string | null) => void;
+    setCatalogExamKey: (v: string | null) => void;
+    setSelectedTrack: (v: ExamTrack | null) => void;
+    setExamResults: (v: SyllabusDataForUserResult[]) => void;
+  },
+): void {
+  setters.setRows(cached.rows);
+  setters.setStatusBySyllabusMasterId(cached.statusBySyllabusMasterId);
+  setters.setTargetExamLabel(cached.targetExamLabel);
+  setters.setCuetDomainSubjects(cached.cuetDomainSubjects);
+  setters.setUpscOptionalSubject(cached.upscOptionalSubject);
+  setters.setCatalogExamKey(cached.catalogExamKey);
+  setters.setSelectedTrack(cached.selectedTrack);
+  setters.setExamResults(cached.examResults);
+}
 
 export function useSyllabusTracker() {
   const userId = useAuthStore((s) => s.user?.id);
@@ -111,6 +159,32 @@ export function useSyllabusTracker() {
         setLoading(true);
         setError(null);
       }
+      if (!shouldSyncWithServer()) {
+        const idbSnap = await getSyllabusSnapshot(userId);
+        const mem =
+          trackerCache && trackerCache.userId === userId
+            ? trackerCache
+            : idbSnap
+              ? snapshotToTrackerCache(idbSnap)
+              : null;
+        if (mem) {
+          trackerCache = mem;
+          applyTrackerCacheToState(mem, {
+            setRows,
+            setStatusBySyllabusMasterId,
+            setTargetExamLabel,
+            setCuetDomainSubjects,
+            setUpscOptionalSubject,
+            setCatalogExamKey,
+            setSelectedTrack,
+            setExamResults,
+          });
+          if (myId === loadSeqRef.current) setLoading(false);
+          return;
+        }
+        if (myId === loadSeqRef.current) setLoading(false);
+        return;
+      }
       try {
         if (myId !== loadSeqRef.current) return;
         const supabase = getSupabaseBrowserClient();
@@ -149,7 +223,7 @@ export function useSyllabusTracker() {
             : mergedStatus;
         setRows(allRows);
         setStatusBySyllabusMasterId(finalMap);
-        trackerCache = {
+        const cached: SyllabusTrackerCache = {
           userId,
           rows: allRows,
           statusBySyllabusMasterId: finalMap,
@@ -161,6 +235,19 @@ export function useSyllabusTracker() {
           examResults: loaded,
           loadedAt: Date.now(),
         };
+        trackerCache = cached;
+        void saveSyllabusSnapshot({
+          userId,
+          rows: allRows,
+          statusBySyllabusMasterId: finalMap,
+          targetExamLabel: cached.targetExamLabel,
+          cuetDomainSubjects: cached.cuetDomainSubjects,
+          upscOptionalSubject: cached.upscOptionalSubject,
+          catalogExamKey: cached.catalogExamKey,
+          selectedTrack: track,
+          examResults: loaded,
+          cachedAt: cached.loadedAt,
+        }).catch(() => {});
         if (silent) setError(null);
       } catch (e) {
         if (myId !== loadSeqRef.current) return;
@@ -185,31 +272,49 @@ export function useSyllabusTracker() {
       void load();
       return;
     }
-    const cached = trackerCache;
-    if (cached && cached.userId === userId) {
-      setRows(cached.rows);
-      setStatusBySyllabusMasterId(cached.statusBySyllabusMasterId);
-      setTargetExamLabel(cached.targetExamLabel);
-      setCuetDomainSubjects(cached.cuetDomainSubjects);
-      setUpscOptionalSubject(cached.upscOptionalSubject);
-      setCatalogExamKey(cached.catalogExamKey);
-      setSelectedTrack(cached.selectedTrack);
-      setExamResults(cached.examResults);
-      setLoading(false);
-      setError(null);
-      // Only trigger a background refresh when the cache is actually stale.
-      // Without this guard, every component mount fires 4 parallel Supabase
-      // queries even though the data hasn't changed.
-      if (Date.now() - cached.loadedAt > TRACKER_CACHE_TTL_MS) {
-        void load({ silent: true });
+    let cancelled = false;
+    void (async () => {
+      const idbSnap = await getSyllabusSnapshot(userId);
+      if (cancelled) return;
+      const cached =
+        trackerCache && trackerCache.userId === userId
+          ? trackerCache
+          : idbSnap
+            ? snapshotToTrackerCache(idbSnap)
+            : null;
+      if (cached) {
+        trackerCache = cached;
+        applyTrackerCacheToState(cached, {
+          setRows,
+          setStatusBySyllabusMasterId,
+          setTargetExamLabel,
+          setCuetDomainSubjects,
+          setUpscOptionalSubject,
+          setCatalogExamKey,
+          setSelectedTrack,
+          setExamResults,
+        });
+        setLoading(false);
+        setError(null);
+        const ttl = getSyllabusTrackerCacheTtlMs();
+        if (
+          shouldSyncWithServer() &&
+          Date.now() - cached.loadedAt > ttl
+        ) {
+          void load({ silent: true });
+        }
+        return;
       }
-      return;
-    }
-    void load();
+      void load();
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [load, userId]);
 
   useEffect(() => {
     const onProfileUpdated = () => {
+      if (!shouldSyncWithServer()) return;
       void load();
     };
     window.addEventListener(KALNEHI_PROFILE_UPDATED_EVENT, onProfileUpdated);
@@ -314,6 +419,51 @@ export function useSyllabusTracker() {
     });
   }, [examResults, statusBySyllabusMasterId]);
 
+  const persistSyllabusStatus = useCallback(
+    async (
+      keys: string[],
+      ids: string[],
+      nextStatus: MicrotopicProgressStatus,
+      mode: "single" | "bulk",
+    ): Promise<{ ok: true; serverStatus?: string } | { ok: false; error?: string }> => {
+      if (!userId) return { ok: false };
+      const patch: Record<string, string> = {};
+      for (const k of keys) patch[k] = nextStatus;
+      await patchSyllabusSnapshotStatus(userId, patch).catch(() => {});
+
+      const tryServer =
+        useSyncStore.getState().isOnline && shouldSyncWithServer();
+      if (tryServer) {
+        if (mode === "single" && ids[0]) {
+          const res = await updateMicrotopicStatus(ids[0], nextStatus);
+          if (res.ok) return { ok: true, serverStatus: res.row.status };
+          return { ok: false, error: res.error };
+        }
+        const res = await bulkUpdateChapterMicrotopics(ids, nextStatus);
+        if (res.ok) return { ok: true };
+        return { ok: false, error: res.error };
+      }
+
+      if (mode === "single" && ids[0]) {
+        await enqueueSyllabusOutbox(userId, {
+          type: "status",
+          syllabusMasterId: ids[0],
+          status: nextStatus,
+        });
+      } else {
+        await enqueueSyllabusOutbox(userId, {
+          type: "bulk",
+          syllabusMasterIds: ids,
+          status: nextStatus,
+        });
+      }
+      const { flushAllOutboxes } = await import("@/lib/sync");
+      void flushAllOutboxes(userId);
+      return { ok: true, serverStatus: nextStatus };
+    },
+    [userId],
+  );
+
   const setMicrotopicStatus = useCallback(
     async (
       syllabusMasterId: string,
@@ -329,7 +479,7 @@ export function useSyllabusTracker() {
       });
       pendingStatusRef.current[key] = next;
 
-      const res = await updateMicrotopicStatus(syllabusMasterId, next);
+      const res = await persistSyllabusStatus([key], [syllabusMasterId], next, "single");
 
       if (!res.ok) {
         delete pendingStatusRef.current[key];
@@ -337,27 +487,33 @@ export function useSyllabusTracker() {
           ...m,
           [key]: previousSnapshot,
         }));
-        setUpdateError(res.error);
+        setUpdateError(res.error ?? "Could not save. Try again when online.");
         return false;
       }
 
       setStatusBySyllabusMasterId((m) => ({
         ...m,
-        [key]: res.row.status,
+        [key]: res.serverStatus ?? next,
       }));
 
-      await load({ silent: true });
+      if (shouldSyncWithServer()) {
+        await load({ silent: true });
+      }
       delete pendingStatusRef.current[key];
 
       if (saveFeedbackTimer.current) clearTimeout(saveFeedbackTimer.current);
-      setSaveFeedback("Saved");
+      setSaveFeedback(
+        shouldSyncWithServer()
+          ? "Saved"
+          : "Saved on this device — will sync when you're online.",
+      );
       saveFeedbackTimer.current = setTimeout(() => {
         setSaveFeedback(null);
         saveFeedbackTimer.current = null;
       }, 2200);
       return true;
     },
-    [load],
+    [load, persistSyllabusStatus],
   );
 
   const undoMicrotopicToStatus = useCallback(
@@ -375,7 +531,12 @@ export function useSyllabusTracker() {
       });
       pendingStatusRef.current[key] = targetStatus;
 
-      const res = await updateMicrotopicStatus(syllabusMasterId, targetStatus);
+      const res = await persistSyllabusStatus(
+        [key],
+        [syllabusMasterId],
+        targetStatus,
+        "single",
+      );
 
       if (!res.ok) {
         delete pendingStatusRef.current[key];
@@ -383,20 +544,22 @@ export function useSyllabusTracker() {
           ...m,
           [key]: snapshotBefore,
         }));
-        setUpdateError(res.error);
+        setUpdateError(res.error ?? "Could not save. Try again when online.");
         return false;
       }
 
       setStatusBySyllabusMasterId((m) => ({
         ...m,
-        [key]: res.row.status,
+        [key]: res.serverStatus ?? targetStatus,
       }));
 
-      await load({ silent: true });
+      if (shouldSyncWithServer()) {
+        await load({ silent: true });
+      }
       delete pendingStatusRef.current[key];
       return true;
     },
-    [load],
+    [load, persistSyllabusStatus],
   );
 
   const setChapterCompleted = useCallback(
@@ -421,21 +584,32 @@ export function useSyllabusTracker() {
       });
       for (const k of keys) pendingStatusRef.current[k] = nextStatus;
 
-      const res = await bulkUpdateChapterMicrotopics(microtopicIds, nextStatus);
+      const res = await persistSyllabusStatus(
+        keys,
+        microtopicIds,
+        nextStatus,
+        "bulk",
+      );
 
       if (!res.ok) {
         for (const k of keys) delete pendingStatusRef.current[k];
         setStatusBySyllabusMasterId(previousSnapshot);
-        setUpdateError(res.error);
+        setUpdateError(res.error ?? "Could not save. Try again when online.");
         return false;
       }
 
-      await load({ silent: true });
+      if (shouldSyncWithServer()) {
+        await load({ silent: true });
+      }
       for (const k of keys) delete pendingStatusRef.current[k];
 
       if (saveFeedbackTimer.current) clearTimeout(saveFeedbackTimer.current);
       setSaveFeedback(
-        completed ? "Chapter marked complete" : "Chapter status reset",
+        shouldSyncWithServer()
+          ? completed
+            ? "Chapter marked complete"
+            : "Chapter status reset"
+          : "Saved on this device — will sync when you're online.",
       );
       saveFeedbackTimer.current = setTimeout(() => {
         setSaveFeedback(null);
@@ -443,7 +617,7 @@ export function useSyllabusTracker() {
       }, 2200);
       return true;
     },
-    [load],
+    [load, persistSyllabusStatus],
   );
 
   useEffect(() => {

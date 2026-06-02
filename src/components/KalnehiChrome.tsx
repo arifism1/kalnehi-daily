@@ -22,6 +22,7 @@ import { APP_DASHBOARD_PATH, APP_HOME_PATH } from "@/config/appRoutes";
 import { PwaInstallPromptDeferred } from "@/components/PwaInstallPromptDeferred";
 import { FreeTrialWelcomeBanner } from "@/components/subscription/FreeTrialWelcomeBanner";
 import { QuietSavedToast } from "@/components/QuietSavedToast";
+import { CapacitorFirstRunWifiTip } from "@/components/CapacitorFirstRunWifiTip";
 import { SyncStatusBanner } from "@/components/SyncStatusBanner";
 import { UndoToast } from "@/components/ui/UndoToast";
 import { TimerVisibilityBridge } from "@/components/task/TimerVisibilityBridge";
@@ -253,6 +254,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
             )}
           >
             <SyncStatusBanner />
+            <CapacitorFirstRunWifiTip />
             {children}
           </main>
         </div>

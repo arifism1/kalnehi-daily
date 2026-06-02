@@ -8,6 +8,7 @@ import { refreshStudySessionsFromServer } from "@/lib/refreshStudySessionsFromSe
 import { persistTasks } from "@/lib/taskIdb";
 import { refreshTasksFromSupabase } from "@/lib/refreshTasksFromSupabase";
 import { dispatchTasksSync } from "@/lib/taskRefreshDispatch";
+import { shouldSyncWithServer } from "@/lib/nativeSyncPolicy";
 import { flushAllOutboxes, initSyncManager } from "@/lib/sync";
 import { hydrateUserPlannerTextFromServer } from "@/lib/userPlannerTextClient";
 import { usePrimaryExamLabel } from "@/hooks/usePrimaryExamLabel";
@@ -54,10 +55,11 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!userId || !hydrated) return;
+    if (!shouldSyncWithServer()) return;
     let cancelled = false;
     void refreshTasksFromSupabase(userId).catch(() => {});
     const runSecondary = () => {
-      if (cancelled) return;
+      if (cancelled || !shouldSyncWithServer()) return;
       void Promise.all([
         refreshExecutionLogFromServer(),
         refreshStudySessionsFromServer(),
@@ -81,6 +83,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!userId) return;
     const onProfileUpdated = () => {
+      if (!shouldSyncWithServer()) return;
       void Promise.all([
         refreshTasksFromSupabase(userId),
         refreshExecutionLogFromServer(),

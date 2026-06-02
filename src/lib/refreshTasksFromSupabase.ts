@@ -29,6 +29,8 @@ import {
 import { toCalendarDateKey } from "@/lib/calendarDateKey";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { TASKS_SERVER_SYNC_LOOKBACK_DAYS } from "@/lib/taskRetentionPolicy";
+import { saveProfileExamCache } from "@/lib/profileExamIdb";
+import { shouldSyncWithServer } from "@/lib/nativeSyncPolicy";
 import { getAllOutboxMutations, persistMicrotopics, persistTasks } from "@/lib/taskIdb";
 import type { Microtopic, Task } from "@/store/useTaskStore";
 import { useTaskStore } from "@/store/useTaskStore";
@@ -68,6 +70,8 @@ function normalizeTaskRow(row: Record<string, unknown>): Task {
 }
 
 async function refreshTasksFromSupabaseImpl(userId: string): Promise<void> {
+  if (!shouldSyncWithServer()) return;
+
   const supabase = getSupabaseBrowserClient();
 
   const { data: profile, error: pProf } = await supabase
@@ -77,6 +81,15 @@ async function refreshTasksFromSupabaseImpl(userId: string): Promise<void> {
     .maybeSingle();
 
   if (pProf) throw pProf;
+
+  if (profile) {
+    void saveProfileExamCache(userId, {
+      primary_exam: profile.primary_exam,
+      target_exam: profile.target_exam,
+      cuet_domain_subjects: profile.cuet_domain_subjects,
+      upsc_optional_subjects: profile.upsc_optional_subjects,
+    }).catch(() => {});
+  }
 
   const examLabel = resolveSyllabusExam(profile);
   /** Aligns profile `target_exam` (`exams.exam_name`) with `syllabus_master.exam_name`. */
