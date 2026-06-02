@@ -1,9 +1,11 @@
 "use client";
 
 import clsx from "clsx";
-import { BookOpen, Grid2x2, Home, Calendar, Settings, Users } from "lucide-react";
+import { BookOpen, Grid2x2, Calendar, LayoutDashboard, Settings, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
+import { APP_DASHBOARD_PATH, APP_HOME_PATH } from "@/config/appRoutes";
 
 type Tab = {
   href: string;
@@ -17,13 +19,18 @@ type Tab = {
 };
 
 const TABS: Tab[] = [
-  { href: "/home", label: "Home", icon: Home },
-  { href: "/daily-plan", label: "Plan", icon: Calendar, matchPrefix: true },
   {
-    href: "/syllabus",
-    label: "Syllabus",
+    href: APP_HOME_PATH,
+    label: "Home",
     ariaLabel: "Syllabus Tracker",
     icon: BookOpen,
+    matchPrefix: true,
+  },
+  { href: "/daily-plan", label: "Plan", icon: Calendar, matchPrefix: true },
+  {
+    href: APP_DASHBOARD_PATH,
+    label: "Dashboard",
+    icon: LayoutDashboard,
     matchPrefix: true,
   },
   { href: "/study-squad", label: "Squad", icon: Users, matchPrefix: true },

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { APP_HOME_PATH } from "@/config/appRoutes";
 import { isAdminUser } from "@/lib/waitlist/batchEngine";
 import { AdminShell } from "@/components/admin/AdminShell";
 
@@ -16,7 +17,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   const isAdmin = await isAdminUser(user.id, user.email ?? undefined);
   if (!isAdmin) {
-    redirect("/home");
+    redirect(APP_HOME_PATH);
   }
 
   return <AdminShell>{children}</AdminShell>;

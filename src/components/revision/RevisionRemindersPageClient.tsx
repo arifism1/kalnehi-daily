@@ -13,6 +13,8 @@ import {
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { APP_DASHBOARD_PATH } from "@/config/appRoutes";
+
 import { ScheduleRevisionReminderDialog } from "@/components/revision/ScheduleRevisionReminderDialog";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { DateFilterNativeInput } from "@/components/ui/DateFilterNativeInput";
@@ -381,7 +383,7 @@ export function RevisionRemindersPageClient() {
       />
 
       <Link
-        href="/home"
+        href={APP_DASHBOARD_PATH}
         className="relative mb-6 inline-flex text-sm font-semibold text-kal-accent transition-colors hover:text-kal-accent-hover"
       >
         ← Back

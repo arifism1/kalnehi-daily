@@ -22,6 +22,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { ANDROID_APP_UA_MARKER } from "@/lib/androidAppUa";
 import { ORG_ID_HEADER } from "@/lib/auth/withOrganization";
+import { APP_HOME_PATH } from "@/config/appRoutes";
 import { distributedRateLimit } from "@/lib/distributedRateLimit";
 import { isLegalPath } from "@/lib/legal-paths";
 import { isPublicMarketingPath } from "@/lib/public-paths";
@@ -283,7 +284,7 @@ export async function proxy(request: NextRequest) {
     ua.includes(ANDROID_APP_UA_MARKER) &&
     isAndroidAppBillingBlockedPath(pathname)
   ) {
-    return NextResponse.redirect(new URL("/home", request.url), { status: 307 });
+    return NextResponse.redirect(new URL(APP_HOME_PATH, request.url), { status: 307 });
   }
 
   const baseResponse = NextResponse.next({ request });

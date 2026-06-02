@@ -33,9 +33,12 @@ import {
   LAUNCH_HIDDEN_DASHBOARD_FEATURE_IDS,
   resolveEffectiveEnabledFeatures,
 } from "@/lib/dashboardFeatures";
+import { APP_DASHBOARD_PATH, APP_HOME_PATH } from "@/config/appRoutes";
 
 export function navActive(pathname: string, href: string): boolean {
-  if (href === "/") return pathname === "/";
+  if (href === APP_HOME_PATH) {
+    return pathname === APP_HOME_PATH || pathname.startsWith(`${APP_HOME_PATH}/`);
+  }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -82,7 +85,13 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
   {
     title: "DAILY ESSENTIALS",
     items: [
-      { href: "/", label: "Home", shortLabel: "Home", Icon: Home },
+      { href: APP_HOME_PATH, label: "Home", shortLabel: "Home", Icon: BookOpen },
+      {
+        href: APP_DASHBOARD_PATH,
+        label: "Dashboard",
+        shortLabel: "Dashboard",
+        Icon: Home,
+      },
       {
         href: "/daily-plan",
         label: "Today's Plan",
@@ -266,7 +275,8 @@ export function filterNavByEnabledFeatures(
  * Full menu in {@link MAIN_NAV_SECTIONS} stays grouped by theme.
  */
 const QUICK_NAV_HREF_ORDER: readonly string[] = [
-  "/",
+  APP_HOME_PATH,
+  APP_DASHBOARD_PATH,
   "/daily-plan",
   "/timer",
   "/missed-tasks",

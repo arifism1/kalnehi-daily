@@ -1,7 +1,7 @@
 import { getOrgContext } from "@/lib/auth/withOrganization";
 import { getOrgAnalytics } from "@/actions/b2b/getOrgAnalyticsAction";
 
-export default async function B2BDashboardPage() {
+export default async function B2BInstitutePage() {
   const ctx = await getOrgContext();
   if (!ctx) return null;
 

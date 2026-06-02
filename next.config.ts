@@ -177,6 +177,11 @@ const nextConfig: NextConfig = {
         destination: "/mastermind",
         permanent: true,
       },
+      {
+        source: "/home",
+        destination: "/dashboard",
+        permanent: true,
+      },
     ];
   },
 

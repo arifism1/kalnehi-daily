@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 
 import { formatSupabaseError, getSupabaseBrowserClient } from "@/lib/supabase";
+import { APP_HOME_PATH } from "@/config/appRoutes";
 import { useAuthStore } from "@/store/useAuthStore";
 
 export default function AuthResetPage() {
@@ -46,7 +47,7 @@ export default function AuthResetPage() {
         data: { session },
       } = await supabase.auth.getSession();
       if (session) setAuth(session);
-      router.replace("/home");
+      router.replace(APP_HOME_PATH);
     } catch (e) {
       setError(formatSupabaseError(e));
     } finally {

@@ -18,7 +18,9 @@ import {
   useEffect,
   useMemo,
   useState,
+  type CSSProperties,
   type Dispatch,
+  type ReactNode,
   type SetStateAction,
 } from "react";
 
@@ -55,7 +57,12 @@ import {
 import {
   syllabusHasCatalogMarksData,
   type ChapterRollup,
+  type CuetScoringRollup,
+  type NeetYearProjection,
+  type SyllabusRollup,
 } from "@/lib/syllabusRollup";
+import { computeDaysToExam } from "@/lib/examCountdown";
+import { useTargetExamDate } from "@/hooks/useTargetExamDate";
 
 function buildRollupMapsFromChapters(chapters: ChapterRollup[]) {
   const chapterRollupMap = new Map<string, ChapterRollup>();
@@ -447,6 +454,385 @@ function SyllabusMicrotopicRow({
   );
 }
 
+function formatOverviewPercent(p: number): string {
+  return p % 1 === 0 ? p.toFixed(0) : p.toFixed(1);
+}
+
+function SyllabusStatCell({
+  value,
+  label,
+  ariaLabel,
+  caption,
+}: {
+  value: string;
+  label: string;
+  ariaLabel: string;
+  caption?: string | null;
+}) {
+  return (
+    <div className="flex min-w-0 flex-1 flex-col items-center gap-0.5 px-2 py-3 text-center">
+      <span className="kal-home-stat-value" aria-label={ariaLabel}>
+        {value}
+      </span>
+      <span className="text-[10px] leading-tight text-kal-muted">{label}</span>
+      {caption ? (
+        <span className="min-w-0 max-w-full px-0.5 text-[9px] leading-snug text-kal-muted">
+          {caption}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+function MarksDisclaimerDetails() {
+  return (
+    <details
+      className="kal-glass-subtle group rounded-xl border-kal-border/60 shadow-sm open:bg-kal-card-muted/45"
+      aria-label="Important marks and weightage disclaimer"
+    >
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-left text-sm font-medium text-kal-text outline-none transition-colors hover:bg-kal-card-muted marker:hidden [&::-webkit-details-marker]:hidden focus-visible:ring-2 focus-visible:ring-kal-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-kal-card">
+        <span>Important marks/weightage disclaimer</span>
+        <ChevronDown
+          aria-hidden
+          className="size-4 shrink-0 text-kal-accent transition-transform duration-200 group-open:rotate-180"
+        />
+      </summary>
+      <div className="border-t border-kal-border/50 px-4 pb-4 pt-3 text-[13px] leading-relaxed text-kal-muted">
+        Chapter marks are gathered from public sources and patterns seen in
+        previous years — a study aid, not an official mark scheme. You can edit
+        chapter marks anytime so they match how you prepare. When an exam does
+        not publish a clear chapter-wise split, we use careful averages or
+        estimates so you still get a fair picture. Totals may not line up exactly
+        with the exam&apos;s full marks (rounding and gaps happen), but they are
+        built to be largely accurate and helpful for planning your time.
+      </div>
+    </details>
+  );
+}
+
+function SyllabusProjScoreCell({
+  showMarksUi,
+  cuetScoringRollup,
+  neetYearProjections,
+  isUpscMainsUi,
+  maxScore,
+  rollup,
+}: {
+  showMarksUi: boolean;
+  cuetScoringRollup: CuetScoringRollup | null;
+  neetYearProjections: NeetYearProjection[];
+  isUpscMainsUi: boolean;
+  maxScore: number;
+  rollup: SyllabusRollup;
+}) {
+  if (cuetScoringRollup) {
+    return (
+      <SyllabusStatCell
+        value={`${cuetScoringRollup.totalProjected}/${cuetScoringRollup.totalMax}`}
+        label="Proj. score"
+        ariaLabel={`Projected score ${cuetScoringRollup.totalProjected} out of ${cuetScoringRollup.totalMax}`}
+      />
+    );
+  }
+  if (!showMarksUi) return null;
+
+  const top = neetYearProjections[0];
+  if (top && neetYearProjections.length > 1) {
+    const scoreVal = isUpscMainsUi
+      ? rollup.totalMarksMastered.toFixed(0)
+      : String(top.projectedOutOf720);
+    const denom = isUpscMainsUi ? UPSC_CSE_MAINS_UI_TOTAL_MARKS : maxScore;
+    return (
+      <div className="flex min-w-0 flex-1 flex-col items-center gap-1 px-2 py-3 text-center">
+        <details
+          className="kal-glass-subtle group w-full max-w-[14rem] rounded-lg border border-kal-border/60 text-center open:bg-kal-card-muted/40"
+          aria-label="Marks projection by year"
+        >
+          <summary className="flex cursor-pointer list-none flex-col items-center gap-0.5 rounded-lg px-2 py-1 outline-none marker:hidden [&::-webkit-details-marker]:hidden focus-visible:ring-2 focus-visible:ring-kal-accent/40">
+            <span className="kal-home-stat-value" aria-label={`Projected score ${scoreVal} out of ${denom}`}>
+              {scoreVal}
+              <span className="text-base font-semibold text-kal-muted"> / {denom}</span>
+            </span>
+            <span className="flex items-center gap-0.5 text-[9px] text-kal-muted">
+              Based on {top.year} pattern
+              <ChevronDown
+                aria-hidden
+                className="size-3 text-kal-accent transition-transform group-open:rotate-180"
+              />
+            </span>
+          </summary>
+          <ul className="border-t border-kal-border/50 px-2 pb-2 pt-1.5 text-left text-[10px]">
+            {neetYearProjections.map((p) => (
+              <li key={p.year} className="border-b border-kal-border/35 py-1.5 last:border-0">
+                <span className="font-medium text-kal-muted">{p.year}</span>
+                <span className="ml-1 tabular-nums font-bold text-kal-text">
+                  {isUpscMainsUi
+                    ? rollup.totalMarksMastered.toFixed(0)
+                    : p.projectedOutOf720}
+                  <span className="font-semibold text-kal-muted">
+                    {" "}
+                    / {isUpscMainsUi ? UPSC_CSE_MAINS_UI_TOTAL_MARKS : maxScore}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </details>
+        <span className="text-[10px] leading-tight text-kal-muted">Proj. score</span>
+      </div>
+    );
+  }
+
+  if (top) {
+    const scoreVal = isUpscMainsUi
+      ? rollup.totalMarksMastered.toFixed(0)
+      : String(top.projectedOutOf720);
+    const denom = isUpscMainsUi ? UPSC_CSE_MAINS_UI_TOTAL_MARKS : maxScore;
+    return (
+      <SyllabusStatCell
+        value={`${scoreVal}/${denom}`}
+        label="Proj. score"
+        ariaLabel={`Projected score ${scoreVal} out of ${denom}`}
+        caption={`Based on ${top.year} pattern`}
+      />
+    );
+  }
+
+  const mastered = rollup.totalMarksMastered.toFixed(0);
+  const pool = isUpscMainsUi
+    ? String(UPSC_CSE_MAINS_UI_TOTAL_MARKS)
+    : rollup.totalMarksPool.toFixed(0);
+  return (
+    <SyllabusStatCell
+      value={`${mastered}/${pool}`}
+      label="Proj. score"
+      ariaLabel={`Marks secured ${mastered} out of ${pool}`}
+    />
+  );
+}
+
+function SyllabusOverviewPanel({
+  displayExam,
+  daysToExam,
+  syllabusHeaderPercent,
+  showMarksUi,
+  cuetScoringRollup,
+  neetYearProjections,
+  isUpscMainsUi,
+  maxScore,
+  rollup,
+}: {
+  displayExam: string;
+  daysToExam: number | null;
+  syllabusHeaderPercent: number;
+  showMarksUi: boolean;
+  cuetScoringRollup: CuetScoringRollup | null;
+  neetYearProjections: NeetYearProjection[];
+  isUpscMainsUi: boolean;
+  maxScore: number;
+  rollup: SyllabusRollup;
+}) {
+  const showProjScore = Boolean(cuetScoringRollup) || showMarksUi;
+  const syllabusDisplay = `${formatOverviewPercent(syllabusHeaderPercent)}%`;
+  const divider = (
+    <div
+      className="w-px self-stretch"
+      style={{ background: "rgba(186,117,23,0.2)" }}
+      aria-hidden
+    />
+  );
+
+  return (
+    <section className="kal-glass-panel overflow-hidden rounded-2xl border-kal-accent/35 p-4 shadow-lg">
+      <p className="text-[11px] text-kal-text-secondary">
+        {displayExam}
+        {daysToExam != null ? (
+          <>
+            {" · "}
+            <span
+              className="font-medium text-[#BA7517] dark:text-kal-accent-dark"
+              aria-live="polite"
+            >
+              {daysToExam} day{daysToExam === 1 ? "" : "s"} to exam
+            </span>
+          </>
+        ) : null}
+      </p>
+      <div
+        className="mt-2 flex divide-x"
+        style={
+          { "--divide-color": "rgba(186,117,23,0.2)" } as CSSProperties
+        }
+      >
+        <SyllabusStatCell
+          value={syllabusDisplay}
+          label="Syllabus"
+          ariaLabel={`${syllabusHeaderPercent.toFixed(1)} percent of syllabus complete`}
+        />
+        {showProjScore ? (
+          <>
+            {divider}
+            <SyllabusProjScoreCell
+              showMarksUi={showMarksUi}
+              cuetScoringRollup={cuetScoringRollup}
+              neetYearProjections={neetYearProjections}
+              isUpscMainsUi={isUpscMainsUi}
+              maxScore={maxScore}
+              rollup={rollup}
+            />
+          </>
+        ) : null}
+      </div>
+      <div className="mt-2">
+        <ChapterBar
+          size="subject"
+          percent={syllabusHeaderPercent}
+          progressAriaLabel={`Overall syllabus progress, ${formatOverviewPercent(syllabusHeaderPercent)} percent`}
+        />
+      </div>
+      {!cuetScoringRollup && !showMarksUi ? (
+        <p className="mt-2 text-[11px] leading-snug text-kal-muted">
+          Weighted projections appear when chapter marks are set for this exam.
+        </p>
+      ) : null}
+    </section>
+  );
+}
+
+type MultiExamOverviewCardProps = {
+  examLabel: string | null;
+  displayName: string;
+  daysToExam: number | null;
+  overallPercent: number;
+  showProjScore: boolean;
+  topProjection: NeetYearProjection | null;
+  projections: NeetYearProjection[];
+  maxScore: number;
+  totalMarksMastered: number;
+  totalMarksPool: number;
+  microtopicsLine: string | null;
+};
+
+function MultiExamOverviewCard({
+  displayName,
+  daysToExam,
+  overallPercent,
+  showProjScore,
+  topProjection,
+  projections,
+  maxScore,
+  totalMarksMastered,
+  totalMarksPool,
+  microtopicsLine,
+}: MultiExamOverviewCardProps) {
+  const syllabusDisplay = `${formatOverviewPercent(overallPercent)}%`;
+  const divider = (
+    <div
+      className="w-px self-stretch"
+      style={{ background: "rgba(186,117,23,0.2)" }}
+      aria-hidden
+    />
+  );
+
+  let projCell: ReactNode = null;
+  if (showProjScore && topProjection) {
+    if (projections.length > 1) {
+      projCell = (
+        <div className="flex min-w-0 flex-1 flex-col items-center gap-1 px-2 py-3 text-center">
+          <details className="kal-glass-subtle group w-full max-w-[14rem] rounded-lg border border-kal-border/60 text-center open:bg-kal-card-muted/40">
+            <summary className="flex cursor-pointer list-none flex-col items-center gap-0.5 rounded-lg px-2 py-1 outline-none marker:hidden [&::-webkit-details-marker]:hidden">
+              <span className="kal-home-stat-value">
+                {topProjection.projectedOutOf720}
+                <span className="text-base font-semibold text-kal-muted">
+                  {" "}
+                  / {maxScore}
+                </span>
+              </span>
+              <span className="flex items-center gap-0.5 text-[9px] text-kal-muted">
+                {topProjection.year} pattern
+                <ChevronDown
+                  aria-hidden
+                  className="size-3 text-kal-accent transition-transform group-open:rotate-180"
+                />
+              </span>
+            </summary>
+            <ul className="border-t border-kal-border/50 px-2 pb-2 pt-1.5 text-left text-[10px]">
+              {projections.map((p) => (
+                <li key={p.year} className="py-1 tabular-nums">
+                  <span className="text-kal-muted">{p.year}</span>{" "}
+                  <span className="font-bold text-kal-text">
+                    {p.projectedOutOf720}/{maxScore}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </details>
+          <span className="text-[10px] text-kal-muted">Proj. score</span>
+        </div>
+      );
+    } else {
+      projCell = (
+        <SyllabusStatCell
+          value={`${topProjection.projectedOutOf720}/${maxScore}`}
+          label="Proj. score"
+          ariaLabel={`Projected score ${topProjection.projectedOutOf720} out of ${maxScore}`}
+          caption={`${topProjection.year} pattern`}
+        />
+      );
+    }
+  } else if (showProjScore && totalMarksPool > 0) {
+    projCell = (
+      <SyllabusStatCell
+        value={`${totalMarksMastered.toFixed(0)}/${totalMarksPool.toFixed(0)}`}
+        label="Proj. score"
+        ariaLabel={`Marks ${totalMarksMastered.toFixed(0)} out of ${totalMarksPool.toFixed(0)}`}
+      />
+    );
+  }
+
+  return (
+    <section className="kal-glass-panel overflow-hidden rounded-2xl border-kal-accent/35 p-4 shadow-lg">
+      <p className="text-[11px] text-kal-text-secondary">
+        {displayName}
+        {daysToExam != null ? (
+          <>
+            {" · "}
+            <span
+              className="font-medium text-[#BA7517] dark:text-kal-accent-dark"
+              aria-live="polite"
+            >
+              {daysToExam} day{daysToExam === 1 ? "" : "s"} to exam
+            </span>
+          </>
+        ) : null}
+      </p>
+      <div className="mt-2 flex divide-x">
+        <SyllabusStatCell
+          value={syllabusDisplay}
+          label="Syllabus"
+          ariaLabel={`${overallPercent.toFixed(1)} percent of syllabus complete`}
+        />
+        {projCell ? (
+          <>
+            {divider}
+            {projCell}
+          </>
+        ) : null}
+      </div>
+      <div className="mt-2">
+        <ChapterBar
+          size="subject"
+          percent={overallPercent}
+          progressAriaLabel={`${displayName}: ${formatOverviewPercent(overallPercent)} percent syllabus complete`}
+        />
+      </div>
+      {microtopicsLine ? (
+        <p className="mt-2 text-[11px] text-kal-muted">{microtopicsLine}</p>
+      ) : null}
+    </section>
+  );
+}
+
 function ChapterBar({
   percent,
   size = "chapter",
@@ -616,20 +1002,12 @@ export function SyllabusTracker() {
       displayNameForExamCatalog(activeExamName, examCatalogRows) || "Your exam",
     [activeExamName, examCatalogRows],
   );
-  const headerSyllabusEyebrow = useMemo(() => {
-    if (examResults.length <= 1) {
-      return `${displayExam} syllabus`;
-    }
-    // react-doctor-disable-next-line react-doctor/js-combine-iterations -- type-narrowing filter after map; flatMap would lose the type predicate
-    const names = examResults
-      .map(
-        (er) =>
-          displayNameForExamCatalog(er.examLabel, examCatalogRows) || er.examLabel,
-      )
-      .filter((n): n is string => Boolean(n?.trim()));
-    if (names.length === 0) return `${displayExam} syllabus`;
-    return `${names.join(" · ")} syllabus`;
-  }, [displayExam, examCatalogRows, examResults]);
+  const { examDate, examDates } = useTargetExamDate();
+  const daysToExam = useMemo(() => {
+    if (!examDate) return null;
+    return computeDaysToExam(examDate);
+  }, [examDate]);
+
   const grouped = useMemo(() => groupBySubjectAndChapter(rows), [rows]);
   const subjects = useMemo(
     () => [...grouped.keys()].toSorted(sortSubjects),
@@ -813,337 +1191,69 @@ export function SyllabusTracker() {
   }
 
   return (
-    <div className="space-y-6 pb-4">
-      <header>
-        <p className="kal-category-label text-kal-accent">
-          {headerSyllabusEyebrow}
-        </p>
-        <h1 className="kal-feature-title mt-1">
-          Syllabus Tracker
-        </h1>
-        {showMarksUi && !cuetScoringRollup ? (
-          <details
-            className="kal-glass-subtle group mt-4 rounded-xl border-kal-border/60 shadow-sm open:bg-kal-card-muted/45"
-            aria-label="Important marks and weightage disclaimer"
-          >
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium text-kal-text outline-none transition-colors hover:bg-kal-card-muted marker:hidden [&::-webkit-details-marker]:hidden focus-visible:ring-2 focus-visible:ring-kal-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-kal-card">
-              <span>Important marks/weightage disclaimer</span>
-              <ChevronDown
-                aria-hidden
-                className="size-4 shrink-0 text-kal-accent transition-transform duration-200 group-open:rotate-180"
-              />
-            </summary>
-            <div className="border-t border-kal-border/50 px-4 pb-4 pt-3 text-[13px] leading-relaxed text-kal-muted">
-              Chapter marks are gathered from public sources and patterns seen in
-              previous years — a study aid, not an official mark scheme. You can
-              edit chapter marks anytime so they match how you prepare. When an
-              exam does not publish a clear chapter-wise split, we use careful
-              averages or estimates so you still get a fair picture. Totals may
-              not line up exactly with the exam&apos;s full marks (rounding and
-              gaps happen), but they are built to be largely accurate and helpful
-              for planning your time.
-            </div>
-          </details>
-        ) : null}
-      </header>
-
+    <div className="space-y-4 pb-4">
       {examRollups ? (
-        /* Multi-exam track: one compact card per exam */
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2">
           {examRollups.map((er) => {
             const erHasMarks = syllabusHasCatalogMarksData(
               examResults.find((x) => x.examLabel === er.examLabel)?.rows ?? [],
             );
             const erShowMarks = examHasPrevYearMarks(er.examLabel) && erHasMarks;
             const erDisplayName =
-              displayNameForExamCatalog(er.examLabel, examCatalogRows) || er.examLabel;
+              displayNameForExamCatalog(er.examLabel, examCatalogRows) ||
+              er.examLabel ||
+              "Exam";
+            const erDays =
+              er.examLabel && examDates[er.examLabel]
+                ? computeDaysToExam(examDates[er.examLabel])
+                : null;
             const topProjection = er.projections[0] ?? null;
-            const marksProjectionBlock =
-              erShowMarks && topProjection ? (
-                er.projections.length <= 1 ? (
-                  <div className="mt-3 flex items-baseline gap-1">
-                    <span
-                      className="text-lg font-bold tabular-nums"
-                      style={{ color: "#BA7517" }}
-                    >
-                      {topProjection.projectedOutOf720}
-                    </span>
-                    <span className="text-sm font-medium text-kal-muted">
-                      / {er.maxScore} · {topProjection.year} pattern
-                    </span>
-                  </div>
-                ) : (
-                  <details
-                    className="kal-glass-subtle group mt-3 rounded-xl border border-kal-border/60 shadow-sm open:bg-kal-card-muted/40"
-                    aria-label={`${erDisplayName} marks by year`}
-                  >
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-left outline-none transition-colors hover:bg-kal-card-muted/50 marker:hidden [&::-webkit-details-marker]:hidden focus-visible:ring-2 focus-visible:ring-kal-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-kal-card">
-                      <div className="flex min-w-0 flex-wrap items-baseline gap-1">
-                        <span
-                          className="text-lg font-bold tabular-nums"
-                          style={{ color: "#BA7517" }}
-                        >
-                          {topProjection.projectedOutOf720}
-                        </span>
-                        <span className="text-sm font-medium text-kal-muted">
-                          / {er.maxScore} · {topProjection.year} pattern
-                        </span>
-                      </div>
-                      <ChevronDown
-                        aria-hidden
-                        className="size-4 shrink-0 text-kal-accent transition-transform duration-200 group-open:rotate-180"
-                      />
-                    </summary>
-                    <div className="border-t border-kal-border/50 px-3 pb-3 pt-2">
-                      <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-kal-muted">
-                        Per-year projection
-                      </p>
-                      <ul className="space-y-2.5">
-                        {er.projections.map((p) => (
-                          <li
-                            key={p.year}
-                            className="flex flex-col gap-0.5 border-b border-kal-border/35 pb-2 last:border-0 last:pb-0"
-                          >
-                            <span className="text-[11px] font-medium text-kal-text-secondary">
-                              {p.patternLabel}
-                            </span>
-                            <span className="text-sm font-bold tabular-nums" style={{ color: "#BA7517" }}>
-                              {p.projectedOutOf720}
-                              <span className="text-xs font-semibold text-kal-muted">
-                                {" "}
-                                / {er.maxScore}
-                              </span>
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </details>
-                )
-              ) : null;
+            const completed = er.rollup.chapters.reduce(
+              (s, ch) => s + ch.completedCount,
+              0,
+            );
+            const total = er.rollup.chapters.reduce(
+              (s, ch) => s + ch.totalCount,
+              0,
+            );
+            const microtopicsLine =
+              !erShowMarks || (erShowMarks && !topProjection)
+                ? `${completed}/${total} microtopics complete`
+                : null;
+
             return (
-              <section
-                key={er.examLabel}
-                className="kal-glass-panel overflow-hidden rounded-2xl border-kal-accent/35 p-5 shadow-lg"
-              >
-                <p className="kal-category-label text-kal-accent">{erDisplayName}</p>
-                <p
-                  className="mt-1 font-serif text-3xl font-normal tabular-nums tracking-tight text-[#BA7517]"
-                  aria-live="polite"
-                >
-                  {er.rollup.overallPercent % 1 === 0
-                    ? er.rollup.overallPercent.toFixed(0)
-                    : er.rollup.overallPercent.toFixed(1)}%
-                </p>
-                <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-kal-card-muted">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-kal-accent via-orange-600 to-orange-700 transition-[width] duration-500"
-                    style={{ width: `${Math.min(100, er.rollup.overallPercent)}%` }}
-                  />
-                </div>
-                {marksProjectionBlock}
-                {erShowMarks && !topProjection ? (
-                  <div className="mt-3 flex items-baseline gap-1">
-                    <span className="text-lg font-bold tabular-nums text-orange-600 dark:text-orange-300">
-                      {er.rollup.totalMarksMastered.toFixed(0)}
-                    </span>
-                    <span className="text-sm font-medium text-kal-muted">
-                      / {er.rollup.totalMarksPool.toFixed(0)} marks
-                    </span>
-                  </div>
-                ) : !erShowMarks ? (
-                  <p className="mt-2 text-[11px] text-kal-muted">
-                    {er.rollup.chapters.reduce((s, ch) => s + ch.completedCount, 0)} / {er.rollup.chapters.reduce((s, ch) => s + ch.totalCount, 0)} microtopics complete
-                  </p>
-                ) : null}
-              </section>
+              <MultiExamOverviewCard
+                key={er.examLabel ?? erDisplayName}
+                examLabel={er.examLabel}
+                displayName={erDisplayName}
+                daysToExam={erDays}
+                overallPercent={er.rollup.overallPercent}
+                showProjScore={erShowMarks}
+                topProjection={topProjection}
+                projections={er.projections}
+                maxScore={er.maxScore}
+                totalMarksMastered={er.rollup.totalMarksMastered}
+                totalMarksPool={er.rollup.totalMarksPool}
+                microtopicsLine={microtopicsLine}
+              />
             );
           })}
         </div>
       ) : (
-        /* Single-exam: existing card unchanged */
-        <section className="kal-glass-panel overflow-hidden rounded-2xl border-kal-accent/35 p-6 shadow-lg">
-          <div
-            className={clsx(
-              "flex gap-6",
-              cuetScoringRollup
-                ? "flex-col items-stretch sm:flex-row sm:flex-wrap sm:items-end sm:justify-between"
-                : "flex-wrap items-end justify-between",
-            )}
-          >
-            <div className="min-w-0">
-              <p className="kal-category-label text-kal-accent">
-                {cuetScoringRollup ? "Overall CUET progress" : "Syllabus progress"}
-              </p>
-              {!cuetScoringRollup && !showMarksUi ? (
-                <p className="mt-1 text-[13px] font-medium leading-snug text-kal-muted">
-                  Track your completion %
-                </p>
-              ) : null}
-              <p
-                className="mt-1 font-serif text-4xl font-normal tabular-nums tracking-tight text-[#BA7517]"
-                aria-live="polite"
-              >
-                {syllabusHeaderPercent}%
-              </p>
-              <p className="mt-1 text-[11px] text-kal-muted">
-                {cuetScoringRollup
-                  ? "Microtopic completion across selected domains"
-                  : showMarksUi
-                    ? isUpscMainsUi
-                      ? `Full Mains written scale (${UPSC_CSE_MAINS_UI_TOTAL_MARKS} max, marks_${primaryMarksYear} weights)`
-                      : `Overall marks_${primaryMarksYear} chapter pool`
-                    : `Overall progress: ${rollup.overallPercent % 1 === 0 ? rollup.overallPercent.toFixed(0) : rollup.overallPercent.toFixed(1)}%`}
-              </p>
-            </div>
-            {cuetScoringRollup || showMarksUi ? (
-              <div className="flex min-w-0 w-full flex-col gap-3 text-left sm:w-auto sm:min-w-[12rem] sm:text-right">
-                {cuetScoringRollup ? (
-                  <div className="w-full">
-                    <p className="text-xs text-kal-muted">Projected total</p>
-                    <p className="text-lg font-semibold tabular-nums text-orange-600 dark:text-orange-300">
-                      {cuetScoringRollup.totalProjected}
-                      <span className="text-kal-muted">
-                        {" "}
-                        / {cuetScoringRollup.totalMax}
-                      </span>
-                    </p>
-                    <ul className="mt-3 space-y-1.5 border-t border-kal-border/60 pt-3 text-[10px] text-kal-muted sm:border-0 sm:pt-0">
-                      {cuetScoringRollup.subjects.map((s) => (
-                        <li
-                          key={s.subject}
-                          className="flex items-baseline justify-between gap-3"
-                        >
-                          <span className="min-w-0 flex-1 text-kal-muted">{s.subject}</span>
-                          <span className="shrink-0 tabular-nums text-kal-accent">
-                            {s.projectedMarks}/{s.maxPerSubject}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : showMarksUi && neetYearProjections.length > 0 ? (
-                  neetYearProjections.length <= 1 ? (
-                    neetYearProjections.map((p) => (
-                      <div key={p.year}>
-                        <p className="text-[10px] font-semibold uppercase text-kal-muted">
-                          {displayExam} {p.year}
-                        </p>
-                        <p className="mt-0.5 text-xl font-bold tabular-nums" style={{ color: "#BA7517" }}>
-                          {isUpscMainsUi
-                            ? rollup.totalMarksMastered.toFixed(0)
-                            : p.projectedOutOf720}
-                          <span className="text-base font-semibold text-kal-muted">
-                            {" "}
-                            /{" "}
-                            {isUpscMainsUi
-                              ? UPSC_CSE_MAINS_UI_TOTAL_MARKS
-                              : maxScore}
-                          </span>
-                        </p>
-                        <p className="mt-0.5 text-[10px] leading-snug text-kal-muted">
-                          Based on {p.year} pattern
-                        </p>
-                      </div>
-                    ))
-                  ) : (
-                    <details
-                      className="kal-glass-subtle group mt-1 w-full rounded-xl border border-kal-border/60 text-left shadow-sm open:bg-kal-card-muted/40 sm:text-right"
-                      aria-label="Marks projection by year"
-                    >
-                      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-xl px-3 py-2.5 outline-none transition-colors hover:bg-kal-card-muted/50 marker:hidden [&::-webkit-details-marker]:hidden focus-visible:ring-2 focus-visible:ring-kal-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-kal-card">
-                        <div className="min-w-0 flex-1 sm:text-right">
-                          <p className="text-[10px] font-semibold uppercase text-kal-muted">
-                            {displayExam} {neetYearProjections[0]!.year}
-                          </p>
-                          <p className="mt-0.5 text-xl font-bold tabular-nums" style={{ color: "#BA7517" }}>
-                            {isUpscMainsUi
-                              ? rollup.totalMarksMastered.toFixed(0)
-                              : neetYearProjections[0]!.projectedOutOf720}
-                            <span className="text-base font-semibold text-kal-muted">
-                              {" "}
-                              /{" "}
-                              {isUpscMainsUi
-                                ? UPSC_CSE_MAINS_UI_TOTAL_MARKS
-                                : maxScore}
-                            </span>
-                          </p>
-                          <p className="mt-0.5 text-[10px] leading-snug text-kal-muted">
-                            Based on {neetYearProjections[0]!.year} pattern
-                          </p>
-                        </div>
-                        <ChevronDown
-                          aria-hidden
-                          className="size-4 shrink-0 text-kal-accent transition-transform duration-200 group-open:rotate-180"
-                        />
-                      </summary>
-                      <div className="border-t border-kal-border/50 px-3 pb-3 pt-2 text-left">
-                        <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-kal-muted">
-                          Per-year projection
-                        </p>
-                        <ul className="space-y-3">
-                          {neetYearProjections.map((p) => (
-                            <li
-                              key={p.year}
-                              className="border-b border-kal-border/35 pb-3 last:border-0 last:pb-0"
-                            >
-                              <p className="text-[10px] font-semibold uppercase text-kal-muted">
-                                {displayExam} {p.year}
-                              </p>
-                              <p className="mt-0.5 text-lg font-bold tabular-nums" style={{ color: "#BA7517" }}>
-                                {isUpscMainsUi
-                                  ? rollup.totalMarksMastered.toFixed(0)
-                                  : p.projectedOutOf720}
-                                <span className="text-sm font-semibold text-kal-muted">
-                                  {" "}
-                                  /{" "}
-                                  {isUpscMainsUi
-                                    ? UPSC_CSE_MAINS_UI_TOTAL_MARKS
-                                    : maxScore}
-                                </span>
-                              </p>
-                              <p className="mt-0.5 text-[10px] leading-snug text-kal-muted">
-                                {p.patternLabel}
-                              </p>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </details>
-                  )
-                ) : (
-                  <div>
-                    <p className="text-xs text-kal-muted">Marks secured</p>
-                    <p className="text-lg font-semibold tabular-nums text-orange-600 dark:text-orange-300">
-                      {rollup.totalMarksMastered.toFixed(0)}
-                      <span className="text-kal-muted">
-                        {" "}
-                        /{" "}
-                        {isUpscMainsUi
-                          ? UPSC_CSE_MAINS_UI_TOTAL_MARKS
-                          : rollup.totalMarksPool.toFixed(0)}
-                      </span>
-                    </p>
-                  </div>
-                )}
-              </div>
-            ) : null}
-          </div>
-          {!cuetScoringRollup && !showMarksUi ? (
-            <p className="mt-3 max-w-prose text-[13px] leading-snug text-kal-muted">
-              Weighted projections appear when chapter marks are set for this exam.
-            </p>
-          ) : null}
-          <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-kal-card-muted">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-kal-accent via-orange-600 to-orange-700 transition-[width] duration-500"
-              style={{
-                width: `${Math.min(100, syllabusHeaderPercent)}%`,
-              }}
-            />
-          </div>
-        </section>
+        <SyllabusOverviewPanel
+          displayExam={displayExam}
+          daysToExam={daysToExam}
+          syllabusHeaderPercent={syllabusHeaderPercent}
+          showMarksUi={showMarksUi}
+          cuetScoringRollup={cuetScoringRollup}
+          neetYearProjections={neetYearProjections}
+          isUpscMainsUi={isUpscMainsUi}
+          maxScore={maxScore}
+          rollup={rollup}
+        />
       )}
+
+      {showMarksUi && !cuetScoringRollup ? <MarksDisclaimerDetails /> : null}
 
       <TransientNotice
         message={updateError}

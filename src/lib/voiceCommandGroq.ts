@@ -79,6 +79,8 @@ export type VoiceCommandResult =
 
 const VALID_NAV_PATHS = new Set([
   // Core / home
+  "/syllabus",
+  "/dashboard",
   "/home",
   "/settings",
   "/notifications",
@@ -145,6 +147,7 @@ function voiceNavigatePathname(path: string): string {
 /** Legacy URLs still emitted by models or bookmarks → canonical app path. */
 const VOICE_NAV_PATH_ALIASES: Readonly<Record<string, string>> = {
   "/revision-reminders": "/revision-tracker",
+  "/home": "/syllabus",
 };
 
 export function canonicalVoiceNavigatePath(path: string): string {
@@ -260,13 +263,14 @@ Parse the user voice command and return ONLY a valid JSON object — no markdown
 - **Daily Debrief** (reflection / journal / notebook debrief flow only) → /daily-debrief — only when the user clearly says debrief, reflection journal, or "daily debrief", NOT when they only say "recap"
 
 Valid paths:
-  Core: /home, /settings (profile and app preferences), /notifications, /my-subscription, /feedback
+  Core: /syllabus (home), /dashboard (daily hub), /home (alias → syllabus), /settings (profile and app preferences), /notifications, /my-subscription, /feedback
   Planning: /daily-plan, /daily-debrief (/daily-log redirects to debrief), /recap (Today's Recap), /recap/weekly, /recap/monthly, /daily-engine, /dictate-day, /saved-plans, /missed-tasks, /calendar, /timer, /study-squad, /study-sessions, /study-camera
   Planner: /planner, /planner/habits, /planner/schedule, /planner/weekly, /planner/todos, /planner/routine, /planner/productivity
   Track: /progress, /consistency-tracker, /heatmap, /marks-engine, /my-target, /target-score-blueprint, /mock-tests, /mistake-log
   Revise: /revision-tracker, /syllabus, /doubts, /mastermind, /prepbrain (same AI coach as Mastermind — prefer /mastermind)
   Wellbeing: /habits, /meditation, /meditation/consistency, /motivation
-- "Go to home" → {"intent":"navigate","path":"/home","response_text":"Going home."}
+- "Go to home" → {"intent":"navigate","path":"/syllabus","response_text":"Going home."}
+- "Go to dashboard" / "Daily hub" → {"intent":"navigate","path":"/dashboard","response_text":"Opening your dashboard."}
 - "Go to daily plan" → {"intent":"navigate","path":"/daily-plan","response_text":"Going to your daily plan."}
 - "Go to today's recap" / "Open my recap" → {"intent":"navigate","path":"/recap","response_text":"Opening Today's Recap."}
 - "Weekly recap" → {"intent":"navigate","path":"/recap/weekly","response_text":"Opening your weekly recap."}
@@ -388,7 +392,7 @@ function parseIntent(o: Record<string, unknown>): VoiceCommandIntent | null {
       const path = typeof o.path === "string" ? o.path.trim() : "";
       return {
         intent: "navigate",
-        path: isVoiceNavigatePathAllowed(path) ? canonicalVoiceNavigatePath(path) : "/home",
+        path: isVoiceNavigatePathAllowed(path) ? canonicalVoiceNavigatePath(path) : "/syllabus",
       };
     }
     case "query_plan":

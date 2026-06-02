@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 
+import { APP_HOME_PATH } from "@/config/appRoutes";
+
 const NAV_GROUPS: {
   label: string;
   items: { label: string; href: string }[];
@@ -103,7 +105,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </nav>
         <div className="border-t border-kal-border p-3">
           <Link
-            href="/home"
+            href={APP_HOME_PATH}
             className="block rounded-lg p-2 text-xs text-kal-muted hover:text-kal-text"
           >
             ← Back to app
@@ -115,7 +117,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <header className="sticky top-0 z-10 border-b border-kal-border bg-kal-card/90 backdrop-blur-sm lg:hidden">
           <div className="flex h-12 items-center justify-between gap-2 px-3">
             <span className="text-xs font-bold uppercase tracking-widest text-kal-accent">Admin</span>
-            <Link href="/home" className="text-xs text-kal-muted">
+            <Link href={APP_HOME_PATH} className="text-xs text-kal-muted">
               App
             </Link>
           </div>

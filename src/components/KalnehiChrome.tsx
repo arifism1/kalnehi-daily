@@ -18,6 +18,7 @@ import { TourGate } from "@/components/tour/TourGate";
 import { useVoiceCommandStore } from "@/store/useVoiceCommandStore";
 
 import { KalnehiMark } from "@/components/KalnehiMark";
+import { APP_DASHBOARD_PATH, APP_HOME_PATH } from "@/config/appRoutes";
 import { PwaInstallPromptDeferred } from "@/components/PwaInstallPromptDeferred";
 import { FreeTrialWelcomeBanner } from "@/components/subscription/FreeTrialWelcomeBanner";
 import { QuietSavedToast } from "@/components/QuietSavedToast";
@@ -66,7 +67,7 @@ const MINIMAL_CHROME_PATHS = new Set([
 ]);
 
 /** Free-trial welcome toast: dashboard + subscription only (not syllabus, tools, etc.). */
-const FREE_TRIAL_WELCOME_BANNER_PATHS = new Set(["/home", "/my-subscription"]);
+const FREE_TRIAL_WELCOME_BANNER_PATHS = new Set([APP_DASHBOARD_PATH, "/my-subscription"]);
 
 export function KalnehiChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -127,9 +128,9 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
         <header className="kal-glass-header sticky top-0 z-40 pt-[env(safe-area-inset-top)]">
           <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between gap-3 px-3 sm:h-[3.5rem] sm:gap-4 sm:px-6 xl:px-8">
             <Link
-              href="/home"
+              href={APP_HOME_PATH}
               className="flex shrink-0 items-center rounded-xl py-1 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-kal-accent/40"
-              aria-label="Dashboard"
+              aria-label="Home"
             >
               {org?.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -179,9 +180,9 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
         <div className="flex h-[52px] w-full items-center justify-between gap-2 px-3 sm:h-[52px] sm:px-5">
           {/* Logo — swapped for org logo when a B2B student is signed in */}
           <Link
-            href="/home"
+            href={APP_HOME_PATH}
             className="flex shrink-0 items-center rounded-xl py-1 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-kal-accent/40"
-            aria-label="Dashboard"
+            aria-label="Home"
           >
             {org?.logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element

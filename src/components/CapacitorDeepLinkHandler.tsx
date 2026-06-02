@@ -8,6 +8,7 @@ import {
   closeNativeOAuthBrowser,
   isNativeOAuthCallbackUrl,
 } from "@/lib/nativeSupabaseOAuth";
+import { APP_HOME_PATH } from "@/config/appRoutes";
 
 /** Mirrors isAndroidAppBillingBlockedPath in proxy.ts — keep in sync manually. */
 const BILLING_BLOCKED_PATHS = [
@@ -38,7 +39,7 @@ function isBillingPath(pathname: string): boolean {
  *  3. OAuth callbacks use a full document navigation so the server route can
  *     exchange the PKCE code and set session cookies in the WebView.
  *  4. Other paths use client-side router.replace().
- *  5. Billing paths are redirected to /home — payments must not load in WebView.
+ *  5. Billing paths are redirected to APP_HOME_PATH — payments must not load in WebView.
  */
 export function CapacitorDeepLinkHandler() {
   const router = useRouter();
@@ -59,7 +60,7 @@ export function CapacitorDeepLinkHandler() {
         if (!destination || destination === "/") return;
 
         if (isBillingPath(url.pathname)) {
-          router.replace("/home");
+          router.replace(APP_HOME_PATH);
           return;
         }
 

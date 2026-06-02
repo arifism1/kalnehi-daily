@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 
+import { APP_DASHBOARD_PATH } from "@/config/appRoutes";
 import { fetchTaskListPayload } from "@/actions/backlogRecovery";
 import { BacklogsTabsClient } from "@/components/backlog/BacklogsTabsClient";
 import { kalnehiPageMetadata } from "@/lib/seo-metadata";
@@ -23,8 +24,8 @@ export default async function BacklogsPage() {
     return (
       <p className="mx-auto max-w-lg rounded-xl border border-kal-warn-border bg-kal-warn-soft px-4 py-3 text-sm text-kal-warn-text">
         {data.error}{" "}
-        <Link href="/home" className="font-semibold text-kal-accent underline">
-          Home
+        <Link href={APP_DASHBOARD_PATH} className="font-semibold text-kal-accent underline">
+          Dashboard
         </Link>
       </p>
     );

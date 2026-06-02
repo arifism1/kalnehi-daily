@@ -29,6 +29,7 @@ export const OG_IMAGE_HEIGHT = 630;
 
 export type KalnehiPageSeoKey =
   | "home"
+  | "dashboard"
   | "prepbrain"
   | "mastermind"
   | "studySessions"
@@ -65,6 +66,12 @@ const PAGE_SEO: Record<
       `Plan by voice, track syllabus, and log study time in one web app for Indian competitive exams.`,
     ogDescription:
       `Voice planning, syllabus tracking, and Mastermind for JEE, NEET, UPSC, and more.`,
+  },
+  dashboard: {
+    path: "/dashboard",
+    title: `Dashboard — daily hub & execution signals | ${SITE_NAME}`,
+    description:
+      `Your daily hub: feature grid, progress snapshot, missed tasks, and quick links to plan and track syllabus in ${SITE_NAME}.`,
   },
   prepbrain: {
     path: "/prepbrain",

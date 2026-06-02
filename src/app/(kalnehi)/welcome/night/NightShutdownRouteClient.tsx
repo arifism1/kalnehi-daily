@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect } from "react";
 
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
+import { APP_HOME_PATH } from "@/config/appRoutes";
 import { NightShutdownScreen } from "@/components/welcome/NightShutdownScreen";
 import { useNightShutdownData } from "@/components/welcome/hooks/useWelcomeScreenData";
 
@@ -21,12 +22,12 @@ export function NightShutdownRouteClient() {
   useEffect(() => {
     if (subscriptionLoading) return;
     if (!welcomeEligible) {
-      router.replace("/home");
+      router.replace(APP_HOME_PATH);
     }
   }, [subscriptionLoading, welcomeEligible, router]);
 
   const onClose = useCallback(() => {
-    router.replace("/home");
+    router.replace(APP_HOME_PATH);
   }, [router]);
 
   if (subscriptionLoading) {

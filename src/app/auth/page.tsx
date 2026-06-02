@@ -17,6 +17,7 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useState } from "react";
 
 import { buildAuthCallbackUrl } from "@/lib/authCallbackUrl";
+import { APP_HOME_PATH } from "@/config/appRoutes";
 import { useNativeOAuthBrowserDismiss } from "@/hooks/useNativeOAuthBrowserDismiss";
 import {
   isNativeKalnehiShell,
@@ -107,7 +108,7 @@ export default function AuthPage() {
       const params = new URLSearchParams(window.location.search);
       const nextRaw = params.get("next");
       const nextPath =
-        nextRaw && nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "/home";
+        nextRaw && nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : APP_HOME_PATH;
       router.replace(nextPath);
     },
     [router, setAuth],
@@ -216,7 +217,7 @@ export default function AuthPage() {
       const params = new URLSearchParams(window.location.search);
       const nextRaw = params.get("next");
       const nextPath =
-        nextRaw && nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "/home";
+        nextRaw && nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : APP_HOME_PATH;
       const supabase = getSupabaseBrowserClient();
       const redirectTo = buildAuthCallbackUrl(nextPath);
 

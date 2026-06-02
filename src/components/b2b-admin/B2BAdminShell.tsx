@@ -4,9 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import type { OrgContext } from "@/lib/auth/withOrganization";
+import { B2B_INSTITUTE_PATH } from "@/config/appRoutes";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Dashboard", icon: "▦" },
+  { href: B2B_INSTITUTE_PATH, label: "Dashboard", icon: "▦" },
   { href: "/batches", label: "Batches", icon: "⊞" },
   { href: "/students", label: "Students", icon: "◎" },
   { href: "/assignments", label: "Assignments", icon: "✎" },

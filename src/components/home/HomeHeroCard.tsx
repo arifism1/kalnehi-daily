@@ -1,11 +1,11 @@
 "use client";
 
-import { differenceInCalendarDays, parseISO, startOfDay } from "date-fns";
 import { Building2 } from "lucide-react";
 import { useMemo } from "react";
 
 import { useExamsCatalogRows } from "@/hooks/useExamsCatalogRows";
 import { useTargetExamDate } from "@/hooks/useTargetExamDate";
+import { computeDaysToExam } from "@/lib/examCountdown";
 import { examHasPrevYearMarks } from "@/lib/examProfile";
 import { displayNameForExamCatalog } from "@/lib/examsCatalog";
 import { useCountUp } from "@/hooks/useCountUp";
@@ -75,14 +75,6 @@ export type HomeHeroCardProps = {
    */
   loading?: boolean;
 };
-
-function computeDaysToExam(dateStr: string): number | null {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return null;
-  const today = startOfDay(new Date());
-  const exam = startOfDay(parseISO(dateStr));
-  const diff = differenceInCalendarDays(exam, today);
-  return diff > 0 ? diff : null;
-}
 
 function StatCell({
   value,

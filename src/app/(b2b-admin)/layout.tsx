@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { B2BAdminShell } from "@/components/b2b-admin/B2BAdminShell";
+import { APP_HOME_PATH } from "@/config/appRoutes";
 import { getOrgContext } from "@/lib/auth/withOrganization";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -16,17 +17,17 @@ export default async function B2BAdminLayout({
   const ctx = await getOrgContext();
 
   if (!ctx) {
-    // Distinguish "not logged in" (→ /auth) from "logged in but no org" (→ /home).
+    // Distinguish "not logged in" (→ /auth) from "logged in but no org" (→ app home).
     const supabase = await createSupabaseServerClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    redirect(user ? "/home" : "/auth");
+    redirect(user ? APP_HOME_PATH : "/auth");
   }
 
   // Only faculty and org-admins can access this dashboard.
   if (ctx.role !== "admin" && ctx.role !== "faculty") {
-    redirect("/home");
+    redirect(APP_HOME_PATH);
   }
 
   // Fetch org name for the shell using the regular (RLS) client.

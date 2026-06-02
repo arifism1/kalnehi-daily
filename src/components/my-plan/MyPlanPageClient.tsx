@@ -13,6 +13,7 @@ import {
 } from "@/actions/subscription";
 import { getAiStudyPartnerBalance } from "@/actions/aiStudyPartner";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { APP_HOME_PATH } from "@/config/appRoutes";
 import { ExtraCreditsSection } from "@/components/settings/ExtraCreditsSection";
 import { AiStudyPartnerPurchaseModal } from "@/components/study/AiStudyPartnerPurchaseModal";
 import { isAiStudyPartnerUiEnabled } from "@/lib/aiStudyPartnerUi";
@@ -353,7 +354,7 @@ export function MyPlanPageClient() {
             setResubError(surfaceErrorForUi(updated.error));
             return;
           }
-          window.location.assign("/home");
+          window.location.assign(APP_HOME_PATH);
         },
       });
       rzp.open();

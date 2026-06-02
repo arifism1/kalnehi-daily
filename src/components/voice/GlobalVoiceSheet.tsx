@@ -13,6 +13,7 @@ import {
   updateDailyTaskWorkedTime,
 } from "@/actions/dailyPlan";
 import { VoiceCreditBanner } from "@/components/budget/VoiceCreditBanner";
+import { APP_HOME_PATH } from "@/config/appRoutes";
 import { ScheduleRevisionReminderDialog } from "@/components/revision/ScheduleRevisionReminderDialog";
 import { useVoiceCommand } from "@/hooks/useVoiceCommand";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -565,7 +566,7 @@ export function GlobalVoiceSheet() {
         router.push(
           isVoiceNavigatePathAllowed(intent.path)
             ? canonicalVoiceNavigatePath(intent.path)
-            : "/home",
+            : APP_HOME_PATH,
         );
         break;
       }

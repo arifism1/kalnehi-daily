@@ -16,6 +16,7 @@ import { Capacitor } from "@capacitor/core";
 import { useCallback, useEffect, useId, useState } from "react";
 
 import { completeOnboarding } from "@/actions/profile";
+import { APP_HOME_PATH } from "@/config/appRoutes";
 import { ensureFreeTrialStarted } from "@/actions/subscription";
 import { trackActivity } from "@/lib/activity";
 import { JourneyAction } from "@/lib/analytics/journeyEvents";
@@ -208,7 +209,7 @@ export function OnboardingWizard() {
         return;
       }
       if (trial.ok && trial.started) trackMetaFreeTrialStarted();
-      window.location.assign("/home");
+      window.location.assign(APP_HOME_PATH);
     } catch (e) {
       setError(toUserFacingMessage(e));
     } finally {

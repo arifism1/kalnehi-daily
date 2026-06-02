@@ -11,6 +11,7 @@ import {
   activateRazorpayMonthlySubscription,
   createRazorpayMonthlySubscription,
 } from "@/actions/subscription";
+import { APP_HOME_PATH } from "@/config/appRoutes";
 import { KalSpinner } from "@/components/loading/KalSpinner";
 import {
   AUTOPAY_MONTHS_MAX,
@@ -40,7 +41,7 @@ declare global {
 
 function navigateHomeAfterPurchase() {
   if (typeof window === "undefined") return;
-  window.location.assign("/home");
+  window.location.assign(APP_HOME_PATH);
 }
 
 // ── Android-native checkout card ──────────────────────────────────────────────

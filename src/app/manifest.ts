@@ -72,19 +72,19 @@ export default function manifest(): MetadataRoute.Manifest {
     // Android long-press shortcuts — max 4 shown by Android launcher; keep most-used first.
     shortcuts: [
       {
-        name: "Today's Plan",
-        short_name: "Today's Plan",
-        description: "Today's live task list — check off, edit, and execute",
-        url: "/daily-plan",
+        name: "Syllabus Tracker",
+        short_name: "Syllabus",
+        description: "Track chapter and topic progress across your syllabus",
+        url: "/syllabus",
         icons: [
           { src: "/icon-maskable-192.png", sizes: "192x192", type: "image/png" },
         ],
       },
       {
-        name: "Syllabus Tracker",
-        short_name: "Syllabus",
-        description: "Track chapter and topic progress across your syllabus",
-        url: "/syllabus",
+        name: "Today's Plan",
+        short_name: "Today's Plan",
+        description: "Today's live task list — check off, edit, and execute",
+        url: "/daily-plan",
         icons: [
           { src: "/icon-maskable-192.png", sizes: "192x192", type: "image/png" },
         ],

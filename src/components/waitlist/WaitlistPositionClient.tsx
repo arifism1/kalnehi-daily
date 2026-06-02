@@ -3,6 +3,8 @@
 import Script from "next/script";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { APP_HOME_PATH } from "@/config/appRoutes";
+
 type PositionData = {
   position: number;
   opensAt: string | null;
@@ -135,7 +137,7 @@ export function WaitlistPositionClient() {
           setSkipDone(true);
           setSkipBusy(false);
           // Redirect to app after short delay.
-          setTimeout(() => { window.location.href = "/home"; }, 1500);
+          setTimeout(() => { window.location.href = APP_HOME_PATH; }, 1500);
         },
         modal: { ondismiss: () => setSkipBusy(false) },
       });
@@ -153,7 +155,7 @@ export function WaitlistPositionClient() {
           <p className="text-lg font-semibold text-kal-text">No position data found.</p>
           <p className="mt-2 text-sm text-kal-text-secondary">
             Your session may have expired.{" "}
-            <a href="/home" className="text-kal-accent underline">Return to the app →</a>
+            <a href={APP_HOME_PATH} className="text-kal-accent underline">Return to the app →</a>
           </p>
         </div>
       </div>
@@ -250,7 +252,7 @@ export function WaitlistPositionClient() {
                 <div className="mt-4 flex flex-col items-center gap-3">
                   <p className="text-base font-semibold text-emerald-500">Your trial is now live.</p>
                   <a
-                    href="/home"
+                    href={APP_HOME_PATH}
                     className="inline-flex min-h-[48px] items-center justify-center rounded-full bg-kal-accent px-6 text-base font-bold text-white shadow-[0_4px_16px_rgba(255,122,0,0.32)] hover:brightness-105"
                   >
                     Go to dashboard →

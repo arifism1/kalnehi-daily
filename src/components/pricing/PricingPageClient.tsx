@@ -12,6 +12,7 @@ import {
   ensureFreeTrialStarted,
 } from "@/actions/subscription";
 import { fetchDailyCapStatus } from "@/actions/dailyCap";
+import { APP_HOME_PATH } from "@/config/appRoutes";
 import type { DailyCapStatus } from "@/lib/daily-trial-cap";
 import { CancelSubscriptionButton } from "@/components/subscription/CancelSubscriptionButton";
 import { PaymentErrorMailButton } from "@/components/subscription/PaymentErrorMailButton";
@@ -274,7 +275,7 @@ export function PricingPageClient() {
         trackMetaFreeTrialStarted();
         refetch();
       }
-      window.location.assign("/home");
+      window.location.assign(APP_HOME_PATH);
     } catch (error) {
       setCheckoutError({
         text: toUserFacingMessage(error),
@@ -338,7 +339,7 @@ export function PricingPageClient() {
               setBusy(false);
               return;
             }
-            window.location.assign("/home");
+            window.location.assign(APP_HOME_PATH);
           } catch (error) {
             const raw = error instanceof Error ? error.message : String(error);
             const text =
@@ -441,7 +442,7 @@ export function PricingPageClient() {
               setBusy(false);
               return;
             }
-            window.location.assign("/home");
+            window.location.assign(APP_HOME_PATH);
           } catch (error) {
             setCheckoutError({ text: toUserFacingMessage(error) });
             setBusy(false);

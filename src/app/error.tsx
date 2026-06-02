@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { APP_HOME_PATH } from "@/config/appRoutes";
 import { RefreshCw, AlertTriangle } from "lucide-react";
 
 /**
@@ -51,7 +52,7 @@ export default function RouteError({
 
         <button
           type="button"
-          onClick={() => router.push("/home")}
+          onClick={() => router.push(APP_HOME_PATH)}
           className="text-sm font-medium text-kal-accent underline underline-offset-2"
         >
           Go to Home

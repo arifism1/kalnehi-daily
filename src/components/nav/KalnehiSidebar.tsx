@@ -34,6 +34,7 @@ import { usePathname } from "next/navigation";
 import { useMemo } from "react";
 
 import { PwaUpdateCallout } from "@/components/pwa/PwaUpdateCallout";
+import { APP_DASHBOARD_PATH, APP_HOME_PATH } from "@/config/appRoutes";
 import { resolveEffectiveEnabledFeatures, VISIBLE_FEATURE_CATEGORIES } from "@/lib/dashboardFeatures";
 import { useEnabledFeaturesStore } from "@/store/useEnabledFeaturesStore";
 
@@ -125,18 +126,48 @@ export function KalnehiSidebar() {
     >
       {/* Same PWA update prompt as nav drawer + bottom toast (desktop large layout). */}
       <PwaUpdateCallout variant="sidebar" />
-      {/* Home — always first, standalone */}
-      <ul className="mb-2 mt-1">
+      {/* Home + Dashboard — always first, standalone */}
+      <ul className="mb-2 mt-1 space-y-0.5">
         <li>
           <Link
-            href="/home"
+            href={APP_HOME_PATH}
             aria-current={
-              pathname === "/home" || pathname.startsWith("/home/") ? "page" : undefined
+              pathname === APP_HOME_PATH || pathname.startsWith(`${APP_HOME_PATH}/`)
+                ? "page"
+                : undefined
             }
             className={clsx(
               "flex h-9 items-center gap-2.5 px-4 text-[13px] transition-colors outline-none",
               "focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-kal-accent/50",
-              pathname === "/home" || pathname.startsWith("/home/")
+              pathname === APP_HOME_PATH || pathname.startsWith(`${APP_HOME_PATH}/`)
+                ? "bg-[#FFF3E4] font-medium text-[#BA7517] dark:bg-kal-accent/10 dark:text-kal-accent"
+                : "font-normal text-kal-text-secondary hover:bg-black/[0.04] hover:text-kal-text dark:hover:bg-white/5",
+            )}
+          >
+            <BookOpen
+              className={clsx(
+                "size-4 shrink-0",
+                pathname === APP_HOME_PATH || pathname.startsWith(`${APP_HOME_PATH}/`)
+                  ? "text-[#BA7517] dark:text-kal-accent"
+                  : "text-kal-text-secondary",
+              )}
+              aria-hidden
+            />
+            <span className="min-w-0 truncate">Home</span>
+          </Link>
+        </li>
+        <li>
+          <Link
+            href={APP_DASHBOARD_PATH}
+            aria-current={
+              pathname === APP_DASHBOARD_PATH || pathname.startsWith(`${APP_DASHBOARD_PATH}/`)
+                ? "page"
+                : undefined
+            }
+            className={clsx(
+              "flex h-9 items-center gap-2.5 px-4 text-[13px] transition-colors outline-none",
+              "focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-kal-accent/50",
+              pathname === APP_DASHBOARD_PATH || pathname.startsWith(`${APP_DASHBOARD_PATH}/`)
                 ? "bg-[#FFF3E4] font-medium text-[#BA7517] dark:bg-kal-accent/10 dark:text-kal-accent"
                 : "font-normal text-kal-text-secondary hover:bg-black/[0.04] hover:text-kal-text dark:hover:bg-white/5",
             )}
@@ -144,13 +175,13 @@ export function KalnehiSidebar() {
             <Home
               className={clsx(
                 "size-4 shrink-0",
-                pathname === "/home" || pathname.startsWith("/home/")
+                pathname === APP_DASHBOARD_PATH || pathname.startsWith(`${APP_DASHBOARD_PATH}/`)
                   ? "text-[#BA7517] dark:text-kal-accent"
                   : "text-kal-text-secondary",
               )}
               aria-hidden
             />
-            <span className="min-w-0 truncate">Home</span>
+            <span className="min-w-0 truncate">Dashboard</span>
           </Link>
         </li>
       </ul>

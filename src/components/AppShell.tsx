@@ -11,6 +11,7 @@ import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { isLegalPath } from "@/lib/legal-paths";
 import { isPaidAccessOverlayExemptPath } from "@/lib/paid-access-exempt-paths";
 import { isPublicMarketingPath } from "@/lib/public-paths";
+import { APP_HOME_PATH } from "@/config/appRoutes";
 import { useAuthStore } from "@/store/useAuthStore";
 import { KalShimmerBlock } from "@/components/loading/KalShimmerBlock";
 import { KalSpinner } from "@/components/loading/KalSpinner";
@@ -288,7 +289,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         router.replace("/auth");
         break;
       case "home":
-        router.replace("/home");
+        router.replace(APP_HOME_PATH);
         break;
       case "onboarding":
         router.replace("/onboarding");

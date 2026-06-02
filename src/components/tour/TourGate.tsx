@@ -4,6 +4,7 @@ import { AnimatePresence } from "framer-motion";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
+import { APP_DASHBOARD_PATH } from "@/config/appRoutes";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { useTourStore } from "@/store/useTourStore";
 
@@ -24,7 +25,7 @@ const WELCOME_STEP = 0;
  *  - user has completed onboarding
  *  - user has an active trial or paid access
  *  - tour has not been completed or dismissed
- *  - current page is /home  (or `?reset_tour=1` is present — dev-only reset)
+ *  - current page is /dashboard  (or `?reset_tour=1` is present — dev-only reset)
  */
 export function TourGate() {
   const pathname = usePathname();
@@ -46,8 +47,8 @@ export function TourGate() {
     }
   }, [searchParams, resetTour]);
 
-  const isHome = pathname === "/home";
-  const shouldShow = onboardingDone && allowAppWithoutPaid && !tourCompleted && isHome;
+  const isDashboard = pathname === APP_DASHBOARD_PATH;
+  const shouldShow = onboardingDone && allowAppWithoutPaid && !tourCompleted && isDashboard;
   const showVoiceNudge = onboardingDone && allowAppWithoutPaid && tourCompleted && !voiceNudgeShown;
 
   if (!shouldShow && !showVoiceNudge) return null;
