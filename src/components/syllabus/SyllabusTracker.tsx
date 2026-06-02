@@ -1253,8 +1253,6 @@ export function SyllabusTracker() {
         />
       )}
 
-      {showMarksUi && !cuetScoringRollup ? <MarksDisclaimerDetails /> : null}
-
       <TransientNotice
         message={updateError}
         onDismiss={clearUpdateError}
@@ -1956,14 +1954,14 @@ export function SyllabusTracker() {
 
       )} {/* end single-exam subjects div */}
 
-      <div className="kal-glass-subtle rounded-2xl border border-kal-border/60 px-4 py-5 sm:px-6 dark:border-white/10">
-        <p className="text-sm leading-relaxed text-kal-text">
-          Is the syllabus wrong here? Please tell us what&apos;s wrong so we can
-          improve your experience.
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-xl border border-kal-border/60 bg-kal-card-muted/40 px-3 py-2.5 dark:border-white/10">
+        <p className="min-w-0 flex-1 text-xs leading-snug text-kal-muted">
+          Syllabus wrong?{" "}
+          <span className="text-kal-text-secondary">Help us fix it.</span>
         </p>
         <button
           type="button"
-          className="mt-4 flex min-h-[48px] w-full items-center justify-center rounded-xl bg-kal-accent px-4 py-3 text-sm font-semibold text-kal-accent-foreground hover:bg-kal-accent-hover sm:w-auto sm:min-w-[12rem]"
+          className="inline-flex shrink-0 items-center justify-center rounded-lg border border-kal-border bg-kal-card px-3 py-1.5 text-xs font-semibold text-kal-accent transition-colors hover:border-kal-accent/40 hover:bg-kal-accent-soft"
           onClick={() =>
             openContactSupport({
               subject: "syllabus_correction",
@@ -1971,9 +1969,11 @@ export function SyllabusTracker() {
             })
           }
         >
-          Report a syllabus issue
+          Report issue
         </button>
       </div>
+
+      {showMarksUi && !cuetScoringRollup ? <MarksDisclaimerDetails /> : null}
 
       <ChapterMarksSheet
         open={
