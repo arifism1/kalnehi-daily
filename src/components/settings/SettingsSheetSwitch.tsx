@@ -9,12 +9,14 @@ export function SettingsSheetSwitch({
   onChange,
   disabled,
   id,
+  ariaLabel,
   size = "md",
 }: {
   checked: boolean;
   onChange: (next: boolean) => void;
   disabled?: boolean;
   id: string;
+  ariaLabel?: string;
   size?: SettingsSheetSwitchSize;
 }) {
   const sm = size === "sm";
@@ -23,6 +25,7 @@ export function SettingsSheetSwitch({
       type="button"
       role="switch"
       id={id}
+      aria-label={ariaLabel}
       aria-checked={checked}
       disabled={disabled}
       onClick={() => {

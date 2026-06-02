@@ -20,7 +20,7 @@ type Props = {
 };
 
 /**
- * Fixed overlay matching GlobalVoiceSheet z-index so live dictation reads as app-level chrome.
+ * Fixed overlay for live dictation — z-[85]/[86] sits above sheets (z-[70]–[80]) and below toasts (z-[90]+).
  */
 export function VoiceLiveTranscriptOverlay({
   open,
@@ -46,10 +46,10 @@ export function VoiceLiveTranscriptOverlay({
   return (
     <>
       <div
-        className="kal-fade-in-fast fixed inset-0 z-[51] bg-black/35 backdrop-blur-[2px]"
+        className="kal-fade-in-fast fixed inset-0 z-[85] bg-black/35 backdrop-blur-[2px]"
         aria-hidden
       />
-      <div className="pointer-events-none fixed inset-0 z-[52] flex items-center justify-center p-4">
+      <div className="pointer-events-none fixed inset-0 z-[86] flex items-center justify-center p-4">
         <div
           role="dialog"
           aria-modal="true"

@@ -139,7 +139,7 @@ export function MotivationStrip() {
 
       {lightbox ? (
         <div
-          className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-6"
+          className="fixed inset-0 z-[200] flex items-center justify-center p-3 pt-[max(0.75rem,env(safe-area-inset-top))] pr-[max(0.75rem,env(safe-area-inset-right))] pb-[max(0.75rem,env(safe-area-inset-bottom))] pl-[max(0.75rem,env(safe-area-inset-left))] sm:p-6"
           role="dialog"
           aria-modal="true"
           aria-label={lightbox.label}

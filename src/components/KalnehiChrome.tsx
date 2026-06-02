@@ -161,9 +161,7 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
         <div className="mx-auto w-full flex-1 px-4 py-6 sm:px-6 sm:py-8 max-w-lg md:max-w-5xl lg:max-w-6xl xl:max-w-7xl 2xl:max-w-[90rem] md:px-8 xl:px-10 xl:py-10 2xl:px-12">
           {children}
         </div>
-        {menuOpen ? (
-          <MainNavigationMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
-        ) : null}
+        <MainNavigationMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
         <UndoToast />
         <QuietSavedToastBoundary>
           <QuietSavedToast />
@@ -200,30 +198,32 @@ export function KalnehiChrome({ children }: { children: React.ReactNode }) {
             )}
           </Link>
 
-          {/* Right controls */}
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={openVoice}
-              aria-label="Voice command"
-              aria-pressed={voiceOpen}
-              data-tour="voice"
-              className={clsx(
-                "flex size-8 min-h-[32px] min-w-[32px] items-center justify-center rounded-xl border backdrop-blur-md transition-colors active:scale-[0.98]",
-                voiceOpen
-                  ? "border-kal-accent/35 bg-kal-accent-soft text-kal-accent shadow-sm"
-                  : "border-white/30 bg-white/45 text-kal-accent hover:border-white/45 hover:bg-white/65 dark:border-white/12 dark:bg-zinc-900/50",
-              )}
-            >
-              <MicVocal className="size-4.5 shrink-0" strokeWidth={2.25} aria-hidden />
-            </button>
-            <NotificationBellLink pathname={pathname} />
+          {/* Right controls — mic + bell grouped tight; menu spaced separately */}
+          <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-0">
+              <button
+                type="button"
+                onClick={openVoice}
+                aria-label="Voice command"
+                aria-pressed={voiceOpen}
+                data-tour="voice"
+                className={clsx(
+                  "flex size-10 min-h-[40px] min-w-[40px] items-center justify-center rounded-xl border backdrop-blur-md transition-colors active:scale-[0.98] sm:size-11 sm:min-h-[44px] sm:min-w-[44px]",
+                  voiceOpen
+                    ? "border-kal-accent/35 bg-kal-accent-soft text-kal-accent shadow-sm"
+                    : "border-white/30 bg-white/45 text-kal-accent hover:border-white/45 hover:bg-white/65 dark:border-white/12 dark:bg-zinc-900/50",
+                )}
+              >
+                <MicVocal className="size-4.5 shrink-0" strokeWidth={2.25} aria-hidden />
+              </button>
+              <NotificationBellLink pathname={pathname} compact />
+            </div>
 
             {/* Hamburger — always visible for settings/legal/support/saved-plans */}
             <button
               type="button"
               onClick={() => setMenuOpen(true)}
-              className="flex size-8 min-h-[32px] min-w-[32px] items-center justify-center rounded-xl border border-white/25 bg-white/40 text-kal-text-secondary backdrop-blur-md transition-colors hover:border-white/40 hover:bg-white/55 active:scale-[0.98] dark:border-white/12 dark:bg-zinc-900/50"
+              className="flex size-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-white/25 bg-white/40 text-kal-text-secondary backdrop-blur-md transition-colors hover:border-white/40 hover:bg-white/55 active:scale-[0.98] dark:border-white/12 dark:bg-zinc-900/50"
               aria-expanded={menuOpen}
               aria-label="Open navigation menu"
               data-tour="menu"

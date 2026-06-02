@@ -34,15 +34,15 @@ export default async function SyllabusPage() {
       <SyllabusEmptyIllustration className="mx-auto size-44" />
       <h1 className="kal-feature-title mt-4">Choose your target exam</h1>
       <p className="mt-2 text-sm leading-relaxed text-kal-muted">
-        Set <strong className="text-kal-text">Target exam</strong> in Settings
+        Set <strong className="text-kal-text">Target exam</strong> in Profile
         so we load the matching syllabus (NEET UG, JEE Main, and more as we ship
         catalogs).
       </p>
       <Link
-        href="/settings"
+        href="/profile"
         className="mt-6 inline-flex min-h-[48px] items-center justify-center rounded-xl bg-kal-accent px-6 text-sm font-semibold text-kal-accent-foreground transition-opacity hover:bg-kal-accent-hover"
       >
-        Open settings
+        Open profile
       </Link>
     </div>
   );

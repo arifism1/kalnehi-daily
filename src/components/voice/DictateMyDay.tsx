@@ -324,6 +324,7 @@ export function DictateMyDay({ urlInitialPlanDate = null, hideLivePlan = false, 
     isSupported: whisperMicSupported,
   } = useMediaRecorderVoice({
     maxMs: VOICE_LONG_FORM_MAX_SESSION_MS,
+    lang,
     onTranscript: ({ transcript, occurredAt, durationSeconds }) => {
       void sendTranscript(transcript, occurredAt, durationSeconds);
     },

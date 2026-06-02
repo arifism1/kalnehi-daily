@@ -1,6 +1,5 @@
-import { redirect } from "next/navigation";
+import ProfileRouteLazy from "./ProfileRouteLazy";
 
-/** @deprecated Use /settings — profile and preferences were merged. */
 export default function ProfilePage() {
-  redirect("/settings");
+  return <ProfileRouteLazy />;
 }

@@ -39,7 +39,12 @@ export function TrackPicker({ selected, onSelect, catalog, disabled }: TrackPick
                 <Check className="size-4 shrink-0 text-kal-accent" />
               )}
             </div>
-            <p className="text-[11px] leading-snug text-kal-text-secondary">
+            <p
+              className="line-clamp-2 text-[11px] leading-snug text-kal-text-secondary"
+              title={track.examNames
+                .map((name) => displayNameForExamCatalog(name, catalog) || name)
+                .join(" → ")}
+            >
               {track.examNames
                 .map((name) => displayNameForExamCatalog(name, catalog) || name)
                 .join(" → ")}

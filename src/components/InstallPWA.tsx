@@ -1,5 +1,6 @@
 "use client";
 
+import { Capacitor } from "@capacitor/core";
 import { Download } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
@@ -17,6 +18,9 @@ function isStandalone(): boolean {
 }
 
 export function InstallPWA({ className = "" }: { className?: string }) {
+  const isNativeShell =
+    typeof window !== "undefined" && Capacitor.isNativePlatform();
+
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(
     null,
   );
@@ -24,10 +28,12 @@ export function InstallPWA({ className = "" }: { className?: string }) {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
+    if (isNativeShell) return;
     setInstalled(isStandalone());
-  }, []);
+  }, [isNativeShell]);
 
   useEffect(() => {
+    if (isNativeShell) return;
     const onBeforeInstall = (e: Event) => {
       e.preventDefault();
       setDeferred(e as BeforeInstallPromptEvent);
@@ -41,16 +47,17 @@ export function InstallPWA({ className = "" }: { className?: string }) {
         "beforeinstallprompt",
         onBeforeInstall as EventListener,
       );
-  }, []);
+  }, [isNativeShell]);
 
   useEffect(() => {
+    if (isNativeShell) return;
     const onInstalled = () => {
       setInstalled(true);
       setDeferred(null);
     };
     window.addEventListener("appinstalled", onInstalled);
     return () => window.removeEventListener("appinstalled", onInstalled);
-  }, []);
+  }, [isNativeShell]);
 
   const onClick = useCallback(async () => {
     if (!deferred) return;
@@ -64,7 +71,7 @@ export function InstallPWA({ className = "" }: { className?: string }) {
     }
   }, [deferred]);
 
-  if (installed || !deferred) {
+  if (isNativeShell || installed || !deferred) {
     return null;
   }
 

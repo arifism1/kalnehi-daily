@@ -7,27 +7,28 @@ import { SMART_PLAN_MONTHLY_DISPLAY } from "@/lib/smartPlanPricing";
 
 export function HeroSection() {
   return (
-    <section className="relative min-h-[88vh] overflow-hidden bg-kal-page">
-      {/* Subtle grid */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{
-          backgroundImage:
-            "linear-gradient(var(--kal-landing-hero-grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--kal-landing-hero-grid-line) 1px, transparent 1px)",
-          backgroundSize: "48px 48px",
-        }}
-      />
+    <section className="relative min-h-[88vh] bg-kal-page">
+      {/* Background decorations — overflow-hidden scoped here so floating cards aren't clipped */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        {/* Subtle grid */}
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "linear-gradient(var(--kal-landing-hero-grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--kal-landing-hero-grid-line) 1px, transparent 1px)",
+            backgroundSize: "48px 48px",
+          }}
+        />
 
-      {/* Warm radial glow */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(ellipse 60% 50% at 70% 40%, var(--kal-landing-hero-radial) 0%, transparent 70%)",
-        }}
-      />
+        {/* Warm radial glow */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 60% 50% at 70% 40%, var(--kal-landing-hero-radial) 0%, transparent 70%)",
+          }}
+        />
+      </div>
 
       <div className="relative mx-auto flex min-h-[88vh] max-w-7xl flex-col items-center px-6 lg:flex-row lg:items-center lg:gap-16 lg:px-8">
         {/* Left — text */}
@@ -141,17 +142,17 @@ function DashboardMockup() {
   return (
     <div className="p-5">
       {/* Header */}
-      <div className="mb-4 flex items-center justify-between">
-        <div>
+      <div className="mb-4 flex items-center justify-between gap-2">
+        <div className="min-w-0">
           <p className="text-[10px] text-kal-muted">Good morning</p>
           <p
-            className="text-lg font-bold text-kal-text"
+            className="truncate text-lg font-bold text-kal-text"
             style={{ fontFamily: "var(--font-display)" }}
           >
             Ananya
           </p>
         </div>
-        <p className="text-[10px] font-medium text-kal-accent">
+        <p className="shrink-0 text-[10px] font-medium text-kal-accent">
           "Small daily wins stack into rank."
         </p>
       </div>

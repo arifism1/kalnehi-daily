@@ -15,12 +15,18 @@ type EndOfDayNudgeFlowProps = {
   planDate: string;
   /** Today's calendar yyyy-MM-dd from useCalendarDate() */
   todayCalendar: string;
+  /** Parent can hide duplicate debrief / share UI while sheet is open. */
+  onSheetOpenChange?: (open: boolean) => void;
 };
 
 /**
  * Dismissible evening banner when viewing Today's plan for today; opens combined recap + debrief sheet.
  */
-export function EndOfDayNudgeFlow({ planDate, todayCalendar }: EndOfDayNudgeFlowProps) {
+export function EndOfDayNudgeFlow({
+  planDate,
+  todayCalendar,
+  onSheetOpenChange,
+}: EndOfDayNudgeFlowProps) {
   const [hydratedStorage, setHydratedStorage] = useState(false);
   const [, setRefresh] = useState(0);
   const [tick, setTick] = useState(0);
@@ -101,7 +107,12 @@ export function EndOfDayNudgeFlow({ planDate, todayCalendar }: EndOfDayNudgeFlow
         </div>
       ) : null}
 
-      <EndOfDaySheet open={sheetOpen} onClose={() => setSheetOpen(false)} isoDate={todayCalendar} />
+      <EndOfDaySheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        isoDate={todayCalendar}
+        onOpenChange={onSheetOpenChange}
+      />
     </>
   );
 }

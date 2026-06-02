@@ -1,5 +1,9 @@
 import type { Messaging } from "firebase-admin/messaging";
 
+import {
+  resolveNotificationPath,
+  stringifyFcmData,
+} from "@/lib/fcm/resolveNotificationPath";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 
 /** FCM error codes that mean the saved token may be stale — increment streak; delete row only after threshold. */
@@ -52,12 +56,40 @@ export type FcmPayload = {
   data?: Record<string, string>;
 };
 
-function resolveWebpushLink(data: Record<string, string> | undefined): string {
-  const rawPath = data?.path;
-  if (!rawPath) return "/";
-  const path = rawPath.trim();
-  if (!path.startsWith("/")) return "/";
-  return path;
+function resolvePayloadPath(data: Record<string, string> | undefined): string {
+  const rawPath = data?.path?.trim();
+  if (rawPath?.startsWith("/")) return rawPath;
+  return resolveNotificationPath(data);
+}
+
+function resolveAbsoluteFcmLink(path: string): string {
+  const origin =
+    process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://www.kalnehi.com";
+  try {
+    return new URL(path, origin).href;
+  } catch {
+    return `${origin}/`;
+  }
+}
+
+function buildFcmMessage(token: string, payload: FcmPayload) {
+  const path = resolvePayloadPath(payload.data);
+  const data = stringifyFcmData({ ...payload.data, path });
+  const link = resolveAbsoluteFcmLink(path);
+  const analyticsLabel = data.kind ?? "kalnehi";
+
+  return {
+    token,
+    notification: { title: payload.title, body: payload.body },
+    data,
+    webpush: {
+      fcmOptions: { link: path },
+    },
+    fcmOptions: {
+      link,
+      analyticsLabel,
+    },
+  };
 }
 
 export async function sendFcmToUserTokens(
@@ -87,16 +119,7 @@ export async function sendFcmToUserTokens(
     return { sent: 0, failures: ["No device tokens for user"] };
   }
 
-  const messages = tokens.map((token) => ({
-    token,
-    notification: { title: payload.title, body: payload.body },
-    data: payload.data ?? {},
-    webpush: {
-      fcmOptions: {
-        link: resolveWebpushLink(payload.data),
-      },
-    },
-  }));
+  const messages = tokens.map((token) => buildFcmMessage(token, payload));
 
   const result = await messaging.sendEach(messages);
   let sent = 0;

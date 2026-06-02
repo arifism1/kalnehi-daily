@@ -25,6 +25,7 @@ import { useTaskStore, type Task } from "@/store/useTaskStore";
 
 import { TASK_STATUS } from "@/components/task/TaskCard";
 import { TaskPlanner } from "@/components/planner/TaskPlanner";
+import { KalModalShell } from "@/components/ui/KalModalShell";
 import { surfaceErrorForUi } from "@/lib/userFacingErrors";
 
 const AUTOSAVE_MS = 350;
@@ -374,18 +375,13 @@ export function AddEditTaskSheet({
     (mode === "edit" && Boolean(task)) || mode === "add";
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-end justify-center sm:items-center">
-      <button
-        type="button"
-        aria-label="Close"
-        className="absolute inset-0 bg-[var(--kal-overlay)] backdrop-blur-[2px]"
-        onClick={handleClose}
-      />
-      <div
-        className="kal-glass-panel relative z-10 flex min-h-0 w-full max-w-lg max-h-[min(92dvh,40rem)] flex-col overflow-hidden rounded-t-[1.25rem] sm:rounded-[1.25rem]"
-        role="dialog"
-        aria-modal="true"
-      >
+    <KalModalShell
+      onClose={handleClose}
+      zIndex={70}
+      busy={blockUi}
+      panelClassName="max-h-[min(var(--kal-sheet-max-h,92dvh),40rem)] rounded-t-[1.25rem] sm:rounded-[1.25rem]"
+      scrollClassName="p-4 sm:px-6"
+      header={
         <div className="flex shrink-0 items-start justify-between gap-2 border-b border-kal-border px-4 pb-3 pt-4 sm:px-6 sm:pt-6">
           <div>
             <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-kal-muted">
@@ -409,8 +405,28 @@ export function AddEditTaskSheet({
             <X className="size-5" />
           </button>
         </div>
-
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-4 sm:px-6 [-webkit-overflow-scrolling:touch]">
+      }
+      footer={
+        <div className="flex gap-2 px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-6">
+          <button
+            type="button"
+            onClick={handleClose}
+            className="flex-1 rounded-2xl border border-kal-border py-3.5 text-sm font-medium text-kal-text-secondary transition-colors duration-200"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            disabled={blockUi}
+            onClick={handleClose}
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-kal-accent py-3.5 text-sm font-semibold text-white shadow-sm transition-opacity duration-200 hover:bg-kal-accent-hover disabled:opacity-40"
+          >
+            Save task
+          </button>
+        </div>
+      }
+    >
+        <div>
         {draftError ? (
           <p className="rounded-xl bg-kal-danger-soft border border-kal-danger-border px-3 py-2 text-sm text-kal-danger-text">
             {draftError}
@@ -600,25 +616,6 @@ export function AddEditTaskSheet({
           </p>
         )}
         </div>
-
-        <div className="flex shrink-0 gap-2 border-t border-kal-border p-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-6">
-          <button
-            type="button"
-            onClick={handleClose}
-            className="flex-1 rounded-2xl border border-kal-border py-3.5 text-sm font-medium text-kal-text-secondary transition-colors duration-200"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            disabled={blockUi}
-            onClick={handleClose}
-            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-kal-accent py-3.5 text-sm font-semibold text-white shadow-sm transition-opacity duration-200 hover:bg-kal-accent-hover disabled:opacity-40"
-          >
-            Save task
-          </button>
-        </div>
-      </div>
-    </div>
+    </KalModalShell>
   );
 }

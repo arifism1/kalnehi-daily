@@ -1,5 +1,6 @@
 "use client";
 
+import { Capacitor } from "@capacitor/core";
 import { useEffect, useRef } from "react";
 import { recordPwaStatus, type PwaInstallStatus, type PwaPlatform } from "@/actions/pwaTracking";
 
@@ -35,6 +36,8 @@ export function usePwaTracking(): { isStandalone: boolean; platform: PwaPlatform
   const standalone = useRef(false);
 
   useEffect(() => {
+    if (Capacitor.isNativePlatform()) return;
+
     platform.current = detectPlatform();
     standalone.current = isStandaloneMode();
 

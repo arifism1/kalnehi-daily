@@ -5,6 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import { AuthProvider } from "@/components/AuthProvider";
 import { SubscriptionAccessProvider } from "@/hooks/useSubscriptionAccess";
 import { FcmForegroundListener } from "@/components/FcmForegroundListener";
+import { FcmNativeListener } from "@/components/FcmNativeListener";
 import { OrganicEntryCapture } from "@/components/OrganicEntryCapture";
 import { ReferralCapture } from "@/components/ReferralCapture";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -211,6 +212,7 @@ export default function RootLayout({
                   <UiPrefsRemoteSync />
                   <StoragePersistenceInit />
                   <FcmForegroundListener />
+                  <FcmNativeListener />
                   <CapacitorNetworkSyncBridge />
                   <CapacitorOfflineWarmup />
                   <CapacitorNativeSwPilot />

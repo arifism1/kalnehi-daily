@@ -16,7 +16,7 @@ export function UndoToast() {
     <div
       role="status"
       aria-live="polite"
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-[90] flex justify-center px-3 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-4 sm:pb-6"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-[90] flex justify-center px-3 pb-[calc(max(1rem,env(safe-area-inset-bottom))+3.5rem)] sm:px-4 lg:pb-6"
     >
       <div
         className={clsx(

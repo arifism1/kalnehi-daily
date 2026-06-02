@@ -12,6 +12,11 @@ import {
   revokeFcmToken,
 } from "@/lib/firebase/messagingClient";
 import { FCM_STALE_TOKEN_USER_MESSAGE } from "@/lib/fcm/messages";
+import {
+  FCM_ENABLED_STORAGE_KEY,
+  registerFcmTokenOnServer,
+  unregisterFcmTokenOnServer,
+} from "@/lib/fcm/registerClient";
 import { usePlatform } from "@/hooks/usePlatform";
 import { SITE_NAME } from "@/lib/seo-metadata";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -20,8 +25,6 @@ import * as storage from "@/lib/storage";
 
 import { SettingsSheetSwitch } from "@/components/settings/SettingsSheetSwitch";
 import { useNotificationsToast } from "@/components/settings/notificationsToastContext";
-
-const LS_ENABLED = "kalnehi-fcm-enabled";
 
 /** Stale / unregistered token from API — do not turn the toggle off. */
 const STALE_TOKEN_MESSAGE = FCM_STALE_TOKEN_USER_MESSAGE;
@@ -47,28 +50,6 @@ function testResponseLooksLikeStaleToken(data: {
   if (looksLikeStaleFcmTokenError(data.error)) return true;
   if (looksLikeStaleFcmTokenError(data.message)) return true;
   return false;
-}
-
-async function registerTokenOnServer(token: string): Promise<boolean> {
-  const res = await fetch("/api/fcm/register", {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      token,
-      userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "",
-    }),
-  });
-  return res.ok;
-}
-
-async function unregisterTokenOnServer(token: string): Promise<boolean> {
-  const q = new URLSearchParams({ token });
-  const res = await fetch(`/api/fcm/register?${q.toString()}`, {
-    method: "DELETE",
-    credentials: "include",
-  });
-  return res.ok;
 }
 
 export function PushNotificationsSettings({
@@ -125,18 +106,20 @@ export function PushNotificationsSettings({
     }
 
     if (isNativeKalnehiShell) {
-      const want = (await storage.getItem(LS_ENABLED)) === "1";
+      const want = (await storage.getItem(FCM_ENABLED_STORAGE_KEY)) === "1";
       if (!want) {
         setPushOn(false);
         return;
       }
-      const { token } = await obtainNativeFcmToken();
+      const { token, hint } = await obtainNativeFcmToken();
       if (token) {
         tokenRef.current = token;
-        await registerTokenOnServer(token);
-        setPushOn(true);
+        const ok = await registerFcmTokenOnServer(token);
+        setPushOn(ok);
+        if (!ok && hint) setMessage("Could not sync this device with the server.");
       } else {
         setPushOn(false);
+        if (hint) setMessage(hint);
       }
       return;
     }
@@ -149,38 +132,30 @@ export function PushNotificationsSettings({
       setPushOn(false);
       return;
     }
-    const want = (await storage.getItem(LS_ENABLED)) === "1";
+    const want = (await storage.getItem(FCM_ENABLED_STORAGE_KEY)) === "1";
+    if (!want) {
+      setPushOn(false);
+      return;
+    }
     try {
       const { token, hint } = await obtainFcmToken();
       if (!token) {
-        if (hint) console.warn("[FCM sync]", hint);
-        if (want) {
-          setPushOn(true);
-        } else {
-          setPushOn(false);
+        if (hint) {
+          console.warn("[FCM sync]", hint);
+          setMessage(hint);
         }
+        setPushOn(false);
         return;
       }
       tokenRef.current = token;
-      if (!want) {
-        setPushOn(false);
-        return;
-      }
-      const ok = await registerTokenOnServer(token);
-      if (ok) {
-        setPushOn(true);
-      } else if (want) {
-        setPushOn(true);
-      } else {
-        setPushOn(false);
+      const ok = await registerFcmTokenOnServer(token);
+      setPushOn(ok);
+      if (!ok) {
+        setMessage("Could not sync this device with the server.");
       }
     } catch (e) {
       console.error(e);
-      if (want) {
-        setPushOn(true);
-      } else {
-        setPushOn(false);
-      }
+      setPushOn(false);
     }
   }, [configured, isNativeKalnehiShell]);
 
@@ -201,18 +176,18 @@ export function PushNotificationsSettings({
     setBusy(true);
     try {
       if (isNativeKalnehiShell) {
-        const { token, hint } = await obtainNativeFcmToken();
+        const { token, hint } = await obtainNativeFcmToken({ forceRefresh: true });
         if (!token) {
           setMessage(hint ?? "Could not get a push token from the native app.");
           return;
         }
-        const ok = await registerTokenOnServer(token);
+        const ok = await registerFcmTokenOnServer(token);
         if (!ok) {
           setMessage("Could not save this device on the server. Try again.");
           return;
         }
         tokenRef.current = token;
-        await storage.setItem(LS_ENABLED, "1");
+        await storage.setItem(FCM_ENABLED_STORAGE_KEY, "1");
         setPushOn(true);
         setMessage("Push notifications are on for this device.");
         showToast("Push is on for this device.");
@@ -260,14 +235,14 @@ export function PushNotificationsSettings({
         return;
       }
 
-      const ok = await registerTokenOnServer(token);
+      const ok = await registerFcmTokenOnServer(token);
       if (!ok) {
         setMessage("Could not save this device on the server. Try again.");
         return;
       }
 
       tokenRef.current = token;
-      await storage.setItem(LS_ENABLED, "1");
+      await storage.setItem(FCM_ENABLED_STORAGE_KEY, "1");
       setPushOn(true);
       setMessage("Push notifications are on for this device.");
       showToast("Push is on for this device.");
@@ -286,17 +261,17 @@ export function PushNotificationsSettings({
       const tok = tokenRef.current;
       await revokeFcmToken();
       if (tok) {
-        await unregisterTokenOnServer(tok);
+        await unregisterFcmTokenOnServer(tok);
       }
       tokenRef.current = null;
-      await storage.removeItem(LS_ENABLED);
+      await storage.removeItem(FCM_ENABLED_STORAGE_KEY);
       setPushOn(false);
       setMessage("Push notifications are off for this device.");
       showToast("Push is off for this device.", "neutral");
     } catch (e) {
       console.error(e);
       setMessage("Could not turn off push completely. Try clearing site data.");
-      await storage.removeItem(LS_ENABLED);
+      await storage.removeItem(FCM_ENABLED_STORAGE_KEY);
       setPushOn(false);
     } finally {
       setBusy(false);
@@ -304,18 +279,40 @@ export function PushNotificationsSettings({
   }, [showToast]);
 
   const refreshToken = useCallback(async () => {
-    if (!configured) {
-      setMessage("Push is not configured on this deployment.");
-      return;
-    }
-    if (!("Notification" in window) || !("serviceWorker" in navigator)) {
-      setMessage("This browser does not support web push.");
-      return;
-    }
-
     setMessage(null);
     setRefreshBusy(true);
     try {
+      if (isNativeKalnehiShell) {
+        const { token, hint } = await obtainNativeFcmToken({ forceRefresh: true });
+        if (!token) {
+          setMessage(
+            hint ??
+              "Could not refresh the push token. Try again in a moment or reopen the app.",
+          );
+          return;
+        }
+        const ok = await registerFcmTokenOnServer(token);
+        if (!ok) {
+          setMessage("Could not save this device on the server. Try again.");
+          return;
+        }
+        tokenRef.current = token;
+        await storage.setItem(FCM_ENABLED_STORAGE_KEY, "1");
+        setPushOn(true);
+        setMessage("Push registration refreshed.");
+        showToast("Push registration refreshed.");
+        return;
+      }
+
+      if (!configured) {
+        setMessage("Push is not configured on this deployment.");
+        return;
+      }
+      if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+        setMessage("This browser does not support web push.");
+        return;
+      }
+
       if (Notification.permission === "denied") {
         setMessage(
           "Notifications are blocked for this site. Enable them in browser or system settings.",
@@ -343,14 +340,14 @@ export function PushNotificationsSettings({
         return;
       }
 
-      const ok = await registerTokenOnServer(token);
+      const ok = await registerFcmTokenOnServer(token);
       if (!ok) {
         setMessage("Could not save this device on the server. Try again.");
         return;
       }
 
       tokenRef.current = token;
-      await storage.setItem(LS_ENABLED, "1");
+      await storage.setItem(FCM_ENABLED_STORAGE_KEY, "1");
       setPushOn(true);
       setMessage("Push registration refreshed.");
       showToast("Push registration refreshed.");
@@ -360,7 +357,7 @@ export function PushNotificationsSettings({
     } finally {
       setRefreshBusy(false);
     }
-  }, [configured, showToast]);
+  }, [configured, isNativeKalnehiShell, showToast]);
 
   const onToggle = useCallback(
     (next: boolean) => {
@@ -422,12 +419,45 @@ export function PushNotificationsSettings({
   }
 
   const legacyUnsupportedEnv =
+    !isNativeKalnehiShell &&
     typeof window !== "undefined" &&
     (!("Notification" in window) || !("serviceWorker" in navigator));
 
   const shellClass = embedded
     ? "rounded-xl border border-white/12 bg-white/[0.035] px-3 py-4 dark:border-white/10 dark:bg-black/25"
     : "kal-glass-panel rounded-[1rem] px-3 py-4";
+
+  const devToolsBlock = showDevTest ? (
+    <div className="mt-4 border-t border-white/10 pt-4 dark:border-white/10">
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => void refreshToken()}
+          disabled={busy || refreshBusy}
+          className="inline-flex min-h-[40px] items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 text-sm font-medium text-kal-text backdrop-blur-sm transition-colors hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <RefreshCw
+            className={clsx("size-4", refreshBusy && "animate-spin")}
+            aria-hidden
+          />
+          {refreshBusy ? "Refreshing…" : "Refresh push registration"}
+        </button>
+        <button
+          type="button"
+          onClick={() => void sendTest()}
+          disabled={testBusy || !pushOn}
+          className="inline-flex min-h-[40px] items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 text-sm font-medium text-kal-text backdrop-blur-sm transition-colors hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <Send className="size-4" aria-hidden />
+          {testBusy ? "Sending…" : "Send test notification"}
+        </button>
+      </div>
+      <p className="mt-2 text-[11px] text-kal-text-secondary">
+        Admin / developer: calls{" "}
+        <span className="font-mono">/api/fcm/test</span>.
+      </p>
+    </div>
+  ) : null;
 
   return (
     <div className={shellClass}>
@@ -450,7 +480,22 @@ export function PushNotificationsSettings({
         </div>
       ) : null}
 
-      {!configured ? (
+      {isNativeKalnehiShell ? (
+        <>
+          <div className={clsx("flex items-center justify-between gap-3", embedded ? "mt-1" : "mt-4")}>
+            <span className="text-sm font-medium text-kal-text">
+              Enable push notifications
+            </span>
+            <SettingsSheetSwitch
+              id={`${baseId}-push`}
+              checked={pushOn}
+              disabled={busy || refreshBusy}
+              onChange={onToggle}
+            />
+          </div>
+          {devToolsBlock}
+        </>
+      ) : !configured ? (
         <p className={clsx("text-xs text-kal-text-secondary", !embedded && "mt-3")}>
           Push is not configured. Add{" "}
           <span className="font-mono text-[11px]">
@@ -466,28 +511,6 @@ export function PushNotificationsSettings({
         <p className={clsx("text-xs text-kal-text-secondary", !embedded && "mt-3")}>
           This environment does not support web push.
         </p>
-      ) : isNativeKalnehiShell ? (
-        <>
-          <div className={clsx("flex items-center justify-between gap-3", embedded ? "mt-1" : "mt-4")}>
-            <span className="text-sm font-medium text-kal-text">
-              Enable push notifications
-            </span>
-            <SettingsSheetSwitch
-              id={`${baseId}-push`}
-              checked={pushOn}
-              disabled={busy || refreshBusy}
-              onChange={onToggle}
-            />
-          </div>
-          {message ? (
-            <p
-              className="mt-3 text-xs leading-relaxed text-kal-text-secondary"
-              role="status"
-            >
-              {message}
-            </p>
-          ) : null}
-        </>
       ) : (
         <>
           <div className={clsx("flex items-center justify-between gap-3", embedded ? "mt-1" : "mt-4")}>
@@ -508,37 +531,7 @@ export function PushNotificationsSettings({
             </p>
           ) : null}
 
-          {showDevTest && (
-            <div className="mt-4 border-t border-white/10 pt-4 dark:border-white/10">
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => void refreshToken()}
-                  disabled={busy || refreshBusy}
-                  className="inline-flex min-h-[40px] items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 text-sm font-medium text-kal-text backdrop-blur-sm transition-colors hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <RefreshCw
-                    className={clsx("size-4", refreshBusy && "animate-spin")}
-                    aria-hidden
-                  />
-                  {refreshBusy ? "Refreshing…" : "Refresh push registration"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void sendTest()}
-                  disabled={testBusy || !pushOn}
-                  className="inline-flex min-h-[40px] items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 text-sm font-medium text-kal-text backdrop-blur-sm transition-colors hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <Send className="size-4" aria-hidden />
-                  {testBusy ? "Sending…" : "Send test notification"}
-                </button>
-              </div>
-              <p className="mt-2 text-[11px] text-kal-text-secondary">
-                Admin / developer: calls{" "}
-                <span className="font-mono">/api/fcm/test</span>.
-              </p>
-            </div>
-          )}
+          {devToolsBlock}
         </>
       )}
 

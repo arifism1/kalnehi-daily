@@ -1,5 +1,6 @@
 "use client";
 
+import { Capacitor } from "@capacitor/core";
 import {
   useCallback,
   useEffect,
@@ -59,7 +60,13 @@ function writeStoredInstalled(value: boolean) {
 /** Wait this long before showing "install not supported" so `beforeinstallprompt` can fire. */
 const INSTALL_ELIGIBILITY_PROBE_MS = 1_000;
 
+function readShowPwaInstallUi(): boolean {
+  if (typeof window === "undefined") return false;
+  return !Capacitor.isNativePlatform();
+}
+
 export function usePwaInstall() {
+  const showPwaInstallUi = readShowPwaInstallUi();
   const [installed, setInstalled] = useState(() =>
     typeof window === "undefined" ? false : readStandalone() || readStoredInstalled(),
   );
@@ -77,6 +84,8 @@ export function usePwaInstall() {
   }, []);
 
   useEffect(() => {
+    if (!showPwaInstallUi) return;
+
     const syncInstalledState = () => {
       const standalone = readStandalone();
       writeStoredInstalled(standalone);
@@ -127,26 +136,30 @@ export function usePwaInstall() {
         mq.removeListener(onDisplayModeChange);
       }
     };
-  }, []);
+  }, [showPwaInstallUi]);
 
   useEffect(() => {
+    if (!showPwaInstallUi) return;
     if (deferred) setInstallEligibilityKnown(true);
-  }, [deferred]);
+  }, [deferred, showPwaInstallUi]);
 
   useEffect(() => {
+    if (!showPwaInstallUi) return;
     if (iosDevice) setInstallEligibilityKnown(true);
-  }, [iosDevice]);
+  }, [iosDevice, showPwaInstallUi]);
 
   useEffect(() => {
+    if (!showPwaInstallUi) return;
     if (installed) setInstallEligibilityKnown(true);
-  }, [installed]);
+  }, [installed, showPwaInstallUi]);
 
   useEffect(() => {
+    if (!showPwaInstallUi) return;
     const id = window.setTimeout(() => {
       setInstallEligibilityKnown(true);
     }, INSTALL_ELIGIBILITY_PROBE_MS);
     return () => window.clearTimeout(id);
-  }, []);
+  }, [showPwaInstallUi]);
 
   const promptInstall = useCallback(async () => {
     if (!deferred) return { ok: false as const, reason: "no_prompt" as const };
@@ -170,9 +183,11 @@ export function usePwaInstall() {
     iosDevice && !installed && !canPromptInstall;
 
   const showInstallButton =
-    !installed && (canPromptInstall || iosDevice);
+    showPwaInstallUi && !installed && (canPromptInstall || iosDevice);
 
   return {
+    /** False in Capacitor/APK — install UI is browser/PWA only. */
+    showPwaInstallUi,
     /** Running as installed PWA (standalone / iOS home screen). */
     installed,
     /** Chromium: native install prompt is available. */

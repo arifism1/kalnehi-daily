@@ -1043,7 +1043,7 @@ export function StudyCameraTracker({ subject, userId, aiPartnerMode = false, onD
               <button
                 type="button"
                 onClick={() => setFacing(facing === "user" ? "environment" : "user")}
-                className="absolute top-3 right-3 flex items-center gap-1.5 rounded-xl bg-black/55 px-3 py-2 text-xs font-semibold text-white shadow-lg backdrop-blur-sm ring-1 ring-white/10 transition-opacity active:opacity-70"
+                className="absolute top-3 right-3 flex min-h-[44px] items-center gap-1.5 rounded-xl bg-black/55 px-3 py-2 text-xs font-semibold text-white shadow-lg backdrop-blur-sm ring-1 ring-white/10 transition-opacity active:opacity-70"
                 aria-label={facing === "user" ? "Switch to back camera" : "Switch to front camera"}
               >
                 <RefreshCw className="size-4" />

@@ -12,8 +12,17 @@ export const VOICE_SILENCE_AUTO_STOP_MS = VOICE_TRAILING_SILENCE_MS;
 /** Trailing silence — same as {@link VOICE_TRAILING_SILENCE_MS} (daily plan, doubts, reflection, etc.). */
 export const VOICE_LONG_FORM_SILENCE_MS = VOICE_TRAILING_SILENCE_MS;
 
-/** Trailing silence — same as {@link VOICE_TRAILING_SILENCE_MS} (global voice sheet). */
-export const VOICE_COMMAND_SILENCE_MS = VOICE_TRAILING_SILENCE_MS;
+/**
+ * Boss Mode / global voice: short trailing silence so commands finalize quickly.
+ * Long-form dictation surfaces keep {@link VOICE_TRAILING_SILENCE_MS}.
+ */
+export const VOICE_COMMAND_TRAILING_SILENCE_MS = 900;
+
+/** Android command mode: slightly longer gap tolerance without the 60s long-form floor. */
+export const VOICE_COMMAND_ANDROID_SILENCE_MS = 1_200;
+
+/** @deprecated Use {@link VOICE_COMMAND_TRAILING_SILENCE_MS} for Boss Mode. */
+export const VOICE_COMMAND_SILENCE_MS = VOICE_COMMAND_TRAILING_SILENCE_MS;
 
 /** Hard cap per listen session for generic Web Speech callers (non-long-form). */
 export const VOICE_MAX_SESSION_MS = 60_000;
@@ -26,7 +35,8 @@ export const VOICE_COMMAND_MAX_SESSION_MS = 120_000;
  * Backlog Speak and similar surfaces use this for parity with global voice infra.
  */
 export const VOICE_GLOBAL_NAV_SPEECH_TIMING = {
-  silenceMs: VOICE_COMMAND_SILENCE_MS,
+  silenceMs: VOICE_COMMAND_TRAILING_SILENCE_MS,
+  androidSilenceMs: VOICE_COMMAND_ANDROID_SILENCE_MS,
   maxSessionMs: VOICE_COMMAND_MAX_SESSION_MS,
 } as const;
 

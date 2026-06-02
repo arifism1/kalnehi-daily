@@ -134,7 +134,7 @@ export function SyncStatusBanner() {
         role="status"
         aria-live="polite"
         className={clsx(
-          "fixed left-1/2 top-[56px] z-50 -translate-x-1/2 pointer-events-none",
+          "fixed left-1/2 top-[calc(3.5rem+var(--kal-safe-top,0px))] z-50 -translate-x-1/2 pointer-events-none",
           "flex items-center gap-2 rounded-full border border-kal-accent/30 bg-kal-accent-soft/95 px-4 py-1.5 text-[11px] leading-snug text-kal-text-secondary shadow-md backdrop-blur-md dark:bg-kal-accent-soft/60",
         )}
       >

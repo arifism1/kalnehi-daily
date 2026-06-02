@@ -764,6 +764,20 @@ body {
   }
 }
 
+/*
+ * Modal z-index tiers (fixed overlays):
+ *   40 header · 55 nav menu · 70–80 sheets · 85–86 voice transcript · 88 global voice · 90+ toasts
+ */
+
+body.kal-modal-open .kal-chrome-main-scroll {
+  overflow: hidden;
+}
+
+body.kal-modal-open [data-kal-bottom-tabs] {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 /* ── Chrome layout helpers (all screen sizes) ─────────────────────────── */
 /* kal-chrome-root locks the shell to the viewport height so the only
    scrollable surface is kal-chrome-main-scroll. Applying at every

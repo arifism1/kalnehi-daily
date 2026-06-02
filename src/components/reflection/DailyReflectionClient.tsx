@@ -11,8 +11,9 @@ import {
   SkipForward,
   Target,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
+import { ModalPortal } from "@/components/ui/ModalPortal";
 import { VoiceListeningHint } from "@/components/voice/VoiceListeningHint";
 import { VoiceLiveTranscriptOverlay } from "@/components/voice/VoiceLiveTranscriptOverlay";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
@@ -81,12 +82,27 @@ export type DailyReflectionClientProps = {
   defaultExpanded?: boolean;
   /** When false, skip inline "Recent reflections" (e.g. full Daily Debrief page has its own section). */
   showInlineRecentHistory?: boolean;
+  /** Inside EndOfDaySheet: opaque cards, no duplicate page hero, parent handles loading overlay. */
+  embedded?: boolean;
+  /** Parent sheet uses this to coordinate a single loading state. */
+  onLoadingChange?: (loading: boolean) => void;
+  /** Render Save/Cancel in parent sheet footer instead of mid-scroll. */
+  embeddedFooterActions?: boolean;
+  /** Lift Edit + footer actions into EndOfDaySheet chrome. */
+  onEmbeddedChrome?: (chrome: {
+    headerTrailing: ReactNode | null;
+    footer: ReactNode | null;
+  }) => void;
 };
 
 export function DailyReflectionClient({
   collapsible = false,
   defaultExpanded,
   showInlineRecentHistory = true,
+  embedded = false,
+  onLoadingChange,
+  embeddedFooterActions = false,
+  onEmbeddedChrome,
 }: DailyReflectionClientProps) {
   const today = useCalendarDate();
   const [panelOpen, setPanelOpen] = useState(
@@ -145,6 +161,21 @@ export function DailyReflectionClient({
     void load();
     return () => { cancelled = true; };
   }, [today, showInlineRecentHistory]);
+
+  useEffect(() => {
+    onLoadingChange?.(loadingInit);
+  }, [loadingInit, onLoadingChange]);
+
+  const focusEmbeddedField = useCallback((el: HTMLTextAreaElement | null) => {
+    if (!embedded || !el) return;
+    window.requestAnimationFrame(() => {
+      el.scrollIntoView({ block: "center", behavior: "smooth" });
+    });
+  }, [embedded]);
+
+  const questionCardBase = embedded
+    ? "kal-card-surface rounded-2xl border p-4"
+    : "kal-glass-card rounded-2xl border p-4";
 
   /** Target field for the in-flight utterance — must survive mic Stop until `onTranscript` fires. */
   const voicePendingFieldRef = useRef<Field | null>(null);
@@ -354,7 +385,80 @@ export function DailyReflectionClient({
     }
   }, [draft, today, showInlineRecentHistory]);
 
+  useEffect(() => {
+    if (!embedded || !onEmbeddedChrome || loadingInit) return;
+
+    const showFormNow = isEditing || !savedToday;
+    const headerTrailing =
+      savedToday && !isEditing ? (
+        <button
+          type="button"
+          onClick={() => setIsEditing(true)}
+          className="flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-kal-text-secondary transition-colors hover:bg-kal-surface/60 hover:text-kal-text"
+        >
+          <PenLine className="size-3.5" />
+          Edit
+        </button>
+      ) : null;
+
+    const saveActions = showFormNow ? (
+      <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
+        {savedToday && isEditing ? (
+          <button
+            type="button"
+            onClick={() => {
+              setIsEditing(false);
+              setDraft({
+                finished_today: savedToday.finished_today ?? "",
+                skipped_today: savedToday.skipped_today ?? "",
+                tomorrow_priority: savedToday.tomorrow_priority ?? "",
+              });
+            }}
+            className="min-h-[48px] rounded-xl px-4 py-2.5 text-sm font-medium text-kal-text-secondary transition-colors hover:bg-kal-surface/60 sm:min-h-[44px]"
+          >
+            Cancel
+          </button>
+        ) : null}
+        <button
+          type="button"
+          onClick={() => void handleSave()}
+          disabled={isSaving}
+          className="flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl bg-kal-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-kal-accent/90 disabled:opacity-60 transition-colors sm:min-h-[44px] sm:flex-initial"
+        >
+          {isSaving && <Loader2 className="size-4 animate-spin" />}
+          Save reflection
+        </button>
+      </div>
+    ) : null;
+
+    const footer =
+      embeddedFooterActions && (saveActions || saveError || reflectionVoiceMicError) ? (
+        <div className="flex flex-col gap-2">
+          {reflectionVoiceMicError ? (
+            <p className="text-sm text-red-500">{reflectionVoiceMicError}</p>
+          ) : null}
+          {saveError ? <p className="text-sm text-red-500">{saveError}</p> : null}
+          {saveActions}
+        </div>
+      ) : null;
+
+    onEmbeddedChrome({ headerTrailing, footer });
+  }, [
+    embedded,
+    onEmbeddedChrome,
+    embeddedFooterActions,
+    loadingInit,
+    isEditing,
+    savedToday,
+    draft,
+    isSaving,
+    saveError,
+    reflectionVoiceMicError,
+    handleSave,
+  ]);
+
   if (loadingInit) {
+    if (embedded) return null;
     return (
       <div className="flex min-h-[200px] items-center justify-center">
         <Loader2 className="size-6 animate-spin text-kal-accent/60" />
@@ -394,6 +498,13 @@ export function DailyReflectionClient({
     />
   );
 
+  const voiceOverlayNode =
+    embedded && debriefVoiceOverlayOpen ? (
+      <ModalPortal>{debriefVoiceOverlay}</ModalPortal>
+    ) : (
+      debriefVoiceOverlay
+    );
+
   const subtitle = (
     <p className="text-sm text-kal-text-secondary">
       {formatDate(today)} · 60-second end-of-day check-in
@@ -412,6 +523,37 @@ export function DailyReflectionClient({
       </button>
     ) : null;
 
+  const saveFooterActions =
+    showForm ? (
+      <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
+        {savedToday && isEditing ? (
+          <button
+            type="button"
+            onClick={() => {
+              setIsEditing(false);
+              setDraft({
+                finished_today: savedToday.finished_today ?? "",
+                skipped_today: savedToday.skipped_today ?? "",
+                tomorrow_priority: savedToday.tomorrow_priority ?? "",
+              });
+            }}
+            className="min-h-[48px] rounded-xl px-4 py-2.5 text-sm font-medium text-kal-text-secondary transition-colors hover:bg-kal-surface/60 sm:min-h-[44px]"
+          >
+            Cancel
+          </button>
+        ) : null}
+        <button
+          type="button"
+          onClick={() => void handleSave()}
+          disabled={isSaving}
+          className="flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl bg-kal-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-kal-accent/90 disabled:opacity-60 transition-colors sm:min-h-[44px] sm:flex-initial"
+        >
+          {isSaving && <Loader2 className="size-4 animate-spin" />}
+          Save reflection
+        </button>
+      </div>
+    ) : null;
+
   const formSection = showForm ? (
         <div className="space-y-4">
           {QUESTIONS.map(({ field, icon: Icon, question, placeholder, accentClass, borderClass }) => {
@@ -424,10 +566,7 @@ export function DailyReflectionClient({
             return (
               <div
                 key={field}
-                className={clsx(
-                  "kal-glass-card rounded-2xl border p-4 space-y-3",
-                  borderClass,
-                )}
+                className={clsx(questionCardBase, "space-y-3", borderClass)}
               >
                 <label className={clsx("flex items-center gap-2 font-semibold text-sm", accentClass)}>
                   <Icon className="size-4 shrink-0" aria-hidden />
@@ -438,8 +577,12 @@ export function DailyReflectionClient({
                     rows={2}
                     value={textareaValue}
                     onChange={(e) => setDraft((prev) => ({ ...prev, [field]: e.target.value }))}
+                    onFocus={(e) => focusEmbeddedField(e.currentTarget)}
                     placeholder={placeholder}
-                    className="w-full resize-none rounded-xl border border-kal-border bg-kal-surface/60 px-3 py-2.5 text-sm text-kal-text placeholder:text-kal-text-secondary/60 focus:outline-none focus:ring-2 focus:ring-kal-accent/40"
+                    className={clsx(
+                      "w-full resize-none rounded-xl border border-kal-border bg-kal-surface/60 px-3 py-2.5 text-sm text-kal-text placeholder:text-kal-text-secondary/60 focus:outline-none focus:ring-2 focus:ring-kal-accent/40",
+                      embedded && "scroll-pb-24 scroll-mb-4",
+                    )}
                   />
                   {isSupported && (
                     <button
@@ -492,37 +635,39 @@ export function DailyReflectionClient({
           {reflectionVoiceMicError && (
             <p className="text-sm text-red-500">{reflectionVoiceMicError}</p>
           )}
-          {saveError && (
+          {!embeddedFooterActions && saveError ? (
             <p className="text-sm text-red-500">{saveError}</p>
-          )}
+          ) : null}
 
-          <div className="flex items-center justify-end gap-3">
-            {savedToday && isEditing && (
+          {!embeddedFooterActions ? (
+            <div className="flex items-center justify-end gap-3">
+              {savedToday && isEditing ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditing(false);
+                    setDraft({
+                      finished_today: savedToday.finished_today ?? "",
+                      skipped_today: savedToday.skipped_today ?? "",
+                      tomorrow_priority: savedToday.tomorrow_priority ?? "",
+                    });
+                  }}
+                  className="rounded-xl px-4 py-2.5 text-sm font-medium text-kal-text-secondary transition-colors hover:bg-kal-surface/60"
+                >
+                  Cancel
+                </button>
+              ) : null}
               <button
                 type="button"
-                onClick={() => {
-                  setIsEditing(false);
-                  setDraft({
-                    finished_today: savedToday.finished_today ?? "",
-                    skipped_today: savedToday.skipped_today ?? "",
-                    tomorrow_priority: savedToday.tomorrow_priority ?? "",
-                  });
-                }}
-                className="rounded-xl px-4 py-2.5 text-sm font-medium text-kal-text-secondary transition-colors hover:bg-kal-surface/60"
+                onClick={() => void handleSave()}
+                disabled={isSaving}
+                className="flex items-center gap-2 rounded-xl bg-kal-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-kal-accent/90 disabled:opacity-60 transition-colors"
               >
-                Cancel
+                {isSaving && <Loader2 className="size-4 animate-spin" />}
+                Save reflection
               </button>
-            )}
-            <button
-              type="button"
-              onClick={() => void handleSave()}
-              disabled={isSaving}
-              className="flex items-center gap-2 rounded-xl bg-kal-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-kal-accent/90 disabled:opacity-60 transition-colors"
-            >
-              {isSaving && <Loader2 className="size-4 animate-spin" />}
-              Save reflection
-            </button>
-          </div>
+            </div>
+          ) : null}
         </div>
   ) : (
     <div className="space-y-4">
@@ -531,7 +676,7 @@ export function DailyReflectionClient({
         return (
           <div
             key={field}
-            className={clsx("kal-glass-card rounded-2xl border p-4 space-y-1.5", borderClass)}
+            className={clsx(questionCardBase, "space-y-1.5", borderClass)}
           >
             <p className={clsx("flex items-center gap-2 text-xs font-semibold uppercase tracking-wide", accentClass)}>
               <Icon className="size-3.5" aria-hidden />
@@ -557,7 +702,7 @@ export function DailyReflectionClient({
   if (collapsible) {
     return (
       <>
-        {debriefVoiceOverlay}
+        {voiceOverlayNode}
         <div className="mx-auto max-w-2xl space-y-3">
         <header className="space-y-0.5">
           <div className="flex items-start justify-between gap-2">
@@ -606,9 +751,18 @@ export function DailyReflectionClient({
     );
   }
 
+  if (embedded) {
+    return (
+      <>
+        {voiceOverlayNode}
+        <div className="space-y-4">{formSection}</div>
+      </>
+    );
+  }
+
   return (
     <>
-      {debriefVoiceOverlay}
+      {voiceOverlayNode}
       <div className="mx-auto max-w-2xl space-y-6">
       <header className="space-y-1">
         <div className="flex items-center justify-between">

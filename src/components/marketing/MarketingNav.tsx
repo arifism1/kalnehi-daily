@@ -25,12 +25,20 @@ export function MarketingNav() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const menuRef = useRef<HTMLDivElement>(null);
-  const { installed, canPromptInstall, needsIosInstallModal, promptInstall, iosDevice } =
-    usePwaInstall();
+  const {
+    showPwaInstallUi,
+    installed,
+    canPromptInstall,
+    needsIosInstallModal,
+    promptInstall,
+    iosDevice,
+  } = usePwaInstall();
   const [installBusy, setInstallBusy] = useState(false);
   const [iosInstallOpen, setIosInstallOpen] = useState(false);
-  const installUnsupported = !installed && !canPromptInstall && !iosDevice;
-  const showInstallButton = installed || canPromptInstall || needsIosInstallModal;
+  const installUnsupported =
+    showPwaInstallUi && !installed && !canPromptInstall && !iosDevice;
+  const showInstallButton =
+    showPwaInstallUi && (installed || canPromptInstall || needsIosInstallModal);
 
   // Close on route change
   useEffect(() => {

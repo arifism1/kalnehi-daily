@@ -7,9 +7,10 @@ Values are pre-filled from the codebase. Keep this document updated each release
 
 ## Step 0: Pre-flight checklist (before opening Play Console)
 
+- [ ] **JDK 21** used to run Gradle (Gradle 8.14.x cannot run on Java 25+). On macOS: `export JAVA_HOME=$(/usr/libexec/java_home -v 21)` — if no JDK 21 is installed, use Android Studio’s bundled runtime: `export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"`. Verify with `java -version` and `cd android && ./gradlew -version`
 - [ ] `google-services.json` placed at `android/app/google-services.json`
 - [ ] `android/keystore.properties` created with keystore credentials
-- [ ] Release AAB built: `cd android && ./gradlew bundleRelease`
+- [ ] Release AAB built: `cd android && ./gradlew bundleRelease` (with `JAVA_HOME` pointing at JDK 21)
 - [ ] AAB found at `android/app/build/outputs/bundle/release/app-release.aab`
 - [ ] AAB tested on a real Android device (auth, voice, camera, trial lockout, refresh)
 - [ ] `versionCode` incremented in `android/app/build.gradle` (must be unique per upload)

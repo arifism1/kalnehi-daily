@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 
 import { KalnehiMark } from "@/components/KalnehiMark";
 import { KalShimmerBlock } from "@/components/loading/KalShimmerBlock";
+import { SyllabusPageHeader } from "@/components/syllabus/SyllabusPageHeader";
 
 export type SyllabusPageSkeletonProps = {
   /** Include header + bottom tab placeholders (AppShell bootstrap). */
@@ -21,16 +22,16 @@ function StatValueSkeleton({ delayMs }: { delayMs?: number }) {
   );
 }
 
-/** Mirrors `SyllabusOverviewPanel` stat row + progress bar. */
+/** Mirrors compact `SyllabusOverviewPanel` stat row + progress bar. */
 function SyllabusOverviewSkeleton() {
   return (
-    <section className="kal-glass-panel overflow-hidden rounded-2xl border-kal-accent/35 p-4 shadow-lg">
+    <section className="kal-glass-panel overflow-hidden rounded-2xl border-kal-accent/35 p-3 shadow-lg">
       <KalShimmerBlock className="h-3 w-44 max-w-[85%] rounded-md" />
       <div
-        className="mt-2 flex divide-x"
+        className="mt-1.5 flex divide-x"
         style={{ "--divide-color": "rgba(186,117,23,0.2)" } as CSSProperties}
       >
-        <div className="flex min-w-0 flex-1 flex-col items-center gap-0.5 px-2 py-3 text-center">
+        <div className="flex min-w-0 flex-1 flex-col items-center gap-0 px-2 py-1.5 text-center">
           <StatValueSkeleton />
           <KalShimmerBlock className="mt-0.5 h-2.5 w-12 rounded" />
         </div>
@@ -39,14 +40,17 @@ function SyllabusOverviewSkeleton() {
           style={{ background: "rgba(186,117,23,0.2)" }}
           aria-hidden
         />
-        <div className="flex min-w-0 flex-1 flex-col items-center gap-0.5 px-2 py-3 text-center">
+        <div className="flex min-w-0 flex-1 flex-col items-center gap-0 px-2 py-1.5 text-center">
           <StatValueSkeleton delayMs={40} />
-          <KalShimmerBlock className="mt-0.5 h-2.5 w-16 rounded" delayMs={40} />
         </div>
       </div>
-      <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-kal-card-muted">
+      <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-kal-card-muted">
         <KalShimmerBlock className="h-full w-[38%] rounded-full" delayMs={80} />
       </div>
+      <KalShimmerBlock
+        className="mx-auto mt-1.5 h-2 w-36 max-w-[90%] rounded"
+        delayMs={100}
+      />
     </section>
   );
 }
@@ -99,9 +103,11 @@ function SubjectCardSkeleton({ staggerIndex = 0 }: { staggerIndex?: number }) {
 
 function SyllabusSkeletonBody({
   showStatus = true,
+  showPageTitle = false,
   className,
 }: {
   showStatus?: boolean;
+  showPageTitle?: boolean;
   className?: string;
 }) {
   return (
@@ -110,6 +116,7 @@ function SyllabusSkeletonBody({
       aria-busy="true"
       aria-label="Loading syllabus"
     >
+      {showPageTitle ? <SyllabusPageHeader /> : null}
       <SyllabusOverviewSkeleton />
       {showStatus ? (
         <p
@@ -137,7 +144,11 @@ export function SyllabusPageSkeleton({
   className,
 }: SyllabusPageSkeletonProps) {
   const content = (
-    <SyllabusSkeletonBody showStatus={showStatus} className={className} />
+    <SyllabusSkeletonBody
+      showStatus={showStatus}
+      showPageTitle={showChrome}
+      className={className}
+    />
   );
 
   if (!showChrome) {

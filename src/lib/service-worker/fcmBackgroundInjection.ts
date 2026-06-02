@@ -1,8 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { SYSTEM_PUSH_KIND } from "@/lib/systemPush/copy";
-import { resolveSystemPushPath } from "@/lib/systemPush/routes";
+import { buildNotificationPathFallbackMap } from "@/lib/fcm/resolveNotificationPath";
 
 function readFirebaseVersion(): string {
   try {
@@ -47,11 +46,7 @@ export function buildFcmBackgroundInjection(): string {
     measurementId: measurementId || undefined,
   };
   const cfgJson = JSON.stringify(cfg);
-  const fallbackPathByKindJson = JSON.stringify({
-    [SYSTEM_PUSH_KIND.morning]: resolveSystemPushPath(SYSTEM_PUSH_KIND.morning),
-    [SYSTEM_PUSH_KIND.evening]: resolveSystemPushPath(SYSTEM_PUSH_KIND.evening),
-    [SYSTEM_PUSH_KIND.danger]: resolveSystemPushPath(SYSTEM_PUSH_KIND.danger),
-  });
+  const fallbackPathByKindJson = JSON.stringify(buildNotificationPathFallbackMap());
 
   return `
 // --- Firebase Cloud Messaging (injected at runtime by /sw.js route) ---

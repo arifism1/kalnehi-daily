@@ -15,6 +15,10 @@ type SettingsExpandableSectionProps = {
   /** When false, header is not a toggle — content stays visible (no chevron). */
   expandable?: boolean;
   defaultOpen?: boolean;
+  /** Rendered on the header row (e.g. inline switch), before the chevron. */
+  headerTrailing?: ReactNode;
+  /** Optional id on the root article (deep links). */
+  anchorId?: string;
   className?: string;
   children: ReactNode;
 };
@@ -64,6 +68,8 @@ export function SettingsExpandableSection({
   icon: Icon,
   expandable = true,
   defaultOpen = false,
+  headerTrailing,
+  anchorId,
   className,
   children,
 }: SettingsExpandableSectionProps) {
@@ -75,8 +81,10 @@ export function SettingsExpandableSection({
   if (!expandable) {
     return (
       <article
+        id={anchorId}
         className={clsx(
           "overflow-hidden rounded-xl border border-kal-border/60 bg-kal-card/40",
+          anchorId && "scroll-mt-24",
           className,
         )}
       >
@@ -95,35 +103,62 @@ export function SettingsExpandableSection({
 
   return (
     <article
+      id={anchorId}
       className={clsx(
         "overflow-hidden rounded-xl border border-kal-border/60 bg-kal-card/40",
+        anchorId && "scroll-mt-24",
         className,
       )}
     >
-      <h3>
-        <button
-          id={buttonId}
-          type="button"
-          aria-expanded={open}
-          aria-controls={panelId}
-          onClick={() => setOpen((prev) => !prev)}
-          className="flex w-full items-center justify-between gap-3 p-3 text-left sm:px-4"
-        >
-          <SectionHeaderTitles
-            Icon={Icon}
-            kicker={kicker}
-            title={title}
-            description={description}
-          />
-          <ChevronDown
-            className={clsx(
-              "mt-0.5 size-4.5 shrink-0 text-kal-muted transition-transform duration-300",
-              open && "rotate-180",
-            )}
-            aria-hidden
-          />
-        </button>
-      </h3>
+      <div className="flex items-center gap-2 p-3 sm:px-4">
+        <h3 className="min-w-0 flex-1">
+          <button
+            id={buttonId}
+            type="button"
+            aria-expanded={open}
+            aria-controls={panelId}
+            onClick={() => setOpen((prev) => !prev)}
+            className="flex w-full items-center justify-between gap-3 text-left"
+          >
+            <SectionHeaderTitles
+              Icon={Icon}
+              kicker={kicker}
+              title={title}
+              description={description}
+            />
+            {!headerTrailing ? (
+              <ChevronDown
+                className={clsx(
+                  "mt-0.5 size-4.5 shrink-0 text-kal-muted transition-transform duration-300",
+                  open && "rotate-180",
+                )}
+                aria-hidden
+              />
+            ) : null}
+          </button>
+        </h3>
+        {headerTrailing ? (
+          <div className="flex shrink-0 items-center gap-2">
+            {headerTrailing}
+            <button
+              type="button"
+              aria-expanded={open}
+              aria-controls={panelId}
+              aria-label={open ? "Collapse section" : "Expand section"}
+              onClick={() => setOpen((prev) => !prev)}
+              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-kal-muted hover:text-kal-text"
+            >
+              <ChevronDown
+                className={clsx(
+                  "size-4.5 transition-transform duration-300",
+                  open && "rotate-180",
+                )}
+                aria-hidden
+              />
+            </button>
+          </div>
+        ) : null}
+      </div>
       <div
         id={panelId}
         role="region"

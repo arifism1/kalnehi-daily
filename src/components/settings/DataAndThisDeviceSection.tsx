@@ -15,7 +15,7 @@ export function DataAndThisDeviceSection() {
       icon={Database}
       defaultOpen={false}
     >
-      <div className="space-y-3 px-3 pb-4 text-xs leading-relaxed text-kal-text-secondary sm:px-4">
+      <div className="space-y-3 text-xs leading-relaxed text-kal-text-secondary">
         <ul className="list-disc space-y-2 pl-4">
           <li>
             <strong className="text-kal-text">Account &amp; study data</strong>{" "}

@@ -55,7 +55,7 @@ export async function POST(req: Request) {
     const { sent, failures } = await sendFcmToUserTokens(sdk.messaging, user.id, {
       title: SITE_NAME,
       body: "Test notification — push is working on this account.",
-      data: { kind: "test" },
+      data: { kind: "test", path: "/settings" },
     });
 
     const failureCodes = [...new Set(failures)];

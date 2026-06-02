@@ -1,0 +1,4 @@
+;!function(){try { var e="undefined"!=typeof globalThis?globalThis:"undefined"!=typeof global?global:"undefined"!=typeof window?window:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&((e._debugIds|| (e._debugIds={}))[n]="c23aa664-3591-c99d-8bb6-fef46f1bea8d")}catch(e){}}();
+(globalThis.TURBOPACK||(globalThis.TURBOPACK=[])).push(["object"==typeof document?document.currentScript:void 0,375226,e=>{"use strict";var l=e.i(843476),s=e.i(770703),a=e.i(271645),t=e.i(892681);let u=(0,s.default)(()=>e.A(194134).then(e=>({default:e.SyllabusTracker})),{loadableGenerated:{modules:[655364]},ssr:!1,loading:()=>(0,l.jsx)(t.SyllabusPageSkeleton,{})});e.s(["SyllabusShell",0,function(){return(0,l.jsx)(a.Suspense,{fallback:(0,l.jsx)(t.SyllabusPageSkeleton,{}),children:(0,l.jsx)(u,{})})}])},194134,e=>{e.v(l=>Promise.all(["static/chunks/12bhd.~0ouodz.js","static/chunks/05upqeupz-o6..js"].map(l=>e.l(l))).then(()=>l(655364)))}]);
+
+//# debugId=c23aa664-3591-c99d-8bb6-fef46f1bea8d

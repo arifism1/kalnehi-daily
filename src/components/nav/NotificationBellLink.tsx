@@ -10,7 +10,14 @@ import { getNotificationUnreadTotal } from "@/actions/notifications";
 import { prefetchUserNotificationsList } from "@/lib/userNotificationsListCache";
 import { useAuthStore } from "@/store/useAuthStore";
 
-export function NotificationBellLink({ pathname }: { pathname: string | null }) {
+export function NotificationBellLink({
+  pathname,
+  compact = false,
+}: {
+  pathname: string | null;
+  /** Tighter sizing when grouped beside the voice mic in the top bar. */
+  compact?: boolean;
+}) {
   const router = useRouter();
   const userId = useAuthStore((s) => s.user?.id);
   const [total, setTotal] = useState(0);
@@ -77,7 +84,10 @@ export function NotificationBellLink({ pathname }: { pathname: string | null }) 
       onPointerDown={maybePrefetchList}
       onFocus={maybePrefetchList}
       className={clsx(
-        "relative flex size-8 min-h-[32px] min-w-[32px] items-center justify-center rounded-xl border backdrop-blur-md transition-colors active:scale-[0.98]",
+        "relative flex items-center justify-center rounded-xl border backdrop-blur-md transition-colors active:scale-[0.98]",
+        compact
+          ? "size-10 min-h-[40px] min-w-[40px] sm:size-11 sm:min-h-[44px] sm:min-w-[44px]"
+          : "size-11 min-h-[44px] min-w-[44px]",
         pathname === "/notifications"
           ? "border-kal-accent/35 bg-kal-accent-soft text-kal-accent shadow-sm"
           : "border-white/30 bg-white/45 text-kal-accent hover:border-white/45 hover:bg-white/65 dark:border-white/12 dark:bg-zinc-900/50",

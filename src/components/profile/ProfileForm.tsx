@@ -5,7 +5,6 @@ import {
   Layers,
   Loader2,
   Plus,
-  Smartphone,
   Trash2,
   User,
 } from "lucide-react";
@@ -24,7 +23,6 @@ import { CuetDomainSubjectPick } from "@/components/profile/CuetDomainSubjectPic
 import { TrackExamToggles } from "@/components/profile/TrackExamToggles";
 import { TrackPicker } from "@/components/onboarding/TrackPicker";
 import { UpscOptionalSubjectPick } from "@/components/profile/UpscOptionalSubjectPick";
-import { InstallPWA } from "@/components/InstallPWA";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { SettingsExpandableSection } from "@/components/settings/SettingsExpandableSection";
 import {
@@ -728,9 +726,8 @@ export function ProfileForm() {
               </div>
           </div>
           </div>
-        </SettingsExpandableSection>
 
-          <div className="space-y-3 border-t border-kal-border/80 pt-2">
+          <div className="space-y-3 border-t border-kal-border/80 pt-4">
             <button
               type="submit"
               disabled={saving}
@@ -750,60 +747,10 @@ export function ProfileForm() {
               </p>
             )}
           </div>
+        </SettingsExpandableSection>
         </section>
       </form>
 
-      <SettingsExpandableSection
-        sectionId="profile-install-pwa"
-        kicker="Profile"
-        title="Install app"
-        description="Add Kalnehi to your home screen for quicker access."
-        icon={Smartphone}
-      >
-        <div className="mb-4 space-y-4 text-xs leading-relaxed text-kal-text-secondary">
-          <div>
-            <p className="font-semibold text-[0.7rem] uppercase tracking-wide text-kal-text">
-              iPhone · iPad
-            </p>
-            <p className="mt-1">
-              Open Kalnehi in <strong>Safari</strong> (installation from other browsers
-              is limited on iOS). Tap <strong className="text-kal-text">Share</strong> in
-              the toolbar, then{" "}
-              <strong className="text-kal-text">Add to Home Screen</strong>.
-            </p>
-          </div>
-          <div>
-            <p className="font-semibold text-[0.7rem] uppercase tracking-wide text-kal-text">
-              Android phone · tablet
-            </p>
-            <p className="mt-1">
-              In <strong>Chrome</strong> or <strong>Edge</strong>, open the ⋮ menu and
-              choose <strong className="text-kal-text">Install app</strong> or{" "}
-              <strong className="text-kal-text">Add to Home screen</strong>. On some
-              devices you&apos;ll see an install banner at the bottom instead.
-              Some browsers label it similarly under Menu → Install.
-            </p>
-          </div>
-          <div>
-            <p className="font-semibold text-[0.7rem] uppercase tracking-wide text-kal-text">
-              Windows · Mac · Linux (desktop)
-            </p>
-            <p className="mt-1">
-              In <strong>Chrome</strong>, <strong>Edge</strong>, or{" "}
-              <strong>Brave</strong>, look for an install (⊕) icon in the address bar, or
-              open the ⋮ menu and choose <strong className="text-kal-text">Install Kalnehi</strong>{" "}
-              / install this site as an app. When your browser can install from this page,
-              the <strong className="text-kal-text">Install Kalnehi</strong> button appears
-              below.
-            </p>
-          </div>
-          <p className="text-[11px] text-kal-muted">
-            A home-screen or installed shortcut opens Kalnehi faster and often in a
-            dedicated window. Exact menus vary by device, OS, and browser version.
-          </p>
-        </div>
-        <InstallPWA />
-      </SettingsExpandableSection>
     </div>
   );
 }

@@ -38,11 +38,13 @@
     "test:prepbrain": "node --import tsx --test src/lib/prepbrainIntentRouting.test.ts src/lib/mastermindModelTier.test.ts src/lib/prepBrainMultiExam.test.ts",
     "test:doubt-voice": "node --import tsx --test src/components/doubts/doubtVoicePopupWiring.test.ts",
     "test:voice-quota-wiring": "node --import tsx --test src/hooks/voiceQuotaWiring.test.ts",
+    "test:voice-transcribe-mime": "node --import tsx --test src/lib/voiceTranscribeMime.test.ts",
     "test:waitlist": "node --import tsx --test src/lib/waitlist/joinContactEmail.test.ts",
     "test:e2e": "playwright test",
-    "test:unit": "npm run test:rollup && npm run test:leaderboard && npm run test:prepbrain && npm run test:doubt-voice && npm run test:voice-quota-wiring && npm run test:waitlist"
+    "test:unit": "npm run test:rollup && npm run test:leaderboard && npm run test:prepbrain && npm run test:doubt-voice && npm run test:voice-quota-wiring && npm run test:voice-transcribe-mime && npm run test:waitlist"
   },
   "dependencies": {
+    "@capacitor-community/speech-recognition": "^7.0.1",
     "@capacitor-firebase/messaging": "^8.2.0",
     "@capacitor/android": "^8.3.4",
     "@capacitor/app": "^8.1.0",

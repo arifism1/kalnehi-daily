@@ -18,12 +18,20 @@ import { SITE_NAME } from "@/lib/seo-metadata";
 export function AuthAppNavPreviewMenu() {
   const [open, setOpen] = useState(false);
   const navSections = filterNavByEnabledFeatures(MAIN_NAV_SECTIONS, null);
-  const { installed, canPromptInstall, needsIosInstallModal, promptInstall, iosDevice } =
-    usePwaInstall();
+  const {
+    showPwaInstallUi,
+    installed,
+    canPromptInstall,
+    needsIosInstallModal,
+    promptInstall,
+    iosDevice,
+  } = usePwaInstall();
   const [installBusy, setInstallBusy] = useState(false);
   const [iosInstallOpen, setIosInstallOpen] = useState(false);
-  const installUnsupported = !installed && !canPromptInstall && !iosDevice;
-  const showInstallCard = installed || canPromptInstall || needsIosInstallModal;
+  const installUnsupported =
+    showPwaInstallUi && !installed && !canPromptInstall && !iosDevice;
+  const showInstallCard =
+    showPwaInstallUi && (installed || canPromptInstall || needsIosInstallModal);
 
   useEffect(() => {
     if (!open) return;

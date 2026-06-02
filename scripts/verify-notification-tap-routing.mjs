@@ -19,11 +19,24 @@ function mustInclude(filePath, snippet, message) {
 const copyPath = join(root, "src/lib/systemPush/copy.ts");
 const sendPath = join(root, "src/lib/fcm/sendNotifications.ts");
 const swInjectPath = join(root, "src/lib/service-worker/fcmBackgroundInjection.ts");
+const resolvePath = join(root, "src/lib/fcm/resolveNotificationPath.ts");
+const nativeListenerPath = join(root, "src/components/FcmNativeListener.tsx");
+const foregroundPath = join(root, "src/components/FcmForegroundListener.tsx");
+const layoutPath = join(root, "src/app/layout.tsx");
 
 mustInclude(copyPath, "data: { kind, path: resolveSystemPushPath(kind) }", "Missing canonical payload path");
-mustInclude(sendPath, "link: resolveWebpushLink(payload.data)", "Missing dynamic webpush fcmOptions link");
+mustInclude(sendPath, "fcmOptions:", "Missing cross-platform fcmOptions link");
+mustInclude(sendPath, "resolveNotificationPath", "Missing shared path resolver in send helper");
 mustInclude(swInjectPath, 'self.addEventListener("notificationclick"', "Missing notification click listener");
 mustInclude(swInjectPath, "kalnehiResolveNotificationPath", "Missing notification path resolver");
 mustInclude(swInjectPath, "self.clients.openWindow", "Missing openWindow fallback");
+mustInclude(swInjectPath, "buildNotificationPathFallbackMap", "SW injection must use shared fallback map");
+mustInclude(resolvePath, "export function resolveNotificationPath", "Missing resolveNotificationPath export");
+mustInclude(nativeListenerPath, "notificationActionPerformed", "Native listener must handle notification taps");
+mustInclude(nativeListenerPath, "tokenReceived", "Native listener must handle token refresh");
+mustInclude(nativeListenerPath, "resolveNotificationPath", "Native listener must use shared path resolver");
+mustInclude(foregroundPath, "resolveNotificationPath", "Foreground listener must use shared path resolver");
+mustInclude(foregroundPath, "notification.onclick", "Foreground listener must handle notification clicks");
+mustInclude(layoutPath, "FcmNativeListener", "Layout must mount FcmNativeListener");
 
 console.log("[verify-notification-tap-routing] OK: tap routing hooks are wired.");

@@ -34,7 +34,7 @@ export function NativeLockoutScreen() {
   }, [refetch]);
 
   return (
-    <div className="fixed inset-0 z-[85] flex items-center justify-center bg-kal-page p-6">
+    <div className="fixed inset-0 z-[85] flex items-center justify-center bg-kal-page p-6 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] pl-[max(1.5rem,env(safe-area-inset-left))] pr-[max(1.5rem,env(safe-area-inset-right))]">
       <div className="kal-glass-panel mx-auto flex max-w-md flex-col gap-5 rounded-2xl px-8 py-10 text-center shadow-lg">
         <h2 className="font-display text-lg font-semibold leading-snug text-kal-text">
           Your trial has ended

@@ -32,6 +32,7 @@ import { writeVoiceFocusHint, writeVoicePlanHint } from "@/lib/voiceBossModeHint
 import {
   VOICE_GLOBAL_NAV_SPEECH_TIMING,
 } from "@/lib/voiceConstants";
+import { resolveLocalVoiceIntent } from "@/lib/voiceLocalIntent";
 import type { DailyTaskView } from "@/actions/dailyPlan";
 import type { VoiceCommandIntent } from "@/lib/voiceCommandGroq";
 import {
@@ -39,7 +40,6 @@ import {
   isVoiceNavigatePathAllowed,
 } from "@/lib/voiceCommandGroq";
 import { VoiceListeningHint } from "@/components/voice/VoiceListeningHint";
-import { CommandPreviewToast } from "@/components/voice/CommandPreviewToast";
 import { trackMetaTaskCompleted } from "@/lib/analytics";
 import { trackActivity } from "@/lib/activity";
 
@@ -497,14 +497,20 @@ export function GlobalVoiceSheet() {
   const whisperFallbackAttemptedRef = useRef(false);
   // Abort controller for the in-flight /api/voice-command fetch.
   const voiceFetchAbortRef = useRef<AbortController | null>(null);
+  const earlyStopTriggeredRef = useRef(false);
+  const stopActiveSttRef = useRef<(() => void) | null>(null);
 
   // Animation state: `mounted` controls DOM presence, `animatingOut` selects CSS class.
   const [mounted, setMounted] = useState(false);
   const [animatingOut, setAnimatingOut] = useState(false);
 
   const routing = useVoiceSttRouting();
-  const { silenceMs: speechSilenceMs, maxSessionMs: speechMaxSessionMs } =
+  const { silenceMs: speechSilenceMs, androidSilenceMs, maxSessionMs: speechMaxSessionMs } =
     VOICE_GLOBAL_NAV_SPEECH_TIMING;
+  const capSilenceMs =
+    typeof navigator !== "undefined" && /android/i.test(navigator.userAgent)
+      ? androidSilenceMs
+      : speechSilenceMs;
 
   const {
     isOpen,
@@ -513,14 +519,12 @@ export function GlobalVoiceSheet() {
     responseText,
     error,
     pendingRevision,
-    pendingIntent,
     close: closeSheet,
     setPhase,
     setTranscript,
     setResponseText,
     setError,
     setPendingRevision,
-    setPendingIntent,
     reset,
   } = useVoiceCommandStore();
 
@@ -545,7 +549,7 @@ export function GlobalVoiceSheet() {
   useEffect(() => {
     if (prevPathnameRef.current !== pathname) {
       prevPathnameRef.current = pathname;
-      if (isOpen && (phase === "processing" || phase === "done" || phase === "preview")) {
+      if (isOpen && (phase === "processing" || phase === "done")) {
         if (closeTimerRef.current) {
           clearTimeout(closeTimerRef.current);
           closeTimerRef.current = null;
@@ -858,29 +862,22 @@ export function GlobalVoiceSheet() {
 
   // ─── Handle STT transcript ───────────────────────────────────────────────────
 
+  const tryEarlyStopFromPreview = useCallback((previewText: string) => {
+    if (earlyStopTriggeredRef.current) return;
+    if (!previewText.trim()) return;
+    const local = resolveLocalVoiceIntent(previewText);
+    if (local?.confidence !== "high") return;
+    earlyStopTriggeredRef.current = true;
+    stopActiveSttRef.current?.();
+  }, []);
+
   const handleNativeCapPartialTranscript = useCallback(
     (text: string) => {
       setTranscript(text);
+      tryEarlyStopFromPreview(text);
     },
-    [setTranscript],
+    [setTranscript, tryEarlyStopFromPreview],
   );
-
-  const handlePreviewConfirm = useCallback(() => {
-    const p = useVoiceCommandStore.getState().pendingIntent;
-    if (!p) return;
-    // Move to processing before clearing pending — otherwise one frame has
-    // phase "preview" + null pending and the UI falls through to ErrorState.
-    setError(null);
-    setPhase("processing");
-    setPendingIntent(null);
-    void executeRef.current?.(p.intent, p.responseText);
-  }, [setPendingIntent, setPhase, setError]);
-
-  const handlePreviewCancel = useCallback(() => {
-    setPendingIntent(null);
-    setPhase("idle");
-    setTranscript(null);
-  }, [setPendingIntent, setPhase, setTranscript]);
 
   const handleTranscript = useCallback(
     async ({
@@ -893,6 +890,12 @@ export function GlobalVoiceSheet() {
     }) => {
       setPhase("processing");
       setTranscript(text);
+
+      const local = resolveLocalVoiceIntent(text);
+      if (local?.confidence === "high") {
+        await executeRef.current?.(local.intent, local.responseText);
+        return;
+      }
 
       const controller = new AbortController();
       voiceFetchAbortRef.current = controller;
@@ -918,21 +921,14 @@ export function GlobalVoiceSheet() {
           return;
         }
 
-        if (parsedIntent.intent === "unknown") {
-          await executeRef.current?.(parsedIntent, respText);
-          return;
-        }
-
-        setError(null);
-        setPendingIntent({ intent: parsedIntent, responseText: respText });
-        setPhase("preview");
+        await executeRef.current?.(parsedIntent, respText);
       } catch (e) {
         if (e instanceof Error && e.name === "AbortError") return;
         setError("Network error. Check your connection and try again.");
         setPhase("error");
       }
     },
-    [pathname, submitVoiceCommand, setError, setPendingIntent, setPhase, setTranscript],
+    [pathname, submitVoiceCommand, setError, setPhase, setTranscript],
   );
 
   const {
@@ -946,14 +942,16 @@ export function GlobalVoiceSheet() {
     lang: "en-IN",
     silenceMs: speechSilenceMs,
     maxSessionMs: speechMaxSessionMs,
+    commandMode: true,
     interimPreview: true,
     onPreviewTranscript: (t) => {
       if (t) setTranscript(t);
+      tryEarlyStopFromPreview(t);
     },
     onTranscript: handleTranscript,
   });
 
-  // useCapacitorSpeech — unused on Android while `useNativeCapacitorStt` is false; shell uses Whisper below.
+  // Native on-device STT when `useNativeCapacitorStt` (Capacitor Android); Whisper for WebView fallback.
   const {
     isRecording: isCapRecording,
     isTranscribing: isCapTranscribing,
@@ -965,7 +963,7 @@ export function GlobalVoiceSheet() {
     onTranscript: handleTranscript,
     maxMs: speechMaxSessionMs,
     variant: "longForm",
-    silenceAfterSpeechMs: speechSilenceMs,
+    silenceAfterSpeechMs: capSilenceMs,
     onPartialTranscript: handleNativeCapPartialTranscript,
   });
 
@@ -982,6 +980,24 @@ export function GlobalVoiceSheet() {
     onTranscript: handleTranscript,
     maxMs: speechMaxSessionMs,
   });
+
+  useEffect(() => {
+    stopActiveSttRef.current = () => {
+      if (isCapRecording) void stopCapRecording();
+      else if (isWhisperRecording) void stopWhisperRecording();
+      else stopListening();
+    };
+  }, [
+    isCapRecording,
+    isWhisperRecording,
+    stopCapRecording,
+    stopWhisperRecording,
+    stopListening,
+  ]);
+
+  useEffect(() => {
+    if (isOpen) earlyStopTriggeredRef.current = false;
+  }, [isOpen]);
 
   // Auto-start listening when sheet opens, with chime.
   useEffect(() => {
@@ -1125,6 +1141,7 @@ export function GlobalVoiceSheet() {
     closeSheet();
     reset();
     whisperFallbackAttemptedRef.current = false;
+    earlyStopTriggeredRef.current = false;
   }
 
   function handleRetry() {
@@ -1137,6 +1154,7 @@ export function GlobalVoiceSheet() {
       await stopWhisperRecording();
       reset();
       playStartChime();
+      earlyStopTriggeredRef.current = false;
       // Mirror onStartListening: block duplicate auto-start effect from starting a second session.
       autoStartedRef.current = true;
       whisperFallbackAttemptedRef.current = false;
@@ -1156,7 +1174,7 @@ export function GlobalVoiceSheet() {
   const isWhisperActive = isWhisperRecording || isWhisperTranscribing;
   const isListeningPhase =
     phase === "idle" || phase === "listening" || isCapActive || isWhisperActive;
-  const isWideCard = isListeningPhase || phase === "preview";
+  const isWideCard = isListeningPhase;
 
   // ─── Render ──────────────────────────────────────────────────────────────────
 
@@ -1187,7 +1205,7 @@ export function GlobalVoiceSheet() {
         <>
           {/* Backdrop */}
           <div
-            className="kal-fade-in-fast fixed inset-0 z-[51] bg-black/35 backdrop-blur-[2px]"
+            className="kal-fade-in-fast fixed inset-0 z-[88] bg-black/35 backdrop-blur-[2px]"
             style={
               animatingOut
                 ? { opacity: 0, transition: "opacity 0.15s ease" }
@@ -1198,7 +1216,7 @@ export function GlobalVoiceSheet() {
           />
 
           {/* Centered modal wrapper */}
-          <div className="pointer-events-none fixed inset-0 z-[52] flex items-center justify-center p-4">
+          <div className="pointer-events-none fixed inset-0 z-[89] flex items-center justify-center p-4">
             {/* Card */}
             <div
               role="dialog"
@@ -1269,13 +1287,6 @@ export function GlobalVoiceSheet() {
                       startListening();
                     }
                   }}
-                />
-              ) : phase === "preview" && pendingIntent ? (
-                <CommandPreviewToast
-                  intent={pendingIntent.intent}
-                  responseText={pendingIntent.responseText}
-                  onConfirm={handlePreviewConfirm}
-                  onCancel={handlePreviewCancel}
                 />
               ) : phase === "processing" ? (
                 <ProcessingState transcript={transcript} hideTranscript={false} />

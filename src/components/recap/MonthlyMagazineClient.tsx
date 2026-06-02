@@ -1,9 +1,9 @@
 "use client";
 
 import { Loader2, Share2 } from "lucide-react";
-import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { RecapMagazinePageHeader } from "@/components/recap/RecapMagazinePageHeader";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useMonthlyRecap } from "@/hooks/useMonthlyRecap";
 import { useShareCardIdentity } from "@/hooks/useShareCardIdentity";
@@ -62,13 +62,16 @@ export function MonthlyMagazineClient() {
 
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-6 pb-8">
-      <div>
-        <h1 className="kal-section-heading">Monthly magazine</h1>
-        <p className="mt-1 text-sm text-kal-text-secondary">
-          Last {MONTHLY_RECAP_WINDOW_DAYS} days — cover-style recap for Stories
-          (9:16).
-        </p>
-      </div>
+      <RecapMagazinePageHeader
+        period="monthly"
+        title="Monthly magazine"
+        subtitle={
+          <>
+            Last {MONTHLY_RECAP_WINDOW_DAYS} days — cover-style recap for Stories
+            (9:16).
+          </>
+        }
+      />
 
       {monthly.loading ? (
         <div
@@ -241,12 +244,12 @@ export function MonthlyMagazineClient() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
+          <div className="flex justify-center">
             <button
               type="button"
               onClick={() => void onShare()}
               disabled={busy}
-              className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-kal-accent px-6 text-sm font-semibold text-white shadow-md transition-colors hover:opacity-95 disabled:opacity-60"
+              className="inline-flex min-h-[48px] w-full max-w-sm items-center justify-center gap-2 rounded-xl bg-kal-accent px-6 text-sm font-semibold text-white shadow-md transition-colors hover:opacity-95 disabled:opacity-60 sm:w-auto"
             >
               {busy ? (
                 <Loader2 className="size-4 animate-spin" />
@@ -255,18 +258,6 @@ export function MonthlyMagazineClient() {
               )}
               Share cover
             </button>
-            <Link
-              href="/recap"
-              className="inline-flex min-h-[48px] items-center justify-center rounded-xl border border-kal-border bg-kal-card-muted px-6 text-sm font-semibold text-kal-text transition-colors hover:bg-kal-accent hover:text-white"
-            >
-              Daily recap
-            </Link>
-            <Link
-              href="/recap/weekly"
-              className="inline-flex min-h-[48px] items-center justify-center rounded-xl border border-kal-border bg-kal-card-muted px-6 text-sm font-semibold text-kal-text transition-colors hover:bg-kal-accent hover:text-white"
-            >
-              Weekly magazine
-            </Link>
           </div>
           {shareError && (
             <p className="text-center text-sm text-red-500">{shareError}</p>

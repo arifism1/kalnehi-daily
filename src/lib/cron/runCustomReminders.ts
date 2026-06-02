@@ -68,7 +68,7 @@ async function sendOneReminder(
     const result = await sendFcmToUserTokens(messaging, r.user_id, {
       title: r.title,
       body: r.body,
-      data: { kind: "custom_reminder", reminder_id: r.id },
+      data: { kind: "custom_reminder", reminder_id: r.id, path: "/plan" },
     });
     if (result.sent > 0) {
       logAutomatedPushSent({

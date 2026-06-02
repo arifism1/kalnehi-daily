@@ -1,5 +1,6 @@
 "use client";
 
+import { Capacitor } from "@capacitor/core";
 import { useMemo } from "react";
 
 import { usePlatform } from "@/hooks/usePlatform";
@@ -13,13 +14,11 @@ export type VoiceSttRouting = {
   isAndroidUa: boolean;
   /** Kalnehi Capacitor native shell (`Capacitor.isNativePlatform()`). */
   isNativeApp: boolean;
-  /**
-   * Retained for call-site branching. **Always false** — Capacitor shell removed.
-   */
+  /** `@capacitor-community/speech-recognition` on Android Capacitor shell. */
   useNativeCapacitorStt: boolean;
   /**
    * Android when Web Speech is unsafe or missing: MediaRecorder → `/api/voice-transcribe` (Groq).
-   * Regular Android Chrome / PWA uses Web Speech first (same as desktop Chrome) when API exists.
+   * Regular Android Chrome / PWA uses Web Speech first when API exists.
    */
   useAndroidWhisperStt: boolean;
   /** @deprecated Alias of `useAndroidWhisperStt`. */
@@ -33,11 +32,10 @@ export type VoiceSttRouting = {
  *
  * | Where | Primary STT | Fallback |
  * |-------|-------------|----------|
- * | **Android Chrome / PWA** | Web Speech (same family as Mac Chrome) | MediaRecorder → `/api/voice-transcribe` |
- * | **Android WebView** (`; wv)` in UA) | Whisper only (Web Speech stub/crash risk) | — |
+ * | **Capacitor Android** | Native speech recognition plugin | MediaRecorder → `/api/voice-transcribe` |
+ * | **Android Chrome / PWA** | Web Speech (when ctor exists) | MediaRecorder → `/api/voice-transcribe` |
+ * | **Android WebView** (`; wv)` in UA, not app) | Whisper only | — |
  * | **Desktop / iOS Safari** | Web Speech | Whisper (e.g. global sheet on errors) |
- *
- * `usePlatform().isApp` is always false (PWA distribution); hook kept for compatibility.
  */
 export function useVoiceSttRouting(): VoiceSttRouting {
   const { isApp } = usePlatform();
@@ -49,10 +47,11 @@ export function useVoiceSttRouting(): VoiceSttRouting {
     const ctorAvailable =
       typeof window !== "undefined" && Boolean(getSpeechRecognitionCtor(window));
 
-    const useNativeCapacitorStt = false;
-    const useAndroidWhisperStt = isAndroidUa && (androidWebView || !ctorAvailable);
-    const useWebSpeechStt =
-      !isApp && !useAndroidWhisperStt && ctorAvailable;
+    const useNativeCapacitorStt =
+      isApp && Capacitor.getPlatform() === "android";
+    const useAndroidWhisperStt =
+      isAndroidUa && (androidWebView || !ctorAvailable) && !useNativeCapacitorStt;
+    const useWebSpeechStt = !isApp && !useAndroidWhisperStt && ctorAvailable;
 
     return {
       isAndroidUa,

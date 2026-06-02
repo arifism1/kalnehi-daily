@@ -82,6 +82,7 @@ const VALID_NAV_PATHS = new Set([
   "/syllabus",
   "/dashboard",
   "/home",
+  "/profile",
   "/settings",
   "/notifications",
   "/my-subscription",
@@ -263,7 +264,7 @@ Parse the user voice command and return ONLY a valid JSON object — no markdown
 - **Daily Debrief** (reflection / journal / notebook debrief flow only) → /daily-debrief — only when the user clearly says debrief, reflection journal, or "daily debrief", NOT when they only say "recap"
 
 Valid paths:
-  Core: /syllabus (home), /dashboard (daily hub), /home (alias → syllabus), /settings (profile and app preferences), /notifications, /my-subscription, /feedback
+  Core: /syllabus (home), /dashboard (daily hub), /home (alias → syllabus), /profile (exam details and account), /settings (app preferences and notifications), /notifications, /my-subscription, /feedback
   Planning: /daily-plan, /daily-debrief (/daily-log redirects to debrief), /recap (Today's Recap), /recap/weekly, /recap/monthly, /daily-engine, /dictate-day, /saved-plans, /missed-tasks, /calendar, /timer, /study-squad, /study-sessions, /study-camera
   Planner: /planner, /planner/habits, /planner/schedule, /planner/weekly, /planner/todos, /planner/routine, /planner/productivity
   Track: /progress, /consistency-tracker, /heatmap, /marks-engine, /my-target, /target-score-blueprint, /mock-tests, /mistake-log
@@ -286,7 +287,8 @@ Valid paths:
 - "Mistake log" → {"intent":"navigate","path":"/mistake-log","response_text":"Opening your mistake log."}
 - "Open my target" → {"intent":"navigate","path":"/my-target","response_text":"Opening your exam target."}
 - "Target score blueprint" → {"intent":"navigate","path":"/target-score-blueprint","response_text":"Opening the target score blueprint."}
-- "Open profile" or "Open settings" → {"intent":"navigate","path":"/settings","response_text":"Opening Settings."}
+- "Open profile" → {"intent":"navigate","path":"/profile","response_text":"Opening Profile."}
+- "Open settings" or "Open preferences" → {"intent":"navigate","path":"/settings","response_text":"Opening Settings."}
 - "Open daily engine" → {"intent":"navigate","path":"/daily-engine","response_text":"Opening the daily engine."}
 ${process.env.NEXT_PUBLIC_ENABLE_AI_STUDY_PARTNER === "true" ? `- "Open study camera" → {"intent":"navigate","path":"/study-camera","response_text":"Opening study camera."}
 
@@ -503,7 +505,7 @@ function parseIntent(o: Record<string, unknown>): VoiceCommandIntent | null {
  * Model sometimes routes "recap" phrasing to /daily-debrief. Correct using the raw transcript.
  * Also fixes /daily-log → recap when the user clearly asked for recap only.
  */
-function adjustNavigateIntentForTranscript(
+export function adjustNavigateIntentForTranscript(
   intent: VoiceCommandIntent,
   transcriptRaw: string,
 ): VoiceCommandIntent {
@@ -551,7 +553,7 @@ function applyNavigateTranscriptFixes(
   };
 }
 
-const VOICE_MAX_COMPLETION_TOKENS = 640;
+const VOICE_MAX_COMPLETION_TOKENS = 256;
 
 async function callGroq(
   client: Groq,

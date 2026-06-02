@@ -51,7 +51,7 @@ async function sendOneScheduled(
       data: {
         kind: "scheduled_notification",
         notification_id: r.id,
-        path: "/notification",
+        path: "/notifications",
       },
     });
     if (result.sent > 0) {

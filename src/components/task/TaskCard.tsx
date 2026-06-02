@@ -463,7 +463,7 @@ export function TaskCard({
       <div className="flex flex-col gap-1.5 sm:min-h-[5.25rem] sm:flex-row sm:items-center sm:gap-2.5 md:gap-2.5">
         <div className="flex min-w-0 flex-1 items-start gap-1.5 sm:gap-2">
           <label
-            className="flex shrink-0 cursor-pointer items-center py-0.5 pt-px sm:pt-0.5 md:pt-0"
+            className="flex min-h-[44px] min-w-[44px] shrink-0 cursor-pointer items-center justify-center"
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => e.stopPropagation()}
           >

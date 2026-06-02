@@ -12,20 +12,36 @@ Manual verification checklist for Kalnehi Daily on Android (feature areas touche
 
 ## Voice
 
-| Case | Capacitor shell | Chrome Android |
-| ---- | ---------------- | -------------- |
-| Global voice (`⌘.` / voice sheet) | Native STT partials + command silence; retry restarts single session. | MediaRecorder → `/api/voice-transcribe` (no Web Speech). |
-| Dictate my day / mistakes / reflection / doubts / revision dialog | Native long-form STT + partials where applicable. | Browser Whisper long session (`VOICE_LONG_FORM_MAX_SESSION_MS`). |
+Routing is in `useVoiceSttRouting`: **Capacitor Android** uses `@capacitor-community/speech-recognition` (on-device, no upload). **Chrome / PWA on Android** uses Web Speech when available; **Android WebView without the app shell** falls back to MediaRecorder → `/api/voice-transcribe` (Groq).
 
-Confirm: no crash when opening mic; quota/errors surface readably.
+| Case | Capacitor APK | Chrome Android / PWA |
+| ---- | ------------- | --------------------- |
+| Global voice (`⌘.` / voice sheet) | Native STT; partials + command silence; retry restarts one session. | Web Speech → `/api/voice-command` (text only). |
+| Dictate my day / mistakes / reflection / doubts / revision | Native long-form STT + live partials; Stop finalizes transcript. | Web Speech (long session); same parse APIs after text is captured. |
+| Whisper fallback (non-app WebView only) | Not used when native STT is active. | N/A unless Web Speech unavailable (`; wv)` UA without Kalnehi shell). |
+
+Confirm: no crash when opening mic; mic permission prompt on first use; no generic “Transcription failed” after a normal 5–10s English phrase; quota/errors surface readably.
+
+**Debug:** Chrome → `chrome://inspect` → WebView → Network: Capacitor dictation should **not** call `/api/voice-transcribe` on success (native path). Failed Whisper fallback shows transcribe status + `errorCode` in JSON.
 
 ## Push notifications
 
 | Shell | Expected |
 | ----- | -------- |
-| Capacitor (with google-services.json) | Native FCM token obtained; Settings shows "Push notifications" toggle; test notification arrives. |
+| Capacitor (with google-services.json) | Native FCM token obtained; Settings shows "Push notifications" toggle; test notification arrives; **tap opens the correct in-app route** (`/plan`, `/focus`, `/settings`, etc.). |
 | Capacitor (without google-services.json) | Firebase plugin skipped; graceful degradation (no crash). |
-| Chrome / PWA | Toggle obtains FCM token via service worker when Firebase + VAPID configured. |
+| Chrome / PWA | Toggle obtains FCM token via service worker when Firebase + VAPID configured; **foreground and background taps route via `data.path`**. |
+
+### Push tap routing (manual)
+
+| Case | Capacitor APK | PWA / Chrome |
+| ---- | ------------- | -------------- |
+| App in background, tap morning push | Opens `/plan` | Opens `/plan` |
+| App in foreground, tap test push | Navigates to `/settings` | Navigates to `/settings` |
+| Token refresh after app update | Settings → Refresh push registration re-syncs token | Same via dev tools or toggle off/on |
+| Custom reminder tap | Opens `/plan` | Opens `/plan` |
+
+Confirm: `node scripts/verify-notification-tap-routing.mjs` passes after push-related changes.
 
 ## Billing / trial (companion-app model)
 

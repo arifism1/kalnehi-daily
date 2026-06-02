@@ -26,6 +26,7 @@ import {
   Target,
   TestTube2,
   TrendingUp,
+  User,
   Users,
 } from "lucide-react";
 
@@ -224,6 +225,7 @@ export const MAIN_NAV_SECTIONS: MainNavSection[] = [
         Icon: Shield,
         isActive: policyHubActive,
       },
+      { href: "/profile", label: "Profile", Icon: User },
       { href: "/settings", label: "Settings", Icon: Settings },
       {
         href: "#",
@@ -301,6 +303,7 @@ const QUICK_NAV_HREF_ORDER: readonly string[] = [
 
 /** Not shown in the top quick strip (use the main menu or header links). */
 const QUICK_NAV_EXCLUDED_HREFS = new Set([
+  "/profile",
   "/settings",
   "/my-subscription",
   "/policies",

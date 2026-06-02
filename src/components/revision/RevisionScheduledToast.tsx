@@ -32,7 +32,7 @@ export function RevisionScheduledToast({
 
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-[90] flex justify-center p-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))] sm:bottom-2"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-[90] flex justify-center p-4 pb-[calc(max(1rem,env(safe-area-inset-bottom,0px))+3.5rem)] lg:bottom-2 lg:pb-4"
       role="status"
       aria-live="polite"
       aria-atomic="true"

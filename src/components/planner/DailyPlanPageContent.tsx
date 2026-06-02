@@ -39,6 +39,7 @@ export function DailyPlanPageContent() {
     openParam === "dictate" ? "dictate" : openParam === "self-type" ? "self-type" : null;
   const [modalMode, setModalMode] = useState<TaskInputMode | null>(initialMode);
   const [voicePlanBanner, setVoicePlanBanner] = useState<string | null>(null);
+  const [wrapUpSheetOpen, setWrapUpSheetOpen] = useState(false);
 
   useEffect(() => {
     if (!urlPlanDate) return;
@@ -121,13 +122,13 @@ export function DailyPlanPageContent() {
 
       {/* Date chips + date picker + input action buttons */}
       <div className="mb-5 flex flex-wrap items-center gap-2">
-        <div className="flex min-h-[36px] items-center gap-1 rounded-xl border border-kal-border bg-kal-card-muted p-1">
+        <div className="flex min-h-[44px] items-center gap-1 rounded-xl border border-kal-border bg-kal-card-muted p-1">
           {DATE_CHIPS.map((d) => (
             <button
               key={d.id}
               type="button"
               onClick={() => setLogDate(d.id)}
-              className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors ${
+              className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors ${
                 logDate === d.id
                   ? "bg-kal-accent text-white"
                   : "text-kal-muted hover:text-kal-text"
@@ -139,7 +140,7 @@ export function DailyPlanPageContent() {
         </div>
 
         {/* Arbitrary date picker */}
-        <label className="flex min-h-[36px] cursor-pointer items-center gap-1.5 rounded-xl border border-kal-border bg-kal-card-muted px-3 py-1 text-xs font-semibold text-kal-muted transition-colors hover:text-kal-text">
+        <label className="flex min-h-[44px] cursor-pointer items-center gap-1.5 rounded-xl border border-kal-border bg-kal-card-muted px-3 py-1 text-xs font-semibold text-kal-muted transition-colors hover:text-kal-text">
           <CalendarDays className="size-3.5 text-kal-accent" aria-hidden />
           <span className="sr-only">Pick a date</span>
           {!isChipDate && (
@@ -161,7 +162,7 @@ export function DailyPlanPageContent() {
         <button
           type="button"
           onClick={() => setModalMode("dictate")}
-          className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-kal-border bg-kal-card-muted px-3 py-1 text-xs font-semibold text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-text"
+          className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-kal-border bg-kal-card-muted px-3 py-1 text-xs font-semibold text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-text"
         >
           <Mic className="size-3.5 text-kal-accent" aria-hidden />
           Dictate
@@ -169,7 +170,7 @@ export function DailyPlanPageContent() {
         <button
           type="button"
           onClick={() => setModalMode("self-type")}
-          className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-kal-border bg-kal-card-muted px-3 py-1 text-xs font-semibold text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-text"
+          className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-kal-border bg-kal-card-muted px-3 py-1 text-xs font-semibold text-kal-muted transition-colors hover:border-kal-accent/40 hover:text-kal-text"
         >
           <Type className="size-3.5 text-kal-accent" aria-hidden />
           Self Type
@@ -194,15 +195,21 @@ export function DailyPlanPageContent() {
       />
 
       {logDate === today ? (
-        <EndOfDayNudgeFlow planDate={logDate} todayCalendar={today} />
+        <EndOfDayNudgeFlow
+          planDate={logDate}
+          todayCalendar={today}
+          onSheetOpenChange={setWrapUpSheetOpen}
+        />
       ) : null}
 
-      <div className="mt-6">
-        <ShareYourDayCard />
-      </div>
+      {!wrapUpSheetOpen ? (
+        <div className="mt-6">
+          <ShareYourDayCard />
+        </div>
+      ) : null}
 
       <FeatureGate feature="daily_log">
-        {logDate === today ? (
+        {logDate === today && !wrapUpSheetOpen ? (
           <div className="mt-6">
             <DailyReflectionClient collapsible />
           </div>

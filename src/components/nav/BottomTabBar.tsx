@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { BookOpen, Grid2x2, Calendar, LayoutDashboard, Settings, Users } from "lucide-react";
+import { BookOpen, Grid2x2, Calendar, LayoutDashboard, User, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -16,6 +16,8 @@ type Tab = {
   icon: React.ComponentType<{ className?: string }>;
   /** Match exact path or prefix */
   matchPrefix?: boolean;
+  /** Hide the text label on very narrow screens (≤360px) to reduce crowding */
+  noLabelOnNarrow?: boolean;
 };
 
 const TABS: Tab[] = [
@@ -34,8 +36,8 @@ const TABS: Tab[] = [
     matchPrefix: true,
   },
   { href: "/study-squad", label: "Squad", icon: Users, matchPrefix: true },
-  { href: "/features", label: "Features", icon: Grid2x2, matchPrefix: true },
-  { href: "/settings", label: "Settings", icon: Settings, matchPrefix: true },
+  { href: "/features", label: "Features", icon: Grid2x2, matchPrefix: true, noLabelOnNarrow: true },
+  { href: "/profile", label: "Profile", icon: User, matchPrefix: true, noLabelOnNarrow: true },
 ];
 
 export function BottomTabBar() {
@@ -45,6 +47,7 @@ export function BottomTabBar() {
     <nav
       role="navigation"
       aria-label="Main navigation"
+      data-kal-bottom-tabs
       data-tour="bottom-tabs"
       className="fixed bottom-0 left-0 right-0 z-50 border-t border-kal-border/60 bg-white pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] dark:bg-zinc-950 lg:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
@@ -72,8 +75,9 @@ export function BottomTabBar() {
                 <Icon className="size-5 shrink-0" aria-hidden />
                 <span
                   className={clsx(
-                    "w-full max-w-full truncate text-center text-[9px] font-medium leading-none tracking-wide",
+                    "w-full max-w-full truncate text-center text-[10px] font-medium leading-none tracking-wide",
                     isActive ? "text-[#BA7517]" : "text-kal-muted",
+                    tab.noLabelOnNarrow && "max-[360px]:hidden",
                   )}
                 >
                   {tab.label}

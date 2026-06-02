@@ -69,6 +69,7 @@ function IosShareIcon({ className }: { className?: string }) {
 
 export function PwaInstallPrompt() {
   const {
+    showPwaInstallUi,
     installed,
     canPromptInstall,
     iosDevice,
@@ -81,6 +82,7 @@ export function PwaInstallPrompt() {
   const [entered, setEntered] = useState(false);
 
   useEffect(() => {
+    if (!showPwaInstallUi) return;
     if (!installEligibilityKnown) return;
     if (installed) return;
     if (readPermanentDismiss()) return;
@@ -89,7 +91,7 @@ export function PwaInstallPrompt() {
 
     const id = window.setTimeout(() => setVisible(true), 1200);
     return () => window.clearTimeout(id);
-  }, [installEligibilityKnown, installed, canPromptInstall, iosDevice]);
+  }, [showPwaInstallUi, installEligibilityKnown, installed, canPromptInstall, iosDevice]);
 
   useEffect(() => {
     if (!visible) {
@@ -121,7 +123,7 @@ export function PwaInstallPrompt() {
     }
   }, [promptInstall]);
 
-  if (!visible) return null;
+  if (!showPwaInstallUi || !visible) return null;
 
   const isIos = iosDevice && !canPromptInstall;
 

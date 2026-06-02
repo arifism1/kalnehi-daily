@@ -14,6 +14,7 @@ import {
   VOICE_ANDROID_SESSION_BUMP_BELOW_MS,
   VOICE_ANDROID_SPEECH_END_GRACE_MS,
   VOICE_ANDROID_TRAILING_SILENCE_MS,
+  VOICE_COMMAND_ANDROID_SILENCE_MS,
   VOICE_LONG_FORM_SILENCE_MS,
   VOICE_MAX_SESSION_MS,
 } from "@/lib/voiceConstants";
@@ -41,6 +42,10 @@ type UseDeviceSpeechRecognitionOptions = {
   interimPreview?: boolean;
   onPreviewTranscript?: (text: string) => void;
   /**
+   * Boss Mode commands: use short trailing silence on Android instead of the 60s long-form floor.
+   */
+  commandMode?: boolean;
+  /**
    * `onTranscript`: deduct voice quota for this browser Web Speech session on the server
    * (flows that bill again on `/api/voice-parse-*` / `voice-command` must keep `"none"` to avoid double charge).
    */
@@ -60,9 +65,13 @@ function deriveLangFallback(primary: string, explicit: string | null | undefined
 function effectiveSilenceForHost(
   isAndroidStable: boolean,
   silenceMs: number | null | undefined,
+  commandMode: boolean,
 ): number | null {
   if (silenceMs == null || silenceMs <= 0) return silenceMs ?? null;
   if (!isAndroidStable) return silenceMs;
+  if (commandMode) {
+    return Math.max(silenceMs, VOICE_COMMAND_ANDROID_SILENCE_MS);
+  }
   return Math.max(silenceMs, VOICE_ANDROID_TRAILING_SILENCE_MS);
 }
 
@@ -256,6 +265,7 @@ export function useDeviceSpeechRecognition({
   onSpeechEngineInfo,
   interimPreview = false,
   onPreviewTranscript,
+  commandMode = false,
   reportUsage = "none",
 }: UseDeviceSpeechRecognitionOptions) {
   const setMicBusy = useCallback(
@@ -597,7 +607,11 @@ export function useDeviceSpeechRecognition({
         return;
       }
 
-      const effectiveSilence = effectiveSilenceForHost(isAndroidHost, silenceMs);
+      const effectiveSilence = effectiveSilenceForHost(
+        isAndroidHost,
+        silenceMs,
+        commandMode,
+      );
       const effectiveMax = effectiveMaxSessionForHost(isAndroidHost, maxSessionMs);
       silenceMsEffectiveRef.current =
         effectiveSilence != null && effectiveSilence > 0 ? effectiveSilence : 0;
@@ -887,6 +901,7 @@ export function useDeviceSpeechRecognition({
     scheduleSilenceStop,
     setMicBusy,
     silenceMs,
+    commandMode,
     stopRecognition,
   ]);
 

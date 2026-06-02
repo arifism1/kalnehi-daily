@@ -126,6 +126,8 @@ const marketingCacheSources = [
 const nextConfig: NextConfig = {
   transpilePackages: ["@mediapipe/tasks-vision"],
 
+  devIndicators: false,
+
   // Large payloads for planner uploads / media (e.g. study camera, attachments)
   experimental: {
     serverActions: {

@@ -28,7 +28,7 @@ export function OfflineCapabilitiesSection() {
       icon={CloudOff}
       defaultOpen={false}
     >
-      <div className="space-y-3 px-3 pb-4 text-xs leading-relaxed text-kal-text-secondary sm:px-4">
+      <div className="space-y-3 text-xs leading-relaxed text-kal-text-secondary">
         {!isOnline && (
           <p className="rounded-lg border border-kal-border bg-kal-card-muted px-3 py-2 text-kal-text">
             You&apos;re offline now. Your recent work is saved on this device and will sync when
@@ -39,22 +39,14 @@ export function OfflineCapabilitiesSection() {
           On <strong className="text-kal-text">cellular</strong>, Kalnehi defers large background
           downloads (full syllabus refresh) until you&apos;re on Wi‑Fi to save data.
         </p>
-        <table className="w-full border-collapse text-left">
-          <thead>
-            <tr className="border-b border-kal-border text-kal-text">
-              <th className="py-1.5 pr-2 font-semibold">Feature</th>
-              <th className="py-1.5 font-semibold">Offline</th>
-            </tr>
-          </thead>
-          <tbody>
-            {OFFLINE_ROWS.map((row) => (
-              <tr key={row.feature} className="border-b border-kal-border/60">
-                <td className="py-1.5 pr-2 align-top">{row.feature}</td>
-                <td className="py-1.5 align-top">{row.offline}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="kal-glass-panel divide-y divide-kal-border/60 overflow-hidden rounded-[1rem]">
+          {OFFLINE_ROWS.map((row) => (
+            <div key={row.feature} className="px-3.5 py-3 sm:px-4">
+              <p className="text-[15px] font-medium text-kal-text">{row.feature}</p>
+              <p className="mt-0.5 text-xs text-kal-text-secondary">{row.offline}</p>
+            </div>
+          ))}
+        </div>
         <p>
           First launch with no internet uses a built-in app shell; connect on Wi‑Fi once to download
           your full syllabus and latest updates.

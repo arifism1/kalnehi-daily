@@ -339,8 +339,8 @@ export function PrepBrainChat() {
       className={[
         "kal-glass-panel flex flex-col overflow-hidden rounded-3xl",
         historyOpen && "max-sm:touch-none",
-        "h-[min(calc(100dvh-9rem),760px)]",
-        "sm:h-[min(calc(100dvh-10rem),800px)] sm:min-h-[min(76vh,640px)]",
+        "h-[min(calc(100dvh-var(--kal-safe-top,0px)-var(--kal-safe-bottom,0px)-9rem),760px)]",
+        "sm:h-[min(calc(100dvh-var(--kal-safe-top,0px)-var(--kal-safe-bottom,0px)-10rem),800px)] sm:min-h-[min(76vh,640px)]",
       ].join(" ")}
     >
       {/* Minimal header — calm hierarchy; usage lives in sidebar */}
@@ -399,7 +399,7 @@ export function PrepBrainChat() {
                     <button
                       type="button"
                       onClick={() => setHistoryOpen(false)}
-                      className="touch-manipulation -mr-1 -mt-1 flex size-7 items-center justify-center rounded-lg text-kal-text-secondary transition-colors hover:bg-white/60 hover:text-kal-text dark:hover:bg-white/10"
+                      className="touch-manipulation -mr-1 -mt-1 flex size-11 items-center justify-center rounded-lg text-kal-text-secondary transition-colors hover:bg-white/60 hover:text-kal-text dark:hover:bg-white/10"
                       aria-label="Close menu"
                     >
                       <X className="size-4" aria-hidden />
@@ -522,7 +522,7 @@ export function PrepBrainChat() {
                             void deleteConversation(c.id);
                           }}
                           disabled={isSending}
-                          className="touch-manipulation shrink-0 self-center rounded-lg p-2 text-kal-text-secondary opacity-70 transition-colors hover:bg-kal-card-muted hover:text-[var(--kal-danger-text)] disabled:opacity-40"
+                          className="touch-manipulation flex size-11 shrink-0 items-center justify-center self-center rounded-lg text-kal-text-secondary opacity-70 transition-colors hover:bg-kal-card-muted hover:text-[var(--kal-danger-text)] disabled:opacity-40"
                         >
                           <Trash2 className="size-3.5" aria-hidden />
                         </button>

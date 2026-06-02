@@ -17,14 +17,9 @@ import {
 export type EndOfDayRecapPanelProps = {
   /** Calendar day yyyy-MM-dd to summarize */
   isoDate: string;
-  /** When false (e.g. inside end-of-day sheet), magazine links hide — use footer links instead */
-  showMagazineLinks?: boolean;
 };
 
-export function EndOfDayRecapPanel({
-  isoDate,
-  showMagazineLinks = true,
-}: EndOfDayRecapPanelProps) {
+export function EndOfDayRecapPanel({ isoDate }: EndOfDayRecapPanelProps) {
   const recap = useRecapForDay(isoDate);
   const { userDisplayName, examLine } = useShareCardIdentity();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -220,12 +215,12 @@ export function EndOfDayRecapPanel({
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
+      <div className="flex justify-center">
         <button
           type="button"
           onClick={() => void onShare()}
           disabled={busy}
-          className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-kal-accent px-6 text-sm font-semibold text-white shadow-md transition-colors hover:opacity-95 disabled:opacity-60"
+          className="inline-flex min-h-[48px] w-full max-w-sm items-center justify-center gap-2 rounded-xl bg-kal-accent px-6 text-sm font-semibold text-white shadow-md transition-colors hover:opacity-95 disabled:opacity-60 sm:w-auto"
         >
           {busy ? (
             <Loader2 className="size-4 animate-spin" />
@@ -234,22 +229,6 @@ export function EndOfDayRecapPanel({
           )}
           Share image
         </button>
-        {showMagazineLinks ? (
-          <>
-            <Link
-              href="/recap/weekly"
-              className="inline-flex min-h-[48px] items-center justify-center rounded-xl border border-kal-border bg-kal-card-muted px-6 text-sm font-semibold text-kal-text transition-colors hover:bg-kal-accent hover:text-white"
-            >
-              Weekly magazine
-            </Link>
-            <Link
-              href="/recap/monthly"
-              className="inline-flex min-h-[48px] items-center justify-center rounded-xl border border-kal-border bg-kal-card-muted px-6 text-sm font-semibold text-kal-text transition-colors hover:bg-kal-accent hover:text-white"
-            >
-              Monthly magazine
-            </Link>
-          </>
-        ) : null}
       </div>
       {backlogPending != null && backlogPending > 0 ? (
         <p className="mx-auto max-w-md text-center text-sm leading-relaxed text-kal-muted">

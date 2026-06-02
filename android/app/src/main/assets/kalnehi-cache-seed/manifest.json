@@ -1,7 +1,17 @@
 {
   "versionCode": 1,
   "host": "www.kalnehi.com",
-  "builtAt": "placeholder-run-scripts/build-android-cache-seed.mjs-before-release",
+  "builtAt": "2026-06-02T16:51:56.449Z",
   "baseUrl": "https://www.kalnehi.com",
-  "paths": ["/home", "/auth", "/offline.html", "/manifest.webmanifest"]
+  "paths": [
+    "/home",
+    "/auth",
+    "/offline.html",
+    "/manifest.webmanifest",
+    "/icon-192x192.png",
+    "/icon-512x512.png",
+    "/icon-maskable-192.png",
+    "/icon-maskable-512.png",
+    "/apple-touch-icon.png"
+  ]
 }

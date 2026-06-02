@@ -248,7 +248,7 @@ export function LandingNav() {
               onClick={() => setMenuOpen((v) => !v)}
               aria-label={menuOpen ? "Close menu" : "Open menu"}
               aria-expanded={menuOpen}
-              className="inline-flex size-10 items-center justify-center rounded-xl border border-kal-border bg-kal-card/70 text-kal-text-secondary transition hover:border-kal-accent/40 hover:text-kal-accent lg:hidden"
+              className="inline-flex size-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-kal-border bg-kal-card/70 text-kal-text-secondary transition hover:border-kal-accent/40 hover:text-kal-accent lg:hidden"
             >
               {menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
             </button>
@@ -259,7 +259,7 @@ export function LandingNav() {
         {menuOpen && (
           <div
             ref={menuRef}
-            className="border-t border-kal-border bg-kal-card/95 backdrop-blur-xl lg:hidden"
+            className="max-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-kal-border bg-kal-card/95 backdrop-blur-xl lg:hidden"
           >
             <div className="mx-auto max-w-7xl p-4 sm:px-6">
               <nav className="flex flex-col gap-1" aria-label="Mobile navigation">

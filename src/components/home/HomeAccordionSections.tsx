@@ -36,6 +36,7 @@ import {
   resolveEffectiveEnabledFeatures,
 } from "@/lib/dashboardFeatures";
 
+import { RecapPeriodNav } from "@/components/recap/RecapPeriodNav";
 import { useCalendarDate } from "@/hooks/useCalendarDate";
 import { useEnabledFeaturesStore } from "@/store/useEnabledFeaturesStore";
 
@@ -225,23 +226,12 @@ export function HomeAccordionSections() {
             End-of-day cinematic card: tasks done, study time, streak — export
             for Instagram Stories.
           </p>
+          <RecapPeriodNav active="daily" className="w-full" />
           <a
             href="/recap"
-            className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-kal-accent px-5 text-sm font-semibold text-white transition-opacity hover:opacity-95"
+            className="inline-flex min-h-[44px] w-full items-center justify-center rounded-xl bg-kal-accent px-5 text-sm font-semibold text-white transition-opacity hover:opacity-95"
           >
             Open today&apos;s recap
-          </a>
-          <a
-            href="/recap/weekly"
-            className="ml-3 text-sm font-semibold text-kal-accent underline-offset-2 hover:underline"
-          >
-            Weekly magazine
-          </a>
-          <a
-            href="/recap/monthly"
-            className="ml-3 text-sm font-semibold text-kal-accent underline-offset-2 hover:underline"
-          >
-            Monthly magazine
           </a>
         </div>
       ),

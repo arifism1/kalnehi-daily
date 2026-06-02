@@ -2,6 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { isAndroidWebViewUserAgent } from "@/lib/androidWebSpeechEnv";
+import {
+  audioFileExtensionForMime,
+  isAudioBlobTooSmall,
+  isGroqSupportedAudioMime,
+  normalizeAudioMime,
+} from "@/lib/voiceTranscribeMime";
 import { VOICE_MAX_SESSION_MS } from "@/lib/voiceConstants";
 
 type TranscriptPayload = {
@@ -13,7 +20,11 @@ type TranscriptPayload = {
 type UseMediaRecorderVoiceOptions = {
   onTranscript: (payload: TranscriptPayload) => void;
   maxMs?: number;
+  /** BCP-47 tag passed to `/api/voice-transcribe` (e.g. en-IN, hi-IN). */
+  lang?: string;
 };
+
+const WEBVIEW_STOP_FLUSH_MS = 120;
 
 function preferredMimeCandidates(): string[] {
   const c: string[] = [];
@@ -22,7 +33,7 @@ function preferredMimeCandidates(): string[] {
     c.push("audio/webm;codecs=opus");
   if (MediaRecorder.isTypeSupported("audio/webm")) c.push("audio/webm");
   if (MediaRecorder.isTypeSupported("audio/mp4")) c.push("audio/mp4");
-  if (MediaRecorder.isTypeSupported("audio/3gpp")) c.push("audio/3gpp");
+  // Groq does not accept 3gpp — omit audio/3gpp even if the WebView supports it.
   return c;
 }
 
@@ -42,9 +53,32 @@ function createMediaRecorderPreferringMime(stream: MediaStream): MediaRecorder |
   }
 }
 
+function userMessageForTranscribeError(
+  error: string | undefined,
+  errorCode?: string,
+): string {
+  if (errorCode === "unsupported_format") {
+    return (
+      error ??
+      "This device recorded audio in an unsupported format. Update the app or try Chrome."
+    );
+  }
+  if (errorCode === "empty_audio" || errorCode === "no_speech") {
+    return error ?? "No speech captured. Try again.";
+  }
+  if (errorCode === "quota") {
+    return error ?? "Voice quota exceeded.";
+  }
+  if (errorCode === "auth") {
+    return error ?? "Please sign in.";
+  }
+  return error ?? "Transcription failed. Please try again.";
+}
+
 export function useMediaRecorderVoice({
   onTranscript,
   maxMs = VOICE_MAX_SESSION_MS,
+  lang = "en-IN",
 }: UseMediaRecorderVoiceOptions) {
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -53,7 +87,9 @@ export function useMediaRecorderVoice({
   const isMountedRef = useRef(true);
   useEffect(() => {
     isMountedRef.current = true;
-    return () => { isMountedRef.current = false; };
+    return () => {
+      isMountedRef.current = false;
+    };
   }, []);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -61,13 +97,21 @@ export function useMediaRecorderVoice({
   const mimeRef = useRef<string>("audio/webm");
   const startedAtRef = useRef<number | null>(null);
   const sessionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  /** When true, drop the result of the in-flight `/api/voice-transcribe` call. */
   const ignoreNextTranscriptRef = useRef(false);
   const onTranscriptRef = useRef(onTranscript);
+  const langRef = useRef(lang);
+  const androidWebViewRef = useRef(false);
 
   useEffect(() => {
     onTranscriptRef.current = onTranscript;
-  }, [onTranscript]);
+    langRef.current = lang;
+  }, [onTranscript, lang]);
+
+  useEffect(() => {
+    androidWebViewRef.current =
+      typeof navigator !== "undefined" &&
+      isAndroidWebViewUserAgent(navigator.userAgent);
+  }, []);
 
   const clearTimer = useCallback(() => {
     if (sessionTimerRef.current !== null) {
@@ -79,16 +123,27 @@ export function useMediaRecorderVoice({
   const clearError = useCallback(() => setError(null), []);
 
   const transcribeBlob = useCallback(async (blob: Blob, recordingStartMs: number) => {
-    // isTranscribing is already set to true in stopRecording before this is called.
     try {
+      const mimeType = normalizeAudioMime(blob.type || mimeRef.current || "audio/webm");
+      if (!isGroqSupportedAudioMime(mimeType)) {
+        if (isMountedRef.current) {
+          setError(
+            "This device can't record compatible audio for cloud transcription. Use the Kalnehi app with the latest update, or try Chrome.",
+          );
+        }
+        return;
+      }
+      if (isAudioBlobTooSmall(blob.size)) {
+        if (isMountedRef.current) {
+          setError("Recording was too short. Speak for at least a second, then try again.");
+        }
+        return;
+      }
+
       const fd = new FormData();
-      const mimeType = blob.type || mimeRef.current || "audio/webm";
-      const ext = mimeType.includes("mp4")
-        ? "m4a"
-        : mimeType.includes("3gp")
-          ? "3gp"
-          : "webm";
+      const ext = audioFileExtensionForMime(mimeType);
       fd.set("audio", new File([blob], `voice-command.${ext}`, { type: mimeType }));
+      fd.set("lang", langRef.current);
 
       const res = await fetch("/api/voice-transcribe", {
         method: "POST",
@@ -98,12 +153,15 @@ export function useMediaRecorderVoice({
       const data = (await res.json()) as {
         ok: boolean;
         error?: string;
+        errorCode?: string;
         transcript?: string;
         durationSeconds?: number;
       };
 
       if (!data.ok || !data.transcript) {
-        if (isMountedRef.current) setError(data.error ?? "Transcription failed. Please try again.");
+        if (isMountedRef.current) {
+          setError(userMessageForTranscribeError(data.error, data.errorCode));
+        }
         return;
       }
 
@@ -112,7 +170,6 @@ export function useMediaRecorderVoice({
         return;
       }
 
-      // Use server-reported duration (from Groq's verbose_json) for accurate quota billing.
       const durationSeconds =
         typeof data.durationSeconds === "number" && data.durationSeconds > 0
           ? data.durationSeconds
@@ -126,11 +183,44 @@ export function useMediaRecorderVoice({
         });
       }
     } catch {
-      if (isMountedRef.current) setError("Network error during transcription. Check your connection and try again.");
+      if (isMountedRef.current) {
+        setError("Network error during transcription. Check your connection and try again.");
+      }
     } finally {
       if (isMountedRef.current) setIsTranscribing(false);
     }
   }, []);
+
+  const finishStop = useCallback(
+    (mr: MediaRecorder, startedAt: number) => {
+      mr.onstop = () => {
+        mr.stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(chunksRef.current, {
+          type: mimeRef.current || "audio/webm",
+        });
+        chunksRef.current = [];
+        mediaRecorderRef.current = null;
+        if (blob.size > 0) {
+          void transcribeBlob(blob, startedAt);
+        } else {
+          setIsTranscribing(false);
+          setError("No audio was recorded. Please try again.");
+        }
+      };
+      try {
+        if (mr.state === "recording") mr.requestData();
+      } catch {
+        /* some WebViews omit requestData */
+      }
+      try {
+        mr.stop();
+      } catch {
+        mediaRecorderRef.current = null;
+        setIsTranscribing(false);
+      }
+    },
+    [transcribeBlob],
+  );
 
   const stopRecording = useCallback(() => {
     clearTimer();
@@ -138,37 +228,17 @@ export function useMediaRecorderVoice({
     if (!mr) return;
     ignoreNextTranscriptRef.current = false;
     const startedAt = startedAtRef.current ?? Date.now();
-    // Set transcribing immediately so the "On it…" spinner appears before the
-    // MediaRecorder onstop event fires and the upload begins.
     setIsTranscribing(true);
     setIsRecording(false);
-    mr.onstop = () => {
-      mr.stream.getTracks().forEach((t) => t.stop());
-      const blob = new Blob(chunksRef.current, { type: mimeRef.current || "audio/webm" });
-      chunksRef.current = [];
-      mediaRecorderRef.current = null;
-      if (blob.size > 0) {
-        void transcribeBlob(blob, startedAt);
-      } else {
-        setIsTranscribing(false);
-        setError("No audio was recorded. Please try again.");
-      }
-    };
-    try {
-      if (mr.state === "recording") mr.requestData();
-    } catch {
-      /* some WebViews omit requestData */
-    }
-    try {
-      mr.stop();
-    } catch {
-      mediaRecorderRef.current = null;
-      setIsTranscribing(false);
-    }
     startedAtRef.current = null;
-  }, [clearTimer, transcribeBlob]);
 
-  /** Stop the mic without uploading audio (discard this take). */
+    if (androidWebViewRef.current) {
+      window.setTimeout(() => finishStop(mr, startedAt), WEBVIEW_STOP_FLUSH_MS);
+    } else {
+      finishStop(mr, startedAt);
+    }
+  }, [clearTimer, finishStop]);
+
   const discardRecording = useCallback(() => {
     clearTimer();
     const mr = mediaRecorderRef.current;
@@ -195,7 +265,6 @@ export function useMediaRecorderVoice({
     startedAtRef.current = null;
   }, [clearTimer]);
 
-  /** After `stopRecording`, ignore the Whisper response user cancelled during “Transcribing…”. */
   const cancelPendingTranscription = useCallback(() => {
     ignoreNextTranscriptRef.current = true;
     setIsTranscribing(false);
@@ -230,24 +299,31 @@ export function useMediaRecorderVoice({
       return;
     }
 
-    mimeRef.current = mr.mimeType || preferredMimeCandidates()[0] || "audio/webm";
+    const resolvedMime = normalizeAudioMime(
+      mr.mimeType || preferredMimeCandidates()[0] || "audio/webm",
+    );
+    if (!isGroqSupportedAudioMime(resolvedMime)) {
+      stream.getTracks().forEach((t) => t.stop());
+      setError(
+        "This device can't record compatible audio. Update the Kalnehi app or use Chrome.",
+      );
+      return;
+    }
 
+    mimeRef.current = resolvedMime;
     mediaRecorderRef.current = mr;
     startedAtRef.current = Date.now();
     mr.ondataavailable = (e) => {
       if (e.data.size > 0) chunksRef.current.push(e.data);
     };
-    // Timeslice avoids empty blobs on some Android WebViews that only flush on periodic events.
     mr.start(250);
     setIsRecording(true);
 
-    // Auto-stop after maxMs to prevent runaway recordings.
     sessionTimerRef.current = setTimeout(() => {
       stopRecording();
     }, maxMs);
   }, [maxMs, stopRecording]);
 
-  // Cleanup on unmount.
   useEffect(() => {
     return () => {
       clearTimer();

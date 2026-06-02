@@ -1,10 +1,10 @@
 "use client";
 
 import { Mic, Type, X } from "lucide-react";
-import { useEffect } from "react";
 
 import { DailyPlanTypedQuickAdd } from "@/components/planner/DailyPlanTypedQuickAdd";
 import { AiFeatureGate } from "@/components/subscription/AiFeatureGate";
+import { KalModalShell } from "@/components/ui/KalModalShell";
 import { DictateMyDay } from "@/components/voice/DictateMyDay";
 
 export type TaskInputMode = "dictate" | "self-type";
@@ -24,48 +24,18 @@ const MODE_META: Record<
 };
 
 export function TaskInputModal({ mode, planDate, onClose }: Props) {
-  useEffect(() => {
-    if (!mode) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [mode]);
-
-  useEffect(() => {
-    if (!mode) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [mode, onClose]);
-
   if (!mode) return null;
 
   const { label, Icon } = MODE_META[mode];
 
   return (
-    <div
-      className="fixed inset-0 z-[90] flex items-end justify-center sm:items-center"
-      role="dialog"
-      aria-modal="true"
-      aria-label={label}
-    >
-      {/* Backdrop */}
-      <button
-        type="button"
-        aria-label="Close"
-        className="absolute inset-0 bg-black/65"
-        onClick={onClose}
-      />
-
-      {/* Panel — bottom sheet on mobile, centered card on desktop */}
-      <div
-        className="relative z-10 flex min-h-0 w-full max-w-2xl max-h-[min(92dvh,56rem)] flex-col overflow-hidden rounded-t-2xl border border-kal-border bg-kal-card kal-shadow-card sm:max-h-[min(90dvh,56rem)] sm:rounded-2xl"
-      >
-        {/* Sticky header */}
+    <KalModalShell
+      onClose={onClose}
+      zIndex={90}
+      ariaLabel={label}
+      panelClassName="max-w-2xl max-h-[min(var(--kal-sheet-max-h,92dvh),56rem)] sm:max-h-[min(90dvh,56rem)] sm:rounded-2xl bg-kal-card"
+      scrollClassName="px-5 py-6 sm:px-6"
+      header={
         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-kal-border bg-kal-card px-5 py-3.5 sm:px-6">
           <div className="flex items-center gap-2">
             <Icon className="size-4 text-kal-accent" aria-hidden />
@@ -80,23 +50,20 @@ export function TaskInputModal({ mode, planDate, onClose }: Props) {
             <X className="size-4" aria-hidden />
           </button>
         </div>
-
-        {/* Scrollable body */}
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-6 sm:px-6">
-          {mode === "dictate" ? (
-            <AiFeatureGate>
-              <DictateMyDay
-                urlInitialPlanDate={planDate}
-                hideLivePlan
-                compact
-                onCommitted={onClose}
-              />
-            </AiFeatureGate>
-          ) : (
-            <DailyPlanTypedQuickAdd planDate={planDate} onAdded={onClose} />
-          )}
-        </div>
-      </div>
-    </div>
+      }
+    >
+      {mode === "dictate" ? (
+        <AiFeatureGate>
+          <DictateMyDay
+            urlInitialPlanDate={planDate}
+            hideLivePlan
+            compact
+            onCommitted={onClose}
+          />
+        </AiFeatureGate>
+      ) : (
+        <DailyPlanTypedQuickAdd planDate={planDate} onAdded={onClose} />
+      )}
+    </KalModalShell>
   );
 }

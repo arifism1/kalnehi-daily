@@ -105,7 +105,7 @@ export function HomeClient({ dailyPhrase }: HomeClientProps) {
     <div className="relative flex min-h-full flex-col gap-5 pb-6 text-kal-text sm:gap-6 sm:pb-8">
       <MotivationWallpaper />
 
-      <div className="mx-auto w-full max-w-5xl px-4 sm:px-6">
+      <div className="mx-auto w-full max-w-5xl">
         <InstagramWelcomeBanner />
       </div>
 

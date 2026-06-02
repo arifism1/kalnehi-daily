@@ -2,6 +2,8 @@
 
 import clsx from "clsx";
 
+import { KalModalShell } from "@/components/ui/KalModalShell";
+
 export type ConfirmDialogProps = {
   open: boolean;
   title: string;
@@ -29,39 +31,17 @@ export function ConfirmDialog({
   if (!open) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-[80] flex items-end justify-center p-4 sm:items-center"
-      role="presentation"
-    >
-      <button
-        type="button"
-        aria-label="Dismiss"
-        className="absolute inset-0 bg-kal-overlay backdrop-blur-sm"
-        onClick={busy ? undefined : onCancel}
-        disabled={busy}
-      />
-      <div
-        role="alertdialog"
-        aria-modal="true"
-        aria-labelledby="confirm-dialog-title"
-        aria-describedby="confirm-dialog-desc"
-        className="kal-glass-panel relative z-[81] flex min-h-0 w-full max-w-md max-h-[min(92dvh,40rem)] flex-col overflow-hidden rounded-2xl sm:rounded-2xl"
-      >
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-6 [-webkit-overflow-scrolling:touch] sm:px-6">
-        <h2
-          id="confirm-dialog-title"
-          className="text-lg font-semibold tracking-tight text-kal-text"
-        >
-          {title}
-        </h2>
-        <p
-          id="confirm-dialog-desc"
-          className="mt-2 text-sm leading-relaxed text-kal-muted"
-        >
-          {description}
-        </p>
-        </div>
-        <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-kal-border/50 px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end">
+    <KalModalShell
+      role="alertdialog"
+      title={title}
+      titleId="confirm-dialog-title"
+      onClose={onCancel}
+      busy={busy}
+      zIndex={80}
+      panelClassName="max-h-[min(var(--kal-sheet-max-h,92dvh),40rem)] sm:rounded-2xl"
+      scrollClassName="p-6 sm:px-6"
+      footer={
+        <div className="flex flex-col-reverse gap-2 px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end">
           <button
             type="button"
             disabled={busy}
@@ -84,7 +64,14 @@ export function ConfirmDialog({
             {confirmLabel}
           </button>
         </div>
-      </div>
-    </div>
+      }
+    >
+      <p
+        id="confirm-dialog-desc"
+        className="text-sm leading-relaxed text-kal-muted"
+      >
+        {description}
+      </p>
+    </KalModalShell>
   );
 }

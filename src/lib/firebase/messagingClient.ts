@@ -237,7 +237,10 @@ export async function revokeFcmToken(): Promise<void> {
  *
  * Only call on Capacitor.isNativePlatform().
  */
-export async function obtainNativeFcmToken(): Promise<ObtainFcmTokenResult> {
+export async function obtainNativeFcmToken(
+  options?: ObtainFcmTokenOptions,
+): Promise<ObtainFcmTokenResult> {
+  const forceRefresh = options?.forceRefresh === true;
   try {
     const { FirebaseMessaging } = await import("@capacitor-firebase/messaging");
 
@@ -257,6 +260,10 @@ export async function obtainNativeFcmToken(): Promise<ObtainFcmTokenResult> {
           hint: "Notification permission was not granted.",
         };
       }
+    }
+
+    if (forceRefresh) {
+      await FirebaseMessaging.deleteToken().catch(() => {});
     }
 
     const { token } = await FirebaseMessaging.getToken();

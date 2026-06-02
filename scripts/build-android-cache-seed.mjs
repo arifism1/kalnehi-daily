@@ -9,7 +9,7 @@
  * Run after `next build`. Bumps seed version from android/app/build.gradle versionCode.
  */
 
-import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { access, cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -25,10 +25,11 @@ const BASE_URL = (process.env.CACHE_SEED_BASE_URL ?? "https://www.kalnehi.com").
   "",
 );
 
-const HTML_ROUTES = ["/home", "/auth", "/offline.html"];
+/** Fetched from BASE_URL (HTML + App Router metadata routes). */
+const FETCH_ROUTES = ["/home", "/auth", "/offline.html", "/manifest.webmanifest"];
 
+/** Copied from public/ when present; missing files fall back to FETCH_ROUTES. */
 const PUBLIC_ASSETS = [
-  "/manifest.webmanifest",
   "/icon-192x192.png",
   "/icon-512x512.png",
   "/icon-maskable-192.png",
@@ -50,6 +51,13 @@ function pathToSeedFile(urlPath) {
   return join(PATHS_DIR, clean);
 }
 
+function acceptHeaderForPath(urlPath) {
+  if (urlPath.endsWith(".webmanifest")) {
+    return "application/manifest+json,application/json;q=0.9,*/*;q=0.8";
+  }
+  return "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
+}
+
 async function fetchToFile(urlPath) {
   const url = `${BASE_URL}${urlPath}`;
   const dest = pathToSeedFile(urlPath);
@@ -57,7 +65,7 @@ async function fetchToFile(urlPath) {
   const res = await fetch(url, {
     headers: {
       "User-Agent": "KalnehiAndroidApp KalnehiCacheSeedBuild/1",
-      Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      Accept: acceptHeaderForPath(urlPath),
     },
     redirect: "follow",
   });
@@ -83,6 +91,16 @@ async function copyNextStatic() {
 
 async function copyPublicAsset(urlPath) {
   const src = join(PUBLIC_DIR, urlPath.replace(/^\//, ""));
+  try {
+    await access(src);
+  } catch (err) {
+    if (err && typeof err === "object" && "code" in err && err.code === "ENOENT") {
+      console.warn(`  warn: ${src} missing — fetching ${urlPath} from ${BASE_URL}`);
+      await fetchToFile(urlPath);
+      return;
+    }
+    throw err;
+  }
   const dest = pathToSeedFile(urlPath);
   await mkdir(dirname(dest), { recursive: true });
   await cp(src, dest);
@@ -96,7 +114,7 @@ async function main() {
   await rm(SEED_ROOT, { recursive: true, force: true });
   await mkdir(PATHS_DIR, { recursive: true });
 
-  for (const route of HTML_ROUTES) {
+  for (const route of FETCH_ROUTES) {
     await fetchToFile(route);
   }
   for (const asset of PUBLIC_ASSETS) {
@@ -110,7 +128,7 @@ async function main() {
     host: new URL(BASE_URL).host,
     builtAt: new Date().toISOString(),
     baseUrl: BASE_URL,
-    paths: [...HTML_ROUTES, ...PUBLIC_ASSETS],
+    paths: [...FETCH_ROUTES, ...PUBLIC_ASSETS],
   };
   await writeFile(join(SEED_ROOT, "manifest.json"), JSON.stringify(manifest, null, 2));
 

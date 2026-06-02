@@ -20,7 +20,6 @@ import {
   useState,
   type CSSProperties,
   type Dispatch,
-  type ReactNode,
   type SetStateAction,
 } from "react";
 
@@ -458,29 +457,227 @@ function formatOverviewPercent(p: number): string {
   return p % 1 === 0 ? p.toFixed(0) : p.toFixed(1);
 }
 
+const SYLLABUS_COMPACT_STAT_CLASS =
+  "font-[family-name:var(--font-dm-serif),Georgia,serif] text-lg font-normal tabular-nums leading-tight text-[#BA7517] dark:text-kal-accent-dark";
+
+function projScoreWeightageCaption(year?: number | null): string {
+  if (year != null) {
+    return `Based on ${year} weightage`;
+  }
+  return "Based on previous year's weightage";
+}
+
+function SyllabusOverviewDivider() {
+  return (
+    <div
+      className="w-px self-stretch shrink-0"
+      style={{ background: "rgba(186,117,23,0.2)" }}
+      aria-hidden
+    />
+  );
+}
+
+function SyllabusProjScoreFooter() {
+  return (
+    <p className="mt-1.5 text-center text-[9px] leading-tight text-kal-muted">
+      Proj. score · Prev. year weightage
+    </p>
+  );
+}
+
 function SyllabusStatCell({
   value,
   label,
   ariaLabel,
   caption,
+  compact = false,
+  showLabel = true,
 }: {
   value: string;
   label: string;
   ariaLabel: string;
   caption?: string | null;
+  compact?: boolean;
+  showLabel?: boolean;
 }) {
   return (
-    <div className="flex min-w-0 flex-1 flex-col items-center gap-0.5 px-2 py-3 text-center">
-      <span className="kal-home-stat-value" aria-label={ariaLabel}>
+    <div
+      className={clsx(
+        "flex min-w-0 flex-1 flex-col items-center px-2 text-center",
+        compact ? "gap-0 py-1.5" : "gap-0.5 py-3",
+      )}
+    >
+      <span
+        className={compact ? SYLLABUS_COMPACT_STAT_CLASS : "kal-home-stat-value"}
+        aria-label={ariaLabel}
+      >
         {value}
       </span>
-      <span className="text-[10px] leading-tight text-kal-muted">{label}</span>
-      {caption ? (
+      {showLabel ? (
+        <span className="text-[10px] leading-tight text-kal-muted">{label}</span>
+      ) : null}
+      {!compact && caption ? (
         <span className="min-w-0 max-w-full px-0.5 text-[9px] leading-snug text-kal-muted">
           {caption}
         </span>
       ) : null}
     </div>
+  );
+}
+
+type SyllabusProjScoreInlineProps = {
+  showMarksUi: boolean;
+  cuetScoringRollup: CuetScoringRollup | null;
+  projections: NeetYearProjection[];
+  topProjection: NeetYearProjection | null;
+  isUpscMainsUi?: boolean;
+  maxScore: number;
+  totalMarksMastered?: number;
+  totalMarksPool?: number;
+  rollup?: SyllabusRollup;
+};
+
+function SyllabusProjScoreInline({
+  showMarksUi,
+  cuetScoringRollup,
+  projections,
+  topProjection,
+  isUpscMainsUi = false,
+  maxScore,
+  totalMarksMastered,
+  totalMarksPool,
+  rollup,
+}: SyllabusProjScoreInlineProps) {
+  if (cuetScoringRollup) {
+    const value = `${cuetScoringRollup.totalProjected}/${cuetScoringRollup.totalMax}`;
+    return (
+      <div className="flex min-w-0 flex-1 flex-col items-center px-2 py-1.5 text-center">
+        <span
+          className={SYLLABUS_COMPACT_STAT_CLASS}
+          aria-label={`Projected score ${value}. ${projScoreWeightageCaption()}`}
+        >
+          {value}
+        </span>
+      </div>
+    );
+  }
+  if (!showMarksUi) return null;
+
+  const top = topProjection ?? projections[0];
+  if (top && projections.length > 1) {
+    const scoreVal = isUpscMainsUi
+      ? (rollup?.totalMarksMastered.toFixed(0) ?? "0")
+      : String(top.projectedOutOf720);
+    const denom = isUpscMainsUi ? UPSC_CSE_MAINS_UI_TOTAL_MARKS : maxScore;
+    return (
+      <div className="flex min-w-0 flex-1 flex-col items-center px-2 py-1.5 text-center">
+        <details
+          className="group text-center"
+          aria-label="Marks projection by year"
+        >
+          <summary className="flex cursor-pointer list-none flex-col items-center gap-0 outline-none marker:hidden [&::-webkit-details-marker]:hidden focus-visible:ring-2 focus-visible:ring-kal-accent/40">
+            <span
+              className={SYLLABUS_COMPACT_STAT_CLASS}
+              aria-label={`Projected score ${scoreVal} out of ${denom}. ${projScoreWeightageCaption()}`}
+            >
+              {scoreVal}
+              <span className="text-sm font-semibold text-kal-muted"> / {denom}</span>
+            </span>
+            <span className="flex items-center gap-0.5 text-[9px] text-kal-muted">
+              {top.year}
+              <ChevronDown
+                aria-hidden
+                className="size-3 text-kal-accent transition-transform group-open:rotate-180"
+              />
+            </span>
+          </summary>
+          <ul className="mt-1 border-t border-kal-border/50 px-1 pb-1 pt-1 text-left text-[10px]">
+            {projections.map((p) => (
+              <li key={p.year} className="border-b border-kal-border/35 py-1 last:border-0">
+                <span className="font-medium text-kal-muted">{p.year}</span>
+                <span className="ml-1 tabular-nums font-bold text-kal-text">
+                  {isUpscMainsUi
+                    ? rollup?.totalMarksMastered.toFixed(0) ?? "0"
+                    : p.projectedOutOf720}
+                  <span className="font-semibold text-kal-muted">
+                    {" "}
+                    / {isUpscMainsUi ? UPSC_CSE_MAINS_UI_TOTAL_MARKS : maxScore}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      </div>
+    );
+  }
+
+  if (top) {
+    const scoreVal = isUpscMainsUi
+      ? (rollup?.totalMarksMastered.toFixed(0) ?? "0")
+      : String(top.projectedOutOf720);
+    const denom = isUpscMainsUi ? UPSC_CSE_MAINS_UI_TOTAL_MARKS : maxScore;
+    const value = `${scoreVal}/${denom}`;
+    return (
+      <div className="flex min-w-0 flex-1 flex-col items-center px-2 py-1.5 text-center">
+        <span
+          className={SYLLABUS_COMPACT_STAT_CLASS}
+          aria-label={`Projected score ${value}. ${projScoreWeightageCaption(top.year)}`}
+        >
+          {value}
+        </span>
+      </div>
+    );
+  }
+
+  if (totalMarksPool != null && totalMarksPool > 0) {
+    const mastered = (totalMarksMastered ?? 0).toFixed(0);
+    const pool = isUpscMainsUi
+      ? String(UPSC_CSE_MAINS_UI_TOTAL_MARKS)
+      : totalMarksPool.toFixed(0);
+    const value = `${mastered}/${pool}`;
+    return (
+      <div className="flex min-w-0 flex-1 flex-col items-center px-2 py-1.5 text-center">
+        <span
+          className={SYLLABUS_COMPACT_STAT_CLASS}
+          aria-label={`Marks secured ${value}. ${projScoreWeightageCaption()}`}
+        >
+          {value}
+        </span>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+function SyllabusProjScoreCell({
+  showMarksUi,
+  cuetScoringRollup,
+  neetYearProjections,
+  isUpscMainsUi,
+  maxScore,
+  rollup,
+}: {
+  showMarksUi: boolean;
+  cuetScoringRollup: CuetScoringRollup | null;
+  neetYearProjections: NeetYearProjection[];
+  isUpscMainsUi: boolean;
+  maxScore: number;
+  rollup: SyllabusRollup;
+}) {
+  return (
+    <SyllabusProjScoreInline
+      showMarksUi={showMarksUi}
+      cuetScoringRollup={cuetScoringRollup}
+      projections={neetYearProjections}
+      topProjection={neetYearProjections[0] ?? null}
+      isUpscMainsUi={isUpscMainsUi}
+      maxScore={maxScore}
+      totalMarksMastered={rollup.totalMarksMastered}
+      totalMarksPool={rollup.totalMarksPool}
+      rollup={rollup}
+    />
   );
 }
 
@@ -510,107 +707,6 @@ function MarksDisclaimerDetails() {
   );
 }
 
-function SyllabusProjScoreCell({
-  showMarksUi,
-  cuetScoringRollup,
-  neetYearProjections,
-  isUpscMainsUi,
-  maxScore,
-  rollup,
-}: {
-  showMarksUi: boolean;
-  cuetScoringRollup: CuetScoringRollup | null;
-  neetYearProjections: NeetYearProjection[];
-  isUpscMainsUi: boolean;
-  maxScore: number;
-  rollup: SyllabusRollup;
-}) {
-  if (cuetScoringRollup) {
-    return (
-      <SyllabusStatCell
-        value={`${cuetScoringRollup.totalProjected}/${cuetScoringRollup.totalMax}`}
-        label="Proj. score"
-        ariaLabel={`Projected score ${cuetScoringRollup.totalProjected} out of ${cuetScoringRollup.totalMax}`}
-      />
-    );
-  }
-  if (!showMarksUi) return null;
-
-  const top = neetYearProjections[0];
-  if (top && neetYearProjections.length > 1) {
-    const scoreVal = isUpscMainsUi
-      ? rollup.totalMarksMastered.toFixed(0)
-      : String(top.projectedOutOf720);
-    const denom = isUpscMainsUi ? UPSC_CSE_MAINS_UI_TOTAL_MARKS : maxScore;
-    return (
-      <div className="flex min-w-0 flex-1 flex-col items-center gap-1 px-2 py-3 text-center">
-        <details
-          className="kal-glass-subtle group w-full max-w-[14rem] rounded-lg border border-kal-border/60 text-center open:bg-kal-card-muted/40"
-          aria-label="Marks projection by year"
-        >
-          <summary className="flex cursor-pointer list-none flex-col items-center gap-0.5 rounded-lg px-2 py-1 outline-none marker:hidden [&::-webkit-details-marker]:hidden focus-visible:ring-2 focus-visible:ring-kal-accent/40">
-            <span className="kal-home-stat-value" aria-label={`Projected score ${scoreVal} out of ${denom}`}>
-              {scoreVal}
-              <span className="text-base font-semibold text-kal-muted"> / {denom}</span>
-            </span>
-            <span className="flex items-center gap-0.5 text-[9px] text-kal-muted">
-              Based on {top.year} pattern
-              <ChevronDown
-                aria-hidden
-                className="size-3 text-kal-accent transition-transform group-open:rotate-180"
-              />
-            </span>
-          </summary>
-          <ul className="border-t border-kal-border/50 px-2 pb-2 pt-1.5 text-left text-[10px]">
-            {neetYearProjections.map((p) => (
-              <li key={p.year} className="border-b border-kal-border/35 py-1.5 last:border-0">
-                <span className="font-medium text-kal-muted">{p.year}</span>
-                <span className="ml-1 tabular-nums font-bold text-kal-text">
-                  {isUpscMainsUi
-                    ? rollup.totalMarksMastered.toFixed(0)
-                    : p.projectedOutOf720}
-                  <span className="font-semibold text-kal-muted">
-                    {" "}
-                    / {isUpscMainsUi ? UPSC_CSE_MAINS_UI_TOTAL_MARKS : maxScore}
-                  </span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </details>
-        <span className="text-[10px] leading-tight text-kal-muted">Proj. score</span>
-      </div>
-    );
-  }
-
-  if (top) {
-    const scoreVal = isUpscMainsUi
-      ? rollup.totalMarksMastered.toFixed(0)
-      : String(top.projectedOutOf720);
-    const denom = isUpscMainsUi ? UPSC_CSE_MAINS_UI_TOTAL_MARKS : maxScore;
-    return (
-      <SyllabusStatCell
-        value={`${scoreVal}/${denom}`}
-        label="Proj. score"
-        ariaLabel={`Projected score ${scoreVal} out of ${denom}`}
-        caption={`Based on ${top.year} pattern`}
-      />
-    );
-  }
-
-  const mastered = rollup.totalMarksMastered.toFixed(0);
-  const pool = isUpscMainsUi
-    ? String(UPSC_CSE_MAINS_UI_TOTAL_MARKS)
-    : rollup.totalMarksPool.toFixed(0);
-  return (
-    <SyllabusStatCell
-      value={`${mastered}/${pool}`}
-      label="Proj. score"
-      ariaLabel={`Marks secured ${mastered} out of ${pool}`}
-    />
-  );
-}
-
 function SyllabusOverviewPanel({
   displayExam,
   daysToExam,
@@ -634,23 +730,16 @@ function SyllabusOverviewPanel({
 }) {
   const showProjScore = Boolean(cuetScoringRollup) || showMarksUi;
   const syllabusDisplay = `${formatOverviewPercent(syllabusHeaderPercent)}%`;
-  const divider = (
-    <div
-      className="w-px self-stretch"
-      style={{ background: "rgba(186,117,23,0.2)" }}
-      aria-hidden
-    />
-  );
 
   return (
-    <section className="kal-glass-panel overflow-hidden rounded-2xl border-kal-accent/35 p-4 shadow-lg">
-      <p className="text-[11px] text-kal-text-secondary">
-        {displayExam}
+    <section className="kal-glass-panel overflow-hidden rounded-2xl border-kal-accent/35 p-3 shadow-lg">
+      <p className="text-[11px]">
+        <span className="font-semibold text-kal-text-secondary">{displayExam}</span>
         {daysToExam != null ? (
           <>
             {" · "}
             <span
-              className="font-medium text-[#BA7517] dark:text-kal-accent-dark"
+              className="font-semibold text-[#BA7517] dark:text-kal-accent-dark"
               aria-live="polite"
             >
               {daysToExam} day{daysToExam === 1 ? "" : "s"} to exam
@@ -659,19 +748,20 @@ function SyllabusOverviewPanel({
         ) : null}
       </p>
       <div
-        className="mt-2 flex divide-x"
+        className="mt-1.5 flex divide-x"
         style={
           { "--divide-color": "rgba(186,117,23,0.2)" } as CSSProperties
         }
       >
         <SyllabusStatCell
+          compact
           value={syllabusDisplay}
           label="Syllabus"
           ariaLabel={`${syllabusHeaderPercent.toFixed(1)} percent of syllabus complete`}
         />
         {showProjScore ? (
           <>
-            {divider}
+            <SyllabusOverviewDivider />
             <SyllabusProjScoreCell
               showMarksUi={showMarksUi}
               cuetScoringRollup={cuetScoringRollup}
@@ -683,15 +773,16 @@ function SyllabusOverviewPanel({
           </>
         ) : null}
       </div>
-      <div className="mt-2">
+      <div className="mt-1.5">
         <ChapterBar
           size="subject"
           percent={syllabusHeaderPercent}
           progressAriaLabel={`Overall syllabus progress, ${formatOverviewPercent(syllabusHeaderPercent)} percent`}
         />
       </div>
+      {showProjScore ? <SyllabusProjScoreFooter /> : null}
       {!cuetScoringRollup && !showMarksUi ? (
-        <p className="mt-2 text-[11px] leading-snug text-kal-muted">
+        <p className="mt-1.5 text-[11px] leading-snug text-kal-muted">
           Weighted projections appear when chapter marks are set for this exam.
         </p>
       ) : null}
@@ -699,8 +790,7 @@ function SyllabusOverviewPanel({
   );
 }
 
-type MultiExamOverviewCardProps = {
-  examLabel: string | null;
+type ExamOverviewRowProps = {
   displayName: string;
   daysToExam: number | null;
   overallPercent: number;
@@ -710,10 +800,10 @@ type MultiExamOverviewCardProps = {
   maxScore: number;
   totalMarksMastered: number;
   totalMarksPool: number;
-  microtopicsLine: string | null;
+  microtopicsSuffix: string | null;
 };
 
-function MultiExamOverviewCard({
+function ExamOverviewRow({
   displayName,
   daysToExam,
   overallPercent,
@@ -723,112 +813,151 @@ function MultiExamOverviewCard({
   maxScore,
   totalMarksMastered,
   totalMarksPool,
-  microtopicsLine,
-}: MultiExamOverviewCardProps) {
+  microtopicsSuffix,
+}: ExamOverviewRowProps) {
   const syllabusDisplay = `${formatOverviewPercent(overallPercent)}%`;
-  const divider = (
-    <div
-      className="w-px self-stretch"
-      style={{ background: "rgba(186,117,23,0.2)" }}
-      aria-hidden
-    />
-  );
-
-  let projCell: ReactNode = null;
-  if (showProjScore && topProjection) {
-    if (projections.length > 1) {
-      projCell = (
-        <div className="flex min-w-0 flex-1 flex-col items-center gap-1 px-2 py-3 text-center">
-          <details className="kal-glass-subtle group w-full max-w-[14rem] rounded-lg border border-kal-border/60 text-center open:bg-kal-card-muted/40">
-            <summary className="flex cursor-pointer list-none flex-col items-center gap-0.5 rounded-lg px-2 py-1 outline-none marker:hidden [&::-webkit-details-marker]:hidden">
-              <span className="kal-home-stat-value">
-                {topProjection.projectedOutOf720}
-                <span className="text-base font-semibold text-kal-muted">
-                  {" "}
-                  / {maxScore}
-                </span>
-              </span>
-              <span className="flex items-center gap-0.5 text-[9px] text-kal-muted">
-                {topProjection.year} pattern
-                <ChevronDown
-                  aria-hidden
-                  className="size-3 text-kal-accent transition-transform group-open:rotate-180"
-                />
-              </span>
-            </summary>
-            <ul className="border-t border-kal-border/50 px-2 pb-2 pt-1.5 text-left text-[10px]">
-              {projections.map((p) => (
-                <li key={p.year} className="py-1 tabular-nums">
-                  <span className="text-kal-muted">{p.year}</span>{" "}
-                  <span className="font-bold text-kal-text">
-                    {p.projectedOutOf720}/{maxScore}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </details>
-          <span className="text-[10px] text-kal-muted">Proj. score</span>
-        </div>
-      );
-    } else {
-      projCell = (
-        <SyllabusStatCell
-          value={`${topProjection.projectedOutOf720}/${maxScore}`}
-          label="Proj. score"
-          ariaLabel={`Projected score ${topProjection.projectedOutOf720} out of ${maxScore}`}
-          caption={`${topProjection.year} pattern`}
-        />
-      );
-    }
-  } else if (showProjScore && totalMarksPool > 0) {
-    projCell = (
-      <SyllabusStatCell
-        value={`${totalMarksMastered.toFixed(0)}/${totalMarksPool.toFixed(0)}`}
-        label="Proj. score"
-        ariaLabel={`Marks ${totalMarksMastered.toFixed(0)} out of ${totalMarksPool.toFixed(0)}`}
-      />
-    );
-  }
+  const showProjColumn =
+    showProjScore &&
+    (topProjection != null ||
+      totalMarksPool > 0 ||
+      projections.length > 0);
 
   return (
-    <section className="kal-glass-panel overflow-hidden rounded-2xl border-kal-accent/35 p-4 shadow-lg">
-      <p className="text-[11px] text-kal-text-secondary">
-        {displayName}
+    <>
+      <p className="text-[11px]">
+        <span className="font-semibold text-kal-text-secondary">{displayName}</span>
         {daysToExam != null ? (
           <>
             {" · "}
             <span
-              className="font-medium text-[#BA7517] dark:text-kal-accent-dark"
+              className="font-semibold text-[#BA7517] dark:text-kal-accent-dark"
               aria-live="polite"
             >
               {daysToExam} day{daysToExam === 1 ? "" : "s"} to exam
             </span>
           </>
         ) : null}
+        {microtopicsSuffix ? (
+          <span className="text-kal-muted"> · {microtopicsSuffix}</span>
+        ) : null}
       </p>
-      <div className="mt-2 flex divide-x">
+      <div
+        className="mt-1 flex divide-x"
+        style={
+          { "--divide-color": "rgba(186,117,23,0.2)" } as CSSProperties
+        }
+      >
         <SyllabusStatCell
+          compact
           value={syllabusDisplay}
           label="Syllabus"
           ariaLabel={`${overallPercent.toFixed(1)} percent of syllabus complete`}
         />
-        {projCell ? (
+        {showProjColumn ? (
           <>
-            {divider}
-            {projCell}
+            <SyllabusOverviewDivider />
+            <SyllabusProjScoreInline
+              showMarksUi={showProjScore}
+              cuetScoringRollup={null}
+              projections={projections}
+              topProjection={topProjection}
+              maxScore={maxScore}
+              totalMarksMastered={totalMarksMastered}
+              totalMarksPool={totalMarksPool}
+            />
           </>
         ) : null}
       </div>
-      <div className="mt-2">
+      <div className="mt-1.5">
         <ChapterBar
           size="subject"
           percent={overallPercent}
           progressAriaLabel={`${displayName}: ${formatOverviewPercent(overallPercent)} percent syllabus complete`}
         />
       </div>
-      {microtopicsLine ? (
-        <p className="mt-2 text-[11px] text-kal-muted">{microtopicsLine}</p>
-      ) : null}
+    </>
+  );
+}
+
+type MultiExamOverviewListProps = {
+  examRollups: NonNullable<
+    ReturnType<typeof useSyllabusTracker>["examRollups"]
+  >;
+  examResults: ReturnType<typeof useSyllabusTracker>["examResults"];
+  examCatalogRows: ReturnType<typeof useExamsCatalogRows>["rows"];
+  examDates: Record<string, string>;
+};
+
+function MultiExamOverviewList({
+  examRollups,
+  examResults,
+  examCatalogRows,
+  examDates,
+}: MultiExamOverviewListProps) {
+  const rows = examRollups.map((er) => {
+    const erHasMarks = syllabusHasCatalogMarksData(
+      examResults.find((x) => x.examLabel === er.examLabel)?.rows ?? [],
+    );
+    const erShowMarks = examHasPrevYearMarks(er.examLabel) && erHasMarks;
+    const erDisplayName =
+      displayNameForExamCatalog(er.examLabel, examCatalogRows) ||
+      er.examLabel ||
+      "Exam";
+    const erExamDate = er.examLabel ? examDates[er.examLabel] : undefined;
+    const erDays = erExamDate ? computeDaysToExam(erExamDate) : null;
+    const topProjection = er.projections[0] ?? null;
+    const completed = er.rollup.chapters.reduce(
+      (s, ch) => s + ch.completedCount,
+      0,
+    );
+    const total = er.rollup.chapters.reduce(
+      (s, ch) => s + ch.totalCount,
+      0,
+    );
+    const microtopicsSuffix =
+      !erShowMarks || (erShowMarks && !topProjection)
+        ? `${completed}/${total} microtopics complete`
+        : null;
+
+    return {
+      key: er.examLabel ?? erDisplayName,
+      displayName: erDisplayName,
+      daysToExam: erDays,
+      overallPercent: er.rollup.overallPercent,
+      showProjScore: erShowMarks,
+      topProjection,
+      projections: er.projections,
+      maxScore: er.maxScore,
+      totalMarksMastered: er.rollup.totalMarksMastered,
+      totalMarksPool: er.rollup.totalMarksPool,
+      microtopicsSuffix,
+    };
+  });
+
+  const anyShowProjScore = rows.some((row) => row.showProjScore);
+
+  return (
+    <section className="kal-glass-panel overflow-hidden rounded-2xl border-kal-accent/35 p-3 shadow-lg">
+      {rows.map((row, index) => (
+        <div
+          key={row.key}
+          className={index > 0 ? "mt-2.5 border-t border-kal-border/40 pt-2.5" : undefined}
+        >
+          <ExamOverviewRow
+            displayName={row.displayName}
+            daysToExam={row.daysToExam}
+            overallPercent={row.overallPercent}
+            showProjScore={row.showProjScore}
+            topProjection={row.topProjection}
+            projections={row.projections}
+            maxScore={row.maxScore}
+            totalMarksMastered={row.totalMarksMastered}
+            totalMarksPool={row.totalMarksPool}
+            microtopicsSuffix={row.microtopicsSuffix}
+          />
+        </div>
+      ))}
+      {anyShowProjScore ? <SyllabusProjScoreFooter /> : null}
     </section>
   );
 }
@@ -1189,52 +1318,12 @@ export function SyllabusTracker() {
   return (
     <div className="kal-fade-in-fast space-y-4 pb-4">
       {examRollups ? (
-        <div className="grid gap-3 sm:grid-cols-2">
-          {examRollups.map((er) => {
-            const erHasMarks = syllabusHasCatalogMarksData(
-              examResults.find((x) => x.examLabel === er.examLabel)?.rows ?? [],
-            );
-            const erShowMarks = examHasPrevYearMarks(er.examLabel) && erHasMarks;
-            const erDisplayName =
-              displayNameForExamCatalog(er.examLabel, examCatalogRows) ||
-              er.examLabel ||
-              "Exam";
-            const erDays =
-              er.examLabel && examDates[er.examLabel]
-                ? computeDaysToExam(examDates[er.examLabel])
-                : null;
-            const topProjection = er.projections[0] ?? null;
-            const completed = er.rollup.chapters.reduce(
-              (s, ch) => s + ch.completedCount,
-              0,
-            );
-            const total = er.rollup.chapters.reduce(
-              (s, ch) => s + ch.totalCount,
-              0,
-            );
-            const microtopicsLine =
-              !erShowMarks || (erShowMarks && !topProjection)
-                ? `${completed}/${total} microtopics complete`
-                : null;
-
-            return (
-              <MultiExamOverviewCard
-                key={er.examLabel ?? erDisplayName}
-                examLabel={er.examLabel}
-                displayName={erDisplayName}
-                daysToExam={erDays}
-                overallPercent={er.rollup.overallPercent}
-                showProjScore={erShowMarks}
-                topProjection={topProjection}
-                projections={er.projections}
-                maxScore={er.maxScore}
-                totalMarksMastered={er.rollup.totalMarksMastered}
-                totalMarksPool={er.rollup.totalMarksPool}
-                microtopicsLine={microtopicsLine}
-              />
-            );
-          })}
-        </div>
+        <MultiExamOverviewList
+          examRollups={examRollups}
+          examResults={examResults}
+          examCatalogRows={examCatalogRows}
+          examDates={examDates}
+        />
       ) : (
         <SyllabusOverviewPanel
           displayExam={displayExam}
@@ -1466,7 +1555,7 @@ export function SyllabusTracker() {
                                           ))}
                                         </ul>
                                       ) : null}
-                                      <div className="flex flex-nowrap items-center gap-2 overflow-hidden border-t border-kal-border/50 px-4 pb-4 pl-4 pr-3 pt-3.5 sm:pl-5 sm:pr-4">
+                                      <div className="flex flex-wrap items-center gap-2 border-t border-kal-border/50 px-4 pb-4 pl-4 pr-3 pt-3.5 sm:pl-5 sm:pr-4">
                                         {Boolean(sectionExamKey) ? (
                                           <>
                                             <button
@@ -1805,7 +1894,7 @@ export function SyllabusTracker() {
                             </p>
                           </div>
 
-                          <div className="flex flex-nowrap items-center gap-2 overflow-hidden border-t border-kal-border/50 px-4 pb-4 pl-4 pr-3 pt-3.5 sm:pl-5 sm:pr-4">
+                          <div className="flex flex-wrap items-center gap-2 border-t border-kal-border/50 px-4 pb-4 pl-4 pr-3 pt-3.5 sm:pl-5 sm:pr-4">
                             {canCustomize && catalogExamKey ? (
                               <>
                                 <button

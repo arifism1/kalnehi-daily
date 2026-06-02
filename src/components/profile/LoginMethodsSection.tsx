@@ -74,7 +74,7 @@ export function LoginMethodsSection() {
     setLinkBusy(true);
     try {
       const supabase = getSupabaseBrowserClient();
-      const redirectTo = buildAuthCallbackUrl("/settings#login-methods");
+      const redirectTo = buildAuthCallbackUrl("/profile#login-methods");
 
       if (isNativeKalnehiShell()) {
         await startNativeSupabaseOAuthFlow(() =>

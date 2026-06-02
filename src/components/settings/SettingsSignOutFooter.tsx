@@ -29,7 +29,7 @@ function LogoutFarewellScreen() {
 }
 
 /**
- * Sign out at the bottom of Settings so session exit is unmistakably last.
+ * Sign out footer — shown at the bottom of Profile and Settings session sections.
  */
 export function SettingsSignOutFooter() {
   const router = useRouter();
@@ -71,13 +71,7 @@ export function SettingsSignOutFooter() {
         onConfirm={() => void signOut()}
       />
 
-      <nav
-        aria-label="Session"
-        className="scroll-mt-28 border-t border-kal-border/60 pt-6"
-      >
-        <p className="mb-3 text-[0.65rem] font-semibold uppercase tracking-widest text-kal-accent">
-          Session
-        </p>
+      <nav aria-label="Session">
         <button
           type="button"
           onClick={() => setSignOutConfirmOpen(true)}

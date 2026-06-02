@@ -405,14 +405,14 @@ export function ExecutionLogClient() {
             {monthlyRows.map((row) => (
               <li
                 key={row.key}
-                className="flex items-center justify-between gap-2 rounded-xl border border-kal-border bg-kal-card-muted px-3 py-2.5 text-sm"
+                className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 rounded-xl border border-kal-border bg-kal-card-muted px-3 py-2.5 text-sm"
               >
-                <span className="tabular-nums text-kal-text-secondary">{row.key}</span>
-                <span className="text-xs text-kal-muted">
+                <span className="min-w-0 tabular-nums text-kal-text-secondary">{row.key}</span>
+                <span className="min-w-0 text-xs text-kal-muted">
                   {row.sessionCount} sessions
                   {row.completionPct != null ? ` · ${row.completionPct}% done` : ""}
                 </span>
-                <span className="font-semibold tabular-nums text-kal-accent">
+                <span className="min-w-0 font-semibold tabular-nums text-kal-accent">
                   {formatInvested(row.invested)}
                 </span>
               </li>

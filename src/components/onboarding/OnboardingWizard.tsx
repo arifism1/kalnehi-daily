@@ -245,7 +245,7 @@ export function OnboardingWizard() {
               }
             }}
             disabled={busy}
-            className="ml-auto inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-kal-text-secondary hover:text-kal-accent disabled:pointer-events-none disabled:opacity-30"
+            className="ml-auto inline-flex min-h-[44px] min-w-[44px] items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-kal-text-secondary hover:text-kal-accent disabled:pointer-events-none disabled:opacity-30"
           >
             <ChevronLeft className="size-4" />
             Back

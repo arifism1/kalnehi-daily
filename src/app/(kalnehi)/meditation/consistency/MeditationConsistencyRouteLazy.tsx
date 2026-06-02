@@ -3,7 +3,6 @@
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
 
-import { EnabledDashboardFeatureGate } from "@/components/features/EnabledDashboardFeatureGate";
 import { RoutePageSkeleton } from "@/components/loading/RoutePageSkeleton";
 import { FeatureGate } from "@/components/subscription/FeatureGate";
 
@@ -19,9 +18,7 @@ export default function MeditationConsistencyRouteLazy() {
   return (
     <Suspense fallback={<RoutePageSkeleton />}>
       <FeatureGate feature="meditation_consistency">
-        <EnabledDashboardFeatureGate featureId="brain-yoga" title="Brain Yoga consistency">
-          <MeditationConsistencyPage />
-        </EnabledDashboardFeatureGate>
+        <MeditationConsistencyPage />
       </FeatureGate>
     </Suspense>
   );
