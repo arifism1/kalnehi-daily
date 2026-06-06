@@ -49,6 +49,29 @@ export async function createRightsRequest(opts: {
     return { ok: false, error: "Service unavailable." };
   }
 
+  if (opts.type === "erasure") {
+    const { data: existing, error: dupErr } = await svc
+      .from("dpdp_rights_requests")
+      .select("id, reference_id")
+      .eq("user_id", opts.userId)
+      .eq("type", "erasure")
+      .in("status", ["pending", "in_progress"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (dupErr) {
+      console.error("[createRightsRequest] dedup check failed:", dupErr.message);
+      return { ok: false, error: "Could not submit your request." };
+    }
+    if (existing) {
+      return {
+        ok: false,
+        error: `You already have an open deletion request (${existing.reference_id}). We will process it within ${DPDP_RIGHTS_SLA_DAYS} days.`,
+      };
+    }
+  }
+
   const referenceId = generateRightsReferenceId();
   const dueAt = rightsRequestDueAt();
   const nowIso = new Date().toISOString();
@@ -171,4 +194,39 @@ export async function sendBreachNotificationEmail(opts: {
     return false;
   }
   return true;
+}
+
+export async function sendErasureCompletedEmail(opts: {
+  to: string;
+  referenceId: string;
+}): Promise<void> {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  const from = process.env.RESEND_FROM?.trim();
+  if (!apiKey || !from) {
+    console.error("[dpdp-erasure] Missing RESEND_API_KEY or RESEND_FROM");
+    return;
+  }
+
+  const resend = new Resend(apiKey);
+  const { error } = await resend.emails.send({
+    from,
+    to: [opts.to],
+    replyTo: SUPPORT_EMAIL,
+    subject: `[${SITE_NAME}] Account deletion completed — ${opts.referenceId}`,
+    text: [
+      `Hello,`,
+      ``,
+      `Your account erasure request (${opts.referenceId}) has been completed.`,
+      `Your Kalnehi Daily account and associated personal data have been deleted,`,
+      `except records we must retain for legal or tax compliance (such as billing references).`,
+      ``,
+      `If you did not request this deletion, contact ${SUPPORT_EMAIL} immediately.`,
+      ``,
+      `— ${SITE_NAME}`,
+    ].join("\n"),
+  });
+
+  if (error) {
+    console.error("[dpdp-erasure] Resend error:", error);
+  }
 }

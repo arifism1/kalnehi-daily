@@ -63,6 +63,33 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_action_audit_log: {
+        Row: {
+          action: string
+          admin_user_id: string
+          created_at: string
+          id: string
+          metadata: Json
+          target_user_id: string | null
+        }
+        Insert: {
+          action: string
+          admin_user_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          target_user_id?: string | null
+        }
+        Update: {
+          action?: string
+          admin_user_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
       admin_user_support_notes: {
         Row: {
           created_at: string

@@ -132,14 +132,14 @@ export default function PrivacyPolicyPage() {
           Where we rely on <strong>consent</strong>, you can withdraw it at any time
           without affecting the lawfulness of processing based on consent before its
           withdrawal (for example by changing choices in{" "}
-          <strong>Cookie settings</strong>, using our{" "}
-          <Link
-            href="/dpdp-rights"
+          <strong>Cookie settings</strong> or emailing our{" "}
+          <a
+            href={`mailto:${GRIEVANCE_OFFICER_EMAIL}`}
             className="font-medium text-kal-accent underline underline-offset-2 hover:text-kal-accent/90"
           >
-            Data Principal Rights portal
-          </Link>
-          , or emailing us).
+            Grievance Officer
+          </a>
+          ).
         </p>
       </section>
 
@@ -316,30 +316,32 @@ export default function PrivacyPolicyPage() {
           </li>
           <li>
             <strong>Consent withdrawal:</strong> where processing is based on
-            consent, withdraw consent at any time via{" "}
-            <Link
-              href="/dpdp-rights"
+            consent, withdraw consent at any time via <strong>Cookie settings</strong>{" "}
+            or by emailing our{" "}
+            <a
+              href={`mailto:${GRIEVANCE_OFFICER_EMAIL}`}
               className="font-medium text-kal-accent underline underline-offset-2 hover:text-kal-accent/90"
             >
-              Data Principal Rights
-            </Link>{" "}
-            or by emailing us.
+              Grievance Officer
+            </a>
+            .
           </li>
         </ul>
         <p>
-          You can submit requests through our{" "}
+          To request <strong>account deletion (erasure)</strong>, use our{" "}
           <Link
-            href="/dpdp-rights"
+            href="/account-deletion"
             className="font-medium text-kal-accent underline underline-offset-2 hover:text-kal-accent/90"
           >
-            Data Principal Rights portal
+            Account deletion page
           </Link>{" "}
-          (when signed in) or email{" "}
+          when signed in. For access, correction, nomination, data export, or other
+          rights, email our Grievance Officer at{" "}
           <a
-            href={SUPPORT_MAILTO_HREF}
+            href={`mailto:${GRIEVANCE_OFFICER_EMAIL}`}
             className="font-medium text-kal-accent underline underline-offset-2 hover:text-kal-accent/90"
           >
-            {SUPPORT_EMAIL}
+            {GRIEVANCE_OFFICER_EMAIL}
           </a>{" "}
           from the email address associated with your account. We will acknowledge
           grievances within {DPDP_GRIEVANCE_ACK_HOURS} hours and aim to resolve them

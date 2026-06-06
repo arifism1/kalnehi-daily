@@ -4,6 +4,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 import { assertSameOrigin } from "@/lib/assertSameOrigin";
+import { logAdminAction } from "@/lib/admin/auditLog";
+import { deleteUserAccount } from "@/lib/dpdp/deleteUserAccount";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 import { isAdminUser } from "@/lib/waitlist/batchEngine";
@@ -122,34 +124,26 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === "delete_user") {
-      // Block deletion of any admin account (check by user_id and by email)
-      let adminBlocked = false;
-      const { data: byId } = await admin
-        .from("admin_users")
-        .select("user_id")
-        .eq("user_id", userId)
-        .maybeSingle();
-      if (byId) adminBlocked = true;
-
-      if (!adminBlocked && targetEmail) {
-        const { data: byEmail } = await admin
-          .from("admin_users")
-          .select("user_id")
-          .eq("email", targetEmail)
-          .maybeSingle();
-        if (byEmail) adminBlocked = true;
+      const result = await deleteUserAccount({
+        userId,
+        targetEmail,
+        skipSubscriptionCheck: true,
+      });
+      if (!result.ok) {
+        return NextResponse.json(
+          { ok: false, error: result.error },
+          { status: result.status ?? 500 },
+        );
       }
-
-      if (adminBlocked) {
-        return NextResponse.json({ ok: false, error: "Cannot delete an admin account." }, { status: 403 });
-      }
-
-      // Manual cleanup for tables without FK cascade
-      await admin.from("waitlist_entries").delete().eq("user_id", userId);
-
-      // Delete the auth user — cascades all FK-linked tables
-      const { error: delErr } = await admin.auth.admin.deleteUser(userId, false);
-      if (delErr) throw delErr;
+      await logAdminAction({
+        adminUserId: user.id,
+        action: "admin_delete_user",
+        targetUserId: userId,
+        metadata: {
+          targetEmail: targetEmail || null,
+          skipSubscriptionCheck: true,
+        },
+      });
       return NextResponse.json({ ok: true });
     }
 

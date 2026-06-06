@@ -2,7 +2,12 @@ import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
 import { getSupabaseConfig } from "@/lib/supabase";
-import { recordDpdpSignupConsent } from "@/lib/dpdp/consent";
+import { clientIpFromRequest, recordDpdpSignupConsent } from "@/lib/dpdp/consent";
+import {
+  clearSignupAttestationCookie,
+  verifySignupAttestation,
+} from "@/lib/dpdp/signupConsentAttestation";
+import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 
 function safeNextPath(next: string | null): string {
   if (!next || !next.startsWith("/") || next.startsWith("//")) return "/";
@@ -53,6 +58,17 @@ export async function GET(request: NextRequest) {
         : 0;
   const isNewUser = createdMs > 0 && Date.now() - createdMs < 5 * 60 * 1000;
   if (isNewUser && data.user?.id) {
+    if (!verifySignupAttestation(request, { method: "google_oauth" })) {
+      const svc = getSupabaseServiceRoleClient();
+      if (svc) {
+        await svc.auth.admin.deleteUser(data.user.id);
+      }
+      clearSignupAttestationCookie(response);
+      return errRedirect(
+        "Please confirm you are 18+ and agree to the data processing notice before signing up.",
+      );
+    }
+
     const ip =
       request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
       request.headers.get("x-real-ip")?.trim() ||
@@ -62,6 +78,7 @@ export async function GET(request: NextRequest) {
       method: "google_oauth",
       ip,
     });
+    clearSignupAttestationCookie(response);
   }
   dest.searchParams.set("kalnehi_auth_event", isNewUser ? "sign_up" : "login");
   response.headers.set("Location", dest.toString());

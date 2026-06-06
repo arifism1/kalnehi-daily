@@ -27,6 +27,6 @@ export async function POST(req: Request) {
   return NextResponse.json({
     ok: true,
     message:
-      "Your consent has been withdrawn. To stop processing entirely, submit an erasure request from Data Principal Rights or email support.",
+      "Your consent has been withdrawn. To stop processing entirely, request account deletion on the Account deletion page or email our Grievance Officer.",
   });
 }

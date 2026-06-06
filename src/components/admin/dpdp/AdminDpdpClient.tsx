@@ -7,17 +7,31 @@ import { useState } from "react";
 
 import type { AdminDpdpRightsRow } from "@/lib/admin/dpdpQueries";
 
+type PendingErasureAction = {
+  id: string;
+  confirmText: string;
+  userEmail: string | null;
+  userId: string;
+  referenceId: string;
+};
+
 export function AdminDpdpClient({ initial }: { initial: AdminDpdpRightsRow[] }) {
   const router = useRouter();
   const [rows, setRows] = useState(initial);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pendingErasure, setPendingErasure] = useState<PendingErasureAction | null>(
+    null,
+  );
 
   const now = Date.now();
 
-  const updateStatus = async (
+  const patchRequest = async (
     id: string,
-    status: "in_progress" | "resolved" | "rejected",
+    payload: {
+      status: "in_progress" | "resolved" | "rejected";
+      fulfillErasure?: boolean;
+    },
   ) => {
     setBusyId(id);
     setError(null);
@@ -26,29 +40,30 @@ export function AdminDpdpClient({ initial }: { initial: AdminDpdpRightsRow[] }) 
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ id, status }),
+        body: JSON.stringify({ id, ...payload }),
       });
-      const payload = (await res.json().catch(() => ({}))) as {
+      const body = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
         error?: string;
       };
-      if (!res.ok || !payload.ok) {
-        throw new Error(payload.error ?? "Update failed.");
+      if (!res.ok || !body.ok) {
+        throw new Error(body.error ?? "Update failed.");
       }
       setRows((prev) =>
         prev.map((r) =>
           r.id === id
             ? {
                 ...r,
-                status,
+                status: payload.status,
                 resolved_at:
-                  status === "resolved" || status === "rejected"
+                  payload.status === "resolved" || payload.status === "rejected"
                     ? new Date().toISOString()
                     : r.resolved_at,
               }
             : r,
         ),
       );
+      setPendingErasure(null);
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Update failed.");
@@ -56,6 +71,9 @@ export function AdminDpdpClient({ initial }: { initial: AdminDpdpRightsRow[] }) 
       setBusyId(null);
     }
   };
+
+  const confirmTarget =
+    pendingErasure?.userEmail ?? pendingErasure?.userId ?? "";
 
   return (
     <div className="space-y-4 p-4 lg:p-6">
@@ -78,6 +96,59 @@ export function AdminDpdpClient({ initial }: { initial: AdminDpdpRightsRow[] }) 
         <p className="rounded-lg border border-kal-danger-border bg-kal-danger-soft px-3 py-2 text-sm text-kal-danger-text">
           {error}
         </p>
+      )}
+
+      {pendingErasure && (
+        <div className="rounded-xl border border-red-500/40 bg-red-500/5 p-4 space-y-3">
+          <p className="text-sm font-semibold text-red-600">
+            Resolve &amp; delete account — {pendingErasure.referenceId}
+          </p>
+          <p className="text-xs text-kal-text-secondary">
+            This permanently deletes the user&apos;s auth account and cascaded data.
+            Type{" "}
+            <span className="font-mono font-bold text-kal-text">{confirmTarget}</span>{" "}
+            to confirm.
+          </p>
+          <input
+            type="text"
+            value={pendingErasure.confirmText}
+            onChange={(e) =>
+              setPendingErasure((prev) =>
+                prev ? { ...prev, confirmText: e.target.value } : prev,
+              )
+            }
+            placeholder={confirmTarget}
+            className="w-full max-w-md rounded border border-red-500/40 bg-kal-card/50 px-2 py-1.5 text-xs font-mono"
+          />
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={
+                busyId === pendingErasure.id ||
+                pendingErasure.confirmText !== confirmTarget
+              }
+              onClick={() =>
+                void patchRequest(pendingErasure.id, {
+                  status: "resolved",
+                  fulfillErasure: true,
+                })
+              }
+              className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40"
+            >
+              {busyId === pendingErasure.id
+                ? "Deleting…"
+                : "Yes, delete account & resolve"}
+            </button>
+            <button
+              type="button"
+              disabled={busyId === pendingErasure.id}
+              onClick={() => setPendingErasure(null)}
+              className="rounded-md border border-kal-border px-3 py-1.5 text-xs text-kal-muted"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
       )}
 
       <div className="overflow-x-auto rounded-xl border border-kal-border">
@@ -105,11 +176,26 @@ export function AdminDpdpClient({ initial }: { initial: AdminDpdpRightsRow[] }) 
                   r.status !== "resolved" &&
                   r.status !== "rejected" &&
                   new Date(r.due_at).getTime() < now;
+                const isErasure = r.type === "erasure";
+                const isClosed = r.status === "resolved" || r.status === "rejected";
+                const details =
+                  r.request_details && Object.keys(r.request_details).length > 0
+                    ? JSON.stringify(r.request_details)
+                    : null;
+
                 return (
-                  <tr key={r.id} className="border-b border-kal-border/60">
+                  <tr key={r.id} className="border-b border-kal-border/60 align-top">
                     <td className="px-3 py-2 font-mono text-xs">{r.reference_id}</td>
                     <td className="px-3 py-2 text-xs">
-                      {r.user_email ?? r.user_id.slice(0, 8)}
+                      <div>{r.user_email ?? "—"}</div>
+                      <div className="font-mono text-[10px] text-kal-muted">
+                        {r.user_id}
+                      </div>
+                      {isErasure && details && (
+                        <div className="mt-1 max-w-xs break-all text-[10px] text-kal-text-secondary">
+                          {details}
+                        </div>
+                      )}
                     </td>
                     <td className="px-3 py-2">{r.type}</td>
                     <td className="px-3 py-2">
@@ -129,21 +215,59 @@ export function AdminDpdpClient({ initial }: { initial: AdminDpdpRightsRow[] }) 
                       {new Date(r.due_at).toLocaleDateString("en-IN")}
                     </td>
                     <td className="px-3 py-2">
-                      <div className="flex flex-wrap gap-1">
-                        {(["in_progress", "resolved", "rejected"] as const).map(
-                          (status) => (
+                      {!isClosed && (
+                        <div className="flex flex-wrap gap-1">
+                          <button
+                            type="button"
+                            disabled={busyId === r.id || r.status === "in_progress"}
+                            onClick={() =>
+                              void patchRequest(r.id, { status: "in_progress" })
+                            }
+                            className="rounded border border-kal-border px-2 py-0.5 text-[11px] disabled:opacity-40"
+                          >
+                            in progress
+                          </button>
+                          {isErasure ? (
                             <button
-                              key={status}
                               type="button"
-                              disabled={busyId === r.id || r.status === status}
-                              onClick={() => void updateStatus(r.id, status)}
+                              disabled={busyId === r.id}
+                              onClick={() =>
+                                setPendingErasure({
+                                  id: r.id,
+                                  confirmText: "",
+                                  userEmail: r.user_email,
+                                  userId: r.user_id,
+                                  referenceId: r.reference_id,
+                                })
+                              }
+                              className="rounded border border-red-500/50 px-2 py-0.5 text-[11px] font-medium text-red-600 disabled:opacity-40"
+                            >
+                              resolve &amp; delete
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled={busyId === r.id || r.status === "resolved"}
+                              onClick={() =>
+                                void patchRequest(r.id, { status: "resolved" })
+                              }
                               className="rounded border border-kal-border px-2 py-0.5 text-[11px] disabled:opacity-40"
                             >
-                              {status}
+                              resolved
                             </button>
-                          ),
-                        )}
-                      </div>
+                          )}
+                          <button
+                            type="button"
+                            disabled={busyId === r.id || r.status === "rejected"}
+                            onClick={() =>
+                              void patchRequest(r.id, { status: "rejected" })
+                            }
+                            className="rounded border border-kal-border px-2 py-0.5 text-[11px] disabled:opacity-40"
+                          >
+                            rejected
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 );

@@ -43,6 +43,12 @@ const RATE_LIMITS: Record<string, number> = {
   "/api/six-month-plan":       5,
   "/api/six-month-plan/verify": 10,
   "/api/admin/config":         20,  // Mutations only; low limit to deter abuse
+  "/api/dpdp/rights-request":  3,
+  "/api/dpdp/record-consent":  10,
+  "/api/dpdp/withdraw-consent": 10,
+  "/api/dpdp/attest-signup":   10,
+  "/api/admin/dpdp/rights-request": 30,
+  "/api/admin/dpdp/breach-notify": 10,
 };
 const WINDOW_MS = 60_000;
 

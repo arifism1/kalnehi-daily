@@ -8,7 +8,6 @@ export const LEGAL_PATHS = new Set<string>([
   "/policies",
   "/about",
   "/account-deletion",
-  "/dpdp-rights",
 ]);
 
 export function isLegalPath(pathname: string): boolean {

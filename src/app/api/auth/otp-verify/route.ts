@@ -8,6 +8,11 @@ import {
   retryMinutesFromResult,
 } from "@/lib/authRateLimit";
 import { assertSameOrigin } from "@/lib/assertSameOrigin";
+import {
+  clearSignupAttestationCookie,
+  verifySignupAttestation,
+} from "@/lib/dpdp/signupConsentAttestation";
+import { clientIpFromRequest, recordDpdpSignupConsent } from "@/lib/dpdp/consent";
 import { formatSupabaseError } from "@/lib/supabase";
 import { createSupabaseRouteHandlerClient } from "@/lib/supabase/routeHandler";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
@@ -92,7 +97,7 @@ export async function POST(request: NextRequest) {
 
   const res = NextResponse.json({ ok: true });
   const supabase = createSupabaseRouteHandlerClient(request, res);
-  const { error: verifyErr } = await supabase.auth.verifyOtp({
+  const { data: verifyData, error: verifyErr } = await supabase.auth.verifyOtp({
     email,
     token,
     type,
@@ -104,6 +109,35 @@ export async function POST(request: NextRequest) {
       p_bucket_key: bucket,
       p_step: "record_success",
     });
+
+    const createdAt = verifyData.user?.created_at;
+    const isNewUser =
+      createdAt != null &&
+      Date.now() - new Date(createdAt).getTime() < 5 * 60 * 1000;
+
+    if (isNewUser && verifyData.user?.id) {
+      if (!verifySignupAttestation(request, { method: "email_otp", email })) {
+        const errRes = NextResponse.json(
+          {
+            error: "Signup consent attestation missing or expired. Please start again.",
+            code: "consent_required",
+          },
+          { status: 403 },
+        );
+        const signOutClient = createSupabaseRouteHandlerClient(request, errRes);
+        await signOutClient.auth.signOut();
+        clearSignupAttestationCookie(errRes);
+        return errRes;
+      }
+
+      await recordDpdpSignupConsent({
+        userId: verifyData.user.id,
+        method: "email_otp",
+        ip: clientIpFromRequest(request),
+      });
+      clearSignupAttestationCookie(res);
+    }
+
     return res;
   }
 

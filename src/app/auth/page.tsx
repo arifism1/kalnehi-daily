@@ -125,18 +125,30 @@ export default function AuthPage() {
 
   const signupChecksOk = ageConfirmed && dpdpAgreed;
 
-  const recordSignupConsent = useCallback(async (method: "email_otp" | "google_oauth") => {
-    try {
-      await fetch("/api/dpdp/record-consent", {
+  const attestSignupConsent = useCallback(
+    async (method: "email_otp" | "google_oauth", signupEmail?: string) => {
+      const res = await fetch("/api/dpdp/attest-signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ method }),
+        body: JSON.stringify({
+          ageConfirmed: true,
+          dpdpAgreed: true,
+          method,
+          email: signupEmail,
+        }),
       });
-    } catch {
-      /* non-blocking; consent can be reconciled via support */
-    }
-  }, []);
+      const payload = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        throw new Error(
+          typeof payload.error === "string"
+            ? payload.error
+            : "Could not record signup consent. Please try again.",
+        );
+      }
+    },
+    [],
+  );
 
   const sendOtp = useCallback(async () => {
     setBusy(true);
@@ -151,6 +163,7 @@ export default function AuthPage() {
         setError("Please confirm you are 18+ and agree to the data processing notice.");
         return;
       }
+      await attestSignupConsent("email_otp", em);
       const res = await fetch("/api/auth/otp-send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -171,7 +184,7 @@ export default function AuthPage() {
     } finally {
       setBusy(false);
     }
-  }, [email, signupChecksOk]);
+  }, [email, signupChecksOk, attestSignupConsent]);
 
   const verifyOtp = useCallback(async () => {
     setBusy(true);
@@ -210,7 +223,6 @@ export default function AuthPage() {
 
       const isNewUser = isNewUserFromSession(session.user.created_at);
       if (isNewUser) {
-        await recordSignupConsent("email_otp");
         const ref = getStoredReferral();
         if (ref.ref) {
           void attachReferralToUser({
@@ -228,7 +240,7 @@ export default function AuthPage() {
     } finally {
       setBusy(false);
     }
-  }, [email, otp, redirectAfterAuth, recordSignupConsent]);
+  }, [email, otp, redirectAfterAuth]);
 
   const clearGoogleBusy = useCallback(() => {
     setBusy(false);
@@ -245,6 +257,7 @@ export default function AuthPage() {
         setBusy(false);
         return;
       }
+      await attestSignupConsent("google_oauth");
       const params = new URLSearchParams(window.location.search);
       const nextRaw = params.get("next");
       const nextPath =
@@ -271,7 +284,7 @@ export default function AuthPage() {
       setError(formatSupabaseError(e));
       setBusy(false);
     }
-  }, [signupChecksOk]);
+  }, [signupChecksOk, attestSignupConsent]);
 
   const trimmedEmail = email.trim();
 

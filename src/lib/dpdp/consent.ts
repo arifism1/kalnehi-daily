@@ -5,7 +5,6 @@ import {
   DPDP_SIGNUP_PROCESSORS,
   DPDP_SIGNUP_PURPOSES,
 } from "@/lib/dpdp/constants";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 
 export type DpdpConsentMethod = "email_otp" | "google_oauth";
@@ -63,10 +62,14 @@ export async function recordDpdpSignupConsent(opts: {
 export async function withdrawDpdpConsent(userId: string): Promise<
   { ok: true } | { ok: false; error: string }
 > {
-  const supabase = await createSupabaseServerClient();
+  const svc = getSupabaseServiceRoleClient();
+  if (!svc) {
+    return { ok: false, error: "Service unavailable." };
+  }
+
   const now = new Date().toISOString();
 
-  const { data, error } = await supabase
+  const { data, error } = await svc
     .from("dpdp_consent_records")
     .update({ withdrawn_at: now })
     .eq("user_id", userId)

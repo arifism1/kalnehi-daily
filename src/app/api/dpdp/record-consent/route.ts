@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { clientIpFromRequest, recordDpdpSignupConsent } from "@/lib/dpdp/consent";
+import { verifySignupAttestation } from "@/lib/dpdp/signupConsentAttestation";
 import { assertSameOrigin } from "@/lib/assertSameOrigin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -30,6 +31,18 @@ export async function POST(req: Request) {
   } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ ok: false, error: "Unauthorized." }, { status: 401 });
+  }
+
+  if (
+    !verifySignupAttestation(req, {
+      method,
+      email: method === "email_otp" ? (user.email ?? undefined) : undefined,
+    })
+  ) {
+    return NextResponse.json(
+      { ok: false, error: "Signup consent attestation missing or expired." },
+      { status: 403 },
+    );
   }
 
   const result = await recordDpdpSignupConsent({

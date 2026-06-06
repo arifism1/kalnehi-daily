@@ -5,6 +5,7 @@ import { useId } from "react";
 
 import { PurposeModePhotos } from "@/components/settings/PurposeModePhotos";
 import { AccountPageShell } from "@/components/settings/AccountPageShell";
+import { DataAndThisDeviceSection } from "@/components/settings/DataAndThisDeviceSection";
 import { NotificationsSettingsGroup } from "@/components/settings/NotificationsSettingsGroup";
 import { SettingsExpandableSection } from "@/components/settings/SettingsExpandableSection";
 import { SettingsJumpNav } from "@/components/settings/SettingsJumpNav";
@@ -76,6 +77,12 @@ export function SettingsPageClient() {
 
       <SettingsSectionGroup id="settings-notifications" title="Notifications">
         <NotificationsSettingsGroup />
+      </SettingsSectionGroup>
+
+      <SettingsSectionGroup id="settings-data" title="Data & privacy">
+        <div id="data-device" className="scroll-mt-24">
+          <DataAndThisDeviceSection />
+        </div>
       </SettingsSectionGroup>
 
       <SettingsSectionGroup id="settings-session" title="Session">

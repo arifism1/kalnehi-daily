@@ -5,6 +5,7 @@ import clsx from "clsx";
 const LINKS = [
   { href: "#settings-app", label: "App" },
   { href: "#settings-notifications", label: "Notifications" },
+  { href: "#settings-data", label: "Data & privacy" },
   { href: "#settings-session", label: "Session" },
 ] as const;
 

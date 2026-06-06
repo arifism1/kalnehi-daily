@@ -7,6 +7,7 @@ import {
   retryMinutesFromResult,
 } from "@/lib/authRateLimit";
 import { assertSameOrigin } from "@/lib/assertSameOrigin";
+import { verifySignupAttestation } from "@/lib/dpdp/signupConsentAttestation";
 import { formatSupabaseError } from "@/lib/supabase";
 import { createSupabaseRouteHandlerClient } from "@/lib/supabase/routeHandler";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
@@ -38,6 +39,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: "Enter your email address.", code: "validation" },
       { status: 400 },
+    );
+  }
+
+  if (!verifySignupAttestation(request, { method: "email_otp", email })) {
+    return NextResponse.json(
+      {
+        error: "Please confirm you are 18+ and agree to the data processing notice.",
+        code: "consent_required",
+      },
+      { status: 403 },
     );
   }
 

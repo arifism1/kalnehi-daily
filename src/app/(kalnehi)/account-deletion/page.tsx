@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 
+import { ErasureRequestForm } from "@/components/dpdp/ErasureRequestForm";
+import { GRIEVANCE_OFFICER_EMAIL } from "@/lib/dpdp/constants";
 import { SUPPORT_EMAIL, SUPPORT_MAILTO_HREF } from "@/lib/seo-metadata";
 
 export const metadata: Metadata = {
@@ -23,21 +25,11 @@ export default function AccountDeletionPage() {
         deletion, what gets removed, and what the timeline looks like.
       </p>
 
-      <section className="space-y-2 rounded-xl border border-kal-accent/25 bg-kal-accent/[0.04] p-4">
+      <section className="space-y-3 rounded-xl border border-kal-accent/25 bg-kal-accent/[0.04] p-4">
         <h2 className="text-lg font-semibold text-kal-text">
-          Recommended: use the Data Principal Rights portal
+          Request account deletion (signed in)
         </h2>
-        <p>
-          Signed-in users can submit an erasure request directly from our DPDP
-          self-service portal. You will receive a reference ID and confirmation
-          email with a 90-day response timeline.
-        </p>
-        <Link
-          href="/dpdp-rights"
-          className="kal-btn-accent inline-flex min-h-[44px] items-center rounded-xl px-4 py-2 text-sm font-semibold"
-        >
-          Open Data Principal Rights portal
-        </Link>
+        <ErasureRequestForm />
       </section>
 
       <section className="space-y-2">
@@ -70,8 +62,8 @@ export default function AccountDeletionPage() {
         </ol>
         <p className="text-sm text-kal-text-secondary">
           If you use the Android app, you can also go to{" "}
-          <strong>Settings → Data &amp; this device</strong> and tap the
-          deletion email link there.
+          <strong>Settings → Data &amp; this device</strong> for a link to this
+          page.
         </p>
       </section>
 
@@ -137,14 +129,13 @@ export default function AccountDeletionPage() {
           Data export before deletion
         </h2>
         <p>
-          If you would like a copy of your data before we delete it, submit an
-          access request from the{" "}
-          <Link
-            href="/dpdp-rights"
+          If you would like a copy of your data before we delete it, email{" "}
+          <a
+            href={`mailto:${GRIEVANCE_OFFICER_EMAIL}`}
             className="font-medium text-kal-accent underline underline-offset-2 hover:text-kal-accent/90"
           >
-            Data Principal Rights portal
-          </Link>{" "}
+            {GRIEVANCE_OFFICER_EMAIL}
+          </a>{" "}
           or include that request in your deletion email. We will send you an
           export of your account data in a machine-readable format (JSON or CSV)
           within the same 30-day window.

@@ -33,14 +33,8 @@ export function DpdpConsentNotice({
         {DPDP_SIGNUP_PROCESSORS.join("; ")}.
       </p>
       <p className="mt-2">
-        You can withdraw consent or exercise your rights at any time via{" "}
-        <Link
-          href="/dpdp-rights"
-          className="font-medium text-kal-accent underline underline-offset-2 hover:text-kal-accent/90"
-        >
-          Data Principal Rights
-        </Link>{" "}
-        or our{" "}
+        You can withdraw consent or exercise other data rights by contacting us as
+        described in our{" "}
         <Link
           href="/privacy"
           className="font-medium text-kal-accent underline underline-offset-2 hover:text-kal-accent/90"

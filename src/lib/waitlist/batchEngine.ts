@@ -404,20 +404,11 @@ export async function getAllAdminConfig(): Promise<Record<string, string>> {
 }
 
 /**
- * Check if a user is an admin, identified by their Supabase user_id or email.
- *
- * Security model:
- *  1. Fast path — look up by user_id (parameterised .eq, no injection risk).
- *  2. First-login path — if no user_id match, look up by email (also .eq).
- *     On success, update the placeholder user_id to the caller's real UUID so
- *     that all future calls take the fast path and the email path is no longer
- *     needed. This also prevents the email slot from being "stolen" by a new
- *     account after the real admin has logged in once.
- *
- * NOTE: Never build the filter with string interpolation — always use .eq()
- * so PostgREST never sees user-supplied data inside the filter expression.
+ * Check if a user is an admin by their pre-bound Supabase user_id in admin_users.
+ * Email-only auto-claim is disabled; run the admin_security_hardening migration
+ * to sync user_id from auth.users for seeded admin emails.
  */
-export async function isAdminUser(userId: string, email?: string): Promise<boolean> {
+export async function isAdminUser(userId: string, _email?: string): Promise<boolean> {
   const admin = getSupabaseServiceRoleClient();
   if (!admin) return false;
 
@@ -430,28 +421,7 @@ export async function isAdminUser(userId: string, email?: string): Promise<boole
 
   if (byId) return true;
 
-  // First-login path: check by email (seeded rows start with a placeholder UUID).
-  if (!email) return false;
-
-  const { data: byEmail } = await admin
-    .from("admin_users")
-    .select("user_id")
-    .eq("email", email)
-    .maybeSingle();
-
-  if (!byEmail) return false;
-
-  // Claim the slot: persist the real user_id so future logins use the fast path.
-  await admin
-    .from("admin_users")
-    .update({
-      user_id: userId,
-      user_id_claimed_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("email", email);
-
-  return true;
+  return false;
 }
 
 /** Get the waitlist entry for a user. */
