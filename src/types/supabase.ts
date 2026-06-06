@@ -608,6 +608,129 @@ export type Database = {
         }
         Relationships: []
       }
+      dpdp_breach_incidents: {
+        Row: {
+          affected_count: number
+          affected_user_ids: string[]
+          board_notified_at: string | null
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          principal_notified_at: string | null
+          reported_at: string
+          status: Database["public"]["Enums"]["dpdp_breach_incident_status"]
+          updated_at: string
+        }
+        Insert: {
+          affected_count?: number
+          affected_user_ids?: string[]
+          board_notified_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description: string
+          id?: string
+          principal_notified_at?: string | null
+          reported_at?: string
+          status?: Database["public"]["Enums"]["dpdp_breach_incident_status"]
+          updated_at?: string
+        }
+        Update: {
+          affected_count?: number
+          affected_user_ids?: string[]
+          board_notified_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          principal_notified_at?: string | null
+          reported_at?: string
+          status?: Database["public"]["Enums"]["dpdp_breach_incident_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      dpdp_consent_records: {
+        Row: {
+          created_at: string
+          given_at: string
+          id: string
+          ip_hash: string | null
+          method: string
+          purpose_version: string
+          raw_purposes: Json
+          user_id: string
+          withdrawn_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          given_at?: string
+          id?: string
+          ip_hash?: string | null
+          method: string
+          purpose_version: string
+          raw_purposes?: Json
+          user_id: string
+          withdrawn_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          given_at?: string
+          id?: string
+          ip_hash?: string | null
+          method?: string
+          purpose_version?: string
+          raw_purposes?: Json
+          user_id?: string
+          withdrawn_at?: string | null
+        }
+        Relationships: []
+      }
+      dpdp_rights_requests: {
+        Row: {
+          created_at: string
+          due_at: string
+          export_url: string | null
+          id: string
+          notes: string | null
+          reference_id: string
+          request_details: Json
+          resolved_at: string | null
+          status: Database["public"]["Enums"]["dpdp_rights_request_status"]
+          type: Database["public"]["Enums"]["dpdp_rights_request_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          due_at: string
+          export_url?: string | null
+          id?: string
+          notes?: string | null
+          reference_id: string
+          request_details?: Json
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["dpdp_rights_request_status"]
+          type: Database["public"]["Enums"]["dpdp_rights_request_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          due_at?: string
+          export_url?: string | null
+          id?: string
+          notes?: string | null
+          reference_id?: string
+          request_details?: Json
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["dpdp_rights_request_status"]
+          type?: Database["public"]["Enums"]["dpdp_rights_request_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       doubts: {
         Row: {
           created_at: string
@@ -4404,6 +4527,21 @@ export type Database = {
       }
     }
     Enums: {
+      dpdp_breach_incident_status:
+        | "draft"
+        | "board_notified"
+        | "principals_notified"
+        | "closed"
+      dpdp_rights_request_status:
+        | "pending"
+        | "in_progress"
+        | "resolved"
+        | "rejected"
+      dpdp_rights_request_type:
+        | "access"
+        | "correction"
+        | "erasure"
+        | "nomination"
       journey_segment:
         | "explorer"
         | "activated"
@@ -4541,6 +4679,24 @@ export const Constants = {
   },
   public: {
     Enums: {
+      dpdp_breach_incident_status: [
+        "draft",
+        "board_notified",
+        "principals_notified",
+        "closed",
+      ],
+      dpdp_rights_request_status: [
+        "pending",
+        "in_progress",
+        "resolved",
+        "rejected",
+      ],
+      dpdp_rights_request_type: [
+        "access",
+        "correction",
+        "erasure",
+        "nomination",
+      ],
       journey_segment: [
         "explorer",
         "activated",

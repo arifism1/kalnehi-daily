@@ -23,6 +23,7 @@ const AuthAppNavPreviewMenu = dynamic(
     })),
   { ssr: false },
 );
+import { DpdpConsentNotice } from "@/components/auth/DpdpConsentNotice";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { attachReferralToUser } from "@/actions/referral";
 import { trackAuthSuccess } from "@/lib/analytics";
@@ -77,6 +78,8 @@ export default function AuthPage() {
   const [error, setError] = useState<string | null>(null);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [storedReferral, setStoredReferral] = useState<StoredReferral | null>(null);
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
+  const [dpdpAgreed, setDpdpAgreed] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -120,6 +123,21 @@ export default function AuthPage() {
     [router, setAuth],
   );
 
+  const signupChecksOk = ageConfirmed && dpdpAgreed;
+
+  const recordSignupConsent = useCallback(async (method: "email_otp" | "google_oauth") => {
+    try {
+      await fetch("/api/dpdp/record-consent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ method }),
+      });
+    } catch {
+      /* non-blocking; consent can be reconciled via support */
+    }
+  }, []);
+
   const sendOtp = useCallback(async () => {
     setBusy(true);
     setError(null);
@@ -127,6 +145,10 @@ export default function AuthPage() {
       const em = email.trim();
       if (!em) {
         setError("Enter your email address.");
+        return;
+      }
+      if (!signupChecksOk) {
+        setError("Please confirm you are 18+ and agree to the data processing notice.");
         return;
       }
       const res = await fetch("/api/auth/otp-send", {
@@ -149,7 +171,7 @@ export default function AuthPage() {
     } finally {
       setBusy(false);
     }
-  }, [email]);
+  }, [email, signupChecksOk]);
 
   const verifyOtp = useCallback(async () => {
     setBusy(true);
@@ -188,6 +210,7 @@ export default function AuthPage() {
 
       const isNewUser = isNewUserFromSession(session.user.created_at);
       if (isNewUser) {
+        await recordSignupConsent("email_otp");
         const ref = getStoredReferral();
         if (ref.ref) {
           void attachReferralToUser({
@@ -205,7 +228,7 @@ export default function AuthPage() {
     } finally {
       setBusy(false);
     }
-  }, [email, otp, redirectAfterAuth]);
+  }, [email, otp, redirectAfterAuth, recordSignupConsent]);
 
   const clearGoogleBusy = useCallback(() => {
     setBusy(false);
@@ -217,6 +240,11 @@ export default function AuthPage() {
     setBusy(true);
     setError(null);
     try {
+      if (!signupChecksOk) {
+        setError("Please confirm you are 18+ and agree to the data processing notice.");
+        setBusy(false);
+        return;
+      }
       const params = new URLSearchParams(window.location.search);
       const nextRaw = params.get("next");
       const nextPath =
@@ -243,7 +271,7 @@ export default function AuthPage() {
       setError(formatSupabaseError(e));
       setBusy(false);
     }
-  }, []);
+  }, [signupChecksOk]);
 
   const trimmedEmail = email.trim();
 
@@ -270,10 +298,26 @@ export default function AuthPage() {
       <div className="kal-glass-panel w-full max-w-sm rounded-2xl p-1">
         {!isNativeApp && step === "email" && (
           <>
-            <div className="px-3 pt-4">
+            <div className="space-y-3 px-3 pt-4">
+              <DpdpConsentNotice agreed={dpdpAgreed} onAgreedChange={setDpdpAgreed} />
+              <label
+                htmlFor="auth-age-confirm"
+                className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-kal-border/80 bg-kal-input-bg/60 p-2.5 text-xs text-kal-text"
+              >
+                <input
+                  id="auth-age-confirm"
+                  type="checkbox"
+                  checked={ageConfirmed}
+                  onChange={(e) => setAgeConfirmed(e.target.checked)}
+                  className="mt-0.5 size-4 shrink-0 rounded border-kal-border accent-kal-accent"
+                />
+                <span>I confirm I am 18 years of age or older.</span>
+              </label>
+            </div>
+            <div className="px-3 pt-2">
               <GoogleSignInButton
                 busy={busy}
-                disabled={busy}
+                disabled={busy || !signupChecksOk}
                 onClick={() => void signInGoogle()}
               />
               <p className="mt-2 text-center text-[11px] text-kal-muted">
@@ -326,6 +370,25 @@ export default function AuthPage() {
               />
             </div>
 
+            {isNativeApp && (
+              <div className="space-y-3">
+                <DpdpConsentNotice agreed={dpdpAgreed} onAgreedChange={setDpdpAgreed} />
+                <label
+                  htmlFor="auth-age-confirm-native"
+                  className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-kal-border/80 bg-kal-input-bg/60 p-2.5 text-xs text-kal-text"
+                >
+                  <input
+                    id="auth-age-confirm-native"
+                    type="checkbox"
+                    checked={ageConfirmed}
+                    onChange={(e) => setAgeConfirmed(e.target.checked)}
+                    className="mt-0.5 size-4 shrink-0 rounded border-kal-border accent-kal-accent"
+                  />
+                  <span>I confirm I am 18 years of age or older.</span>
+                </label>
+              </div>
+            )}
+
             {error && (
               <p className="rounded-xl border border-kal-danger-border bg-kal-danger-soft px-3 py-2 text-sm text-kal-danger-text">
                 {error}
@@ -334,7 +397,7 @@ export default function AuthPage() {
 
             <button
               type="submit"
-              disabled={busy}
+              disabled={busy || !signupChecksOk}
               className="kal-glass-subtle flex w-full min-h-[50px] items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-kal-text transition-colors duration-200 hover:opacity-95 disabled:opacity-50"
             >
               {busy ? <Loader2 className="size-5 animate-spin" /> : <Mail className="size-4" />}

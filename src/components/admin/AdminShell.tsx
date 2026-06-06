@@ -47,6 +47,7 @@ const NAV_GROUPS: {
     label: "Support",
     items: [
       { label: "User lookup", href: "/admin/users" },
+      { label: "DPDP compliance", href: "/admin/dpdp" },
       { label: "User activity", href: "/admin/user-activity" },
       { label: "Exam segments", href: "/admin/exam-segments" },
     ],

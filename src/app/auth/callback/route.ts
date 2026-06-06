@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
 import { getSupabaseConfig } from "@/lib/supabase";
+import { recordDpdpSignupConsent } from "@/lib/dpdp/consent";
 
 function safeNextPath(next: string | null): string {
   if (!next || !next.startsWith("/") || next.startsWith("//")) return "/";
@@ -51,6 +52,17 @@ export async function GET(request: NextRequest) {
         ? new Date(data.session.user.created_at).getTime()
         : 0;
   const isNewUser = createdMs > 0 && Date.now() - createdMs < 5 * 60 * 1000;
+  if (isNewUser && data.user?.id) {
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      request.headers.get("x-real-ip")?.trim() ||
+      null;
+    await recordDpdpSignupConsent({
+      userId: data.user.id,
+      method: "google_oauth",
+      ip,
+    });
+  }
   dest.searchParams.set("kalnehi_auth_event", isNewUser ? "sign_up" : "login");
   response.headers.set("Location", dest.toString());
 

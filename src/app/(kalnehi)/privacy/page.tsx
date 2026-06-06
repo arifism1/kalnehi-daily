@@ -1,3 +1,12 @@
+import Link from "next/link";
+
+import {
+  DPDP_GRIEVANCE_ACK_HOURS,
+  DPDP_GRIEVANCE_RESOLVE_DAYS,
+  DPDP_RIGHTS_SLA_DAYS,
+  GRIEVANCE_OFFICER_EMAIL,
+  GRIEVANCE_OFFICER_NAME,
+} from "@/lib/dpdp/constants";
 import {
   SITE_NAME,
   SUPPORT_EMAIL,
@@ -9,7 +18,7 @@ export default function PrivacyPolicyPage() {
     <article className="mx-auto max-w-2xl space-y-5 pb-8 text-[15px] leading-relaxed text-kal-text sm:text-base">
       <h1 className="kal-feature-title">Privacy Policy</h1>
       <p>
-        <strong>Last updated:</strong> May 16, 2026
+        <strong>Last updated:</strong> June 6, 2026
       </p>
       <p>
         Neven Academy Assam (“<strong>we</strong>”, “<strong>us</strong>”) operates{" "}
@@ -25,8 +34,8 @@ export default function PrivacyPolicyPage() {
         <p>
           The controller responsible for personal data processed in connection with
           the Service is Neven Academy Assam (contact details under{" "}
-          <strong>Contact</strong> below). For product support and privacy requests,
-          you can also reach us at{" "}
+          <strong>Contact</strong> and <strong>Grievance Officer</strong> below).
+          For product support and privacy requests, you can also reach us at{" "}
           <a
             href={SUPPORT_MAILTO_HREF}
             className="font-medium text-kal-accent underline underline-offset-2 hover:text-kal-accent/90"
@@ -123,7 +132,14 @@ export default function PrivacyPolicyPage() {
           Where we rely on <strong>consent</strong>, you can withdraw it at any time
           without affecting the lawfulness of processing based on consent before its
           withdrawal (for example by changing choices in{" "}
-          <strong>Cookie settings</strong> or emailing us).
+          <strong>Cookie settings</strong>, using our{" "}
+          <Link
+            href="/dpdp-rights"
+            className="font-medium text-kal-accent underline underline-offset-2 hover:text-kal-accent/90"
+          >
+            Data Principal Rights portal
+          </Link>
+          , or emailing us).
         </p>
       </section>
 
@@ -203,6 +219,10 @@ export default function PrivacyPolicyPage() {
             <strong>Rate limiting / abuse protection:</strong> Upstash or comparable
             infrastructure for distributed rate limits.
           </li>
+          <li>
+            <strong>Error monitoring:</strong> Sentry (diagnostic logs for security
+            and reliability).
+          </li>
         </ul>
         <p>
           We may also disclose information if required by law, to protect rights and
@@ -217,10 +237,12 @@ export default function PrivacyPolicyPage() {
         </h2>
         <p>
           Our subprocessors may process data in India, the European Economic Area,
-          the United States, and other regions. Where personal data is transferred
-          from the EEA, UK, or Switzerland, we rely on appropriate safeguards (such
-          as Standard Contractual Clauses) where required, in addition to technical
-          and organizational measures.
+          the United States, and other regions. Personal data may be transferred to
+          US-based processors including Vercel, Groq, Firebase, Google (analytics/AI),
+          Meta (with consent), and Sentry. Where personal data is transferred from
+          the EEA, UK, Switzerland, or where otherwise required, we rely on
+          appropriate safeguards (such as Standard Contractual Clauses) in addition
+          to technical and organizational measures.
         </p>
       </section>
 
@@ -260,48 +282,125 @@ export default function PrivacyPolicyPage() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-lg font-semibold text-kal-text">10. Your rights</h2>
+        <h2 className="text-lg font-semibold text-kal-text">
+          10. Your rights under DPDP and applicable law
+        </h2>
         <p>
-          Depending on where you live, you may have rights to access, correct,
-          delete, or export your personal data; to object to or restrict certain
-          processing; to withdraw consent where processing is consent-based; and to
-          lodge a complaint with a supervisory authority.
+          Under India&apos;s Digital Personal Data Protection Act, 2023 (DPDP Act)
+          and applicable law, you may have the following rights regarding your
+          personal data:
         </p>
+        <ul className="list-disc space-y-1.5 pl-5">
+          <li>
+            <strong>Right to access information:</strong> obtain a summary of
+            personal data we process about you and the processing activities
+            undertaken.
+          </li>
+          <li>
+            <strong>Right to correction:</strong> request correction of inaccurate
+            or incomplete personal data.
+          </li>
+          <li>
+            <strong>Right to erasure:</strong> request deletion of your personal
+            data when it is no longer necessary for the stated purpose or when you
+            withdraw consent (subject to legal retention requirements).
+          </li>
+          <li>
+            <strong>Right to nominate:</strong> designate another individual to
+            exercise your rights on your behalf in the event of your death or
+            incapacity.
+          </li>
+          <li>
+            <strong>Right to grievance redressal:</strong> raise a complaint with our
+            Grievance Officer (section 11).
+          </li>
+          <li>
+            <strong>Consent withdrawal:</strong> where processing is based on
+            consent, withdraw consent at any time via{" "}
+            <Link
+              href="/dpdp-rights"
+              className="font-medium text-kal-accent underline underline-offset-2 hover:text-kal-accent/90"
+            >
+              Data Principal Rights
+            </Link>{" "}
+            or by emailing us.
+          </li>
+        </ul>
         <p>
-          To exercise these rights for account data we control, email{" "}
+          You can submit requests through our{" "}
+          <Link
+            href="/dpdp-rights"
+            className="font-medium text-kal-accent underline underline-offset-2 hover:text-kal-accent/90"
+          >
+            Data Principal Rights portal
+          </Link>{" "}
+          (when signed in) or email{" "}
           <a
             href={SUPPORT_MAILTO_HREF}
             className="font-medium text-kal-accent underline underline-offset-2 hover:text-kal-accent/90"
           >
             {SUPPORT_EMAIL}
           </a>{" "}
-          from the email address associated with your account and describe your
-          request. We may need to verify your identity before fulfilling it. We will
-          respond within a reasonable period as required by applicable law (typically
-          within about 30 days, unless a shorter or longer period applies in your
-          jurisdiction).
+          from the email address associated with your account. We will acknowledge
+          grievances within {DPDP_GRIEVANCE_ACK_HOURS} hours and aim to resolve them
+          within {DPDP_GRIEVANCE_RESOLVE_DAYS} days. Rights requests will be
+          fulfilled within {DPDP_RIGHTS_SLA_DAYS} days as required by the DPDP Act,
+          unless a shorter period applies under other law.
         </p>
         <p>
-          <strong>India (DPDP):</strong> if the Digital Personal Data Protection Act
-          applies to you, you may have additional grievance and nomination rights —
-          contact us using the same inbox.
+          Depending on where you live, you may also have additional rights (such as
+          objection, restriction, or portability under GDPR) and the right to lodge
+          a complaint with a supervisory authority.
         </p>
       </section>
 
       <section className="space-y-2">
         <h2 className="text-lg font-semibold text-kal-text">
-          11. Children&apos;s privacy
+          11. Grievance Officer (DPDP)
         </h2>
         <p>
-          The Service is not directed to children under 13 (or the minimum digital
-          consent age in your region). If you believe a child has provided personal
-          data, contact us and we will take appropriate steps.
+          For questions, complaints, or requests relating to your personal data under
+          the DPDP Act, contact our designated Grievance Officer:
+        </p>
+        <p>
+          <strong>{GRIEVANCE_OFFICER_NAME}</strong>
+          <br />
+          Email:{" "}
+          <a
+            href={`mailto:${GRIEVANCE_OFFICER_EMAIL}`}
+            className="font-medium text-kal-accent underline underline-offset-2 hover:text-kal-accent/90"
+          >
+            {GRIEVANCE_OFFICER_EMAIL}
+          </a>
+          <br />
+          Neven Academy Assam, 1000, Uday Nagar, Bono Durga Mandir, Karim Chowk,
+          K.Chowka, Ward No.4, Mangaldoi, Darrang, Assam, 784125
+        </p>
+        <p>
+          We will acknowledge your grievance within{" "}
+          <strong>{DPDP_GRIEVANCE_ACK_HOURS} hours</strong> and work to resolve it
+          within <strong>{DPDP_GRIEVANCE_RESOLVE_DAYS} days</strong>. If unresolved,
+          you may escalate to the Data Protection Board of India as provided under
+          the DPDP Act.
         </p>
       </section>
 
       <section className="space-y-2">
         <h2 className="text-lg font-semibold text-kal-text">
-          12. Changes to this policy
+          12. Children&apos;s privacy
+        </h2>
+        <p>
+          The Service is not directed to children under <strong>18</strong> years of
+          age. We do not knowingly process personal data of children without
+          verifiable parental consent as required under the DPDP Act. If you believe a
+          child under 18 has provided personal data, contact us and we will take
+          appropriate steps.
+        </p>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="text-lg font-semibold text-kal-text">
+          13. Changes to this policy
         </h2>
         <p>
           We may update this Privacy Policy to reflect product, legal, or operational
@@ -312,7 +411,7 @@ export default function PrivacyPolicyPage() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-lg font-semibold text-kal-text">13. Contact</h2>
+        <h2 className="text-lg font-semibold text-kal-text">14. Contact</h2>
         <p>
           Neven Academy Assam
           <br />

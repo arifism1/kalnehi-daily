@@ -47,7 +47,14 @@ export function DataAndThisDeviceSection() {
           </Link>
           . Optional analytics &amp; marketing:{" "}
           <CookieSettingsTrigger className="font-semibold text-kal-accent underline underline-offset-2" />
-          . To export or delete your account data, visit the{" "}
+          . To export or delete your account data, use the{" "}
+          <Link
+            href="/dpdp-rights"
+            className="font-semibold text-kal-accent underline underline-offset-2"
+          >
+            Data Principal Rights portal
+          </Link>{" "}
+          or the{" "}
           <Link
             href="/account-deletion"
             className="font-semibold text-kal-accent underline underline-offset-2"

@@ -29,6 +29,7 @@ For architecture, auth, proxy behavior, cron, and troubleshooting, use **[docs/D
 | [GSC_API_SETUP.md](GSC_API_SETUP.md) | Search Console API automation |
 | [CHECKLIST.md](CHECKLIST.md) | SEO rollout checklist |
 | [docs/android-device-qa-matrix.md](docs/android-device-qa-matrix.md) | Capacitor / Android voice, push, billing checks |
+| [docs/EXTERNAL_SSD_DEV.md](docs/EXTERNAL_SSD_DEV.md) | SSD volume layout, `npm ci`, Android SDK paths, sibling apps |
 
 ## Common commands
 

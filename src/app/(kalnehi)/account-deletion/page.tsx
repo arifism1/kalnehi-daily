@@ -15,7 +15,7 @@ export default function AccountDeletionPage() {
     <article className="mx-auto max-w-2xl space-y-5 pb-8 text-[15px] leading-relaxed text-kal-text sm:text-base">
       <h1 className="kal-feature-title">Account Deletion</h1>
       <p>
-        <strong>Last updated:</strong> May 23, 2026
+        <strong>Last updated:</strong> June 6, 2026
       </p>
       <p>
         You have the right to delete your Kalnehi Daily account and all
@@ -23,9 +23,26 @@ export default function AccountDeletionPage() {
         deletion, what gets removed, and what the timeline looks like.
       </p>
 
+      <section className="space-y-2 rounded-xl border border-kal-accent/25 bg-kal-accent/[0.04] p-4">
+        <h2 className="text-lg font-semibold text-kal-text">
+          Recommended: use the Data Principal Rights portal
+        </h2>
+        <p>
+          Signed-in users can submit an erasure request directly from our DPDP
+          self-service portal. You will receive a reference ID and confirmation
+          email with a 90-day response timeline.
+        </p>
+        <Link
+          href="/dpdp-rights"
+          className="kal-btn-accent inline-flex min-h-[44px] items-center rounded-xl px-4 py-2 text-sm font-semibold"
+        >
+          Open Data Principal Rights portal
+        </Link>
+      </section>
+
       <section className="space-y-2">
         <h2 className="text-lg font-semibold text-kal-text">
-          How to request account deletion
+          Alternative: request by email
         </h2>
         <ol className="list-decimal space-y-2 pl-5">
           <li>
@@ -120,10 +137,17 @@ export default function AccountDeletionPage() {
           Data export before deletion
         </h2>
         <p>
-          If you would like a copy of your data before we delete it, include
-          that request in your deletion email. We will send you an export of
-          your account data in a machine-readable format (JSON or CSV) within
-          the same 30-day window.
+          If you would like a copy of your data before we delete it, submit an
+          access request from the{" "}
+          <Link
+            href="/dpdp-rights"
+            className="font-medium text-kal-accent underline underline-offset-2 hover:text-kal-accent/90"
+          >
+            Data Principal Rights portal
+          </Link>{" "}
+          or include that request in your deletion email. We will send you an
+          export of your account data in a machine-readable format (JSON or CSV)
+          within the same 30-day window.
         </p>
       </section>
 
@@ -143,9 +167,7 @@ export default function AccountDeletionPage() {
 
       <section className="space-y-2">
         <h2 className="text-lg font-semibold text-kal-text">Contact</h2>
-        <p>
-          For questions about this process or to submit your request:
-        </p>
+        <p>For questions about this process or to submit your request:</p>
         <p>
           Email:{" "}
           <a

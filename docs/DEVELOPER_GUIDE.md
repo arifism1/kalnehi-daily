@@ -2,7 +2,7 @@
 
 Engineering onboarding: how requests move through the app, where auth and billing live, and how to operate cron and env safely. **Claims below map to source files** in this repo.
 
-For device-specific QA (Capacitor, voice, push, billing UA), see [android-device-qa-matrix.md](./android-device-qa-matrix.md). For canonical URLs, sitemaps, and Google Search Console, see [SEO_ENVIRONMENT_GUIDE.md](../SEO_ENVIRONMENT_GUIDE.md), [GSC_DIAGNOSTICS_GUIDE.md](../GSC_DIAGNOSTICS_GUIDE.md), and [GSC_API_SETUP.md](../GSC_API_SETUP.md).
+For device-specific QA (Capacitor, voice, push, billing UA), see [android-device-qa-matrix.md](./android-device-qa-matrix.md). For canonical URLs, sitemaps, and Google Search Console, see [SEO_ENVIRONMENT_GUIDE.md](../SEO_ENVIRONMENT_GUIDE.md), [GSC_DIAGNOSTICS_GUIDE.md](../GSC_DIAGNOSTICS_GUIDE.md), and [GSC_API_SETUP.md](../GSC_API_SETUP.md). For local development on the external SSD (volume layout, `npm ci`, Android SDK paths, sibling apps), see [EXTERNAL_SSD_DEV.md](./EXTERNAL_SSD_DEV.md).
 
 ---
 
