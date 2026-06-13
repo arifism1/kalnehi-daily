@@ -96,22 +96,22 @@
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
-    "@capacitor/cli": "^8.3.4",
-    "@next/bundle-analyzer": "^16.2.6",
+    "@capacitor/cli": "^8.4.0",
+    "@next/bundle-analyzer": "^16.2.9",
     "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4",
     "@types/canvas-confetti": "^1.9.0",
-    "@types/node": "^20",
+    "@types/node": "^25",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "^16.2.6",
-    "eslint-plugin-react-doctor": "^0.2.1",
-    "eslint-plugin-react-you-might-not-need-an-effect": "^0.10.1",
-    "react-doctor": "^0.2.1",
-    "sharp": "^0.34.5",
+    "eslint": "^10",
+    "eslint-config-next": "^16.2.9",
+    "eslint-plugin-react-doctor": "^0.5.4",
+    "eslint-plugin-react-you-might-not-need-an-effect": "^1.0.0",
+    "react-doctor": "^0.5.4",
+    "sharp": "^0.35.1",
     "tailwindcss": "^4",
-    "tsx": "^4.21.0",
-    "typescript": "^5"
+    "tsx": "^4.22.4",
+    "typescript": "^6"
   }
 }
