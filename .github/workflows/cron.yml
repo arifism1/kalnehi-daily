@@ -1,0 +1,39 @@
+name: Cron Dispatcher
+
+# Single scheduler for all background jobs. Pings the /api/cron/tick dispatcher
+# every 5 minutes; the dispatcher decides which jobs are due (see
+# src/lib/cron/registry.ts) and fans out to the individual handlers.
+#
+# Requires repo secrets:
+#   CRON_SECRET   - same value as the Vercel CRON_SECRET env var
+#   CRON_BASE_URL - production origin, e.g. https://www.kalnehi.com
+#
+# GitHub may delay or occasionally skip scheduled runs under load; the
+# dispatcher's Redis last-run tracking self-heals on the next tick.
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: cron-dispatcher
+  cancel-in-progress: false
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger cron dispatcher
+        env:
+          CRON_BASE_URL: ${{ secrets.CRON_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_BASE_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "::error::CRON_BASE_URL and CRON_SECRET repo secrets must be set"
+            exit 1
+          fi
+          curl --fail --show-error --silent \
+            --max-time 60 \
+            -X POST "${CRON_BASE_URL%/}/api/cron/tick" \
+            -H "Authorization: Bearer ${CRON_SECRET}"
