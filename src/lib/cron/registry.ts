@@ -28,8 +28,8 @@ export type DailyJob = {
 };
 
 /**
- * Jobs that previously used sub-daily cron expressions (`*/5`, `*/15`, `*/30`,
- * hourly). The dispatcher fires them once per elapsed interval.
+ * Jobs that previously used sub-daily cron expressions (every 5, 15, 30
+ * minutes, hourly). The dispatcher fires them once per elapsed interval.
  */
 export const INTERVAL_JOBS: readonly IntervalJob[] = [
   { id: "notification-worker", path: "/api/cron/notification-worker", everyMinutes: 5 },
