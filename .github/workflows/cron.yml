@@ -37,3 +37,24 @@ jobs:
             --max-time 60 \
             -X POST "${CRON_BASE_URL%/}/api/cron/tick" \
             -H "Authorization: Bearer ${CRON_SECRET}"
+
+      # Keep the Supabase free-tier project from pausing after 7 days of
+      # inactivity. A single external request resets the timer; pg_cron cannot
+      # help (it dies with the paused DB). Runs even if the dispatcher step
+      # above failed, so the DB stays alive during a Vercel outage.
+      - name: Supabase keep-alive ping
+        if: always()
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "::error::SUPABASE_URL and SUPABASE_ANON_KEY repo secrets must be set"
+            exit 1
+          fi
+          curl --fail --show-error --silent --max-time 30 --retry 2 \
+            "${SUPABASE_URL%/}/rest/v1/daily_motivational_phrases?select=id&limit=1" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+            -o /dev/null
+          echo "Supabase keep-alive ping OK"
