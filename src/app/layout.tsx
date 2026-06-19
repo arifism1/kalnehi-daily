@@ -28,6 +28,8 @@ import { CapacitorOfflineWarmup } from "@/components/CapacitorOfflineWarmup";
 import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 import { NativeSyncPolicyInit } from "@/components/NativeSyncPolicyInit";
 import { VercelWebVitalsGate } from "@/components/VercelWebVitalsGate";
+import { VerticalProvider } from "@/components/vertical/VerticalProvider";
+import { getServerVertical } from "@/lib/vertical/serverVertical";
 
 import "./globals.css";
 
@@ -184,11 +186,12 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const vertical = await getServerVertical();
   return (
     <html
       lang="en-IN"
@@ -196,6 +199,7 @@ export default function RootLayout({
       className={`${dmSans.variable} ${dmSerifDisplay.variable} ${syne.variable} h-full min-h-dvh min-h-[-webkit-fill-available] antialiased`}
     >
       <body className="flex min-h-dvh min-h-[-webkit-fill-available] flex-col bg-kal-page font-sans text-kal-text">
+        <VerticalProvider config={vertical}>
         <CookieConsentProvider>
           <OAuthAuthAnalytics />
           <CapacitorDeepLinkHandler />
@@ -223,6 +227,7 @@ export default function RootLayout({
             <VercelWebVitalsGate />
           </PwaServiceWorkerUpdateProvider>
         </CookieConsentProvider>
+        </VerticalProvider>
       </body>
     </html>
   );

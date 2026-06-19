@@ -21,6 +21,7 @@ import { isLegalPath } from "@/lib/legal-paths";
 import { isPublicMarketingPath } from "@/lib/public-paths";
 import { getSupabaseConfig } from "@/lib/supabase";
 import { grantOrgSubscriptionInternal } from "@/lib/b2b/orgSubscription";
+import { VERTICAL_HEADER, resolveVertical } from "@/lib/vertical/resolveVertical";
 
 // ── Rate limiting ─────────────────────────────────────────────────────────────
 // Per-IP, per-minute limits on public payment and waitlist endpoints.
@@ -221,23 +222,28 @@ export async function proxy(request: NextRequest) {
       );
     }
   }
+  // Resolve the brand vertical from the request host (source of truth in prod;
+  // NEXT_PUBLIC_VERTICAL is the local/per-project fallback) and forward it so
+  // Server Components / Route Handlers read it via getServerVertical().
+  const verticalId = resolveVertical(request.headers.get("host"));
+
   const requestHeaders = new Headers(request.headers);
+  requestHeaders.set(VERTICAL_HEADER, verticalId);
   if (orgIdForHeader) {
     requestHeaders.set(ORG_ID_HEADER, orgIdForHeader);
   }
 
-  // Re-create baseResponse with the updated request headers if needed.
-  // We only need to do this when there's an org to forward.
-  if (orgIdForHeader) {
-    const finalResponse = NextResponse.next({ request: { headers: requestHeaders } });
-    // Copy session cookies from baseResponse onto finalResponse.
-    baseResponse.headers.getSetCookie?.().forEach((cookie) => {
-      finalResponse.headers.append("Set-Cookie", cookie);
-    });
-    return finalResponse;
-  }
-
-  return baseResponse;
+  // Always forward the updated request headers (x-vertical + optional org id).
+  const finalResponse = NextResponse.next({ request: { headers: requestHeaders } });
+  // Copy refreshed session cookies from baseResponse onto finalResponse.
+  baseResponse.headers.getSetCookie?.().forEach((cookie) => {
+    finalResponse.headers.append("Set-Cookie", cookie);
+  });
+  // Host-keyed caching: each brand domain deploys as its OWN Vercel project with a
+  // baked NEXT_PUBLIC_VERTICAL, so the CDN cache namespace is already per-host — a
+  // cached response cannot bleed across brands. The x-vertical request header above
+  // makes host resolution explicit for Server Components within a single deployment.
+  return finalResponse;
 }
 
 // ── Org membership sync helper ────────────────────────────────────────────────
