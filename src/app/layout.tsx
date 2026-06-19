@@ -19,7 +19,6 @@ import {
   PWA_STANDALONE_DISPLAY_NAME,
   SITE_NAME,
 } from "@/lib/seo-metadata";
-import { KillSwitchGuard } from "@/components/KillSwitchGuard";
 import { OAuthAuthAnalytics } from "@/components/OAuthAuthAnalytics";
 import { CookieConsentProvider } from "@/components/consent/CookieConsentProvider";
 import { CapacitorDeepLinkHandler } from "@/components/CapacitorDeepLinkHandler";
@@ -206,23 +205,21 @@ export default function RootLayout({
             <ReferralCapture />
             <ThemeSync />
             <ServiceWorkerRegister />
-            <KillSwitchGuard>
-              <AuthProvider>
-                <SubscriptionAccessProvider>
-                  <UiPrefsRemoteSync />
-                  <StoragePersistenceInit />
-                  <FcmForegroundListener />
-                  <FcmNativeListener />
-                  <CapacitorNetworkSyncBridge />
-                  <CapacitorOfflineWarmup />
-                  <CapacitorNativeSwPilot />
-                  <NativeSyncPolicyInit />
-                  <GlobalErrorBoundary>
-                    <AppShell>{children}</AppShell>
-                  </GlobalErrorBoundary>
-                </SubscriptionAccessProvider>
-              </AuthProvider>
-            </KillSwitchGuard>
+            <AuthProvider>
+              <SubscriptionAccessProvider>
+                <UiPrefsRemoteSync />
+                <StoragePersistenceInit />
+                <FcmForegroundListener />
+                <FcmNativeListener />
+                <CapacitorNetworkSyncBridge />
+                <CapacitorOfflineWarmup />
+                <CapacitorNativeSwPilot />
+                <NativeSyncPolicyInit />
+                <GlobalErrorBoundary>
+                  <AppShell>{children}</AppShell>
+                </GlobalErrorBoundary>
+              </SubscriptionAccessProvider>
+            </AuthProvider>
             <VercelWebVitalsGate />
           </PwaServiceWorkerUpdateProvider>
         </CookieConsentProvider>

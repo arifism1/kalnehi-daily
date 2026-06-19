@@ -101,8 +101,6 @@ const ALLOWLIST = {
     "After getUser(); RPC increments user_app_active_time_daily scoped to session user.id.",
 
   // ── Admin API routes (admin gate checked before service-role access) ──────
-  "src/app/api/admin/app-config/route.ts":
-    "After getUser() + isAdminUser(); app_config writes.",
   "src/app/api/admin/batch-notes/route.ts":
     "After getUser() + isAdminUser(); batch notes writes.",
   "src/app/api/admin/batches/route.ts":
@@ -111,8 +109,6 @@ const ALLOWLIST = {
     "After getUser() + isAdminUser(); batch update/activate.",
   "src/app/api/admin/daily-cap/route.ts":
     "After getUser() + isAdminUser(); daily cap read/write.",
-  "src/app/api/admin/feature-flags/route.ts":
-    "After getUser() + isAdminUser(); feature flag writes.",
   "src/app/api/admin/user-action/route.ts":
     "After getUser() + isAdminUser(); target userId validated as UUID before any write.",
 
@@ -176,7 +172,7 @@ const ALLOWLIST = {
 
   // ── Shared libs ───────────────────────────────────────────────────────────
   "src/lib/admin/killSwitch.ts":
-    "Reads app_config + feature_flags (no user data); called from proxy for kill-switch check.",
+    "Reads app_config (global daily-cap settings, no user data).",
   "src/lib/daily-trial-cap.ts":
     "Reads daily cap config (global table, no user PII); called from subscription gate.",
   "src/lib/waitlist/batchEngine.ts":
@@ -186,7 +182,7 @@ const ALLOWLIST = {
   "src/actions/leaderboard.ts":
     "After getUser(); leaderboard_weekly_metrics scoped to user.id.",
   "src/proxy.ts":
-    "Admin bypass check for kill switch (read-only admin_users lookup by user.id).",
+    "B2B org membership sync (reads user_organization_memberships / org invitations by user.id).",
 };
 
 // ── Run grep ──────────────────────────────────────────────────────────────────

@@ -38,14 +38,11 @@ Next.js 16 runs [`src/proxy.ts`](../src/proxy.ts) as the request **proxy** (see 
 
 **Order of work** (same file):
 
-1. **Per-IP rate limits** — `RATE_LIMITS` for waitlist, annual/six-month plan, and `/api/admin/config` paths (`applyRateLimit`, lines 31–79).
-2. **Android shell billing block** — If `User-Agent` contains [`ANDROID_APP_UA_MARKER`](../src/lib/androidAppUa.ts) and the path is a billing/checkout route (`isAndroidAppBillingBlockedPath`), **307 redirect** to `/home` (lines 274–281).
-3. **Supabase session on the edge** — `createServerClient` with request cookies; **`getUser()`** runs in parallel with **`readAppStatus()`** from Edge Config (lines 285–304, 301–304).
-4. **Kill switch** — If `!appStatus.app_enabled` and the path is not exempt (`isKillSwitchExempt`), non-admins get:
-   - **`/api/*`**: JSON `{ error: "maintenance", ... }` with **503**
-   - **Pages / RSC**: **307** redirect to `/maintenance` (so the router does not surface raw JSON; see comments at lines 332–337)
-   - Admins are detected via service role + `admin_users` (`isAdminInProxy`, lines 109–151).
-5. **Auth gate** — If there is no user and the path is not **`isProxyAuthExempt`**, redirect to `/auth` while preserving refreshed cookies (lines 344–362).
+1. **Per-IP rate limits** — `RATE_LIMITS` for waitlist, annual/six-month plan, and `/api/admin/config` paths (`applyRateLimit`).
+2. **Android shell billing block** — If `User-Agent` contains [`ANDROID_APP_UA_MARKER`](../src/lib/androidAppUa.ts) and the path is a billing/checkout route (`isAndroidAppBillingBlockedPath`), **307 redirect** to `/home`.
+3. **Supabase session on the edge** — `createServerClient` with request cookies; **`getUser()`** refreshes the session.
+4. **Auth gate** — If there is no user and the path is not **`isProxyAuthExempt`**, redirect to `/auth` while preserving refreshed cookies.
+5. **B2B org sync** — On first sight of a user, resolve their `organization_id` and write it to the JWT (`syncOrgMembership`).
 
 **Public marketing URLs** (anonymous HTML allowed) are defined in [`src/lib/public-paths.ts`](../src/lib/public-paths.ts) (`isPublicMarketingPath`). Exempt logic for the proxy must stay consistent with [`AppShell`](../src/components/AppShell.tsx) and paid-access rules.
 
@@ -53,12 +50,11 @@ Next.js 16 runs [`src/proxy.ts`](../src/proxy.ts) as the request **proxy** (see 
 
 ---
 
-## 3. Kill switch (two layers)
+## 3. App config (daily trial cap)
 
-1. **Edge / proxy** — [`readAppStatus()`](../src/lib/edgeConfig.ts) reads Vercel Edge Config key `app_status` when configured; otherwise falls back to Supabase `app_config` with a short TTL (see [`edgeConfig.ts`](../src/lib/edgeConfig.ts) header and `_readFromSupabase`).
-2. **React tree** — [`KillSwitchGuard`](../src/components/KillSwitchGuard.tsx) calls `fetchAppConfig()`; if disabled, non-admins see [`MaintenanceScreen`](../src/components/MaintenanceScreen.tsx) while admins bypass (lines 19–55).
+The `app_config` table holds the daily trial cap settings, read via [`fetchAppConfig()`](../src/lib/admin/killSwitch.ts) (cached 30s, tag `app-config`). Managed from the admin System page ([`/admin/system`](../src/app/admin/system/page.tsx)).
 
-**Intent:** Fast propagation in production via Edge Config at the proxy; UI consistency via DB-backed config in the layout.
+> The former Edge Config kill switch and feature-flag systems were removed. `app_config` is retained only for the daily trial cap.
 
 ---
 
@@ -144,7 +140,6 @@ Sitemap entries for **marketing** paths are built from [`MARKETING_SITEMAP`](../
 | Symptom | Likely cause | Where to look |
 | -------- | ------------- | ------------- |
 | `Unauthorized` in server actions | Cookie session not shared; wrong client | [`src/lib/supabase.ts`](../src/lib/supabase.ts), [`AuthProvider`](../src/components/AuthProvider.tsx) |
-| Maintenance / cannot use app | Kill switch on | Edge Config / `app_config`; [`KillSwitchGuard`](../src/components/KillSwitchGuard.tsx); [`readAppStatus`](../src/lib/edgeConfig.ts) |
 | 401 on cron URLs | Missing/mismatched `CRON_SECRET` | Route file + [`verifyCronSecret`](../src/lib/verifyCronSecret.ts) |
 | Razorpay/webhook oddities | Test vs live mismatch | [.env.example](../.env.example), webhook route |
 | Play billing URLs redirect | Android UA marker | [`proxy.ts`](../src/proxy.ts) `isAndroidAppBillingBlockedPath`, [android-device-qa-matrix.md](./android-device-qa-matrix.md) |

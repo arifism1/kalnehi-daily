@@ -1,5 +1,4 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { fetchAppConfig, fetchFeatureFlags, fetchAppConfigLog } from "@/lib/admin/killSwitch";
+import { fetchAppConfig } from "@/lib/admin/killSwitch";
 import { getSupabaseServiceRoleClient } from "@/lib/supabase/serviceRoleClient";
 import { AdminSystemClient } from "@/components/admin/system/AdminSystemClient";
 import type { DailyCountRow } from "@/components/admin/system/AdminDailyCapSection";
@@ -45,15 +44,8 @@ async function fetchDailyCapHistory(): Promise<DailyCountRow[]> {
 }
 
 export default async function AdminSystemPage() {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const [config, flags, auditLog, dailyCapHistory] = await Promise.all([
+  const [config, dailyCapHistory] = await Promise.all([
     fetchAppConfig(),
-    fetchFeatureFlags(),
-    fetchAppConfigLog(50),
     fetchDailyCapHistory(),
   ]);
 
@@ -66,12 +58,6 @@ export default async function AdminSystemPage() {
   }
 
   return (
-    <AdminSystemClient
-      config={config}
-      flags={flags}
-      auditLog={auditLog}
-      userId={user?.id ?? ""}
-      dailyCapHistory={dailyCapHistory}
-    />
+    <AdminSystemClient config={config} dailyCapHistory={dailyCapHistory} />
   );
 }

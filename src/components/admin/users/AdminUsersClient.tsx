@@ -147,6 +147,31 @@ export function AdminUsersClient({
   const router = useRouter();
   const [q, setQ] = useState(initialQ);
   const [busy, setBusy] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+
+  async function exportExcel() {
+    setExporting(true);
+    try {
+      const res = await fetch("/api/admin/users-export");
+      if (!res.ok) {
+        const j = (await res.json().catch(() => null)) as { error?: string } | null;
+        alert(j?.error ?? "Export failed.");
+        return;
+      }
+      const blob = await res.blob();
+      const disposition = res.headers.get("Content-Disposition") ?? "";
+      const match = disposition.match(/filename="([^"]+)"/);
+      const filename = match?.[1] ?? "kalnehi-users-export.xlsx";
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setExporting(false);
+    }
+  }
 
   function search(e: React.FormEvent) {
     e.preventDefault();
@@ -187,9 +212,23 @@ export function AdminUsersClient({
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-kal-text">Users</h1>
-          <p className="mt-1 text-sm text-kal-muted">Search by email, name, or phone — or browse all users.</p>
+          <p className="mt-1 text-sm text-kal-muted">
+            Search by email, name, or phone — or browse all users.
+            {isListView && listData.total > 0 && (
+              <span className="block mt-0.5 text-xs">Export includes all {listData.total} non-admin users.</span>
+            )}
+          </p>
         </div>
-        <div className="flex rounded-lg border border-kal-border overflow-hidden text-sm">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            disabled={exporting}
+            onClick={() => void exportExcel()}
+            className="rounded-lg border border-kal-border px-4 py-1.5 text-sm font-medium text-kal-text hover:bg-kal-card/60 disabled:opacity-50"
+          >
+            {exporting ? "Exporting…" : "Export Excel"}
+          </button>
+          <div className="flex rounded-lg border border-kal-border overflow-hidden text-sm">
           <button
             type="button"
             onClick={() => router.push("/admin/users")}
@@ -204,6 +243,7 @@ export function AdminUsersClient({
           >
             All Users {listData.total > 0 && isListView ? `(${listData.total})` : ""}
           </button>
+          </div>
         </div>
       </div>
 
