@@ -1,0 +1,374 @@
+{
+  "syllabusRollup": {
+    "neet_partial": {
+      "overallPercent": 20,
+      "totalMarksMastered": 8,
+      "totalMarksPool": 40,
+      "chapters": [
+        {
+          "subject": "Physics",
+          "chapter": "Kinematics",
+          "totalCount": 2,
+          "completedCount": 2,
+          "microtopicProgressPercent": 100,
+          "chapterMarksTotal": 8,
+          "chapterMarksAwarded": 8,
+          "isChapterMastered": true
+        },
+        {
+          "subject": "Chemistry",
+          "chapter": "Mole Concept",
+          "totalCount": 2,
+          "completedCount": 1,
+          "microtopicProgressPercent": 50,
+          "chapterMarksTotal": 12,
+          "chapterMarksAwarded": 0,
+          "isChapterMastered": false
+        },
+        {
+          "subject": "Biology",
+          "chapter": "Genetics",
+          "totalCount": 3,
+          "completedCount": 2,
+          "microtopicProgressPercent": 66.7,
+          "chapterMarksTotal": 20,
+          "chapterMarksAwarded": 0,
+          "isChapterMastered": false
+        }
+      ]
+    },
+    "neet_all": {
+      "overallPercent": 100,
+      "totalMarksMastered": 40,
+      "totalMarksPool": 40,
+      "chapters": [
+        {
+          "subject": "Physics",
+          "chapter": "Kinematics",
+          "totalCount": 2,
+          "completedCount": 2,
+          "microtopicProgressPercent": 100,
+          "chapterMarksTotal": 8,
+          "chapterMarksAwarded": 8,
+          "isChapterMastered": true
+        },
+        {
+          "subject": "Chemistry",
+          "chapter": "Mole Concept",
+          "totalCount": 2,
+          "completedCount": 2,
+          "microtopicProgressPercent": 100,
+          "chapterMarksTotal": 12,
+          "chapterMarksAwarded": 12,
+          "isChapterMastered": true
+        },
+        {
+          "subject": "Biology",
+          "chapter": "Genetics",
+          "totalCount": 3,
+          "completedCount": 3,
+          "microtopicProgressPercent": 100,
+          "chapterMarksTotal": 20,
+          "chapterMarksAwarded": 20,
+          "isChapterMastered": true
+        }
+      ]
+    },
+    "neet_none": {
+      "overallPercent": 0,
+      "totalMarksMastered": 0,
+      "totalMarksPool": 40,
+      "chapters": [
+        {
+          "subject": "Physics",
+          "chapter": "Kinematics",
+          "totalCount": 2,
+          "completedCount": 0,
+          "microtopicProgressPercent": 0,
+          "chapterMarksTotal": 8,
+          "chapterMarksAwarded": 0,
+          "isChapterMastered": false
+        },
+        {
+          "subject": "Chemistry",
+          "chapter": "Mole Concept",
+          "totalCount": 2,
+          "completedCount": 0,
+          "microtopicProgressPercent": 0,
+          "chapterMarksTotal": 12,
+          "chapterMarksAwarded": 0,
+          "isChapterMastered": false
+        },
+        {
+          "subject": "Biology",
+          "chapter": "Genetics",
+          "totalCount": 3,
+          "completedCount": 0,
+          "microtopicProgressPercent": 0,
+          "chapterMarksTotal": 20,
+          "chapterMarksAwarded": 0,
+          "isChapterMastered": false
+        }
+      ]
+    },
+    "empty": {
+      "overallPercent": 0,
+      "totalMarksMastered": 0,
+      "totalMarksPool": 0,
+      "chapters": []
+    },
+    "jee_A": {
+      "overallPercent": 100,
+      "totalMarksMastered": 10,
+      "totalMarksPool": 10,
+      "chapters": [
+        {
+          "subject": "Physics",
+          "chapter": "Kinematics",
+          "totalCount": 2,
+          "completedCount": 2,
+          "microtopicProgressPercent": 100,
+          "chapterMarksTotal": 10,
+          "chapterMarksAwarded": 10,
+          "isChapterMastered": true
+        }
+      ]
+    },
+    "jee_B": {
+      "overallPercent": 0,
+      "totalMarksMastered": 0,
+      "totalMarksPool": 10,
+      "chapters": [
+        {
+          "subject": "Physics",
+          "chapter": "Kinematics",
+          "totalCount": 2,
+          "completedCount": 1,
+          "microtopicProgressPercent": 50,
+          "chapterMarksTotal": 10,
+          "chapterMarksAwarded": 0,
+          "isChapterMastered": false
+        }
+      ]
+    },
+    "jee_merged": {
+      "overallPercent": 0,
+      "totalMarksMastered": 0,
+      "totalMarksPool": 10,
+      "chapters": [
+        {
+          "subject": "Physics",
+          "chapter": "Kinematics",
+          "totalCount": 4,
+          "completedCount": 3,
+          "microtopicProgressPercent": 75,
+          "chapterMarksTotal": 10,
+          "chapterMarksAwarded": 0,
+          "isChapterMastered": false
+        }
+      ]
+    }
+  },
+  "projections": {
+    "neet_partial_720": [
+      {
+        "year": 2026,
+        "totalMarksPool": 40,
+        "totalMarksMastered": 8,
+        "projectedOutOf720": 144,
+        "patternLabel": "Based on 2026 exam pattern",
+        "completionNote": "Projected based on your current completion"
+      }
+    ],
+    "neet_all_720": [
+      {
+        "year": 2026,
+        "totalMarksPool": 40,
+        "totalMarksMastered": 40,
+        "projectedOutOf720": 720,
+        "patternLabel": "Based on 2026 exam pattern",
+        "completionNote": "Projected based on your current completion"
+      }
+    ],
+    "neet_none_720": [
+      {
+        "year": 2026,
+        "totalMarksPool": 40,
+        "totalMarksMastered": 0,
+        "projectedOutOf720": 0,
+        "patternLabel": "Based on 2026 exam pattern",
+        "completionNote": "Projected based on your current completion"
+      }
+    ],
+    "upsc_2350": [
+      {
+        "year": 2026,
+        "totalMarksPool": 40,
+        "totalMarksMastered": 8,
+        "projectedOutOf720": 470,
+        "patternLabel": "Based on 2026 exam pattern",
+        "completionNote": "Projected based on your current completion"
+      }
+    ],
+    "empty_720": [],
+    "avg_neet_partial": 144,
+    "avg_empty": null
+  },
+  "outcomeMetric": {
+    "neet_partial_720": {
+      "linearPool": 27.34,
+      "estimatedExamMarks": 492
+    },
+    "neet_all_720": {
+      "linearPool": 40,
+      "estimatedExamMarks": 720
+    },
+    "neet_none_720": {
+      "linearPool": 0,
+      "estimatedExamMarks": 0
+    },
+    "upsc_2350": {
+      "linearPool": 27.34,
+      "estimatedExamMarks": 1606
+    },
+    "empty_720": {
+      "linearPool": 0,
+      "estimatedExamMarks": 0
+    },
+    "zero_max": {
+      "linearPool": 0,
+      "estimatedExamMarks": 0
+    }
+  },
+  "targetRange": {
+    "neet_650_720": {
+      "clampedTarget": 650,
+      "low": 635,
+      "high": 665
+    },
+    "neet_zero_720": {
+      "clampedTarget": 0,
+      "low": 0,
+      "high": 15
+    },
+    "cuet_300_300": {
+      "clampedTarget": 300,
+      "low": 285,
+      "high": 300
+    },
+    "upsc_over_2350": {
+      "clampedTarget": 2350,
+      "low": 2303,
+      "high": 2350
+    },
+    "upsc_1900_2350": {
+      "clampedTarget": 1900,
+      "low": 1853,
+      "high": 1947
+    }
+  },
+  "gapPlanner": {
+    "sorted_subjects_marks": [
+      {
+        "subject": "Biology",
+        "chapter": "Genetics",
+        "chapterMarksTotal": 20,
+        "microtopicProgressPercent": 66.7
+      },
+      {
+        "subject": "Chemistry",
+        "chapter": "Mole Concept",
+        "chapterMarksTotal": 12,
+        "microtopicProgressPercent": 50
+      },
+      {
+        "subject": "Physics",
+        "chapter": "Kinematics",
+        "chapterMarksTotal": 8,
+        "microtopicProgressPercent": 100
+      }
+    ],
+    "gain_threshold": 143,
+    "picked_total_covered": 40,
+    "picked_count": 3,
+    "picked_exceeds_full_pool": true,
+    "subject_split": [
+      {
+        "subject": "Physics",
+        "percent": 20
+      },
+      {
+        "subject": "Chemistry",
+        "percent": 30
+      },
+      {
+        "subject": "Biology",
+        "percent": 50
+      }
+    ],
+    "absolute_threshold": 635
+  },
+  "cuet": {
+    "scoring": {
+      "subjects": [
+        {
+          "subject": "English",
+          "completedMicrotopics": 2,
+          "totalMicrotopics": 2,
+          "completionPercent": 100,
+          "projectedMarks": 200,
+          "maxPerSubject": 200
+        },
+        {
+          "subject": "Physics",
+          "completedMicrotopics": 1,
+          "totalMicrotopics": 2,
+          "completionPercent": 50,
+          "projectedMarks": 100,
+          "maxPerSubject": 200
+        },
+        {
+          "subject": "Chemistry",
+          "completedMicrotopics": 0,
+          "totalMicrotopics": 1,
+          "completionPercent": 0,
+          "projectedMarks": 0,
+          "maxPerSubject": 200
+        }
+      ],
+      "totalProjected": 300,
+      "totalMax": 600,
+      "overallPercent": 50
+    },
+    "empty_domains": null
+  },
+  "chapterMarksPool": {
+    "duplicated_equal": 10,
+    "split_weights": 10,
+    "no_data": 0
+  },
+  "leaderboard": {
+    "composite_full": 100,
+    "composite_mixed": 50,
+    "composite_over_cap": 86.75,
+    "composite_zero": 0,
+    "top_pct_best": 1,
+    "top_pct_mid": 50,
+    "top_pct_small_cohort": null
+  },
+  "progress": {
+    "weighted_totals": {
+      "mastered": 20,
+      "total": 25
+    },
+    "weighted_pct": 61.5,
+    "band_flawless": "flawless",
+    "band_strong": "strong",
+    "band_mediocre": "mediocre",
+    "band_danger": "danger",
+    "band_no_plan": "no_plan",
+    "msg_perfect": "perfect",
+    "msg_partial": "partial",
+    "msg_behind_empty": "falling_behind"
+  }
+}
