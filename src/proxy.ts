@@ -42,6 +42,7 @@ const RATE_LIMITS: Record<string, number> = {
   "/api/dpdp/attest-signup":   10,
   "/api/admin/dpdp/rights-request": 30,
   "/api/admin/dpdp/breach-notify": 10,
+  "/api/fizaki/demo-request": 5,
 };
 const WINDOW_MS = 60_000;
 

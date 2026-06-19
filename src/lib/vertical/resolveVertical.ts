@@ -47,6 +47,14 @@ export function getEnvVertical(): VerticalId | null {
 }
 
 /**
+ * Build-time vertical for static pages (landing, metadata). Does NOT read request
+ * headers — safe for CDN-cached routes. Each Vercel project bakes NEXT_PUBLIC_VERTICAL.
+ */
+export function getBuildVertical(): VerticalId {
+  return getEnvVertical() ?? DEFAULT_VERTICAL_ID;
+}
+
+/**
  * Full resolution with fallback chain. Host wins; then env; then default.
  * Never throws, always returns a valid VerticalId.
  */

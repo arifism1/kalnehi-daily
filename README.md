@@ -55,6 +55,9 @@ and roles all come from each `VerticalConfig` in `src/verticals/`.
 - **Demo without a DB**: the FIZAKI buyer-core surfaces (import, pipeline, manager dashboard)
   run on in-memory seed data. Use `NEXT_PUBLIC_FIZAKI_DEMO_ROLE` to preview rep/manager/admin
   views without real org memberships (leave it unset in production).
+- **FIZAKI public landing**: at `/` when `NEXT_PUBLIC_VERTICAL=fizaki` (build-time branch —
+  keeps the page statically cached). Preview locally: `NEXT_PUBLIC_VERTICAL=fizaki npm run dev`
+  then open `/`. Demo requests post to `/api/fizaki/demo-request` (Resend; optional `FIZAKI_DEMO_TO`).
 
 ## Common commands
 
@@ -82,5 +85,6 @@ and roles all come from each `VerticalConfig` in `src/verticals/`.
 | `npm run test:voice-quota-wiring` | Voice quota wiring tests |
 | `npm run test:vertical` | Vertical config + host resolution + no-wording-leakage |
 | `npm run test:fizaki` | FIZAKI buyer-core logic (structurer, ramp, quota-gap) |
+| `npm run test:fizaki-landing` | FIZAKI landing copy leakage + revenue framing |
 
 Database migrations live under `supabase/migrations/`. Apply with Supabase CLI (`npx supabase db push`) or run SQL in the dashboard as described in `.env.example`.
