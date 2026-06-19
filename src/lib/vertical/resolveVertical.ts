@@ -15,10 +15,10 @@ import {
   type VerticalId,
 } from "@/verticals";
 
-/** Host substrings that map to each vertical (covers apex + www + bare). */
+/** Host substrings that map to each vertical (covers apex + www + bare + local dev). */
 const HOST_MATCHERS: Record<VerticalId, RegExp> = {
-  kalnehi: /(^|\.)kalnehi\.com$/i,
-  fizaki: /(^|\.)fizaki\.in$/i,
+  kalnehi: /(^|\.)kalnehi\.(com|local|test)$/i,
+  fizaki: /(^|\.)fizaki\.(in|local|test)$/i,
 };
 
 /** Strips port and lowercases. Returns null for empty/invalid input. */

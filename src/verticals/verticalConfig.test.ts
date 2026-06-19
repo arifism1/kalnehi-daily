@@ -24,6 +24,13 @@ describe("resolveVerticalFromHost", () => {
     assert.equal(resolveVerticalFromHost("fizaki.in"), "fizaki");
   });
 
+  it("matches local dev domains (.local / .test)", () => {
+    assert.equal(resolveVerticalFromHost("kalnehi.local"), "kalnehi");
+    assert.equal(resolveVerticalFromHost("www.kalnehi.local:3000"), "kalnehi");
+    assert.equal(resolveVerticalFromHost("fizaki.local"), "fizaki");
+    assert.equal(resolveVerticalFromHost("www.fizaki.local:3000"), "fizaki");
+  });
+
   it("returns null for unknown hosts (preview / localhost / empty)", () => {
     assert.equal(resolveVerticalFromHost("my-app-abc123.vercel.app"), null);
     assert.equal(resolveVerticalFromHost("localhost"), null);

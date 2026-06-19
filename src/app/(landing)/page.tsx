@@ -16,10 +16,10 @@ import {
   LANDING_WEB_PAGE,
 } from "@/lib/landing-meta";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
-import { getBuildVertical } from "@/lib/vertical/resolveVertical";
+import { getLandingVertical } from "@/lib/vertical/landingVertical";
 
-export function generateMetadata(): Metadata {
-  if (getBuildVertical() === "fizaki") {
+export async function generateMetadata(): Promise<Metadata> {
+  if ((await getLandingVertical()) === "fizaki") {
     return marketingPageMetadata({
       path: "/",
       title: FIZAKI_LANDING_TITLE,
@@ -33,8 +33,8 @@ export function generateMetadata(): Metadata {
   });
 }
 
-export default function LandingPage() {
-  if (getBuildVertical() === "fizaki") {
+export default async function LandingPage() {
+  if ((await getLandingVertical()) === "fizaki") {
     return (
       <>
         <MarketingPageJsonLd

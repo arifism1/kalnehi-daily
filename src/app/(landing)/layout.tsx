@@ -1,16 +1,16 @@
 import { LandingShell } from "@/components/landing/LandingShell";
 import { FizakiLandingShell } from "@/components/fizaki/landing/FizakiLandingShell";
-import { getBuildVertical } from "@/lib/vertical/resolveVertical";
+import { getLandingVertical } from "@/lib/vertical/landingVertical";
 
 /** Public landing page — aggressively cached on the CDN. */
 export const revalidate = 3600;
 
-export default function LandingLayout({
+export default async function LandingLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  if (getBuildVertical() === "fizaki") {
+  if ((await getLandingVertical()) === "fizaki") {
     return <FizakiLandingShell>{children}</FizakiLandingShell>;
   }
   return <LandingShell>{children}</LandingShell>;

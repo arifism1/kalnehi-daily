@@ -58,6 +58,14 @@ and roles all come from each `VerticalConfig` in `src/verticals/`.
 - **FIZAKI public landing**: at `/` when `NEXT_PUBLIC_VERTICAL=fizaki` (build-time branch —
   keeps the page statically cached). Preview locally: `NEXT_PUBLIC_VERTICAL=fizaki npm run dev`
   then open `/`. Demo requests post to `/api/fizaki/demo-request` (Resend; optional `FIZAKI_DEMO_TO`).
+- **Local dev — two brands on one server**: add to `/etc/hosts`:
+  ```
+  127.0.0.1 kalnehi.local
+  127.0.0.1 fizaki.local
+  ```
+  Run `npm run dev`, then open [http://kalnehi.local:3000](http://kalnehi.local:3000) (Kalnehi)
+  and [http://fizaki.local:3000](http://fizaki.local:3000) (FIZAKI). Host picks the brand in
+  development; production still uses separate Vercel projects + domains.
 
 ## Common commands
 
