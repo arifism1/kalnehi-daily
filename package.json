@@ -46,8 +46,9 @@
     "test:crm": "node --import tsx --test src/lib/providers/crm/crmProviders.test.ts",
     "test:knowledge": "node --import tsx --test src/lib/knowledge/kalnehiSyllabusRepository.test.ts",
     "test:with-vertical": "node --import tsx --test src/lib/vertical/withVertical.test.ts",
+    "test:fizaki": "node --import tsx --test src/lib/fizaki/fizakiSurfaces.test.ts",
     "test:e2e": "playwright test",
-    "test:unit": "npm run test:rollup && npm run test:leaderboard && npm run test:prepbrain && npm run test:doubt-voice && npm run test:voice-quota-wiring && npm run test:voice-transcribe-mime && npm run test:waitlist && npm run test:golden && npm run test:vertical && npm run test:crm && npm run test:knowledge && npm run test:with-vertical"
+    "test:unit": "npm run test:rollup && npm run test:leaderboard && npm run test:prepbrain && npm run test:doubt-voice && npm run test:voice-quota-wiring && npm run test:voice-transcribe-mime && npm run test:waitlist && npm run test:golden && npm run test:vertical && npm run test:crm && npm run test:knowledge && npm run test:with-vertical && npm run test:fizaki"
   },
   "dependencies": {
     "@capacitor-community/speech-recognition": "^7.0.1",
