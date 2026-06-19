@@ -1,3 +1,4 @@
+import { ManagerDashboardClient } from "@/components/fizaki/ManagerDashboardClient";
 import { SurfacePlaceholder } from "@/components/fizaki/SurfacePlaceholder";
 import { resolveFizakiRole } from "@/lib/fizaki/serverRole";
 
@@ -11,15 +12,5 @@ export default async function FizakiManagerPage() {
       />
     );
   }
-  return (
-    <SurfacePlaceholder
-      title="Team"
-      subtitle="Prove enablement drives revenue."
-      points={[
-        "Per-rep ramp progress and consistency",
-        "Competency / knowledge gaps across the team",
-        "Quota attainment and ramp time (days-to-first-deal)",
-      ]}
-    />
-  );
+  return <ManagerDashboardClient />;
 }

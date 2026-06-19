@@ -7,9 +7,15 @@ import "server-only";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-import { toFizakiRole, type FizakiRole } from "./roles";
+import { isFizakiRole, toFizakiRole, type FizakiRole } from "./roles";
 
 export async function resolveFizakiRole(): Promise<FizakiRole> {
+  // Demo override: with no real FIZAKI memberships yet (no Supabase Pro / branch), this
+  // lets the manager + admin surfaces be previewed. Unset in production → real membership
+  // resolution applies and the role gates enforce normally.
+  const demoRole = process.env.NEXT_PUBLIC_FIZAKI_DEMO_ROLE;
+  if (isFizakiRole(demoRole)) return demoRole;
+
   try {
     const supabase = await createSupabaseServerClient();
     const {
