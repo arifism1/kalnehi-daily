@@ -3,8 +3,7 @@
  *
  * Maps the exam syllabus model (syllabus_master rows + microtopic status) onto the
  * engine's generic KnowledgeTree: Subject -> group, Chapter -> branch, Microtopic -> leaf,
- * chapter marks pool -> branch weight. This is the Kalnehi half of the "one API, two
- * adapters" boundary; FIZAKI gets `FizakiKnowledgeRepository` over knowledge_nodes.
+ * chapter marks pool -> branch weight.
  */
 import type {
   KnowledgeBranch,

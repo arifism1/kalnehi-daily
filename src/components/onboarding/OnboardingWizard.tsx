@@ -16,6 +16,7 @@ import { Capacitor } from "@capacitor/core";
 import { useCallback, useEffect, useId, useState } from "react";
 
 import { completeOnboarding } from "@/actions/profile";
+import { saveActivationScores } from "@/actions/activation";
 import { APP_HOME_PATH } from "@/config/appRoutes";
 import { ensureFreeTrialStarted } from "@/actions/subscription";
 import { trackActivity } from "@/lib/activity";
@@ -29,11 +30,12 @@ import {
   fetchExamsCatalog,
   type ExamCatalogRow,
 } from "@/lib/examsCatalog";
+import { examScoreMax } from "@/lib/examProfile";
 import { toUserFacingMessage } from "@/lib/userFacingErrors";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { useOnboardingStore } from "@/store/useOnboardingStore";
 
-const STEPS = 3;
+const STEPS = 4;
 
 const CLASS_OPTIONS = [
   "Class 10",
@@ -64,6 +66,8 @@ export function OnboardingWizard() {
   const [selectedTrack, setSelectedTrack] = useState<ExamTrack | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mockScore, setMockScore] = useState("");
+  const [targetScore, setTargetScore] = useState("");
 
   useEffect(() => {
     void (async () => {
@@ -209,13 +213,52 @@ export function OnboardingWizard() {
         return;
       }
       if (trial.ok && trial.started) trackMetaFreeTrialStarted();
-      window.location.assign(APP_HOME_PATH);
+
+      const primaryExam = selectedTrack.examNames[0] ?? "";
+      const mock = Number(mockScore);
+      const target = Number(targetScore);
+      if (primaryExam && Number.isFinite(mock) && Number.isFinite(target)) {
+        const scoreRes = await saveActivationScores({
+          examName: primaryExam,
+          mockScore: mock,
+          targetScore: target,
+        });
+        if (!scoreRes.ok) {
+          console.warn("[onboarding] activation scores", scoreRes.error);
+        }
+      }
+
+      window.location.assign(`${APP_HOME_PATH}?activation=1`);
     } catch (e) {
       setError(toUserFacingMessage(e));
     } finally {
       setBusy(false);
     }
-  }, [fullName, phone, classStudying, selectedTrack, examDatesByKey, setLocalCompleted]);
+  }, [fullName, phone, classStudying, selectedTrack, examDatesByKey, mockScore, targetScore, setLocalCompleted]);
+
+  const validateStep4 = useCallback(() => {
+    if (!selectedTrack) {
+      setError("Please choose a track.");
+      return;
+    }
+    const primaryExam = selectedTrack.examNames[0] ?? "";
+    const max = examScoreMax(primaryExam);
+    const mock = Number(mockScore);
+    const target = Number(targetScore);
+    if (!Number.isFinite(mock) || mock < 0 || mock > max) {
+      setError(`Enter your latest mock score (0–${max}).`);
+      return;
+    }
+    if (!Number.isFinite(target) || target <= 0 || target > max) {
+      setError(`Enter your target score (1–${max}).`);
+      return;
+    }
+    if (target <= mock) {
+      setError("Target should be higher than your current mock score.");
+      return;
+    }
+    void submitProfile();
+  }, [selectedTrack, mockScore, targetScore, submitProfile]);
 
   const displayStep = step;
   const totalStepsDisplay = STEPS;
@@ -459,10 +502,77 @@ export function OnboardingWizard() {
           <button
             type="button"
             disabled={busy}
-            onClick={() => void submitProfile()}
+            onClick={() => goNext()}
             className="kal-btn-accent mt-auto flex min-h-[52px] items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-semibold disabled:opacity-50"
           >
-            {busy ? "Saving…" : "Continue"}
+            Continue
+            <ArrowRight className="size-4" />
+          </button>
+        </section>
+      )}
+
+      {step === 4 && selectedTrack && (
+        <section className="kal-glass-panel flex flex-1 flex-col gap-6 rounded-2xl p-5 sm:p-6">
+          <OnboardingStepIllustration step={3} className="mx-auto w-full max-w-[200px] opacity-90" />
+          <div>
+            <h1 className="kal-feature-title">Your scores</h1>
+            <p className="mt-2 text-sm leading-relaxed text-kal-text-secondary">
+              We&apos;ll show your projected marks and rank estimate as you tick syllabus —
+              anchored to your real mock and target.
+            </p>
+          </div>
+          {(() => {
+            const primaryExam = selectedTrack.examNames[0] ?? "";
+            const max = examScoreMax(primaryExam);
+            const label = displayNameForExamCatalog(primaryExam, catalog) || primaryExam;
+            return (
+              <div className="space-y-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-kal-accent">
+                  {label} · max {max}
+                </p>
+                <div>
+                  <label className="text-sm font-medium text-kal-text-secondary">
+                    Latest mock score
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={max}
+                    value={mockScore}
+                    onChange={(e) => setMockScore(e.target.value)}
+                    className="mt-2 box-border min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-kal-text focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
+                    placeholder={`e.g. ${Math.round(max * 0.55)}`}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-kal-text-secondary">
+                    Target score
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={max}
+                    value={targetScore}
+                    onChange={(e) => setTargetScore(e.target.value)}
+                    className="mt-2 box-border min-h-[48px] w-full rounded-xl border border-kal-border bg-kal-card-muted px-4 py-3 text-kal-text focus:border-kal-accent/40 focus:outline-none focus:ring-2 focus:ring-kal-accent/20"
+                    placeholder={`e.g. ${Math.round(max * 0.75)}`}
+                  />
+                </div>
+              </div>
+            );
+          })()}
+          {error && (
+            <p className="text-sm font-medium text-kal-accent-dark dark:text-kal-accent">
+              {error}
+            </p>
+          )}
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => validateStep4()}
+            className="kal-btn-accent mt-auto flex min-h-[52px] items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-semibold disabled:opacity-50"
+          >
+            {busy ? "Saving…" : "See my projection"}
             <ArrowRight className="size-4" />
           </button>
         </section>

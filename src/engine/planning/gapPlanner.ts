@@ -2,8 +2,7 @@
  * ENGINE primitive: GapPlanner + OutcomeMetric projection (domain-agnostic).
  *
  * This is the generic "max payoff per effort" math that powers Kalnehi's Target Score
- * Blueprint AND FIZAKI's Quota-Gap Planner. It knows nothing about exams, marks, syllabi,
- * quotas or sales — it operates on neutral "branches" with a `weight` (outcome contribution)
+ * Blueprint. It knows nothing about exams, marks, or syllabi — it operates on neutral "branches" with a `weight` (outcome contribution)
  * and a `progressPercent` (0..100 mastery). Verticals supply accessors over their own shapes.
  *
  * PARITY: these functions are the single source of truth for the math previously inlined in

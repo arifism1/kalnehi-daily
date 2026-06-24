@@ -1,5 +1,8 @@
 # Architecture Audit — Kalnehi Daily
 
+> **Status (2026-06):** FIZAKI was removed from this repo. Engine-extraction work continues for
+> Kalnehi only; ignore FIZAKI-specific rollout items below unless reviving that program.
+
 > Step 0 deliverable for the engine-extraction + FIZAKI program.
 > Read-only audit of the repository as it exists today. Every named file/table/RPC
 > below was verified against the codebase (not assumed). Items that could not be

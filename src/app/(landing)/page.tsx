@@ -1,14 +1,7 @@
 import type { Metadata } from "next";
 
-import { FizakiLandingContent } from "@/components/fizaki/landing/FizakiLandingContent";
-import { FIZAKI_FAQ_ITEMS } from "@/components/fizaki/landing/copy";
 import { LandingPageContent } from "@/components/landing/LandingPageContent";
 import { MarketingPageJsonLd } from "@/components/seo/MarketingPageJsonLd";
-import {
-  FIZAKI_LANDING_DESCRIPTION,
-  FIZAKI_LANDING_TITLE,
-  FIZAKI_LANDING_WEB_PAGE,
-} from "@/lib/fizaki/landing-meta";
 import { LANDING_FAQ_ITEMS } from "@/lib/landing-faqs";
 import {
   LANDING_DESCRIPTION,
@@ -16,16 +9,8 @@ import {
   LANDING_WEB_PAGE,
 } from "@/lib/landing-meta";
 import { marketingPageMetadata } from "@/lib/marketing-seo";
-import { getLandingVertical } from "@/lib/vertical/landingVertical";
 
 export async function generateMetadata(): Promise<Metadata> {
-  if ((await getLandingVertical()) === "fizaki") {
-    return marketingPageMetadata({
-      path: "/",
-      title: FIZAKI_LANDING_TITLE,
-      description: FIZAKI_LANDING_DESCRIPTION,
-    });
-  }
   return marketingPageMetadata({
     path: "/",
     title: LANDING_TITLE,
@@ -34,19 +19,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function LandingPage() {
-  if ((await getLandingVertical()) === "fizaki") {
-    return (
-      <>
-        <MarketingPageJsonLd
-          breadcrumbs={[{ name: "Home", path: "/" }]}
-          webPage={FIZAKI_LANDING_WEB_PAGE}
-          faqs={[...FIZAKI_FAQ_ITEMS]}
-        />
-        <FizakiLandingContent />
-      </>
-    );
-  }
-
   return (
     <>
       <MarketingPageJsonLd

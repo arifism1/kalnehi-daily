@@ -1,13 +1,9 @@
 /**
  * ENGINE model: KnowledgeTree — nested masterable units (domain-agnostic).
  *
- * Kalnehi: Syllabus -> Chapter -> Microtopic. FIZAKI: Playbook -> Module -> Skill.
- * The engine sees only generic branches/leaves with a weight (outcome contribution) and
- * a mastery status. Each vertical provides a `KnowledgeTreeRepository` adapter that maps
- * its own storage (Kalnehi -> syllabus_master; FIZAKI -> knowledge_nodes) onto this shape.
- *
- * This is the explicit two-backend boundary from REFRACTOR_PLAN.md section 4: "one engine
- * API, two adapters" — never a hidden divergent implementation behind one type.
+ * Kalnehi maps Syllabus -> Chapter -> Microtopic onto branches/leaves with a weight
+ * (outcome contribution) and mastery status. Each vertical provides a
+ * `KnowledgeTreeRepository` adapter that maps its storage onto this shape.
  */
 
 export type MasteryStatus = "not_begun" | "in_progress" | "completed";
@@ -22,7 +18,7 @@ export interface KnowledgeLeaf {
 export interface KnowledgeBranch {
   /** Unique key within the tree (e.g. group + label). */
   key: string;
-  /** Top grouping (Kalnehi subject / FIZAKI competency area). */
+  /** Top grouping (e.g. Kalnehi subject). */
   group: string;
   label: string;
   /** Outcome weight contributed when the whole branch is mastered (all-or-nothing). */
@@ -35,8 +31,8 @@ export interface KnowledgeTree {
 }
 
 /**
- * Per-vertical adapter. `Scope` is the vertical's own selector (Kalnehi: exam + user;
- * FIZAKI: org playbook + rep). The engine depends only on this interface.
+ * Per-vertical adapter. `Scope` is the vertical's own selector (Kalnehi: exam + user).
+ * The engine depends only on this interface.
  */
 export interface KnowledgeTreeRepository<Scope = unknown> {
   getTree(scope: Scope): Promise<KnowledgeTree>;

@@ -4,8 +4,7 @@
  * The generic "max payoff per effort" math lives in the engine
  * (`@engine/planning/gapPlanner`). This module is the Kalnehi VERTICAL ADAPTER: it maps
  * `ChapterRollup` (chapter marks weight + microtopic progress) onto the engine's neutral
- * branch shape and applies Kalnehi's exam-subject ordering (PCB) on top. One engine,
- * configured per vertical — FIZAKI's Quota-Gap Planner reuses the SAME engine functions.
+ * branch shape and applies Kalnehi's exam-subject ordering (PCB) on top.
  *
  * Public API and outputs are unchanged (golden-master guarded).
  */

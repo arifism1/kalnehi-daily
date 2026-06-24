@@ -9,8 +9,8 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useState } from "react";
 
 import { buildAuthCallbackUrl } from "@/lib/authCallbackUrl";
-import { APP_HOME_PATH } from "@/config/appRoutes";
 import { useNativeOAuthBrowserDismiss } from "@/hooks/useNativeOAuthBrowserDismiss";
+import { useVertical } from "@/components/vertical/VerticalProvider";
 import {
   isNativeKalnehiShell,
   startNativeSupabaseOAuthFlow,
@@ -69,6 +69,8 @@ function isNewUserFromSession(createdAt: string | undefined): boolean {
 export default function AuthPage() {
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
+  const { config: verticalConfig } = useVertical();
+  const defaultHomePath = verticalConfig.defaultHomePath;
   const isNativeApp = isNativeKalnehiShell();
 
   const [step, setStep] = useState<AuthStep>("email");
@@ -117,13 +119,13 @@ export default function AuthPage() {
       const params = new URLSearchParams(window.location.search);
       const nextRaw = params.get("next");
       const nextPath =
-        nextRaw && nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : APP_HOME_PATH;
+        nextRaw && nextRaw.startsWith("/") && !nextRaw.startsWith("//")
+          ? nextRaw
+          : defaultHomePath;
       router.replace(nextPath);
     },
-    [router, setAuth],
+    [router, setAuth, defaultHomePath],
   );
-
-  const signupChecksOk = ageConfirmed && dpdpAgreed;
 
   const attestSignupConsent = useCallback(
     async (method: "email_otp" | "google_oauth", signupEmail?: string) => {
@@ -159,8 +161,8 @@ export default function AuthPage() {
         setError("Enter your email address.");
         return;
       }
-      if (!signupChecksOk) {
-        setError("Please confirm you are 18+ and agree to the data processing notice.");
+      if (!ageConfirmed) {
+        setError("Please confirm you are 18 years of age or older.");
         return;
       }
       await attestSignupConsent("email_otp", em);
@@ -184,7 +186,7 @@ export default function AuthPage() {
     } finally {
       setBusy(false);
     }
-  }, [email, signupChecksOk, attestSignupConsent]);
+  }, [email, ageConfirmed, attestSignupConsent]);
 
   const verifyOtp = useCallback(async () => {
     setBusy(true);
@@ -252,16 +254,13 @@ export default function AuthPage() {
     setBusy(true);
     setError(null);
     try {
-      if (!signupChecksOk) {
-        setError("Please confirm you are 18+ and agree to the data processing notice.");
-        setBusy(false);
-        return;
-      }
       await attestSignupConsent("google_oauth");
       const params = new URLSearchParams(window.location.search);
       const nextRaw = params.get("next");
       const nextPath =
-        nextRaw && nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : APP_HOME_PATH;
+        nextRaw && nextRaw.startsWith("/") && !nextRaw.startsWith("//")
+          ? nextRaw
+          : defaultHomePath;
       const supabase = getSupabaseBrowserClient();
       const redirectTo = buildAuthCallbackUrl(nextPath);
 
@@ -284,7 +283,7 @@ export default function AuthPage() {
       setError(formatSupabaseError(e));
       setBusy(false);
     }
-  }, [signupChecksOk, attestSignupConsent]);
+  }, [attestSignupConsent, defaultHomePath]);
 
   const trimmedEmail = email.trim();
 
@@ -312,29 +311,15 @@ export default function AuthPage() {
         {!isNativeApp && step === "email" && (
           <>
             <div className="space-y-3 px-3 pt-4">
-              <DpdpConsentNotice agreed={dpdpAgreed} onAgreedChange={setDpdpAgreed} />
-              <label
-                htmlFor="auth-age-confirm"
-                className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-kal-border/80 bg-kal-input-bg/60 p-2.5 text-xs text-kal-text"
-              >
-                <input
-                  id="auth-age-confirm"
-                  type="checkbox"
-                  checked={ageConfirmed}
-                  onChange={(e) => setAgeConfirmed(e.target.checked)}
-                  className="mt-0.5 size-4 shrink-0 rounded border-kal-border accent-kal-accent"
-                />
-                <span>I confirm I am 18 years of age or older.</span>
-              </label>
-            </div>
-            <div className="px-3 pt-2">
+              <DpdpConsentNotice showCheckbox={false} />
               <GoogleSignInButton
                 busy={busy}
-                disabled={busy || !signupChecksOk}
+                disabled={busy}
                 onClick={() => void signInGoogle()}
               />
-              <p className="mt-2 text-center text-[11px] text-kal-muted">
-                Fastest way to get started
+              <p className="text-center text-[11px] text-kal-text-secondary">
+                By continuing, you confirm you are 18+ and agree to the data
+                processing described in the notice above.
               </p>
             </div>
             <div className="px-3 py-3">
@@ -383,9 +368,14 @@ export default function AuthPage() {
               />
             </div>
 
-            {isNativeApp && (
+            {isNativeApp ? (
               <div className="space-y-3">
-                <DpdpConsentNotice agreed={dpdpAgreed} onAgreedChange={setDpdpAgreed} />
+                <DpdpConsentNotice
+                  showCheckbox
+                  agreed={dpdpAgreed}
+                  onAgreedChange={setDpdpAgreed}
+                  id="dpdp-consent-native"
+                />
                 <label
                   htmlFor="auth-age-confirm-native"
                   className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-kal-border/80 bg-kal-input-bg/60 p-2.5 text-xs text-kal-text"
@@ -400,6 +390,20 @@ export default function AuthPage() {
                   <span>I confirm I am 18 years of age or older.</span>
                 </label>
               </div>
+            ) : (
+              <label
+                htmlFor="auth-age-confirm"
+                className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-kal-border/80 bg-kal-input-bg/60 p-2.5 text-xs text-kal-text"
+              >
+                <input
+                  id="auth-age-confirm"
+                  type="checkbox"
+                  checked={ageConfirmed}
+                  onChange={(e) => setAgeConfirmed(e.target.checked)}
+                  className="mt-0.5 size-4 shrink-0 rounded border-kal-border accent-kal-accent"
+                />
+                <span>I confirm I am 18 years of age or older.</span>
+              </label>
             )}
 
             {error && (
@@ -410,7 +414,7 @@ export default function AuthPage() {
 
             <button
               type="submit"
-              disabled={busy || !signupChecksOk}
+              disabled={busy || !ageConfirmed}
               className="kal-glass-subtle flex w-full min-h-[50px] items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-kal-text transition-colors duration-200 hover:opacity-95 disabled:opacity-50"
             >
               {busy ? <Loader2 className="size-5 animate-spin" /> : <Mail className="size-4" />}

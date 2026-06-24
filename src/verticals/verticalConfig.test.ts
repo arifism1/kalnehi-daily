@@ -6,9 +6,8 @@ import {
   resolveVerticalFromHost,
 } from "@/lib/vertical/resolveVertical";
 
-import { fizakiConfig } from "./fizaki.config";
 import { kalnehiConfig } from "./kalnehi.config";
-import { VERTICALS, copy, isFeatureEnabled } from "./index";
+import { VERTICALS, copy } from "./index";
 import type { CopyPack } from "./types";
 
 describe("resolveVerticalFromHost", () => {
@@ -19,16 +18,15 @@ describe("resolveVerticalFromHost", () => {
     assert.equal(resolveVerticalFromHost("WWW.KALNEHI.COM"), "kalnehi");
   });
 
-  it("matches fizaki domains", () => {
-    assert.equal(resolveVerticalFromHost("www.fizaki.in"), "fizaki");
-    assert.equal(resolveVerticalFromHost("fizaki.in"), "fizaki");
+  it("does not match removed fizaki domains", () => {
+    assert.equal(resolveVerticalFromHost("www.fizaki.in"), null);
+    assert.equal(resolveVerticalFromHost("fizaki.in"), null);
+    assert.equal(resolveVerticalFromHost("fizaki.local"), null);
   });
 
   it("matches local dev domains (.local / .test)", () => {
     assert.equal(resolveVerticalFromHost("kalnehi.local"), "kalnehi");
     assert.equal(resolveVerticalFromHost("www.kalnehi.local:3000"), "kalnehi");
-    assert.equal(resolveVerticalFromHost("fizaki.local"), "fizaki");
-    assert.equal(resolveVerticalFromHost("www.fizaki.local:3000"), "fizaki");
   });
 
   it("returns null for unknown hosts (preview / localhost / empty)", () => {
@@ -46,12 +44,10 @@ describe("resolveVerticalFromHost", () => {
 });
 
 describe("resolveVertical (host wins, never throws)", () => {
-  it("host takes precedence and always returns a valid id", () => {
-    assert.equal(resolveVertical("www.fizaki.in"), "fizaki");
+  it("host takes precedence and always returns kalnehi for known hosts", () => {
     assert.equal(resolveVertical("www.kalnehi.com"), "kalnehi");
-    // Unknown host falls back to env or default — must still be a known id.
-    const fallback = resolveVertical("preview.vercel.app");
-    assert.ok(fallback === "kalnehi" || fallback === "fizaki");
+    assert.equal(resolveVertical("preview.vercel.app"), "kalnehi");
+    assert.equal(resolveVertical("localhost:3000"), "kalnehi");
   });
 });
 
@@ -89,15 +85,6 @@ describe("CopyPack completeness", () => {
 
 describe("no cross-vertical wording leakage", () => {
   const SALES_WORDS = ["quota", "playbook", "deal", "pitch", "objection", "crm"];
-  const STUDENT_WORDS = [
-    "syllabus",
-    "exam",
-    "marks",
-    "chapter",
-    "microtopic",
-    "rank",
-    "student",
-  ];
 
   function copyValues(c: CopyPack): string[] {
     return Object.values(c).map((v) => v.toLowerCase());
@@ -111,15 +98,9 @@ describe("no cross-vertical wording leakage", () => {
     }
   });
 
-  it("fizaki copy contains NO student wording", () => {
-    for (const value of copyValues(fizakiConfig.copy)) {
-      for (const w of STUDENT_WORDS) {
-        assert.ok(
-          !value.includes(w),
-          `fizaki copy "${value}" leaks student word "${w}"`,
-        );
-      }
-    }
+  it("kalnehi copy contains student wording (sanity check)", () => {
+    const joined = copyValues(kalnehiConfig.copy).join(" ");
+    assert.ok(joined.includes("student") || joined.includes("syllabus"));
   });
 });
 
@@ -132,23 +113,6 @@ describe("brand + feature invariants", () => {
     assert.equal(kalnehiConfig.brand.theme.primaryColor, "#FF7A00");
     assert.equal(kalnehiConfig.brand.theme.backgroundColor, "#FAF7F2");
     assert.equal(kalnehiConfig.defaultHomePath, "/syllabus");
-  });
-
-  it("fizaki uses a distinct brand + domain", () => {
-    assert.notEqual(
-      fizakiConfig.brand.theme.primaryColor,
-      kalnehiConfig.brand.theme.primaryColor,
-    );
-    assert.equal(fizakiConfig.brand.domain, "www.fizaki.in");
     assert.equal(kalnehiConfig.brand.domain, "www.kalnehi.com");
-  });
-
-  it("Tier-2 FIZAKI surfaces are disabled until a pilot is signed", () => {
-    assert.equal(isFeatureEnabled(fizakiConfig, "mock-test-tracker"), false);
-    assert.equal(isFeatureEnabled(fizakiConfig, "study-squad"), false);
-    assert.equal(isFeatureEnabled(fizakiConfig, "habit-maker"), false);
-    // Tier-1 buyer core is on.
-    assert.equal(isFeatureEnabled(fizakiConfig, "manager-dashboard"), true);
-    assert.equal(isFeatureEnabled(fizakiConfig, "quota-gap-planner"), true);
   });
 });

@@ -15,6 +15,7 @@ export const JourneyAction = {
   FIRST_STUDY_SESSION: "first_study_session_started",
   FIRST_TASK: "first_task_created",
   FIRST_CHAPTER_MARKED: "first_chapter_marked",
+  FIRST_SYLLABUS_MARKS_RAISE: "first_syllabus_marks_raise",
   FIRST_REVISION: "first_revision_scheduled",
   FIRST_MOCK: "first_mock_logged",
   SYLLABUS_TRACKER_OPENED: "syllabus_tracker_opened",
@@ -70,6 +71,7 @@ export const MILESTONE_ACTIONS = new Set<string>([
   JourneyAction.FIRST_TASK,
   JourneyAction.TASK_CREATED,
   JourneyAction.FIRST_CHAPTER_MARKED,
+  JourneyAction.FIRST_SYLLABUS_MARKS_RAISE,
   JourneyAction.FIRST_REVISION,
   JourneyAction.FIRST_MOCK,
 ]);

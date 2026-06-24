@@ -6,7 +6,7 @@
  *
  * Usage:
  *   const { config } = useVertical();
- *   const treeLabel = useCopy("knowledgeTreeLabel"); // "Syllabus" | "Playbook"
+ *   const treeLabel = useCopy("knowledgeTreeLabel"); // "Syllabus"
  *
  * NOT YET mounted in the Kalnehi layout — wired in during the Kalnehi refactor phase so
  * copy lookups replace hard-coded student wording with zero behavior change verified by
@@ -45,7 +45,7 @@ export function useVertical(): VerticalContextValue {
   return ctx;
 }
 
-/** Copy lookup hook. `useCopy("coachName")` -> "Mastermind" | "FIZAKI Coach". */
+/** Copy lookup hook. `useCopy("coachName")` -> "Mastermind". */
 export function useCopy<K extends keyof CopyPack>(key: K): CopyPack[K] {
   const { config } = useVertical();
   return copy(config, key);

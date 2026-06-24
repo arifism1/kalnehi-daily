@@ -10,6 +10,7 @@ type JourneyStateRow = {
   first_study_session_at: string | null;
   first_task_at: string | null;
   first_chapter_marked_at: string | null;
+  first_syllabus_marks_raise_at: string | null;
   first_revision_at: string | null;
   first_mock_logged_at: string | null;
   first_value_at: string | null;
@@ -42,6 +43,7 @@ function earliest(a: string | null | undefined, b: string): string {
 
 function computeFirstValueAt(state: JourneyStateRow): string | null {
   const candidates = [
+    state.first_syllabus_marks_raise_at,
     state.first_ai_insight_at,
     state.first_study_session_at,
     state.first_task_at,
@@ -53,7 +55,12 @@ function computeFirstValueAt(state: JourneyStateRow): string | null {
 function isActivated(state: JourneyStateRow, profileOnboardingAt: string | null): boolean {
   const onboarded = !!(state.onboarding_completed_at ?? profileOnboardingAt);
   const hasValue =
-    !!(state.first_ai_insight_at || state.first_study_session_at || state.first_task_at);
+    !!(
+      state.first_syllabus_marks_raise_at ||
+      state.first_ai_insight_at ||
+      state.first_study_session_at ||
+      state.first_task_at
+    );
   return onboarded && hasValue;
 }
 
@@ -157,6 +164,8 @@ function patchForAction(
       return { first_task_at: at };
     case JourneyAction.FIRST_CHAPTER_MARKED:
       return { first_chapter_marked_at: at };
+    case JourneyAction.FIRST_SYLLABUS_MARKS_RAISE:
+      return { first_syllabus_marks_raise_at: at };
     case JourneyAction.FIRST_REVISION:
       return { first_revision_at: at };
     case JourneyAction.FIRST_MOCK:
@@ -201,6 +210,7 @@ export async function processJourneyMilestones(
     first_study_session_at: null,
     first_task_at: null,
     first_chapter_marked_at: null,
+    first_syllabus_marks_raise_at: null,
     first_revision_at: null,
     first_mock_logged_at: null,
     first_value_at: null,
@@ -235,6 +245,11 @@ export async function processJourneyMilestones(
     if (patch.first_task_at) state.first_task_at = earliest(state.first_task_at, patch.first_task_at);
     if (patch.first_chapter_marked_at)
       state.first_chapter_marked_at = earliest(state.first_chapter_marked_at, patch.first_chapter_marked_at);
+    if (patch.first_syllabus_marks_raise_at)
+      state.first_syllabus_marks_raise_at = earliest(
+        state.first_syllabus_marks_raise_at,
+        patch.first_syllabus_marks_raise_at,
+      );
     if (patch.first_revision_at)
       state.first_revision_at = earliest(state.first_revision_at, patch.first_revision_at);
     if (patch.first_mock_logged_at)

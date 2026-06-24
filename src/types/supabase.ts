@@ -2633,6 +2633,7 @@ export type Database = {
           first_ai_insight_at: string | null
           first_app_open_at: string | null
           first_chapter_marked_at: string | null
+          first_syllabus_marks_raise_at: string | null
           first_mock_logged_at: string | null
           first_revision_at: string | null
           first_study_session_at: string | null
@@ -2652,6 +2653,7 @@ export type Database = {
           first_ai_insight_at?: string | null
           first_app_open_at?: string | null
           first_chapter_marked_at?: string | null
+          first_syllabus_marks_raise_at?: string | null
           first_mock_logged_at?: string | null
           first_revision_at?: string | null
           first_study_session_at?: string | null
@@ -2671,6 +2673,7 @@ export type Database = {
           first_ai_insight_at?: string | null
           first_app_open_at?: string | null
           first_chapter_marked_at?: string | null
+          first_syllabus_marks_raise_at?: string | null
           first_mock_logged_at?: string | null
           first_revision_at?: string | null
           first_study_session_at?: string | null
@@ -3854,6 +3857,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      exam_score_rank_bands: {
+        Row: {
+          exam_name: string
+          id: string
+          label: string | null
+          percentile: number | null
+          rank_max: number | null
+          rank_min: number | null
+          score_max: number
+          score_min: number
+          sort_order: number
+        }
+        Insert: {
+          exam_name: string
+          id?: string
+          label?: string | null
+          percentile?: number | null
+          rank_max?: number | null
+          rank_min?: number | null
+          score_max: number
+          score_min: number
+          sort_order?: number
+        }
+        Update: {
+          exam_name?: string
+          id?: string
+          label?: string | null
+          percentile?: number | null
+          rank_max?: number | null
+          rank_min?: number | null
+          score_max?: number
+          score_min?: number
+          sort_order?: number
+        }
+        Relationships: []
       }
       user_system_push_dedupe: {
         Row: {

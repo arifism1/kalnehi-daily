@@ -22,6 +22,7 @@ import {
   sendRetargetingD7,
   sendRetargetingD14,
 } from "@/lib/waitlist/notifications";
+import { runSignupReengagementCron } from "@/lib/reengagement/cronRun";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -331,6 +332,13 @@ async function runNotificationSequencesCron(admin: ServiceRoleClient): Promise<N
     stats.retargeting_d14 = d14Sent;
   }
 
+  /* ── Signup re-engagement (explorer, no D1 return) ───────────────── */
+  {
+    const re = await runSignupReengagementCron(admin, hour);
+    stats.reengagement_d1 = re.reengagement_d1;
+    stats.reengagement_d2 = re.reengagement_d2;
+  }
+
   // Every run: all counters present so log/JSON parsers never see missing keys (IST windows skip trial blocks).
   stats.batch_tomorrow ??= 0;
   stats.trial_day6_nudge ??= 0;
@@ -339,6 +347,8 @@ async function runNotificationSequencesCron(admin: ServiceRoleClient): Promise<N
   stats.paused ??= 0;
   stats.retargeting_d7 ??= 0;
   stats.retargeting_d14 ??= 0;
+  stats.reengagement_d1 ??= 0;
+  stats.reengagement_d2 ??= 0;
 
   // Deprecated: legacy drains/dashboards keyed day2/day3. Values mirror trial_day6_* / trial_day7_*;
   // semantics are 7-day calendar trial (day 6 / 7), not historical 3-day trial day indices.

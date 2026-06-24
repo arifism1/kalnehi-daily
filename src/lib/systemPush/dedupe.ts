@@ -7,7 +7,7 @@ import type { SystemPushKind } from "./copy";
 export async function reserveSystemPushDedupe(
   admin: SupabaseClient<Database>,
   userId: string,
-  kind: SystemPushKind,
+  kind: SystemPushKind | string,
   dateKey: string,
 ): Promise<"reserved" | "duplicate" | "error"> {
   const { error } = await admin.from("user_system_push_dedupe").insert({
@@ -24,7 +24,7 @@ export async function reserveSystemPushDedupe(
 export async function releaseSystemPushDedupe(
   admin: SupabaseClient<Database>,
   userId: string,
-  kind: SystemPushKind,
+  kind: SystemPushKind | string,
   dateKey: string,
 ): Promise<void> {
   await admin

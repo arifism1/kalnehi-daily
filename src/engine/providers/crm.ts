@@ -1,14 +1,11 @@
 /**
  * ENGINE provider interface: CRM / pipeline (PROVIDER_CRM).
  *
- * For FIZAKI pilots there are TWO implementations (app layer):
- *   - manual: rep enters deals by hand + voice
- *   - csv: read-only import of an exported CRM deal list (so RampMetric / attainment
- *     run on real-ish data instead of perfect manual logging — review item #5)
- * Salesforce / HubSpot sync arrive later behind this SAME interface.
+ * App-layer implementations (manual entry, CSV import, future Salesforce/HubSpot sync)
+ * sit outside the engine and implement this interface.
  *
  * Domain-agnostic: "deal" here is a generic pipeline item with an outcome value and
- * a stage; it carries no sales-only wording the engine would have to understand.
+ * a stage; it carries no domain-specific wording the engine would have to understand.
  */
 
 export type DealStage =

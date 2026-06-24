@@ -1,5 +1,9 @@
 # Refactor Plan — Engine Extraction + FIZAKI (without breaking Kalnehi)
 
+> **Status (2026-06):** FIZAKI was removed from this repo (separate app planned). Kalnehi-only
+> vertical config remains. The sections below are historical planning notes for the engine-extraction
+> program — not the current deployment topology.
+
 > Step 1–8 deliverable. Companion to `ARCHITECTURE_AUDIT.md`. This is the engine-extraction
 > contract: how we generalize Kalnehi's execution engine into a domain-agnostic package,
 > prove Kalnehi parity, and add FIZAKI as a second brand on the same codebase + Supabase —

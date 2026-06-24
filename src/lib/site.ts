@@ -32,12 +32,9 @@ export function getTrustedBrowserOrigins(): string[] {
   const set = new Set<string>([
     SITE_URL.replace(/\/+$/, ""),
     "http://localhost:3000",
-    "http://localhost:3001",
-    // Local multi-brand dev (add matching lines to /etc/hosts — see README).
+    // Local dev (add matching lines to /etc/hosts — see README).
     "http://kalnehi.local:3000",
     "http://www.kalnehi.local:3000",
-    "http://fizaki.local:3000",
-    "http://www.fizaki.local:3000",
   ]);
   const primary = getSiteUrl().replace(/\/+$/, "");
   if (primary) set.add(primary);

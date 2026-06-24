@@ -264,17 +264,15 @@ export async function getJourneySnapshot(windowDays = 7): Promise<JourneySnapsho
   const activationFunnel = buildFunnel(
     [
       "Onboarding completed",
-      "First AI insight",
+      "Scores entered (mock + target)",
+      "Syllabus marks raised",
       "First study session",
-      "First task",
     ],
     [
       countUsersWithAction(JourneyAction.ONBOARDING_COMPLETED),
-      countUsersWithAction(JourneyAction.AI_CHAT_SENT) +
-        countUsersWithAction(JourneyAction.FIRST_AI_INSIGHT),
+      countUsersWithAction(JourneyAction.CURRENT_SCORE_ENTERED),
+      countUsersWithAction(JourneyAction.FIRST_SYLLABUS_MARKS_RAISE),
       countUsersWithAction(JourneyAction.FIRST_STUDY_SESSION),
-      countUsersWithAction(JourneyAction.TASK_CREATED) +
-        countUsersWithAction(JourneyAction.FIRST_TASK),
     ],
   );
 

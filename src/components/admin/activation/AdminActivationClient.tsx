@@ -35,6 +35,35 @@ export function AdminActivationClient({ data }: { data: ActivationSnapshot }) {
         <AdminKpiCard label="Voice (events, users)" value={data.voiceUserCount} />
       </div>
 
+      <div>
+        <h2 className="text-lg font-semibold text-kal-text">Retention scoreboard (30d cohort)</h2>
+        <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
+          <AdminKpiCard label="Signups (30d)" value={data.cohortSignups30d} />
+          <AdminKpiCard
+            label="Activation rate"
+            value={`${data.activationRatePct30d.toFixed(0)}%`}
+            sub="Onboarded + syllabus aha"
+          />
+          <AdminKpiCard
+            label="Day-1 return"
+            value={`${data.day1RetentionPct30d.toFixed(0)}%`}
+            sub="Eligible cohort ≥2d old"
+          />
+          <AdminKpiCard label="Explorer (1 session)" value={data.explorerCount} />
+          <AdminKpiCard
+            label="Median TTFA"
+            value={
+              data.medianTtfaSeconds != null
+                ? data.medianTtfaSeconds < 60
+                  ? `${data.medianTtfaSeconds}s`
+                  : `${Math.round(data.medianTtfaSeconds / 60)}m`
+                : "—"
+            }
+            sub="Time to first value"
+          />
+        </div>
+      </div>
+
       {data.summary && (
         <div className="rounded-2xl border border-kal-border bg-kal-card/40 p-4">
           <h2 className="text-sm font-semibold text-kal-text mb-2">Feature events (14d)</h2>

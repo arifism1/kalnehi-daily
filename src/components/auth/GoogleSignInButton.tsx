@@ -51,7 +51,7 @@ export function GoogleSignInButton({
       disabled={disabled || busy}
       onClick={onClick}
       className={clsx(
-        "flex w-full min-h-[50px] items-center justify-center gap-3 rounded-xl border border-kal-border/80 bg-white px-4 py-3 text-sm font-semibold text-kal-text shadow-sm transition-[box-shadow,opacity] duration-200 hover:shadow-md disabled:opacity-50",
+        "flex w-full min-h-[50px] items-center justify-center gap-3 rounded-xl border border-kal-border/80 bg-white px-4 py-3 text-sm font-semibold text-kal-text shadow-sm transition-[box-shadow,opacity] duration-200 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-70",
         className,
       )}
     >

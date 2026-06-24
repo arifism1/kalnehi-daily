@@ -13,6 +13,7 @@ import { isPaidAccessOverlayExemptPath } from "@/lib/paid-access-exempt-paths";
 import { isPublicMarketingPath } from "@/lib/public-paths";
 import { APP_HOME_PATH } from "@/config/appRoutes";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useVertical } from "@/components/vertical/VerticalProvider";
 import { KalShimmerBlock } from "@/components/loading/KalShimmerBlock";
 import { KalSpinner } from "@/components/loading/KalSpinner";
 import { SyllabusPageSkeleton } from "@/components/syllabus/SyllabusPageSkeleton";
@@ -194,6 +195,8 @@ function isAccountBufferPath(p: string): boolean {
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { config: verticalConfig } = useVertical();
+  const appHomePath = verticalConfig.defaultHomePath;
 
   const initialized = useAuthStore((s) => s.initialized);
   const session = useAuthStore((s) => s.session);
@@ -228,7 +231,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         isLegalPath(pathname) ||
         isAccountBufferPath(pathname) ||
         pathname === "/upgrade" ||
-        pathname === APP_HOME_PATH
+        pathname === appHomePath
       ) {
         return "render";
       }
@@ -291,6 +294,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     hasUsedFreeTrial,
     welcomeTrialExpiredNoPay,
     pathname,
+    appHomePath,
   ]);
 
   useEffect(() => {
@@ -299,13 +303,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         router.replace("/auth");
         break;
       case "home":
-        router.replace(APP_HOME_PATH);
+        router.replace(appHomePath);
         break;
       case "onboarding":
         router.replace("/onboarding");
         break;
     }
-  }, [gateTarget, router]);
+  }, [gateTarget, router, appHomePath]);
 
   if (gateTarget === "error") {
     return (

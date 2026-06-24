@@ -42,7 +42,6 @@ const RATE_LIMITS: Record<string, number> = {
   "/api/dpdp/attest-signup":   10,
   "/api/admin/dpdp/rights-request": 30,
   "/api/admin/dpdp/breach-notify": 10,
-  "/api/fizaki/demo-request": 5,
 };
 const WINDOW_MS = 60_000;
 
@@ -120,6 +119,14 @@ function isAndroidAppBillingBlockedPath(pathname: string): boolean {
   return false;
 }
 
+const FIZAKI_HOST = /(^|\.)fizaki\.(in|local|test)$/i;
+
+function isFizakiHost(host: string | null | undefined): boolean {
+  if (!host) return false;
+  const h = host.split(",")[0]?.trim().toLowerCase().split(":")[0];
+  return Boolean(h && FIZAKI_HOST.test(h));
+}
+
 /**
  * Refreshes the auth session cookie on each navigation so server actions and
  * Route Handlers see the same user as the browser.
@@ -137,8 +144,14 @@ export async function proxy(request: NextRequest) {
   const rateLimited = await applyRateLimit(request);
   if (rateLimited) return rateLimited;
 
+  if (isFizakiHost(request.headers.get("host"))) {
+    return new NextResponse("Not Found", { status: 404 });
+  }
+
   const ua = request.headers.get("user-agent") ?? "";
   const pathname = request.nextUrl.pathname;
+  const verticalId = resolveVertical(request.headers.get("host"));
+
   if (pathname === "/auth/reset") {
     return NextResponse.redirect(new URL("/auth", request.url), { status: 307 });
   }
@@ -226,8 +239,6 @@ export async function proxy(request: NextRequest) {
   // Resolve the brand vertical from the request host (source of truth in prod;
   // NEXT_PUBLIC_VERTICAL is the local/per-project fallback) and forward it so
   // Server Components / Route Handlers read it via getServerVertical().
-  const verticalId = resolveVertical(request.headers.get("host"));
-
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set(VERTICAL_HEADER, verticalId);
   if (orgIdForHeader) {
@@ -240,10 +251,7 @@ export async function proxy(request: NextRequest) {
   baseResponse.headers.getSetCookie?.().forEach((cookie) => {
     finalResponse.headers.append("Set-Cookie", cookie);
   });
-  // Host-keyed caching: each brand domain deploys as its OWN Vercel project with a
-  // baked NEXT_PUBLIC_VERTICAL, so the CDN cache namespace is already per-host — a
-  // cached response cannot bleed across brands. The x-vertical request header above
-  // makes host resolution explicit for Server Components within a single deployment.
+  // The x-vertical request header makes host resolution explicit for Server Components.
   return finalResponse;
 }
 

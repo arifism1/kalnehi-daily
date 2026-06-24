@@ -6,8 +6,8 @@ import { applyVerticalFilter, stampVertical } from "./withVertical";
 describe("stampVertical", () => {
   it("stamps a single row without mutating the input", () => {
     const input = { user_id: "u1", amount: 100 };
-    const out = stampVertical(input, "fizaki");
-    assert.deepEqual(out, { user_id: "u1", amount: 100, vertical: "fizaki" });
+    const out = stampVertical(input, "kalnehi");
+    assert.deepEqual(out, { user_id: "u1", amount: 100, vertical: "kalnehi" });
     assert.equal("vertical" in input, false, "input must not be mutated");
   });
 
@@ -20,8 +20,8 @@ describe("stampVertical", () => {
   });
 
   it("overrides any pre-existing vertical (server-authoritative)", () => {
-    const out = stampVertical({ vertical: "kalnehi", x: 1 }, "fizaki");
-    assert.equal(out.vertical, "fizaki");
+    const out = stampVertical({ vertical: "other", x: 1 }, "kalnehi");
+    assert.equal(out.vertical, "kalnehi");
   });
 });
 
@@ -34,8 +34,8 @@ describe("applyVerticalFilter", () => {
         return this;
       },
     };
-    const result = applyVerticalFilter(fakeQuery, "fizaki");
+    const result = applyVerticalFilter(fakeQuery, "kalnehi");
     assert.equal(result, fakeQuery);
-    assert.deepEqual(calls, [["vertical", "fizaki"]]);
+    assert.deepEqual(calls, [["vertical", "kalnehi"]]);
   });
 });

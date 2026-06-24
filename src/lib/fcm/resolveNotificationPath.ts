@@ -5,6 +5,9 @@ const EXTRA_PATH_BY_KIND: Record<string, string> = {
   custom_reminder: "/plan",
   scheduled_notification: "/notifications",
   test: "/settings",
+  reengagement_d1: "/syllabus",
+  reengagement_d2: "/syllabus",
+  waitlist: "/",
 };
 
 /**

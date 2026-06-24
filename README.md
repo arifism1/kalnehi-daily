@@ -31,41 +31,18 @@ For architecture, auth, proxy behavior, cron, and troubleshooting, use **[docs/D
 | [docs/android-device-qa-matrix.md](docs/android-device-qa-matrix.md) | Capacitor / Android voice, push, billing checks |
 | [docs/EXTERNAL_SSD_DEV.md](docs/EXTERNAL_SSD_DEV.md) | SSD volume layout, `npm ci`, Android SDK paths, sibling apps |
 
-## Multi-vertical (Kalnehi + FIZAKI)
+## Vertical config (Kalnehi)
 
-One codebase serves two brands on two domains. The active **vertical** is resolved from the
-request **host** by `proxy.ts` (`www.kalnehi.com` → `kalnehi`, `www.fizaki.in` → `fizaki`)
-and passed to server components via the `x-vertical` header. Branding, copy, feature flags,
-and roles all come from each `VerticalConfig` in `src/verticals/`.
+Branding, copy, feature flags, and roles come from `VerticalConfig` in
+[`src/verticals/kalnehi.config.ts`](src/verticals/kalnehi.config.ts). The active vertical is
+resolved from the request **host** by `proxy.ts` (`www.kalnehi.com` → `kalnehi`) and passed
+to server components via the `x-vertical` header.
 
 - **Engine vs. vertical**: domain-agnostic business logic lives in `src/engine/**` (imported
   via `@engine/*`, enforced by an ESLint boundary). Verticals are thin adapters/config.
-- **Deploy**: create **two Vercel projects from the same repo**, one per domain. Host
-  resolution is the source of truth; set `NEXT_PUBLIC_VERTICAL` per project only as a
-  fallback for previews/local. Separate projects also give each brand its own cache
-  namespace, so a cached page can't serve the wrong brand.
-- **Auth**: shared Supabase project; cookies are domain-scoped so sessions don't bleed
-  across brands. Add **both** `/auth/callback` origins to the Supabase redirect allowlist
-  (see `.env.example`).
 - **Data isolation**: shared tables carry a `vertical` discriminator (migration
   `supabase/migrations/20260821120000_vertical_discriminator.sql`); reads/writes go through
-  the `withVertical` helpers, and the PrepBrain RPC is vertical-scoped. RLS still enforces
-  row ownership. Apply the **additive** migration first; defer the `NOT NULL` follow-up until
-  the app stamps `vertical` everywhere.
-- **Demo without a DB**: the FIZAKI buyer-core surfaces (import, pipeline, manager dashboard)
-  run on in-memory seed data. Use `NEXT_PUBLIC_FIZAKI_DEMO_ROLE` to preview rep/manager/admin
-  views without real org memberships (leave it unset in production).
-- **FIZAKI public landing**: at `/` when `NEXT_PUBLIC_VERTICAL=fizaki` (build-time branch —
-  keeps the page statically cached). Preview locally: `NEXT_PUBLIC_VERTICAL=fizaki npm run dev`
-  then open `/`. Demo requests post to `/api/fizaki/demo-request` (Resend; optional `FIZAKI_DEMO_TO`).
-- **Local dev — two brands on one server**: add to `/etc/hosts`:
-  ```
-  127.0.0.1 kalnehi.local
-  127.0.0.1 fizaki.local
-  ```
-  Run `npm run dev`, then open [http://kalnehi.local:3000](http://kalnehi.local:3000) (Kalnehi)
-  and [http://fizaki.local:3000](http://fizaki.local:3000) (FIZAKI). Host picks the brand in
-  development; production still uses separate Vercel projects + domains.
+  the `withVertical` helpers. RLS still enforces row ownership.
 
 ## Common commands
 
@@ -92,7 +69,5 @@ and roles all come from each `VerticalConfig` in `src/verticals/`.
 | `npm run test:doubt-voice` | Doubt voice wiring tests |
 | `npm run test:voice-quota-wiring` | Voice quota wiring tests |
 | `npm run test:vertical` | Vertical config + host resolution + no-wording-leakage |
-| `npm run test:fizaki` | FIZAKI buyer-core logic (structurer, ramp, quota-gap) |
-| `npm run test:fizaki-landing` | FIZAKI landing copy leakage + revenue framing |
 
 Database migrations live under `supabase/migrations/`. Apply with Supabase CLI (`npx supabase db push`) or run SQL in the dashboard as described in `.env.example`.

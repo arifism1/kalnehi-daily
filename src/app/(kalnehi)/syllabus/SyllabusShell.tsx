@@ -5,6 +5,7 @@ import { Suspense } from "react";
 
 import { SyllabusPageHeader } from "@/components/syllabus/SyllabusPageHeader";
 import { SyllabusPageSkeleton } from "@/components/syllabus/SyllabusPageSkeleton";
+import { SyllabusActivationHost } from "@/components/syllabus/SyllabusActivationHost";
 
 const SyllabusTracker = dynamic(
   () =>
@@ -16,11 +17,15 @@ const SyllabusTracker = dynamic(
 
 export function SyllabusShell() {
   return (
-    <div className="space-y-4">
-      <SyllabusPageHeader />
-      <Suspense fallback={<SyllabusPageSkeleton />}>
-        <SyllabusTracker />
-      </Suspense>
-    </div>
+    <Suspense fallback={<SyllabusPageSkeleton />}>
+      <SyllabusActivationHost>
+        <div className="space-y-4">
+          <SyllabusPageHeader />
+          <Suspense fallback={<SyllabusPageSkeleton />}>
+            <SyllabusTracker />
+          </Suspense>
+        </div>
+      </SyllabusActivationHost>
+    </Suspense>
   );
 }
