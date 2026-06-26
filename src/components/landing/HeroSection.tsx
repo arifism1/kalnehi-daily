@@ -7,7 +7,7 @@ import { SMART_PLAN_MONTHLY_DISPLAY } from "@/lib/smartPlanPricing";
 
 export function HeroSection() {
   return (
-    <section className="relative min-h-[88vh] bg-kal-page">
+    <section data-hero-section className="relative min-h-fit bg-kal-page lg:min-h-[88vh]">
       {/* Background decorations — overflow-hidden scoped here so floating cards aren't clipped */}
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
         {/* Subtle grid */}
@@ -30,7 +30,7 @@ export function HeroSection() {
         />
       </div>
 
-      <div className="relative mx-auto flex min-h-[88vh] max-w-7xl flex-col items-center px-6 lg:flex-row lg:items-center lg:gap-16 lg:px-8">
+      <div className="relative mx-auto flex max-w-7xl flex-col items-center px-6 lg:min-h-[88vh] lg:flex-row lg:items-center lg:gap-16 lg:px-8">
         {/* Left — text */}
         <div className="flex flex-1 flex-col items-start justify-center pb-8 pt-24 lg:pb-0 lg:pt-0 lg:max-w-[50%]">
           <p className="mb-5 text-[10px] font-bold uppercase tracking-[0.25em] text-kal-muted">
@@ -50,16 +50,16 @@ export function HeroSection() {
             Kalnehi Daily connects your dashboard, syllabus at microtopic level, and marks you should expect from recent exam weightages — then powers your day with voice or typed planning, timers, backlog, and Mastermind as your strategic coach.
           </p>
 
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="flex flex-col items-start gap-3 lg:flex-row">
             <Link
               href="/auth"
-              className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-kal-accent px-8 text-base font-bold text-white shadow-[0_4px_20px_rgba(255,122,0,0.35)] transition hover:brightness-105 active:scale-[0.99]"
+              className="inline-flex min-h-[52px] w-full items-center justify-center rounded-full bg-kal-accent px-8 text-base font-bold text-white shadow-[0_4px_20px_rgba(255,122,0,0.35)] transition hover:brightness-105 active:scale-[0.99] sm:w-auto"
             >
               Start free — 7 days on us
             </Link>
             <Link
               href="/what-can-kalnehi-do"
-              className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full border border-kal-border bg-kal-card px-6 text-base font-semibold text-kal-text backdrop-blur-sm transition hover:border-kal-accent/30 hover:bg-kal-bg-elevated active:scale-[0.99]"
+              className="inline-flex items-center gap-1.5 px-1 text-sm font-semibold text-kal-text-secondary underline-offset-4 hover:text-kal-text hover:underline lg:min-h-[52px] lg:gap-2 lg:rounded-full lg:border lg:border-kal-border lg:bg-kal-card lg:px-6 lg:text-base lg:text-kal-text lg:no-underline lg:backdrop-blur-sm lg:transition lg:hover:border-kal-accent/30 lg:hover:bg-kal-bg-elevated lg:active:scale-[0.99]"
             >
               See all features
               <ArrowRight className="size-4" aria-hidden />
@@ -72,7 +72,7 @@ export function HeroSection() {
         </div>
 
         {/* Right — dashboard mockup */}
-        <div className="relative flex flex-1 items-center justify-center py-10 lg:py-0 lg:justify-end">
+        <div className="relative flex flex-1 items-center justify-center py-6 lg:py-0 lg:justify-end">
           <div className="relative w-full max-w-[480px]">
             {/* Floating subject icons — decorative */}
             <div className="absolute -left-10 top-16 z-10 hidden lg:block" aria-hidden>
@@ -140,7 +140,7 @@ export function HeroSection() {
 
 function DashboardMockup() {
   return (
-    <div className="p-5">
+    <div className="p-4 sm:p-5">
       {/* Header */}
       <div className="mb-4 flex items-center justify-between gap-2">
         <div className="min-w-0">
@@ -189,8 +189,8 @@ function DashboardMockup() {
         </div>
       </div>
 
-      {/* 3-Day Strip */}
-      <div className="mb-3 grid grid-cols-3 gap-2">
+      {/* 3-Day Strip — hidden on mobile to keep the hero card short */}
+      <div className="mb-3 hidden grid-cols-3 gap-2 sm:grid">
         {[
           { label: "Yesterday", tasks: 4, done: 4, color: "text-emerald-600 dark:text-emerald-400" },
           { label: "Today", tasks: 5, done: 2, color: "text-kal-accent" },

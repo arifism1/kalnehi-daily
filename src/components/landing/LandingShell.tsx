@@ -1,6 +1,7 @@
 import { LandingVisitBeacon } from "@/components/LandingVisitBeacon";
 import { LandingNav } from "@/components/landing/LandingNav";
 import { LandingFooter } from "@/components/landing/LandingFooter";
+import { MobileStickyCta } from "@/components/landing/MobileStickyCta";
 
 export function LandingShell({ children }: { children: React.ReactNode }) {
   return (
@@ -11,6 +12,7 @@ export function LandingShell({ children }: { children: React.ReactNode }) {
         {children}
       </main>
       <LandingFooter />
+      <MobileStickyCta />
     </div>
   );
 }

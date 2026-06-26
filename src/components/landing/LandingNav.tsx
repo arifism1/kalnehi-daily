@@ -273,10 +273,18 @@ export function LandingNav() {
                     {label}
                   </Link>
                 ))}
-                <div className="mt-1 border-t border-kal-border pt-1">
-                  <p className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-kal-muted">
+                <details className="group mt-1 border-t border-kal-border pt-1">
+                  <summary className="flex cursor-pointer list-none items-center justify-between rounded-xl px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-kal-muted">
                     Exams
-                  </p>
+                    <svg
+                      className="size-3.5 shrink-0 transition-transform group-open:rotate-180"
+                      viewBox="0 0 12 12"
+                      fill="none"
+                      aria-hidden
+                    >
+                      <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </summary>
                   {EXAM_LINKS.map(({ href, label }) => (
                     <Link
                       key={href}
@@ -288,11 +296,19 @@ export function LandingNav() {
                       {label}
                     </Link>
                   ))}
-                </div>
-                <div className="mt-1 border-t border-kal-border pt-1">
-                  <p className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-kal-muted">
+                </details>
+                <details className="group mt-1 border-t border-kal-border pt-1">
+                  <summary className="flex cursor-pointer list-none items-center justify-between rounded-xl px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-kal-muted">
                     Features
-                  </p>
+                    <svg
+                      className="size-3.5 shrink-0 transition-transform group-open:rotate-180"
+                      viewBox="0 0 12 12"
+                      fill="none"
+                      aria-hidden
+                    >
+                      <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </summary>
                   {FEATURE_LINKS.map(({ href, label }) => (
                     <Link
                       key={href}
@@ -303,7 +319,7 @@ export function LandingNav() {
                       {label}
                     </Link>
                   ))}
-                </div>
+                </details>
                 <div className="mt-2 flex flex-col gap-2 pt-2">
                   <Link
                     href="/auth"
